@@ -21,9 +21,14 @@ import {
     useFetchChallengePhases,
     useFetchChallengeTracks,
 } from '../../../../../lib/hooks'
-import { ChallengePhase } from '../../../../../lib/models'
 import {
+    ChallengeMetadata,
+    ChallengePhase,
+} from '../../../../../lib/models'
+import {
+    getMetadataValue,
     getPhaseDuration,
+    setMetadataValue,
 } from '../../../../../lib/utils'
 import { PhaseEditorRow } from '../PhaseEditorRow'
 import {
@@ -58,6 +63,36 @@ const START_DATE_MODE: Record<'IMMEDIATELY' | 'SCHEDULED', StartDateMode> = {
     IMMEDIATELY: 'immediately',
     SCHEDULED: 'scheduled',
 }
+const START_DATE_MODE_METADATA_NAME = 'challengeStartMode'
+
+/**
+ * Resolves the persisted challenge start mode from metadata, falling back to
+ * whether the form currently has a concrete start date.
+ *
+ * @param startDate challenge start date stored in the form state.
+ * @param metadata challenge metadata entries stored in the form state.
+ * @returns the restored start mode for the schedule editor radios.
+ */
+function resolveStartDateMode(
+    startDate: Date | string | undefined,
+    metadata: ChallengeMetadata[] | undefined,
+): StartDateMode {
+    const persistedStartDateMode = getMetadataValue(
+        metadata,
+        START_DATE_MODE_METADATA_NAME,
+    )
+
+    if (
+        persistedStartDateMode === START_DATE_MODE.IMMEDIATELY
+        || persistedStartDateMode === START_DATE_MODE.SCHEDULED
+    ) {
+        return persistedStartDateMode
+    }
+
+    return startDate
+        ? START_DATE_MODE.SCHEDULED
+        : START_DATE_MODE.IMMEDIATELY
+}
 
 function noopVirtualPhaseChange(): void {
     // Display-only schedule rows do not mutate persisted phase state.
@@ -75,6 +110,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const challengeTracks = challengeTrackResult.tracks
     const trackId = formContext.watch('trackId') as string | undefined
     const useSchedulingApi = formContext.watch('legacy.useSchedulingAPI') as boolean | undefined
+    const metadata = formContext.watch('metadata') as ChallengeMetadata[] | undefined
     const startDate = formContext.watch('startDate') as Date | string | undefined
     const watchedPhases = formContext.watch('phases') as ChallengePhase[] | undefined
     const watchedReviewers = formContext.watch('reviewers') as {
@@ -98,11 +134,9 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const isViewToggleDisabled = !phases.length
 
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
-    const [startDateMode, setStartDateMode] = useState<StartDateMode>(() => (
-        startDate
-            ? START_DATE_MODE.SCHEDULED
-            : START_DATE_MODE.IMMEDIATELY
-    ))
+    const [startDateMode, setStartDateMode] = useState<StartDateMode>(
+        () => resolveStartDateMode(startDate, metadata),
+    )
     const [calculationError, setCalculationError] = useState<string | undefined>()
     const [phaseEndDateErrors, setPhaseEndDateErrors] = useState<Record<string, string>>({})
     const minScheduleDate = useMemo(() => new Date(), [])
@@ -295,6 +329,18 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 ? nextStartDate.getTime()
                 : 'empty'
             setStartDateMode(nextMode)
+            setValue(
+                'metadata',
+                setMetadataValue(
+                    metadata,
+                    START_DATE_MODE_METADATA_NAME,
+                    nextMode,
+                ),
+                {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                },
+            )
             setValue('startDate', nextStartDate, {
                 shouldDirty: true,
                 shouldValidate: true,
@@ -308,6 +354,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         },
         [
             applyPhases,
+            metadata,
             phases,
             setStartDateMode,
             setValue,
@@ -326,12 +373,8 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         }
 
         lastInternalStartDateValueRef.current = undefined
-        setStartDateMode(
-            parsedStartDate
-                ? START_DATE_MODE.SCHEDULED
-                : START_DATE_MODE.IMMEDIATELY,
-        )
-    }, [startDate])
+        setStartDateMode(resolveStartDateMode(startDate, metadata))
+    }, [metadata, startDate])
 
     const handleDurationChange = useCallback(
         (index: number, durationMinutes: number): void => {
@@ -444,8 +487,20 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             }
 
             setStartDateMode(START_DATE_MODE.SCHEDULED)
+            setValue(
+                'metadata',
+                setMetadataValue(
+                    metadata,
+                    START_DATE_MODE_METADATA_NAME,
+                    START_DATE_MODE.SCHEDULED,
+                ),
+                {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                },
+            )
         },
-        [handleStartDateChange],
+        [handleStartDateChange, metadata, setValue],
     )
     const handleSetScheduledStartDateMode = useCallback(
         (): void => {
