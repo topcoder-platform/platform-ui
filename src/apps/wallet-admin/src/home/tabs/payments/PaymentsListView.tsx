@@ -192,8 +192,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
-    const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
+    //   const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
+    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0 && filters.status?.[0] !== 'all'
+
+    /*   const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         if (!restrictedCategory) {
             return filters
         }
@@ -205,13 +207,33 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 ? { status: filters.status }
                 : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
         }
+    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus]) */
+    const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
+        // Strip 'all' sentinel values — never forward them to the API
+        const activeFilters = Object.fromEntries(
+            Object.entries(filters)
+                .filter(([, v]) => v.length > 0 && v[0] !== 'all'),
+        )
+
+        if (!restrictedCategory) {
+            return activeFilters
+        }
+
+        return {
+            ...activeFilters,
+            category: [restrictedCategory],
+            ...(hasSelectedStatusFilter
+                ? { status: activeFilters.status }
+                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
+        }
     }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
+
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
             .some(([key, value]) => key !== 'category' && value.length > 0),
         [appliedFilters],
     )
-    const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
+    /*   const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
         if (!restrictedCategory) {
             return {} as Record<string, string>
         }
@@ -222,17 +244,32 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             category: restrictedCategory,
             ...(statusOverride ? { status: statusOverride } : {}),
         }
-    }, [filters.status, restrictedCategory, restrictedDefaultStatus])
+    }, [filters.status, restrictedCategory, restrictedDefaultStatus]) */
+    const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
+        if (!restrictedCategory) {
+            return {} as Record<string, string>
+        }
+
+        // Reflect the user's explicit status choice in the dropdown display.
+        // Do not inject restrictedDefaultStatus here — it applies to the API query
+        // via appliedFilters but must not override the dropdown's "All" default.
+        const statusOverride = filters.status?.[0] !== 'all' ? filters.status?.[0] : undefined
+
+        return {
+            category: restrictedCategory,
+            ...(statusOverride ? { status: statusOverride } : {}),
+        }
+    }, [filters.status, restrictedCategory])
 
     const defaultDropdownValues = React.useMemo<Record<string, string>>(() => {
         const defaults: Record<string, string> = {}
 
         if (!restrictedCategory) {
-            defaults.status = filters.status?.[0] ?? 'all'
             defaults.category = filters.category?.[0] ?? 'all'
         }
 
         defaults.date = filters.date?.[0] ?? 'all'
+        defaults.status = filters.status?.[0] ?? 'all' // ← moved out
 
         return defaults
     }, [filters.category, filters.date, filters.status, restrictedCategory])
@@ -702,7 +739,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ...filters,
                             [key]: value,
                         }) */
-                        setFilters(prev => {
+                        /*  setFilters(prev => {
                             const newFilters = { ...prev }
                             if (value[0] === 'all') {
                                 delete newFilters[key]
@@ -711,7 +748,12 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             }
 
                             return newFilters
-                        })
+                        }) */
+
+                        setFilters(prev => ({
+                            ...prev,
+                            [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
+                        }))
                         setSelectedPayments({})
                     }}
                     onResetFilters={() => {
