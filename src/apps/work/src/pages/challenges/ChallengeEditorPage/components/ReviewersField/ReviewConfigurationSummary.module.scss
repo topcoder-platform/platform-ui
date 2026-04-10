@@ -375,9 +375,10 @@
 
     .flowCanvasGated {
         align-items: start;
-        column-gap: 16px;
+        column-gap: 12px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 148px) auto minmax(0, 148px);
+        justify-content: center;
         row-gap: 16px;
     }
 
@@ -404,20 +405,35 @@
         grid-row: 3;
         justify-self: center;
         min-height: 96px;
-        width: min(100%, 180px);
+        width: min(100%, 148px);
     }
 
     .flowCanvasGated .lockedBranch {
-        align-self: start;
-        grid-column: 2;
-        grid-row: 3 / span 3;
+        align-items: center;
+        align-self: center;
+        column-gap: 12px;
+        display: grid;
+        grid-column: 2 / 4;
+        grid-row: 3;
+        grid-template-columns: auto minmax(0, 148px);
         justify-self: center;
-        width: min(100%, 180px);
+        width: auto;
     }
 
     .flowCanvasGated .lockedStep {
         min-height: 96px;
         width: 100%;
+    }
+
+    .flowCanvasGated .failureArrow {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .flowCanvasGated .failureArrow span:first-child,
+    .flowCanvasGated .failureArrow span:last-child {
+        display: inline-block;
+        transform: rotate(-90deg);
     }
 
     .flowCanvasGated .humanArrow {
