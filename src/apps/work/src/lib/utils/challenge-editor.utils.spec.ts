@@ -197,6 +197,33 @@ describe('challenge-editor utils submission count mapping', () => {
         expect(result.numOfSubmissions)
             .toBe(1)
     })
+
+    it('keeps phase completion dates in form data so completed schedule rows stay locked', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Completed phase challenge',
+            phases: [{
+                actualEndDate: '2026-04-09T00:15:00.000Z',
+                duration: 900,
+                isOpen: false,
+                name: 'Registration',
+                phaseId: 'registration-phase',
+                scheduledEndDate: '2026-04-09T00:15:00.000Z',
+                scheduledStartDate: '2026-04-09T00:00:00.000Z',
+            }],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.phases)
+            .toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    actualEndDate: '2026-04-09T00:15:00.000Z',
+                    isOpen: false,
+                    phaseId: 'registration-phase',
+                }),
+            ]))
+    })
 })
 
 describe('challenge-editor utils task reviewer mapping', () => {
