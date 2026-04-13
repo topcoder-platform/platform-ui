@@ -647,7 +647,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                         value: 'TAAS_PAYMENT',
                                     },
                                     {
-                                        label: 'Topgear Payments',
+                                        label: 'Topgear Payment',
                                         value: topgearPaymentCategory,
                                     },
                                 ],
