@@ -444,7 +444,7 @@ describe('PaymentsListView', () => {
         const typeFilter = filterProps.filters.find((filter: any) => filter.key === 'category')
 
         expect(typeFilter.options.some((option: any) => (
-            option.value === 'TOPGEAR_PAYMENT' && option.label === 'Topgear Payments'
+            option.value === 'TOPGEAR_PAYMENT' && option.label === 'Topgear Payment'
         )))
             .toBe(true)
     })
