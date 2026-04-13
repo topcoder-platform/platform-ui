@@ -748,15 +748,26 @@ function applyPersistedManualReviewerAssignments(
             })
             .filter((entry): entry is readonly [string, string] => !!entry),
     )
+    const humanReviewers = formData.reviewers.filter((reviewer): reviewer is Reviewer => (
+        !!reviewer && !isAiReviewer(reviewer)
+    ))
     const assignedResourcesByReviewer = buildAssignedResourcesByReviewer({
         getReviewerCount: getRequiredMemberReviewerCount,
         phaseNameById,
         resourceRoles,
         resources,
-        reviewers: formData.reviewers,
+        reviewers: humanReviewers,
     })
+    const assignedResourcesByHumanReviewer = new Map(
+        humanReviewers.map((reviewer, index) => [
+            reviewer,
+            assignedResourcesByReviewer[index] || [],
+        ] as const),
+    )
     let hasChanges = false
-    const reviewers = formData.reviewers.map((reviewer, reviewerIndex) => {
+    const reviewers = formData.reviewers.map(reviewer => {
+        const assignedReviewerResources = assignedResourcesByHumanReviewer.get(reviewer) || []
+
         if (
             !reviewer
             || isAiReviewer(reviewer)
@@ -768,16 +779,16 @@ function applyPersistedManualReviewerAssignments(
         }
 
         const memberIds = Array.from(new Set(
-            (assignedResourcesByReviewer[reviewerIndex] || [])
+            assignedReviewerResources
                 .map(resource => normalizeTextValue(resource.memberId))
                 .filter(Boolean),
         ))
             .slice(0, getRequiredMemberReviewerCount(reviewer))
         const assignedHandle = normalizeTextValue(reviewer.handle)
-            || normalizeTextValue(assignedResourcesByReviewer[reviewerIndex]?.[0]?.memberHandle)
+            || normalizeTextValue(assignedReviewerResources[0]?.memberHandle)
             || undefined
         const assignedRoleId = normalizeTextValue(reviewer.roleId)
-            || normalizeTextValue(assignedResourcesByReviewer[reviewerIndex]?.[0]?.roleId)
+            || normalizeTextValue(assignedReviewerResources[0]?.roleId)
             || undefined
 
         if (memberIds.length === 0 && !assignedHandle) {
