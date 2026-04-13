@@ -10,6 +10,7 @@ import {
 import {
     useController,
     useFormContext,
+    UseFormSetValue,
     useWatch,
 } from 'react-hook-form'
 
@@ -39,6 +40,7 @@ import {
     createResource,
     deleteResource,
     fetchDefaultReviewers,
+    fetchProfile,
     fetchScorecards,
     updateResourceRoleAssignment,
 } from '../../../../../lib/services'
@@ -48,6 +50,9 @@ import {
 } from '../../../../../lib/utils'
 
 import { isAiReviewer } from './reviewers-field.utils'
+import {
+    buildAssignedResourcesByReviewer,
+} from './reviewerAssignments.utils'
 import styles from './ReviewersField.module.scss'
 
 const SCORECARD_TRACK_ALIASES: Record<string, string> = {
@@ -328,6 +333,149 @@ function isPublicOpportunityOpen(reviewer?: Reviewer): boolean {
     return reviewer?.shouldOpenOpportunity === true
 }
 
+/**
+ * Returns whether a manual reviewer row can be hydrated from persisted challenge resources.
+ *
+ * @param reviewer reviewer row from form state.
+ * @param fieldIndex resolved reviewer field-array index.
+ * @returns `true` when the row should receive persisted reviewer assignments.
+ */
+function canHydrateAssignedReviewer(
+    reviewer: Reviewer | undefined,
+    fieldIndex: number | undefined,
+): boolean {
+    return fieldIndex !== undefined
+        && !!reviewer
+        && reviewer.isMemberReview !== false
+        && !isPublicOpportunityOpen(reviewer)
+}
+
+/**
+ * Resolves member ids from persisted reviewer resources, using looked-up user ids for
+ * legacy handle-only assignments when the challenge API omitted `memberId`.
+ *
+ * @param assignedResources persisted reviewer resources for a single reviewer row.
+ * @param userIdsByHandle resolved profile ids keyed by lower-cased handle.
+ * @returns de-duplicated reviewer member ids in persisted order.
+ */
+function getHydratedMemberIdsForResources(
+    assignedResources: Resource[],
+    userIdsByHandle: Map<string, string>,
+): string[] {
+    return toUniqueValues(
+        assignedResources
+            .map(resource => {
+                const memberId = normalizeText(resource.memberId)
+
+                if (memberId) {
+                    return memberId
+                }
+
+                const memberHandle = normalizeText(resource.memberHandle)
+
+                return memberHandle
+                    ? userIdsByHandle.get(memberHandle.toLowerCase()) || ''
+                    : ''
+            })
+            .filter(Boolean),
+    )
+}
+
+interface HydratedReviewerAssignment {
+    assignedHandle?: string
+    assignedRoleId?: string
+    memberIds: string[]
+}
+
+/**
+ * Builds the reviewer assignment payload that should be rehydrated into a reviewer row.
+ *
+ * @param reviewer reviewer row from form state.
+ * @param assignedResources persisted resources allocated to the reviewer row.
+ * @param userIdsByHandle resolved profile ids keyed by lower-cased handle.
+ * @returns the normalized reviewer assignment, or `undefined` when nothing can be restored.
+ */
+function getHydratedReviewerAssignment(
+    reviewer: Reviewer,
+    assignedResources: Resource[],
+    userIdsByHandle: Map<string, string>,
+): HydratedReviewerAssignment | undefined {
+    const memberIds = getHydratedMemberIdsForResources(assignedResources, userIdsByHandle)
+        .slice(0, getReviewerCount(reviewer))
+    const assignedHandle = normalizeText(reviewer.handle)
+        || normalizeText(assignedResources[0]?.memberHandle)
+        || undefined
+    const assignedRoleId = normalizeText(reviewer.roleId)
+        || normalizeText(assignedResources[0]?.roleId)
+        || undefined
+
+    if (!memberIds.length && !assignedHandle && !assignedRoleId) {
+        return undefined
+    }
+
+    return {
+        assignedHandle,
+        assignedRoleId,
+        memberIds,
+    }
+}
+
+/**
+ * Writes a restored reviewer assignment back into the form without marking the draft dirty.
+ *
+ * @param params reviewer row metadata and assignment values to apply.
+ */
+function applyHydratedReviewerAssignment(params: {
+    assignment: HydratedReviewerAssignment
+    fieldIndex: number
+    reviewer: Reviewer
+    setValue: UseFormSetValue<ChallengeEditorFormData>
+}): void {
+    const existingAssignedMemberIds = toUniqueValues(getAssignedMemberIds(params.reviewer))
+
+    if (!existingAssignedMemberIds.length && params.assignment.memberIds.length) {
+        const [
+            memberId,
+            ...additionalMemberIds
+        ] = params.assignment.memberIds
+
+        params.setValue(`reviewers.${params.fieldIndex}.memberId` as any, memberId || undefined, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+        params.setValue(
+            `reviewers.${params.fieldIndex}.additionalMemberIds` as any,
+            additionalMemberIds.length
+                ? additionalMemberIds
+                : undefined,
+            {
+                shouldDirty: false,
+                shouldValidate: true,
+            },
+        )
+    }
+
+    if (
+        params.assignment.assignedHandle
+        && normalizeText(params.reviewer.handle) !== params.assignment.assignedHandle
+    ) {
+        params.setValue(`reviewers.${params.fieldIndex}.handle` as any, params.assignment.assignedHandle, {
+            shouldDirty: false,
+            shouldValidate: false,
+        })
+    }
+
+    if (
+        params.assignment.assignedRoleId
+        && normalizeText(params.reviewer.roleId) !== params.assignment.assignedRoleId
+    ) {
+        params.setValue(`reviewers.${params.fieldIndex}.roleId` as any, params.assignment.assignedRoleId, {
+            shouldDirty: false,
+            shouldValidate: false,
+        })
+    }
+}
+
 function getReviewerPhaseId(
     defaultReviewer: DefaultReviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
@@ -419,30 +567,6 @@ function getReviewerRoleNamesForPhaseName(phaseName: string | undefined): string
     return normalizeKey(phaseName) === 'iterativereview'
         ? ITERATIVE_REVIEW_ROLE_NAMES
         : [getRoleNameForPhaseName(phaseName)]
-}
-
-/**
- * Matches a persisted reviewer resource against either the resolved role id or legacy role names.
- */
-function resourceMatchesReviewerRole(
-    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
-    roleId: string | undefined,
-    roleNames: string[],
-): boolean {
-    const normalizedRoleId = normalizeText(roleId)
-
-    if (normalizedRoleId && normalizeText(resource.roleId) === normalizedRoleId) {
-        return true
-    }
-
-    const normalizedRoleNames = new Set(
-        roleNames
-            .map(roleName => normalizeKey(roleName))
-            .filter(Boolean),
-    )
-    const normalizedResourceRoleName = normalizeKey(resource.role || resource.roleName)
-
-    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
 }
 
 function mapDefaultReviewerToReviewer(
@@ -725,7 +849,7 @@ export const HumanReviewTab: FC = () => {
                 return undefined
             }
 
-            return resolveRoleIdForPhase(reviewer.phaseId) || normalizeText(reviewer.roleId) || undefined
+            return normalizeText(reviewer.roleId) || resolveRoleIdForPhase(reviewer.phaseId) || undefined
         },
         [resolveRoleIdForPhase],
     )
@@ -1063,60 +1187,80 @@ export const HumanReviewTab: FC = () => {
             || !resourceRoles.length
             || !reviewerRows.length
         ) {
-            return
+            return undefined
         }
 
-        reviewerRows.forEach((reviewer, reviewerIndex) => {
-            const fieldIndex = getReviewerFieldIndex(reviewerIndex)
-            if (
-                fieldIndex === undefined
-                || !reviewer
-                || reviewer.isMemberReview === false
-                || isPublicOpportunityOpen(reviewer)
-            ) {
-                return
-            }
-
-            const existingAssignedMemberIds = toUniqueValues(getAssignedMemberIds(reviewer))
-            if (existingAssignedMemberIds.length) {
-                return
-            }
-
-            const phaseName = phaseNameById.get(normalizeText(reviewer.phaseId))
-            const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
-            const roleId = resolveRoleIdForReviewer(reviewer)
-            const reviewerCount = getReviewerCount(reviewer)
-            const memberIdsForRole = toUniqueValues(
-                challengeResourcesResult.resources
-                    .filter(resource => resourceMatchesReviewerRole(resource, roleId, roleNames))
-                    .map(resource => normalizeText(resource.memberId)),
-            )
-                .slice(0, reviewerCount)
-
-            if (!memberIdsForRole.length) {
-                return
-            }
-
-            const [
-                memberId,
-                ...additionalMemberIds
-            ] = memberIdsForRole
-
-            formContext.setValue(`reviewers.${fieldIndex}.memberId` as any, memberId || undefined, {
-                shouldDirty: false,
-                shouldValidate: true,
-            })
-            formContext.setValue(
-                `reviewers.${fieldIndex}.additionalMemberIds` as any,
-                additionalMemberIds.length
-                    ? additionalMemberIds
-                    : undefined,
-                {
-                    shouldDirty: false,
-                    shouldValidate: true,
-                },
-            )
+        let isActive = true
+        const assignedResourcesByReviewer = buildAssignedResourcesByReviewer({
+            getReviewerCount,
+            phaseNameById,
+            resourceRoles,
+            resources: challengeResourcesResult.resources,
+            reviewers: reviewerRows,
         })
+        const handlesMissingUserIds = Array.from(new Set(
+            assignedResourcesByReviewer
+                .flat()
+                .map(resource => {
+                    const memberHandle = normalizeText(resource.memberHandle)
+                    const memberId = normalizeText(resource.memberId)
+
+                    return memberHandle && !memberId
+                        ? memberHandle
+                        : ''
+                })
+                .filter(Boolean),
+        ))
+
+        const hydrateAssignedMembers = async (): Promise<void> => {
+            const userIdsByHandle = new Map<string, string>()
+
+            await Promise.all(handlesMissingUserIds.map(async handle => {
+                const profile = await fetchProfile(handle)
+                    .catch(() => undefined)
+                const userId = normalizeText(profile?.userId)
+
+                if (userId) {
+                    userIdsByHandle.set(handle.toLowerCase(), userId)
+                }
+            }))
+
+            if (!isActive) {
+                return
+            }
+
+            reviewerRows.forEach((reviewer, reviewerIndex) => {
+                const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+                if (!canHydrateAssignedReviewer(reviewer, fieldIndex) || fieldIndex === undefined) {
+                    return
+                }
+
+                const assignedResources = assignedResourcesByReviewer[reviewerIndex] || []
+                const assignment = getHydratedReviewerAssignment(
+                    reviewer,
+                    assignedResources,
+                    userIdsByHandle,
+                )
+
+                if (!assignment) {
+                    return
+                }
+
+                applyHydratedReviewerAssignment({
+                    assignment,
+                    fieldIndex,
+                    reviewer,
+                    setValue: formContext.setValue,
+                })
+            })
+        }
+
+        hydrateAssignedMembers()
+            .catch(() => undefined)
+
+        return () => {
+            isActive = false
+        }
     }, [
         challengeResourcesResult.isLoading,
         challengeResourcesResult.resources,
@@ -1125,8 +1269,7 @@ export const HumanReviewTab: FC = () => {
         isFormDirty,
         normalizedChallengeId,
         phaseNameById,
-        resolveRoleIdForReviewer,
-        resourceRoles.length,
+        resourceRoles,
         reviewerRows,
     ])
 

@@ -1182,6 +1182,105 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Please fix validation errors before launching')
     })
 
+    it('launches a read-only draft when approval assignments are stored under the generic reviewer role', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberId: 'approval-reviewer-member-id',
+                role: 'Reviewer',
+                roleId: 'reviewer-role-id',
+            }],
+        })
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'approval-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 24,
+                name: 'Approval',
+                phaseId: 'approval-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'approval-phase-id',
+                scorecardId: 'approval-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 24,
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: [
+                        expect.objectContaining({
+                            memberId: 'approval-reviewer-member-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                    ],
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
     it('returns to view mode after launching from an edit route', async () => {
         let launchAction: (() => Promise<void>) | undefined
 

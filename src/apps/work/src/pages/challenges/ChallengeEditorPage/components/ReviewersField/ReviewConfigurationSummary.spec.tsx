@@ -12,6 +12,7 @@ import {
     fetchAiReviewConfigByChallenge,
     fetchScorecards,
     fetchWorkflows,
+    searchProfilesByUserIds,
 } from '../../../../../lib/services'
 
 import styles from './ReviewConfigurationSummary.module.scss'
@@ -28,10 +29,12 @@ jest.mock('../../../../../lib/services', () => ({
     fetchAiReviewConfigByChallenge: jest.fn(),
     fetchScorecards: jest.fn(),
     fetchWorkflows: jest.fn(),
+    searchProfilesByUserIds: jest.fn(),
 }))
 
 const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchScorecards = fetchScorecards as jest.Mock
+const mockedSearchProfilesByUserIds = searchProfilesByUserIds as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
@@ -85,6 +88,7 @@ describe('ReviewConfigurationSummary', () => {
             id: 'scorecard-1',
             name: 'Development Review Scorecard',
         }])
+        mockedSearchProfilesByUserIds.mockResolvedValue([])
         mockedFetchWorkflows.mockResolvedValue([{
             id: 'workflow-1',
             name: 'AI Submission Scanner',
@@ -323,6 +327,57 @@ describe('ReviewConfigurationSummary', () => {
         )
 
         expect(await screen.findByText('reviewer-one')).not.toBeNull()
+    })
+
+    it('falls back to the generic reviewer role for approval rows and renders resolved handles', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'role-reviewer',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: 'challenge-1',
+                memberId: '40158994',
+                roleId: 'role-reviewer',
+            }],
+        })
+        mockedSearchProfilesByUserIds.mockResolvedValue([{
+            handle: 'approval-user',
+            userId: '40158994',
+        }])
+        mockedFetchScorecards.mockResolvedValue([{
+            id: 'scorecard-approval',
+            name: 'Approval Scorecard',
+        }])
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Approval',
+                    phaseId: 'phase-approval',
+                }]}
+                reviewers={[{
+                    isMemberReview: true,
+                    memberReviewerCount: 1,
+                    phaseId: 'phase-approval',
+                    scorecardId: 'scorecard-approval',
+                }]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByText('approval-user')).not.toBeNull()
     })
 
     it('groups the locked review-flow path into the centered failure branch', async () => {

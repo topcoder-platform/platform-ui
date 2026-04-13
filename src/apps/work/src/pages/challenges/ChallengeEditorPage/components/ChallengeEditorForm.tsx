@@ -179,6 +179,9 @@ import {
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
 } from './ChallengeEditorForm.utils'
+import {
+    buildAssignedResourcesByReviewer,
+} from './ReviewersField/reviewerAssignments.utils'
 import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
@@ -272,13 +275,6 @@ const REVIEWER_REQUIRED_PHASE_KEYS = new Set(
     REVIEWER_REQUIRED_PHASES
         .map(phaseName => normalizeReviewerPhaseName(phaseName)),
 )
-const REVIEWER_ROLE_NAMES_BY_PHASE_KEY: Record<string, string[]> = {
-    approval: ['Approver'],
-    checkpointreview: ['Checkpoint Reviewer'],
-    checkpointscreening: ['Checkpoint Screener'],
-    iterativereview: ['Iterative Reviewer', 'Iterative Review'],
-    screening: ['Screener'],
-}
 const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
     DESIGN_WORK_TYPES
         .map(workType => [
@@ -615,41 +611,6 @@ function normalizeReviewerPhaseId(phase: {
     return normalizeTextValue(phase?.phaseId) || normalizeTextValue(phase?.id)
 }
 
-/**
- * Resolves the supported reviewer resource-role aliases for a challenge phase.
- */
-function getReviewerRoleNamesForPhase(phaseName: string | undefined): string[] {
-    const normalizedPhaseName = normalizeReviewerPhaseName(phaseName)
-
-    return normalizedPhaseName
-        ? REVIEWER_ROLE_NAMES_BY_PHASE_KEY[normalizedPhaseName] || ['Reviewer']
-        : []
-}
-
-/**
- * Matches reviewer resources by resolved role id first, then by legacy role names when ids are absent.
- */
-function resourceMatchesReviewerRole(
-    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
-    roleId: string | undefined,
-    roleNames: string[],
-): boolean {
-    const normalizedRoleId = normalizeTextValue(roleId)
-
-    if (normalizedRoleId && normalizeTextValue(resource.roleId) === normalizedRoleId) {
-        return true
-    }
-
-    const normalizedRoleNames = new Set(
-        roleNames
-            .map(roleName => normalizeReviewerPhaseName(roleName))
-            .filter(Boolean),
-    )
-    const normalizedResourceRoleName = normalizeReviewerPhaseName(resource.role || resource.roleName)
-
-    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
-}
-
 function isMarathonMatchChallengeTypeByNameAndAbbreviation({
     abbreviation,
     name,
@@ -732,6 +693,21 @@ function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[
     ]
 }
 
+function getAssignedMemberReviewerValidationSlots(reviewer: Reviewer | undefined): string[] {
+    if (!reviewer) {
+        return []
+    }
+
+    const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
+        ? reviewer.additionalMemberIds
+        : []
+
+    return [
+        normalizeTextValue(reviewer.memberId) || normalizeTextValue(reviewer.handle),
+        ...additionalMemberIds.map(memberId => normalizeTextValue(memberId)),
+    ]
+}
+
 /**
  * Backfills manual reviewer member ids from persisted challenge resources.
  *
@@ -772,20 +748,15 @@ function applyPersistedManualReviewerAssignments(
             })
             .filter((entry): entry is readonly [string, string] => !!entry),
     )
-    const roleIdByName = new Map(
-        resourceRoles
-            .map(role => {
-                const normalizedRoleName = normalizeReviewerPhaseName(role.name)
-                const roleId = normalizeTextValue(role.id)
-
-                return normalizedRoleName && roleId
-                    ? [normalizedRoleName, roleId] as const
-                    : undefined
-            })
-            .filter((entry): entry is readonly [string, string] => !!entry),
-    )
+    const assignedResourcesByReviewer = buildAssignedResourcesByReviewer({
+        getReviewerCount: getRequiredMemberReviewerCount,
+        phaseNameById,
+        resourceRoles,
+        resources,
+        reviewers: formData.reviewers,
+    })
     let hasChanges = false
-    const reviewers = formData.reviewers.map(reviewer => {
+    const reviewers = formData.reviewers.map((reviewer, reviewerIndex) => {
         if (
             !reviewer
             || isAiReviewer(reviewer)
@@ -796,27 +767,20 @@ function applyPersistedManualReviewerAssignments(
             return reviewer
         }
 
-        const phaseName = phaseNameById.get(normalizeReviewerPhaseId(reviewer))
-        const roleNames = getReviewerRoleNamesForPhase(phaseName)
-        const roleId = roleNames
-            .map(roleName => roleIdByName.get(normalizeReviewerPhaseName(roleName)))
-            .find((value): value is string => !!value)
-            || normalizeTextValue(reviewer.roleId)
-            || undefined
-
-        if (!roleId && roleNames.length === 0) {
-            return reviewer
-        }
-
         const memberIds = Array.from(new Set(
-            resources
-                .filter(resource => resourceMatchesReviewerRole(resource, roleId, roleNames))
+            (assignedResourcesByReviewer[reviewerIndex] || [])
                 .map(resource => normalizeTextValue(resource.memberId))
                 .filter(Boolean),
         ))
             .slice(0, getRequiredMemberReviewerCount(reviewer))
+        const assignedHandle = normalizeTextValue(reviewer.handle)
+            || normalizeTextValue(assignedResourcesByReviewer[reviewerIndex]?.[0]?.memberHandle)
+            || undefined
+        const assignedRoleId = normalizeTextValue(reviewer.roleId)
+            || normalizeTextValue(assignedResourcesByReviewer[reviewerIndex]?.[0]?.roleId)
+            || undefined
 
-        if (memberIds.length === 0) {
+        if (memberIds.length === 0 && !assignedHandle) {
             return reviewer
         }
 
@@ -832,7 +796,9 @@ function applyPersistedManualReviewerAssignments(
             additionalMemberIds: additionalMemberIds.length
                 ? additionalMemberIds
                 : undefined,
+            handle: assignedHandle,
             memberId: memberId || undefined,
+            roleId: assignedRoleId,
         }
     })
 
@@ -865,7 +831,7 @@ function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string
         }
 
         if (reviewer.shouldOpenOpportunity !== true) {
-            const requiredAssignedMembers = getAssignedMemberReviewerSlots(reviewer)
+            const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
             const hasAllRequiredMembers = requiredAssignedMembers.length === reviewerCount
                 && requiredAssignedMembers.every(Boolean)

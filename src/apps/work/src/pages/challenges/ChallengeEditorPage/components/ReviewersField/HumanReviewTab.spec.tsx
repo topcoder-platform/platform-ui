@@ -27,6 +27,7 @@ import {
 } from '../../../../../lib/hooks'
 import {
     fetchDefaultReviewers,
+    fetchProfile,
     fetchScorecards,
 } from '../../../../../lib/services'
 import {
@@ -142,6 +143,7 @@ jest.mock('../../../../../lib/services', () => ({
     createResource: jest.fn(),
     deleteResource: jest.fn(),
     fetchDefaultReviewers: jest.fn(),
+    fetchProfile: jest.fn(),
     fetchScorecards: jest.fn(),
     updateResourceRoleAssignment: jest.fn(),
 }))
@@ -172,6 +174,7 @@ const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedFetchDefaultReviewers = fetchDefaultReviewers as jest.Mock
+const mockedFetchProfile = fetchProfile as jest.Mock
 const mockedFetchScorecards = fetchScorecards as jest.Mock
 
 interface DeferredPromise<T> {
@@ -328,6 +331,7 @@ describe('HumanReviewTab', () => {
             resources: [],
         })
         mockedFetchDefaultReviewers.mockImplementation(() => createPendingPromise())
+        mockedFetchProfile.mockResolvedValue(undefined)
         mockedFetchScorecards.mockImplementation(() => createPendingPromise())
     })
 
@@ -543,6 +547,53 @@ describe('HumanReviewTab', () => {
         await waitFor(() => {
             expect(screen.getByTestId('member-id-value').textContent)
                 .toBe('member-4')
+        })
+    })
+
+    it('hydrates approval reviewers from handle-only generic reviewer resources', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [{
+                id: 'role-reviewer',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [{
+                memberHandle: 'approval-user',
+                roleId: 'role-reviewer',
+            }],
+        })
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'approval-user',
+            userId: 'member-approval',
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [{
+                        id: 'approval-phase',
+                        name: 'Approval',
+                        phaseId: 'approval-phase',
+                    }],
+                    reviewers: [{
+                        additionalMemberIds: [],
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'approval-phase',
+                        scorecardId: 'scorecard-1',
+                    }],
+                }}
+                showMemberValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('member-approval')
         })
     })
 

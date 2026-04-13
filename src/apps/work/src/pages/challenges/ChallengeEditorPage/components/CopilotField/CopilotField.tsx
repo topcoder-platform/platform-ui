@@ -34,6 +34,9 @@ import {
     ProjectMember,
     WorkAppContextModel,
 } from '../../../../../lib/models'
+import {
+    searchProfilesByUserIds,
+} from '../../../../../lib/services'
 
 import styles from './CopilotField.module.scss'
 
@@ -197,6 +200,77 @@ export const CopilotField: FC<CopilotFieldProps> = (props: CopilotFieldProps) =>
             props.projectId,
         ],
     )
+
+    useEffect(() => {
+        const normalizedCopilot = normalizeHandle(copilot)
+
+        if (!normalizedCopilot) {
+            return undefined
+        }
+
+        const matchingProjectCopilotHandle = projectMembers
+            .map(member => ({
+                handle: normalizeProjectCopilotHandle(member),
+                userId: member.userId !== undefined && member.userId !== null
+                    ? String(member.userId)
+                    : undefined,
+            }))
+            .find(member => member.userId === normalizedCopilot)
+            ?.handle
+
+        if (
+            matchingProjectCopilotHandle
+            && matchingProjectCopilotHandle.toLowerCase() !== normalizedCopilot.toLowerCase()
+        ) {
+            setValue('copilot', matchingProjectCopilotHandle, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+
+            return undefined
+        }
+
+        const hasMatchingHandle = projectCopilotHandles
+            .some(handle => handle.toLowerCase() === normalizedCopilot.toLowerCase())
+
+        if (hasMatchingHandle) {
+            return undefined
+        }
+
+        let mounted = true
+
+        searchProfilesByUserIds([normalizedCopilot])
+            .then(users => {
+                if (!mounted) {
+                    return
+                }
+
+                const matchedUserHandle = users
+                    .find(user => user.userId === normalizedCopilot)
+                    ?.handle
+                    ?.trim()
+
+                if (
+                    matchedUserHandle
+                    && matchedUserHandle.toLowerCase() !== normalizedCopilot.toLowerCase()
+                ) {
+                    setValue('copilot', matchedUserHandle, {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    })
+                }
+            })
+            .catch(() => undefined)
+
+        return () => {
+            mounted = false
+        }
+    }, [
+        copilot,
+        projectCopilotHandles,
+        projectMembers,
+        setValue,
+    ])
 
     useEffect(() => {
         const copilotFee = getCopilotFee(prizeSets)
