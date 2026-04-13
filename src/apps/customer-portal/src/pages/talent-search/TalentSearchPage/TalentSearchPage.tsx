@@ -386,7 +386,7 @@ export const TalentSearchPage: FC = () => {
                                     <Tooltip
                                         content={(
                                             'This member has participated in a challenge, task, '
-                                            + 'or engagement in the past 1 year.'
+                                            + 'or engagement in the past 3 months.'
                                         )}
                                         place='top'
                                     >
