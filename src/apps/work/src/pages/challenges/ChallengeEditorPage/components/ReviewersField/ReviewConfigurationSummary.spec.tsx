@@ -280,6 +280,94 @@ describe('ReviewConfigurationSummary', () => {
             .toContain('approver-two')
     })
 
+    it('continues into generic reviewer assignments when the approver pool is exhausted', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [
+                {
+                    id: 'role-approver',
+                    name: 'Approver',
+                },
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'approver-one',
+                    memberId: 'member-1',
+                    roleId: 'role-approver',
+                },
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'approver-two',
+                    memberId: 'member-2',
+                    roleId: 'role-reviewer',
+                },
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'approver-three',
+                    memberId: 'member-3',
+                    roleId: 'role-reviewer',
+                },
+            ],
+        })
+        mockedFetchScorecards.mockResolvedValue([{
+            id: 'scorecard-approval',
+            name: 'Approval Scorecard',
+        }])
+
+        const rendered: ReturnType<typeof render> = render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Approval',
+                    phaseId: 'phase-approval',
+                }]}
+                reviewers={[
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 2,
+                        phaseId: 'phase-approval',
+                        scorecardId: 'scorecard-approval',
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-approval',
+                        scorecardId: 'scorecard-approval',
+                    },
+                ]}
+                typeId='type-1'
+            />,
+        )
+        const container: HTMLElement = rendered.container
+
+        expect(
+            await screen.findAllByText('Approval Scorecard'),
+        )
+            .toHaveLength(2)
+
+        const humanReviewerRows = container.querySelectorAll('tbody tr')
+        expect(humanReviewerRows)
+            .toHaveLength(2)
+        expect(humanReviewerRows[0]?.textContent)
+            .toContain('approver-one, approver-two')
+        expect(humanReviewerRows[1]?.textContent)
+            .toContain('approver-three')
+    })
+
     it('shows assigned reviewers when resources only expose the reviewer role name', async () => {
         mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
         mockedUseFetchResourceRoles.mockReturnValue({
