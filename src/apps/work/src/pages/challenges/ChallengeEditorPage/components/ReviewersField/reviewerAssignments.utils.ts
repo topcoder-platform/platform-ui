@@ -187,6 +187,8 @@ interface BuildAssignedResourcesByReviewerParams {
  * mirrors Work Manager by consuming resources sequentially for repeated rows that share
  * the same role pool, while still honoring persisted `reviewer.roleId` values first and
  * falling back to the generic `Reviewer` role when legacy design drafts were saved that way.
+ * If a phase-specific role pool is partially or fully exhausted, allocation continues into
+ * later fallback groups so mixed legacy resource layouts still show every assigned reviewer.
  *
  * @param params reviewer rows, resources, resource roles, and a reviewer-count resolver.
  * @returns a row-aligned list of matching persisted resources for each reviewer row.
@@ -203,6 +205,7 @@ export function buildAssignedResourcesByReviewer(
             params.phaseNameById,
             params.resourceRoles,
         )
+        const assignedResources: Resource[] = []
 
         for (const roleMatchGroup of roleMatchGroups) {
             const matchingResources = params.resources
@@ -214,14 +217,26 @@ export function buildAssignedResourcesByReviewer(
 
             if (matchingResources.length) {
                 const roleOffset = roleOffsets.get(roleMatchGroup.key) || 0
-                const nextRoleOffset = roleOffset + reviewerCount
 
-                roleOffsets.set(roleMatchGroup.key, nextRoleOffset)
+                if (roleOffset < matchingResources.length) {
+                    const remainingReviewerSlots = reviewerCount - assignedResources.length
+                    const allocatedResources = matchingResources.slice(
+                        roleOffset,
+                        roleOffset + remainingReviewerSlots,
+                    )
 
-                return matchingResources.slice(roleOffset, nextRoleOffset)
+                    if (allocatedResources.length) {
+                        roleOffsets.set(roleMatchGroup.key, roleOffset + allocatedResources.length)
+                        assignedResources.push(...allocatedResources)
+
+                        if (assignedResources.length >= reviewerCount) {
+                            break
+                        }
+                    }
+                }
             }
         }
 
-        return []
+        return assignedResources
     })
 }
