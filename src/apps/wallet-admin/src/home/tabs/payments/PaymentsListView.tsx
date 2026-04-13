@@ -25,6 +25,7 @@ type SelectedPaymentAction = 'approve' | 'reject'
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
 const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
 const taasPaymentCategory = 'TAAS_PAYMENT'
+const topgearPaymentCategory = 'TOPGEAR_PAYMENT'
 const defaultPageSize = 10
 
 interface PaymentsListViewProps {
@@ -644,6 +645,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     {
                                         label: 'TaaS Payment',
                                         value: 'TAAS_PAYMENT',
+                                    },
+                                    {
+                                        label: 'Topgear Payment',
+                                        value: topgearPaymentCategory,
                                     },
                                 ],
                                 type: 'dropdown',
