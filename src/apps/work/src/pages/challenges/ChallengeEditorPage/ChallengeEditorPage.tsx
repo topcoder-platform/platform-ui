@@ -1068,7 +1068,7 @@ export const ChallengeEditorPage: FC = () => {
         effectiveChallengeStatus,
     )
     const canCompleteTask = shouldShowCompleteTaskAction(
-        isEditMode,
+        isExistingChallenge,
         activeTab,
         headerChallenge,
     )

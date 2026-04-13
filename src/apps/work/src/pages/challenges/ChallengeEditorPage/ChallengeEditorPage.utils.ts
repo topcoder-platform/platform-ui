@@ -127,17 +127,17 @@ function getSubmitterResources(
 /**
  * Returns whether the page header should show the task completion action.
  *
- * @param isEditMode whether the page is editing an existing challenge
+ * @param isExistingChallenge whether the page is showing a persisted challenge
  * @param activeTab current challenge editor tab
  * @param challenge current challenge payload
  * @returns true when the user is viewing the details tab for an active task challenge
  */
 export function shouldShowCompleteTaskAction(
-    isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: string,
     challenge?: Challenge,
 ): boolean {
-    return isEditMode
+    return isExistingChallenge
         && activeTab === 'details'
         && normalizeStatus(challenge?.status) === 'ACTIVE'
         && challenge?.task?.isTask === true

@@ -62,7 +62,7 @@ function buildContext(overrides: Partial<WorkAppContextModel> = {}): WorkAppCont
 }
 
 describe('shouldShowCompleteTaskAction', () => {
-    it('returns true for active task challenges on the details tab', () => {
+    it('returns true for existing active task challenges on the details tab', () => {
         const result = shouldShowCompleteTaskAction(
             true,
             'details',
@@ -74,6 +74,13 @@ describe('shouldShowCompleteTaskAction', () => {
     })
 
     it('returns false when the challenge is not an active task on the details tab', () => {
+        expect(shouldShowCompleteTaskAction(
+            false,
+            'details',
+            buildChallenge(),
+        ))
+            .toBe(false)
+
         expect(shouldShowCompleteTaskAction(
             true,
             'resources',
