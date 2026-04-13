@@ -25,6 +25,7 @@ import {
     fetchAiReviewConfigByChallenge,
     fetchScorecards,
     fetchWorkflows,
+    searchProfilesByUserIds,
 } from '../../../../../lib/services'
 import { REVIEW_APP_URL } from '../../../../../lib/constants'
 import {
@@ -33,15 +34,14 @@ import {
 } from '../../../../../lib/utils/prize.utils'
 
 import {
+    buildAssignedResourcesByReviewer,
+} from './reviewerAssignments.utils'
+import {
     isAiReviewer,
     normalizeReviewerText,
 } from './reviewers-field.utils'
 import styles from './ReviewConfigurationSummary.module.scss'
 
-const ITERATIVE_REVIEW_ROLE_NAMES = [
-    'Iterative Reviewer',
-    'Iterative Review',
-]
 const REVIEW_TYPE_LABELS: Record<string, string> = {
     COMPONENT_DEV_REVIEW: 'Component Dev Review',
     ITERATIVE_REVIEW: 'Iterative Review',
@@ -56,18 +56,6 @@ interface ReviewConfigurationSummaryProps {
     prizeSets?: PrizeSet[]
     reviewers?: Reviewer[]
     typeId?: string
-}
-
-/**
- * Normalizes summary lookup keys so phase and role names can be matched reliably.
- *
- * @param value raw phase, role, or id text.
- * @returns lowercase text without separators for map lookups.
- */
-function normalizeSummaryKey(value: unknown): string {
-    return normalizeReviewerText(value)
-        .toLowerCase()
-        .replace(/[-_\s]/g, '')
 }
 
 /**
@@ -102,166 +90,46 @@ function getPhaseId(phase?: ChallengePhase): string {
     return normalizeReviewerText(phase?.phaseId) || normalizeReviewerText(phase?.id)
 }
 
-/**
- * Maps challenge review phases to the resource role name used for reviewer assignments.
- *
- * @param phaseName challenge phase display name.
- * @returns the matching reviewer resource role name.
- */
-function getRoleNameForPhaseName(phaseName: string | undefined): string {
-    const normalizedPhaseName = normalizeSummaryKey(phaseName)
-
-    if (normalizedPhaseName === 'approval') {
-        return 'Approver'
-    }
-
-    if (normalizedPhaseName === 'checkpointscreening') {
-        return 'Checkpoint Screener'
-    }
-
-    if (normalizedPhaseName === 'checkpointreview') {
-        return 'Checkpoint Reviewer'
-    }
-
-    if (normalizedPhaseName === 'iterativereview') {
-        return 'Iterative Reviewer'
-    }
-
-    if (normalizedPhaseName === 'screening') {
-        return 'Screener'
-    }
-
-    return 'Reviewer'
+interface AssignedMemberDisplayValue {
+    memberHandle?: string
+    memberId?: string
 }
 
-/**
- * Resolves the supported reviewer resource-role aliases for a challenge phase in read-only mode.
- */
-function getReviewerRoleNamesForPhaseName(phaseName: string | undefined): string[] {
-    return normalizeSummaryKey(phaseName) === 'iterativereview'
-        ? ITERATIVE_REVIEW_ROLE_NAMES
-        : [getRoleNameForPhaseName(phaseName)]
-}
-
-/**
- * Matches read-only reviewer resources by role id first, then by legacy role names.
- */
-function resourceMatchesReviewerRole(
-    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
-    roleId: string | undefined,
-    roleNames: string[],
-): boolean {
-    const normalizedRoleId = normalizeReviewerText(roleId)
-
-    if (normalizedRoleId && normalizeReviewerText(resource.roleId) === normalizedRoleId) {
-        return true
-    }
-
-    const normalizedRoleNames = new Set(
-        roleNames
-            .map(roleName => normalizeSummaryKey(roleName))
-            .filter(Boolean),
-    )
-    const normalizedResourceRoleName = normalizeSummaryKey(resource.role || resource.roleName)
-
-    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
-}
-
-/**
- * Builds a fallback assigned-member label directly from reviewer fields.
- *
- * @param reviewer reviewer row from the challenge payload.
- * @returns a comma-separated fallback member label when resource assignments are unavailable.
- */
-function getFallbackAssignedMembers(reviewer: Reviewer): string {
-    return [
-        normalizeReviewerText(reviewer.handle),
-        normalizeReviewerText(reviewer.memberId),
+function buildFallbackAssignedMembersByReviewer(reviewers: Reviewer[]): AssignedMemberDisplayValue[][] {
+    return reviewers.map(reviewer => ([
+        {
+            memberHandle: normalizeReviewerText(reviewer.handle) || undefined,
+            memberId: normalizeReviewerText(reviewer.memberId) || undefined,
+        },
         ...((reviewer.additionalMemberIds || [])
-            .map(memberId => normalizeReviewerText(memberId))
-            .filter(Boolean)),
-    ]
+            .map(memberId => ({
+                memberHandle: undefined,
+                memberId: normalizeReviewerText(memberId) || undefined,
+            }))),
+    ])
+        .filter(assignedMember => !!assignedMember.memberHandle || !!assignedMember.memberId))
+}
+
+function formatAssignedMembers(
+    assignedMembers: AssignedMemberDisplayValue[],
+    memberHandlesByUserId: Record<string, string>,
+): string {
+    return assignedMembers
+        .map(assignedMember => {
+            const normalizedMemberHandle = normalizeReviewerText(assignedMember.memberHandle)
+            if (normalizedMemberHandle) {
+                return normalizedMemberHandle
+            }
+
+            const normalizedMemberId = normalizeReviewerText(assignedMember.memberId)
+            if (!normalizedMemberId) {
+                return ''
+            }
+
+            return memberHandlesByUserId[normalizedMemberId.toLowerCase()] || normalizedMemberId
+        })
         .filter(Boolean)
         .join(', ')
-}
-
-/**
- * Resolves the resource role id for a reviewer row in read-only mode.
- *
- * @param reviewer reviewer row from the challenge payload.
- * @param phaseNameById map of phase ids to phase names.
- * @param resourceRoles loaded resource role definitions.
- * @returns the matching resource role id when assignments can be resolved.
- */
-function getReviewerRoleId(
-    reviewer: Reviewer,
-    phaseNameById: Map<string, string>,
-    resourceRoles: ResourceRole[],
-): string | undefined {
-    const explicitRoleId = normalizeReviewerText(reviewer.roleId)
-    const normalizedPhaseId = normalizeReviewerText(reviewer.phaseId)
-    const phaseName = phaseNameById.get(normalizedPhaseId)
-    const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
-
-    return explicitRoleId || roleNames
-        .map(roleName => resourceRoles.find(
-            role => normalizeSummaryKey(role.name) === normalizeSummaryKey(roleName),
-        )?.id)
-        .find((roleId): roleId is string => !!roleId)
-}
-
-/**
- * Resolves the assigned resource members for each reviewer row in read-only mode.
- *
- * Review resources are stored per role, so repeated reviewer rows can share the same
- * role id. This allocator consumes matching resources in reviewer order so duplicate
- * approval or reviewer rows still surface every assigned member once in view mode.
- *
- * @param reviewers reviewer rows from the challenge payload.
- * @param phaseNameById map of phase ids to phase names.
- * @param resources loaded challenge resources.
- * @param resourceRoles loaded resource role definitions.
- * @returns a row-aligned list of comma-separated assigned-member labels.
- */
-function buildAssignedMembersByReviewer(
-    reviewers: Reviewer[],
-    phaseNameById: Map<string, string>,
-    resources: Resource[],
-    resourceRoles: ResourceRole[],
-): string[] {
-    const roleOffsets = new Map<string, number>()
-
-    return reviewers.map(reviewer => {
-        const fallbackAssignedMembers = getFallbackAssignedMembers(reviewer)
-        const normalizedPhaseId = normalizeReviewerText(reviewer.phaseId)
-        const phaseName = phaseNameById.get(normalizedPhaseId)
-        const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
-        const resolvedRoleId = getReviewerRoleId(reviewer, phaseNameById, resourceRoles)
-        const roleAssignmentKey = resolvedRoleId
-            ? `id:${resolvedRoleId}`
-            : `name:${roleNames.map(roleName => normalizeSummaryKey(roleName))
-                .join('|')}`
-
-        if (!resolvedRoleId && roleNames.length === 0) {
-            return fallbackAssignedMembers || '-'
-        }
-
-        const roleLabels = resources
-            .filter(resource => resourceMatchesReviewerRole(resource, resolvedRoleId, roleNames))
-            .map(resource => normalizeReviewerText(resource.memberHandle) || normalizeReviewerText(resource.memberId))
-            .filter(Boolean)
-        const roleOffset = roleOffsets.get(roleAssignmentKey) || 0
-        const nextRoleOffset = roleOffset + getReviewerCount(reviewer)
-        const assignedMembers = roleLabels.slice(roleOffset, nextRoleOffset)
-
-        roleOffsets.set(roleAssignmentKey, nextRoleOffset)
-
-        if (assignedMembers.length) {
-            return assignedMembers.join(', ')
-        }
-
-        return fallbackAssignedMembers || '-'
-    })
 }
 
 /**
@@ -521,6 +389,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
 
     const [aiConfiguration, setAiConfiguration] = useState<AiReviewConfig | undefined>()
     const [aiConfigError, setAiConfigError] = useState<string | undefined>()
+    const [memberHandlesByUserId, setMemberHandlesByUserId] = useState<Record<string, string>>({})
     const [scorecardError, setScorecardError] = useState<string | undefined>()
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
     const [workflowError, setWorkflowError] = useState<string | undefined>()
@@ -567,18 +436,48 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
         () => humanReviewers.reduce((sum, reviewer) => sum + getReviewerCount(reviewer), 0),
         [humanReviewers],
     )
-    const assignedMembersByReviewer = useMemo(
-        () => buildAssignedMembersByReviewer(
-            humanReviewers,
+    const assignedResourcesByReviewer = useMemo(
+        () => buildAssignedResourcesByReviewer({
+            getReviewerCount,
             phaseNameById,
-            resources,
             resourceRoles,
-        ),
+            resources,
+            reviewers: humanReviewers,
+        }),
         [
             humanReviewers,
             phaseNameById,
             resourceRoles,
             resources,
+        ],
+    )
+    const fallbackAssignedMembersByReviewer = useMemo(
+        () => buildFallbackAssignedMembersByReviewer(humanReviewers),
+        [humanReviewers],
+    )
+    const assignedMembersByReviewer = useMemo(
+        () => humanReviewers.map((reviewer, reviewerIndex) => {
+            const assignedMembers = (assignedResourcesByReviewer[reviewerIndex] || [])
+                .map(resource => ({
+                    memberHandle: normalizeReviewerText(resource.memberHandle) || undefined,
+                    memberId: normalizeReviewerText(resource.memberId) || undefined,
+                }))
+                .filter(assignedMember => !!assignedMember.memberHandle || !!assignedMember.memberId)
+
+            if (assignedMembers.length) {
+                return formatAssignedMembers(assignedMembers, memberHandlesByUserId)
+            }
+
+            return formatAssignedMembers(
+                fallbackAssignedMembersByReviewer[reviewerIndex] || [],
+                memberHandlesByUserId,
+            ) || '-'
+        }),
+        [
+            assignedResourcesByReviewer,
+            fallbackAssignedMembersByReviewer,
+            humanReviewers,
+            memberHandlesByUserId,
         ],
     )
     const estimatedReviewCost = useMemo(
@@ -640,6 +539,70 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
             workflowError,
         ],
     )
+
+    useEffect(() => {
+        let mounted = true
+        const unresolvedUserIds = Array.from(new Set([
+            ...assignedResourcesByReviewer.flatMap(assignedResources => assignedResources
+                .map(resource => {
+                    const memberId = normalizeReviewerText(resource.memberId)
+                    const memberHandle = normalizeReviewerText(resource.memberHandle)
+
+                    return memberId && !memberHandle && !memberHandlesByUserId[memberId.toLowerCase()]
+                        ? memberId
+                        : ''
+                })),
+            ...fallbackAssignedMembersByReviewer.flatMap(assignedMembers => assignedMembers
+                .map(assignedMember => {
+                    const memberId = normalizeReviewerText(assignedMember.memberId)
+                    const memberHandle = normalizeReviewerText(assignedMember.memberHandle)
+
+                    return memberId && !memberHandle && !memberHandlesByUserId[memberId.toLowerCase()]
+                        ? memberId
+                        : ''
+                })),
+        ]
+            .filter(Boolean)))
+
+        if (!unresolvedUserIds.length) {
+            return () => {
+                mounted = false
+            }
+        }
+
+        searchProfilesByUserIds(unresolvedUserIds)
+            .then(users => {
+                if (!mounted || !users.length) {
+                    return
+                }
+
+                setMemberHandlesByUserId(currentHandlesByUserId => {
+                    const nextHandlesByUserId = {
+                        ...currentHandlesByUserId,
+                    }
+
+                    users.forEach(user => {
+                        const userId = normalizeReviewerText(user.userId)
+                        const handle = normalizeReviewerText(user.handle)
+
+                        if (userId && handle) {
+                            nextHandlesByUserId[userId.toLowerCase()] = handle
+                        }
+                    })
+
+                    return nextHandlesByUserId
+                })
+            })
+            .catch(() => undefined)
+
+        return () => {
+            mounted = false
+        }
+    }, [
+        assignedResourcesByReviewer,
+        fallbackAssignedMembersByReviewer,
+        memberHandlesByUserId,
+    ])
 
     useEffect(() => {
         let mounted = true
