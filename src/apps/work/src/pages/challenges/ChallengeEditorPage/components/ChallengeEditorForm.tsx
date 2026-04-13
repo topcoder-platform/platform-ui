@@ -1680,6 +1680,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         let isActive = true
         const challenge = challengeRef.current
         const challengeId = challenge?.id
+        const isRefreshingCurrentChallenge = !!challengeId
+            && challengeId === currentChallengeId
+            && isFormDirtyRef.current
+
+        if (isRefreshingCurrentChallenge) {
+            return () => {
+                isActive = false
+            }
+        }
+
         const baseFormData = applyProjectBillingToChallengeFormData(
             transformChallengeToFormData(challenge),
             projectBillingAccountRef.current,
@@ -1737,7 +1747,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             isActive = false
         }
     }, [
+        currentChallengeId,
         props.challenge?.id,
+        props.challenge?.updated,
         reset,
     ])
 

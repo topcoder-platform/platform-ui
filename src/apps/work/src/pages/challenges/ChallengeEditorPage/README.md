@@ -13,7 +13,9 @@
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
   In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch
   footer actions. Manual saves from an existing `/edit` route, including trailing-slash variants,
-  navigate back to the matching `/view` route after the update succeeds.
+  navigate back to the matching `/view` route after the update succeeds. When challenge detail
+  revalidation returns a fresher snapshot for the same challenge id, the form rehydrates from that
+  updated payload while still avoiding resets over in-progress edits.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded once per saved challenge even if the challenge payload is temporarily missing synced AI reviewer rows, while still avoiding empty-config lookups for unsaved challenges, ordinary parent rerenders in edit mode, and same-session re-fetches right after a config is intentionally removed. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. In read-only view mode the tab switcher remains clickable so users can inspect AI config details inside the disabled challenge form, and the review summary surfaces the human-review table, AI workflow details, resolved scorecard names, review flow, and estimated reviewer cost without requiring edits. Repeated human-review rows that share the same resource role now consume persisted challenge-resource assignments in row order so every assigned reviewer still appears once in the summary. The AI-gating failure path keeps the locked state grouped under the gate so the diagram matches the legacy work-manager layout, including `AI_GATING` configs whose workflows do not explicitly mark `isGating`. On narrow screens the review-flow diagram switches to a compact portrait branch: submission stays full width, the `AI Gate` and `Locked` states sit side by side as narrower cards, the `< threshold` connector sits between those two cards, and the human-review path continues only from the gate column. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the challenge-prizes and copilot-fee inputs at fixed widths on larger screens, preserves whitespace to the right, and moves the billing summary underneath them.
@@ -84,7 +86,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Challenge fetch: `useFetchChallenge`.
 - Challenge detail remount refresh: `useFetchChallenge` disables SWR request deduping for
   challenge details so reopening a challenge view right after a save still triggers a fresh
-  challenge-api-v6 fetch instead of reusing stale cached detail data.
+  challenge-api-v6 fetch instead of reusing stale cached detail data, and the editor form
+  reapplies that refreshed same-id snapshot once it arrives.
 - Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
 - Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses and to surface the generated forum link for challenge types that provision a discussion on create.
 - Skills search: `searchSkills`.

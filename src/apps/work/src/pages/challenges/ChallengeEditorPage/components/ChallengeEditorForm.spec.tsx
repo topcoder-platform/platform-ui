@@ -240,14 +240,26 @@ jest.mock('./ChallengeDescriptionField', () => ({
     ChallengeDescriptionField: () => <></>,
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
-    ChallengeScheduleSection: (props: {
+    ChallengeScheduleSection: function ChallengeScheduleSection(props: {
         disabled?: boolean
-    }) => (
-        <div
-            data-disabled={props.disabled === true ? 'true' : 'false'}
-            data-testid='challenge-schedule-section'
-        />
-    ),
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+        const phases = reactHookForm.useWatch({
+            control: formContext.control,
+            name: 'phases',
+        }) as Array<{
+            scheduledEndDate?: string
+        }> | undefined
+
+        return (
+            <div
+                data-disabled={props.disabled === true ? 'true' : 'false'}
+                data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                data-testid='challenge-schedule-section'
+            />
+        )
+    },
 }))
 jest.mock('./ChallengeFeeField', () => ({
     ChallengeFeeField: function ChallengeFeeField() {
@@ -1782,6 +1794,48 @@ describe('ChallengeEditorForm', () => {
                 .toHaveBeenCalledTimes(1)
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('refreshes phase data when the fetched challenge updates for the same id', async () => {
+        const initialChallenge = {
+            ...validDraftChallenge,
+            phases: [{
+                duration: 1440,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-17T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+            updated: '2026-04-13T01:00:00.000Z',
+        } as Challenge
+        const refreshedChallenge = {
+            ...initialChallenge,
+            phases: [{
+                ...initialChallenge.phases?.[0],
+                scheduledEndDate: '2026-04-18T04:58:51.000Z',
+            }],
+            updated: '2026-04-13T01:05:00.000Z',
+        } as Challenge
+
+        const renderResult = render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={initialChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-17T04:58:51.000Z')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={refreshedChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
         })
     })
 
