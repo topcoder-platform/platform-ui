@@ -448,6 +448,58 @@ describe('ChallengeEditorPage', () => {
             .toBeTruthy()
     })
 
+    it('shows mark complete in read-only view mode for active task challenges', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Active task challenge',
+                prizeSets: [],
+                status: 'ACTIVE',
+                task: {
+                    isTask: true,
+                },
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+        mockedShouldShowCompleteTaskAction.mockReturnValue(true)
+        mockedGetAssignedTaskMember.mockReturnValue({
+            handle: 'taskmember',
+            userId: 12345,
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(mockedShouldShowCompleteTaskAction)
+            .toHaveBeenCalledWith(
+                true,
+                'details',
+                expect.objectContaining({
+                    id: '456',
+                    status: 'ACTIVE',
+                    task: {
+                        isTask: true,
+                    },
+                }),
+            )
+        expect(screen.getByRole('button', { name: 'Mark Complete' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+    })
+
     it('hides the read-only edit action for completed challenges', async () => {
         mockedUseFetchChallenge.mockReturnValue({
             challenge: {
