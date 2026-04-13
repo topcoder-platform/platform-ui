@@ -228,6 +228,7 @@ type SingleAssignmentFieldName = 'assignedMemberId' | 'copilot' | 'reviewer'
 interface SingleAssignmentConfig {
     fieldName: SingleAssignmentFieldName
     roleNames: readonly string[]
+    resourceValueFields?: readonly ResourceAssignmentValueField[]
     valueField: ResourceAssignmentValueField
 }
 
@@ -285,6 +286,10 @@ const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
 )
 const COPILOT_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
     fieldName: 'copilot',
+    resourceValueFields: [
+        'memberHandle',
+        'memberId',
+    ],
     roleNames: COPILOT_RESOURCE_ROLE_NAMES,
     valueField: 'memberHandle',
 }
@@ -480,6 +485,7 @@ async function persistCreatedChallengeCopilot(
     await params.syncSingleAssignmentResource({
         challengeId: params.challengeId,
         nextValue: selectedCopilot,
+        resourceValueFields: COPILOT_ASSIGNMENT_CONFIG.resourceValueFields,
         roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
         valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
     })
@@ -538,6 +544,95 @@ function buildSingleAssignmentPayload(
             memberHandle: memberValue,
             roleId,
         }
+}
+
+/**
+ * Resolves the persisted resource fields that a single-assignment sync should inspect.
+ *
+ * Most selectors map to one resource field, but copilot assignments may still exist as either a
+ * `memberHandle` or a legacy `memberId`. The save flow shares this helper anywhere it needs to
+ * compare or delete an existing single-assignment resource.
+ *
+ * @param config single-assignment config or sync params with the primary field and any fallbacks.
+ * @returns the ordered resource fields that should be searched for an existing assignment.
+ */
+function getSingleAssignmentResourceValueFields(
+    config: Pick<SingleAssignmentConfig, 'resourceValueFields' | 'valueField'>,
+): readonly ResourceAssignmentValueField[] {
+    return config.resourceValueFields || [config.valueField]
+}
+
+/**
+ * Resolves the first persisted single-member resource assignment across one or more value fields.
+ *
+ * Challenge resources can temporarily store the same logical assignment under different payload
+ * shapes while the editor migrates legacy data. The sync flow needs the original field name so it
+ * can delete or restore the matching resource without creating duplicates.
+ *
+ * @param params resource data, accepted role names, and the resource fields to inspect.
+ * @returns the matched resource value together with the field it came from, or `undefined` when no
+ * persisted assignment exists.
+ */
+function resolvePersistedResourceAssignment(params: {
+    resourceRoles: ResourceRole[]
+    resources: Resource[]
+    roleNames: readonly string[]
+    valueFields: readonly ResourceAssignmentValueField[]
+}): {
+    value: string
+    valueField: ResourceAssignmentValueField
+} | undefined {
+    for (const valueField of params.valueFields) {
+        const value = resolveResourceAssignmentValue({
+            fallbackValue: undefined,
+            resourceRoles: params.resourceRoles,
+            resources: params.resources,
+            roleNames: params.roleNames,
+            valueField,
+        })
+
+        if (value) {
+            return {
+                value,
+                valueField,
+            }
+        }
+    }
+
+    return undefined
+}
+
+/**
+ * Resolves the payload value that should be used when deleting or restoring a single assignment.
+ *
+ * The sync flow prefers the exact persisted field/value that was loaded from challenge resources.
+ * When no resource-backed assignment exists, it falls back to the normalized in-memory value so
+ * callers can still construct a valid rollback payload.
+ *
+ * @param currentAssignment persisted assignment matched from resources, if any.
+ * @param fallbackValue normalized assignment value to use when no resource match exists.
+ * @param fallbackValueField primary resource field for the assignment type.
+ * @returns the field/value pair that should be sent to the resource API.
+ */
+function resolveSingleAssignmentResourcePayloadValue(
+    currentAssignment: {
+        value: string
+        valueField: ResourceAssignmentValueField
+    } | undefined,
+    fallbackValue: string,
+    fallbackValueField: ResourceAssignmentValueField,
+): {
+    value: string
+    valueField: ResourceAssignmentValueField
+} {
+    if (currentAssignment) {
+        return currentAssignment
+    }
+
+    return {
+        value: fallbackValue,
+        valueField: fallbackValueField,
+    }
 }
 
 function normalizeChallengeTypeToken(value: unknown): string {
@@ -1522,50 +1617,58 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+    const getPersistedAssignmentValueByFields = useCallback((
+        fallbackValue: string | undefined,
+        roleNames: readonly string[],
+        valueFields: readonly ResourceAssignmentValueField[],
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => {
+        const resourceAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames,
+            valueFields,
+        })
+
+        if (resourceAssignment) {
+            return resourceAssignment.value
+        }
+
+        const normalizedFallbackValue = normalizeTextValue(fallbackValue)
+
+        return normalizedFallbackValue || undefined
+    }, [
+        challengeResources,
+        resourceRoles,
+    ])
     const getPersistedAssignmentValue = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
         valueField: ResourceAssignmentValueField,
         resourcesOverride?: typeof challengeResources,
         resourceRolesOverride?: typeof resourceRoles,
-    ): string | undefined => resolveResourceAssignmentValue({
+    ): string | undefined => getPersistedAssignmentValueByFields(
         fallbackValue,
-        resourceRoles: resourceRolesOverride || resourceRoles,
-        resources: resourcesOverride || challengeResources,
         roleNames,
-        valueField,
-    }), [
-        challengeResources,
-        resourceRoles,
+        [valueField],
+        resourcesOverride,
+        resourceRolesOverride,
+    ), [
+        getPersistedAssignmentValueByFields,
     ])
     const getPersistedCopilotValue = useCallback((
         fallbackValue: string | undefined,
         resourcesOverride?: typeof challengeResources,
         resourceRolesOverride?: typeof resourceRoles,
-    ): string | undefined => {
-        const persistedHandle = getPersistedAssignmentValue(
-            fallbackValue,
-            COPILOT_RESOURCE_ROLE_NAMES,
-            'memberHandle',
-            resourcesOverride,
-            resourceRolesOverride,
-        )
-
-        if (persistedHandle) {
-            return persistedHandle
-        }
-
-        return resolveResourceAssignmentValue({
-            fallbackValue: undefined,
-            resourceRoles: resourceRolesOverride || resourceRoles,
-            resources: resourcesOverride || challengeResources,
-            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
-            valueField: 'memberId',
-        })
-    }, [
-        challengeResources,
-        getPersistedAssignmentValue,
-        resourceRoles,
+    ): string | undefined => getPersistedAssignmentValueByFields(
+        fallbackValue,
+        COPILOT_RESOURCE_ROLE_NAMES,
+        getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
+        resourcesOverride,
+        resourceRolesOverride,
+    ), [
+        getPersistedAssignmentValueByFields,
     ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
@@ -1666,14 +1769,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ): Promise<void> => {
         const resolvedResourceRoles = await loadSingleAssignmentResourceRoles()
         const resolvedResources = await loadSingleAssignmentResources(params.challengeId)
-        const currentValue = resolveResourceAssignmentValue({
+        const currentAssignment = resolvePersistedResourceAssignment({
             resourceRoles: resolvedResourceRoles,
             resources: resolvedResources,
             roleNames: params.roleNames,
-            valueField: params.valueField,
+            valueFields: getSingleAssignmentResourceValueFields(params),
         })
-        const normalizedCurrentValue = normalizeTextValue(currentValue)
+        const normalizedCurrentValue = normalizeTextValue(currentAssignment?.value)
         const normalizedNextValue = normalizeTextValue(params.nextValue)
+        const currentPayloadAssignment = resolveSingleAssignmentResourcePayloadValue(
+            currentAssignment,
+            normalizedCurrentValue,
+            params.valueField,
+        )
         const role = findMatchingResourceRole(resolvedResourceRoles, params.roleNames)
 
         if (hasSameNormalizedValue(normalizedCurrentValue, normalizedNextValue)) {
@@ -1692,8 +1800,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             await deleteResource(buildSingleAssignmentPayload(
                 params.challengeId,
                 role.id,
-                params.valueField,
-                normalizedCurrentValue,
+                currentPayloadAssignment.valueField,
+                currentPayloadAssignment.value,
             ))
         }
 
@@ -1714,8 +1822,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     await createResource(buildSingleAssignmentPayload(
                         params.challengeId,
                         role.id,
-                        params.valueField,
-                        normalizedCurrentValue,
+                        currentPayloadAssignment.valueField,
+                        currentPayloadAssignment.value,
                     ))
                 } catch {
                     // Preserve the original error when rollback also fails.
@@ -1737,10 +1845,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         )
             .map(config => {
                 const nextValue = getSingleAssignmentFieldValue(formData, config.fieldName)
-                const persistedValue = getPersistedAssignmentValue(
+                const persistedValue = getPersistedAssignmentValueByFields(
                     undefined,
                     config.roleNames,
-                    config.valueField,
+                    getSingleAssignmentResourceValueFields(config),
                 )
 
                 return hasSameNormalizedValue(nextValue, persistedValue)
@@ -1748,6 +1856,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     : syncSingleAssignmentResource({
                         challengeId,
                         nextValue,
+                        resourceValueFields: config.resourceValueFields,
                         roleNames: config.roleNames,
                         valueField: config.valueField,
                     })
@@ -1761,7 +1870,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         await Promise.all(resourceSyncOperations)
         await mutateChallengeResources()
     }, [
-        getPersistedAssignmentValue,
+        getPersistedAssignmentValueByFields,
         isTaskSingleAssignmentChallenge,
         mutateChallengeResources,
         syncSingleAssignmentResource,

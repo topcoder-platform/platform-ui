@@ -1633,6 +1633,70 @@ describe('ChallengeEditorForm', () => {
             .toContain('"handle":"manual-reviewer"')
     })
 
+    it('replaces member-id-only copilot resources with handle-based resources on save', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberId: '40158994',
+                roleId: 'copilot-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            copilot: 'resolved-copilot',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        copilot: 'resolved-copilot',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('resolved-copilot')
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+        expect(mockedDeleteResource)
+            .toHaveBeenCalledWith({
+                challengeId: '12345',
+                memberId: '40158994',
+                roleId: 'copilot-role-id',
+            })
+        expect(mockedCreateResource)
+            .toHaveBeenCalledWith({
+                challengeId: '12345',
+                memberHandle: 'resolved-copilot',
+                roleId: 'copilot-role-id',
+            })
+        expect(mockedDeleteResource.mock.invocationCallOrder[0])
+            .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+    })
+
     it('keeps the review section after submission settings in read-only mode', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
