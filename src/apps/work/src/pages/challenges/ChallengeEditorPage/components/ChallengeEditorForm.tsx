@@ -54,6 +54,7 @@ import {
     createResource,
     deleteResource,
     fetchChallenge,
+    fetchProfile,
     fetchProjectBillingAccount,
     fetchResourceRoles,
     fetchResources,
@@ -708,6 +709,31 @@ function getAssignedMemberReviewerValidationSlots(reviewer: Reviewer | undefined
     ]
 }
 
+function getPersistedReviewerMemberIds(
+    assignedReviewerResources: Resource[],
+    userIdsByHandle?: Map<string, string>,
+): string[] {
+    return Array.from(new Set(
+        assignedReviewerResources
+            .map(resource => {
+                const memberId = normalizeTextValue(resource.memberId)
+
+                if (memberId) {
+                    return memberId
+                }
+
+                const memberHandle = normalizeTextValue(resource.memberHandle)
+
+                if (!memberHandle || !userIdsByHandle) {
+                    return ''
+                }
+
+                return userIdsByHandle.get(memberHandle.toLowerCase()) || ''
+            })
+            .filter(Boolean),
+    ))
+}
+
 /**
  * Backfills manual reviewer member ids from persisted challenge resources.
  *
@@ -729,6 +755,7 @@ function applyPersistedManualReviewerAssignments(
     formData: ChallengeEditorFormData,
     resources: Resource[],
     resourceRoles: ResourceRole[],
+    userIdsByHandle?: Map<string, string>,
 ): ChallengeEditorFormData {
     if (!Array.isArray(formData.reviewers) || formData.reviewers.length === 0 || resourceRoles.length === 0) {
         return formData
@@ -778,11 +805,10 @@ function applyPersistedManualReviewerAssignments(
             return reviewer
         }
 
-        const memberIds = Array.from(new Set(
-            assignedReviewerResources
-                .map(resource => normalizeTextValue(resource.memberId))
-                .filter(Boolean),
-        ))
+        const memberIds = getPersistedReviewerMemberIds(
+            assignedReviewerResources,
+            userIdsByHandle,
+        )
             .slice(0, getRequiredMemberReviewerCount(reviewer))
         const assignedHandle = normalizeTextValue(reviewer.handle)
             || normalizeTextValue(assignedReviewerResources[0]?.memberHandle)
@@ -819,6 +845,76 @@ function applyPersistedManualReviewerAssignments(
             reviewers,
         }
         : formData
+}
+
+async function hydratePersistedManualReviewerAssignments(
+    formData: ChallengeEditorFormData,
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+): Promise<ChallengeEditorFormData> {
+    if (!Array.isArray(formData.reviewers) || formData.reviewers.length === 0 || resourceRoles.length === 0) {
+        return formData
+    }
+
+    const phaseNameById = new Map(
+        (Array.isArray(formData.phases)
+            ? formData.phases
+            : [])
+            .map(phase => {
+                const phaseId = normalizeReviewerPhaseId(phase)
+                const phaseName = normalizeTextValue(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const humanReviewers = formData.reviewers.filter((reviewer): reviewer is Reviewer => (
+        !!reviewer && !isAiReviewer(reviewer)
+    ))
+    const handlesMissingUserIds = Array.from(new Set(
+        buildAssignedResourcesByReviewer({
+            getReviewerCount: getRequiredMemberReviewerCount,
+            phaseNameById,
+            resourceRoles,
+            resources,
+            reviewers: humanReviewers,
+        })
+            .flat()
+            .map(resource => {
+                const memberHandle = normalizeTextValue(resource.memberHandle)
+                const memberId = normalizeTextValue(resource.memberId)
+
+                return memberHandle && !memberId
+                    ? memberHandle
+                    : ''
+            })
+            .filter(Boolean),
+    ))
+
+    if (!handlesMissingUserIds.length) {
+        return applyPersistedManualReviewerAssignments(formData, resources, resourceRoles)
+    }
+
+    const userIdsByHandle = new Map<string, string>()
+
+    await Promise.all(handlesMissingUserIds.map(async handle => {
+        const profile = await fetchProfile(handle)
+            .catch(() => undefined)
+        const userId = normalizeTextValue(profile?.userId)
+
+        if (userId) {
+            userIdsByHandle.set(handle.toLowerCase(), userId)
+        }
+    }))
+
+    return applyPersistedManualReviewerAssignments(
+        formData,
+        resources,
+        resourceRoles,
+        userIdsByHandle,
+    )
 }
 
 function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
@@ -1442,6 +1538,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         challengeResources,
         resourceRoles,
     ])
+    const getPersistedCopilotValue = useCallback((
+        fallbackValue: string | undefined,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => {
+        const persistedHandle = getPersistedAssignmentValue(
+            fallbackValue,
+            COPILOT_RESOURCE_ROLE_NAMES,
+            'memberHandle',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+
+        if (persistedHandle) {
+            return persistedHandle
+        }
+
+        return resolveResourceAssignmentValue({
+            fallbackValue: undefined,
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+            valueField: 'memberId',
+        })
+    }, [
+        challengeResources,
+        getPersistedAssignmentValue,
+        resourceRoles,
+    ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
     ): boolean => shouldTreatChallengeAsTask({
@@ -1460,10 +1585,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ): ChallengeEditorFormData => {
         const nextFormData: ChallengeEditorFormData = {
             ...formData,
-            copilot: getPersistedAssignmentValue(
+            copilot: getPersistedCopilotValue(
                 getSingleAssignmentFieldValue(formData, 'copilot'),
-                COPILOT_RESOURCE_ROLE_NAMES,
-                'memberHandle',
                 resourcesOverride,
                 resourceRolesOverride,
             ),
@@ -1493,6 +1616,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
         return nextFormData
     }, [
+        getPersistedCopilotValue,
         getPersistedAssignmentValue,
         isTaskSingleAssignmentChallenge,
     ])
@@ -1730,7 +1854,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 ? Promise.resolve(currentResourceRoles)
                 : fetchResourceRoles(),
         ])
-            .then(([
+            .then(async ([
                 fetchedResources,
                 fetchedResourceRoles,
             ]) => {
@@ -1738,7 +1862,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     return
                 }
 
-                reset(applyPersistedManualReviewerAssignments(
+                const hydratedFormData = await hydratePersistedManualReviewerAssignments(
                     applyPersistedSingleAssignmentsRef.current(
                         baseFormData,
                         fetchedResources,
@@ -1746,7 +1870,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     ),
                     fetchedResources,
                     fetchedResourceRoles,
-                ))
+                )
+
+                if (!isActive || isFormDirtyRef.current) {
+                    return
+                }
+
+                reset(hydratedFormData)
             })
             .catch(() => {
                 // The base form data has already been applied above.
@@ -1773,36 +1903,55 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             || challengeResourcesResult.isLoading
             || resourceRolesResult.isLoading
         ) {
-            return
+            return undefined
         }
 
-        const currentFormValues = getValues()
-        const persistedValues = applyPersistedManualReviewerAssignments(
-            applyPersistedSingleAssignments(currentFormValues),
+        let isActive = true
+
+        hydratePersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(getValues()),
             challengeResources,
             resourceRoles,
         )
-
-        getSingleAssignmentConfigs(isTaskSingleAssignmentChallenge(currentFormValues))
-            .forEach(config => {
-                const currentValue = getSingleAssignmentFieldValue(currentFormValues, config.fieldName)
-                const persistedValue = getSingleAssignmentFieldValue(persistedValues, config.fieldName)
-
-                if (hasSameNormalizedValue(currentValue, persistedValue)) {
+            .then(persistedValues => {
+                if (!isActive) {
                     return
                 }
 
-                setValue(config.fieldName, persistedValue, {
-                    shouldDirty: false,
-                    shouldValidate: true,
-                })
-            })
+                const currentFormValues = getValues()
 
-        if (JSON.stringify(currentFormValues.reviewers || []) !== JSON.stringify(persistedValues.reviewers || [])) {
-            setValue('reviewers', persistedValues.reviewers, {
-                shouldDirty: false,
-                shouldValidate: true,
+                getSingleAssignmentConfigs(isTaskSingleAssignmentChallenge(currentFormValues))
+                    .forEach(config => {
+                        const currentValue = getSingleAssignmentFieldValue(currentFormValues, config.fieldName)
+                        const persistedValue = getSingleAssignmentFieldValue(
+                            persistedValues,
+                            config.fieldName,
+                        )
+
+                        if (hasSameNormalizedValue(currentValue, persistedValue)) {
+                            return
+                        }
+
+                        setValue(config.fieldName, persistedValue, {
+                            shouldDirty: false,
+                            shouldValidate: true,
+                        })
+                    })
+
+                if (
+                    JSON.stringify(currentFormValues.reviewers || [])
+                    !== JSON.stringify(persistedValues.reviewers || [])
+                ) {
+                    setValue('reviewers', persistedValues.reviewers, {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    })
+                }
             })
+            .catch(() => undefined)
+
+        return () => {
+            isActive = false
         }
     }, [
         applyPersistedSingleAssignments,

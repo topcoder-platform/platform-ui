@@ -31,6 +31,7 @@ import {
     createChallenge,
     deleteResource,
     fetchChallenge,
+    fetchProfile,
     fetchProjectBillingAccount,
     patchChallenge,
     fetchResourceRoles,
@@ -64,6 +65,7 @@ jest.mock('../../../../lib/services', () => ({
     createResource: jest.fn(),
     deleteResource: jest.fn(),
     fetchChallenge: jest.fn(),
+    fetchProfile: jest.fn(),
     fetchProjectBillingAccount: jest.fn(),
     fetchResourceRoles: jest.fn(),
     fetchResources: jest.fn(),
@@ -457,14 +459,23 @@ jest.mock('./ReviewCostField', () => ({
     ReviewCostField: () => <></>,
 }))
 jest.mock('./ReviewersField', () => ({
-    ReviewersField: (props: { isReadOnly?: boolean }) => (
-        <div
-            data-read-only={props.isReadOnly === true ? 'true' : 'false'}
-            data-testid='reviewers-field'
-        >
-            Reviewers Field
-        </div>
-    ),
+    ReviewersField: (props: { isReadOnly?: boolean }) => {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const reviewers = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'reviewers',
+        })
+
+        return (
+            <div
+                data-read-only={props.isReadOnly === true ? 'true' : 'false'}
+                data-reviewers={JSON.stringify(reviewers || [])}
+                data-testid='reviewers-field'
+            >
+                Reviewers Field
+            </div>
+        )
+    },
 }))
 jest.mock('./ReviewTypeField', () => ({
     ReviewTypeField: () => <span>Review Type Field</span>,
@@ -493,6 +504,7 @@ const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedDeleteResource = deleteResource as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
+const mockedFetchProfile = fetchProfile as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
@@ -603,6 +615,7 @@ describe('ChallengeEditorForm', () => {
         mockedFetchProjectBillingAccountService.mockResolvedValue({
             billingAccount: undefined,
         })
+        mockedFetchProfile.mockResolvedValue(undefined)
         mockedFetchResourceRolesService.mockResolvedValue([])
         mockedFetchResourcesService.mockResolvedValue([])
         mockedCreateResource.mockResolvedValue(undefined)
@@ -1547,6 +1560,77 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('maximum-submissions-field'))
                 .toHaveAttribute('data-defer-dirty', 'false')
         })
+    })
+
+    it('rehydrates the copilot field from member-id-only copilot resources on refresh', async () => {
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: '40158994',
+            roleId: 'copilot-role-id',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('40158994')
+        })
+    })
+
+    it('rehydrates handle-only reviewer resources before the refreshed form settles', async () => {
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'reviewer-role-id',
+            name: 'Reviewer',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberHandle: 'manual-reviewer',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'manual-reviewer',
+            userId: 'manual-reviewer-member-id',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers-field')
+                .getAttribute('data-reviewers'))
+                .toContain('"memberId":"manual-reviewer-member-id"')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"handle":"manual-reviewer"')
     })
 
     it('keeps the review section after submission settings in read-only mode', () => {
