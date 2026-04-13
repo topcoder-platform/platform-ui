@@ -72,24 +72,22 @@
     gap: $sp-2;
     align-items: center;
     min-width: 0;
+}
 
-    h4 {
-        margin: 0;
-        color: $black-100;
-        font-size: 20px;
-        line-height: 26px;
-        font-weight: 700;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+.handleText {
+    margin: 0;
+    color: $black-100;
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     @include ltemd {
-        h4 {
-            font-size: 16px;
-            line-height: 22px;
-        }
+        font-size: 16px;
+        line-height: 22px;
     }
 }
 
