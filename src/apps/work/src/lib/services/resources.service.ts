@@ -64,9 +64,11 @@ function toRequiredString(value: unknown): string {
 
 function normalizeResource(resource: RawResource): Resource | undefined {
     const challengeId = toRequiredString(resource.challengeId)
-    const roleId = toRequiredString(resource.roleId)
+    const roleId = toOptionalString(resource.roleId) || ''
+    const role = toOptionalString(resource.role)
+    const roleName = toOptionalString(resource.roleName)
 
-    if (!challengeId || !roleId) {
+    if (!challengeId || (!roleId && !role && !roleName)) {
         return undefined
     }
 
@@ -78,9 +80,9 @@ function normalizeResource(resource: RawResource): Resource | undefined {
         memberHandle: toOptionalString(resource.memberHandle),
         memberId: toOptionalString(resource.memberId),
         rating: toOptionalFiniteNumber(resource.rating),
-        role: toOptionalString(resource.role),
+        role,
         roleId,
-        roleName: toOptionalString(resource.roleName),
+        roleName,
     }
 }
 

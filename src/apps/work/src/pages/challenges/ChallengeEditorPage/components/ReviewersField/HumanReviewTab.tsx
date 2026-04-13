@@ -31,6 +31,7 @@ import {
 import {
     ChallengeEditorFormData,
     DefaultReviewer,
+    Resource,
     Reviewer,
     Scorecard,
 } from '../../../../../lib/models'
@@ -129,6 +130,15 @@ function normalizeKey(value: unknown): string {
     return normalizeText(value)
         .toLowerCase()
         .replace(/[-_\s]/g, '')
+}
+
+/**
+ * Compares reviewer-related text values without treating casing drift as a mismatch.
+ */
+function hasSameNormalizedText(valueA: unknown, valueB: unknown): boolean {
+    return normalizeText(valueA)
+        .toLowerCase() === normalizeText(valueB)
+        .toLowerCase()
 }
 
 function normalizeTrackForScorecards(value: unknown): string {
@@ -402,6 +412,39 @@ function getRoleNameForPhaseName(phaseName: string | undefined): string {
     return 'Reviewer'
 }
 
+/**
+ * Resolves the accepted reviewer resource-role aliases for a phase.
+ */
+function getReviewerRoleNamesForPhaseName(phaseName: string | undefined): string[] {
+    return normalizeKey(phaseName) === 'iterativereview'
+        ? ITERATIVE_REVIEW_ROLE_NAMES
+        : [getRoleNameForPhaseName(phaseName)]
+}
+
+/**
+ * Matches a persisted reviewer resource against either the resolved role id or legacy role names.
+ */
+function resourceMatchesReviewerRole(
+    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
+    roleId: string | undefined,
+    roleNames: string[],
+): boolean {
+    const normalizedRoleId = normalizeText(roleId)
+
+    if (normalizedRoleId && normalizeText(resource.roleId) === normalizedRoleId) {
+        return true
+    }
+
+    const normalizedRoleNames = new Set(
+        roleNames
+            .map(roleName => normalizeKey(roleName))
+            .filter(Boolean),
+    )
+    const normalizedResourceRoleName = normalizeKey(resource.role || resource.roleName)
+
+    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
+}
+
 function mapDefaultReviewerToReviewer(
     defaultReviewer: DefaultReviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
@@ -667,9 +710,7 @@ export const HumanReviewTab: FC = () => {
                 return undefined
             }
 
-            const roleNames = normalizeKey(phaseName) === 'iterativereview'
-                ? ITERATIVE_REVIEW_ROLE_NAMES
-                : [getRoleNameForPhaseName(phaseName)]
+            const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
 
             return roleNames
                 .map(roleName => roleIdByName.get(normalizeKey(roleName)))
@@ -972,7 +1013,7 @@ export const HumanReviewTab: FC = () => {
             }
 
             const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
-                .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
+                .some(scorecard => hasSameNormalizedText(scorecard.id, selectedScorecardId))
             if (hasSelectedScorecard) {
                 formContext.clearErrors(scorecardFieldName as any)
 
@@ -1041,15 +1082,13 @@ export const HumanReviewTab: FC = () => {
                 return
             }
 
+            const phaseName = phaseNameById.get(normalizeText(reviewer.phaseId))
+            const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
             const roleId = resolveRoleIdForReviewer(reviewer)
-            if (!roleId) {
-                return
-            }
-
             const reviewerCount = getReviewerCount(reviewer)
             const memberIdsForRole = toUniqueValues(
                 challengeResourcesResult.resources
-                    .filter(resource => normalizeText(resource.roleId) === roleId)
+                    .filter(resource => resourceMatchesReviewerRole(resource, roleId, roleNames))
                     .map(resource => normalizeText(resource.memberId)),
             )
                 .slice(0, reviewerCount)
@@ -1085,6 +1124,7 @@ export const HumanReviewTab: FC = () => {
         getReviewerFieldIndex,
         isFormDirty,
         normalizedChallengeId,
+        phaseNameById,
         resolveRoleIdForReviewer,
         resourceRoles.length,
         reviewerRows,
@@ -1322,7 +1362,9 @@ export const HumanReviewTab: FC = () => {
             const matchingScorecards = getPhaseMatchedScorecardsForPhase(nextPhaseId)
             const selectedScorecardId = normalizeText(reviewer.scorecardId)
             const hasSelectedScorecard = selectedScorecardId
-                ? matchingScorecards.some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
+                ? matchingScorecards.some(scorecard => (
+                    hasSameNormalizedText(scorecard.id, selectedScorecardId)
+                ))
                 : false
             if (hasSelectedScorecard) {
                 return

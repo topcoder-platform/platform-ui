@@ -276,6 +276,55 @@ describe('ReviewConfigurationSummary', () => {
             .toContain('approver-two')
     })
 
+    it('shows assigned reviewers when resources only expose the reviewer role name', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'role-reviewer',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: 'challenge-1',
+                memberHandle: 'reviewer-one',
+                memberId: 'member-1',
+                role: 'Reviewer',
+                roleId: '',
+            }],
+        })
+        mockedFetchScorecards.mockResolvedValue([{
+            id: 'scorecard-review',
+            name: 'Review Scorecard',
+        }])
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Review',
+                    phaseId: 'phase-review',
+                }]}
+                reviewers={[{
+                    isMemberReview: true,
+                    memberReviewerCount: 1,
+                    phaseId: 'phase-review',
+                    scorecardId: 'scorecard-review',
+                }]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByText('reviewer-one')).not.toBeNull()
+    })
+
     it('groups the locked review-flow path into the centered failure branch', async () => {
         const rendered: ReturnType<typeof render> = render(
             <ReviewConfigurationSummary

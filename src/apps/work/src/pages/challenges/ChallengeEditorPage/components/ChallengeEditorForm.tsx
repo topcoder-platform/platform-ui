@@ -615,6 +615,41 @@ function normalizeReviewerPhaseId(phase: {
     return normalizeTextValue(phase?.phaseId) || normalizeTextValue(phase?.id)
 }
 
+/**
+ * Resolves the supported reviewer resource-role aliases for a challenge phase.
+ */
+function getReviewerRoleNamesForPhase(phaseName: string | undefined): string[] {
+    const normalizedPhaseName = normalizeReviewerPhaseName(phaseName)
+
+    return normalizedPhaseName
+        ? REVIEWER_ROLE_NAMES_BY_PHASE_KEY[normalizedPhaseName] || ['Reviewer']
+        : []
+}
+
+/**
+ * Matches reviewer resources by resolved role id first, then by legacy role names when ids are absent.
+ */
+function resourceMatchesReviewerRole(
+    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
+    roleId: string | undefined,
+    roleNames: string[],
+): boolean {
+    const normalizedRoleId = normalizeTextValue(roleId)
+
+    if (normalizedRoleId && normalizeTextValue(resource.roleId) === normalizedRoleId) {
+        return true
+    }
+
+    const normalizedRoleNames = new Set(
+        roleNames
+            .map(roleName => normalizeReviewerPhaseName(roleName))
+            .filter(Boolean),
+    )
+    const normalizedResourceRoleName = normalizeReviewerPhaseName(resource.role || resource.roleName)
+
+    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
+}
+
 function isMarathonMatchChallengeTypeByNameAndAbbreviation({
     abbreviation,
     name,
@@ -762,23 +797,20 @@ function applyPersistedManualReviewerAssignments(
         }
 
         const phaseName = phaseNameById.get(normalizeReviewerPhaseId(reviewer))
-        const normalizedPhaseName = normalizeReviewerPhaseName(phaseName)
-        const roleNames = normalizedPhaseName
-            ? REVIEWER_ROLE_NAMES_BY_PHASE_KEY[normalizedPhaseName] || ['Reviewer']
-            : []
+        const roleNames = getReviewerRoleNamesForPhase(phaseName)
         const roleId = roleNames
             .map(roleName => roleIdByName.get(normalizeReviewerPhaseName(roleName)))
             .find((value): value is string => !!value)
             || normalizeTextValue(reviewer.roleId)
             || undefined
 
-        if (!roleId) {
+        if (!roleId && roleNames.length === 0) {
             return reviewer
         }
 
         const memberIds = Array.from(new Set(
             resources
-                .filter(resource => normalizeTextValue(resource.roleId) === roleId)
+                .filter(resource => resourceMatchesReviewerRole(resource, roleId, roleNames))
                 .map(resource => normalizeTextValue(resource.memberId))
                 .filter(Boolean),
         ))
@@ -1190,6 +1222,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [challengesListPath, navigate])
 
     const [currentChallengeId, setCurrentChallengeId] = useState<string | undefined>(props.challenge?.id)
+    const currentChallengeIdRef = useRef<string | undefined>(props.challenge?.id)
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [isInitialResourceHydrationPending, setIsInitialResourceHydrationPending] = useState<boolean>(
         !!props.challenge?.id,
@@ -1661,6 +1694,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [props.challenge])
 
     useEffect(() => {
+        currentChallengeIdRef.current = currentChallengeId
+    }, [currentChallengeId])
+
+    useEffect(() => {
         projectBillingAccountRef.current = projectBillingAccount
     }, [projectBillingAccount])
 
@@ -1681,7 +1718,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         const challenge = challengeRef.current
         const challengeId = challenge?.id
         const isRefreshingCurrentChallenge = !!challengeId
-            && challengeId === currentChallengeId
+            && challengeId === currentChallengeIdRef.current
             && isFormDirtyRef.current
 
         if (isRefreshingCurrentChallenge) {
@@ -1747,7 +1784,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             isActive = false
         }
     }, [
-        currentChallengeId,
         props.challenge?.id,
         props.challenge?.updated,
         reset,

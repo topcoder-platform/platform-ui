@@ -2198,4 +2198,50 @@ describe('ChallengeEditorForm', () => {
                 'Challenge created, but the selected copilot could not be saved. Please add it again.',
             )
     })
+
+    it('keeps the created challenge sections visible after creating from the new route', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Created Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Created Draft Challenge',
+            status: 'NEW',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/12345/challenges/new']}>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Created Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Specification'))
+                .toBeInTheDocument()
+        })
+
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('Specification'))
+                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Save as Draft' }))
+                .toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: 'New' }))
+                .toBeNull()
+        })
+    })
 })

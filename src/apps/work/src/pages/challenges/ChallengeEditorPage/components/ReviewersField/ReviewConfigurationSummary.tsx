@@ -135,6 +135,39 @@ function getRoleNameForPhaseName(phaseName: string | undefined): string {
 }
 
 /**
+ * Resolves the supported reviewer resource-role aliases for a challenge phase in read-only mode.
+ */
+function getReviewerRoleNamesForPhaseName(phaseName: string | undefined): string[] {
+    return normalizeSummaryKey(phaseName) === 'iterativereview'
+        ? ITERATIVE_REVIEW_ROLE_NAMES
+        : [getRoleNameForPhaseName(phaseName)]
+}
+
+/**
+ * Matches read-only reviewer resources by role id first, then by legacy role names.
+ */
+function resourceMatchesReviewerRole(
+    resource: Pick<Resource, 'role' | 'roleId' | 'roleName'>,
+    roleId: string | undefined,
+    roleNames: string[],
+): boolean {
+    const normalizedRoleId = normalizeReviewerText(roleId)
+
+    if (normalizedRoleId && normalizeReviewerText(resource.roleId) === normalizedRoleId) {
+        return true
+    }
+
+    const normalizedRoleNames = new Set(
+        roleNames
+            .map(roleName => normalizeSummaryKey(roleName))
+            .filter(Boolean),
+    )
+    const normalizedResourceRoleName = normalizeSummaryKey(resource.role || resource.roleName)
+
+    return !!normalizedResourceRoleName && normalizedRoleNames.has(normalizedResourceRoleName)
+}
+
+/**
  * Builds a fallback assigned-member label directly from reviewer fields.
  *
  * @param reviewer reviewer row from the challenge payload.
@@ -168,9 +201,7 @@ function getReviewerRoleId(
     const explicitRoleId = normalizeReviewerText(reviewer.roleId)
     const normalizedPhaseId = normalizeReviewerText(reviewer.phaseId)
     const phaseName = phaseNameById.get(normalizedPhaseId)
-    const roleNames = normalizeSummaryKey(phaseName) === 'iterativereview'
-        ? ITERATIVE_REVIEW_ROLE_NAMES
-        : [getRoleNameForPhaseName(phaseName)]
+    const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
 
     return explicitRoleId || roleNames
         .map(roleName => resourceRoles.find(
@@ -198,36 +229,32 @@ function buildAssignedMembersByReviewer(
     resources: Resource[],
     resourceRoles: ResourceRole[],
 ): string[] {
-    const resourceLabelsByRoleId = new Map<string, string[]>()
     const roleOffsets = new Map<string, number>()
-
-    resources.forEach(resource => {
-        const roleId = normalizeReviewerText(resource.roleId)
-        const resourceLabel = normalizeReviewerText(resource.memberHandle) || normalizeReviewerText(resource.memberId)
-
-        if (!roleId || !resourceLabel) {
-            return
-        }
-
-        const existingLabels = resourceLabelsByRoleId.get(roleId) || []
-        existingLabels.push(resourceLabel)
-        resourceLabelsByRoleId.set(roleId, existingLabels)
-    })
 
     return reviewers.map(reviewer => {
         const fallbackAssignedMembers = getFallbackAssignedMembers(reviewer)
+        const normalizedPhaseId = normalizeReviewerText(reviewer.phaseId)
+        const phaseName = phaseNameById.get(normalizedPhaseId)
+        const roleNames = getReviewerRoleNamesForPhaseName(phaseName)
         const resolvedRoleId = getReviewerRoleId(reviewer, phaseNameById, resourceRoles)
+        const roleAssignmentKey = resolvedRoleId
+            ? `id:${resolvedRoleId}`
+            : `name:${roleNames.map(roleName => normalizeSummaryKey(roleName))
+                .join('|')}`
 
-        if (!resolvedRoleId) {
+        if (!resolvedRoleId && roleNames.length === 0) {
             return fallbackAssignedMembers || '-'
         }
 
-        const roleLabels = resourceLabelsByRoleId.get(resolvedRoleId) || []
-        const roleOffset = roleOffsets.get(resolvedRoleId) || 0
+        const roleLabels = resources
+            .filter(resource => resourceMatchesReviewerRole(resource, resolvedRoleId, roleNames))
+            .map(resource => normalizeReviewerText(resource.memberHandle) || normalizeReviewerText(resource.memberId))
+            .filter(Boolean)
+        const roleOffset = roleOffsets.get(roleAssignmentKey) || 0
         const nextRoleOffset = roleOffset + getReviewerCount(reviewer)
         const assignedMembers = roleLabels.slice(roleOffset, nextRoleOffset)
 
-        roleOffsets.set(resolvedRoleId, nextRoleOffset)
+        roleOffsets.set(roleAssignmentKey, nextRoleOffset)
 
         if (assignedMembers.length) {
             return assignedMembers.join(', ')

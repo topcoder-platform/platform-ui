@@ -502,6 +502,50 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('restores reviewer member ids when persisted resources only expose the reviewer role name', async () => {
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-4',
+                    role: 'Reviewer',
+                    roleId: '',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'phase-1',
+                            name: 'Review',
+                            phaseId: 'phase-1',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                    ],
+                }}
+                showMemberValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('member-4')
+        })
+    })
+
     it('checks public review opportunity by default when the default reviewer opens it', async () => {
         mockedFetchDefaultReviewers.mockResolvedValue([
             {
@@ -853,5 +897,55 @@ describe('HumanReviewTab', () => {
         })
         expect(screen.getByTestId('scorecard-id-value').textContent)
             .toBe('scorecard-1')
+    })
+
+    it('clears a stale scorecard validation error when the saved scorecard id casing drifts', async () => {
+        const scorecardsRequest = createDeferredPromise<Array<{
+            id: string
+            name: string
+            phaseId?: string
+        }>>()
+        mockedFetchScorecards.mockImplementation(() => scorecardsRequest.promise)
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            roleId: 'role-1',
+                            scorecardId: 'Scorecard-1',
+                        },
+                    ],
+                }}
+                initialScorecardErrorMessage='Scorecard is required for member reviewer type'
+                showScorecardValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchScorecards)
+                .toHaveBeenCalled()
+        })
+
+        await act(async () => {
+            scorecardsRequest.resolve([
+                {
+                    id: 'scorecard-1',
+                    name: 'Scorecard 1',
+                    phaseId: 'phase-1',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('reviewers.0.scorecardId-error'))
+                .toBeNull()
+        })
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('Scorecard-1')
     })
 })

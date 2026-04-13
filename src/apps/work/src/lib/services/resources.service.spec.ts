@@ -61,4 +61,35 @@ describe('fetchResources', () => {
                 }),
             ])
     })
+
+    it('keeps resources that only expose a role name when role metadata is incomplete', async () => {
+        const mockedGetPaginated = xhrGetPaginatedAsync as jest.Mock
+
+        mockedGetPaginated.mockResolvedValue({
+            data: [
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'member1',
+                    memberId: '123',
+                    role: 'Copilot',
+                },
+            ],
+            page: 1,
+            perPage: 5000,
+            total: 1,
+            totalPages: 1,
+        })
+
+        await expect(fetchResources('challenge-1'))
+            .resolves
+            .toEqual([
+                expect.objectContaining({
+                    challengeId: 'challenge-1',
+                    memberHandle: 'member1',
+                    memberId: '123',
+                    role: 'Copilot',
+                    roleId: '',
+                }),
+            ])
+    })
 })
