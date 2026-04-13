@@ -81,7 +81,6 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
     const profileUrl = `${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(talent.handle)}`
     const displayHandle = String(talent.handle || '')
         .trim()
-        .toLowerCase()
     const matchedSkillLabel = uniqueSkills.length === 1 ? 'matched skill' : 'matched skills'
 
     return (
@@ -105,7 +104,7 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     </div>
                     <div className={styles.headContent}>
                         <div className={styles.cardHeader}>
-                            <h4>{displayHandle}</h4>
+                            <span className={styles.handleText}>{displayHandle}</span>
                             <span className={styles.matchPill}>
                                 {`${talent.matchIndex}% Match`}
                             </span>
