@@ -179,25 +179,15 @@ export const TalentSearchPage: FC = () => {
     }, [onlyActive, onlyOpenToWork])
 
     const clearAllFilters = useCallback((): void => {
-        const willTriggerAutoSearch = onlyOpenToWork !== true || onlyActive !== true
-
         setSelectedCountry('all')
         setOnlyOpenToWork(true)
         setOnlyActive(true)
-
-        if (hasSearched && selectedSkills.length > 0) {
-            // Prevent duplicate request only when toggles will trigger the search effect.
-            if (willTriggerAutoSearch) {
-                skipNextAutoSearchRef.current = true
-            }
-
-            runMemberSearch(selectedSkills, {
-                openToWork: true,
-                page: 1,
-                recentlyActive: true,
-            })
-        }
-    }, [hasSearched, onlyActive, onlyOpenToWork, runMemberSearch, selectedSkills])
+        setSelectedSkills([])
+        setResults([])
+        setTotalResults(0)
+        setCurrentPage(1)
+        setErrorMessage('')
+    }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
         const normalizedDescription = jobDescription.trim()
@@ -353,6 +343,7 @@ export const TalentSearchPage: FC = () => {
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
+                                        setHasSearched(value.length > 0)
                                     }}
                                 />
                             </div>
@@ -444,11 +435,11 @@ export const TalentSearchPage: FC = () => {
                             <div className={styles.resultsContent}>
                                 <div className={styles.resultsTop}>
                                     <p className={styles.foundText}>
-                                        We found&nbsp;
+                                        We have found&nbsp;
                                         <span className={styles.foundTextCount}>
                                             {`${foundMembersCount} members`}
                                         </span>
-                                        &nbsp;that match your filters
+                                        &nbsp;that match your search.
                                     </p>
                                     <div className={styles.sortControl}>
                                         <span className={styles.sortLabel}>Sort by</span>

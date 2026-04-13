@@ -98,7 +98,7 @@
     color: $black-100;
     font-size: 14px;
     line-height: 20px;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .matchPill {
@@ -275,13 +275,16 @@
 
 .tooltipLines {
     margin: 0;
+    padding-left: 0;
+    list-style-type: disc;
+    list-style-position: inside;
     font-size: 12px;
     line-height: 16px;
     font-weight: 400;
 }
 
 .tooltipSkillLine {
-    display: block;
+    display: list-item;
 
     & + & {
         margin-top: 4px;
