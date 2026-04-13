@@ -183,6 +183,7 @@ export const TalentSearchPage: FC = () => {
         setOnlyOpenToWork(true)
         setOnlyActive(true)
         setSelectedSkills([])
+        setHasSearched(false)
         setResults([])
         setTotalResults(0)
         setCurrentPage(1)
