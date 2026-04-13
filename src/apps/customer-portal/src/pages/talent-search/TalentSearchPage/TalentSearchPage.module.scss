@@ -96,6 +96,7 @@
     background: transparent;
     padding: 12px 0;
     color: $black-60;
+    font-family: $font-roboto;
     font-size: 16px;
     line-height: 24px;
     font-weight: 500;
@@ -119,6 +120,10 @@
 .aiActions {
     display: flex;
     gap: $sp-2;
+
+    :global(button) {
+        font-size: 14px;
+    }
 }
 
 .errorMessage {
@@ -239,6 +244,10 @@
 .clearFiltersWrap {
     margin-top: 10px;
     align-self: flex-start;
+
+    :global(button) {
+        font-size: 14px;
+    }
 }
 
 .resultsPanel {

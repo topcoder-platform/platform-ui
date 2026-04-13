@@ -54,14 +54,14 @@ function buildMatchedSkillsTooltipContent(
             <p className={styles.tooltipTitle}>
                 {`${count} Matched Skills:`}
             </p>
-            <p className={styles.tooltipLines}>
+            <ul className={styles.tooltipLines}>
                 {skills.map((skill: MatchedSkill) => (
-                    <span key={`${skill.id}-${skill.name}`} className={styles.tooltipSkillLine}>
+                    <li key={`${skill.id}-${skill.name}`} className={styles.tooltipSkillLine}>
                         <span className={styles.tooltipSkillName}>{skill.name}</span>
                         {`: ${skill.wins} wins, ${skill.submitted} submissions`}
-                    </span>
+                    </li>
                 ))}
-            </p>
+            </ul>
         </div>
     )
 }
@@ -79,6 +79,9 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
     const isActive = talent.isRecentlyActive === true
     const openToWork = talent.openToWork
     const profileUrl = `${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(talent.handle)}`
+    const displayHandle = String(talent.handle || '')
+        .trim()
+        .toLowerCase()
     const matchedSkillLabel = uniqueSkills.length === 1 ? 'matched skill' : 'matched skills'
 
     return (
@@ -102,7 +105,7 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     </div>
                     <div className={styles.headContent}>
                         <div className={styles.cardHeader}>
-                            <h4>{talent.handle}</h4>
+                            <h4>{displayHandle}</h4>
                             <span className={styles.matchPill}>
                                 {`${talent.matchIndex}% Match`}
                             </span>
