@@ -1875,6 +1875,42 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         mutateChallengeResources,
         syncSingleAssignmentResource,
     ])
+    /**
+     * Reapplies resource-backed assignments after a save response resets the form.
+     *
+     * Challenge patch responses may omit persisted copilot and manual-reviewer member selections
+     * even though those resources were saved successfully. Reloading resources before the post-save
+     * reset keeps the editor aligned with the persisted draft state.
+     *
+     * @param challengeId saved challenge identifier whose persisted resources should be reloaded.
+     * @param formData form-state snapshot derived from the saved challenge payload.
+     * @returns the same form data with persisted resource assignments restored.
+     */
+    const hydratePersistedSavedFormData = useCallback(async (
+        challengeId: string,
+        formData: ChallengeEditorFormData,
+    ): Promise<ChallengeEditorFormData> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
+
+        return hydratePersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(
+                formData,
+                persistedResources,
+                persistedResourceRoles,
+            ),
+            persistedResources,
+            persistedResourceRoles,
+        )
+    }, [
+        applyPersistedSingleAssignments,
+        loadSingleAssignmentResourceRoles,
+    ])
 
     const handleScorerConfigChange = useCallback(
         (hasUnsavedChanges: boolean, hasError: boolean): void => {
@@ -2519,7 +2555,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 )
 
                 const nextValues = applySingleAssignmentFieldValues(
-                    applyPersistedSingleAssignments(
+                    await hydratePersistedSavedFormData(
+                        currentChallengeId,
                         {
                             ...persistedFormData,
                             attachments: Array.isArray(persistedFormData.attachments)
@@ -2579,10 +2616,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
-            applyPersistedSingleAssignments,
             clearErrors,
             currentChallengeId,
             fallbackProjectId,
+            hydratePersistedSavedFormData,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
