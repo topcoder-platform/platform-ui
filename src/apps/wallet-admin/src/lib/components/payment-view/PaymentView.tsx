@@ -3,15 +3,28 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable complexity */
+/* eslint-disable ordered-imports/ordered-imports */
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
-import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
+import { TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
-import { Winning } from '../../models/WinningDetail'
+import { Winning, WinningPaymentDetails } from '../../models/WinningDetail'
 import { PayoutAudit } from '../../models/PayoutAudit'
-import { fetchAuditLogs, fetchPayoutAuditLogs, getMemberHandle } from '../../services/wallet'
+import {
+    fetchAuditLogs,
+    fetchPayoutAuditLogs,
+    fetchWinningPaymentDetails,
+    getMemberHandle,
+} from '../../services/wallet'
+import {
+    buildWorkManagerAssignmentUrl,
+    buildWorkManagerProjectUrl,
+    formatOptionalDate,
+    formatOptionalText,
+    renderOptionalLinkedText,
+} from './payment-view.utils'
 
 import styles from './PaymentView.module.scss'
 
@@ -24,10 +37,52 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [view, setView] = React.useState<'details' | 'audit' | 'external_transaction'>('details')
     const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
     const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>([])
+    const [paymentDetails, setPaymentDetails] = React.useState<WinningPaymentDetails>()
+    const [isPaymentDetailsLoading, setIsPaymentDetailsLoading] = React.useState<boolean>(false)
+    const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
+
+    const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
+    const hasEngagementDetails = Boolean(paymentDetails?.engagementDetails)
 
     const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
         setView(newView)
     }
+
+    React.useEffect(() => {
+        if (!isEngagementPayment) {
+            setPaymentDetails(undefined)
+            setIsPaymentDetailsLoading(false)
+            setPaymentDetailsError(undefined)
+            return undefined
+        }
+
+        let ignore = false
+
+        setIsPaymentDetailsLoading(true)
+        setPaymentDetailsError(undefined)
+
+        fetchWinningPaymentDetails(props.payment)
+            .then(details => {
+                if (!ignore) {
+                    setPaymentDetails(details)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setPaymentDetails(undefined)
+                    setPaymentDetailsError('Unable to load engagement details.')
+                }
+            })
+            .finally(() => {
+                if (!ignore) {
+                    setIsPaymentDetailsLoading(false)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [isEngagementPayment, props.payment])
 
     React.useEffect(() => {
         if (view === 'audit') {
@@ -40,9 +95,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                 log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
                             })
                         })
-                        .catch(() => {
-                            console.error('Error fetching member handles')
-                        })
+                        .catch(() => undefined)
                         .finally(() => {
                             setAuditLines(auditLogs)
                         })
@@ -83,13 +136,10 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return action
     }
 
-    const getLink = (payment: Winning): string => {
-        if (payment.type.toLowerCase() === 'engagement payment') {
-            return `${ENGAGEMENTS_URL}/${payment.externalId}`
-        }
-
-        return `${TOPCODER_URL}/challenges/${payment.externalId}`
-    }
+    const descriptionLink = isEngagementPayment
+        ? buildWorkManagerAssignmentUrl(paymentDetails?.engagementDetails)
+        : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
+    const projectLink = buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)
 
     return (
         <div className={styles.formContainer}>
@@ -98,9 +148,13 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                     <>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Description</span>
-                            <a href={getLink(props.payment)} target='_blank' rel='noreferrer'>
-                                {props.payment.description}
-                            </a>
+                            {descriptionLink
+                                ? (
+                                    <a href={descriptionLink} target='_blank' rel='noreferrer'>
+                                        {props.payment.description}
+                                    </a>
+                                )
+                                : <p className={styles.value}>{props.payment.description}</p>}
                         </div>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Payment ID</span>
@@ -110,7 +164,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                             <span className={styles.label}>Handle</span>
                             <p className={styles.value}>{props.payment.handle}</p>
                         </div>
-
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Type</span>
                             <p className={styles.value}>{props.payment.type}</p>
@@ -140,6 +193,116 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                             <div className={styles.infoItem}>
                                 <span className={styles.label}>Date Paid</span>
                                 <p className={styles.value}>{props.payment.datePaid}</p>
+                            </div>
+                        )}
+
+                        {isEngagementPayment && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Engagement Details</h3>
+                                {isPaymentDetailsLoading
+                                    ? <p className={styles.helperText}>Loading engagement details...</p>
+                                    : undefined}
+                                {!isPaymentDetailsLoading && paymentDetailsError
+                                    ? <p className={styles.helperText}>{paymentDetailsError}</p>
+                                    : undefined}
+                                {!isPaymentDetailsLoading && !paymentDetailsError && !hasEngagementDetails
+                                    ? (
+                                        <p className={styles.helperText}>
+                                            Engagement details are unavailable for this payment.
+                                        </p>
+                                    )
+                                    : undefined}
+                                {!isPaymentDetailsLoading && !paymentDetailsError && hasEngagementDetails && (
+                                    <div className={styles.sectionGrid}>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Project Name</span>
+                                            {projectLink && paymentDetails?.engagementDetails?.projectName
+                                                ? (
+                                                    <a
+                                                        className={styles.value}
+                                                        href={projectLink}
+                                                        target='_blank'
+                                                        rel='noreferrer'
+                                                    >
+                                                        {paymentDetails.engagementDetails.projectName}
+                                                    </a>
+                                                )
+                                                : (
+                                                    <p className={styles.value}>
+                                                        {formatOptionalText(paymentDetails?.engagementDetails?.projectName)}
+                                                    </p>
+                                                )}
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Billing Start Date</span>
+                                            <p className={styles.value}>
+                                                {formatOptionalDate(paymentDetails?.engagementDetails?.billingStartDate)}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Duration</span>
+                                            <p className={styles.value}>
+                                                {paymentDetails?.engagementDetails?.durationMonths
+                                                    ? `${paymentDetails.engagementDetails.durationMonths} month${paymentDetails.engagementDetails.durationMonths === 1 ? '' : 's'}`
+                                                    : '-'}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Rate per Hour</span>
+                                            <p className={styles.value}>
+                                                {paymentDetails?.engagementDetails?.ratePerHour
+                                                    ? Number(paymentDetails.engagementDetails.ratePerHour)
+                                                        .toLocaleString(undefined, {
+                                                            currency: 'USD',
+                                                            style: 'currency',
+                                                        })
+                                                    : '-'}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Standard Hours per Week</span>
+                                            <p className={styles.value}>
+                                                {formatOptionalText(paymentDetails?.engagementDetails?.standardHoursPerWeek)}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Other Remarks</span>
+                                            <p className={styles.remarksValue}>
+                                                {renderOptionalLinkedText(paymentDetails?.engagementDetails?.otherRemarks)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {isEngagementPayment && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Work Log / Manager Inputs</h3>
+                                {isPaymentDetailsLoading
+                                    ? <p className={styles.helperText}>Loading work log...</p>
+                                    : (
+                                        <div className={styles.sectionGrid}>
+                                            <div className={styles.infoItem}>
+                                                <span className={styles.label}>Hours Worked</span>
+                                                <p className={styles.value}>
+                                                    {formatOptionalText(paymentDetails?.workLog?.hoursWorked)}
+                                                </p>
+                                            </div>
+                                            <div className={styles.infoItem}>
+                                                <span className={styles.label}>Remarks</span>
+                                                <p className={styles.remarksValue}>
+                                                    {renderOptionalLinkedText(paymentDetails?.workLog?.remarks)}
+                                                </p>
+                                            </div>
+                                            <div className={styles.infoItem}>
+                                                <span className={styles.label}>Payment Creator</span>
+                                                <p className={styles.value}>
+                                                    {formatOptionalText(paymentDetails?.paymentCreatorHandle)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                             </div>
                         )}
 

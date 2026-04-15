@@ -24,6 +24,11 @@ jest.mock('remark-gfm', () => ({
     default: jest.fn(),
 }))
 
+jest.mock('rehype-raw', () => ({
+    __esModule: true,
+    default: jest.fn(),
+}))
+
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         URLS: {

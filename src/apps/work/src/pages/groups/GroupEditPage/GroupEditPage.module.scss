@@ -1,0 +1,204 @@
+@import '@libs/ui/styles/includes';
+
+.pageContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pageHeading {
+    color: $black-80;
+    font-size: $sp-8;
+    line-height: 36px;
+    margin: 0;
+
+    @include font-weight-bold;
+}
+
+.backLink {
+    color: $blue-100;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.errorBanner {
+    background: #fff4f4;
+    border: 1px solid #f2c9c9;
+    border-radius: 8px;
+    color: #8a1f1f;
+    font-size: 14px;
+    padding: 12px;
+}
+
+.form {
+    background: rgb(224 228 232 / 30%);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.formRow {
+    align-items: flex-start;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(180px, 220px) minmax(260px, 1fr);
+    margin-bottom: 16px;
+}
+
+.fieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+    padding-top: 10px;
+}
+
+.fieldValue {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.required {
+    color: $red-100;
+    margin-left: 4px;
+}
+
+.textInput,
+.textArea,
+.typeSelect {
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    color: $black-80;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+}
+
+.textArea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.typeSelect {
+    max-width: 200px;
+}
+
+.helperText {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.fieldError {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.checkboxGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.checkboxItem {
+    align-items: center;
+    color: $black-80;
+    display: flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.buttonRow {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.membersSection {
+    background: rgb(224 228 232 / 30%);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.sectionHeading {
+    color: $black-80;
+    font-size: 22px;
+    margin: 0 0 12px;
+
+    @include font-weight-bold;
+}
+
+.memberForm {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(220px, 1fr) 180px auto;
+    margin-bottom: 12px;
+}
+
+.emptyState {
+    color: $black-60;
+    font-size: 14px;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        border-bottom: 1px solid $black-20;
+        color: $black-80;
+        font-size: 14px;
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    th {
+        background: rgb(224 228 232 / 50%);
+        font-weight: 700;
+    }
+}
+
+.loadingState {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.loadingText {
+    color: $black-60;
+    font-size: 14px;
+}
+
+@media (max-width: 900px) {
+    .headerRow {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .formRow {
+        gap: 8px;
+        grid-template-columns: 1fr;
+        margin-bottom: 14px;
+    }
+
+    .fieldLabel {
+        padding-top: 0;
+    }
+
+    .memberForm {
+        grid-template-columns: 1fr;
+    }
+}

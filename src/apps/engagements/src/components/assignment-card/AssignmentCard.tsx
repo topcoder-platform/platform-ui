@@ -1,12 +1,17 @@
 import type { FC, ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { Button, IconSolid } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
+import {
+    renderRichTextToPlainText,
+    sanitizeRichTextSource,
+} from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import {
     formatCurrencyAmount,
@@ -123,6 +128,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
     const engagement = props.engagement
     const assignment = props.assignment
     const canContactTalentManager = props.canContactTalentManager ?? true
+    const contactEmail = props.contactEmail
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
@@ -131,11 +137,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         engagement.timeZones ?? [],
     )
     const handleContactTalentManagerClick = useCallback(() => {
-        props.onContactTalentManager(props.contactEmail)
-    }, [props.contactEmail, props.onContactTalentManager])
+        props.onContactTalentManager(contactEmail)
+    }, [contactEmail, props.onContactTalentManager])
 
     const descriptionSnippet = useMemo(() => (
-        truncateText(engagement.description, DESCRIPTION_MAX_LENGTH)
+        truncateText(renderRichTextToPlainText(engagement.description), DESCRIPTION_MAX_LENGTH)
     ), [engagement.description])
 
     const assignmentStatusLabel = useMemo(
@@ -214,13 +220,14 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
             </div>
             <div className={styles.description}>
                 <Markdown
+                    rehypePlugins={[rehypeRaw as any]}
                     remarkPlugins={[
                         remarkFrontmatter,
                         [remarkGfm, { singleTilde: false }],
                     ]}
                     components={compactMarkdownComponents}
                 >
-                    {descriptionSnippet || 'Description not available.'}
+                    {sanitizeRichTextSource(descriptionSnippet || 'Description not available.')}
                 </Markdown>
             </div>
             <div className={styles.meta}>

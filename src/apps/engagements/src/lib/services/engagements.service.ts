@@ -118,6 +118,7 @@ export interface GetEngagementsParams {
     countries?: string[]
     timeZones?: string[]
     search?: string
+    includePrivate?: boolean
 }
 
 const normalizePaginatedResponse = <T>(
@@ -347,6 +348,7 @@ export const getEngagements = async (
     }
 
     if (params.search) queryParams.append('search', params.search)
+    if (params.includePrivate) queryParams.append('includePrivate', 'true')
     if (params.skills?.length) {
         params.skills.forEach(skill => queryParams.append('requiredSkills', skill))
     }

@@ -173,6 +173,16 @@
     }
 }
 
+.actionsCell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.actionItem {
+    display: inline-flex;
+}
+
 .completedAction {
     align-items: center;
     display: flex;

@@ -1,0 +1,231 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.empty {
+    color: #5b5b5b;
+    font-size: 14px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.card {
+    background: #fbfcff;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.cardHighlighted {
+    border-color: #4d91ff;
+    box-shadow: 0 0 0 3px rgba(77, 145, 255, 0.16);
+}
+
+.cardHeader {
+    align-items: center;
+    display: flex;
+}
+
+.memberHandle {
+    color: #2a2a2a;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.memberHeader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.statusPill {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    height: 24px;
+    line-height: 1;
+    padding: 0 12px;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.statusGreen {
+    background: rgba(33, 163, 79, 0.12);
+    color: #1d7f48;
+}
+
+.statusYellow {
+    background: rgba(245, 180, 39, 0.18);
+    color: #805b00;
+}
+
+.statusGray {
+    background: rgba(84, 95, 113, 0.15);
+    color: #4f5967;
+}
+
+.statusBlue {
+    background: rgba(0, 121, 122, 0.14);
+    color: #006666;
+}
+
+.statusRed {
+    background: rgba(211, 47, 47, 0.13);
+    color: #9f1f1f;
+}
+
+.metaGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.label {
+    color: #767676;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+}
+
+.remarksButton {
+    align-items: center;
+    background: #f7f8fb;
+    border: 1px solid #d5d5d5;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 28px;
+}
+
+.remarksButton:hover {
+    background: #edf4ff;
+    border-color: #b9c8da;
+}
+
+.remarksButton:focus-visible {
+    box-shadow: 0 0 0 3px rgba(77, 145, 255, 0.2);
+    outline: none;
+}
+
+.remarksIcon {
+    display: block;
+    height: 14px;
+    width: 14px;
+}
+
+.terminationReason {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    justify-content: space-between;
+}
+
+.leftActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rightActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.completeButton {
+    --btn-variant: #64c98b;
+    --btn-variant--hover: #57ba7e;
+    --btn-variant--active: #49a86f;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalSubtitle {
+    color: #2a2a2a;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.modalGrid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.modalFieldRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modalLabel {
+    color: #5b5b5b;
+    font-size: 12px;
+}
+
+.modalInput,
+.modalTextarea {
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.modalInputReadOnly {
+    background: #f7f8fb;
+    color: #2a2a2a;
+}
+
+.modalError {
+    color: #db3030;
+    font-size: 12px;
+    margin: 0;
+}
+
+.remarksContent {
+    color: #2a2a2a;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-line;
+    word-break: break-word;
+}

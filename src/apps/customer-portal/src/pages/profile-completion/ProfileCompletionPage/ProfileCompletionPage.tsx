@@ -5,7 +5,7 @@ import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'reac
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes, xhrGetAsync } from '~/libs/core'
+import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
 import {
     Button,
     InputMultiselect,
@@ -15,6 +15,7 @@ import {
     LoadingSpinner,
     Tooltip,
 } from '~/libs/ui'
+import { fetchSkillAutocompleteOptions } from '~/libs/shared'
 import { getPreferredRoleLabelByValue } from '~/libs/shared/lib/utils/roles'
 
 import { PageWrapper } from '../../../lib'
@@ -44,25 +45,7 @@ export const ProfileCompletionPage: FC = () => {
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
         setSkillOptionsLoading(true)
         try {
-            const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
-            const params = new URLSearchParams({
-                size: '25',
-            })
-            if (query && query.trim().length > 0) {
-                params.append('term', query.trim())
-            }
-
-            const url = `${baseUrl}/skills/autocomplete?${params.toString()}`
-            const response: any = await xhrGetAsync(url)
-
-            const skills = Array.isArray(response) ? response : []
-
-            return skills
-                .map((skill: any) => ({
-                    label: skill.name,
-                    value: String(skill.id),
-                }))
-                .filter((option: InputMultiselectOption) => !!option.value)
+            return await fetchSkillAutocompleteOptions(query)
         } catch {
             return []
         } finally {
@@ -176,6 +159,10 @@ export const ProfileCompletionPage: FC = () => {
             ]
 
             const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
+            const remainingSkillsText = principalSkills.slice(DISPLAY_SKILLS_COUNT)
+                .map(skill => skill.name)
+                .filter(Boolean)
+                .join(', ')
             const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
 
             const isOpenToWork = profile.isOpenToWork === true
@@ -204,6 +191,7 @@ export const ProfileCompletionPage: FC = () => {
                     .join(', '),
                 openToWorkLabel,
                 openToWorkRolesText,
+                remainingSkillsText,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -354,12 +342,14 @@ export const ProfileCompletionPage: FC = () => {
                                                         </span>
                                                     ))}
                                                     {profile.additionalSkillsCount > 0 && (
-                                                        <span className={styles.moreIndicator}>
-                                                            +
-                                                            {profile.additionalSkillsCount}
-                                                            {' '}
-                                                            skills
-                                                        </span>
+                                                        <Tooltip content={profile.remainingSkillsText}>
+                                                            <span className={styles.moreIndicator}>
+                                                                +
+                                                                {profile.additionalSkillsCount}
+                                                                {' '}
+                                                                skills
+                                                            </span>
+                                                        </Tooltip>
                                                     )}
                                                 </div>
                                             ) : (

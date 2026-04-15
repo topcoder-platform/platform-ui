@@ -16,16 +16,19 @@ import {
     ChallengeDetailContextModel,
     ChallengeWinner,
     convertBackendReviewToReviewResult,
+    convertBackendSubmissionToSubmissionInfo,
     ProjectResult,
     ReviewResult,
     SubmissionInfo,
 } from '../models'
-import { fetchAllChallengeReviews } from '../services'
+import { fetchAllChallengeReviews, fetchAllSubmissions } from '../services'
 import { ChallengeDetailContext } from '../contexts'
 import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
-    SUBMISSION_TYPE_CONTEST,
+    isContestSubmissionType,
 } from '../constants'
+import { buildChallengeResultSubmissionSource } from '../utils/challengeResultSubmissions'
+import { submissionMatchesWinner } from '../utils/winnerMatching'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
 
@@ -70,6 +73,15 @@ const orderReviewsByCreatedDate = (reviews: ReviewResult[]): ReviewResult[] => o
     },
     ['asc'],
 )
+
+const normalizeIdentifier = (value: unknown): string | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
 
 const resolveUserInfo = ({
     challengeUuid,
@@ -136,16 +148,22 @@ const buildProjectResult = ({
 }: BuildProjectResultParams): ProjectResult | undefined => {
     const memberId = `${winner.userId}`
 
-    // Find all submissions for this member
-    const memberSubmissions = submissions.filter(s => s.memberId === memberId)
-    const contestSubmissions = memberSubmissions.filter(
-        submission => (submission.type ?? SUBMISSION_TYPE_CONTEST) === SUBMISSION_TYPE_CONTEST,
+    // Prefer exact member matches, then fall back to legacy winner identifiers.
+    const exactMemberSubmissions = submissions.filter(s => s.memberId === memberId)
+    const matchingSubmissions = exactMemberSubmissions.length
+        ? exactMemberSubmissions
+        : submissions.filter(submission => submissionMatchesWinner(submission, winner))
+    const contestSubmissions = matchingSubmissions.filter(
+        submission => isContestSubmissionType(
+            submission.type,
+            { defaultToContest: true },
+        ),
     )
 
     // Prefer contest submissions; fall back to everything so we still display something if data is inconsistent
     const submissionsToEvaluate = contestSubmissions.length
         ? contestSubmissions
-        : memberSubmissions
+        : matchingSubmissions
 
     if (!submissionsToEvaluate.length) {
         return undefined
@@ -274,16 +292,40 @@ export function useFetchChallengeResults(
             : false),
         [normalizedStatus],
     )
-    const submissionSource = useMemo<SubmissionInfo[]>(() => {
-        if (isPastChallengeStatus && (challengeInfo?.submissions?.length ?? 0) > 0) {
-            return challengeInfo?.submissions ?? submissions
-        }
+    const {
+        data: winnerSubmissions,
+        error: winnerSubmissionsError,
+        isValidating: isLoadingWinnerSubmissions,
+    }: SWRResponse<SubmissionInfo[], Error> = useSWR<
+        SubmissionInfo[],
+        Error
+    >(
+        shouldFetchReviews
+            ? `reviewBaseUrl/challengeWinnerSubmissions/${challengeUuid}`
+            : undefined,
+        async () => {
+            const allSubmissions = await fetchAllSubmissions(challengeUuid, 100)
+            return allSubmissions.map(item => convertBackendSubmissionToSubmissionInfo(item))
+        },
+    )
 
-        return submissions
+    const submissionSource = useMemo<SubmissionInfo[]>(() => {
+        const challengeSubmissions = isPastChallengeStatus
+            ? (challengeInfo?.submissions ?? submissions)
+            : submissions
+
+        return buildChallengeResultSubmissionSource({
+            challengeSubmissions,
+            memberMapping: resourceMemberIdMapping,
+            reviewSubmissions: submissions,
+            winnerSubmissions,
+        })
     }, [
         challengeInfo?.submissions,
         isPastChallengeStatus,
+        resourceMemberIdMapping,
         submissions,
+        winnerSubmissions,
     ])
 
     // Use swr hooks for challenge reviews fetching when winners are available
@@ -307,18 +349,54 @@ export function useFetchChallengeResults(
         }
     }, [error])
 
+    useEffect(() => {
+        if (winnerSubmissionsError) {
+            handleError(winnerSubmissionsError)
+        }
+    }, [winnerSubmissionsError])
+
     const reviewsBySubmissionId = useMemo(() => {
         const result = new Map<string, ReviewResult[]>()
         const reviewList = challengeReviews ?? []
+        const submissionIdAliases = new Map<string, string>()
+
+        submissionSource.forEach(submission => {
+            const canonicalId = normalizeIdentifier(submission.id)
+            if (!canonicalId) {
+                return
+            }
+
+            submissionIdAliases.set(canonicalId, canonicalId)
+
+            const legacySubmissionId = normalizeIdentifier(submission.legacySubmissionId)
+            if (legacySubmissionId) {
+                submissionIdAliases.set(legacySubmissionId, canonicalId)
+            }
+        })
 
         reviewList.forEach(review => {
+            const canonicalSubmissionId = [
+                normalizeIdentifier(review.submissionId),
+                normalizeIdentifier(review.legacySubmissionId),
+            ]
+                .map(identifier => (
+                    identifier
+                        ? (submissionIdAliases.get(identifier) ?? identifier)
+                        : undefined
+                ))
+                .find((identifier): identifier is string => Boolean(identifier))
+
+            if (!canonicalSubmissionId) {
+                return
+            }
+
             const transformedReview = convertBackendReviewToReviewResult(review)
-            const existing = result.get(review.submissionId) ?? []
-            result.set(review.submissionId, [...existing, transformedReview])
+            const existing = result.get(canonicalSubmissionId) ?? []
+            result.set(canonicalSubmissionId, [...existing, transformedReview])
         })
 
         return result
-    }, [challengeReviews])
+    }, [challengeReviews, submissionSource])
 
     const sortedWinners = useMemo(
         () => orderBy(winners, ['placement'], ['asc']),
@@ -355,7 +433,7 @@ export function useFetchChallengeResults(
     ])
 
     return {
-        isLoading: shouldFetchReviews ? isLoadingReviews : false,
+        isLoading: shouldFetchReviews ? (isLoadingReviews || isLoadingWinnerSubmissions) : false,
         projectResults,
     }
 }

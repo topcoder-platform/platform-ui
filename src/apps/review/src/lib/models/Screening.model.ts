@@ -7,6 +7,16 @@ import { BackendResource } from './BackendResource.model'
 
 type ScreeningResult = 'PASS' | 'NO PASS' | '' | '-'
 
+export interface ScreeningReviewDetail {
+    reviewId?: string
+    reviewPhaseId?: string
+    reviewStatus?: string
+    screenerId?: string
+    screener?: BackendResource
+    score: string
+    result: ScreeningResult
+}
+
 export interface Screening {
     challengeId: string
     submissionId: string
@@ -66,6 +76,11 @@ export interface Screening {
      * Used for defensive filtering to ensure phase data isolation.
      */
     phaseName?: string
+    /**
+     * Individual screening reviews associated with the submission.
+     * Used to render multi-screener columns in the Screening table.
+     */
+    screeningReviews?: ScreeningReviewDetail[]
 }
 
 /**

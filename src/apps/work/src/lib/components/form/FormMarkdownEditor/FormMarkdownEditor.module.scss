@@ -1,0 +1,7 @@
+.editor {
+    min-height: 280px;
+
+    :global(.EasyMDEContainer) {
+        min-height: 280px;
+    }
+}

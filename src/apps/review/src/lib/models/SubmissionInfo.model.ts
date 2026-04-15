@@ -20,7 +20,19 @@ import {
  */
 export interface SubmissionInfo {
     id: string
+    /**
+     * Legacy submission identifier used by older review payloads and result lookups.
+     */
+    legacySubmissionId?: string
     memberId: string
+    /**
+     * Placement assigned to the submission when available from the backend.
+     */
+    placement?: number | null
+    /**
+     * Submitter handle returned by the submissions API for legacy winner matching.
+     */
+    submitterHandle?: string
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
     reviewInfos?: ReviewInfo[]
@@ -157,7 +169,9 @@ export function convertBackendSubmissionToSubmissionInfo(
         isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         isPassingReview,
+        legacySubmissionId: data.legacySubmissionId,
         memberId: data.memberId,
+        placement: data.placement,
         review: primaryReviewInfo,
         reviewInfos,
         reviews: reviewResults,
@@ -165,6 +179,9 @@ export function convertBackendSubmissionToSubmissionInfo(
         status: normalizeSubmissionStatus(data.status),
         submittedDate,
         submittedDateString,
+        submitterHandle: (data as BackendSubmission & {
+            submitterHandle?: string | null
+        }).submitterHandle?.trim() || undefined,
         type: data.type,
         userInfo: registrantMap.get(data.memberId),
         virusScan: data.virusScan,

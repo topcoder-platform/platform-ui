@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Fetch reviews of submission
  */
@@ -57,6 +58,7 @@ import { ReviewItemComment } from '../models/ReviewItemComment.model'
 import { SUBMITTER } from '../../config/index.config'
 
 import { useRole, useRoleProps } from './useRole'
+import { applyAppealResponseScoreUpdate } from './useFetchSubmissionReviews.utils'
 
 const hasSubmitterReviewDetails = (review?: BackendReview): boolean => {
     if (!review) {
@@ -628,16 +630,26 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                         ? buildReviewItemsPayload(updatedReview)
                         : undefined
 
-                const payload = {
-                    committed,
-                    reviewDate,
-                    status,
-                    ...(scorecardId ? { scorecardId } : {}),
-                    ...(challengeInfo?.typeId ? { typeId: challengeInfo.typeId } : {}),
-                    ...(currentPhase?.id ? { phaseId: currentPhase.id } : {}),
-                    ...(reviewItemsPayload
-                        ? { reviewItems: reviewItemsPayload }
-                        : {}),
+                let payload
+
+                if (!committed && !updatedReview && !fullReview) {
+                    // REOPEN CASE → send only status payload
+                    payload = {
+                        committed: false,
+                        status: 'IN_PROGRESS',
+                    }
+                } else {
+                    payload = {
+                        committed,
+                        reviewDate,
+                        status,
+                        ...(scorecardId ? { scorecardId } : {}),
+                        ...(challengeInfo?.typeId ? { typeId: challengeInfo.typeId } : {}),
+                        ...(currentPhase?.id ? { phaseId: currentPhase.id } : {}),
+                        ...(reviewItemsPayload
+                            ? { reviewItems: reviewItemsPayload }
+                            : {}),
+                    }
                 }
 
                 setIsSavingReview(true)
@@ -796,25 +808,12 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                             scorecardQuestionId: reviewItem.scorecardQuestionId,
                         })
                             .then(rs => {
-                                const result = map(
-                                    reviewInfo?.reviewItems ?? [],
-                                    existingReview => {
-                                        if (existingReview.id === reviewItem.id) {
-                                            return {
-                                                ...existingReview,
-                                                finalAnswer: updatedResponse,
-                                            }
-                                        }
-
-                                        return existingReview
-                                    },
-                                )
-                                if (updatedReviewInfo) {
-                                    setUpdatedReviewInfo({
-                                        ...updatedReviewInfo,
-                                        reviewItems: result,
-                                    })
-                                }
+                                setUpdatedReviewInfo(previousReviewInfo => applyAppealResponseScoreUpdate(
+                                    previousReviewInfo ?? reviewInfo,
+                                    reviewItem.id,
+                                    updatedResponse,
+                                    scorecardInfo,
+                                ))
 
                                 resolve(rs)
                             })
@@ -878,7 +877,7 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                     handleError(e)
                 })
         },
-        [resourceId, reviewInfo, setUpdatedReviewInfo, updatedReviewInfo, reviewId],
+        [resourceId, reviewInfo, reviewId, scorecardInfo],
     )
 
     /**
