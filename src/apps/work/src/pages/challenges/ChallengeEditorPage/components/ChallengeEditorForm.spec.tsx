@@ -1697,6 +1697,96 @@ describe('ChallengeEditorForm', () => {
             .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
     })
 
+    it('rehydrates persisted reviewer assignments from fresh resources after saving a draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'reviewer-role-id',
+            name: 'Reviewer',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'manual-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberId: 'manual-reviewer-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+
+        mockedFetchResourceRolesService.mockClear()
+        mockedFetchResourcesService.mockClear()
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByLabelText('Challenge Name'))
+                .toHaveValue(validDraftChallenge.name)
+        })
+        expect(mockedFetchResourceRolesService)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenCalledWith('12345')
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
     it('keeps the review section after submission settings in read-only mode', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
