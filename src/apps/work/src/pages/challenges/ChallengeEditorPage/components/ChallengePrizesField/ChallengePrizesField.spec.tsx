@@ -203,4 +203,68 @@ describe('ChallengePrizesField', () => {
         expect(secondPrizeRow.className)
             .toContain(styles.prizeRowWithRemove)
     })
+
+    it('allows equal lower placement prizes without showing an ordering error', () => {
+        render(
+            <TestHarness
+                challengeTypeName='Challenge'
+                defaultPrizeSets={[
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                        ],
+                        type: 'PLACEMENT',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.queryByText('Each subsequent prize must be less than or equal to the one above it.'))
+            .toBeNull()
+    })
+
+    it('shows an ordering error when a lower placement prize increases', () => {
+        render(
+            <TestHarness
+                challengeTypeName='Challenge'
+                defaultPrizeSets={[
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 60,
+                            },
+                        ],
+                        type: 'PLACEMENT',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByText('Each subsequent prize must be less than or equal to the one above it.'))
+            .toBeTruthy()
+    })
 })
