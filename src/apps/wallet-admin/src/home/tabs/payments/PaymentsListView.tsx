@@ -242,10 +242,12 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         }
 
         defaults.date = filters.date?.[0] ?? 'all'
-        defaults.status = filters.status?.[0] ?? 'all' // ← moved out
+
+        // Fall back to the restricted default if no filter is applied
+        defaults.status = filters.status?.[0] ?? (restrictedDefaultStatus || 'all')
 
         return defaults
-    }, [filters.category, filters.date, filters.status, restrictedCategory])
+    }, [filters.category, filters.date, filters.status, restrictedCategory, restrictedDefaultStatus])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
