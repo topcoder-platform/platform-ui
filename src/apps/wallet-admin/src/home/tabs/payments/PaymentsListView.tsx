@@ -192,7 +192,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0 && filters.status?.[0] !== 'all'
+    //   const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0 && filters.status?.[0] !== 'all'
     // Remove the old hasSelectedStatusFilter declaration as we handle it directly below
 
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
