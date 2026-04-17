@@ -193,6 +193,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0 && filters.status?.[0] !== 'all'
+    // Remove the old hasSelectedStatusFilter declaration as we handle it directly below
+
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         // Strip 'all' sentinel values — never forward them to the API
         const activeFilters = Object.fromEntries(
@@ -204,14 +206,25 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             return activeFilters
         }
 
+        // Determine the correct status filter to append
+        let statusFilter: Record<string, string[]> = {}
+
+        if (filters.status && filters.status[0] !== 'all') {
+            // 1. User explicitly chose a specific status (e.g. 'OWED')
+            statusFilter = { status: activeFilters.status }
+        } else if (!filters.status && restrictedDefaultStatus) {
+            // 2. Initial load (filters.status is undefined), apply restricted default
+            statusFilter = { status: [restrictedDefaultStatus] }
+        }
+        // 3. If user explicitly selected 'all' (filters.status[0] === 'all'),
+        // statusFilter remains empty, allowing the API to return all statuses.
+
         return {
             ...activeFilters,
             category: [restrictedCategory],
-            ...(hasSelectedStatusFilter
-                ? { status: activeFilters.status }
-                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
+            ...statusFilter,
         }
-    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
+    }, [filters, restrictedCategory, restrictedDefaultStatus])
 
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
