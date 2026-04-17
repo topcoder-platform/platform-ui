@@ -28,18 +28,22 @@ import personSearchImage from '../../../lib/assets/person-search.png'
 
 import styles from './TalentSearchPage.module.scss'
 
+type TalentSearchSortOption = 'alphabetical' | 'matching-index'
+
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
-    const [hasSearched, setHasSearched] = useState<boolean>(false)
+    const [hasSearched, setHasSearched] = useState<boolean>(true)
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
+    const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
-    const [onlyActive, setOnlyActive] = useState<boolean>(true)
+    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(true)
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
+    const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
@@ -65,28 +69,40 @@ export const TalentSearchPage: FC = () => {
         [countryLookup],
     )
 
+    const hasSkillSearch = selectedSkills.length > 0
+    const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
+    const sortOptions = useMemo(
+        (): InputSelectOption[] => (hasSkillSearch
+            ? [{ label: 'Matching Index', value: 'matching-index' }]
+            : [{ label: 'Alphabetical', value: 'alphabetical' }]),
+        [hasSkillSearch],
+    )
+
     const filteredResults = useMemo(() => results.filter(talent => {
-        if (selectedCountry !== 'all') {
-            const selectedCountryOption = countryOptions.find(option => option.value === selectedCountry)
-            const selectedCountryName = typeof selectedCountryOption?.label === 'string'
-                ? selectedCountryOption.label
-                : ''
-            const normalizedLocation = talent.location.toLowerCase()
-
-            if (!selectedCountryName || !normalizedLocation.includes(selectedCountryName.toLowerCase())) {
-                return false
-            }
-        }
-
         if (onlyActive && !talent.isRecentlyActive) {
             return false
         }
 
+        if (onlyOpenToWork && !talent.openToWork) {
+            return false
+        }
+
         return true
-    }), [countryOptions, onlyActive, results, selectedCountry])
-    const foundMembersCount = selectedCountry === 'all'
-        ? (totalResults || filteredResults.length)
-        : filteredResults.length
+    }), [onlyActive, onlyOpenToWork, results])
+
+    const displayedResults = useMemo(() => {
+        const sorted = [...filteredResults]
+        if (activeSort === 'matching-index') {
+            sorted.sort((a, b) => b.matchIndex - a.matchIndex)
+            return sorted
+        }
+
+        sorted.sort((a, b) => String(a.handle || '')
+            .localeCompare(String(b.handle || ''), undefined, { sensitivity: 'base' }))
+        return sorted
+    }, [activeSort, filteredResults])
+
+    const foundMembersCount = totalResults || displayedResults.length
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -104,21 +120,23 @@ export const TalentSearchPage: FC = () => {
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            country?: string
             openToWork?: boolean
             page?: number
             recentlyActive?: boolean
+            verifiedProfile?: boolean
         },
     ): Promise<void> => {
         const append = overrides?.append === true
+        const country = overrides?.country ?? selectedCountry
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
+        const verifiedProfile = overrides?.verifiedProfile ?? onlyProfileComplete
 
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
-            openToWork,
             page,
-            recentlyActive,
             skills: skillsToSearch
                 .map(skill => String(skill.value || '')
                     .trim())
@@ -128,7 +146,22 @@ export const TalentSearchPage: FC = () => {
                     wins: 1,
                 })),
             skillSearchType: 'OR',
-            verifiedProfile: true,
+        }
+
+        if (country !== 'all') {
+            payload.country = country
+        }
+
+        if (openToWork) {
+            payload.openToWork = true
+        }
+
+        if (recentlyActive) {
+            payload.recentlyActive = true
+        }
+
+        if (verifiedProfile) {
+            payload.verifiedProfile = true
         }
 
         if (append) {
@@ -176,19 +209,25 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountry])
 
     const clearAllFilters = useCallback((): void => {
         setSelectedCountry('all')
-        setOnlyOpenToWork(true)
-        setOnlyActive(true)
+        setOnlyProfileComplete(true)
+        setOnlyOpenToWork(false)
+        setOnlyActive(false)
+        setSortBy('alphabetical')
         setSelectedSkills([])
-        setHasSearched(false)
-        setResults([])
-        setTotalResults(0)
-        setCurrentPage(1)
+        setHasSearched(true)
         setErrorMessage('')
-    }, [])
+        skipNextAutoSearchRef.current = true
+        runMemberSearch([], {
+            openToWork: false,
+            page: 1,
+            recentlyActive: false,
+            verifiedProfile: true,
+        })
+    }, [runMemberSearch])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
         const normalizedDescription = jobDescription.trim()
@@ -230,12 +269,12 @@ export const TalentSearchPage: FC = () => {
                 setTotalResults(0)
                 setHasSearched(true)
                 setErrorMessage('No skills were extracted from the job description.')
+                skipNextAutoSearchRef.current = true
                 return
             }
 
             setHasSearched(true)
-            skipNextAutoSearchRef.current = true
-            await runMemberSearch(extractedOptions, { page: 1 })
+            // Let the normal effect-driven search run with populated skills.
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
@@ -244,10 +283,10 @@ export const TalentSearchPage: FC = () => {
         } finally {
             setIsExtractingSkills(false)
         }
-    }, [isExtractingSkills, jobDescription, runMemberSearch])
+    }, [isExtractingSkills, jobDescription])
 
     useEffect(() => {
-        if (!hasSearched || isExtractingSkills || selectedSkills.length === 0) {
+        if (!hasSearched || isExtractingSkills) {
             return
         }
 
@@ -256,18 +295,20 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        runMemberSearch(selectedSkills)
+        runMemberSearch(selectedSkills, { page: 1 })
     }, [
         hasSearched,
         isExtractingSkills,
         onlyActive,
+        onlyProfileComplete,
         onlyOpenToWork,
         runMemberSearch,
+        selectedCountry,
         selectedSkills,
     ])
 
     const handleLoadMore = useCallback((): void => {
-        if (isLoadingMore || isSearchingMembers || !hasMoreResults || selectedSkills.length === 0) {
+        if (isLoadingMore || isSearchingMembers || !hasMoreResults) {
             return
         }
 
@@ -344,7 +385,7 @@ export const TalentSearchPage: FC = () => {
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
-                                        setHasSearched(value.length > 0)
+                                        setHasSearched(true)
                                     }}
                                 />
                             </div>
@@ -360,6 +401,18 @@ export const TalentSearchPage: FC = () => {
                                     placeholder='Select country'
                                 />
                             </div>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile Complete</span>
+                            </label>
                             <label className={styles.checkboxRow}>
                                 <input
                                     type='checkbox'
@@ -447,11 +500,13 @@ export const TalentSearchPage: FC = () => {
                                         <InputSelect
                                             classNameWrapper={styles.matchingIndexSelect}
                                             name='sortBy'
-                                            options={[
-                                                { label: 'Matching Index', value: 'matching-index' },
-                                            ]}
-                                            value='matching-index'
-                                            onChange={() => undefined}
+                                            options={sortOptions}
+                                            value={activeSort}
+                                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                                setSortBy(
+                                                    (event.target.value || 'alphabetical') as TalentSearchSortOption,
+                                                )
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -460,19 +515,20 @@ export const TalentSearchPage: FC = () => {
                                         <h4>Searching talent...</h4>
                                     </div>
                                 )}
-                                {!isSearchingMembers && filteredResults.length === 0 && (
+                                {!isSearchingMembers && displayedResults.length === 0 && (
                                     <div className={styles.emptyState}>
                                         <h4>No matching talent found</h4>
                                         <p>Try changing filters or using a different job description.</p>
                                     </div>
                                 )}
-                                {!isSearchingMembers && filteredResults.length > 0 && (
+                                {!isSearchingMembers && displayedResults.length > 0 && (
                                     <>
                                         <div className={styles.cardsGrid}>
-                                            {filteredResults.map(talent => (
+                                            {displayedResults.map(talent => (
                                                 <TalentResultCard
                                                     key={talent.id}
                                                     talent={talent}
+                                                    showSkillMatch={hasSkillSearch}
                                                 />
                                             ))}
                                         </div>
