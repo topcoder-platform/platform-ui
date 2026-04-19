@@ -581,6 +581,8 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             if (
                 configurationMode === 'template'
                 && selectedTemplateId
+                && !templatesLoading
+                && templates.length > 0
                 && !activeTemplateIdSet.has(selectedTemplateId)
             ) {
                 errors.push('Selected AI review template is deactivated. Please select an active template.')
@@ -609,6 +611,8 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             configuration.workflows,
             configurationMode,
             normalizedConfiguration,
+            templates,
+            templatesLoading,
         ],
     )
     const hasPersistedConfigForCurrentChallenge = useMemo(
