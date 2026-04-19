@@ -27,7 +27,7 @@ const createSkills = (count: number): Array<{ id: string; name: string }> => (
 )
 
 describe('useFetchTalentMatches', () => {
-    it('requires at least the configured minimum number of skills to search', () => {
+    it('allows single-skill searches while still blocking empty searches', () => {
         expect(canSearchTalentMatches(createSkills(SKILL_SEARCH_MINIMUM - 1) as any))
             .toBe(false)
         expect(canSearchTalentMatches(createSkills(SKILL_SEARCH_MINIMUM) as any))
