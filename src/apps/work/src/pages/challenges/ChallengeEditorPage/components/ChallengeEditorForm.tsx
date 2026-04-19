@@ -1395,6 +1395,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [isInitialResourceHydrationPending, setIsInitialResourceHydrationPending] = useState<boolean>(
         !!props.challenge?.id,
     )
+    const isInitialResourceHydrationPendingRef = useRef<boolean>(!!props.challenge?.id)
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
@@ -1661,14 +1662,31 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         fallbackValue: string | undefined,
         resourcesOverride?: typeof challengeResources,
         resourceRolesOverride?: typeof resourceRoles,
-    ): string | undefined => getPersistedAssignmentValueByFields(
-        fallbackValue,
-        COPILOT_RESOURCE_ROLE_NAMES,
-        getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
-        resourcesOverride,
-        resourceRolesOverride,
-    ), [
-        getPersistedAssignmentValueByFields,
+    ): string | undefined => {
+        const resourceAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+            valueFields: getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
+        })
+        const normalizedFallbackValue = normalizeTextValue(fallbackValue)
+
+        if (!resourceAssignment) {
+            return normalizedFallbackValue || undefined
+        }
+
+        if (
+            resourceAssignment.valueField === 'memberId'
+            && normalizedFallbackValue
+            && !hasSameNormalizedValue(resourceAssignment.value, normalizedFallbackValue)
+        ) {
+            return normalizedFallbackValue
+        }
+
+        return resourceAssignment.value
+    }, [
+        challengeResources,
+        resourceRoles,
     ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
@@ -1944,6 +1962,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [currentChallengeId])
 
     useEffect(() => {
+        isInitialResourceHydrationPendingRef.current = isInitialResourceHydrationPending
+    }, [isInitialResourceHydrationPending])
+
+    useEffect(() => {
         projectBillingAccountRef.current = projectBillingAccount
     }, [projectBillingAccount])
 
@@ -1966,6 +1988,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         const isRefreshingCurrentChallenge = !!challengeId
             && challengeId === currentChallengeIdRef.current
             && isFormDirtyRef.current
+            && !isInitialResourceHydrationPendingRef.current
 
         if (isRefreshingCurrentChallenge) {
             return () => {
@@ -2003,7 +2026,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 fetchedResources,
                 fetchedResourceRoles,
             ]) => {
-                if (!isActive || isFormDirtyRef.current) {
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
                     return
                 }
 
@@ -2017,7 +2043,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     fetchedResourceRoles,
                 )
 
-                if (!isActive || isFormDirtyRef.current) {
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
                     return
                 }
 
@@ -2044,7 +2073,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         if (
             !currentChallengeId
-            || formState.isDirty
+            || (formState.isDirty && !isInitialResourceHydrationPending)
             || challengeResourcesResult.isLoading
             || resourceRolesResult.isLoading
         ) {
@@ -2104,6 +2133,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         currentChallengeId,
         formState.isDirty,
         getValues,
+        isInitialResourceHydrationPending,
         isTaskSingleAssignmentChallenge,
         resourceRoles,
         resourceRolesResult.isLoading,

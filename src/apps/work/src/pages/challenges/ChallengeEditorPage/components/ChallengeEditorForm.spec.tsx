@@ -48,6 +48,8 @@ import {
 } from './ChallengeEditorForm'
 import { TermsField } from './TermsField'
 
+let mockShouldAutoDirtyDuringInitialHydration = false
+
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
 }))
@@ -484,7 +486,29 @@ jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
 }))
 jest.mock('./StockArtsField', () => ({
-    StockArtsField: () => <>Stock Arts Field</>,
+    StockArtsField: function StockArtsField() {
+        const React: typeof import('react') = jest.requireActual('react')
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+        const hasAutoDirtiedRef = React.useRef(false)
+
+        React.useEffect(() => {
+            if (!mockShouldAutoDirtyDuringInitialHydration || hasAutoDirtiedRef.current) {
+                return
+            }
+
+            hasAutoDirtiedRef.current = true
+            formContext.setValue('metadata', [{
+                name: 'autoDirty',
+                value: 'true',
+            }], {
+                shouldDirty: true,
+                shouldValidate: false,
+            })
+        }, [formContext])
+
+        return <>Stock Arts Field</>
+    },
 }))
 jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
@@ -622,6 +646,7 @@ describe('ChallengeEditorForm', () => {
     })
 
     afterEach(() => {
+        mockShouldAutoDirtyDuringInitialHydration = false
         jest.clearAllMocks()
     })
 
@@ -1583,6 +1608,79 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByLabelText('Copilot Field'))
                 .toHaveValue('40158994')
         })
+    })
+
+    it('rehydrates persisted assignments during initial hydration when mount-time dirty state exists', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockShouldAutoDirtyDuringInitialHydration = true
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await act(async () => {
+            resolveFetchedResourceRoles?.([
+                {
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                },
+                {
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                },
+            ])
+            resolveFetchedResources?.([
+                {
+                    challengeId: '12345',
+                    memberHandle: 'saved-copilot',
+                    roleId: 'copilot-role-id',
+                },
+                {
+                    challengeId: '12345',
+                    memberId: 'manual-reviewer-member-id',
+                    role: 'Reviewer',
+                    roleId: 'reviewer-role-id',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('saved-copilot')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
     })
 
     it('rehydrates handle-only reviewer resources before the refreshed form settles', async () => {
