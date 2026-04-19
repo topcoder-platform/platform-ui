@@ -47,7 +47,7 @@ jest.mock('~/config/environments/default.env', () => ({
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         ADMIN: {
-            WORK_MANAGER_URL: 'https://challenges.example.com',
+            WORK_MANAGER_URL: 'https://work.example.com',
         },
     },
 }), { virtual: true })
@@ -55,11 +55,11 @@ jest.mock('~/config', () => ({
 const mockedFetchWinningPaymentDetails = (
     fetchWinningPaymentDetails as jest.MockedFunction<typeof fetchWinningPaymentDetails>
 )
-const expectedWorkManagerLink
-    = 'https://challenges.example.com/projects/project-789/engagements/engagement-456/assignments'
+const expectedWorkAppLink
+    = 'https://work.example.com/projects/project-789/engagements/engagement-456/assignments'
         + '?assignmentId=assignment-123'
-const expectedProjectLink
-    = 'https://challenges.example.com/projects/project-789'
+const expectedWorkProjectLink
+    = 'https://work.example.com/projects/project-789'
 
 describe('PaymentView', () => {
     const payment: Winning = {
@@ -153,14 +153,14 @@ describe('PaymentView', () => {
         })
 
         expect(descriptionLink.getAttribute('href'))
-            .toBe(expectedWorkManagerLink)
+            .toBe(expectedWorkAppLink)
 
         const projectLink = await screen.findByRole('link', {
             name: 'Wipro - US Foods',
         })
 
         expect(projectLink.getAttribute('href'))
-            .toBe(expectedProjectLink)
+            .toBe(expectedWorkProjectLink)
         expect(projectLink.getAttribute('target'))
             .toBe('_blank')
 
