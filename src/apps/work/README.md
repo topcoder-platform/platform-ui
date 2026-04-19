@@ -17,6 +17,7 @@ The Work app provides work management capabilities for:
 - `groups`
 - `role-error` (shown when the user is authenticated but missing a required Work role)
 - root-level authentication and role restriction for Work Manager access
+- project-scoped routes are additionally guarded so only authorized members, invitees, admins, and managers can open them
 
 `config/routes.config.ts` contains route ids and the `rootRoute` resolver based on the active subdomain.
 

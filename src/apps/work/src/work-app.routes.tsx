@@ -40,6 +40,7 @@ import {
 } from './config/routes.config'
 import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
 import { ErrorMessage } from './lib/components'
+import { ProjectAccessGuard } from './lib/components/ProjectAccessGuard/ProjectAccessGuard'
 import { WorkAppContext } from './lib/contexts'
 import { WorkAppContextModel } from './lib/models'
 import { canViewAllEngagements } from './lib/utils'
@@ -146,6 +147,20 @@ const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) 
     return <>{props.children}</>
 }
 
+/**
+ * Wraps a project-scoped route so unauthorized users cannot open it directly.
+ *
+ * @param element route element that requires project access.
+ * @returns the guarded route element.
+ */
+function withProjectAccess(element: JSX.Element): JSX.Element {
+    return (
+        <ProjectAccessGuard>
+            {element}
+        </ProjectAccessGuard>
+    )
+}
+
 export const toolTitle: string = ToolTitle.work
 
 export const workRoutes: ReadonlyArray<PlatformRoute> = [
@@ -172,13 +187,13 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <ChallengesListPage />,
+                element: withProjectAccess(<ChallengesListPage />),
                 route: '/projects/:projectId/challenges',
                 title: 'Challenges',
             },
             {
                 authRequired: true,
-                element: <ChallengeEditorPage />,
+                element: withProjectAccess(<ChallengeEditorPage />),
                 id: challengeCreateRouteId,
                 route: '/projects/:projectId/challenges/new',
                 title: 'Create Challenge',
@@ -198,13 +213,13 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <ChallengeEditorPage />,
+                element: withProjectAccess(<ChallengeEditorPage />),
                 route: '/projects/:projectId/challenges/:challengeId/edit',
                 title: 'Edit Challenge',
             },
             {
                 authRequired: true,
-                element: <ChallengeEditorPage />,
+                element: withProjectAccess(<ChallengeEditorPage />),
                 route: '/projects/:projectId/challenges/:challengeId/view',
                 title: 'View Challenge',
             },
@@ -216,7 +231,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <ProjectAssetsPage />,
+                element: withProjectAccess(<ProjectAssetsPage />),
                 id: projectAssetsRouteId,
                 route: '/projects/:projectId/assets',
                 title: 'Project Assets',
@@ -237,7 +252,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <ProjectEditorPage />,
+                element: withProjectAccess(<ProjectEditorPage />),
                 id: projectEditRouteId,
                 route: `${projectsRouteId}/:projectId/edit`,
                 title: 'Edit Project',
@@ -255,48 +270,48 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <EngagementsListPage />,
+                element: withProjectAccess(<EngagementsListPage />),
                 route: '/projects/:projectId/engagements',
                 title: 'Engagements',
             },
             {
                 authRequired: true,
-                element: <EngagementEditorPage />,
+                element: withProjectAccess(<EngagementEditorPage />),
                 id: engagementCreateRouteId,
                 route: '/projects/:projectId/engagements/new',
                 title: 'Create Engagement',
             },
             {
                 authRequired: true,
-                element: <EngagementEditorPage />,
+                element: withProjectAccess(<EngagementEditorPage />),
                 id: engagementEditRouteId,
                 route: '/projects/:projectId/engagements/:engagementId',
                 title: 'Edit Engagement',
             },
             {
                 authRequired: true,
-                element: <ApplicationsListPage />,
+                element: withProjectAccess(<ApplicationsListPage />),
                 id: engagementApplicationsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/applications',
                 title: 'Applications',
             },
             {
                 authRequired: true,
-                element: <EngagementPaymentPage />,
+                element: withProjectAccess(<EngagementPaymentPage />),
                 id: engagementAssignmentsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments',
                 title: 'Assignments',
             },
             {
                 authRequired: true,
-                element: <EngagementFeedbackPage />,
+                element: withProjectAccess(<EngagementFeedbackPage />),
                 id: engagementFeedbackRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/feedback',
                 title: 'Feedback',
             },
             {
                 authRequired: true,
-                element: <EngagementExperiencePage />,
+                element: withProjectAccess(<EngagementExperiencePage />),
                 id: engagementExperienceRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/experience',
                 title: 'Experience',
@@ -324,26 +339,26 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <ProjectInvitationsPage />,
+                element: withProjectAccess(<ProjectInvitationsPage />),
                 route: '/projects/:projectId/accept/:inviteId',
                 title: 'Project Invitations',
             },
             {
                 authRequired: true,
-                element: <ProjectInvitationsPage />,
+                element: withProjectAccess(<ProjectInvitationsPage />),
                 route: '/projects/:projectId/decline/:inviteId',
                 title: 'Project Invitations',
             },
             {
                 authRequired: true,
-                element: <ProjectInvitationsPage />,
+                element: withProjectAccess(<ProjectInvitationsPage />),
                 id: projectInvitationsRouteId,
                 route: '/projects/:projectId/invitations/:action?',
                 title: 'Project Invitations',
             },
             {
                 authRequired: true,
-                element: <UsersManagementPage />,
+                element: withProjectAccess(<UsersManagementPage />),
                 id: usersRouteId,
                 route: '/projects/:projectId/users',
                 title: 'Users',
