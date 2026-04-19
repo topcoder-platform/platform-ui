@@ -193,7 +193,7 @@ describe('EngagementPaymentPage', () => {
             },
         } as unknown as ReturnType<typeof useFetchProject>)
 
-        render(
+        const renderedPage: ReturnType<typeof render> = render(
             <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
                 <Routes>
                     <Route
@@ -203,9 +203,19 @@ describe('EngagementPaymentPage', () => {
                 </Routes>
             </MemoryRouter>,
         )
+        const container: HTMLElement = renderedPage.container
 
         expect(screen.queryByText('testing 123'))
             .toBeNull()
+        const labels: Array<string | null> = Array.from(container.querySelectorAll('.label'))
+            .map(element => element.textContent)
+
+        expect(labels)
+            .toEqual(expect.arrayContaining([
+                'Billing Start Date*',
+                'Rate Per Hour*',
+                'Standard Hours Per Week*',
+            ]))
 
         fireEvent.click(screen.getByRole('button', {
             name: 'View other remarks for testaws1',
