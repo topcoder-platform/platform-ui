@@ -1366,6 +1366,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const onSavingChange = props.onSavingChange
     const formElementRef = useRef<HTMLFormElement>(null)
     const challengeRef = useRef<Challenge | undefined>(props.challenge)
+    const pendingChallengeRefreshRef = useRef<Challenge | undefined>()
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -1919,60 +1920,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [],
     )
-
-    useEffect(() => {
-        if (!onSavingChange) {
-            return undefined
-        }
-
-        onSavingChange(isSaving)
-
-        return () => {
-            onSavingChange(false)
-        }
-    }, [
-        isSaving,
-        onSavingChange,
-    ])
-
-    useEffect(() => {
-        challengeRef.current = props.challenge
-    }, [props.challenge])
-
-    useEffect(() => {
-        currentChallengeIdRef.current = currentChallengeId
-    }, [currentChallengeId])
-
-    useEffect(() => {
-        projectBillingAccountRef.current = projectBillingAccount
-    }, [projectBillingAccount])
-
-    useEffect(() => {
-        resourceRolesRef.current = resourceRoles
-    }, [resourceRoles])
-
-    useEffect(() => {
-        isFormDirtyRef.current = formState.isDirty
-    }, [formState.isDirty])
-
-    useEffect(() => {
-        applyPersistedSingleAssignmentsRef.current = applyPersistedSingleAssignments
-    }, [applyPersistedSingleAssignments])
-
-    useEffect(() => {
+    const hydrateChallengeSnapshot = useCallback((
+        challenge?: Challenge,
+    ): (() => void) => {
         let isActive = true
-        const challenge = challengeRef.current
         const challengeId = challenge?.id
-        const isRefreshingCurrentChallenge = !!challengeId
-            && challengeId === currentChallengeIdRef.current
-            && isFormDirtyRef.current
-
-        if (isRefreshingCurrentChallenge) {
-            return () => {
-                isActive = false
-            }
-        }
-
         const baseFormData = applyProjectBillingToChallengeFormData(
             transformChallengeToFormData(challenge),
             projectBillingAccountRef.current,
@@ -1986,6 +1938,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
         if (!challengeId) {
             setIsInitialResourceHydrationPending(false)
+
             return () => {
                 isActive = false
             }
@@ -2035,10 +1988,87 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         return () => {
             isActive = false
         }
+    }, [reset])
+
+    useEffect(() => {
+        if (!onSavingChange) {
+            return undefined
+        }
+
+        onSavingChange(isSaving)
+
+        return () => {
+            onSavingChange(false)
+        }
     }, [
+        isSaving,
+        onSavingChange,
+    ])
+
+    useEffect(() => {
+        challengeRef.current = props.challenge
+    }, [props.challenge])
+
+    useEffect(() => {
+        currentChallengeIdRef.current = currentChallengeId
+    }, [currentChallengeId])
+
+    useEffect(() => {
+        projectBillingAccountRef.current = projectBillingAccount
+    }, [projectBillingAccount])
+
+    useEffect(() => {
+        resourceRolesRef.current = resourceRoles
+    }, [resourceRoles])
+
+    useEffect(() => {
+        isFormDirtyRef.current = formState.isDirty
+    }, [formState.isDirty])
+
+    useEffect(() => {
+        applyPersistedSingleAssignmentsRef.current = applyPersistedSingleAssignments
+    }, [applyPersistedSingleAssignments])
+
+    useEffect(() => {
+        const challenge = challengeRef.current
+        const challengeId = challenge?.id
+        const isRefreshingCurrentChallenge = !!challengeId
+            && challengeId === currentChallengeIdRef.current
+            && isFormDirtyRef.current
+
+        if (isRefreshingCurrentChallenge) {
+            pendingChallengeRefreshRef.current = challenge
+
+            return undefined
+        }
+
+        pendingChallengeRefreshRef.current = undefined
+
+        return hydrateChallengeSnapshot(challenge)
+    }, [
+        hydrateChallengeSnapshot,
+        props.challenge,
         props.challenge?.id,
         props.challenge?.updated,
-        reset,
+    ])
+
+    useEffect(() => {
+        if (formState.isDirty) {
+            return undefined
+        }
+
+        const pendingChallengeRefresh = pendingChallengeRefreshRef.current
+
+        if (!pendingChallengeRefresh) {
+            return undefined
+        }
+
+        pendingChallengeRefreshRef.current = undefined
+
+        return hydrateChallengeSnapshot(pendingChallengeRefresh)
+    }, [
+        formState.isDirty,
+        hydrateChallengeSnapshot,
     ])
 
     useEffect(() => {

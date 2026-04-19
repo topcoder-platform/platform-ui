@@ -251,15 +251,56 @@ jest.mock('./ChallengeScheduleSection', () => ({
             control: formContext.control,
             name: 'phases',
         }) as Array<{
+            duration?: number
+            phaseId?: string
             scheduledEndDate?: string
+            scheduledStartDate?: string
         }> | undefined
+        const handleSetDirtyPhaseEnd = (): void => {
+            const currentPhases = formContext.getValues('phases') as typeof phases
+
+            formContext.setValue('phases', (currentPhases || []).map((phase, index) => (
+                index === 0
+                    ? {
+                        ...phase,
+                        duration: 1440,
+                        phaseId: phase?.phaseId || 'submission-phase-id',
+                        scheduledEndDate: '2026-04-18T04:58:51.000Z',
+                        scheduledStartDate: phase?.scheduledStartDate || '2026-04-11T04:58:51.000Z',
+                    }
+                    : phase
+            )), {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        const handleMarkFormClean = (): void => {
+            formContext.reset(formContext.getValues())
+        }
 
         return (
-            <div
-                data-disabled={props.disabled === true ? 'true' : 'false'}
-                data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
-                data-testid='challenge-schedule-section'
-            />
+            <>
+                <div
+                    data-disabled={props.disabled === true ? 'true' : 'false'}
+                    data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                    data-testid='challenge-schedule-section'
+                />
+                <button
+                    data-testid='mock-dirty-phase-end'
+                    onClick={handleSetDirtyPhaseEnd}
+                    type='button'
+                >
+                    Mock Dirty Phase End
+                </button>
+                <button
+                    data-testid='mock-clean-form'
+                    onClick={handleMarkFormClean}
+                    type='button'
+                >
+                    Mock Clean Form
+                </button>
+            </>
         )
     },
 }))
@@ -2292,6 +2333,54 @@ describe('ChallengeEditorForm', () => {
         await waitFor(() => {
             expect(screen.getByTestId('challenge-schedule-section'))
                 .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+        })
+    })
+
+    it('reapplies a same-id challenge refresh after the form becomes clean again', async () => {
+        const user = userEvent.setup()
+        const initialChallenge = {
+            ...validDraftChallenge,
+            phases: [{
+                duration: 1440,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-17T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+        } as Challenge
+        const refreshedChallenge = {
+            ...initialChallenge,
+            phases: [{
+                ...initialChallenge.phases?.[0],
+                scheduledEndDate: '2026-04-19T04:58:51.000Z',
+            }],
+        } as Challenge
+
+        const renderResult = render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={initialChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={refreshedChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        await user.click(screen.getByTestId('mock-clean-form'))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-19T04:58:51.000Z')
         })
     })
 
