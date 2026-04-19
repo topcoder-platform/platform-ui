@@ -588,7 +588,11 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                 errors.push('Selected AI review template is deactivated. Please select an active template.')
             }
 
-            if (configurationMode === 'manual') {
+            if (
+                configurationMode === 'manual'
+                && !isWorkflowsLoading
+                && availableWorkflows.length > 0
+            ) {
                 const hasDeactivatedWorkflow = (configuration.workflows || [])
                     .map(workflow => normalizeReviewerText(workflow.workflowId))
                     .filter(Boolean)
@@ -610,6 +614,8 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             configuration.templateId,
             configuration.workflows,
             configurationMode,
+            availableWorkflows,
+            isWorkflowsLoading,
             normalizedConfiguration,
             templates,
             templatesLoading,
