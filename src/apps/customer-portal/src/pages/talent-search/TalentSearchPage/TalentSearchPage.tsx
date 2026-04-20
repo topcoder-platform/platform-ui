@@ -31,7 +31,6 @@ import styles from './TalentSearchPage.module.scss'
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
     const lastSearchedDescriptionRef = useRef<string>('')
-
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
@@ -196,11 +195,11 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        lastSearchedDescriptionRef.current = normalizedDescription // <-- add this
+        lastSearchedDescriptionRef.current = normalizedDescription
 
         setErrorMessage('')
         setIsExtractingSkills(true)
-        setIsLoading(true) // <-- add this
+        setIsLoading(true)
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
@@ -246,7 +245,7 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
-            setIsLoading(false) // <-- add this
+            setIsLoading(false)
 
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
