@@ -257,8 +257,8 @@ export const TalentSearchPage: FC = () => {
             }
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
-            if (searchGenerationRef.current !== generation) return
             skipNextAutoSearchRef.current = true
+            if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
         } finally {
