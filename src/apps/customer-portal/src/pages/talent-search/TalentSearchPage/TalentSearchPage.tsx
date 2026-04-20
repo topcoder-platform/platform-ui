@@ -30,6 +30,8 @@ import styles from './TalentSearchPage.module.scss'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
+    const lastSearchedDescriptionRef = useRef<string>('')
+
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
@@ -45,7 +47,7 @@ export const TalentSearchPage: FC = () => {
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
-
+    const [isLoading, setIsLoading] = useState<boolean>(false)
     // const breadCrumb = useMemo(
     //     () => [{ index: 1, label: 'Talent Search' }],
     //     [],
@@ -84,9 +86,7 @@ export const TalentSearchPage: FC = () => {
 
         return true
     }), [countryOptions, onlyActive, results, selectedCountry])
-    const foundMembersCount = selectedCountry === 'all'
-        ? (totalResults || filteredResults.length)
-        : filteredResults.length
+
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -196,8 +196,11 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
+        lastSearchedDescriptionRef.current = normalizedDescription // <-- add this
+
         setErrorMessage('')
         setIsExtractingSkills(true)
+        setIsLoading(true) // <-- add this
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
@@ -243,6 +246,8 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
+            setIsLoading(false) // <-- add this
+
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
 
@@ -276,7 +281,12 @@ export const TalentSearchPage: FC = () => {
             page: currentPage + 1,
         })
     }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
-
+    const isSearchButtonDisabled = useMemo(
+        () => isExtractingSkills
+        || !jobDescription.trim()
+        || jobDescription.trim() === lastSearchedDescriptionRef.current,
+        [isExtractingSkills, jobDescription],
+    )
     return (
         <PageWrapper
             pageTitle='Talent Search'
@@ -319,7 +329,7 @@ export const TalentSearchPage: FC = () => {
                                 </Button>
                                 <Button
                                     primary
-                                    disabled={isExtractingSkills || !jobDescription.trim()}
+                                    disabled={isSearchButtonDisabled}
                                     onClick={handleAiSearch}
                                 >
                                     {isExtractingSkills ? 'Analyzing...' : 'Search'}
@@ -434,58 +444,40 @@ export const TalentSearchPage: FC = () => {
 
                         {hasSearched && (
                             <div className={styles.resultsContent}>
-                                <div className={styles.resultsTop}>
-                                    <p className={styles.foundText}>
-                                        We have found&nbsp;
-                                        <span className={styles.foundTextCount}>
-                                            {`${foundMembersCount} members`}
-                                        </span>
-                                        &nbsp;that match your search.
-                                    </p>
-                                    <div className={styles.sortControl}>
-                                        <span className={styles.sortLabel}>Sort by</span>
-                                        <InputSelect
-                                            classNameWrapper={styles.matchingIndexSelect}
-                                            name='sortBy'
-                                            options={[
-                                                { label: 'Matching Index', value: 'matching-index' },
-                                            ]}
-                                            value='matching-index'
-                                            onChange={() => undefined}
-                                        />
-                                    </div>
-                                </div>
-                                {isSearchingMembers && (
+                                {isLoading ? (
                                     <div className={styles.emptyState}>
                                         <h4>Searching talent...</h4>
                                     </div>
-                                )}
-                                {!isSearchingMembers && filteredResults.length === 0 && (
-                                    <div className={styles.emptyState}>
-                                        <h4>No matching talent found</h4>
-                                        <p>Try changing filters or using a different job description.</p>
-                                    </div>
-                                )}
-                                {!isSearchingMembers && filteredResults.length > 0 && (
+                                ) : (
                                     <>
-                                        <div className={styles.cardsGrid}>
-                                            {filteredResults.map(talent => (
-                                                <TalentResultCard
-                                                    key={talent.id}
-                                                    talent={talent}
-                                                />
-                                            ))}
-                                        </div>
-                                        {hasMoreResults && (
-                                            <div className={styles.loadMoreWrap}>
-                                                <Button
-                                                    secondary
-                                                    disabled={isLoadingMore}
-                                                    onClick={handleLoadMore}
-                                                >
-                                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
-                                                </Button>
+
+                                        {filteredResults.length === 0 ? (
+                                            <div className={styles.emptyState}>
+                                                <h4>No matching talent found</h4>
+                                                <p>Try changing filters or using a different job description.</p>
                                             </div>
+                                        ) : (
+                                            <>
+                                                <div className={styles.cardsGrid}>
+                                                    {filteredResults.map(talent => (
+                                                        <TalentResultCard
+                                                            key={talent.id}
+                                                            talent={talent}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                {hasMoreResults && (
+                                                    <div className={styles.loadMoreWrap}>
+                                                        <Button
+                                                            secondary
+                                                            disabled={isLoadingMore}
+                                                            onClick={handleLoadMore}
+                                                        >
+                                                            {isLoadingMore ? 'Loading...' : 'Load More Members'}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </>
                                 )}
