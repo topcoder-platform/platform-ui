@@ -119,6 +119,128 @@ describe('filterIterativeReviewRows', () => {
             .toBe('iterative-phase-1')
     })
 
+    it('maps phase-less AI-failed submissions to iterative tabs by submission order', () => {
+        const multiIterativePhases: BackendPhase[] = [
+            createPhase('submission-1', 'Submission'),
+            createPhase('iterative-1', 'Iterative Review', 'iterative-phase-1'),
+            createPhase('iterative-2', 'Iterative Review', 'iterative-phase-2'),
+            createPhase('review-1', 'Review', 'review-phase-1'),
+        ]
+
+        const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+        const firstAiFailedSubmission: SubmissionInfo = {
+            ...createSubmission(iterativeReviewer.id),
+            id: 'submission-1',
+            status: 'AI_FAILED_REVIEW',
+            submittedDate: '2026-04-01T04:56:13.405Z',
+        }
+
+        const secondAiFailedSubmission: SubmissionInfo = {
+            ...createSubmission(iterativeReviewer.id),
+            id: 'submission-2',
+            status: 'AI_FAILED_REVIEW',
+            submittedDate: '2026-04-01T04:57:13.405Z',
+        }
+
+        const phase1Results = filterIterativeReviewRows({
+            challengePhases: multiIterativePhases,
+            isPostMortemPhase: false,
+            phaseIdFilter: 'iterative-1',
+            reviewerResources: [iterativeReviewer],
+            sourceRows: [secondAiFailedSubmission, firstAiFailedSubmission],
+        })
+
+        const phase2Results = filterIterativeReviewRows({
+            challengePhases: multiIterativePhases,
+            isPostMortemPhase: false,
+            phaseIdFilter: 'iterative-2',
+            reviewerResources: [iterativeReviewer],
+            sourceRows: [secondAiFailedSubmission, firstAiFailedSubmission],
+        })
+
+        expect(phase1Results)
+            .toHaveLength(1)
+        expect(phase1Results[0].id)
+            .toBe('submission-1')
+
+        expect(phase2Results)
+            .toHaveLength(1)
+        expect(phase2Results[0].id)
+            .toBe('submission-2')
+    })
+
+    it(
+        'skips iterative phases that already have assigned reviews when mapping phase-less AI-failed submissions',
+        () => {
+            const multiIterativePhases: BackendPhase[] = [
+                createPhase('submission-1', 'Submission'),
+                createPhase('iterative-1', 'Iterative Review', 'iterative-phase-1'),
+                createPhase('iterative-2', 'Iterative Review', 'iterative-phase-2'),
+                createPhase('review-1', 'Review', 'review-phase-1'),
+            ]
+
+            const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+            const assignedSubmission: SubmissionInfo = {
+                ...createSubmission('assigned-reviewer', 'iterative-phase-1'),
+                id: 'assigned-submission',
+            }
+
+            const aiFailedSubmission: SubmissionInfo = {
+                ...createSubmission(iterativeReviewer.id),
+                id: 'ai-failed-submission',
+                status: 'AI_FAILED_REVIEW',
+                submittedDate: '2026-04-01T04:56:13.405Z',
+            }
+
+            const phase1Results = filterIterativeReviewRows({
+                challengePhases: multiIterativePhases,
+                isPostMortemPhase: false,
+                phaseIdFilter: 'iterative-1',
+                reviewerResources: [iterativeReviewer],
+                sourceRows: [assignedSubmission, aiFailedSubmission],
+            })
+
+            const phase2Results = filterIterativeReviewRows({
+                challengePhases: multiIterativePhases,
+                isPostMortemPhase: false,
+                phaseIdFilter: 'iterative-2',
+                reviewerResources: [iterativeReviewer],
+                sourceRows: [assignedSubmission, aiFailedSubmission],
+            })
+
+            expect(phase1Results)
+                .toHaveLength(1)
+            expect(phase1Results[0].id)
+                .toBe('assigned-submission')
+
+            expect(phase2Results)
+                .toHaveLength(1)
+            expect(phase2Results[0].id)
+                .toBe('ai-failed-submission')
+        },
+    )
+
+    it('keeps a phase-less AI-failed submission when only one iterative phase exists', () => {
+        const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+        const aiFailedSubmission: SubmissionInfo = {
+            ...createSubmission(iterativeReviewer.id),
+            status: 'AI_FAILED_REVIEW',
+        }
+
+        const results = filterIterativeReviewRows({
+            challengePhases,
+            isPostMortemPhase: false,
+            phaseIdFilter: 'iterative-1',
+            reviewerResources: [iterativeReviewer],
+            sourceRows: [aiFailedSubmission],
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].id)
+            .toBe(`submission-${iterativeReviewer.id}`)
+    })
+
     it('limits completed F2F rows to the supplied winning submission ids', () => {
         const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
         const losingReviewer = createResource('iterative-resource-2', 'Iterative Reviewer')
