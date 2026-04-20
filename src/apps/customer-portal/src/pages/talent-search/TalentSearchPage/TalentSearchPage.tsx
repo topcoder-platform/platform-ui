@@ -105,16 +105,17 @@ export const TalentSearchPage: FC = () => {
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            generation?: number
             openToWork?: boolean
             page?: number
             recentlyActive?: boolean
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
+        const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
             openToWork,
@@ -131,7 +132,6 @@ export const TalentSearchPage: FC = () => {
             skillSearchType: 'OR',
             verifiedProfile: true,
         }
-
         if (append) {
             setIsLoadingMore(true)
         } else {
@@ -140,11 +140,14 @@ export const TalentSearchPage: FC = () => {
         }
 
         setErrorMessage('')
-
         try {
             const response = await searchMembers(payload)
-            const fetchedData = Array.isArray(response?.data) ? response.data : []
+            // If generation was provided and has changed, discard stale results
+            if (generation !== undefined && searchGenerationRef.current !== generation) {
+                return false
+            }
 
+            const fetchedData = Array.isArray(response?.data) ? response.data : []
             setResults(prevResults => {
                 if (!append) {
                     return fetchedData
@@ -158,7 +161,6 @@ export const TalentSearchPage: FC = () => {
                         merged.push(item)
                     }
                 })
-
                 return merged
             })
             setTotalResults(Number(response?.total || 0))
@@ -247,7 +249,7 @@ export const TalentSearchPage: FC = () => {
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
-            const searchSucceeded = await runMemberSearch(extractedOptions, { page: 1 })
+            const searchSucceeded = await runMemberSearch(extractedOptions, { generation, page: 1 })
             if (searchGenerationRef.current !== generation) return
 
             if (searchSucceeded) {
@@ -275,7 +277,7 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        runMemberSearch(selectedSkills)
+        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current })
     }, [
         hasSearched,
         isExtractingSkills,
