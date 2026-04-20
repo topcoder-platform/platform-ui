@@ -30,8 +30,7 @@ import styles from './TalentSearchPage.module.scss'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
-    const lastSearchedDescriptionRef = useRef<string>('')
-
+    const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
@@ -135,6 +134,7 @@ export const TalentSearchPage: FC = () => {
             setIsLoadingMore(true)
         } else {
             setIsSearchingMembers(true)
+            setIsLoading(true)
         }
 
         setErrorMessage('')
@@ -166,6 +166,7 @@ export const TalentSearchPage: FC = () => {
                 setResults([])
                 setTotalResults(0)
                 setCurrentPage(1)
+                setLastSearchedDescription('')
             }
 
             setErrorMessage('Failed to search matching members. Please try again.')
@@ -174,6 +175,7 @@ export const TalentSearchPage: FC = () => {
                 setIsLoadingMore(false)
             } else {
                 setIsSearchingMembers(false)
+                setIsLoading(false)
             }
         }
     }, [onlyActive, onlyOpenToWork])
@@ -188,6 +190,7 @@ export const TalentSearchPage: FC = () => {
         setTotalResults(0)
         setCurrentPage(1)
         setErrorMessage('')
+        setLastSearchedDescription('')
     }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
@@ -196,11 +199,8 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        lastSearchedDescriptionRef.current = normalizedDescription // <-- add this
-
         setErrorMessage('')
         setIsExtractingSkills(true)
-        setIsLoading(true) // <-- add this
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
@@ -239,6 +239,7 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
             await runMemberSearch(extractedOptions, { page: 1 })
+            setLastSearchedDescription(normalizedDescription)
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
@@ -246,7 +247,6 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
-            setIsLoading(false) // <-- add this
 
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
@@ -284,8 +284,8 @@ export const TalentSearchPage: FC = () => {
     const isSearchButtonDisabled = useMemo(
         () => isExtractingSkills
         || !jobDescription.trim()
-        || jobDescription.trim() === lastSearchedDescriptionRef.current,
-        [isExtractingSkills, jobDescription],
+        || jobDescription.trim() === lastSearchedDescription,
+        [isExtractingSkills, jobDescription, lastSearchedDescription],
     )
     return (
         <PageWrapper
@@ -323,6 +323,7 @@ export const TalentSearchPage: FC = () => {
                                     onClick={() => {
                                         setJobDescription('')
                                         setErrorMessage('')
+                                        setLastSearchedDescription('')
                                     }}
                                 >
                                     Clear
