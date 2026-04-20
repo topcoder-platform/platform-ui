@@ -13,6 +13,41 @@ export interface BillingAccount {
     [key: string]: unknown
 }
 
+export interface BillingAccountLockedAmount {
+    id: string
+    billingAccountId: number
+    challengeId: string
+    amount: number
+    createdAt: string
+    updatedAt: string
+}
+
+export interface BillingAccountConsumedAmount {
+    id: string
+    billingAccountId: number
+    challengeId: string
+    amount: number
+    createdAt: string
+    updatedAt: string
+}
+
+export interface BillingAccountLineItem {
+    id: string
+    challengeId: string
+    amount: number
+    createdAt: string
+    type: 'locked' | 'consumed'
+}
+
+export interface BillingAccountDetails extends BillingAccount {
+    budget: number
+    lockedBudget: number
+    consumedBudget: number
+    totalBudgetRemaining: number
+    lockedAmounts: BillingAccountLockedAmount[]
+    consumedAmounts: BillingAccountConsumedAmount[]
+}
+
 interface BillingAccountsResponse {
     data?: BillingAccount[]
     page?: number
@@ -136,7 +171,7 @@ export async function searchBillingAccounts(
  */
 export async function fetchBillingAccountById(
     billingAccountId: string,
-): Promise<BillingAccount> {
+): Promise<BillingAccountDetails> {
     const normalizedBillingAccountId = billingAccountId.trim()
 
     if (!normalizedBillingAccountId) {
@@ -144,10 +179,35 @@ export async function fetchBillingAccountById(
     }
 
     try {
-        return await xhrGetAsync<BillingAccount>(
+        return await xhrGetAsync<BillingAccountDetails>(
             `${EnvironmentConfig.API.V6}/billing-accounts/${encodeURIComponent(normalizedBillingAccountId)}`,
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch billing account details')
     }
+}
+
+/**
+ * Combines locked and consumed amounts into a unified line items array.
+ */
+export function combineBillingAccountLineItems(
+    details: BillingAccountDetails,
+): BillingAccountLineItem[] {
+    const lockedItems: BillingAccountLineItem[] = (details.lockedAmounts || []).map(item => ({
+        amount: Number(item.amount),
+        challengeId: item.challengeId,
+        createdAt: item.createdAt,
+        id: item.id,
+        type: 'locked' as const,
+    }))
+
+    const consumedItems: BillingAccountLineItem[] = (details.consumedAmounts || []).map(item => ({
+        amount: Number(item.amount),
+        challengeId: item.challengeId,
+        createdAt: item.createdAt,
+        id: item.id,
+        type: 'consumed' as const,
+    }))
+
+    return [...lockedItems, ...consumedItems]
 }
