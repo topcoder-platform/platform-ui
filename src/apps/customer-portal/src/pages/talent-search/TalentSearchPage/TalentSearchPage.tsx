@@ -134,6 +134,7 @@ export const TalentSearchPage: FC = () => {
             setIsLoadingMore(true)
         } else {
             setIsSearchingMembers(true)
+            setIsLoading(true)
         }
 
         setErrorMessage('')
@@ -173,6 +174,7 @@ export const TalentSearchPage: FC = () => {
                 setIsLoadingMore(false)
             } else {
                 setIsSearchingMembers(false)
+                setIsLoading(false)
             }
         }
     }, [onlyActive, onlyOpenToWork])
@@ -187,6 +189,7 @@ export const TalentSearchPage: FC = () => {
         setTotalResults(0)
         setCurrentPage(1)
         setErrorMessage('')
+        lastSearchedDescriptionRef.current = ''
     }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
@@ -199,7 +202,6 @@ export const TalentSearchPage: FC = () => {
 
         setErrorMessage('')
         setIsExtractingSkills(true)
-        setIsLoading(true)
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
@@ -245,7 +247,6 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
-            setIsLoading(false)
 
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
@@ -322,6 +323,7 @@ export const TalentSearchPage: FC = () => {
                                     onClick={() => {
                                         setJobDescription('')
                                         setErrorMessage('')
+                                        lastSearchedDescriptionRef.current = ''
                                     }}
                                 >
                                     Clear
