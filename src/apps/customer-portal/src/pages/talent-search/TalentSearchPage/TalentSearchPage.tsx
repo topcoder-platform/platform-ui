@@ -30,7 +30,7 @@ import styles from './TalentSearchPage.module.scss'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
-    const lastSearchedDescriptionRef = useRef<string>('')
+    const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
@@ -189,7 +189,7 @@ export const TalentSearchPage: FC = () => {
         setTotalResults(0)
         setCurrentPage(1)
         setErrorMessage('')
-        lastSearchedDescriptionRef.current = ''
+        setLastSearchedDescription('')
     }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
@@ -235,8 +235,7 @@ export const TalentSearchPage: FC = () => {
                 return
             }
 
-            lastSearchedDescriptionRef.current = normalizedDescription
-
+            setLastSearchedDescription(normalizedDescription)
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
             await runMemberSearch(extractedOptions, { page: 1 })
@@ -284,8 +283,8 @@ export const TalentSearchPage: FC = () => {
     const isSearchButtonDisabled = useMemo(
         () => isExtractingSkills
         || !jobDescription.trim()
-        || jobDescription.trim() === lastSearchedDescriptionRef.current,
-        [isExtractingSkills, jobDescription],
+        || jobDescription.trim() === lastSearchedDescription,
+        [isExtractingSkills, jobDescription, lastSearchedDescription],
     )
     return (
         <PageWrapper
@@ -323,7 +322,7 @@ export const TalentSearchPage: FC = () => {
                                     onClick={() => {
                                         setJobDescription('')
                                         setErrorMessage('')
-                                        lastSearchedDescriptionRef.current = ''
+                                        setLastSearchedDescription('')
                                     }}
                                 >
                                     Clear
