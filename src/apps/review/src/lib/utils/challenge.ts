@@ -743,11 +743,15 @@ export function shouldForceWinnersTabForPastChallenge(
     challengeInfo?: WinnersTabFallbackChallengeInfo,
     approvalReviews?: ApprovalReviewStatusLike[] | null,
 ): boolean {
+    if (!isPastChallengeStatus(challengeInfo?.status)) {
+        return false
+    }
+
     if (!(challengeInfo?.winners?.length)) {
         return false
     }
 
-    return shouldAllowWinnersTabForPastChallenge(challengeInfo, approvalReviews)
+    return !hasPendingApprovalReview(approvalReviews)
 }
 
 export function isReviewPhaseCurrentlyOpen(
