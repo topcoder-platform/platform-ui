@@ -33,7 +33,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const commentsArr: any[] = (feedback?.comments) || []
 
     const onShowReply = useCallback(() => {
-        setShowReply(!showReply)
+        setShowReply(prevShowReply => !prevShowReply)
     }, [])
 
     const onSubmitReply = useCallback(async (content: string) => {
