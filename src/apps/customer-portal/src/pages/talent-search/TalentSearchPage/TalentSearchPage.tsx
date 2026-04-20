@@ -360,6 +360,9 @@ export const TalentSearchPage: FC = () => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
                                         setHasSearched(value.length > 0)
+                                        if (value.length === 0) {
+                                            setLastSearchedDescription('')
+                                        }
                                     }}
                                 />
                             </div>
