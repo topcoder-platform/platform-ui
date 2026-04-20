@@ -30,6 +30,8 @@ import styles from './TalentSearchPage.module.scss'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
+    const searchGenerationRef = useRef<number>(0) // ← add this
+
     const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
@@ -183,6 +185,7 @@ export const TalentSearchPage: FC = () => {
     }, [onlyActive, onlyOpenToWork])
 
     const clearAllFilters = useCallback((): void => {
+        searchGenerationRef.current += 1
         setSelectedCountry('all')
         setOnlyOpenToWork(true)
         setOnlyActive(true)
@@ -201,11 +204,15 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
+        const generation = searchGenerationRef.current // ← capture before async work
+
         setErrorMessage('')
         setIsExtractingSkills(true)
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
+            if (searchGenerationRef.current !== generation) return
+
             const extractedSkills = Array.isArray(extractedSkillsResult?.matches)
                 ? extractedSkillsResult.matches
                 : []
@@ -241,11 +248,15 @@ export const TalentSearchPage: FC = () => {
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
             const searchSucceeded = await runMemberSearch(extractedOptions, { page: 1 })
+            if (searchGenerationRef.current !== generation) return
+
             if (searchSucceeded) {
                 setLastSearchedDescription(normalizedDescription)
             }
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
+            if (searchGenerationRef.current !== generation) return
+
             skipNextAutoSearchRef.current = true
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
@@ -325,6 +336,7 @@ export const TalentSearchPage: FC = () => {
                                     secondary
                                     disabled={isExtractingSkills}
                                     onClick={() => {
+                                        searchGenerationRef.current += 1
                                         setJobDescription('')
                                         setErrorMessage('')
                                         setLastSearchedDescription('')
