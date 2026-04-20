@@ -49,10 +49,6 @@ export const TalentSearchPage: FC = () => {
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [isLoading, setIsLoading] = useState<boolean>(false)
-    // const breadCrumb = useMemo(
-    //     () => [{ index: 1, label: 'Talent Search' }],
-    //     [],
-    // )
     const countryOptions = useMemo(
         (): InputSelectOption[] => [
             { label: 'All Countries', value: 'all' },
@@ -206,7 +202,7 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        const generation = searchGenerationRef.current // ← capture before async work
+        const generation = searchGenerationRef.current
 
         setErrorMessage('')
         setIsExtractingSkills(true)
@@ -256,7 +252,6 @@ export const TalentSearchPage: FC = () => {
                 setLastSearchedDescription(normalizedDescription)
             }
         } catch {
-            // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
             if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
