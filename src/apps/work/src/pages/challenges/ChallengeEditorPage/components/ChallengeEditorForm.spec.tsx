@@ -1697,6 +1697,15 @@ describe('ChallengeEditorForm', () => {
                 roleId: 'copilot-role-id',
             }],
         })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: '40158994',
+            roleId: 'copilot-role-id',
+        }])
         mockedPatchChallenge.mockResolvedValue({
             ...validDraftChallenge,
             copilot: 'resolved-copilot',
@@ -1713,8 +1722,12 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByLabelText('Copilot Field'))
-            .toHaveValue('resolved-copilot')
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('40158994')
+        })
+        await user.clear(screen.getByLabelText('Copilot Field'))
+        await user.type(screen.getByLabelText('Copilot Field'), 'resolved-copilot')
         await user.type(screen.getByLabelText('Challenge Name'), ' updated')
         await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
 
@@ -1722,20 +1735,84 @@ describe('ChallengeEditorForm', () => {
             expect(mockedPatchChallenge)
                 .toHaveBeenCalledTimes(1)
         })
-        expect(mockedDeleteResource)
-            .toHaveBeenCalledWith({
-                challengeId: '12345',
-                memberId: '40158994',
-                roleId: 'copilot-role-id',
-            })
-        expect(mockedCreateResource)
-            .toHaveBeenCalledWith({
-                challengeId: '12345',
-                memberHandle: 'resolved-copilot',
-                roleId: 'copilot-role-id',
-            })
+        await waitFor(() => {
+            expect(mockedDeleteResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberId: '40158994',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'resolved-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
         expect(mockedDeleteResource.mock.invocationCallOrder[0])
             .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+    })
+
+    it('creates a copilot resource from the selected dropdown value even when cached resources are stale', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'selected-copilot',
+                roleId: 'copilot-role-id',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            copilot: 'selected-copilot',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Copilot Field'), 'selected-copilot')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    copilot: 'selected-copilot',
+                }))
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'selected-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
     })
 
     it('rehydrates persisted reviewer assignments from fresh resources after saving a draft', async () => {
@@ -1820,9 +1897,13 @@ describe('ChallengeEditorForm', () => {
                 .toHaveValue(validDraftChallenge.name)
         })
         expect(mockedFetchResourceRolesService)
-            .toHaveBeenCalledTimes(1)
+            .toHaveBeenCalledTimes(2)
         expect(mockedFetchResourcesService)
-            .toHaveBeenCalledWith('12345')
+            .toHaveBeenCalledTimes(2)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(1, '12345')
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(2, '12345')
         expect(screen.getByTestId('reviewers-field')
             .getAttribute('data-reviewers'))
             .toContain('"memberId":"manual-reviewer-member-id"')

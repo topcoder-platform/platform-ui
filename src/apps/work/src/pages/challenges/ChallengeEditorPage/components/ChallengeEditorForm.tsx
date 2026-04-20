@@ -235,6 +235,8 @@ interface SingleAssignmentConfig {
 interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig, 'fieldName'> {
     challengeId: string
     nextValue?: string
+    resourceRolesOverride?: ResourceRole[]
+    resourcesOverride?: Resource[]
 }
 
 interface PersistCreatedChallengeCopilotParams {
@@ -1768,8 +1770,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const syncSingleAssignmentResource = useCallback(async (
         params: SyncSingleAssignmentResourceParams,
     ): Promise<void> => {
-        const resolvedResourceRoles = await loadSingleAssignmentResourceRoles()
-        const resolvedResources = await loadSingleAssignmentResources(params.challengeId)
+        const resolvedResourceRoles = params.resourceRolesOverride
+            || await loadSingleAssignmentResourceRoles()
+        const resolvedResources = params.resourcesOverride
+            || await loadSingleAssignmentResources(params.challengeId)
         const currentAssignment = resolvePersistedResourceAssignment({
             resourceRoles: resolvedResourceRoles,
             resources: resolvedResources,
@@ -1837,10 +1841,29 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         loadSingleAssignmentResourceRoles,
         loadSingleAssignmentResources,
     ])
+    /**
+     * Synchronizes single-member assignments against the latest persisted challenge resources.
+     *
+     * The edit flow keeps a SWR cache of resources for the Resources tab, but challenge saves
+     * should compare against the freshest backend state so a newly selected copilot still creates
+     * the required `Copilot` resource even when the local cache is stale.
+     *
+     * @param challengeId saved challenge identifier whose assignments should be synchronized.
+     * @param formData current form snapshot containing the selected assignment values.
+     * @returns Resolves after all changed single-member assignments are saved and the local
+     * resource cache is revalidated.
+     */
     const syncDraftSingleAssignments = useCallback(async (
         challengeId: string,
         formData: ChallengeEditorFormData,
     ): Promise<void> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
         const resourceSyncOperations = getSingleAssignmentConfigs(
             isTaskSingleAssignmentChallenge(formData),
         )
@@ -1850,6 +1873,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     undefined,
                     config.roleNames,
                     getSingleAssignmentResourceValueFields(config),
+                    persistedResources,
+                    persistedResourceRoles,
                 )
 
                 return hasSameNormalizedValue(nextValue, persistedValue)
@@ -1857,6 +1882,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     : syncSingleAssignmentResource({
                         challengeId,
                         nextValue,
+                        resourceRolesOverride: persistedResourceRoles,
+                        resourcesOverride: persistedResources,
                         resourceValueFields: config.resourceValueFields,
                         roleNames: config.roleNames,
                         valueField: config.valueField,
@@ -1873,6 +1900,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [
         getPersistedAssignmentValueByFields,
         isTaskSingleAssignmentChallenge,
+        loadSingleAssignmentResourceRoles,
         mutateChallengeResources,
         syncSingleAssignmentResource,
     ])
