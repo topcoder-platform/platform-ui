@@ -50,6 +50,7 @@ import {
 import {
     calculateAssignmentRatePerWeek,
     deserializeTentativeAssignmentDate,
+    getCountableEngagementAssignments,
     normalizeAssignmentStatus,
     sanitizePositiveNumericInput,
     serializeTentativeAssignmentDate,
@@ -244,7 +245,7 @@ function buildAssignmentDetailsUpdatePayload(
     const assignmentIdText = String(assignmentId)
 
     return {
-        assignmentDetails: assignments
+        assignmentDetails: getCountableEngagementAssignments(assignments)
             .map(assignment => {
                 const baseEntry = buildAssignmentDetailsPayloadEntry(assignment)
 

@@ -5,7 +5,9 @@ import {
 import {
     formatEngagementStatus,
     fromEngagementStatusApi,
+    getCountableEngagementAssignments,
     getEngagementStatusPillVariant,
+    normalizeEngagement,
     toEngagementStatusApi,
 } from './engagement.utils'
 
@@ -49,5 +51,37 @@ describe('engagement.utils status mappings', () => {
             .toBe('yellow')
         expect(getEngagementStatusPillVariant('Pending Assignment'))
             .toBe('yellow')
+    })
+
+    it('preserves assignment history while deriving assigned handles from active rows', () => {
+        const normalized = normalizeEngagement({
+            assignedMemberHandles: ['stale_member'],
+            assignments: [
+                {
+                    id: 'assignment-active',
+                    memberHandle: 'active_member',
+                    status: 'ASSIGNED',
+                },
+                {
+                    id: 'assignment-completed',
+                    memberHandle: 'completed_member',
+                    status: 'COMPLETED',
+                },
+                {
+                    id: 'assignment-terminated',
+                    memberHandle: 'terminated_member',
+                    status: 'TERMINATED',
+                },
+            ],
+            id: 'engagement-1',
+        } as any)
+
+        expect(normalized.assignments.map(assignment => assignment.memberHandle))
+            .toEqual(['active_member', 'completed_member', 'terminated_member'])
+        expect(normalized.assignedMemberHandles)
+            .toEqual(['active_member'])
+        expect(getCountableEngagementAssignments(normalized.assignments)
+            .map(assignment => assignment.memberHandle))
+            .toEqual(['active_member'])
     })
 })
