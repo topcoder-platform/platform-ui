@@ -54,11 +54,11 @@ import {
     createResource,
     deleteResource,
     fetchChallenge,
-    fetchWorkflows,
     fetchProfile,
     fetchProjectBillingAccount,
     fetchResourceRoles,
     fetchResources,
+    fetchWorkflows,
     patchChallenge,
 } from '../../../../lib/services'
 import {
@@ -256,7 +256,8 @@ const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
-    = 'One or more saved AI workflows were disabled. Update the AI workflow configuration before saving or launching this challenge.'
+    = `One or more saved AI workflows were disabled.
+        Update the AI workflow configuration before saving or launching this challenge.`
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
