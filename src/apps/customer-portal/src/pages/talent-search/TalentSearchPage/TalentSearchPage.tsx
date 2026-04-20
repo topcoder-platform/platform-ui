@@ -107,7 +107,7 @@ export const TalentSearchPage: FC = () => {
             page?: number
             recentlyActive?: boolean
         },
-    ): Promise<void> => {
+    ): Promise<boolean> => {
         const append = overrides?.append === true
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
@@ -161,6 +161,7 @@ export const TalentSearchPage: FC = () => {
             })
             setTotalResults(Number(response?.total || 0))
             setCurrentPage(Number(response?.page || page))
+            return true
         } catch {
             if (!append) {
                 setResults([])
@@ -170,6 +171,7 @@ export const TalentSearchPage: FC = () => {
             }
 
             setErrorMessage('Failed to search matching members. Please try again.')
+            return false
         } finally {
             if (append) {
                 setIsLoadingMore(false)
@@ -238,8 +240,10 @@ export const TalentSearchPage: FC = () => {
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
-            await runMemberSearch(extractedOptions, { page: 1 })
-            setLastSearchedDescription(normalizedDescription)
+            const searchSucceeded = await runMemberSearch(extractedOptions, { page: 1 })
+            if (searchSucceeded) {
+                setLastSearchedDescription(normalizedDescription)
+            }
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
@@ -356,6 +360,9 @@ export const TalentSearchPage: FC = () => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
                                         setHasSearched(value.length > 0)
+                                        if (value.length === 0) {
+                                            setLastSearchedDescription('')
+                                        }
                                     }}
                                 />
                             </div>
