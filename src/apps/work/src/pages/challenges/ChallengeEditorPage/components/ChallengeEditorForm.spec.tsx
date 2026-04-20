@@ -68,11 +68,11 @@ jest.mock('../../../../lib/services', () => ({
     createResource: jest.fn(),
     deleteResource: jest.fn(),
     fetchChallenge: jest.fn(),
-    fetchWorkflows: jest.fn(),
     fetchProfile: jest.fn(),
     fetchProjectBillingAccount: jest.fn(),
     fetchResourceRoles: jest.fn(),
     fetchResources: jest.fn(),
+    fetchWorkflows: jest.fn(),
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
