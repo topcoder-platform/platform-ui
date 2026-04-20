@@ -1820,12 +1820,8 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        await waitFor(() => {
-            expect(screen.getByLabelText('Copilot Field'))
-                .toHaveValue('40158994')
-        })
-        await user.clear(screen.getByLabelText('Copilot Field'))
-        await user.type(screen.getByLabelText('Copilot Field'), 'resolved-copilot')
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('resolved-copilot')
         await user.type(screen.getByLabelText('Challenge Name'), ' updated')
         await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
 
@@ -1892,7 +1888,11 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        await user.type(screen.getByLabelText('Copilot Field'), 'selected-copilot')
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('selected-copilot')
+        })
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
         await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
 
         await waitFor(() => {
