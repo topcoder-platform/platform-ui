@@ -853,7 +853,10 @@ export const EngagementPaymentPage: FC = () => {
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>Billing Start</span>
+                                                <span className={styles.label}>
+                                                    Billing Start Date
+                                                    <span aria-hidden='true' className={styles.required}>*</span>
+                                                </span>
                                                 <span className={styles.value}>{formatDate(assignment.startDate)}</span>
                                             </div>
                                             <div>
@@ -861,11 +864,17 @@ export const EngagementPaymentPage: FC = () => {
                                                 <span className={styles.value}>{formatDurationMonths(assignment.durationMonths)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>Rate Per Hour</span>
+                                                <span className={styles.label}>
+                                                    Rate Per Hour
+                                                    <span aria-hidden='true' className={styles.required}>*</span>
+                                                </span>
                                                 <span className={styles.value}>{formatCurrency(assignment.ratePerHour)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>Hours Per Week</span>
+                                                <span className={styles.label}>
+                                                    Standard Hours Per Week
+                                                    <span aria-hidden='true' className={styles.required}>*</span>
+                                                </span>
                                                 <span className={styles.value}>
                                                     {assignment.standardHoursPerWeek || '-'}
                                                 </span>
