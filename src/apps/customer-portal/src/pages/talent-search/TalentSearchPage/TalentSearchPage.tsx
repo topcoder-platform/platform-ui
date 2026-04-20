@@ -166,6 +166,7 @@ export const TalentSearchPage: FC = () => {
                 setResults([])
                 setTotalResults(0)
                 setCurrentPage(1)
+                setLastSearchedDescription('')
             }
 
             setErrorMessage('Failed to search matching members. Please try again.')
@@ -235,10 +236,10 @@ export const TalentSearchPage: FC = () => {
                 return
             }
 
-            setLastSearchedDescription(normalizedDescription)
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
             await runMemberSearch(extractedOptions, { page: 1 })
+            setLastSearchedDescription(normalizedDescription)
         } catch {
             // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
