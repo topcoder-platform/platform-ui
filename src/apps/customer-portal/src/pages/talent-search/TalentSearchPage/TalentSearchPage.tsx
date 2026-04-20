@@ -198,8 +198,6 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        lastSearchedDescriptionRef.current = normalizedDescription
-
         setErrorMessage('')
         setIsExtractingSkills(true)
 
@@ -236,6 +234,8 @@ export const TalentSearchPage: FC = () => {
                 setErrorMessage('No skills were extracted from the job description.')
                 return
             }
+
+            lastSearchedDescriptionRef.current = normalizedDescription
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
