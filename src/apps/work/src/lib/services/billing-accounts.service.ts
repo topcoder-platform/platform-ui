@@ -197,7 +197,7 @@ export function combineBillingAccountLineItems(
         amount: Number(item.amount),
         challengeId: item.challengeId,
         createdAt: item.createdAt,
-        id: item.id,
+        id: `locked-${item.id}`,
         type: 'locked' as const,
     }))
 
@@ -205,7 +205,7 @@ export function combineBillingAccountLineItems(
         amount: Number(item.amount),
         challengeId: item.challengeId,
         createdAt: item.createdAt,
-        id: item.id,
+        id: `consumed-${item.id}`,
         type: 'consumed' as const,
     }))
 
