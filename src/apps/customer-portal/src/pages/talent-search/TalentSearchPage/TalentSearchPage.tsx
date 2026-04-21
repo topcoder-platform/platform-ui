@@ -41,7 +41,6 @@ export const TalentSearchPage: FC = () => {
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
-    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(true)
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
     const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
@@ -124,7 +123,6 @@ export const TalentSearchPage: FC = () => {
             openToWork?: boolean
             page?: number
             recentlyActive?: boolean
-            verifiedProfile?: boolean
         },
     ): Promise<void> => {
         const append = overrides?.append === true
@@ -132,7 +130,6 @@ export const TalentSearchPage: FC = () => {
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-        const verifiedProfile = overrides?.verifiedProfile ?? onlyProfileComplete
 
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
@@ -158,10 +155,6 @@ export const TalentSearchPage: FC = () => {
 
         if (recentlyActive) {
             payload.recentlyActive = true
-        }
-
-        if (verifiedProfile) {
-            payload.verifiedProfile = true
         }
 
         if (append) {
@@ -209,11 +202,10 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountry])
+    }, [onlyActive, onlyOpenToWork, selectedCountry])
 
     const clearAllFilters = useCallback((): void => {
         setSelectedCountry('all')
-        setOnlyProfileComplete(true)
         setOnlyOpenToWork(false)
         setOnlyActive(false)
         setSortBy('alphabetical')
@@ -225,7 +217,6 @@ export const TalentSearchPage: FC = () => {
             openToWork: false,
             page: 1,
             recentlyActive: false,
-            verifiedProfile: true,
         })
     }, [runMemberSearch])
 
@@ -300,7 +291,6 @@ export const TalentSearchPage: FC = () => {
         hasSearched,
         isExtractingSkills,
         onlyActive,
-        onlyProfileComplete,
         onlyOpenToWork,
         runMemberSearch,
         selectedCountry,
@@ -401,18 +391,6 @@ export const TalentSearchPage: FC = () => {
                                     placeholder='Select country'
                                 />
                             </div>
-                            <label className={styles.checkboxRow}>
-                                <input
-                                    type='checkbox'
-                                    checked={onlyProfileComplete}
-                                    className={styles.checkboxInput}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setOnlyProfileComplete(event.target.checked)
-                                    }}
-                                />
-                                <span className={styles.toggleControl} />
-                                <span>100% Profile Complete</span>
-                            </label>
                             <label className={styles.checkboxRow}>
                                 <input
                                     type='checkbox'
