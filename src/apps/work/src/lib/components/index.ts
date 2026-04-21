@@ -1,3 +1,4 @@
+export * from './BillingAccountLineItemsModal'
 export * from './ChallengesFilter'
 export * from './ChallengesTable'
 export * from './EngagementCard'

@@ -178,6 +178,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
+                element: <Rewrite to='/projects/:projectId/challenges' />,
+                route: '/projects/:projectId',
+                title: 'Project Overview',
+            },
+            {
+                authRequired: true,
                 element: <ChallengeEditorPage />,
                 id: challengeCreateRouteId,
                 route: '/projects/:projectId/challenges/new',

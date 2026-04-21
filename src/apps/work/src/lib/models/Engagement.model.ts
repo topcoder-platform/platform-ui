@@ -16,7 +16,7 @@ export type EngagementStatus =
 
 export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
-export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'TERMINATED'
+export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
 
 export interface Assignment {
     agreementRate: string

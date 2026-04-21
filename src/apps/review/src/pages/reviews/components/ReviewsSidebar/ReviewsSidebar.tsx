@@ -254,6 +254,13 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                         </li>
                         <li>
                             <StatusLabel
+                                icon={<IconOutline.UserIcon className='icon-xl' />}
+                                label='Unlocked'
+                                status='human-override'
+                            />
+                        </li>
+                        <li>
+                            <StatusLabel
                                 icon={(
                                     <IconOutline.LightningBoltIcon
                                         className={classNames('icon-lg', styles.gatingIcon)}

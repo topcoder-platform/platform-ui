@@ -49,6 +49,7 @@ import {
 } from '../../../../lib/services'
 import {
     formatEngagementStatus,
+    getCountableEngagementAssignments,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -224,6 +225,16 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
     }
 }
 
+/**
+ * Builds private-assignment form defaults from active assignment slots only.
+ *
+ * Historical completed or terminated assignments remain on the engagement
+ * response, but editing an engagement should only submit currently countable
+ * assignments so closed history rows are not modified.
+ *
+ * @param engagement engagement being edited, if one exists.
+ * @returns member handles and details for active private-assignment slots.
+ */
 function getAssignmentDefaults(engagement: Engagement | undefined): {
     assignedMemberHandles: string[]
     assignmentDetails: AssignmentDetailsFormValue[]
@@ -231,7 +242,8 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
     const assignments = engagement?.assignments
 
     if (Array.isArray(assignments) && assignments.length > 0) {
-        const assignmentDetails = assignments.map(toAssignmentDetailsValue)
+        const assignmentDetails = getCountableEngagementAssignments(assignments)
+            .map(toAssignmentDetailsValue)
 
         return {
             assignedMemberHandles: assignmentDetails.map(assignment => assignment.memberHandle),

@@ -190,7 +190,7 @@ export const ADMIN = {
     ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',
     REVIEW_UI_URL: 'https://review.topcoder-dev.com',
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
-    WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
+    WORK_MANAGER_URL: 'https://work.topcoder-dev.com',
 }
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
