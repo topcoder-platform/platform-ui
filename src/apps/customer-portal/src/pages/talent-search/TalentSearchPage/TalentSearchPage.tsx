@@ -46,7 +46,7 @@ export const TalentSearchPage: FC = () => {
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
     const [onlyActive, setOnlyActive] = useState<boolean>(false)
-    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
+    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
