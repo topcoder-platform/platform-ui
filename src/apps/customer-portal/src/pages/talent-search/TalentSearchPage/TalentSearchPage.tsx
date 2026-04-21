@@ -65,6 +65,11 @@ export const TalentSearchPage: FC = () => {
         ],
         [countryLookup],
     )
+    const countryNameByCode = useMemo((): Map<string, string> => new Map(
+        (countryLookup || [])
+            .filter(country => country.countryCode && country.country)
+            .map(country => [country.countryCode.toUpperCase(), country.country]),
+    ), [countryLookup])
 
     const hasSkillSearch = selectedSkills.length > 0
     const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
@@ -100,6 +105,24 @@ export const TalentSearchPage: FC = () => {
     }, [activeSort, filteredResults])
 
     const foundMembersCount = totalResults || displayedResults.length
+    const displayedResultsWithCountryName = useMemo(
+        () => displayedResults.map(talent => {
+            const code = String(talent.location || '')
+                .trim()
+                .toUpperCase()
+            const countryName = countryNameByCode.get(code)
+
+            if (!countryName) {
+                return talent
+            }
+
+            return {
+                ...talent,
+                location: countryName,
+            }
+        }),
+        [countryNameByCode, displayedResults],
+    )
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -533,7 +556,7 @@ export const TalentSearchPage: FC = () => {
                                 {!isSearchingMembers && displayedResults.length > 0 && (
                                     <>
                                         <div className={styles.cardsGrid}>
-                                            {displayedResults.map(talent => (
+                                            {displayedResultsWithCountryName.map(talent => (
                                                 <TalentResultCard
                                                     key={talent.id}
                                                     talent={talent}
