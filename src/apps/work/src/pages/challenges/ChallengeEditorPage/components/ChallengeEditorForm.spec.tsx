@@ -30,6 +30,7 @@ import {
     createResource,
     createChallenge,
     deleteResource,
+    fetchAiReviewConfigByChallenge,
     fetchChallenge,
     fetchProfile,
     fetchProjectBillingAccount,
@@ -67,6 +68,7 @@ jest.mock('../../../../lib/services', () => ({
     createChallenge: jest.fn(),
     createResource: jest.fn(),
     deleteResource: jest.fn(),
+    fetchAiReviewConfigByChallenge: jest.fn(),
     fetchChallenge: jest.fn(),
     fetchProfile: jest.fn(),
     fetchProjectBillingAccount: jest.fn(),
@@ -570,6 +572,7 @@ const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedDeleteResource = deleteResource as jest.Mock
+const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
 const mockedFetchProfile = fetchProfile as jest.Mock
@@ -680,6 +683,7 @@ describe('ChallengeEditorForm', () => {
         mockedUseFetchTimelineTemplates.mockReturnValue({
             timelineTemplates: [],
         })
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
         mockedFetchWorkflows.mockResolvedValue([])
         mockedFetchProjectBillingAccountService.mockResolvedValue({
             billingAccount: undefined,
@@ -2479,18 +2483,12 @@ describe('ChallengeEditorForm', () => {
             }
         })
 
-        expect(launchError)
-            .toEqual(expect.objectContaining({
-                message: 'One or more saved AI workflows were disabled. '
-                    + 'Update the AI workflow configuration before saving or launching this challenge.',
-            }))
+        expect(launchError?.message)
+            .toContain('One or more saved AI workflows were disabled.')
         expect(mockedPatchChallenge)
             .not.toHaveBeenCalled()
         expect(mockedShowErrorToast)
-            .toHaveBeenCalledWith(
-                'One or more saved AI workflows were disabled. '
-                    + 'Update the AI workflow configuration before saving or launching this challenge.',
-            )
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
     })
 
     it('does not render the attachments section while editing a draft', () => {
@@ -2564,12 +2562,54 @@ describe('ChallengeEditorForm', () => {
                 .not.toHaveBeenCalled()
         })
         expect(mockedShowErrorToast)
-            .toHaveBeenCalledWith(
-                'One or more saved AI workflows were disabled. '
-                    + 'Update the AI workflow configuration before saving or launching this challenge.',
-            )
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks saving when disabled workflow exists only in persisted AI config', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_HUMAN',
+            workflows: [{
+                id: 'config-workflow-1',
+                isGating: false,
+                weightPercent: 100,
+                workflowId: 'workflow-disabled',
+            }],
+        })
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedFetchAiReviewConfigByChallenge)
+            .toHaveBeenCalledWith('12345')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
     })
 
     it('refreshes phase data when the fetched challenge updates for the same id', async () => {
