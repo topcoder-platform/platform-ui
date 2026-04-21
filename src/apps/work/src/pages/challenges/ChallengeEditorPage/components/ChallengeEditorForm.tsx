@@ -2814,6 +2814,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             onChallengeStatusChange,
             reset,
             resolveProjectBillingAccount,
+            selectedChallengeTrack,
+            selectedChallengeType,
             setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
