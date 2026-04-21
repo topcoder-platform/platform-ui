@@ -53,6 +53,7 @@ import {
     createChallenge,
     createResource,
     deleteResource,
+    fetchAiReviewConfigByChallenge,
     fetchChallenge,
     fetchProfile,
     fetchProjectBillingAccount,
@@ -256,8 +257,8 @@ const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
-    = `One or more saved AI workflows were disabled.
-        Update the AI workflow configuration before saving or launching this challenge.`
+    = 'One or more saved AI workflows were disabled. '
+    + 'Update the AI workflow configuration before saving or launching this challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
@@ -1121,15 +1122,28 @@ function getReviewerValidationError(
 }
 
 async function getDisabledAiWorkflowForActionError(
+    challengeId: string | undefined,
     formData: ChallengeEditorFormData,
 ): Promise<string | undefined> {
-    const selectedAiWorkflowIds = Array.from(new Set((Array.isArray(formData.reviewers)
+    const selectedAiWorkflowIds = (Array.isArray(formData.reviewers)
         ? formData.reviewers
         : [])
         .map(reviewer => normalizeTextValue(reviewer?.aiWorkflowId))
-        .filter(Boolean)))
+        .filter(Boolean)
+    const normalizedChallengeId = normalizeTextValue(challengeId)
+    const persistedAiConfig = normalizedChallengeId
+        ? await fetchAiReviewConfigByChallenge(normalizedChallengeId)
+            .catch(() => undefined)
+        : undefined
+    const persistedWorkflowIds = (persistedAiConfig?.workflows || [])
+        .map(workflow => normalizeTextValue(workflow.workflowId))
+        .filter(Boolean)
+    const configuredAiWorkflowIds = Array.from(new Set([
+        ...selectedAiWorkflowIds,
+        ...persistedWorkflowIds,
+    ]))
 
-    if (!selectedAiWorkflowIds.length) {
+    if (!configuredAiWorkflowIds.length) {
         return undefined
     }
 
@@ -1140,7 +1154,7 @@ async function getDisabledAiWorkflowForActionError(
             workflow,
         ] as const),
     )
-    const hasDisabledWorkflow = selectedAiWorkflowIds.some(workflowId => {
+    const hasDisabledWorkflow = configuredAiWorkflowIds.some(workflowId => {
         const matchedWorkflow = workflowMapById.get(workflowId)
 
         return matchedWorkflow?.disabled === true
@@ -2634,7 +2648,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
-            const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(formData)
+            const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
+                currentChallengeId,
+                formData,
+            )
 
             if (disabledAiWorkflowError) {
                 setSaveStatus('idle')
