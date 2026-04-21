@@ -2,7 +2,6 @@ import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
 import {
-    profileCompletionRouteId,
     talentSearchRouteId,
 } from '~/apps/customer-portal/src/config/routes.config'
 
@@ -10,9 +9,6 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnpri
 
     const tabs: TabsNavItem[] = [
         ...(!isUnprivilegedUser ? [{
-            id: profileCompletionRouteId,
-            title: 'Profile Completion',
-        }, {
             id: talentSearchRouteId,
             title: 'Talent Search',
         }] : []),
