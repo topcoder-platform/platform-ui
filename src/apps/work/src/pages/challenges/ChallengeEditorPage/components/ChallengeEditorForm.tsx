@@ -54,6 +54,7 @@ import {
     createResource,
     deleteResource,
     fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
     fetchChallenge,
     fetchProfile,
     fetchProjectBillingAccount,
@@ -259,6 +260,9 @@ const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
 const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
     = 'One or more saved AI workflows were disabled. '
     + 'Update the AI workflow configuration before saving or launching this challenge.'
+const DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+    = 'The saved AI review template was disabled. '
+    + 'Update the AI template selection before saving or launching this challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
@@ -1122,8 +1126,10 @@ function getReviewerValidationError(
 }
 
 async function getDisabledAiWorkflowForActionError(
-    challengeId: string | undefined,
     formData: ChallengeEditorFormData,
+    challengeId: string | undefined,
+    challengeTrack?: string,
+    challengeType?: string,
 ): Promise<string | undefined> {
     const selectedAiWorkflowIds = (Array.isArray(formData.reviewers)
         ? formData.reviewers
@@ -1142,6 +1148,29 @@ async function getDisabledAiWorkflowForActionError(
         ...selectedAiWorkflowIds,
         ...persistedWorkflowIds,
     ]))
+    const selectedTemplateId = normalizeTextValue(persistedAiConfig?.templateId)
+
+    if (selectedTemplateId) {
+        const templates = await fetchAiReviewTemplates({
+            challengeTrack,
+            challengeType,
+        })
+        let selectedTemplate = templates.find(template => (
+            normalizeTextValue(template.id) === selectedTemplateId
+        ))
+
+        if (!selectedTemplate && (challengeTrack || challengeType)) {
+            const allTemplates = await fetchAiReviewTemplates()
+
+            selectedTemplate = allTemplates.find(template => (
+                normalizeTextValue(template.id) === selectedTemplateId
+            ))
+        }
+
+        if (selectedTemplate?.disabled === true) {
+            return DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+        }
+    }
 
     if (!configuredAiWorkflowIds.length) {
         return undefined
@@ -2649,8 +2678,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
-                currentChallengeId,
                 formData,
+                currentChallengeId,
+                selectedChallengeTrack?.track || selectedChallengeTrack?.name,
+                selectedChallengeType?.name,
             )
 
             if (disabledAiWorkflowError) {
