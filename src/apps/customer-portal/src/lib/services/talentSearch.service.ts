@@ -21,7 +21,7 @@ export type SearchTalent = {
 }
 
 export type MemberSearchPayload = {
-    country?: string
+    countries?: string[]
     limit: number
     openToWork?: boolean
     page: number

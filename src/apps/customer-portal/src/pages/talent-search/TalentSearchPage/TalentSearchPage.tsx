@@ -43,7 +43,7 @@ export const TalentSearchPage: FC = () => {
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
-    const [selectedCountry, setSelectedCountry] = useState<string>('all')
+    const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
     const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
@@ -51,25 +51,43 @@ export const TalentSearchPage: FC = () => {
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
-    const countryOptions = useMemo(
-        (): InputSelectOption[] => [
-            { label: 'All Countries', value: 'all' },
-            ...((countryLookup || [])
-                .map(country => ({
-                    label: country.country,
-                    value: country.countryCode,
-                }))
-                .filter(option => option.label && option.value)
-                .sort((a, b) => String(a.label)
-                    .localeCompare(String(b.label)))),
-        ],
-        [countryLookup],
-    )
     const countryNameByCode = useMemo((): Map<string, string> => new Map(
         (countryLookup || [])
             .filter(country => country.countryCode && country.country)
             .map(country => [country.countryCode.toUpperCase(), country.country]),
     ), [countryLookup])
+    const countryFilterOptions = useMemo(
+        (): InputMultiselectOption[] => (countryLookup || [])
+            .map(country => ({
+                label: country.country,
+                value: country.countryCode,
+            }))
+            .filter(option => option.label && option.value)
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label))),
+        [countryLookup],
+    )
+    const selectedCountryCodes = useMemo(
+        (): Set<string> => new Set(selectedCountries.map(country => String(country.value || '')
+            .trim()
+            .toUpperCase())),
+        [selectedCountries],
+    )
+    const selectedCountryNames = useMemo(
+        (): string[] => selectedCountries.map(country => String(country.label || '')
+            .trim()
+            .toLowerCase())
+            .filter(Boolean),
+        [selectedCountries],
+    )
+    const selectedCountryCodesList = useMemo(
+        (): string[] => selectedCountries
+            .map(country => String(country.value || '')
+                .trim()
+                .toUpperCase())
+            .filter(Boolean),
+        [selectedCountries],
+    )
 
     const hasSkillSearch = selectedSkills.length > 0
     const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
@@ -89,8 +107,25 @@ export const TalentSearchPage: FC = () => {
             return false
         }
 
+        if (selectedCountryCodes.size > 0) {
+            const location = String(talent.location || '')
+                .trim()
+            const upperLocation = location.toUpperCase()
+            const lowerLocation = location.toLowerCase()
+            const matchesCountryCode = selectedCountryCodes.has(upperLocation)
+                || Array.from(selectedCountryCodes)
+                    .some(code => upperLocation.endsWith(` ${code}`))
+            const matchesCountryName = selectedCountryNames.some(name => (
+                lowerLocation === name || lowerLocation.endsWith(` ${name}`)
+            ))
+
+            if (!matchesCountryCode && !matchesCountryName) {
+                return false
+            }
+        }
+
         return true
-    }), [onlyActive, onlyOpenToWork, results])
+    }), [onlyActive, onlyOpenToWork, results, selectedCountryCodes, selectedCountryNames])
 
     const displayedResults = useMemo(() => {
         const sorted = [...filteredResults]
@@ -135,12 +170,23 @@ export const TalentSearchPage: FC = () => {
             setSkillOptionsLoading(false)
         }
     }, [])
+    const loadCountryOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        const normalizedQuery = query.trim()
+            .toLowerCase()
+        if (!normalizedQuery) {
+            return countryFilterOptions
+        }
+
+        return countryFilterOptions.filter(option => String(option.label || '')
+            .toLowerCase()
+            .includes(normalizedQuery))
+    }, [countryFilterOptions])
 
     const runMemberSearch = useCallback(async (
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
-            country?: string
+            countries?: string[]
             generation?: number
             openToWork?: boolean
             page?: number
@@ -148,7 +194,8 @@ export const TalentSearchPage: FC = () => {
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
-        const country = overrides?.country ?? selectedCountry
+        const countries = (overrides?.countries ?? selectedCountryCodesList)
+            .filter(Boolean)
         const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
@@ -167,8 +214,8 @@ export const TalentSearchPage: FC = () => {
             skillSearchType: 'OR',
         }
 
-        if (country !== 'all') {
-            payload.country = country
+        if (countries.length > 0) {
+            payload.countries = countries
         }
 
         if (openToWork) {
@@ -229,11 +276,11 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, selectedCountry])
+    }, [onlyActive, onlyOpenToWork, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
         searchGenerationRef.current += 1
-        setSelectedCountry('all')
+        setSelectedCountries([])
         setOnlyOpenToWork(false)
         setOnlyActive(false)
         setSortBy('alphabetical')
@@ -243,6 +290,7 @@ export const TalentSearchPage: FC = () => {
         skipNextAutoSearchRef.current = true
         setLastSearchedDescription('')
         runMemberSearch([], {
+            countries: [],
             generation: searchGenerationRef.current,
             openToWork: false,
             page: 1,
@@ -334,7 +382,7 @@ export const TalentSearchPage: FC = () => {
         onlyActive,
         onlyOpenToWork,
         runMemberSearch,
-        selectedCountry,
+        selectedCountries,
         selectedSkills,
     ])
 
@@ -431,13 +479,15 @@ export const TalentSearchPage: FC = () => {
                                 />
                             </div>
                             <div className={styles.filterBlock}>
-                                <InputSelect
+                                <InputMultiselect
                                     label='Country'
                                     name='country'
-                                    options={countryOptions}
-                                    value={selectedCountry}
+                                    options={countryFilterOptions}
+                                    onFetchOptions={loadCountryOptions}
+                                    value={selectedCountries}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setSelectedCountry(event.target.value || 'all')
+                                        const value = (event.target.value || []) as InputMultiselectOption[]
+                                        setSelectedCountries(value)
                                     }}
                                     placeholder='Select country'
                                 />
