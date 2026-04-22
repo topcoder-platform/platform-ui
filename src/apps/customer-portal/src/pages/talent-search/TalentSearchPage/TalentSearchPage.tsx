@@ -77,6 +77,11 @@ export const TalentSearchPage: FC = () => {
     )
 
     const hasSkillSearch = selectedSkills.length > 0
+    const hasActiveFilters = hasSkillSearch
+        || selectedCountries.length > 0
+        || onlyOpenToWork
+        || onlyActive
+    const shouldShowIntroState = !hasSearched && !hasActiveFilters
     const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
     const sortOptions = useMemo(
         (): InputSelectOption[] => (hasSkillSearch
@@ -336,7 +341,7 @@ export const TalentSearchPage: FC = () => {
     }, [isExtractingSkills, jobDescription, runMemberSearch])
 
     useEffect(() => {
-        if (!hasSearched || isExtractingSkills) {
+        if ((shouldShowIntroState) || isExtractingSkills) {
             return
         }
 
@@ -348,12 +353,14 @@ export const TalentSearchPage: FC = () => {
         runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
     }, [
         hasSearched,
+        hasActiveFilters,
         isExtractingSkills,
         onlyActive,
         onlyOpenToWork,
         runMemberSearch,
         selectedCountries,
         selectedSkills,
+        shouldShowIntroState,
     ])
 
     const handleLoadMore = useCallback((): void => {
@@ -441,7 +448,7 @@ export const TalentSearchPage: FC = () => {
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
-                                        setHasSearched(value.length > 0)
+                                        setHasSearched(true)
                                         if (value.length === 0) {
                                             setLastSearchedDescription('')
                                         }
@@ -514,10 +521,10 @@ export const TalentSearchPage: FC = () => {
                     <section
                         className={classNames(
                             styles.resultsPanel,
-                            !hasSearched && styles.resultsPanelEmpty,
+                            shouldShowIntroState && styles.resultsPanelEmpty,
                         )}
                     >
-                        {!hasSearched && (
+                        {shouldShowIntroState && (
                             <div className={styles.emptyState}>
                                 <img
                                     src={personSearchImage}
@@ -525,16 +532,10 @@ export const TalentSearchPage: FC = () => {
                                     className={styles.emptyIcon}
                                 />
                                 <p className={styles.emptyStateTitle}>Find the right talent</p>
-                                <p className={styles.emptyStateDescription}>
-                                    Paste a job description on the left and hit&nbsp;
-                                    <span className={styles.emptyStateSearchText}>Search</span>
-                                    &nbsp;- Our AI will match you with the
-                                    best candidates from our network.
-                                </p>
                             </div>
                         )}
 
-                        {hasSearched && (
+                        {!shouldShowIntroState && (
                             <div className={styles.resultsContent}>
                                 {!isSearchingMembers && (
                                     <div className={styles.resultsTop}>
