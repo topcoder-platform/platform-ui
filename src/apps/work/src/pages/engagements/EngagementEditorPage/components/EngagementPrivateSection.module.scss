@@ -35,6 +35,27 @@
     gap: 8px;
 }
 
+.readOnlyAssignment {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.readOnlyLabel {
+    color: #2a2a2a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.readOnlyValue {
+    background: #f5f7fa;
+    border: 1px solid #d8dee8;
+    border-radius: 6px;
+    color: #2a2a2a;
+    min-height: 44px;
+    padding: 12px;
+}
+
 .actionButton {
     align-self: flex-start;
     background: none;
@@ -74,6 +95,13 @@
     font-size: 12px;
     margin-left: 8px;
     padding: 0;
+    text-decoration: underline;
+}
+
+.assignmentLink {
+    align-self: flex-start;
+    color: #2a62d5;
+    font-size: 12px;
     text-decoration: underline;
 }
 

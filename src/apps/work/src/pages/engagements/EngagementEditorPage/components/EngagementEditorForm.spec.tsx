@@ -500,7 +500,7 @@ describe('EngagementEditorForm', () => {
         })
     })
 
-    it('keeps terminal assignment history out of the edit payload', async () => {
+    it('preserves existing assignments while keeping terminal history out of the edit payload', async () => {
         const user = userEvent.setup()
         const activeAssignment = {
             agreementRate: '800',
@@ -590,6 +590,10 @@ describe('EngagementEditorForm', () => {
             </MemoryRouter>,
         )
 
+        const requiredMembersField = screen.getByLabelText('Required Members')
+
+        await user.clear(requiredMembersField)
+        await user.type(requiredMembersField, '0')
         await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
 
         await waitFor(() => {
@@ -600,8 +604,11 @@ describe('EngagementEditorForm', () => {
         const payload = mockedUpdateEngagement.mock.calls[0][1] as {
             assignedMemberHandles?: string[]
             assignmentDetails?: Array<{ memberHandle: string }>
+            requiredMemberCount?: number
         }
 
+        expect(payload.requiredMemberCount)
+            .toBe(1)
         expect(payload.assignedMemberHandles)
             .toEqual(['active_member'])
         expect(payload.assignmentDetails)
