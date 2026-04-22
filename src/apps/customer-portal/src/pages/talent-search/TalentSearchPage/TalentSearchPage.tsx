@@ -30,6 +30,9 @@ import styles from './TalentSearchPage.module.scss'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
+    const searchGenerationRef = useRef<number>(0) // ← add this
+
+    const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
@@ -45,11 +48,7 @@ export const TalentSearchPage: FC = () => {
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
-
-    // const breadCrumb = useMemo(
-    //     () => [{ index: 1, label: 'Talent Search' }],
-    //     [],
-    // )
+    const [isLoading, setIsLoading] = useState<boolean>(false)
     const countryOptions = useMemo(
         (): InputSelectOption[] => [
             { label: 'All Countries', value: 'all' },
@@ -84,9 +83,7 @@ export const TalentSearchPage: FC = () => {
 
         return true
     }), [countryOptions, onlyActive, results, selectedCountry])
-    const foundMembersCount = selectedCountry === 'all'
-        ? (totalResults || filteredResults.length)
-        : filteredResults.length
+
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -104,16 +101,17 @@ export const TalentSearchPage: FC = () => {
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            generation?: number
             openToWork?: boolean
             page?: number
             recentlyActive?: boolean
         },
-    ): Promise<void> => {
+    ): Promise<boolean> => {
         const append = overrides?.append === true
+        const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
             openToWork,
@@ -130,19 +128,22 @@ export const TalentSearchPage: FC = () => {
             skillSearchType: 'OR',
             verifiedProfile: true,
         }
-
         if (append) {
             setIsLoadingMore(true)
         } else {
             setIsSearchingMembers(true)
+            setIsLoading(true)
         }
 
         setErrorMessage('')
-
         try {
             const response = await searchMembers(payload)
-            const fetchedData = Array.isArray(response?.data) ? response.data : []
+            // If generation was provided and has changed, discard stale results
+            if (generation !== undefined && searchGenerationRef.current !== generation) {
+                return false
+            }
 
+            const fetchedData = Array.isArray(response?.data) ? response.data : []
             setResults(prevResults => {
                 if (!append) {
                     return fetchedData
@@ -156,29 +157,33 @@ export const TalentSearchPage: FC = () => {
                         merged.push(item)
                     }
                 })
-
                 return merged
             })
             setTotalResults(Number(response?.total || 0))
             setCurrentPage(Number(response?.page || page))
+            return true
         } catch {
             if (!append) {
                 setResults([])
                 setTotalResults(0)
                 setCurrentPage(1)
+                setLastSearchedDescription('')
             }
 
             setErrorMessage('Failed to search matching members. Please try again.')
+            return false
         } finally {
             if (append) {
                 setIsLoadingMore(false)
             } else {
                 setIsSearchingMembers(false)
+                setIsLoading(false)
             }
         }
     }, [onlyActive, onlyOpenToWork])
 
     const clearAllFilters = useCallback((): void => {
+        searchGenerationRef.current += 1
         setSelectedCountry('all')
         setOnlyOpenToWork(true)
         setOnlyActive(true)
@@ -188,6 +193,7 @@ export const TalentSearchPage: FC = () => {
         setTotalResults(0)
         setCurrentPage(1)
         setErrorMessage('')
+        setLastSearchedDescription('')
     }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
@@ -196,11 +202,15 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
+        const generation = searchGenerationRef.current
+
         setErrorMessage('')
         setIsExtractingSkills(true)
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
+            if (searchGenerationRef.current !== generation) return
+
             const extractedSkills = Array.isArray(extractedSkillsResult?.matches)
                 ? extractedSkillsResult.matches
                 : []
@@ -235,14 +245,20 @@ export const TalentSearchPage: FC = () => {
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
-            await runMemberSearch(extractedOptions, { page: 1 })
+            const searchSucceeded = await runMemberSearch(extractedOptions, { generation, page: 1 })
+            if (searchGenerationRef.current !== generation) return
+
+            if (searchSucceeded) {
+                setLastSearchedDescription(normalizedDescription)
+            }
         } catch {
-            // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
+            if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
+
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
 
@@ -256,7 +272,7 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        runMemberSearch(selectedSkills)
+        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current })
     }, [
         hasSearched,
         isExtractingSkills,
@@ -276,7 +292,12 @@ export const TalentSearchPage: FC = () => {
             page: currentPage + 1,
         })
     }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
-
+    const isSearchButtonDisabled = useMemo(
+        () => isExtractingSkills
+        || !jobDescription.trim()
+        || jobDescription.trim() === lastSearchedDescription,
+        [isExtractingSkills, jobDescription, lastSearchedDescription],
+    )
     return (
         <PageWrapper
             pageTitle='Talent Search'
@@ -311,15 +332,17 @@ export const TalentSearchPage: FC = () => {
                                     secondary
                                     disabled={isExtractingSkills}
                                     onClick={() => {
+                                        searchGenerationRef.current += 1
                                         setJobDescription('')
                                         setErrorMessage('')
+                                        setLastSearchedDescription('')
                                     }}
                                 >
                                     Clear
                                 </Button>
                                 <Button
                                     primary
-                                    disabled={isExtractingSkills || !jobDescription.trim()}
+                                    disabled={isSearchButtonDisabled}
                                     onClick={handleAiSearch}
                                 >
                                     {isExtractingSkills ? 'Analyzing...' : 'Search'}
@@ -345,6 +368,9 @@ export const TalentSearchPage: FC = () => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
                                         setHasSearched(value.length > 0)
+                                        if (value.length === 0) {
+                                            setLastSearchedDescription('')
+                                        }
                                     }}
                                 />
                             </div>
@@ -434,58 +460,40 @@ export const TalentSearchPage: FC = () => {
 
                         {hasSearched && (
                             <div className={styles.resultsContent}>
-                                <div className={styles.resultsTop}>
-                                    <p className={styles.foundText}>
-                                        We have found&nbsp;
-                                        <span className={styles.foundTextCount}>
-                                            {`${foundMembersCount} members`}
-                                        </span>
-                                        &nbsp;that match your search.
-                                    </p>
-                                    <div className={styles.sortControl}>
-                                        <span className={styles.sortLabel}>Sort by</span>
-                                        <InputSelect
-                                            classNameWrapper={styles.matchingIndexSelect}
-                                            name='sortBy'
-                                            options={[
-                                                { label: 'Matching Index', value: 'matching-index' },
-                                            ]}
-                                            value='matching-index'
-                                            onChange={() => undefined}
-                                        />
-                                    </div>
-                                </div>
-                                {isSearchingMembers && (
+                                {isLoading ? (
                                     <div className={styles.emptyState}>
                                         <h4>Searching talent...</h4>
                                     </div>
-                                )}
-                                {!isSearchingMembers && filteredResults.length === 0 && (
-                                    <div className={styles.emptyState}>
-                                        <h4>No matching talent found</h4>
-                                        <p>Try changing filters or using a different job description.</p>
-                                    </div>
-                                )}
-                                {!isSearchingMembers && filteredResults.length > 0 && (
+                                ) : (
                                     <>
-                                        <div className={styles.cardsGrid}>
-                                            {filteredResults.map(talent => (
-                                                <TalentResultCard
-                                                    key={talent.id}
-                                                    talent={talent}
-                                                />
-                                            ))}
-                                        </div>
-                                        {hasMoreResults && (
-                                            <div className={styles.loadMoreWrap}>
-                                                <Button
-                                                    secondary
-                                                    disabled={isLoadingMore}
-                                                    onClick={handleLoadMore}
-                                                >
-                                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
-                                                </Button>
+
+                                        {filteredResults.length === 0 ? (
+                                            <div className={styles.emptyState}>
+                                                <h4>No matching talent found</h4>
+                                                <p>Try changing filters or using a different job description.</p>
                                             </div>
+                                        ) : (
+                                            <>
+                                                <div className={styles.cardsGrid}>
+                                                    {filteredResults.map(talent => (
+                                                        <TalentResultCard
+                                                            key={talent.id}
+                                                            talent={talent}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                {hasMoreResults && (
+                                                    <div className={styles.loadMoreWrap}>
+                                                        <Button
+                                                            secondary
+                                                            disabled={isLoadingMore}
+                                                            onClick={handleLoadMore}
+                                                        >
+                                                            {isLoadingMore ? 'Loading...' : 'Load More Members'}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </>
                                 )}
