@@ -83,13 +83,14 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         props.projectId,
     )
     const billingAccountsResult: UseFetchBillingAccountsResult = useFetchBillingAccounts()
+    const billingAccount = projectBillingAccountResult.billingAccount
+    const normalizedBillingAccountId = normalizeOptionalString(props.billingAccountId)
+        || normalizeOptionalString(billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        props.billingAccountId,
+        normalizedBillingAccountId,
     )
 
-    const billingAccount = projectBillingAccountResult.billingAccount
-    const billingAccountDetails = billingAccountDetailsResult.billingAccountDetails
-    const normalizedBillingAccountId = normalizeOptionalString(props.billingAccountId)
+    const billingAccountDetailsData = billingAccountDetailsResult.billingAccountDetails
     const normalizedBillingAccountName = normalizeOptionalString(props.billingAccountName)
 
     const billingAccountNameFromLookup: string | undefined = useMemo(
@@ -110,16 +111,18 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         ],
     )
 
-    const billingAccountName = normalizedBillingAccountName || billingAccountNameFromLookup
+    const billingAccountName = normalizedBillingAccountName
+        || normalizeOptionalString(billingAccount?.name)
+        || billingAccountNameFromLookup
     const billingAccountIssue = getProjectBillingAccountChallengeIssue(billingAccount)
 
     const budgetInfo = useMemo(() => {
-        if (!billingAccountDetails) {
+        if (!billingAccountDetailsData) {
             return undefined
         }
 
-        const totalBudget = Number(billingAccountDetails.budget) || 0
-        const remaining = Number(billingAccountDetails.totalBudgetRemaining) || 0
+        const totalBudget = Number(billingAccountDetailsData.budget) || 0
+        const remaining = Number(billingAccountDetailsData.totalBudgetRemaining) || 0
         const status = getBudgetStatus(remaining, totalBudget)
 
         return {
@@ -127,7 +130,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             status,
             totalBudget,
         }
-    }, [billingAccountDetails])
+    }, [billingAccountDetailsData])
 
     const handleOpenModal = useCallback((): void => {
         setIsModalOpen(true)
@@ -137,39 +140,12 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         setIsModalOpen(false)
     }, [])
 
-    if (billingAccountIssue) {
-        const noticeMessage = getProjectBillingAccountNoticeMessage(billingAccountIssue)
-        const managedNoticeMessage = `${noticeMessage.slice(0, -1)}, `
-
-        return (
-            <div className={styles.container}>
-                {props.canManageProject
-                    ? (
-                        <>
-                            <span>{managedNoticeMessage}</span>
-                            <Link className={styles.link} to={`/projects/${props.projectId}/edit`}>
-                                click here to update
-                            </Link>
-                        </>
-                    )
-                    : (
-                        <span>{noticeMessage}</span>
-                    )}
-            </div>
-        )
-    }
-
-    if (!normalizedBillingAccountId) {
-        return <></>
-    }
-
     const budgetStatusClass = budgetInfo
         ? styles[`budget${budgetInfo.status.charAt(0)
             .toUpperCase()}${budgetInfo.status.slice(1)}`]
         : ''
-
-    return (
-        <>
+    const billingAccountDetailsContent = normalizedBillingAccountId
+        ? (
             <div className={styles.details}>
                 <span>
                     Billing account:
@@ -199,12 +175,51 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
                     </>
                 )}
             </div>
-            {isModalOpen && billingAccountDetails && (
-                <BillingAccountLineItemsModal
-                    billingAccountDetails={billingAccountDetails}
-                    onClose={handleCloseModal}
-                />
-            )}
+        )
+        : undefined
+    const billingAccountModal = isModalOpen && billingAccountDetailsData
+        ? (
+            <BillingAccountLineItemsModal
+                billingAccountDetails={billingAccountDetailsData}
+                onClose={handleCloseModal}
+            />
+        )
+        : undefined
+
+    if (billingAccountIssue) {
+        const noticeMessage = getProjectBillingAccountNoticeMessage(billingAccountIssue)
+        const managedNoticeMessage = `${noticeMessage.slice(0, -1)}, `
+
+        return (
+            <div className={styles.noticeStack}>
+                {billingAccountDetailsContent}
+                <div className={styles.container}>
+                    {props.canManageProject
+                        ? (
+                            <>
+                                <span>{managedNoticeMessage}</span>
+                                <Link className={styles.link} to={`/projects/${props.projectId}/edit`}>
+                                    click here to update
+                                </Link>
+                            </>
+                        )
+                        : (
+                            <span>{noticeMessage}</span>
+                        )}
+                </div>
+                {billingAccountModal}
+            </div>
+        )
+    }
+
+    if (!normalizedBillingAccountId) {
+        return <></>
+    }
+
+    return (
+        <>
+            {billingAccountDetailsContent}
+            {billingAccountModal}
         </>
     )
 }
