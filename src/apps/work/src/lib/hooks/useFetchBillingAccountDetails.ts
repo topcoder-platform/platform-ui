@@ -22,10 +22,10 @@ function normalizeId(billingAccountId: string | number | undefined): string {
 }
 
 /**
- * Fetches detailed billing account information including locked and consumed amounts.
+ * Fetches detailed billing account information including locked and consumed external entries.
  *
  * @param billingAccountId The billing account identifier to fetch.
- * @returns Billing account details with budget information and line items.
+ * @returns Billing account details with budget totals and typed external-entry line item payloads.
  */
 export function useFetchBillingAccountDetails(
     billingAccountId: string | number | undefined,

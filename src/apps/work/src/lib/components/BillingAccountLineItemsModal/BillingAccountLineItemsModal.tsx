@@ -12,21 +12,26 @@ import {
     IconSolid,
 } from '~/libs/ui'
 
+import { rootRoute } from '../../../config/routes.config'
 import {
     BillingAccountDetails,
     BillingAccountLineItem,
     combineBillingAccountLineItems,
-} from '../../services'
+} from '../../services/billing-accounts.service'
 
 import styles from './BillingAccountLineItemsModal.module.scss'
 
-type SortField = 'amount' | 'type' | 'createdAt'
+type SortField = 'amount' | 'status' | 'date'
 type SortOrder = 'asc' | 'desc'
+
+const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
+    CHALLENGE: 'Challenge',
+    ENGAGEMENT: 'Engagement',
+}
 
 export interface BillingAccountLineItemsModalProps {
     billingAccountDetails: BillingAccountDetails
     onClose: () => void
-    workBaseUrl?: string
 }
 
 function formatCurrency(amount: number): string {
@@ -40,11 +45,17 @@ function formatCurrency(amount: number): string {
 }
 
 function formatDate(dateString: string): string {
+    const isoDateMatch = dateString.match(/^(\d{4}-\d{2}-\d{2})/)
+
+    if (isoDateMatch) {
+        return isoDateMatch[1]
+    }
+
     const date = new Date(dateString)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1)
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1)
         .padStart(2, '0')
-    const day = String(date.getDate())
+    const day = String(date.getUTCDate())
         .padStart(2, '0')
     return `${year}-${month}-${day}`
 }
@@ -53,13 +64,13 @@ function compareByAmount(a: BillingAccountLineItem, b: BillingAccountLineItem): 
     return a.amount - b.amount
 }
 
-function compareByType(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
-    return a.type.localeCompare(b.type)
+function compareByStatus(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
+    return a.status.localeCompare(b.status)
 }
 
-function compareByCreatedAt(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
-    const dateA = new Date(a.createdAt)
-    const dateB = new Date(b.createdAt)
+function compareByDate(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
+    const dateA = new Date(a.date)
+    const dateB = new Date(b.date)
     return dateA.getTime() - dateB.getTime()
 }
 
@@ -75,11 +86,11 @@ function sortLineItems(
             case 'amount':
                 comparison = compareByAmount(a, b)
                 break
-            case 'type':
-                comparison = compareByType(a, b)
+            case 'status':
+                comparison = compareByStatus(a, b)
                 break
-            case 'createdAt':
-                comparison = compareByCreatedAt(a, b)
+            case 'date':
+                comparison = compareByDate(a, b)
                 break
             default:
                 comparison = 0
@@ -89,15 +100,15 @@ function sortLineItems(
     })
 }
 
-function buildChallengeUrl(workBaseUrl: string, challengeId: string): string {
-    const baseUrl = workBaseUrl.replace(/\/$/, '')
-    return `${baseUrl}/challenges/${encodeURIComponent(challengeId)}`
+function buildChallengeUrl(externalId: string): string {
+    const basePath = rootRoute.replace(/\/$/, '')
+    return `${basePath}/challenges/${encodeURIComponent(externalId)}`
 }
 
 export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps> = (
     props: BillingAccountLineItemsModalProps,
 ) => {
-    const [sortBy, setSortBy] = useState<SortField>('createdAt')
+    const [sortBy, setSortBy] = useState<SortField>('date')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
     const lineItems = useMemo<BillingAccountLineItem[]>(
@@ -109,8 +120,6 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         () => sortLineItems(lineItems, sortBy, sortOrder),
         [lineItems, sortBy, sortOrder],
     )
-
-    const workBaseUrl = props.workBaseUrl || window.location.origin
 
     const handleContainerClick = useCallback(
         (event: MouseEvent<HTMLDivElement>): void => {
@@ -128,20 +137,20 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         }
     }, [sortBy])
 
-    const handleSortType = useCallback((): void => {
-        if (sortBy === 'type') {
+    const handleSortStatus = useCallback((): void => {
+        if (sortBy === 'status') {
             setSortOrder(current => (current === 'asc' ? 'desc' : 'asc'))
         } else {
-            setSortBy('type')
+            setSortBy('status')
             setSortOrder('desc')
         }
     }, [sortBy])
 
-    const handleSortCreatedAt = useCallback((): void => {
-        if (sortBy === 'createdAt') {
+    const handleSortDate = useCallback((): void => {
+        if (sortBy === 'date') {
             setSortOrder(current => (current === 'asc' ? 'desc' : 'asc'))
         } else {
-            setSortBy('createdAt')
+            setSortBy('date')
             setSortOrder('desc')
         }
     }, [sortBy])
@@ -223,59 +232,70 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                                     <th>
                                         <button
                                             className={styles.sortButton}
-                                            onClick={handleSortType}
+                                            onClick={handleSortStatus}
                                             type='button'
                                         >
                                             Status
-                                            {renderSortIcon('type')}
+                                            {renderSortIcon('status')}
                                         </button>
                                     </th>
-                                    <th>Challenge ID</th>
+                                    <th>Type</th>
+                                    <th>Name</th>
                                     <th>
                                         <button
                                             className={styles.sortButton}
-                                            onClick={handleSortCreatedAt}
+                                            onClick={handleSortDate}
                                             type='button'
                                         >
                                             Date
-                                            {renderSortIcon('createdAt')}
+                                            {renderSortIcon('date')}
                                         </button>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {sortedLineItems.map(item => (
-                                    <tr key={item.id}>
-                                        <td>{formatCurrency(item.amount)}</td>
-                                        <td>
-                                            <span
-                                                className={
-                                                    item.type === 'locked'
-                                                        ? styles.statusLocked
-                                                        : styles.statusConsumed
-                                                }
-                                            >
-                                                {item.type === 'locked' ? (
-                                                    <IconOutline.LockClosedIcon className={styles.statusIcon} />
-                                                ) : (
-                                                    <IconSolid.CheckCircleIcon className={styles.statusIcon} />
-                                                )}
-                                                {item.type === 'locked' ? 'Locked' : 'Consumed'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a
-                                                className={styles.challengeLink}
-                                                href={buildChallengeUrl(workBaseUrl, item.challengeId)}
-                                                rel='noreferrer noopener'
-                                                target='_blank'
-                                            >
-                                                {item.challengeId}
-                                            </a>
-                                        </td>
-                                        <td>{formatDate(item.createdAt)}</td>
-                                    </tr>
-                                ))}
+                                {sortedLineItems.map(item => {
+                                    const displayName = item.externalName || '-'
+                                    const challengeUrl = item.externalType === 'CHALLENGE' && item.externalId
+                                        ? buildChallengeUrl(item.externalId)
+                                        : undefined
+
+                                    return (
+                                        <tr key={item.id}>
+                                            <td>{formatCurrency(item.amount)}</td>
+                                            <td>
+                                                <span
+                                                    className={
+                                                        item.status === 'locked'
+                                                            ? styles.statusLocked
+                                                            : styles.statusConsumed
+                                                    }
+                                                >
+                                                    {item.status === 'locked' ? (
+                                                        <IconOutline.LockClosedIcon className={styles.statusIcon} />
+                                                    ) : (
+                                                        <IconSolid.CheckCircleIcon className={styles.statusIcon} />
+                                                    )}
+                                                    {item.status === 'locked' ? 'Locked' : 'Consumed'}
+                                                </span>
+                                            </td>
+                                            <td>{EXTERNAL_TYPE_LABELS[item.externalType]}</td>
+                                            <td className={styles.nameCell}>
+                                                {challengeUrl ? (
+                                                    <a
+                                                        className={styles.challengeLink}
+                                                        href={challengeUrl}
+                                                        rel='noreferrer noopener'
+                                                        target='_blank'
+                                                    >
+                                                        {displayName}
+                                                    </a>
+                                                ) : displayName}
+                                            </td>
+                                            <td>{formatDate(item.date)}</td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     )}

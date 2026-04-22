@@ -20,7 +20,7 @@
     display: flex;
     flex-direction: column;
     max-height: 90vh;
-    max-width: 800px;
+    max-width: 920px;
     width: 100%;
 }
 
@@ -84,7 +84,7 @@
 
 .body {
     flex: 1;
-    overflow-y: auto;
+    overflow: auto;
     padding: 16px 20px;
 }
 
@@ -97,6 +97,8 @@
 
 .table {
     border-collapse: collapse;
+    min-width: 720px;
+    table-layout: fixed;
     width: 100%;
 }
 
@@ -125,6 +127,31 @@
 .table th:last-child,
 .table td:last-child {
     padding-right: 0;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 16%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 17%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 15%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 34%;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 18%;
 }
 
 .sortButton {
@@ -173,6 +200,10 @@
 .statusIcon {
     height: 14px;
     width: 14px;
+}
+
+.nameCell {
+    overflow-wrap: anywhere;
 }
 
 .challengeLink {
