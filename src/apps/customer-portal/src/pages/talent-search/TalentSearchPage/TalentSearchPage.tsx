@@ -532,12 +532,6 @@ export const TalentSearchPage: FC = () => {
                                     className={styles.emptyIcon}
                                 />
                                 <p className={styles.emptyStateTitle}>Find the right talent</p>
-                                <p className={styles.emptyStateDescription}>
-                                    Paste a job description on the left and hit&nbsp;
-                                    <span className={styles.emptyStateSearchText}>Search</span>
-                                    &nbsp;- Our AI will match you with the
-                                    best candidates from our network.
-                                </p>
                             </div>
                         )}
 
