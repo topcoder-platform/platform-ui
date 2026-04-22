@@ -67,19 +67,6 @@ export const TalentSearchPage: FC = () => {
                 .localeCompare(String(b.label))),
         [countryLookup],
     )
-    const selectedCountryCodes = useMemo(
-        (): Set<string> => new Set(selectedCountries.map(country => String(country.value || '')
-            .trim()
-            .toUpperCase())),
-        [selectedCountries],
-    )
-    const selectedCountryNames = useMemo(
-        (): string[] => selectedCountries.map(country => String(country.label || '')
-            .trim()
-            .toLowerCase())
-            .filter(Boolean),
-        [selectedCountries],
-    )
     const selectedCountryCodesList = useMemo(
         (): string[] => selectedCountries
             .map(country => String(country.value || '')
@@ -107,25 +94,8 @@ export const TalentSearchPage: FC = () => {
             return false
         }
 
-        if (selectedCountryCodes.size > 0) {
-            const location = String(talent.location || '')
-                .trim()
-            const upperLocation = location.toUpperCase()
-            const lowerLocation = location.toLowerCase()
-            const matchesCountryCode = selectedCountryCodes.has(upperLocation)
-                || Array.from(selectedCountryCodes)
-                    .some(code => upperLocation.endsWith(` ${code}`))
-            const matchesCountryName = selectedCountryNames.some(name => (
-                lowerLocation === name || lowerLocation.endsWith(` ${name}`)
-            ))
-
-            if (!matchesCountryCode && !matchesCountryName) {
-                return false
-            }
-        }
-
         return true
-    }), [onlyActive, onlyOpenToWork, results, selectedCountryCodes, selectedCountryNames])
+    }), [onlyActive, onlyOpenToWork, results])
 
     const displayedResults = useMemo(() => {
         const sorted = [...filteredResults]
