@@ -521,7 +521,7 @@ export const TalentSearchPage: FC = () => {
                     <section
                         className={classNames(
                             styles.resultsPanel,
-                            !hasSearched && styles.resultsPanelEmpty,
+                            shouldShowIntroState && styles.resultsPanelEmpty,
                         )}
                     >
                         {shouldShowIntroState && (
