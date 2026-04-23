@@ -26,6 +26,8 @@ export type MemberSearchPayload = {
     openToWork?: boolean
     page: number
     recentlyActive?: boolean
+    sortBy?: 'handle' | 'matchIndex'
+    sortOrder?: 'asc' | 'desc'
     skillSearchType: 'OR'
     skills: Array<{
         id: string
