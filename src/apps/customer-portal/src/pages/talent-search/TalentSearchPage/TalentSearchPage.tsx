@@ -102,17 +102,8 @@ export const TalentSearchPage: FC = () => {
         return true
     }), [onlyActive, onlyOpenToWork, results])
 
-    const displayedResults = useMemo(() => {
-        const sorted = [...filteredResults]
-        if (activeSort === 'matching-index') {
-            sorted.sort((a, b) => b.matchIndex - a.matchIndex)
-            return sorted
-        }
-
-        sorted.sort((a, b) => String(a.handle || '')
-            .localeCompare(String(b.handle || ''), undefined, { sensitivity: 'base' }))
-        return sorted
-    }, [activeSort, filteredResults])
+    // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
+    const displayedResults = filteredResults
 
     const foundMembersCount = totalResults || displayedResults.length
     const displayedResultsWithCountryName = useMemo(
@@ -175,6 +166,7 @@ export const TalentSearchPage: FC = () => {
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
+        const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
             page,
@@ -187,6 +179,8 @@ export const TalentSearchPage: FC = () => {
                     wins: 1,
                 })),
             skillSearchType: 'OR',
+            sortBy: hasSkills ? 'matchIndex' : 'handle',
+            sortOrder: hasSkills ? 'desc' : 'asc',
         }
 
         if (countries.length > 0) {
