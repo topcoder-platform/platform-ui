@@ -106,7 +106,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeTruthy()
         expect(screen.getByText(/80001063/))
             .toBeTruthy()
-        expect(screen.getByText('-$25 / $1,000 remaining'))
+        expect(screen.getByText('$1,025 / $1,000 spent'))
             .toBeTruthy()
         expect(screen.getByText(/The billing account for this project has insufficient remaining funds,/))
             .toBeTruthy()

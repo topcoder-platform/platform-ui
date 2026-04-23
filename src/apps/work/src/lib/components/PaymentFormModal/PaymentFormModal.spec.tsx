@@ -1,5 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { render } from '@testing-library/react'
+import {
+    render,
+} from '@testing-library/react'
 
 import type { Assignment } from '../../models'
 
@@ -47,10 +49,6 @@ jest.mock('../../utils', () => ({
     calculatePaymentAmount: jest.fn(() => 821.2),
     getAssignmentRatePerHour: jest.fn(() => 20.53),
     getAssignmentStandardHoursPerWeek: jest.fn(() => 40),
-}))
-
-jest.mock('../../utils/payment.utils', () => ({
-    formatCurrency: jest.fn((value: number) => `$${value.toFixed(2)}`),
 }))
 
 describe('PaymentFormModal', () => {

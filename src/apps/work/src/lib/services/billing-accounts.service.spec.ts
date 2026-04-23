@@ -4,6 +4,7 @@ import { xhrGetAsync } from '~/libs/core'
 import {
     BillingAccountDetails,
     combineBillingAccountLineItems,
+    fetchBillingAccounts,
     fetchBillingAccountById,
     searchBillingAccounts,
 } from './billing-accounts.service'
@@ -31,6 +32,43 @@ jest.mock('~/libs/core', () => ({
 })
 
 const NULL_EXTERNAL_NAME = JSON.parse('null') as null
+
+describe('fetchBillingAccounts', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('requests a large lookup page for project billing summaries', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            data: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 125,
+                    name: 'Platform Dev - One',
+                },
+            ],
+        })
+
+        const result = await fetchBillingAccounts()
+
+        expect(result)
+            .toEqual([
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 125,
+                    name: 'Platform Dev - One',
+                },
+            ])
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith('https://example.com/v6/billing-accounts?perPage=1000')
+    })
+})
 
 describe('searchBillingAccounts', () => {
     beforeEach(() => {

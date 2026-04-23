@@ -110,6 +110,7 @@ export interface AssignmentPayment {
     description?: string
     details?: Array<{
         amount?: number
+        challengeFee?: number | string
         grossAmount?: number
         hoursWorked?: number | string
         totalAmount?: number

@@ -33,6 +33,46 @@
     gap: 12px;
 }
 
+.billingAccountCell {
+    align-items: center;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.billingAccountLabel {
+    color: $black-80;
+}
+
+.budgetDisplay {
+    background: #f2f4f7;
+    border-radius: 4px;
+    color: $black-80;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.infoButton {
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 2px;
+}
+
+.infoIcon {
+    color: #4a5568;
+    height: 18px;
+    width: 18px;
+}
+
+.infoButton:hover .infoIcon {
+    color: #137d60;
+}
+
 .listView {
     display: none;
     gap: 12px;

@@ -11,6 +11,7 @@ import {
 import {
     formatCurrency,
     getPaymentAmount,
+    getPaymentChallengeFee,
     getPaymentCreatorLabel,
     getPaymentHoursWorked,
     getPaymentRemarks,
@@ -86,6 +87,8 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                     ? (
                         <ul className={styles.list}>
                             {paymentsResult.payments.map((payment, index) => {
+                                const paymentAmount = getPaymentAmount(payment)
+                                const paymentChallengeFee = getPaymentChallengeFee(payment)
                                 const paymentStatus = getPaymentStatus(payment)
                                 const paymentHoursWorked = getPaymentHoursWorked(payment)
                                 const paymentRemarks = getPaymentRemarks(payment)
@@ -102,7 +105,21 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                         className={styles.item}
                                     >
                                         <div className={styles.itemHeader}>
-                                            <strong>{formatCurrency(getPaymentAmount(payment))}</strong>
+                                            <div className={styles.amountBlock}>
+                                                <span className={styles.amount}>
+                                                    {formatCurrency(paymentAmount)}
+                                                </span>
+                                                {paymentChallengeFee !== undefined
+                                                    ? (
+                                                        <div className={styles.metaRow}>
+                                                            <span className={styles.metaLabel}>
+                                                                Fee:
+                                                            </span>
+                                                            <span>{formatCurrency(paymentChallengeFee)}</span>
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                            </div>
                                             {showPaymentStatus
                                                 ? <span className={styles.status}>{paymentStatus}</span>
                                                 : undefined}
@@ -125,8 +142,8 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                                     </div>
                                                 )
                                                 : undefined}
-                                            <div className={styles.paymentCreator}>
-                                                <span className={styles.paymentCreatorLabel}>
+                                            <div className={styles.metaRow}>
+                                                <span className={styles.metaLabel}>
                                                     Payment Creator:
                                                 </span>
                                                 <span>{paymentCreator || '-'}</span>

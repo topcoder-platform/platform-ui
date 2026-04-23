@@ -126,7 +126,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         const status = getBudgetStatus(remaining, totalBudget)
 
         return {
-            remaining,
+            spent: Math.max(totalBudget - remaining, 0),
             status,
             totalBudget,
         }
@@ -159,10 +159,10 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
                 {budgetInfo && (
                     <>
                         <span className={`${styles.budgetDisplay} ${budgetStatusClass}`}>
-                            {formatCurrency(budgetInfo.remaining)}
+                            {formatCurrency(budgetInfo.spent)}
                             {' / '}
                             {formatCurrency(budgetInfo.totalBudget)}
-                            {' remaining'}
+                            {' spent'}
                         </span>
                         <button
                             aria-label='View billing account details'

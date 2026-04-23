@@ -21,6 +21,7 @@ import type {
 import {
     useFetchEngagement,
     useFetchProject,
+    useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
     partiallyUpdateEngagement,
@@ -95,6 +96,7 @@ jest.mock('../../../lib/components/form', () => ({
 jest.mock('../../../lib/hooks', () => ({
     useFetchEngagement: jest.fn(),
     useFetchProject: jest.fn(),
+    useFetchProjectBillingAccount: jest.fn(),
 }))
 
 jest.mock('../../../lib/services', () => ({
@@ -176,12 +178,22 @@ const assignment: Assignment = {
 
 const mockedUseFetchEngagement = useFetchEngagement as jest.MockedFunction<typeof useFetchEngagement>
 const mockedUseFetchProject = useFetchProject as jest.MockedFunction<typeof useFetchProject>
+const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.MockedFunction<
+    typeof useFetchProjectBillingAccount
+>
 const mockedPartiallyUpdateEngagement = partiallyUpdateEngagement as jest.MockedFunction<
     typeof partiallyUpdateEngagement
 >
 
 beforeEach(() => {
     jest.clearAllMocks()
+    mockedUseFetchProjectBillingAccount.mockReturnValue({
+        billingAccount: {
+            id: 'billing-account-1',
+            markup: 0.15,
+        },
+        isLoading: false,
+    } as unknown as ReturnType<typeof useFetchProjectBillingAccount>)
 })
 
 describe('EngagementPaymentPage', () => {

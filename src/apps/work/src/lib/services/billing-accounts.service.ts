@@ -1,8 +1,13 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
+const BILLING_ACCOUNTS_LOOKUP_PAGE_SIZE = 1000
+
 export interface BillingAccount {
     active?: boolean
+    budget?: number | string
+    consumedBudget?: number | string
+    lockedBudget?: number | string
     markup?: number
     endDate?: string
     id: number | string
@@ -194,14 +199,14 @@ function createLineItem(
 }
 
 /**
- * Fetches billing accounts using default API pagination.
+ * Fetches billing accounts using a large lookup page for project-list joins.
  *
  * Returns only accounts with both `id` and `name`, sorted by name.
  */
 export async function fetchBillingAccounts(): Promise<BillingAccount[]> {
     try {
         const response = await xhrGetAsync<BillingAccount[] | BillingAccountsResponse>(
-            `${EnvironmentConfig.API.V6}/billing-accounts`,
+            `${EnvironmentConfig.API.V6}/billing-accounts?perPage=${BILLING_ACCOUNTS_LOOKUP_PAGE_SIZE}`,
         )
 
         return normalizeBillingAccounts(extractBillingAccounts(response))

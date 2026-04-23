@@ -38,6 +38,7 @@ import {
 import {
     useFetchEngagement,
     useFetchProject,
+    useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
     Assignment,
@@ -581,6 +582,7 @@ export const EngagementPaymentPage: FC = () => {
 
     const engagementResult = useFetchEngagement(engagementId)
     const projectResult = useFetchProject(projectId)
+    const projectBillingAccountResult = useFetchProjectBillingAccount(projectId)
 
     const assignments = useMemo(() => {
         if (!Array.isArray(engagementResult.engagement?.assignments)) {
@@ -614,7 +616,8 @@ export const EngagementPaymentPage: FC = () => {
             return
         }
 
-        const billingAccountId = projectResult.project?.billingAccountId
+        const billingAccountId = projectBillingAccountResult.billingAccount?.id
+            || projectResult.project?.billingAccountId
 
         if (!billingAccountId) {
             showErrorToast('Billing account is required to create payment')
@@ -650,7 +653,11 @@ export const EngagementPaymentPage: FC = () => {
         } finally {
             setIsSubmittingPayment(false)
         }
-    }, [paymentMember, projectResult.project?.billingAccountId])
+    }, [
+        paymentMember,
+        projectBillingAccountResult.billingAccount?.id,
+        projectResult.project?.billingAccountId,
+    ])
 
     const handleTerminateConfirm = useCallback(async (reason: string): Promise<void> => {
         if (!terminateMember) {
@@ -977,7 +984,9 @@ export const EngagementPaymentPage: FC = () => {
             />
 
             <PaymentFormModal
-                billingAccountId={projectResult.project?.billingAccountId}
+                billingAccountId={projectBillingAccountResult.billingAccount?.id
+                    || projectResult.project?.billingAccountId}
+                billingAccountMarkup={projectBillingAccountResult.billingAccount?.markup}
                 engagementName={engagementResult.engagement?.title}
                 isSubmitting={isSubmittingPayment}
                 member={paymentMember}
