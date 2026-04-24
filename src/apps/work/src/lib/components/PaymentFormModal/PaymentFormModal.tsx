@@ -25,7 +25,10 @@ import {
     getAssignmentRatePerHour,
     getAssignmentStandardHoursPerWeek,
 } from '../../utils'
-import { formatCurrency } from '../../utils/payment.utils'
+import {
+    calculatePaymentChallengeFee,
+    formatCurrency,
+} from '../../utils/payment.utils'
 
 import styles from './PaymentFormModal.module.scss'
 
@@ -38,6 +41,7 @@ export interface PaymentFormData {
 
 interface PaymentFormModalProps {
     billingAccountId?: number | string
+    billingAccountMarkup?: number
     engagementName?: string
     isSubmitting?: boolean
     member: Assignment | undefined
@@ -150,6 +154,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const amount = useMemo(
         () => calculatePaymentAmount(hoursWorked, ratePerHour),
         [hoursWorked, ratePerHour],
+    )
+    const challengeFee = useMemo(
+        () => calculatePaymentChallengeFee(amount, props.billingAccountMarkup),
+        [amount, props.billingAccountMarkup],
     )
     const paymentTitle = useMemo(
         () => {
@@ -358,6 +366,15 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             ? ''
                             : amount.toFixed(2)}
                     />
+                    {challengeFee !== undefined
+                        ? (
+                            <p className={styles.helperText}>
+                                <span className={styles.helperLabel}>Fee:</span>
+                                {' '}
+                                {formatCurrency(challengeFee)}
+                            </p>
+                        )
+                        : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>

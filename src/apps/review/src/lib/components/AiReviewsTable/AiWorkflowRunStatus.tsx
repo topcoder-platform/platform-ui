@@ -8,7 +8,7 @@ import StatusLabel from './StatusLabel'
 
 interface AiWorkflowRunStatusProps {
     run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
-    status?: 'passed' | 'pending' | 'failed-score' | 'failed'
+    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'human-override'
     score?: number
     hideLabel?: boolean
     showScore?: boolean
@@ -81,6 +81,16 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
                     hideLabel={props.hideLabel}
                     status={displayStatus}
                     label='Failure'
+                    score={score}
+                    action={props.action}
+                />
+            )}
+            {displayStatus === 'human-override' && (
+                <StatusLabel
+                    icon={<IconOutline.UserIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
+                    status={displayStatus}
+                    label='Unlocked'
                     score={score}
                     action={props.action}
                 />

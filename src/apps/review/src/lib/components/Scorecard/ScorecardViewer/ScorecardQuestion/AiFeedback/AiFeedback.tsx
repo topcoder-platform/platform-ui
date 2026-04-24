@@ -33,7 +33,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const commentsArr: any[] = (feedback?.comments) || []
 
     const onShowReply = useCallback(() => {
-        setShowReply(!showReply)
+        setShowReply(prevShowReply => !prevShowReply)
     }, [])
 
     const onSubmitReply = useCallback(async (content: string) => {
@@ -87,8 +87,12 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
             <AiFeedbackActions
                 feedback={feedback}
                 actionType='runItem'
-                onPressReply={commentsArr.length === 0 ? onShowReply : undefined}
+                onPressReply={onShowReply}
             />
+
+            {commentsArr.length > 0 && (
+                <AiFeedbackComments comments={commentsArr} feedback={feedback} isRoot />
+            )}
 
             {
                 showReply && (
@@ -100,10 +104,6 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                     />
                 )
             }
-
-            {commentsArr.length > 0 && (
-                <AiFeedbackComments comments={commentsArr} feedback={feedback} isRoot />
-            )}
         </ScorecardQuestionRow>
     )
 }

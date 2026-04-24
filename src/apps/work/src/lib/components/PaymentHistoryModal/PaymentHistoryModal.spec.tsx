@@ -58,6 +58,13 @@ describe('PaymentHistoryModal', () => {
                     },
                     createdAt: '2026-03-31T00:00:00.000Z',
                     createdByHandle: 'payment.manager',
+                    details: [
+                        {
+                            challengeFee: 18.6,
+                            grossAmount: 120,
+                            totalAmount: 120,
+                        },
+                    ],
                     id: 'payment-1',
                     title: 'Salesforce support',
                 },
@@ -84,6 +91,10 @@ describe('PaymentHistoryModal', () => {
         expect(screen.getByText('Payment Creator:'))
             .toBeTruthy()
         expect(screen.getByText('payment.manager'))
+            .toBeTruthy()
+        expect(screen.getByText('Fee:'))
+            .toBeTruthy()
+        expect(screen.getByText('$18.60'))
             .toBeTruthy()
     })
 })

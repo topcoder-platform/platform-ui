@@ -230,6 +230,29 @@ describe('challenge phase tab helpers', () => {
             .toBe(false)
     })
 
+    it('force-shows winners for past challenges with winners even when a phase remains open', () => {
+        expect(shouldAllowWinnersTabForPastChallenge({
+            phases: [
+                createBackendPhase('iterative-1', 'Iterative Review', '2026-04-20T00:00:00Z', {
+                    isOpen: true,
+                }),
+            ],
+            status: 'COMPLETED',
+        }))
+            .toBe(false)
+
+        expect(shouldForceWinnersTabForPastChallenge({
+            phases: [
+                createBackendPhase('iterative-1', 'Iterative Review', '2026-04-20T00:00:00Z', {
+                    isOpen: true,
+                }),
+            ],
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }))
+            .toBe(true)
+    })
+
     it('keeps winners hidden when a follow-up approval review is still pending', () => {
         const challengeInfo = {
             phases: [

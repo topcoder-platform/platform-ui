@@ -193,20 +193,40 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
+
+    // Remove the old hasSelectedStatusFilter declaration as we handle it directly below
+
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
+        // Strip 'all' sentinel values — never forward them to the API
+        const activeFilters = Object.fromEntries(
+            Object.entries(filters)
+                .filter(([, v]) => v.length > 0 && v[0] !== 'all'),
+        )
+
         if (!restrictedCategory) {
-            return filters
+            return activeFilters
         }
 
-        return {
-            ...filters,
-            category: [restrictedCategory],
-            ...(hasSelectedStatusFilter
-                ? { status: filters.status }
-                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
+        // Determine the correct status filter to append
+        let statusFilter: Record<string, string[]> = {}
+
+        if (filters.status && filters.status[0] !== 'all') {
+            // 1. User explicitly chose a specific status (e.g. 'OWED')
+            statusFilter = { status: activeFilters.status }
+        } else if (!filters.status && restrictedDefaultStatus) {
+            // 2. Initial load (filters.status is undefined), apply restricted default
+            statusFilter = { status: [restrictedDefaultStatus] }
         }
-    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
+        // 3. If user explicitly selected 'all' (filters.status[0] === 'all'),
+        // statusFilter remains empty, allowing the API to return all statuses.
+
+        return {
+            ...activeFilters,
+            category: [restrictedCategory],
+            ...statusFilter,
+        }
+    }, [filters, restrictedCategory, restrictedDefaultStatus])
+
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
             .some(([key, value]) => key !== 'category' && value.length > 0),
@@ -217,26 +237,31 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             return {} as Record<string, string>
         }
 
-        const statusOverride = filters.status?.[0] ?? restrictedDefaultStatus
+        // Reflect the user's explicit status choice in the dropdown display.
+        // Do not inject restrictedDefaultStatus here — it applies to the API query
+        // via appliedFilters but must not override the dropdown's "All" default.
+        const statusOverride = filters.status?.[0] !== 'all' ? filters.status?.[0] : undefined
 
         return {
             category: restrictedCategory,
             ...(statusOverride ? { status: statusOverride } : {}),
         }
-    }, [filters.status, restrictedCategory, restrictedDefaultStatus])
+    }, [filters.status, restrictedCategory])
 
     const defaultDropdownValues = React.useMemo<Record<string, string>>(() => {
         const defaults: Record<string, string> = {}
 
         if (!restrictedCategory) {
-            defaults.status = filters.status?.[0] ?? 'all'
             defaults.category = filters.category?.[0] ?? 'all'
         }
 
         defaults.date = filters.date?.[0] ?? 'all'
 
+        // Fall back to the restricted default if no filter is applied
+        defaults.status = filters.status?.[0] ?? (restrictedDefaultStatus || 'all')
+
         return defaults
-    }, [filters.category, filters.date, filters.status, restrictedCategory])
+    }, [filters.category, filters.date, filters.status, restrictedCategory, restrictedDefaultStatus])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -703,20 +728,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
-                        /*    setFilters({
-                            ...filters,
-                            [key]: value,
-                        }) */
-                        setFilters(prev => {
-                            const newFilters = { ...prev }
-                            if (value[0] === 'all') {
-                                delete newFilters[key]
-                            } else {
-                                newFilters[key] = value
-                            }
 
-                            return newFilters
-                        })
+                        setFilters(prev => ({
+                            ...prev,
+                            [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
+                        }))
                         setSelectedPayments({})
                     }}
                     onResetFilters={() => {

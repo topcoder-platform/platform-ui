@@ -18,7 +18,6 @@ const DEFAULT_ENGAGEMENT_PAYMENT_STATUS = 'ON_HOLD_ADMIN'
 
 interface PaymentDetailsPayload {
     billingAccount: string
-    challengeFee: number
     currency: string
     grossAmount: number
     installmentNumber: number
@@ -173,7 +172,6 @@ export async function createMemberPayment(
         details: [
             {
                 billingAccount: String(billingAccountId),
-                challengeFee: 0,
                 currency: 'USD',
                 grossAmount: numericAmount,
                 installmentNumber: 1,

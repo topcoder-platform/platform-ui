@@ -49,6 +49,7 @@ import {
 } from '../../../../lib/services'
 import {
     formatEngagementStatus,
+    getCountableEngagementAssignments,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -104,6 +105,10 @@ interface SaveEngagementOptions {
     isAutosave?: boolean
 }
 
+interface AssignmentSerializationOptions {
+    lockedAssignmentDetails?: AssignmentDetailsFormValue[]
+}
+
 type EngagementAssignment = Engagement['assignments'][number]
 type SerializedAssignmentDetailsPayload = {
     agreementRate: string
@@ -136,21 +141,43 @@ function normalizeProjectId(projectId: number | string | undefined): string {
  *
  * @param requiredMemberCount raw form value for the private member count.
  * @param assignedMemberHandles form values for the selected member handles.
+ * @param lockedAssignedMemberHandles persisted member handles that must remain visible.
  * @returns trimmed handles for the currently active private-assignment slots.
  */
 function getVisibleAssignedMemberHandles(
     requiredMemberCount: number | string | undefined,
     assignedMemberHandles: string[],
+    lockedAssignedMemberHandles: string[] = [],
 ): string[] {
     const parsedRequiredMemberCount = Number(requiredMemberCount)
-    const assignmentLimit = Number.isInteger(parsedRequiredMemberCount) && parsedRequiredMemberCount > 0
-        ? parsedRequiredMemberCount
-        : assignedMemberHandles.length
+    const assignmentLimit = Math.max(
+        Number.isInteger(parsedRequiredMemberCount) && parsedRequiredMemberCount > 0
+            ? parsedRequiredMemberCount
+            : assignedMemberHandles.length,
+        lockedAssignedMemberHandles.length,
+    )
 
-    return assignedMemberHandles
-        .slice(0, assignmentLimit)
-        .map(memberHandle => String(memberHandle || '')
+    return Array.from({ length: assignmentLimit }, (_, index) => (
+        lockedAssignedMemberHandles[index] || assignedMemberHandles[index] || ''
+    ))
+        .map(memberHandle => String(memberHandle)
             .trim())
+}
+
+/**
+ * Extracts locked member handles from persisted assignment details.
+ *
+ * @param lockedAssignmentDetails existing assignment detail rows that should
+ * remain owned by the assignments list.
+ * @returns member handles that cannot be edited from the engagement form.
+ */
+function getLockedAssignedMemberHandles(
+    lockedAssignmentDetails: AssignmentDetailsFormValue[] = [],
+): string[] {
+    return lockedAssignmentDetails
+        .map(assignmentDetail => String(assignmentDetail.memberHandle || '')
+            .trim())
+        .filter(Boolean)
 }
 
 /**
@@ -158,19 +185,27 @@ function getVisibleAssignedMemberHandles(
  * member handle selected for each visible slot.
  *
  * @param values engagement editor form values.
+ * @param lockedAssignmentDetails persisted assignment details that must remain
+ * unchanged while editing the engagement.
  * @returns serialized assignment details aligned to the active member handles.
  */
 function serializeAssignmentDetails(
     values: EngagementEditorFormData,
+    lockedAssignmentDetails: AssignmentDetailsFormValue[] = [],
 ): SerializedAssignmentDetailsPayload[] {
+    const lockedAssignedMemberHandles = getLockedAssignedMemberHandles(lockedAssignmentDetails)
     const visibleAssignedMemberHandles = getVisibleAssignedMemberHandles(
         values.requiredMemberCount,
         values.assignedMemberHandles,
+        lockedAssignedMemberHandles,
     )
     const serializedAssignmentDetails: Array<SerializedAssignmentDetailsPayload | undefined>
         = visibleAssignedMemberHandles
             .map((memberHandle, index) => {
-                const detail = values.assignmentDetails[index]
+                const lockedDetail = lockedAssignmentDetails[index]
+                const detail = lockedDetail?.memberHandle
+                    ? lockedDetail
+                    : values.assignmentDetails[index]
                 const detailMemberHandle = String(detail?.memberHandle || '')
                     .trim()
 
@@ -224,6 +259,16 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
     }
 }
 
+/**
+ * Builds private-assignment form defaults from active assignment slots only.
+ *
+ * Historical completed or terminated assignments remain on the engagement
+ * response, but editing an engagement should only submit currently countable
+ * assignments so closed history rows are not modified.
+ *
+ * @param engagement engagement being edited, if one exists.
+ * @returns member handles and details for active private-assignment slots.
+ */
 function getAssignmentDefaults(engagement: Engagement | undefined): {
     assignedMemberHandles: string[]
     assignmentDetails: AssignmentDetailsFormValue[]
@@ -231,7 +276,8 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
     const assignments = engagement?.assignments
 
     if (Array.isArray(assignments) && assignments.length > 0) {
-        const assignmentDetails = assignments.map(toAssignmentDetailsValue)
+        const assignmentDetails = getCountableEngagementAssignments(assignments)
+            .map(toAssignmentDetailsValue)
 
         return {
             assignedMemberHandles: assignmentDetails.map(assignment => assignment.memberHandle),
@@ -243,6 +289,26 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
         assignedMemberHandles: engagement?.assignedMemberHandles || [],
         assignmentDetails: [],
     }
+}
+
+/**
+ * Builds read-only assignment defaults for existing engagement assignments.
+ *
+ * @param engagement engagement being edited, if one exists.
+ * @returns assignment details for active assignments that should no longer be
+ * editable from the engagement editor.
+ */
+function getLockedAssignmentDetails(
+    engagement: Engagement | undefined,
+): AssignmentDetailsFormValue[] {
+    const assignments = engagement?.assignments
+
+    if (!Array.isArray(assignments) || assignments.length < 1) {
+        return []
+    }
+
+    return getCountableEngagementAssignments(assignments)
+        .map(toAssignmentDetailsValue)
 }
 
 /**
@@ -383,10 +449,48 @@ function getEngagementsPath(projectId: number | string | undefined): string {
     return `${rootRoute}/projects/${normalizeProjectId(projectId)}/engagements`
 }
 
-function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
+/**
+ * Resolves a required-member count while preserving already-assigned slots.
+ *
+ * @param rawRequiredMemberCount form value for the required member count.
+ * @param minimumMemberCount minimum count needed to keep locked assignments visible.
+ * @returns normalized member count, or `undefined` when the form value is blank.
+ */
+function getPayloadRequiredMemberCount(
+    rawRequiredMemberCount: number | string | undefined,
+    minimumMemberCount: number,
+): number | undefined {
+    if (rawRequiredMemberCount === '' || rawRequiredMemberCount === undefined) {
+        return minimumMemberCount > 0
+            ? minimumMemberCount
+            : undefined
+    }
+
+    const requiredMemberCount = Number(rawRequiredMemberCount)
+
+    if (!Number.isFinite(requiredMemberCount)) {
+        return undefined
+    }
+
+    return Math.max(requiredMemberCount, minimumMemberCount)
+}
+
+/**
+ * Converts engagement editor form state into the API payload.
+ *
+ * @param values engagement editor form values.
+ * @param options serialization options for preserving locked assignment slots.
+ * @returns partial engagement payload ready for create or update.
+ */
+function toPayload(
+    values: EngagementEditorFormData,
+    options: AssignmentSerializationOptions = {},
+): Partial<Engagement> & {
     assignmentDetails?: SerializedAssignmentDetailsPayload[]
 } {
     const rawRequiredMemberCount = values.requiredMemberCount
+    const lockedAssignmentDetails = options.lockedAssignmentDetails || []
+    const lockedAssignedMemberHandles = getLockedAssignedMemberHandles(lockedAssignmentDetails)
     const payload: Partial<Engagement> & {
         assignmentDetails?: SerializedAssignmentDetailsPayload[]
     } = {
@@ -405,18 +509,22 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
         workload: values.workload,
     }
 
-    if (rawRequiredMemberCount !== '' && rawRequiredMemberCount !== undefined) {
-        const requiredMemberCount = Number(rawRequiredMemberCount)
+    const requiredMemberCount = getPayloadRequiredMemberCount(
+        rawRequiredMemberCount,
+        values.isPrivate
+            ? lockedAssignedMemberHandles.length
+            : 0,
+    )
 
-        if (Number.isFinite(requiredMemberCount)) {
-            payload.requiredMemberCount = requiredMemberCount
-        }
+    if (requiredMemberCount !== undefined) {
+        payload.requiredMemberCount = requiredMemberCount
     }
 
     if (values.isPrivate) {
         const assignedMemberHandles = getVisibleAssignedMemberHandles(
             values.requiredMemberCount,
             values.assignedMemberHandles,
+            lockedAssignedMemberHandles,
         )
             .filter(Boolean)
 
@@ -424,7 +532,7 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
             payload.assignedMemberHandles = assignedMemberHandles
         }
 
-        const assignmentDetails = serializeAssignmentDetails(values)
+        const assignmentDetails = serializeAssignmentDetails(values, lockedAssignmentDetails)
 
         if (assignmentDetails.length > 0) {
             payload.assignmentDetails = assignmentDetails
@@ -448,6 +556,16 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [saveError, setSaveError] = useState<string | undefined>()
 
+    const lockedAssignmentDetails = useMemo<AssignmentDetailsFormValue[]>(
+        () => (props.isEditMode
+            ? getLockedAssignmentDetails(props.engagement)
+            : []),
+        [props.engagement, props.isEditMode],
+    )
+    const lockedAssignedMemberHandles = useMemo<string[]>(
+        () => getLockedAssignedMemberHandles(lockedAssignmentDetails),
+        [lockedAssignmentDetails],
+    )
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
     const currentProjectOption = useMemo<FormSelectOption | undefined>(
@@ -510,7 +628,9 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             setSaveError(undefined)
 
             try {
-                const payload = toPayload(nextValues)
+                const payload = toPayload(nextValues, {
+                    lockedAssignmentDetails,
+                })
 
                 let savedEngagement: Engagement
 
@@ -553,7 +673,14 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 }
             }
         },
-        [currentEngagementId, navigate, props.isEditMode, props.projectId, reset],
+        [
+            currentEngagementId,
+            lockedAssignmentDetails,
+            navigate,
+            props.isEditMode,
+            props.projectId,
+            reset,
+        ],
     )
 
     const loadParentProjectOptions = useCallback(
@@ -743,7 +870,13 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     </div>
                 </section>
 
-                <EngagementPrivateSection />
+                <EngagementPrivateSection
+                    assignmentManagementPath={currentEngagementId
+                        ? `/projects/${normalizeProjectId(values.projectId || props.projectId)}`
+                            + `/engagements/${currentEngagementId}/assignments`
+                        : undefined}
+                    lockedAssignedMemberHandles={lockedAssignedMemberHandles}
+                />
 
                 <div className={styles.footer}>
                     {saveError

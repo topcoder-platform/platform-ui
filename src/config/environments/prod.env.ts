@@ -26,7 +26,7 @@ export const ADMIN = {
     ONLINE_REVIEW_URL: 'https://software.topcoder.com/review',
     REVIEW_UI_URL: 'https://review.topcoder.com',
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
-    WORK_MANAGER_URL: 'https://challenges.topcoder.com',
+    WORK_MANAGER_URL: 'https://work.topcoder.com',
 }
 
 export const REVIEW = {

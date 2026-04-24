@@ -28,65 +28,102 @@ import personSearchImage from '../../../lib/assets/person-search.png'
 
 import styles from './TalentSearchPage.module.scss'
 
+type TalentSearchSortOption = 'alphabetical' | 'matching-index'
+
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
+    const searchGenerationRef = useRef<number>(0) // ← add this
+
+    const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
-    const [hasSearched, setHasSearched] = useState<boolean>(false)
+    const [hasSearched, setHasSearched] = useState<boolean>(true)
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
-    const [selectedCountry, setSelectedCountry] = useState<string>('all')
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
-    const [onlyActive, setOnlyActive] = useState<boolean>(true)
-    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
+    const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
+    const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
+    const [onlyActive, setOnlyActive] = useState<boolean>(false)
+    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
-
-    // const breadCrumb = useMemo(
-    //     () => [{ index: 1, label: 'Talent Search' }],
-    //     [],
-    // )
-    const countryOptions = useMemo(
-        (): InputSelectOption[] => [
-            { label: 'All Countries', value: 'all' },
-            ...((countryLookup || [])
-                .map(country => ({
-                    label: country.country,
-                    value: country.countryCode,
-                }))
-                .filter(option => option.label && option.value)
-                .sort((a, b) => String(a.label)
-                    .localeCompare(String(b.label)))),
-        ],
+    const countryNameByCode = useMemo((): Map<string, string> => new Map(
+        (countryLookup || [])
+            .filter(country => country.countryCode && country.country)
+            .map(country => [country.countryCode.toUpperCase(), country.country]),
+    ), [countryLookup])
+    const countryFilterOptions = useMemo(
+        (): InputMultiselectOption[] => (countryLookup || [])
+            .map(country => ({
+                label: country.country,
+                value: country.countryCode,
+            }))
+            .filter(option => option.label && option.value)
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label))),
         [countryLookup],
+    )
+    const selectedCountryCodesList = useMemo(
+        (): string[] => selectedCountries
+            .map(country => String(country.value || '')
+                .trim()
+                .toUpperCase())
+            .filter(Boolean),
+        [selectedCountries],
+    )
+
+    const hasSkillSearch = selectedSkills.length > 0
+    const hasActiveFilters = hasSkillSearch
+        || selectedCountries.length > 0
+        || onlyOpenToWork
+        || onlyActive
+    const shouldShowIntroState = !hasSearched && !hasActiveFilters
+    const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
+    const sortOptions = useMemo(
+        (): InputSelectOption[] => (hasSkillSearch
+            ? [{ label: 'Matching Index', value: 'matching-index' }]
+            : [{ label: 'Alphabetical', value: 'alphabetical' }]),
+        [hasSkillSearch],
     )
 
     const filteredResults = useMemo(() => results.filter(talent => {
-        if (selectedCountry !== 'all') {
-            const selectedCountryOption = countryOptions.find(option => option.value === selectedCountry)
-            const selectedCountryName = typeof selectedCountryOption?.label === 'string'
-                ? selectedCountryOption.label
-                : ''
-            const normalizedLocation = talent.location.toLowerCase()
-
-            if (!selectedCountryName || !normalizedLocation.includes(selectedCountryName.toLowerCase())) {
-                return false
-            }
-        }
-
         if (onlyActive && !talent.isRecentlyActive) {
             return false
         }
 
+        if (onlyOpenToWork && !talent.openToWork) {
+            return false
+        }
+
         return true
-    }), [countryOptions, onlyActive, results, selectedCountry])
-    const foundMembersCount = selectedCountry === 'all'
-        ? (totalResults || filteredResults.length)
-        : filteredResults.length
+    }), [onlyActive, onlyOpenToWork, results])
+
+    // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
+    const displayedResults = filteredResults
+
+    const foundMembersCount = totalResults || displayedResults.length
+    const displayedResultsWithCountryName = useMemo(
+        () => displayedResults.map(talent => {
+            const code = String(talent.location || '')
+                .trim()
+                .toUpperCase()
+            const countryName = countryNameByCode.get(code)
+
+            if (!countryName) {
+                return talent
+            }
+
+            return {
+                ...talent,
+                location: countryName,
+            }
+        }),
+        [countryNameByCode, displayedResults],
+    )
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -99,26 +136,40 @@ export const TalentSearchPage: FC = () => {
             setSkillOptionsLoading(false)
         }
     }, [])
+    const loadCountryOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        const normalizedQuery = query.trim()
+            .toLowerCase()
+        if (!normalizedQuery) {
+            return countryFilterOptions
+        }
+
+        return countryFilterOptions.filter(option => String(option.label || '')
+            .toLowerCase()
+            .includes(normalizedQuery))
+    }, [countryFilterOptions])
 
     const runMemberSearch = useCallback(async (
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            countries?: string[]
+            generation?: number
             openToWork?: boolean
             page?: number
             recentlyActive?: boolean
         },
-    ): Promise<void> => {
+    ): Promise<boolean> => {
         const append = overrides?.append === true
+        const countries = (overrides?.countries ?? selectedCountryCodesList)
+            .filter(Boolean)
+        const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-
+        const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
-            openToWork,
             page,
-            recentlyActive,
             skills: skillsToSearch
                 .map(skill => String(skill.value || '')
                     .trim())
@@ -128,7 +179,20 @@ export const TalentSearchPage: FC = () => {
                     wins: 1,
                 })),
             skillSearchType: 'OR',
-            verifiedProfile: true,
+            sortBy: hasSkills ? 'matchIndex' : 'handle',
+            sortOrder: hasSkills ? 'desc' : 'asc',
+        }
+
+        if (countries.length > 0) {
+            payload.countries = countries
+        }
+
+        if (openToWork) {
+            payload.openToWork = true
+        }
+
+        if (recentlyActive) {
+            payload.recentlyActive = true
         }
 
         if (append) {
@@ -138,11 +202,14 @@ export const TalentSearchPage: FC = () => {
         }
 
         setErrorMessage('')
-
         try {
             const response = await searchMembers(payload)
-            const fetchedData = Array.isArray(response?.data) ? response.data : []
+            // If generation was provided and has changed, discard stale results
+            if (generation !== undefined && searchGenerationRef.current !== generation) {
+                return false
+            }
 
+            const fetchedData = Array.isArray(response?.data) ? response.data : []
             setResults(prevResults => {
                 if (!append) {
                     return fetchedData
@@ -156,19 +223,21 @@ export const TalentSearchPage: FC = () => {
                         merged.push(item)
                     }
                 })
-
                 return merged
             })
             setTotalResults(Number(response?.total || 0))
             setCurrentPage(Number(response?.page || page))
+            return true
         } catch {
             if (!append) {
                 setResults([])
                 setTotalResults(0)
                 setCurrentPage(1)
+                setLastSearchedDescription('')
             }
 
             setErrorMessage('Failed to search matching members. Please try again.')
+            return false
         } finally {
             if (append) {
                 setIsLoadingMore(false)
@@ -176,19 +245,27 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork])
+    }, [onlyActive, onlyOpenToWork, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
-        setSelectedCountry('all')
-        setOnlyOpenToWork(true)
-        setOnlyActive(true)
+        searchGenerationRef.current += 1
+        setSelectedCountries([])
+        setOnlyOpenToWork(false)
+        setOnlyActive(false)
+        setSortBy('alphabetical')
         setSelectedSkills([])
-        setHasSearched(false)
-        setResults([])
-        setTotalResults(0)
-        setCurrentPage(1)
+        setHasSearched(true)
         setErrorMessage('')
-    }, [])
+        skipNextAutoSearchRef.current = true
+        setLastSearchedDescription('')
+        runMemberSearch([], {
+            countries: [],
+            generation: searchGenerationRef.current,
+            openToWork: false,
+            page: 1,
+            recentlyActive: false,
+        })
+    }, [runMemberSearch])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
         const normalizedDescription = jobDescription.trim()
@@ -196,11 +273,15 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
+        const generation = searchGenerationRef.current
+
         setErrorMessage('')
         setIsExtractingSkills(true)
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
+            if (searchGenerationRef.current !== generation) return
+
             const extractedSkills = Array.isArray(extractedSkillsResult?.matches)
                 ? extractedSkillsResult.matches
                 : []
@@ -230,24 +311,31 @@ export const TalentSearchPage: FC = () => {
                 setTotalResults(0)
                 setHasSearched(true)
                 setErrorMessage('No skills were extracted from the job description.')
+                skipNextAutoSearchRef.current = true
                 return
             }
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
-            await runMemberSearch(extractedOptions, { page: 1 })
+            const searchSucceeded = await runMemberSearch(extractedOptions, { generation, page: 1 })
+            if (searchGenerationRef.current !== generation) return
+
+            if (searchSucceeded) {
+                setLastSearchedDescription(normalizedDescription)
+            }
         } catch {
-            // Prevent stale auto-search when extraction fails and loading flips to false.
             skipNextAutoSearchRef.current = true
+            if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
+
         }
     }, [isExtractingSkills, jobDescription, runMemberSearch])
 
     useEffect(() => {
-        if (!hasSearched || isExtractingSkills || selectedSkills.length === 0) {
+        if ((shouldShowIntroState) || isExtractingSkills) {
             return
         }
 
@@ -256,18 +344,21 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
-        runMemberSearch(selectedSkills)
+        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
     }, [
         hasSearched,
+        hasActiveFilters,
         isExtractingSkills,
         onlyActive,
         onlyOpenToWork,
         runMemberSearch,
+        selectedCountries,
         selectedSkills,
+        shouldShowIntroState,
     ])
 
     const handleLoadMore = useCallback((): void => {
-        if (isLoadingMore || isSearchingMembers || !hasMoreResults || selectedSkills.length === 0) {
+        if (isLoadingMore || isSearchingMembers || !hasMoreResults) {
             return
         }
 
@@ -276,7 +367,12 @@ export const TalentSearchPage: FC = () => {
             page: currentPage + 1,
         })
     }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
-
+    const isSearchButtonDisabled = useMemo(
+        () => isExtractingSkills
+        || !jobDescription.trim()
+        || jobDescription.trim() === lastSearchedDescription,
+        [isExtractingSkills, jobDescription, lastSearchedDescription],
+    )
     return (
         <PageWrapper
             pageTitle='Talent Search'
@@ -311,15 +407,17 @@ export const TalentSearchPage: FC = () => {
                                     secondary
                                     disabled={isExtractingSkills}
                                     onClick={() => {
+                                        searchGenerationRef.current += 1
                                         setJobDescription('')
                                         setErrorMessage('')
+                                        setLastSearchedDescription('')
                                     }}
                                 >
                                     Clear
                                 </Button>
                                 <Button
                                     primary
-                                    disabled={isExtractingSkills || !jobDescription.trim()}
+                                    disabled={isSearchButtonDisabled}
                                     onClick={handleAiSearch}
                                 >
                                     {isExtractingSkills ? 'Analyzing...' : 'Search'}
@@ -344,18 +442,23 @@ export const TalentSearchPage: FC = () => {
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
-                                        setHasSearched(value.length > 0)
+                                        setHasSearched(true)
+                                        if (value.length === 0) {
+                                            setLastSearchedDescription('')
+                                        }
                                     }}
                                 />
                             </div>
                             <div className={styles.filterBlock}>
-                                <InputSelect
+                                <InputMultiselect
                                     label='Country'
                                     name='country'
-                                    options={countryOptions}
-                                    value={selectedCountry}
+                                    options={countryFilterOptions}
+                                    onFetchOptions={loadCountryOptions}
+                                    value={selectedCountries}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setSelectedCountry(event.target.value || 'all')
+                                        const value = (event.target.value || []) as InputMultiselectOption[]
+                                        setSelectedCountries(value)
                                     }}
                                     placeholder='Select country'
                                 />
@@ -412,10 +515,10 @@ export const TalentSearchPage: FC = () => {
                     <section
                         className={classNames(
                             styles.resultsPanel,
-                            !hasSearched && styles.resultsPanelEmpty,
+                            shouldShowIntroState && styles.resultsPanelEmpty,
                         )}
                     >
-                        {!hasSearched && (
+                        {shouldShowIntroState && (
                             <div className={styles.emptyState}>
                                 <img
                                     src={personSearchImage}
@@ -423,56 +526,56 @@ export const TalentSearchPage: FC = () => {
                                     className={styles.emptyIcon}
                                 />
                                 <p className={styles.emptyStateTitle}>Find the right talent</p>
-                                <p className={styles.emptyStateDescription}>
-                                    Paste a job description on the left and hit&nbsp;
-                                    <span className={styles.emptyStateSearchText}>Search</span>
-                                    &nbsp;- Our AI will match you with the
-                                    best candidates from our network.
-                                </p>
                             </div>
                         )}
 
-                        {hasSearched && (
+                        {!shouldShowIntroState && (
                             <div className={styles.resultsContent}>
-                                <div className={styles.resultsTop}>
-                                    <p className={styles.foundText}>
-                                        We have found&nbsp;
-                                        <span className={styles.foundTextCount}>
-                                            {`${foundMembersCount} members`}
-                                        </span>
-                                        &nbsp;that match your search.
-                                    </p>
-                                    <div className={styles.sortControl}>
-                                        <span className={styles.sortLabel}>Sort by</span>
-                                        <InputSelect
-                                            classNameWrapper={styles.matchingIndexSelect}
-                                            name='sortBy'
-                                            options={[
-                                                { label: 'Matching Index', value: 'matching-index' },
-                                            ]}
-                                            value='matching-index'
-                                            onChange={() => undefined}
-                                        />
+                                {!isSearchingMembers && (
+                                    <div className={styles.resultsTop}>
+                                        <p className={styles.foundText}>
+                                            We have found&nbsp;
+                                            <span className={styles.foundTextCount}>
+                                                {`${foundMembersCount} members`}
+                                            </span>
+                                            &nbsp;that match your search.
+                                        </p>
+                                        <div className={styles.sortControl}>
+                                            <span className={styles.sortLabel}>Sort by</span>
+                                            <InputSelect
+                                                classNameWrapper={styles.matchingIndexSelect}
+                                                name='sortBy'
+                                                options={sortOptions}
+                                                value={activeSort}
+                                                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                                    const nextSort = event.target.value || 'alphabetical'
+                                                    setSortBy(
+                                                        nextSort as TalentSearchSortOption,
+                                                    )
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                                 {isSearchingMembers && (
                                     <div className={styles.emptyState}>
                                         <h4>Searching talent...</h4>
                                     </div>
                                 )}
-                                {!isSearchingMembers && filteredResults.length === 0 && (
+                                {!isSearchingMembers && displayedResults.length === 0 && (
                                     <div className={styles.emptyState}>
                                         <h4>No matching talent found</h4>
                                         <p>Try changing filters or using a different job description.</p>
                                     </div>
                                 )}
-                                {!isSearchingMembers && filteredResults.length > 0 && (
+                                {!isSearchingMembers && displayedResults.length > 0 && (
                                     <>
                                         <div className={styles.cardsGrid}>
-                                            {filteredResults.map(talent => (
+                                            {displayedResultsWithCountryName.map(talent => (
                                                 <TalentResultCard
                                                     key={talent.id}
                                                     talent={talent}
+                                                    showSkillMatch={hasSkillSearch}
                                                 />
                                             ))}
                                         </div>

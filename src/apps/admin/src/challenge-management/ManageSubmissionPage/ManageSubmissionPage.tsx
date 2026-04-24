@@ -51,6 +51,7 @@ import {
     checkIsMM,
     getSubmissionReprocessTopic,
     handleError,
+    resolveManualUploadSubmissionType,
 } from '../../lib/utils'
 
 import styles from './ManageSubmissionPage.module.scss'
@@ -92,7 +93,9 @@ interface ManualSubmissionUploadModalProps {
     selectedHandle?: SelectOption
     setSelectedHandle: (value: SelectOption) => void
     isUploading: boolean
+    isLoadingChallenge: boolean
     isLoadingSubmitters: boolean
+    submissionTypeLabel: string
     submitterOptions: SelectOption[]
     handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void
     selectedFile?: File
@@ -160,6 +163,7 @@ const ManualSubmissionUploadModal: FC<ManualSubmissionUploadModalProps> = (
     props: ManualSubmissionUploadModalProps,
 ) => {
     const isHandleSelectDisabled = props.isUploading
+        || props.isLoadingChallenge
         || props.isLoadingSubmitters
         || props.submitterOptions.length === 0
     const memberHandleHint = !props.isLoadingSubmitters
@@ -179,6 +183,16 @@ const ManualSubmissionUploadModal: FC<ManualSubmissionUploadModalProps> = (
         >
             <div className={styles.uploadForm}>
                 <div className={styles.uploadFormFields}>
+                    <div className={styles.fileInputContainer}>
+                        <span className={styles.inputLabel}>
+                            Submission type
+                        </span>
+                        <span className={styles.selectedFile}>
+                            {props.isLoadingChallenge
+                                ? 'Loading challenge phases...'
+                                : props.submissionTypeLabel}
+                        </span>
+                    </div>
                     <FieldSingleSelect
                         label='Member Handle'
                         hint={memberHandleHint}
@@ -225,6 +239,7 @@ const ManualSubmissionUploadModal: FC<ManualSubmissionUploadModalProps> = (
                         onClick={props.handleUploadSubmission}
                         disabled={
                             props.isUploading
+                            || props.isLoadingChallenge
                             || props.isLoadingSubmitters
                             || !props.selectedHandle?.value
                             || !props.selectedFile
@@ -256,6 +271,18 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         challengeInfo,
     }: useFetchChallengeProps = useFetchChallenge(challengeId)
     const isMM = useMemo(() => checkIsMM(challengeInfo), [challengeInfo])
+    const manualUploadSubmissionType = useMemo(
+        () => resolveManualUploadSubmissionType(challengeInfo),
+        [challengeInfo],
+    )
+    const manualUploadSubmissionTypeLabel = useMemo(
+        () => (
+            manualUploadSubmissionType === 'CHECKPOINT_SUBMISSION'
+                ? 'Checkpoint Submission'
+                : 'Submission'
+        ),
+        [manualUploadSubmissionType],
+    )
     const submissionReprocessTopic = useMemo(
         () => getSubmissionReprocessTopic(challengeInfo),
         [challengeInfo],
@@ -329,7 +356,12 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
     )
 
     const handleUploadSubmission = useCallback(async () => {
-        if (!challengeId || !selectedFile || !selectedHandle?.value) {
+        if (
+            !challengeId
+            || !challengeInfo
+            || !selectedFile
+            || !selectedHandle?.value
+        ) {
             return
         }
 
@@ -341,6 +373,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                 fileName: selectedFile.name,
                 memberHandle: String(selectedHandle.label),
                 memberId: selectedHandle.value,
+                type: manualUploadSubmissionType,
             })
 
             toast.success('Submission uploaded successfully', {
@@ -354,7 +387,15 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         } finally {
             setIsUploading(false)
         }
-    }, [challengeId, selectedFile, selectedHandle, resetUploadForm, refresh])
+    }, [
+        challengeId,
+        challengeInfo,
+        manualUploadSubmissionType,
+        refresh,
+        resetUploadForm,
+        selectedFile,
+        selectedHandle,
+    ])
 
     useEffect(() => {
         let isCancelled = false
@@ -415,7 +456,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                     <Button
                         primary
                         size='lg'
-                        disabled={isUploading}
+                        disabled={isUploading || isLoadingChallenge || !challengeInfo}
                         onClick={openUploadModal}
                     >
                         Upload submission
@@ -459,7 +500,9 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                 selectedHandle={selectedHandle}
                 setSelectedHandle={setSelectedHandle}
                 isUploading={isUploading}
+                isLoadingChallenge={isLoadingChallenge}
                 isLoadingSubmitters={isLoadingSubmitters}
+                submissionTypeLabel={manualUploadSubmissionTypeLabel}
                 submitterOptions={submitterOptions}
                 handleFileChange={handleFileChange}
                 selectedFile={selectedFile}

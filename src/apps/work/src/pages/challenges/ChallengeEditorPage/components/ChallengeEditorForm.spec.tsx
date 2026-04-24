@@ -30,9 +30,12 @@ import {
     createResource,
     createChallenge,
     deleteResource,
+    fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
     fetchChallenge,
     fetchProfile,
     fetchProjectBillingAccount,
+    fetchWorkflows,
     patchChallenge,
     fetchResourceRoles,
     fetchResources,
@@ -47,6 +50,8 @@ import {
     getTaskLaunchValidationError,
 } from './ChallengeEditorForm'
 import { TermsField } from './TermsField'
+
+let mockShouldAutoDirtyDuringInitialHydration = false
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -64,11 +69,14 @@ jest.mock('../../../../lib/services', () => ({
     createChallenge: jest.fn(),
     createResource: jest.fn(),
     deleteResource: jest.fn(),
+    fetchAiReviewConfigByChallenge: jest.fn(),
+    fetchAiReviewTemplates: jest.fn(),
     fetchChallenge: jest.fn(),
     fetchProfile: jest.fn(),
     fetchProjectBillingAccount: jest.fn(),
     fetchResourceRoles: jest.fn(),
     fetchResources: jest.fn(),
+    fetchWorkflows: jest.fn(),
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
@@ -251,15 +259,56 @@ jest.mock('./ChallengeScheduleSection', () => ({
             control: formContext.control,
             name: 'phases',
         }) as Array<{
+            duration?: number
+            phaseId?: string
             scheduledEndDate?: string
+            scheduledStartDate?: string
         }> | undefined
+        const handleSetDirtyPhaseEnd = (): void => {
+            const currentPhases = formContext.getValues('phases') as typeof phases
+
+            formContext.setValue('phases', (currentPhases || []).map((phase, index) => (
+                index === 0
+                    ? {
+                        ...phase,
+                        duration: 1440,
+                        phaseId: phase?.phaseId || 'submission-phase-id',
+                        scheduledEndDate: '2026-04-18T04:58:51.000Z',
+                        scheduledStartDate: phase?.scheduledStartDate || '2026-04-11T04:58:51.000Z',
+                    }
+                    : phase
+            )), {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        const handleMarkFormClean = (): void => {
+            formContext.reset(formContext.getValues())
+        }
 
         return (
-            <div
-                data-disabled={props.disabled === true ? 'true' : 'false'}
-                data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
-                data-testid='challenge-schedule-section'
-            />
+            <>
+                <div
+                    data-disabled={props.disabled === true ? 'true' : 'false'}
+                    data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                    data-testid='challenge-schedule-section'
+                />
+                <button
+                    data-testid='mock-dirty-phase-end'
+                    onClick={handleSetDirtyPhaseEnd}
+                    type='button'
+                >
+                    Mock Dirty Phase End
+                </button>
+                <button
+                    data-testid='mock-clean-form'
+                    onClick={handleMarkFormClean}
+                    type='button'
+                >
+                    Mock Clean Form
+                </button>
+            </>
         )
     },
 }))
@@ -484,7 +533,29 @@ jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
 }))
 jest.mock('./StockArtsField', () => ({
-    StockArtsField: () => <>Stock Arts Field</>,
+    StockArtsField: function StockArtsField() {
+        const React: typeof import('react') = jest.requireActual('react')
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+        const hasAutoDirtiedRef = React.useRef(false)
+
+        React.useEffect(() => {
+            if (!mockShouldAutoDirtyDuringInitialHydration || hasAutoDirtiedRef.current) {
+                return
+            }
+
+            hasAutoDirtiedRef.current = true
+            formContext.setValue('metadata', [{
+                name: 'autoDirty',
+                value: 'true',
+            }], {
+                shouldDirty: true,
+                shouldValidate: false,
+            })
+        }, [formContext])
+
+        return <>Stock Arts Field</>
+    },
 }))
 jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
@@ -503,7 +574,10 @@ const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedDeleteResource = deleteResource as jest.Mock
+const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
+const mockedFetchAiReviewTemplates = fetchAiReviewTemplates as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
+const mockedFetchWorkflows = fetchWorkflows as jest.Mock
 const mockedFetchProfile = fetchProfile as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 const mockedPatchChallenge = patchChallenge as jest.Mock
@@ -612,6 +686,9 @@ describe('ChallengeEditorForm', () => {
         mockedUseFetchTimelineTemplates.mockReturnValue({
             timelineTemplates: [],
         })
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedFetchAiReviewTemplates.mockResolvedValue([])
+        mockedFetchWorkflows.mockResolvedValue([])
         mockedFetchProjectBillingAccountService.mockResolvedValue({
             billingAccount: undefined,
         })
@@ -622,6 +699,7 @@ describe('ChallengeEditorForm', () => {
     })
 
     afterEach(() => {
+        mockShouldAutoDirtyDuringInitialHydration = false
         jest.clearAllMocks()
     })
 
@@ -1585,6 +1663,79 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('rehydrates persisted assignments during initial hydration when mount-time dirty state exists', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockShouldAutoDirtyDuringInitialHydration = true
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await act(async () => {
+            resolveFetchedResourceRoles?.([
+                {
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                },
+                {
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                },
+            ])
+            resolveFetchedResources?.([
+                {
+                    challengeId: '12345',
+                    memberHandle: 'saved-copilot',
+                    roleId: 'copilot-role-id',
+                },
+                {
+                    challengeId: '12345',
+                    memberId: 'manual-reviewer-member-id',
+                    role: 'Reviewer',
+                    roleId: 'reviewer-role-id',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('saved-copilot')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
     it('rehydrates handle-only reviewer resources before the refreshed form settles', async () => {
         mockedFetchResourceRolesService.mockResolvedValue([{
             id: 'reviewer-role-id',
@@ -1656,6 +1807,15 @@ describe('ChallengeEditorForm', () => {
                 roleId: 'copilot-role-id',
             }],
         })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: '40158994',
+            roleId: 'copilot-role-id',
+        }])
         mockedPatchChallenge.mockResolvedValue({
             ...validDraftChallenge,
             copilot: 'resolved-copilot',
@@ -1681,20 +1841,182 @@ describe('ChallengeEditorForm', () => {
             expect(mockedPatchChallenge)
                 .toHaveBeenCalledTimes(1)
         })
-        expect(mockedDeleteResource)
-            .toHaveBeenCalledWith({
-                challengeId: '12345',
-                memberId: '40158994',
-                roleId: 'copilot-role-id',
-            })
-        expect(mockedCreateResource)
-            .toHaveBeenCalledWith({
-                challengeId: '12345',
-                memberHandle: 'resolved-copilot',
-                roleId: 'copilot-role-id',
-            })
+        await waitFor(() => {
+            expect(mockedDeleteResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberId: '40158994',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'resolved-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
         expect(mockedDeleteResource.mock.invocationCallOrder[0])
             .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+    })
+
+    it('creates a copilot resource from the selected dropdown value even when cached resources are stale', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'selected-copilot',
+                roleId: 'copilot-role-id',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            copilot: 'selected-copilot',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('selected-copilot')
+        })
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    copilot: 'selected-copilot',
+                }))
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'selected-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('rehydrates persisted reviewer assignments from fresh resources after saving a draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'reviewer-role-id',
+            name: 'Reviewer',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'manual-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberId: 'manual-reviewer-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+
+        mockedFetchResourceRolesService.mockClear()
+        mockedFetchResourcesService.mockClear()
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByLabelText('Challenge Name'))
+                .toHaveValue(validDraftChallenge.name)
+        })
+        expect(mockedFetchResourceRolesService)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(1, '12345')
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(2, '12345')
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
     })
 
     it('keeps the review section after submission settings in read-only mode', () => {
@@ -2124,6 +2446,112 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Failed to save challenge')
     })
 
+    it('blocks launching when an assigned AI workflow has been disabled', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [{
+                            aiWorkflowId: 'workflow-disabled',
+                            isMemberReview: false,
+                            phaseId: 'review-phase-id',
+                        }],
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError?.message)
+            .toContain('One or more saved AI workflows were disabled.')
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+    })
+
+    it('blocks launching when the saved AI template has been disabled', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            templateId: 'template-disabled',
+            workflows: [],
+        })
+        mockedFetchAiReviewTemplates.mockResolvedValue([{
+            autoFinalize: false,
+            challengeTrack: 'DESIGN',
+            challengeType: 'First2Finish',
+            description: 'Disabled template',
+            disabled: true,
+            id: 'template-disabled',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            title: 'Disabled template',
+            workflows: [],
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError?.message)
+            .toContain('The saved AI review template was disabled.')
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('The saved AI review template was disabled.'))
+    })
+
     it('does not render the attachments section while editing a draft', () => {
         render(
             <MemoryRouter>
@@ -2161,6 +2589,129 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
         })
+    })
+
+    it('blocks saving when an assigned AI workflow has been disabled', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [{
+                            aiWorkflowId: 'workflow-disabled',
+                            isMemberReview: false,
+                            phaseId: 'review-phase-id',
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks saving when disabled workflow exists only in persisted AI config', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_HUMAN',
+            workflows: [{
+                id: 'config-workflow-1',
+                isGating: false,
+                weightPercent: 100,
+                workflowId: 'workflow-disabled',
+            }],
+        })
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedFetchAiReviewConfigByChallenge)
+            .toHaveBeenCalledWith('12345')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+    })
+
+    it('blocks saving when the saved AI template has been disabled', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            templateId: 'template-disabled',
+            workflows: [],
+        })
+        mockedFetchAiReviewTemplates.mockResolvedValue([{
+            autoFinalize: false,
+            challengeTrack: 'DESIGN',
+            challengeType: 'First2Finish',
+            description: 'Disabled template',
+            disabled: true,
+            id: 'template-disabled',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            title: 'Disabled template',
+            workflows: [],
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('The saved AI review template was disabled.'))
     })
 
     it('refreshes phase data when the fetched challenge updates for the same id', async () => {
@@ -2202,6 +2753,54 @@ describe('ChallengeEditorForm', () => {
         await waitFor(() => {
             expect(screen.getByTestId('challenge-schedule-section'))
                 .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+        })
+    })
+
+    it('reapplies a same-id challenge refresh after the form becomes clean again', async () => {
+        const user = userEvent.setup()
+        const initialChallenge = {
+            ...validDraftChallenge,
+            phases: [{
+                duration: 1440,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-17T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+        } as Challenge
+        const refreshedChallenge = {
+            ...initialChallenge,
+            phases: [{
+                ...initialChallenge.phases?.[0],
+                scheduledEndDate: '2026-04-19T04:58:51.000Z',
+            }],
+        } as Challenge
+
+        const renderResult = render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={initialChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={refreshedChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        await user.click(screen.getByTestId('mock-clean-form'))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-19T04:58:51.000Z')
         })
     })
 

@@ -53,11 +53,14 @@ import {
     createChallenge,
     createResource,
     deleteResource,
+    fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
     fetchChallenge,
     fetchProfile,
     fetchProjectBillingAccount,
     fetchResourceRoles,
     fetchResources,
+    fetchWorkflows,
     patchChallenge,
 } from '../../../../lib/services'
 import {
@@ -235,6 +238,8 @@ interface SingleAssignmentConfig {
 interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig, 'fieldName'> {
     challengeId: string
     nextValue?: string
+    resourceRolesOverride?: ResourceRole[]
+    resourcesOverride?: Resource[]
 }
 
 interface PersistCreatedChallengeCopilotParams {
@@ -252,6 +257,12 @@ const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before savin
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
+const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
+    = 'One or more saved AI workflows were disabled. '
+    + 'Update the AI workflow configuration before saving or launching this challenge.'
+const DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+    = 'The saved AI review template was disabled. '
+    + 'Update the AI template selection before saving or launching this challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
@@ -1114,6 +1125,75 @@ function getReviewerValidationError(
     return getMissingRequiredPhaseCoverageError(reviewers, requiredPhases)
 }
 
+async function getDisabledAiWorkflowForActionError(
+    formData: ChallengeEditorFormData,
+    challengeId: string | undefined,
+    challengeTrack?: string,
+    challengeType?: string,
+): Promise<string | undefined> {
+    const selectedAiWorkflowIds = (Array.isArray(formData.reviewers)
+        ? formData.reviewers
+        : [])
+        .map(reviewer => normalizeTextValue(reviewer?.aiWorkflowId))
+        .filter(Boolean)
+    const normalizedChallengeId = normalizeTextValue(challengeId)
+    const persistedAiConfig = normalizedChallengeId
+        ? await fetchAiReviewConfigByChallenge(normalizedChallengeId)
+            .catch(() => undefined)
+        : undefined
+    const persistedWorkflowIds = (persistedAiConfig?.workflows || [])
+        .map(workflow => normalizeTextValue(workflow.workflowId))
+        .filter(Boolean)
+    const configuredAiWorkflowIds = Array.from(new Set([
+        ...selectedAiWorkflowIds,
+        ...persistedWorkflowIds,
+    ]))
+    const selectedTemplateId = normalizeTextValue(persistedAiConfig?.templateId)
+
+    if (selectedTemplateId) {
+        const templates = await fetchAiReviewTemplates({
+            challengeTrack,
+            challengeType,
+        })
+        let selectedTemplate = templates.find(template => (
+            normalizeTextValue(template.id) === selectedTemplateId
+        ))
+
+        if (!selectedTemplate && (challengeTrack || challengeType)) {
+            const allTemplates = await fetchAiReviewTemplates()
+
+            selectedTemplate = allTemplates.find(template => (
+                normalizeTextValue(template.id) === selectedTemplateId
+            ))
+        }
+
+        if (selectedTemplate?.disabled === true) {
+            return DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+        }
+    }
+
+    if (!configuredAiWorkflowIds.length) {
+        return undefined
+    }
+
+    const workflows = await fetchWorkflows()
+    const workflowMapById = new Map(
+        workflows.map(workflow => [
+            normalizeTextValue(workflow.id),
+            workflow,
+        ] as const),
+    )
+    const hasDisabledWorkflow = configuredAiWorkflowIds.some(workflowId => {
+        const matchedWorkflow = workflowMapById.get(workflowId)
+
+        return matchedWorkflow?.disabled === true
+    })
+
+    return hasDisabledWorkflow
+        ? DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
+        : undefined
+}
+
 function getStatusText(
     saveStatus: 'error' | 'idle' | 'saved' | 'saving',
 ): string {
@@ -1366,6 +1446,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const onSavingChange = props.onSavingChange
     const formElementRef = useRef<HTMLFormElement>(null)
     const challengeRef = useRef<Challenge | undefined>(props.challenge)
+    const pendingChallengeRefreshRef = useRef<Challenge | undefined>()
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -1395,6 +1476,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [isInitialResourceHydrationPending, setIsInitialResourceHydrationPending] = useState<boolean>(
         !!props.challenge?.id,
     )
+    const isInitialResourceHydrationPendingRef = useRef<boolean>(!!props.challenge?.id)
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
@@ -1661,14 +1743,31 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         fallbackValue: string | undefined,
         resourcesOverride?: typeof challengeResources,
         resourceRolesOverride?: typeof resourceRoles,
-    ): string | undefined => getPersistedAssignmentValueByFields(
-        fallbackValue,
-        COPILOT_RESOURCE_ROLE_NAMES,
-        getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
-        resourcesOverride,
-        resourceRolesOverride,
-    ), [
-        getPersistedAssignmentValueByFields,
+    ): string | undefined => {
+        const resourceAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+            valueFields: getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
+        })
+        const normalizedFallbackValue = normalizeTextValue(fallbackValue)
+
+        if (!resourceAssignment) {
+            return normalizedFallbackValue || undefined
+        }
+
+        if (
+            resourceAssignment.valueField === 'memberId'
+            && normalizedFallbackValue
+            && !hasSameNormalizedValue(resourceAssignment.value, normalizedFallbackValue)
+        ) {
+            return normalizedFallbackValue
+        }
+
+        return resourceAssignment.value
+    }, [
+        challengeResources,
+        resourceRoles,
     ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
@@ -1767,8 +1866,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const syncSingleAssignmentResource = useCallback(async (
         params: SyncSingleAssignmentResourceParams,
     ): Promise<void> => {
-        const resolvedResourceRoles = await loadSingleAssignmentResourceRoles()
-        const resolvedResources = await loadSingleAssignmentResources(params.challengeId)
+        const resolvedResourceRoles = params.resourceRolesOverride
+            || await loadSingleAssignmentResourceRoles()
+        const resolvedResources = params.resourcesOverride
+            || await loadSingleAssignmentResources(params.challengeId)
         const currentAssignment = resolvePersistedResourceAssignment({
             resourceRoles: resolvedResourceRoles,
             resources: resolvedResources,
@@ -1836,10 +1937,29 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         loadSingleAssignmentResourceRoles,
         loadSingleAssignmentResources,
     ])
+    /**
+     * Synchronizes single-member assignments against the latest persisted challenge resources.
+     *
+     * The edit flow keeps a SWR cache of resources for the Resources tab, but challenge saves
+     * should compare against the freshest backend state so a newly selected copilot still creates
+     * the required `Copilot` resource even when the local cache is stale.
+     *
+     * @param challengeId saved challenge identifier whose assignments should be synchronized.
+     * @param formData current form snapshot containing the selected assignment values.
+     * @returns Resolves after all changed single-member assignments are saved and the local
+     * resource cache is revalidated.
+     */
     const syncDraftSingleAssignments = useCallback(async (
         challengeId: string,
         formData: ChallengeEditorFormData,
     ): Promise<void> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
         const resourceSyncOperations = getSingleAssignmentConfigs(
             isTaskSingleAssignmentChallenge(formData),
         )
@@ -1849,6 +1969,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     undefined,
                     config.roleNames,
                     getSingleAssignmentResourceValueFields(config),
+                    persistedResources,
+                    persistedResourceRoles,
                 )
 
                 return hasSameNormalizedValue(nextValue, persistedValue)
@@ -1856,6 +1978,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     : syncSingleAssignmentResource({
                         challengeId,
                         nextValue,
+                        resourceRolesOverride: persistedResourceRoles,
+                        resourcesOverride: persistedResources,
                         resourceValueFields: config.resourceValueFields,
                         roleNames: config.roleNames,
                         valueField: config.valueField,
@@ -1872,8 +1996,45 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [
         getPersistedAssignmentValueByFields,
         isTaskSingleAssignmentChallenge,
+        loadSingleAssignmentResourceRoles,
         mutateChallengeResources,
         syncSingleAssignmentResource,
+    ])
+    /**
+     * Reapplies resource-backed assignments after a save response resets the form.
+     *
+     * Challenge patch responses may omit persisted copilot and manual-reviewer member selections
+     * even though those resources were saved successfully. Reloading resources before the post-save
+     * reset keeps the editor aligned with the persisted draft state.
+     *
+     * @param challengeId saved challenge identifier whose persisted resources should be reloaded.
+     * @param formData form-state snapshot derived from the saved challenge payload.
+     * @returns the same form data with persisted resource assignments restored.
+     */
+    const hydratePersistedSavedFormData = useCallback(async (
+        challengeId: string,
+        formData: ChallengeEditorFormData,
+    ): Promise<ChallengeEditorFormData> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
+
+        return hydratePersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(
+                formData,
+                persistedResources,
+                persistedResourceRoles,
+            ),
+            persistedResources,
+            persistedResourceRoles,
+        )
+    }, [
+        applyPersistedSingleAssignments,
+        loadSingleAssignmentResourceRoles,
     ])
 
     const handleScorerConfigChange = useCallback(
@@ -1883,6 +2044,81 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [],
     )
+    const hydrateChallengeSnapshot = useCallback((
+        challenge?: Challenge,
+    ): (() => void) => {
+        let isActive = true
+        const challengeId = challenge?.id
+        const baseFormData = applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(challenge),
+            projectBillingAccountRef.current,
+        )
+
+        setCurrentChallengeId(challengeId)
+        defaultedDiscussionForumTypeIdRef.current = undefined
+        setIsInitialResourceHydrationPending(!!challengeId)
+
+        reset(baseFormData)
+
+        if (!challengeId) {
+            setIsInitialResourceHydrationPending(false)
+
+            return () => {
+                isActive = false
+            }
+        }
+
+        const currentResourceRoles = resourceRolesRef.current
+
+        Promise.all([
+            fetchResources(challengeId),
+            currentResourceRoles.length
+                ? Promise.resolve(currentResourceRoles)
+                : fetchResourceRoles(),
+        ])
+            .then(async ([
+                fetchedResources,
+                fetchedResourceRoles,
+            ]) => {
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
+                    return
+                }
+
+                const hydratedFormData = await hydratePersistedManualReviewerAssignments(
+                    applyPersistedSingleAssignmentsRef.current(
+                        baseFormData,
+                        fetchedResources,
+                        fetchedResourceRoles,
+                    ),
+                    fetchedResources,
+                    fetchedResourceRoles,
+                )
+
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
+                    return
+                }
+
+                reset(hydratedFormData)
+            })
+            .catch(() => {
+                // The base form data has already been applied above.
+            })
+            .finally(() => {
+                if (isActive) {
+                    setIsInitialResourceHydrationPending(false)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [reset])
 
     useEffect(() => {
         if (!onSavingChange) {
@@ -1908,6 +2144,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [currentChallengeId])
 
     useEffect(() => {
+        isInitialResourceHydrationPendingRef.current = isInitialResourceHydrationPending
+    }, [isInitialResourceHydrationPending])
+
+    useEffect(() => {
         projectBillingAccountRef.current = projectBillingAccount
     }, [projectBillingAccount])
 
@@ -1924,91 +2164,52 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [applyPersistedSingleAssignments])
 
     useEffect(() => {
-        let isActive = true
         const challenge = challengeRef.current
         const challengeId = challenge?.id
         const isRefreshingCurrentChallenge = !!challengeId
             && challengeId === currentChallengeIdRef.current
             && isFormDirtyRef.current
+            && !isInitialResourceHydrationPendingRef.current
 
         if (isRefreshingCurrentChallenge) {
-            return () => {
-                isActive = false
-            }
+            pendingChallengeRefreshRef.current = challenge
+
+            return undefined
         }
 
-        const baseFormData = applyProjectBillingToChallengeFormData(
-            transformChallengeToFormData(challenge),
-            projectBillingAccountRef.current,
-        )
+        pendingChallengeRefreshRef.current = undefined
 
-        setCurrentChallengeId(challengeId)
-        defaultedDiscussionForumTypeIdRef.current = undefined
-        setIsInitialResourceHydrationPending(!!challengeId)
-
-        reset(baseFormData)
-
-        if (!challengeId) {
-            setIsInitialResourceHydrationPending(false)
-            return () => {
-                isActive = false
-            }
-        }
-
-        const currentResourceRoles = resourceRolesRef.current
-
-        Promise.all([
-            fetchResources(challengeId),
-            currentResourceRoles.length
-                ? Promise.resolve(currentResourceRoles)
-                : fetchResourceRoles(),
-        ])
-            .then(async ([
-                fetchedResources,
-                fetchedResourceRoles,
-            ]) => {
-                if (!isActive || isFormDirtyRef.current) {
-                    return
-                }
-
-                const hydratedFormData = await hydratePersistedManualReviewerAssignments(
-                    applyPersistedSingleAssignmentsRef.current(
-                        baseFormData,
-                        fetchedResources,
-                        fetchedResourceRoles,
-                    ),
-                    fetchedResources,
-                    fetchedResourceRoles,
-                )
-
-                if (!isActive || isFormDirtyRef.current) {
-                    return
-                }
-
-                reset(hydratedFormData)
-            })
-            .catch(() => {
-                // The base form data has already been applied above.
-            })
-            .finally(() => {
-                if (isActive) {
-                    setIsInitialResourceHydrationPending(false)
-                }
-            })
-
-        return () => {
-            isActive = false
-        }
+        return hydrateChallengeSnapshot(challenge)
     }, [
+        hydrateChallengeSnapshot,
+        props.challenge,
         props.challenge?.id,
         props.challenge?.updated,
-        reset,
+    ])
+
+    useEffect(() => {
+        if (formState.isDirty) {
+            return undefined
+        }
+
+        const pendingChallengeRefresh = pendingChallengeRefreshRef.current
+
+        if (!pendingChallengeRefresh) {
+            return undefined
+        }
+
+        pendingChallengeRefreshRef.current = undefined
+
+        return hydrateChallengeSnapshot(pendingChallengeRefresh)
+    }, [
+        formState.isDirty,
+        hydrateChallengeSnapshot,
     ])
 
     useEffect(() => {
         if (
             !currentChallengeId
-            || formState.isDirty
+            || (formState.isDirty && !isInitialResourceHydrationPending)
             || challengeResourcesResult.isLoading
             || resourceRolesResult.isLoading
         ) {
@@ -2068,6 +2269,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         currentChallengeId,
         formState.isDirty,
         getValues,
+        isInitialResourceHydrationPending,
         isTaskSingleAssignmentChallenge,
         resourceRoles,
         resourceRolesResult.isLoading,
@@ -2475,6 +2677,28 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
+            const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
+                formData,
+                currentChallengeId,
+                selectedChallengeTrack?.track || selectedChallengeTrack?.name,
+                selectedChallengeType?.name,
+            )
+
+            if (disabledAiWorkflowError) {
+                setSaveStatus('idle')
+                setError('reviewers', {
+                    message: disabledAiWorkflowError,
+                    type: 'manual',
+                })
+                setSaveValidationError(disabledAiWorkflowError)
+
+                if (!options.isAutosave) {
+                    showErrorToast(disabledAiWorkflowError)
+                }
+
+                throw createHandledLaunchBlockError(disabledAiWorkflowError)
+            }
+
             if (!options.isAutosave) {
                 setIsSaving(true)
                 setSaveStatus('saving')
@@ -2519,7 +2743,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 )
 
                 const nextValues = applySingleAssignmentFieldValues(
-                    applyPersistedSingleAssignments(
+                    await hydratePersistedSavedFormData(
+                        currentChallengeId,
                         {
                             ...persistedFormData,
                             attachments: Array.isArray(persistedFormData.attachments)
@@ -2579,16 +2804,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
-            applyPersistedSingleAssignments,
             clearErrors,
             currentChallengeId,
             fallbackProjectId,
+            hydratePersistedSavedFormData,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
             onChallengeStatusChange,
             reset,
             resolveProjectBillingAccount,
+            selectedChallengeTrack,
+            selectedChallengeType,
             setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
@@ -2701,9 +2928,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             clearErrors('reviewers')
-            await saveChallenge(formData, {
-                redirectToViewOnSuccess: true,
-            })
+            try {
+                await saveChallenge(formData, {
+                    redirectToViewOnSuccess: true,
+                })
+            } catch (error) {
+                if (isHandledLaunchBlockError(error)) {
+                    return
+                }
+
+                throw error
+            }
         },
         [
             clearErrors,
