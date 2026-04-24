@@ -182,4 +182,45 @@ describe('PaymentView', () => {
         expect(workLogRemarksLink.getAttribute('target'))
             .toBe('_blank')
     })
+
+    it('renders task details section for task payments', async () => {
+        const taskPayment: Winning = {
+            ...payment,
+            description: 'Build a cool widget for the dashboard',
+            externalId: 'challenge-uuid-1',
+            type: 'task payment',
+        }
+
+        mockedFetchWinningPaymentDetails.mockResolvedValue({
+            paymentCreatorHandle: 'task-creator',
+            taskDetails: {
+                paymentApproverHandle: 'approver-handle',
+                projectId: '42',
+                projectName: 'My Awesome Project',
+            },
+        })
+
+        render(<PaymentView payment={taskPayment} />)
+
+        await waitFor(() => {
+            expect(mockedFetchWinningPaymentDetails)
+                .toHaveBeenCalledWith(taskPayment)
+        })
+
+        expect(await screen.findByRole('heading', { name: 'Task Details' }))
+            .toBeTruthy()
+
+        expect(await screen.findByRole('heading', { name: 'Task Details' }))
+            .toBeTruthy()
+        expect(await screen.findByText('task-creator'))
+            .toBeTruthy()
+        expect(await screen.findByText('approver-handle'))
+            .toBeTruthy()
+
+        const projectLink = await screen.findByRole('link', { name: 'My Awesome Project' })
+        expect(projectLink.getAttribute('href'))
+            .toBe('https://challenges.example.com/projects/42/challenges/challenge-uuid-1/view')
+        expect(projectLink.getAttribute('target'))
+            .toBe('_blank')
+    })
 })
