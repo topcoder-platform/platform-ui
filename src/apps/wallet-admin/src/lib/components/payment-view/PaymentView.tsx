@@ -19,6 +19,7 @@ import {
     getMemberHandle,
 } from '../../services/wallet'
 import {
+    buildWorkAppChallengeUrl,
     buildWorkManagerAssignmentUrl,
     buildWorkManagerProjectUrl,
     formatOptionalDate,
@@ -42,6 +43,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
 
     const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
+    const isTaskPayment = props.payment.type.toLowerCase() === 'task payment'
     const hasEngagementDetails = Boolean(paymentDetails?.engagementDetails)
 
     const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
@@ -49,7 +51,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     }
 
     React.useEffect(() => {
-        if (!isEngagementPayment) {
+        if (!isEngagementPayment && !isTaskPayment) {
             setPaymentDetails(undefined)
             setIsPaymentDetailsLoading(false)
             setPaymentDetailsError(undefined)
@@ -70,7 +72,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
             .catch(() => {
                 if (!ignore) {
                     setPaymentDetails(undefined)
-                    setPaymentDetailsError('Unable to load engagement details.')
+                    setPaymentDetailsError(isTaskPayment ? 'Unable to load task details.' : 'Unable to load engagement details.')
                 }
             })
             .finally(() => {
@@ -82,7 +84,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return () => {
             ignore = true
         }
-    }, [isEngagementPayment, props.payment])
+    }, [isEngagementPayment, isTaskPayment, props.payment])
 
     React.useEffect(() => {
         if (view === 'audit') {
@@ -138,7 +140,9 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
     const descriptionLink = isEngagementPayment
         ? buildWorkManagerAssignmentUrl(paymentDetails?.engagementDetails)
-        : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
+        : isTaskPayment
+            ? buildWorkAppChallengeUrl(paymentDetails?.taskDetails?.projectId, props.payment.externalId)
+            : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
     const projectLink = buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)
 
     return (
@@ -303,6 +307,67 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             </div>
                                         </div>
                                     )}
+                            </div>
+                        )}
+
+                        {isTaskPayment && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Task Details</h3>
+                                {isPaymentDetailsLoading
+                                    ? <p className={styles.helperText}>Loading task details...</p>
+                                    : undefined}
+                                {!isPaymentDetailsLoading && paymentDetailsError
+                                    ? <p className={styles.helperText}>{paymentDetailsError}</p>
+                                    : undefined}
+                                {!isPaymentDetailsLoading && !paymentDetailsError && (
+                                    <div className={styles.sectionGrid}>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Task Creator</span>
+                                            <p className={styles.value}>
+                                                {formatOptionalText(paymentDetails?.paymentCreatorHandle)}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Task Description</span>
+                                            <p className={styles.remarksValue}>
+                                                {props.payment.description
+                                                    ? props.payment.description.substring(0, 500)
+                                                    : '-'}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Project Name</span>
+                                            {buildWorkAppChallengeUrl(
+                                                paymentDetails?.taskDetails?.projectId,
+                                                props.payment.externalId,
+                                            ) && paymentDetails?.taskDetails?.projectName
+                                                ? (
+                                                    <a
+                                                        className={styles.value}
+                                                        href={buildWorkAppChallengeUrl(
+                                                            paymentDetails.taskDetails.projectId,
+                                                            props.payment.externalId,
+                                                        )}
+                                                        target='_blank'
+                                                        rel='noreferrer'
+                                                    >
+                                                        {paymentDetails.taskDetails.projectName}
+                                                    </a>
+                                                )
+                                                : (
+                                                    <p className={styles.value}>
+                                                        {formatOptionalText(paymentDetails?.taskDetails?.projectName)}
+                                                    </p>
+                                                )}
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Payment Approver</span>
+                                            <p className={styles.value}>
+                                                {formatOptionalText(paymentDetails?.taskDetails?.paymentApproverHandle)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
