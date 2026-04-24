@@ -397,10 +397,12 @@ export async function fetchWinnings(
     winnings: WinningDetail[],
     pagination: PaginationInfo
 }> {
-    const filteredFilters: Record<string, string> = {}
+    const filteredFilters: Record<string, string | string[]> = {}
 
     for (const key in filters) {
-        if (filters[key].length > 0 && key !== 'pageSize') {
+        if (['categories'].includes(key)) {
+            filteredFilters[key] = filters[key]
+        } else if (filters[key].length > 0 && key !== 'pageSize') {
             filteredFilters[key] = filters[key][0]
         }
     }
