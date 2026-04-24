@@ -226,8 +226,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
             let categoryFilter: Record<string, string[]> = {}
             if (
-                activeFilters.category &&
-                approverAllowedCategories.includes(activeFilters.category[0])
+                activeFilters.category
+                && approverAllowedCategories.includes(activeFilters.category[0])
             ) {
                 categoryFilter = { category: activeFilters.category }
             } else if (!filters.category || filters.category[0] === 'all') {
