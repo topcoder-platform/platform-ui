@@ -80,6 +80,7 @@ export interface ProjectBillingAccount {
     endDate?: string
     id?: string
     markup?: number
+    memberPaymentsRemaining?: number
     name?: string
     startDate?: string
     status?: string
@@ -770,6 +771,7 @@ export async function fetchProjectBillingAccount(
             endDate?: unknown
             id?: unknown
             markup?: unknown
+            memberPaymentsRemaining?: unknown
             name?: unknown
             startDate?: unknown
             status?: unknown
@@ -793,6 +795,8 @@ export async function fetchProjectBillingAccount(
             id: billingAccountId,
             markup: normalizeOptionalNumber(billingAccount?.markup)
                 ?? normalizeOptionalNumber(billingAccountDetails?.markup),
+            memberPaymentsRemaining: normalizeOptionalNumber(billingAccount?.memberPaymentsRemaining)
+                ?? normalizeOptionalNumber(billingAccountDetails?.memberPaymentsRemaining),
             name: normalizeOptionalString(billingAccount?.name)
                 || normalizeOptionalString(billingAccountDetails?.name),
             startDate: normalizeOptionalString(billingAccount?.startDate)
@@ -807,6 +811,7 @@ export async function fetchProjectBillingAccount(
             normalizedBillingAccount.active === undefined
             && !normalizedBillingAccount.id
             && normalizedBillingAccount.markup === undefined
+            && normalizedBillingAccount.memberPaymentsRemaining === undefined
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate

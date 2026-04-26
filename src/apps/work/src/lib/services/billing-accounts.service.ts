@@ -8,7 +8,8 @@ export interface BillingAccount {
     budget?: number | string
     consumedBudget?: number | string
     lockedBudget?: number | string
-    markup?: number
+    markup?: number | string
+    memberPaymentsRemaining?: number | string
     endDate?: string
     id: number | string
     name: string

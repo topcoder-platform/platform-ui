@@ -18,11 +18,19 @@ import {
     BillingAccountLineItem,
     combineBillingAccountLineItems,
 } from '../../services/billing-accounts.service'
+import {
+    calculateMemberPaymentAmount,
+    getCopilotMemberPaymentsBudgetInfo,
+} from '../../utils/project-billing-account.utils'
 
 import styles from './BillingAccountLineItemsModal.module.scss'
 
 type SortField = 'amount' | 'status' | 'date'
 type SortOrder = 'asc' | 'desc'
+
+interface BillingAccountModalLineItem extends BillingAccountLineItem {
+    displayAmount?: number
+}
 
 const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
     CHALLENGE: 'Challenge',
@@ -32,6 +40,7 @@ const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], strin
 export interface BillingAccountLineItemsModalProps {
     billingAccountDetails: BillingAccountDetails
     onClose: () => void
+    showMemberPaymentsRemaining?: boolean
 }
 
 function formatCurrency(amount: number): string {
@@ -60,25 +69,36 @@ function formatDate(dateString: string): string {
     return `${year}-${month}-${day}`
 }
 
-function compareByAmount(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
-    return a.amount - b.amount
+/**
+ * Resolves the amount used when sorting modal line items.
+ *
+ * @param item Line item already mapped for the current caller role.
+ * @returns Display amount, or zero when a copilot-safe amount cannot be calculated.
+ * @remarks Used only by the billing-account details modal amount sort.
+ */
+function getSortableAmount(item: BillingAccountModalLineItem): number {
+    return item.displayAmount ?? 0
 }
 
-function compareByStatus(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
+function compareByAmount(a: BillingAccountModalLineItem, b: BillingAccountModalLineItem): number {
+    return getSortableAmount(a) - getSortableAmount(b)
+}
+
+function compareByStatus(a: BillingAccountModalLineItem, b: BillingAccountModalLineItem): number {
     return a.status.localeCompare(b.status)
 }
 
-function compareByDate(a: BillingAccountLineItem, b: BillingAccountLineItem): number {
+function compareByDate(a: BillingAccountModalLineItem, b: BillingAccountModalLineItem): number {
     const dateA = new Date(a.date)
     const dateB = new Date(b.date)
     return dateA.getTime() - dateB.getTime()
 }
 
 function sortLineItems(
-    items: BillingAccountLineItem[],
+    items: BillingAccountModalLineItem[],
     sortBy: SortField,
     sortOrder: SortOrder,
-): BillingAccountLineItem[] {
+): BillingAccountModalLineItem[] {
     return [...items].sort((a, b) => {
         let comparison = 0
 
@@ -105,21 +125,80 @@ function buildChallengeUrl(externalId: string): string {
     return `${basePath}/challenges/${encodeURIComponent(externalId)}`
 }
 
+/**
+ * Formats the role-specific line-item amount for the Amount column.
+ *
+ * @param item Line item already mapped for the current caller role.
+ * @returns Formatted currency or `-` when a copilot-safe amount is unavailable.
+ * @remarks Copilot rows use member payment amounts, while other roles use raw
+ * billing-account line-item amounts.
+ */
+function formatLineItemAmount(item: BillingAccountModalLineItem): string {
+    return item.displayAmount === undefined
+        ? '-'
+        : formatCurrency(item.displayAmount)
+}
+
+/**
+ * Builds the modal row model with the amount that should be visible to the caller.
+ *
+ * @param item Raw locked or consumed billing-account line item.
+ * @param billingAccountDetails Billing account detail payload containing hidden markup.
+ * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
+ * @returns A line item with `displayAmount` set to the visible amount for the caller.
+ * @remarks The raw amount remains available for stable ids and source data, but
+ * rendering and sorting use `displayAmount`.
+ */
+function getDisplayLineItem(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+    showMemberPaymentsRemaining: boolean | undefined,
+): BillingAccountModalLineItem {
+    if (!showMemberPaymentsRemaining) {
+        return {
+            ...item,
+            displayAmount: item.amount,
+        }
+    }
+
+    return {
+        ...item,
+        displayAmount: calculateMemberPaymentAmount(
+            item.amount,
+            billingAccountDetails.markup,
+        ),
+    }
+}
+
 export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps> = (
     props: BillingAccountLineItemsModalProps,
 ) => {
     const [sortBy, setSortBy] = useState<SortField>('date')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
-    const lineItems = useMemo<BillingAccountLineItem[]>(
-        () => combineBillingAccountLineItems(props.billingAccountDetails),
-        [props.billingAccountDetails],
+    const lineItems = useMemo<BillingAccountModalLineItem[]>(
+        () => combineBillingAccountLineItems(props.billingAccountDetails)
+            .map(item => getDisplayLineItem(
+                item,
+                props.billingAccountDetails,
+                props.showMemberPaymentsRemaining,
+            )),
+        [props.billingAccountDetails, props.showMemberPaymentsRemaining],
     )
 
-    const sortedLineItems = useMemo<BillingAccountLineItem[]>(
+    const sortedLineItems = useMemo<BillingAccountModalLineItem[]>(
         () => sortLineItems(lineItems, sortBy, sortOrder),
         [lineItems, sortBy, sortOrder],
     )
+    const copilotBudgetInfo = useMemo(() => (
+        props.showMemberPaymentsRemaining
+            ? getCopilotMemberPaymentsBudgetInfo(props.billingAccountDetails)
+            : undefined
+    ), [props.billingAccountDetails, props.showMemberPaymentsRemaining])
+    const copilotBudgetStatusClass = copilotBudgetInfo
+        ? styles[`budget${copilotBudgetInfo.status.charAt(0)
+            .toUpperCase()}${copilotBudgetInfo.status.slice(1)}`]
+        : ''
 
     const handleContainerClick = useCallback(
         (event: MouseEvent<HTMLDivElement>): void => {
@@ -189,26 +268,45 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                     </button>
                 </header>
 
-                <div className={styles.summary}>
-                    <div className={styles.summaryItem}>
-                        <span className={styles.summaryLabel}>Locked</span>
-                        <span className={styles.summaryValue}>
-                            {formatCurrency(props.billingAccountDetails.lockedBudget)}
-                        </span>
+                {props.showMemberPaymentsRemaining ? (
+                    <div className={styles.summary}>
+                        <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Remaining member payments</span>
+                            <span
+                                className={[
+                                    styles.summaryValue,
+                                    styles.budgetValue,
+                                    copilotBudgetStatusClass,
+                                ].join(' ')}
+                            >
+                                {copilotBudgetInfo
+                                    ? formatCurrency(copilotBudgetInfo.memberPaymentsRemaining)
+                                    : '-'}
+                            </span>
+                        </div>
                     </div>
-                    <div className={styles.summaryItem}>
-                        <span className={styles.summaryLabel}>Consumed</span>
-                        <span className={styles.summaryValue}>
-                            {formatCurrency(props.billingAccountDetails.consumedBudget)}
-                        </span>
+                ) : (
+                    <div className={styles.summary}>
+                        <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Locked</span>
+                            <span className={styles.summaryValue}>
+                                {formatCurrency(props.billingAccountDetails.lockedBudget)}
+                            </span>
+                        </div>
+                        <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Consumed</span>
+                            <span className={styles.summaryValue}>
+                                {formatCurrency(props.billingAccountDetails.consumedBudget)}
+                            </span>
+                        </div>
+                        <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Remaining</span>
+                            <span className={styles.summaryValue}>
+                                {formatCurrency(props.billingAccountDetails.totalBudgetRemaining)}
+                            </span>
+                        </div>
                     </div>
-                    <div className={styles.summaryItem}>
-                        <span className={styles.summaryLabel}>Remaining</span>
-                        <span className={styles.summaryValue}>
-                            {formatCurrency(props.billingAccountDetails.totalBudgetRemaining)}
-                        </span>
-                    </div>
-                </div>
+                )}
 
                 <div className={styles.body}>
                     {sortedLineItems.length === 0 ? (
@@ -262,7 +360,7 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
 
                                     return (
                                         <tr key={item.id}>
-                                            <td>{formatCurrency(item.amount)}</td>
+                                            <td>{formatLineItemAmount(item)}</td>
                                             <td>
                                                 <span
                                                     className={

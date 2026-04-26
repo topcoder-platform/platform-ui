@@ -22,9 +22,13 @@ import {
     useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
+import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
 import type {
     Challenge,
     ChallengeEditorFormData,
+    WorkAppContextModel,
 } from '../../../../lib/models'
 import {
     createResource,
@@ -322,7 +326,11 @@ jest.mock('./ChallengeFeeField', () => ({
             markup?: number
         } | undefined
 
-        return <div data-testid='billing-markup'>{String(billing?.markup ?? '')}</div>
+        return (
+            <div data-testid='challenge-fee-field'>
+                <span data-testid='billing-markup'>{String(billing?.markup ?? '')}</span>
+            </div>
+        )
     },
 }))
 jest.mock('./ChallengeNameField', () => {
@@ -362,7 +370,19 @@ jest.mock('./ChallengeTagsField', () => ({
     ChallengeTagsField: () => <></>,
 }))
 jest.mock('./ChallengeTotalField', () => ({
-    ChallengeTotalField: () => <></>,
+    ChallengeTotalField: (props: {
+        includeChallengeFee?: boolean
+        label?: string
+    }) => (
+        <div
+            data-include-challenge-fee={props.includeChallengeFee === false
+                ? 'false'
+                : 'true'}
+            data-testid='challenge-total-field'
+        >
+            {props.label || 'Estimated challenge total:'}
+        </div>
+    ),
 }))
 jest.mock('./ChallengeTrackField', () => ({
     ChallengeTrackField: function ChallengeTrackField() {
@@ -594,6 +614,19 @@ const LocationDisplay = (): JSX.Element => {
 }
 
 describe('ChallengeEditorForm', () => {
+    const copilotContextValue: WorkAppContextModel = {
+        isAdmin: false,
+        isAnonymous: false,
+        isCopilot: true,
+        isManager: false,
+        isReadOnly: false,
+        loginUserInfo: {
+            roles: ['copilot'],
+            token: 'token',
+            userId: 123,
+        } as WorkAppContextModel['loginUserInfo'],
+        userRoles: ['copilot'],
+    }
     const draftChallenge = {
         id: '12345',
         name: 'Draft challenge',
@@ -1055,6 +1088,26 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('billing-markup'))
                 .toHaveTextContent('0.33')
         })
+    })
+
+    it('uses the copilot-safe challenge billing summary for copilot-only users', () => {
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={draftChallenge}
+                        projectId='100578'
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByTestId('challenge-fee-field'))
+            .toBeNull()
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveAttribute('data-include-challenge-fee', 'false')
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveTextContent('Estimated challenge cost:')
     })
 
     it('requires an assigned member before launching a task challenge', () => {

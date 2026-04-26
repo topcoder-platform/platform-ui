@@ -7,7 +7,11 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import type { Project } from '../../models'
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import type {
+    Project,
+    WorkAppContextModel,
+} from '../../models'
 import type { BillingAccountDetails } from '../../services'
 import {
     useFetchBillingAccountDetails,
@@ -94,6 +98,16 @@ const billingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: 650,
 }
 
+const defaultContextValue: WorkAppContextModel = {
+    isAdmin: false,
+    isAnonymous: false,
+    isCopilot: false,
+    isManager: false,
+    isReadOnly: false,
+    loginUserInfo: undefined,
+    userRoles: [],
+}
+
 describe('ProjectsTable', () => {
     const invitedProject: Project = {
         id: 100440,
@@ -125,17 +139,26 @@ describe('ProjectsTable', () => {
         })
     })
 
-    it('links the project name and open action to the challenges route', () => {
+    function renderTable(
+        projects: Project[],
+        contextValue: WorkAppContextModel = defaultContextValue,
+    ): void {
         render(
-            <MemoryRouter>
-                <ProjectsTable
-                    projects={[invitedProject]}
-                    sortBy='name'
-                    sortOrder='asc'
-                    onSort={jest.fn()}
-                />
-            </MemoryRouter>,
+            <WorkAppContext.Provider value={contextValue}>
+                <MemoryRouter>
+                    <ProjectsTable
+                        projects={projects}
+                        sortBy='name'
+                        sortOrder='asc'
+                        onSort={jest.fn()}
+                    />
+                </MemoryRouter>
+            </WorkAppContext.Provider>,
         )
+    }
+
+    it('links the project name and open action to the challenges route', () => {
+        renderTable([invitedProject])
 
         expect(screen.getByRole('link', { name: 'SK project1' })
             .getAttribute('href'))
@@ -168,19 +191,10 @@ describe('ProjectsTable', () => {
             isLoading: false,
         })
 
-        render(
-            <MemoryRouter>
-                <ProjectsTable
-                    projects={[{
-                        ...invitedProject,
-                        billingAccountId: 80001063,
-                    }]}
-                    sortBy='name'
-                    sortOrder='asc'
-                    onSort={jest.fn()}
-                />
-            </MemoryRouter>,
-        )
+        renderTable([{
+            ...invitedProject,
+            billingAccountId: 80001063,
+        }])
 
         expect(screen.getAllByText('Access BA / 80001063').length)
             .toBeGreaterThan(0)
@@ -194,5 +208,41 @@ describe('ProjectsTable', () => {
         expect(screen.getByRole('dialog')
             .textContent)
             .toContain('Billing account details for 80001063')
+    })
+
+    it('shows member payments remaining for copilot project rows', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 525,
+                    markup: 0.8,
+                    name: 'Access BA',
+                    totalBudgetRemaining: 250,
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderTable(
+            [{
+                ...invitedProject,
+                billingAccountId: 80001063,
+            }],
+            {
+                ...defaultContextValue,
+                isCopilot: true,
+                userRoles: ['copilot'],
+            },
+        )
+
+        expect(screen.getAllByText('Member Payments Remaining: $200.00').length)
+            .toBeGreaterThan(0)
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
     })
 })

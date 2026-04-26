@@ -1,6 +1,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -28,6 +29,9 @@ import {
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
+import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
 import {
     useAutosave,
     useFetchChallengeTracks,
@@ -1437,6 +1441,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 ) => {
     const location = useLocation()
     const navigate = useNavigate()
+    const workAppContext = useContext(WorkAppContext)
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
     const onChallengeCreated = props.onChallengeCreated
@@ -1699,6 +1704,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+    const shouldUseCopilotBillingSummary = workAppContext.isCopilot
+        && !workAppContext.isAdmin
+        && !workAppContext.isManager
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -3163,8 +3171,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 </div>
                                                 <div className={styles.billingSummary}>
                                                     <ReviewCostField name='prizeSets' />
-                                                    <ChallengeFeeField />
-                                                    <ChallengeTotalField />
+                                                    {shouldUseCopilotBillingSummary
+                                                        ? undefined
+                                                        : <ChallengeFeeField />}
+                                                    <ChallengeTotalField
+                                                        includeChallengeFee={!shouldUseCopilotBillingSummary}
+                                                        label={shouldUseCopilotBillingSummary
+                                                            ? 'Estimated challenge cost:'
+                                                            : undefined}
+                                                    />
                                                 </div>
                                             </div>
                                         </section>

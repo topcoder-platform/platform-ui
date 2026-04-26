@@ -1,6 +1,27 @@
 import type { ProjectBillingAccount } from '../services'
 
 type ProjectBillingAccountChallengeIssue = 'expired' | 'inactive' | 'insufficient-funds'
+export type BillingAccountBudgetStatus = 'healthy' | 'warning' | 'critical'
+
+export interface BillingAccountBudgetSource {
+    budget?: number | string
+    consumedBudget?: number | string
+    lockedBudget?: number | string
+    markup?: number | string
+    memberPaymentsRemaining?: number | string
+    totalBudgetRemaining?: number | string
+}
+
+export interface BillingAccountBudgetInfo {
+    spent: number
+    status: BillingAccountBudgetStatus
+    totalBudget: number
+    totalBudgetRemaining: number
+}
+
+export interface CopilotMemberPaymentsBudgetInfo extends BillingAccountBudgetInfo {
+    memberPaymentsRemaining: number
+}
 
 /**
  * Normalizes an optional billing-account string value for challenge gating checks.
@@ -37,6 +58,174 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
     return Number.isFinite(normalizedValue)
         ? normalizedValue
         : undefined
+}
+
+/**
+ * Normalizes billing markup into the decimal value used by billing-account math.
+ *
+ * @param value Raw markup value from the billing-account API.
+ * @returns A non-negative decimal markup, or `undefined` when unavailable.
+ * @remarks Whole percentage values such as `15` are normalized to `0.15`.
+ */
+function normalizeBillingMarkup(value: unknown): number | undefined {
+    const normalizedValue = normalizeOptionalNumber(value)
+
+    if (normalizedValue === undefined || normalizedValue < 0) {
+        return undefined
+    }
+
+    return normalizedValue > 1
+        ? normalizedValue / 100
+        : normalizedValue
+}
+
+/**
+ * Resolves the display color state for billing-account remaining budget.
+ *
+ * @param remaining Remaining billing-account budget.
+ * @param total Total billing-account budget.
+ * @returns Healthy, warning, or critical status for the remaining percentage.
+ * @remarks Used by project billing badges, including the copilot-safe member
+ * payments remaining display.
+ */
+export function getBillingAccountBudgetStatus(
+    remaining: number,
+    total: number,
+): BillingAccountBudgetStatus {
+    if (total <= 0) {
+        return 'healthy'
+    }
+
+    const percentage = (remaining / total) * 100
+
+    if (percentage < 10) {
+        return 'critical'
+    }
+
+    if (percentage < 30) {
+        return 'warning'
+    }
+
+    return 'healthy'
+}
+
+/**
+ * Calculates a copilot-safe member payment amount from a billing-account amount.
+ *
+ * @param billingAccountAmount Billing-account amount with markup already accounted for.
+ * @param markup Hidden billing-account markup multiplier.
+ * @returns Member payment amount, or `undefined` when required values are unavailable.
+ * @remarks Product requires copilot-safe amounts to be calculated as
+ * `billing account amount / (1 / markup)` so copilots can see payment values
+ * without seeing the markup itself. A zero markup means no markup must be
+ * reserved, so the full billing-account amount is available for member payments.
+ */
+export function calculateMemberPaymentAmount(
+    billingAccountAmount: unknown,
+    markup: unknown,
+): number | undefined {
+    const amount = normalizeOptionalNumber(billingAccountAmount)
+    const normalizedMarkup = normalizeBillingMarkup(markup)
+
+    if (amount === undefined || normalizedMarkup === undefined) {
+        return undefined
+    }
+
+    if (normalizedMarkup === 0) {
+        return Number(amount.toFixed(2))
+    }
+
+    return Number((amount / (1 / normalizedMarkup)).toFixed(2))
+}
+
+/**
+ * Calculates the copilot-safe member payment capacity for a billing account.
+ *
+ * @param totalBudgetRemaining Remaining billing-account budget.
+ * @param markup Hidden billing-account markup multiplier.
+ * @returns Member payments remaining, or `undefined` when required values are unavailable.
+ * @remarks Used by project billing displays so copilots can see remaining
+ * member payment capacity without seeing markup or total budget values.
+ */
+export function calculateMemberPaymentsRemaining(
+    totalBudgetRemaining: unknown,
+    markup: unknown,
+): number | undefined {
+    return calculateMemberPaymentAmount(totalBudgetRemaining, markup)
+}
+
+/**
+ * Resolves standard billing-account spent, total, and remaining values.
+ *
+ * @param billingAccount Billing-account data returned by project or billing APIs.
+ * @returns Budget info for manager/admin displays, or `undefined` when budget
+ * data is incomplete.
+ * @remarks Remaining budget is preferred for the spent value so project-page
+ * notices keep their previous display behavior. Locked and consumed totals are
+ * used only when remaining budget is unavailable.
+ */
+export function getBillingAccountBudgetInfo(
+    billingAccount: BillingAccountBudgetSource | undefined,
+): BillingAccountBudgetInfo | undefined {
+    const totalBudget = normalizeOptionalNumber(billingAccount?.budget)
+
+    if (totalBudget === undefined) {
+        return undefined
+    }
+
+    const lockedBudget = normalizeOptionalNumber(billingAccount?.lockedBudget)
+    const consumedBudget = normalizeOptionalNumber(billingAccount?.consumedBudget)
+    const totalBudgetRemaining = normalizeOptionalNumber(billingAccount?.totalBudgetRemaining)
+    let spent: number | undefined
+    let remaining: number | undefined
+
+    if (totalBudgetRemaining !== undefined) {
+        spent = totalBudget - totalBudgetRemaining
+        remaining = totalBudgetRemaining
+    } else if (lockedBudget !== undefined || consumedBudget !== undefined) {
+        spent = (lockedBudget || 0) + (consumedBudget || 0)
+        remaining = totalBudget - spent
+    }
+
+    if (spent === undefined || remaining === undefined) {
+        return undefined
+    }
+
+    return {
+        spent: Math.max(spent, 0),
+        status: getBillingAccountBudgetStatus(remaining, totalBudget),
+        totalBudget,
+        totalBudgetRemaining: remaining,
+    }
+}
+
+/**
+ * Resolves the copilot-safe member payments remaining view for a billing account.
+ *
+ * @param billingAccount Billing-account data returned by project or billing APIs.
+ * @returns Member payment capacity plus budget status, or `undefined` when
+ * budget or member-payment data is incomplete.
+ * @remarks Used only for copilot displays so manager/admin users continue to
+ * see the standard locked/consumed and total budget values.
+ */
+export function getCopilotMemberPaymentsBudgetInfo(
+    billingAccount: BillingAccountBudgetSource | undefined,
+): CopilotMemberPaymentsBudgetInfo | undefined {
+    const budgetInfo = getBillingAccountBudgetInfo(billingAccount)
+    const memberPaymentsRemaining = normalizeOptionalNumber(billingAccount?.memberPaymentsRemaining)
+        ?? calculateMemberPaymentsRemaining(
+            billingAccount?.totalBudgetRemaining,
+            billingAccount?.markup,
+        )
+
+    if (!budgetInfo || memberPaymentsRemaining === undefined) {
+        return undefined
+    }
+
+    return {
+        ...budgetInfo,
+        memberPaymentsRemaining,
+    }
 }
 
 /**

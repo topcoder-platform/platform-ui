@@ -61,11 +61,15 @@ const baseBillingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: 1000,
 }
 
-function renderModal(billingAccountDetails: BillingAccountDetails): ReturnType<typeof render> {
+function renderModal(
+    billingAccountDetails: BillingAccountDetails,
+    showMemberPaymentsRemaining: boolean = false,
+): ReturnType<typeof render> {
     return render(
         <BillingAccountLineItemsModal
             billingAccountDetails={billingAccountDetails}
             onClose={jest.fn()}
+            showMemberPaymentsRemaining={showMemberPaymentsRemaining}
         />,
     )
 }
@@ -137,5 +141,37 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(screen.getByText('2026-02-10'))
             .toBeTruthy()
+    })
+
+    it('shows only remaining member payments and member-payment row amounts for copilots', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedBudget: 500,
+            lockedAmounts: [
+                {
+                    amount: '125.25',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Markup Challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            lockedBudget: 250,
+            markup: 0.8,
+            totalBudgetRemaining: 250,
+        }, true)
+
+        expect(screen.getByText('Remaining member payments'))
+            .toBeTruthy()
+        expect(screen.getByText('$200.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$100.20'))
+            .toBeTruthy()
+        expect(screen.queryByText('$125.25'))
+            .toBeNull()
+        expect(screen.queryByText('Consumed'))
+            .toBeNull()
+        expect(screen.queryByText('Remaining'))
+            .toBeNull()
     })
 })

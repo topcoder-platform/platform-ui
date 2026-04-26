@@ -82,6 +82,27 @@
     font-weight: 600;
 }
 
+.budgetValue {
+    border-radius: 4px;
+    display: inline-flex;
+    padding: 4px 8px;
+}
+
+.budgetHealthy {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.budgetWarning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.budgetCritical {
+    background: #fee4e2;
+    color: #b42318;
+}
+
 .body {
     flex: 1;
     overflow: auto;

@@ -6,6 +6,8 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import type { WorkAppContextModel } from '../../models'
 import type { BillingAccountDetails } from '../../services'
 import {
     useFetchBillingAccountDetails,
@@ -60,6 +62,31 @@ const billingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: -25,
 }
 
+const defaultContextValue: WorkAppContextModel = {
+    isAdmin: false,
+    isAnonymous: false,
+    isCopilot: false,
+    isManager: false,
+    isReadOnly: false,
+    loginUserInfo: undefined,
+    userRoles: [],
+}
+
+function renderNotice(contextValue: WorkAppContextModel = defaultContextValue): void {
+    render(
+        <WorkAppContext.Provider value={contextValue}>
+            <MemoryRouter>
+                <ProjectBillingAccountExpiredNotice
+                    billingAccountId={80001063}
+                    billingAccountName='Test Project Engagement BA'
+                    canManageProject
+                    projectId='project-1'
+                />
+            </MemoryRouter>
+        </WorkAppContext.Provider>,
+    )
+}
+
 describe('ProjectBillingAccountExpiredNotice', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -89,16 +116,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     })
 
     it('keeps billing account details and line items available when remaining funds are insufficient', () => {
-        render(
-            <MemoryRouter>
-                <ProjectBillingAccountExpiredNotice
-                    billingAccountId={80001063}
-                    billingAccountName='Test Project Engagement BA'
-                    canManageProject
-                    projectId='project-1'
-                />
-            </MemoryRouter>,
-        )
+        renderNotice()
 
         expect(screen.getByText(/Billing account:/))
             .toBeTruthy()
@@ -121,5 +139,41 @@ describe('ProjectBillingAccountExpiredNotice', () => {
         expect(screen.getByRole('dialog')
             .textContent)
             .toContain('Billing account details for 80001063')
+    })
+
+    it('shows member payments remaining instead of spent and total budget for copilots', () => {
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails: {
+                ...billingAccountDetails,
+                budget: 1000,
+                markup: 0.8,
+                totalBudgetRemaining: 250,
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                markup: 0.8,
+                name: 'Test Project Engagement BA',
+                status: 'ACTIVE',
+                totalBudgetRemaining: 250,
+            },
+            isLoading: false,
+        })
+
+        renderNotice({
+            ...defaultContextValue,
+            isCopilot: true,
+            userRoles: ['copilot'],
+        })
+
+        expect(screen.getByText('Member Payments Remaining: $200.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
     })
 })

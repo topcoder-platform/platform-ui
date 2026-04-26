@@ -1,6 +1,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useMemo,
     useState,
 } from 'react'
@@ -8,6 +9,9 @@ import { Link } from 'react-router-dom'
 
 import { IconOutline } from '~/libs/ui'
 
+import {
+    WorkAppContext,
+} from '../../contexts/WorkAppContext'
 import {
     useFetchBillingAccountDetails,
     useFetchBillingAccounts,
@@ -18,7 +22,14 @@ import type {
     UseFetchBillingAccountsResult,
     UseFetchProjectBillingAccountResult,
 } from '../../hooks'
+import type { WorkAppContextModel } from '../../models'
+import type {
+    BillingAccountBudgetInfo,
+    CopilotMemberPaymentsBudgetInfo,
+} from '../../utils/project-billing-account.utils'
 import {
+    getBillingAccountBudgetInfo,
+    getCopilotMemberPaymentsBudgetInfo,
     getProjectBillingAccountChallengeIssue,
     getProjectBillingAccountNoticeMessage,
 } from '../../utils/project-billing-account.utils'
@@ -33,8 +44,6 @@ interface ProjectBillingAccountExpiredNoticeProps {
     projectId: string
 }
 
-type BudgetStatus = 'healthy' | 'warning' | 'critical'
-
 function normalizeOptionalString(value: unknown): string | undefined {
     if (value === undefined || value === null) {
         return undefined
@@ -46,38 +55,66 @@ function normalizeOptionalString(value: unknown): string | undefined {
     return normalizedValue || undefined
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number, includeCents: boolean = false): string {
     return new Intl.NumberFormat('en-US', {
         currency: 'USD',
-        maximumFractionDigits: 0,
-        minimumFractionDigits: 0,
+        maximumFractionDigits: includeCents ? 2 : 0,
+        minimumFractionDigits: includeCents ? 2 : 0,
         style: 'currency',
     })
         .format(amount)
 }
 
-function getBudgetStatus(remaining: number, total: number): BudgetStatus {
-    if (total <= 0) {
-        return 'healthy'
+function canShowMemberPaymentsRemaining(workAppContext: WorkAppContextModel): boolean {
+    return workAppContext.isCopilot
+        && !workAppContext.isAdmin
+        && !workAppContext.isManager
+}
+
+function getBudgetStatusClass(
+    budgetInfo: BillingAccountBudgetInfo | undefined,
+): string {
+    return budgetInfo
+        ? styles[`budget${budgetInfo.status.charAt(0)
+            .toUpperCase()}${budgetInfo.status.slice(1)}`]
+        : ''
+}
+
+function renderBudgetDisplayContent(
+    budgetInfo: BillingAccountBudgetInfo | undefined,
+    copilotBudgetInfo: CopilotMemberPaymentsBudgetInfo | undefined,
+    showMemberPaymentsRemaining: boolean,
+): JSX.Element | undefined {
+    if (!budgetInfo) {
+        return undefined
     }
 
-    const percentage = (remaining / total) * 100
-
-    if (percentage < 10) {
-        return 'critical'
+    if (showMemberPaymentsRemaining && copilotBudgetInfo) {
+        return (
+            <>
+                Member Payments Remaining:
+                {' '}
+                {formatCurrency(copilotBudgetInfo.memberPaymentsRemaining, true)}
+            </>
+        )
     }
 
-    if (percentage < 30) {
-        return 'warning'
-    }
-
-    return 'healthy'
+    return (
+        <>
+            {formatCurrency(budgetInfo.spent)}
+            {' / '}
+            {formatCurrency(budgetInfo.totalBudget)}
+            {' spent'}
+        </>
+    )
 }
 
 export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpiredNoticeProps> = (
     props: ProjectBillingAccountExpiredNoticeProps,
 ) => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+    const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
+    const showMemberPaymentsRemaining: boolean = canShowMemberPaymentsRemaining(workAppContext)
 
     const projectBillingAccountResult: UseFetchProjectBillingAccountResult = useFetchProjectBillingAccount(
         props.projectId,
@@ -116,21 +153,21 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         || billingAccountNameFromLookup
     const billingAccountIssue = getProjectBillingAccountChallengeIssue(billingAccount)
 
-    const budgetInfo = useMemo(() => {
+    const standardBudgetInfo = useMemo(() => {
         if (!billingAccountDetailsData) {
             return undefined
         }
 
-        const totalBudget = Number(billingAccountDetailsData.budget) || 0
-        const remaining = Number(billingAccountDetailsData.totalBudgetRemaining) || 0
-        const status = getBudgetStatus(remaining, totalBudget)
-
-        return {
-            spent: Math.max(totalBudget - remaining, 0),
-            status,
-            totalBudget,
-        }
+        return getBillingAccountBudgetInfo(billingAccountDetailsData)
     }, [billingAccountDetailsData])
+    const copilotBudgetInfo = useMemo(() => (
+        showMemberPaymentsRemaining
+            ? getCopilotMemberPaymentsBudgetInfo(billingAccountDetailsData)
+            : undefined
+    ), [billingAccountDetailsData, showMemberPaymentsRemaining])
+    const budgetInfo = showMemberPaymentsRemaining
+        ? copilotBudgetInfo
+        : standardBudgetInfo
 
     const handleOpenModal = useCallback((): void => {
         setIsModalOpen(true)
@@ -140,10 +177,12 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         setIsModalOpen(false)
     }, [])
 
-    const budgetStatusClass = budgetInfo
-        ? styles[`budget${budgetInfo.status.charAt(0)
-            .toUpperCase()}${budgetInfo.status.slice(1)}`]
-        : ''
+    const budgetStatusClass = getBudgetStatusClass(budgetInfo)
+    const budgetDisplayContent = renderBudgetDisplayContent(
+        budgetInfo,
+        copilotBudgetInfo,
+        showMemberPaymentsRemaining,
+    )
     const billingAccountDetailsContent = normalizedBillingAccountId
         ? (
             <div className={styles.details}>
@@ -159,10 +198,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
                 {budgetInfo && (
                     <>
                         <span className={`${styles.budgetDisplay} ${budgetStatusClass}`}>
-                            {formatCurrency(budgetInfo.spent)}
-                            {' / '}
-                            {formatCurrency(budgetInfo.totalBudget)}
-                            {' spent'}
+                            {budgetDisplayContent}
                         </span>
                         <button
                             aria-label='View billing account details'
@@ -182,6 +218,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             <BillingAccountLineItemsModal
                 billingAccountDetails={billingAccountDetailsData}
                 onClose={handleCloseModal}
+                showMemberPaymentsRemaining={showMemberPaymentsRemaining}
             />
         )
         : undefined
