@@ -143,11 +143,13 @@ function formatLineItemAmount(item: BillingAccountModalLineItem): string {
  * Builds the modal row model with the amount that should be visible to the caller.
  *
  * @param item Raw locked or consumed billing-account line item.
- * @param billingAccountDetails Billing account detail payload containing hidden markup.
+ * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns A line item with `displayAmount` set to the visible amount for the caller.
- * @remarks The raw amount remains available for stable ids and source data, but
- * rendering and sorting use `displayAmount`.
+ * @remarks Copilot rows prefer the API-provided member payment amount because
+ * their response intentionally omits markup. When markup is still available,
+ * the UI can derive the same value. The raw amount remains available for stable
+ * ids and source data, but rendering and sorting use `displayAmount`.
  */
 function getDisplayLineItem(
     item: BillingAccountLineItem,
@@ -163,10 +165,11 @@ function getDisplayLineItem(
 
     return {
         ...item,
-        displayAmount: calculateMemberPaymentAmount(
-            item.amount,
-            billingAccountDetails.markup,
-        ),
+        displayAmount: item.memberPaymentAmount
+            ?? calculateMemberPaymentAmount(
+                item.amount,
+                billingAccountDetails.markup,
+            ),
     }
 }
 

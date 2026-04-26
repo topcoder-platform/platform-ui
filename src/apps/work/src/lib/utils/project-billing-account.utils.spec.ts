@@ -84,9 +84,9 @@ describe('project-billing-account challenge gating helpers', () => {
     })
 
     it('calculates copilot member payments remaining without exposing markup', () => {
-        expect(calculateMemberPaymentAmount(125.25, 0.8))
+        expect(calculateMemberPaymentAmount(125.25, 0.25))
             .toBe(100.20)
-        expect(calculateMemberPaymentsRemaining(250, 0.8))
+        expect(calculateMemberPaymentsRemaining(250, 0.25))
             .toBe(200)
         expect(getCopilotMemberPaymentsBudgetInfo({
             budget: 1000,
@@ -106,7 +106,7 @@ describe('project-billing-account challenge gating helpers', () => {
             budget: 1000,
             consumedBudget: 500,
             lockedBudget: 250,
-            markup: 0.8,
+            markup: 0.25,
             totalBudgetRemaining: 250,
         }))
             .toEqual({

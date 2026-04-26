@@ -218,7 +218,7 @@ describe('ProjectsTable', () => {
                     consumedBudget: 225,
                     id: 80001063,
                     lockedBudget: 525,
-                    markup: 0.8,
+                    markup: 0.25,
                     name: 'Access BA',
                     totalBudgetRemaining: 250,
                 },

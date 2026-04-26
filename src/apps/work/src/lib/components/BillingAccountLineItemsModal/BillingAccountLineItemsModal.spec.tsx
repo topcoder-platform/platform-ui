@@ -157,7 +157,7 @@ describe('BillingAccountLineItemsModal', () => {
                 },
             ],
             lockedBudget: 250,
-            markup: 0.8,
+            markup: 0.25,
             totalBudgetRemaining: 250,
         }, true)
 
@@ -170,6 +170,36 @@ describe('BillingAccountLineItemsModal', () => {
         expect(screen.queryByText('$125.25'))
             .toBeNull()
         expect(screen.queryByText('Consumed'))
+            .toBeNull()
+        expect(screen.queryByText('Remaining'))
+            .toBeNull()
+    })
+
+    it('uses API-provided member-payment row amounts for copilot responses without markup', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '125.25',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Consumed Markup Challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '100.20',
+                },
+            ],
+            consumedBudget: 125.25,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 250,
+        }, true)
+
+        expect(screen.getByText('Remaining member payments'))
+            .toBeTruthy()
+        expect(screen.getByText('$200.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$100.20'))
+            .toBeTruthy()
+        expect(screen.queryByText('$125.25'))
             .toBeNull()
         expect(screen.queryByText('Remaining'))
             .toBeNull()

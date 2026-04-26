@@ -116,9 +116,10 @@ export function getBillingAccountBudgetStatus(
  * @param markup Hidden billing-account markup multiplier.
  * @returns Member payment amount, or `undefined` when required values are unavailable.
  * @remarks Product requires copilot-safe amounts to be calculated as
- * `billing account amount / (1 / markup)` so copilots can see payment values
- * without seeing the markup itself. A zero markup means no markup must be
- * reserved, so the full billing-account amount is available for member payments.
+ * `billing account amount / (1 + markup)` so copilots can see the underlying
+ * payment value without seeing the markup itself. A zero markup means no fee
+ * has been added, so the full billing-account amount is available for member
+ * payments.
  */
 export function calculateMemberPaymentAmount(
     billingAccountAmount: unknown,
@@ -135,7 +136,7 @@ export function calculateMemberPaymentAmount(
         return Number(amount.toFixed(2))
     }
 
-    return Number((amount / (1 / normalizedMarkup)).toFixed(2))
+    return Number((amount / (1 + normalizedMarkup)).toFixed(2))
 }
 
 /**

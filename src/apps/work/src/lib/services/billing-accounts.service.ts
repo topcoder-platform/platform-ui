@@ -29,6 +29,7 @@ export interface BillingAccountBudgetEntry {
     externalId?: string
     externalName: string | null
     externalType: BillingAccountExternalType
+    memberPaymentAmount?: number | string
 }
 
 export type BillingAccountLockedAmount = BillingAccountBudgetEntry
@@ -42,6 +43,7 @@ export interface BillingAccountLineItem {
     externalId?: string
     externalName?: string | null
     externalType: BillingAccountExternalType
+    memberPaymentAmount?: number
     status: BillingAccountLineItemStatus
 }
 
@@ -166,7 +168,8 @@ function createLineItemKey(
  * @param index The entry index within its source bucket, used in the generated row key.
  * @returns A normalized line item with numeric amount, original date, display
  * fallback for nullable external names, optional canonical external id,
- * optional legacy challenge id, and a deterministic UI row key.
+ * optional legacy challenge id, optional copilot-safe member payment amount,
+ * and a deterministic UI row key.
  */
 function createLineItem(
     status: BillingAccountLineItemStatus,
@@ -194,6 +197,12 @@ function createLineItem(
 
     if (item.externalId) {
         lineItem.externalId = item.externalId
+    }
+
+    const memberPaymentAmount = Number(item.memberPaymentAmount)
+
+    if (Number.isFinite(memberPaymentAmount)) {
+        lineItem.memberPaymentAmount = memberPaymentAmount
     }
 
     return lineItem
@@ -242,9 +251,9 @@ export async function searchBillingAccounts(
  * Fetches a single billing account by its identifier.
  *
  * The detail payload includes budget totals plus locked and consumed external
- * entries with `amount`, `date`, optional canonical `externalId`, `externalType`,
- * and nullable `externalName`. Top-level `id` and `name` remain available for
- * lookup labels.
+ * entries with `amount`, optional copilot-safe `memberPaymentAmount`, `date`,
+ * optional canonical `externalId`, `externalType`, and nullable `externalName`.
+ * Top-level `id` and `name` remain available for lookup labels.
  */
 export async function fetchBillingAccountById(
     billingAccountId: string,
@@ -268,7 +277,8 @@ export async function fetchBillingAccountById(
  * Combines locked and consumed external budget entries into UI line items.
  *
  * @param details Billing account details containing locked and consumed entry arrays.
- * @returns Normalized line items with numeric amounts, API dates, external metadata, status, and UI row keys.
+ * @returns Normalized line items with numeric amounts, optional member payment
+ * amounts, API dates, external metadata, status, and UI row keys.
  */
 export function combineBillingAccountLineItems(
     details: BillingAccountDetails,

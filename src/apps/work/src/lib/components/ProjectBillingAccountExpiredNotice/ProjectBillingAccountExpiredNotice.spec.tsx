@@ -146,7 +146,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             billingAccountDetails: {
                 ...billingAccountDetails,
                 budget: 1000,
-                markup: 0.8,
+                markup: 0.25,
                 totalBudgetRemaining: 250,
             },
             error: undefined,
@@ -157,7 +157,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             billingAccount: {
                 active: true,
                 id: '80001063',
-                markup: 0.8,
+                markup: 0.25,
                 name: 'Test Project Engagement BA',
                 status: 'ACTIVE',
                 totalBudgetRemaining: 250,
