@@ -337,17 +337,11 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                         </div>
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Project Name</span>
-                                            {buildWorkAppChallengeUrl(
-                                                paymentDetails?.taskDetails?.projectId,
-                                                props.payment.externalId,
-                                            ) && paymentDetails?.taskDetails?.projectName
+                                            {projectLink && paymentDetails?.taskDetails?.projectName
                                                 ? (
                                                     <a
                                                         className={styles.value}
-                                                        href={buildWorkAppChallengeUrl(
-                                                            paymentDetails.taskDetails.projectId,
-                                                            props.payment.externalId,
-                                                        )}
+                                                        href={projectLink}
                                                         target='_blank'
                                                         rel='noreferrer'
                                                     >
