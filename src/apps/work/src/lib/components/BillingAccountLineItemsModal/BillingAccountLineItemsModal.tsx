@@ -36,7 +36,9 @@ interface BillingAccountModalLineItem extends BillingAccountLineItem {
     displayAmount?: number
 }
 
-const EMPTY_ENGAGEMENT_FILTERS = {}
+const ENGAGEMENT_ASSIGNMENT_FILTERS = {
+    includePrivate: true,
+}
 
 const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
     CHALLENGE: 'Challenge',
@@ -364,7 +366,7 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
     const showChallengeFeeColumn = !props.showMemberPaymentsRemaining
     const engagementResult = useFetchEngagements(
         normalizedProjectId,
-        EMPTY_ENGAGEMENT_FILTERS,
+        ENGAGEMENT_ASSIGNMENT_FILTERS,
         {
             enabled: showChallengeFeeColumn && !!normalizedProjectId && hasEngagementLineItems,
         },

@@ -85,6 +85,7 @@ function renderModal(
 
 describe('BillingAccountLineItemsModal', () => {
     beforeEach(() => {
+        mockedUseFetchEngagements.mockReset()
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [],
             error: undefined,
@@ -225,6 +226,12 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(engagementLink.getAttribute('href'))
             .toBe('/work/projects/project%20200/engagements/engagement-300')
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                'project 200',
+                { includePrivate: true },
+                { enabled: true },
+            )
     })
 
     it('renders legacy-only challenge rows as plain text', () => {
