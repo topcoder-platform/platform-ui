@@ -18,6 +18,9 @@ import {
 } from '~/libs/ui'
 
 import {
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED,
+} from '../../constants'
+import {
     Assignment,
 } from '../../models'
 import {
@@ -156,7 +159,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         [hoursWorked, ratePerHour],
     )
     const challengeFee = useMemo(
-        () => calculatePaymentChallengeFee(amount, props.billingAccountMarkup),
+        () => (BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
+            ? calculatePaymentChallengeFee(amount, props.billingAccountMarkup)
+            : undefined),
         [amount, props.billingAccountMarkup],
     )
     const paymentTitle = useMemo(
@@ -289,10 +294,14 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         <span className={styles.infoLabel}>Rate Per Week</span>
                         <span className={styles.infoValue}>{formatCurrency(props.member?.agreementRate)}</span>
                     </div>
-                    <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Billing Account</span>
-                        <span className={styles.infoValue}>{props.billingAccountId || 'Unavailable'}</span>
-                    </div>
+                    {BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
+                        ? (
+                            <div className={styles.infoItem}>
+                                <span className={styles.infoLabel}>Billing Account</span>
+                                <span className={styles.infoValue}>{props.billingAccountId || 'Unavailable'}</span>
+                            </div>
+                        )
+                        : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>

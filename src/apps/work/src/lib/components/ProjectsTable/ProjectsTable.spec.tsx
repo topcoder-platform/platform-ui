@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { ReactNode } from 'react'
 import {
-    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -34,6 +33,8 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
 }))
 
 jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
     PROJECT_STATUS: {
         DRAFT: 'draft',
     },
@@ -145,7 +146,7 @@ describe('ProjectsTable', () => {
             .toBe('/projects/100440/challenges')
     })
 
-    it('shows project billing account spent totals and opens the line-item modal', () => {
+    it('hides billing account spent totals and line-item details while billing details are disabled', () => {
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [
                 {
@@ -184,15 +185,13 @@ describe('ProjectsTable', () => {
 
         expect(screen.getAllByText('Access BA / 80001063').length)
             .toBeGreaterThan(0)
-        expect(screen.getAllByText('$350 / $1,000 spent').length)
-            .toBeGreaterThan(0)
-
-        fireEvent.click(screen.getAllByRole('button', {
+        expect(screen.queryByText('$350 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
             name: 'View billing account details',
-        })[0])
-
-        expect(screen.getByRole('dialog')
-            .textContent)
-            .toContain('Billing account details for 80001063')
+        }))
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
