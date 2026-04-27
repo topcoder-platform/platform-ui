@@ -11,6 +11,7 @@ export * from './Pagination.model'
 export * from './Prize.model'
 export type {
     CreateProjectPayload,
+    ProjectDetails,
     ProjectPhase,
     ProjectPhaseProduct,
     Project,

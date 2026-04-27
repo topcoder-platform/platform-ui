@@ -2,9 +2,11 @@
 import {
     xhrGetAsync,
     xhrGetPaginatedAsync,
+    xhrPostAsync,
 } from '~/libs/core'
 
 import {
+    createProject,
     fetchProjectById,
     fetchProjectBillingAccount,
     fetchProjectBillingAccounts,
@@ -377,5 +379,75 @@ describe('fetchProjectById', () => {
             }))
         expect(mockedGetAsync)
             .toHaveBeenCalledWith('https://example.com/projects/200')
+    })
+
+    it('preserves the member payment details display flag from project details', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            details: {
+                displayMemberPaymentDetailsToCopilots: false,
+                taasDefinition: {
+                    taasJobs: [],
+                },
+            },
+            id: 200,
+            name: 'Project with details',
+            status: 'active',
+        })
+
+        const result = await fetchProjectById('200')
+
+        expect(result)
+            .toEqual(expect.objectContaining({
+                details: {
+                    displayMemberPaymentDetailsToCopilots: false,
+                    taasDefinition: {
+                        taasJobs: [],
+                    },
+                },
+                id: '200',
+                name: 'Project with details',
+                status: 'active',
+            }))
+    })
+})
+
+describe('createProject', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('posts project details containing the member payment display flag', async () => {
+        const mockedPostAsync = xhrPostAsync as jest.Mock
+
+        mockedPostAsync.mockResolvedValue({
+            details: {
+                displayMemberPaymentDetailsToCopilots: false,
+            },
+            id: 201,
+            name: 'Project with hidden payments',
+            status: 'active',
+        })
+
+        await createProject({
+            billingAccountId: '80001063',
+            description: 'Project description',
+            details: {
+                displayMemberPaymentDetailsToCopilots: false,
+            },
+            name: 'Project with hidden payments',
+            type: 'app_dev',
+        })
+
+        expect(mockedPostAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/projects',
+                expect.objectContaining({
+                    details: {
+                        displayMemberPaymentDetailsToCopilots: false,
+                    },
+                }),
+            )
     })
 })

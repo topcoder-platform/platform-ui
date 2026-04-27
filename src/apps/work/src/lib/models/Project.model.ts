@@ -8,6 +8,14 @@ import { TaasJob } from './TaasJob.model'
 
 export type ProjectStatus = typeof PROJECT_STATUSES[number]['value']
 
+export interface ProjectDetails {
+    displayMemberPaymentDetailsToCopilots?: boolean
+    taasDefinition?: {
+        taasJobs?: TaasJob[]
+    }
+    [key: string]: unknown
+}
+
 export interface Project {
     id: number | string
     name: string
@@ -25,11 +33,7 @@ export interface Project {
     members?: ProjectMember[]
     invites?: ProjectInvite[]
     isInvited?: boolean
-    details?: {
-        taasDefinition?: {
-            taasJobs?: TaasJob[]
-        }
-    }
+    details?: ProjectDetails
 }
 
 export interface ProjectType {
@@ -45,6 +49,7 @@ export interface CreateProjectPayload {
     billingAccountId?: number | string
     terms?: string[]
     groups?: string[]
+    details?: ProjectDetails
 }
 
 export interface UpdateProjectPayload {
@@ -55,6 +60,7 @@ export interface UpdateProjectPayload {
     cancelReason?: string
     terms?: string[]
     groups?: string[]
+    details?: ProjectDetails
 }
 
 export interface ProjectFilters {

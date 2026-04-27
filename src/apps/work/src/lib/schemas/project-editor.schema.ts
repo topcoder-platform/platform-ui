@@ -11,6 +11,7 @@ export interface ProjectEditorSchemaData {
     cancelReason?: string
     terms?: string
     groups?: string[]
+    displayMemberPaymentDetailsToCopilots?: boolean
 }
 
 export function createProjectEditorSchema(
@@ -32,6 +33,9 @@ export function createProjectEditorSchema(
             description: yup
                 .string()
                 .required('Description is required'),
+            displayMemberPaymentDetailsToCopilots: yup
+                .boolean()
+                .optional(),
             groups: yup
                 .array()
                 .of(yup.string()

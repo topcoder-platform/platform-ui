@@ -18,6 +18,7 @@ import {
 } from '../../../../../lib/constants'
 import {
     FormBillingAccountAutocomplete,
+    FormCheckboxField,
     FormGroupsSelect,
     FormRadioGroup,
     FormSelectField,
@@ -66,6 +67,7 @@ interface ProjectEditorFormValues {
     billingAccountId: string
     cancelReason: string
     description: string
+    displayMemberPaymentDetailsToCopilots: boolean
     groups: string[]
     name: string
     status: ProjectStatusValue | ''
@@ -95,6 +97,8 @@ function getDefaultFormValues(
         billingAccountId,
         cancelReason: projectDetail?.cancelReason || '',
         description: projectDetail?.description || '',
+        displayMemberPaymentDetailsToCopilots: projectDetail?.details
+            ?.displayMemberPaymentDetailsToCopilots !== false,
         groups,
         name: projectDetail?.name || '',
         status: isEdit
@@ -363,6 +367,10 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     const payload: CreateProjectPayload = {
                         billingAccountId: normalizedBillingAccountId,
                         description: formData.description,
+                        details: {
+                            displayMemberPaymentDetailsToCopilots:
+                                formData.displayMemberPaymentDetailsToCopilots,
+                        },
                         groups,
                         name: formData.name,
                         terms,
@@ -386,6 +394,11 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 const payload: UpdateProjectPayload = {
                     billingAccountId: normalizedBillingAccountId || '',
                     description: formData.description,
+                    details: {
+                        ...(props.projectDetail.details || {}),
+                        displayMemberPaymentDetailsToCopilots:
+                            formData.displayMemberPaymentDetailsToCopilots,
+                    },
                     groups,
                     name: formData.name,
                     terms,
@@ -548,6 +561,13 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                         <FormGroupsSelect
                             label='Intended Work Groups'
                             name='groups'
+                        />
+                    </div>
+
+                    <div className={styles.block}>
+                        <FormCheckboxField
+                            label='Display member payment details to copilots'
+                            name='displayMemberPaymentDetailsToCopilots'
                         />
                     </div>
                 </section>

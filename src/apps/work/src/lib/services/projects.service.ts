@@ -23,6 +23,7 @@ import {
     Project,
     ProjectAttachment,
     ProjectAttachmentPayload,
+    ProjectDetails,
     ProjectInvite,
     ProjectMember,
     ProjectPhase,
@@ -281,6 +282,33 @@ function normalizeProjectTermsOrGroups(values: unknown): string[] | undefined {
         .filter((value): value is string => !!value)
 }
 
+/**
+ * Normalizes project details metadata while preserving unknown keys.
+ *
+ * @param details Raw `details` payload from the Projects API.
+ * @returns Project details metadata, or `undefined` when the payload is absent.
+ */
+function normalizeProjectDetails(details: unknown): ProjectDetails | undefined {
+    if (!details || typeof details !== 'object' || Array.isArray(details)) {
+        return undefined
+    }
+
+    const normalizedDetails = {
+        ...(details as Record<string, unknown>),
+    } as ProjectDetails
+    const displayMemberPaymentDetailsToCopilots = normalizeOptionalBoolean(
+        normalizedDetails.displayMemberPaymentDetailsToCopilots,
+    )
+
+    if (displayMemberPaymentDetailsToCopilots !== undefined) {
+        normalizedDetails.displayMemberPaymentDetailsToCopilots = displayMemberPaymentDetailsToCopilots
+    } else {
+        delete normalizedDetails.displayMemberPaymentDetailsToCopilots
+    }
+
+    return normalizedDetails
+}
+
 function normalizeProject(project: Partial<Project>): Project {
     const id = normalizeId(project.id)
     const name = normalizeOptionalString(project.name)
@@ -310,6 +338,7 @@ function normalizeProject(project: Partial<Project>): Project {
         description: typeof project.description === 'string'
             ? project.description
             : undefined,
+        details: normalizeProjectDetails(project.details),
         groups: normalizeProjectTermsOrGroups(project.groups),
         id,
         invites,
