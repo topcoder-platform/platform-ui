@@ -6,6 +6,9 @@ import {
 } from '~/libs/ui'
 
 import {
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED,
+} from '../../constants'
+import {
     useFetchAssignmentPayments,
 } from '../../hooks'
 import {
@@ -88,7 +91,9 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                         <ul className={styles.list}>
                             {paymentsResult.payments.map((payment, index) => {
                                 const paymentAmount = getPaymentAmount(payment)
-                                const paymentChallengeFee = getPaymentChallengeFee(payment)
+                                const paymentChallengeFee = BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
+                                    ? getPaymentChallengeFee(payment)
+                                    : undefined
                                 const paymentStatus = getPaymentStatus(payment)
                                 const paymentHoursWorked = getPaymentHoursWorked(payment)
                                 const paymentRemarks = getPaymentRemarks(payment)

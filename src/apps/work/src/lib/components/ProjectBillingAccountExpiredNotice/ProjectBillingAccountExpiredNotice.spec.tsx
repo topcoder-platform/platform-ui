@@ -1,6 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
-    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -31,6 +30,11 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
             {props.billingAccountDetails.id}
         </div>
     ),
+}))
+
+jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -88,7 +92,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
         })
     })
 
-    it('keeps billing account details and line items available when remaining funds are insufficient', () => {
+    it('hides billing account budget and line-item details while billing details are disabled', () => {
         render(
             <MemoryRouter>
                 <ProjectBillingAccountExpiredNotice
@@ -106,20 +110,17 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeTruthy()
         expect(screen.getByText(/80001063/))
             .toBeTruthy()
-        expect(screen.getByText('$1,025 / $1,000 spent'))
-            .toBeTruthy()
-        expect(screen.getByText(/The billing account for this project has insufficient remaining funds,/))
-            .toBeTruthy()
-        expect(screen.getByRole('link', { name: 'click here to update' })
-            .getAttribute('href'))
-            .toBe('/projects/project-1/edit')
-
-        fireEvent.click(screen.getByRole('button', {
+        expect(screen.queryByText('$1,025 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByText(/The billing account for this project has insufficient remaining funds,/))
+            .toBeNull()
+        expect(screen.queryByRole('link', { name: 'click here to update' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
             name: 'View billing account details',
         }))
-
-        expect(screen.getByRole('dialog')
-            .textContent)
-            .toContain('Billing account details for 80001063')
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
