@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { PropsWithChildren } from 'react'
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -48,6 +49,33 @@ const TestComponent = (props: TestComponentProps): JSX.Element => {
     })
 
     return <div>{metadata.page}</div>
+}
+
+const AppendResultsTestComponent = (): JSX.Element => {
+    const {
+        challenges,
+        mutate,
+    }: UseFetchChallengesResult = useFetchChallenges({
+        appendResults: true,
+        page: 1,
+        perPage: 25,
+    })
+    const challengeNames: string = challenges.map(challenge => challenge.name)
+        .join(', ')
+
+    function handleRefresh(): void {
+        mutate()
+            .catch(() => undefined)
+    }
+
+    return (
+        <>
+            <button onClick={handleRefresh} type='button'>
+                Refresh
+            </button>
+            <div>{challengeNames || 'No challenges'}</div>
+        </>
+    )
 }
 
 describe('useFetchChallenges', () => {
@@ -106,5 +134,90 @@ describe('useFetchChallenges', () => {
 
         expect(mockedFetchChallenges)
             .not.toHaveBeenCalled()
+    })
+
+    it('removes omitted challenges from appended results after a same-page refresh', async () => {
+        const cache = new Map<string, unknown>()
+        const wrapper = createWrapper(cache)
+
+        mockedFetchChallenges
+            .mockResolvedValueOnce({
+                data: [
+                    { id: 'visible-challenge', name: 'Visible Challenge' },
+                    { id: 'restricted-challenge', name: 'Restricted Challenge' },
+                ],
+                metadata: {
+                    page: 1,
+                    perPage: 25,
+                    total: 2,
+                    totalPages: 1,
+                },
+            } as never)
+            .mockResolvedValueOnce({
+                data: [
+                    { id: 'visible-challenge', name: 'Visible Challenge' },
+                ],
+                metadata: {
+                    page: 1,
+                    perPage: 25,
+                    total: 1,
+                    totalPages: 1,
+                },
+            } as never)
+
+        render(<AppendResultsTestComponent />, {
+            wrapper,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText(/Restricted Challenge/))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+
+        await waitFor(() => {
+            expect(screen.queryByText(/Restricted Challenge/))
+                .toBeNull()
+        })
+        expect(screen.getByText('Visible Challenge'))
+            .toBeTruthy()
+    })
+
+    it('does not return cached challenges when a fresh fetch errors', async () => {
+        const cache = new Map<string, unknown>()
+        const wrapper = createWrapper(cache)
+
+        mockedFetchChallenges
+            .mockResolvedValueOnce({
+                data: [
+                    { id: 'restricted-challenge', name: 'Restricted Challenge' },
+                ],
+                metadata: {
+                    page: 1,
+                    perPage: 25,
+                    total: 1,
+                    totalPages: 1,
+                },
+            } as never)
+            .mockRejectedValueOnce(new Error('Forbidden'))
+
+        render(<AppendResultsTestComponent />, {
+            wrapper,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('Restricted Challenge'))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+
+        await waitFor(() => {
+            expect(screen.queryByText('Restricted Challenge'))
+                .toBeNull()
+        })
+        expect(screen.getByText('No challenges'))
+            .toBeTruthy()
     })
 })

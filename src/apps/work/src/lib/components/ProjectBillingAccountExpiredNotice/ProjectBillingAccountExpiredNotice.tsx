@@ -218,6 +218,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             <BillingAccountLineItemsModal
                 billingAccountDetails={billingAccountDetailsData}
                 onClose={handleCloseModal}
+                projectId={props.projectId}
                 showMemberPaymentsRemaining={showMemberPaymentsRemaining}
             />
         )

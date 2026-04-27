@@ -140,7 +140,6 @@ interface ChallengeEditorBodyProps {
 
 interface ChallengeQuickLinksProps {
     challenge: UseFetchChallengeResult['challenge']
-    challengeId?: string
 }
 
 function getErrorMessage(error: Error | undefined): string {
@@ -210,6 +209,7 @@ function shouldShowDeleteAction(
 function useResolvedChallengeStatus(
     challengeId: string | undefined,
     fetchedChallengeStatus: string | undefined,
+    shouldResetChallengeStatus: boolean,
 ): [
     string | undefined,
     (status?: string) => void,
@@ -221,6 +221,15 @@ function useResolvedChallengeStatus(
         lastFetchedChallengeStatusRef.current = undefined
         setChallengeStatus(undefined)
     }, [challengeId])
+
+    useEffect(() => {
+        if (!shouldResetChallengeStatus) {
+            return
+        }
+
+        lastFetchedChallengeStatusRef.current = undefined
+        setChallengeStatus(undefined)
+    }, [shouldResetChallengeStatus])
 
     useEffect(() => {
         if (
@@ -900,7 +909,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 function renderChallengeQuickLinks(
     props: ChallengeQuickLinksProps,
 ): JSX.Element | undefined {
-    const resolvedChallengeId = props.challenge?.id || props.challengeId
+    const resolvedChallengeId = props.challenge?.id
 
     if (!resolvedChallengeId) {
         return undefined
@@ -974,6 +983,11 @@ export const ChallengeEditorPage: FC = () => {
     ] = useResolvedChallengeStatus(
         challengeId,
         challengeResult.challenge?.status,
+        isExistingChallenge
+            && (
+                challengeResult.isError
+                || (!challengeResult.isLoading && !challengeResult.challenge)
+            ),
     )
     const handleRetry = useCallback((): void => {
         challengeResult.mutate()
@@ -1042,13 +1056,22 @@ export const ChallengeEditorPage: FC = () => {
         isViewMode,
         challengeResult.challenge?.name,
     )
+    const hasSuccessfulCurrentChallengeFetch = !isExistingChallenge
+        || (
+            !challengeResult.isError
+            && !challengeResult.isLoading
+            && !!challengeResult.challenge
+        )
+    const currentChallenge = hasSuccessfulCurrentChallengeFetch
+        ? challengeResult.challenge
+        : undefined
     const effectiveChallengeStatus = challengeStatus
         || createdChallenge?.status
-        || challengeResult.challenge?.status
-    const headerChallenge = challengeResult.challenge
+        || currentChallenge?.status
+    const headerChallenge = currentChallenge
         ? {
-            ...challengeResult.challenge,
-            status: effectiveChallengeStatus || challengeResult.challenge.status,
+            ...currentChallenge,
+            status: effectiveChallengeStatus || currentChallenge.status,
         }
         : undefined
     const canLaunchChallenge = shouldShowLaunchAction(
@@ -1175,10 +1198,10 @@ export const ChallengeEditorPage: FC = () => {
         navigate(editChallengePath)
     }, [editChallengePath, navigate])
     const challengeQuickLinks = renderChallengeQuickLinks({
-        challenge: challengeResult.challenge,
-        challengeId,
+        challenge: currentChallenge,
     })
-    const canEditChallenge = isViewMode
+    const canEditChallenge = hasSuccessfulCurrentChallengeFetch
+        && isViewMode
         && !!editChallengePath
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
@@ -1216,7 +1239,7 @@ export const ChallengeEditorPage: FC = () => {
         showLaunchModal,
     })
     const titleAction = renderTitleAction(
-        isExistingChallenge || isCreatedChallenge,
+        (isExistingChallenge && hasSuccessfulCurrentChallengeFetch) || isCreatedChallenge,
         effectiveChallengeStatus,
     )
     const launchButtonLabel = isLaunching

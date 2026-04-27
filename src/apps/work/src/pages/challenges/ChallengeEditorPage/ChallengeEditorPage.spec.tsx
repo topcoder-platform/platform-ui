@@ -18,6 +18,7 @@ import {
     useFetchChallenge,
     useFetchResourceRoles,
     useFetchResources,
+    type UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import { deleteChallenge } from '../../../lib/services'
 import { isChallengeCompletedOrCancelled } from '../../../lib/utils'
@@ -247,10 +248,17 @@ const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
-function renderPage(route: string, path: string): void {
+/**
+ * Builds the routed challenge editor test tree.
+ *
+ * @param route concrete route used as the initial memory history entry.
+ * @param path route pattern registered for the page under test.
+ * @returns the challenge editor element wrapped with router and work context providers.
+ */
+function renderPageElement(route: string, path: string): JSX.Element {
     const MockWorkAppContext = mockWorkAppContext
 
-    render(
+    return (
         <MockWorkAppContext.Provider value={{
             isAdmin: false,
             isAnonymous: false,
@@ -266,8 +274,19 @@ function renderPage(route: string, path: string): void {
                     <Route path={path} element={<ChallengeEditorPage />} />
                 </Routes>
             </MemoryRouter>
-        </MockWorkAppContext.Provider>,
+        </MockWorkAppContext.Provider>
     )
+}
+
+/**
+ * Renders the challenge editor page in a memory router for route-level assertions.
+ *
+ * @param route concrete route used as the initial memory history entry.
+ * @param path route pattern registered for the page under test.
+ * @returns the React Testing Library render result.
+ */
+function renderPage(route: string, path: string): ReturnType<typeof render> {
+    return render(renderPageElement(route, path))
 }
 
 describe('ChallengeEditorPage', () => {
@@ -680,5 +699,70 @@ describe('ChallengeEditorPage', () => {
             expect(mockedDeleteChallenge)
                 .toHaveBeenCalledWith('789')
         })
+    })
+
+    it('clears stale header state after a fresh challenge fetch 403', async () => {
+        const mutate = jest.fn()
+        let challengeResult: UseFetchChallengeResult = {
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate,
+        }
+        mockedUseFetchChallenge.mockImplementation(() => challengeResult)
+
+        const route = '/projects/123/challenges/456/edit'
+        const path = '/projects/:projectId/challenges/:challengeId/edit'
+        const renderResult = renderPage(route, path)
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge Editor Form'))
+                .toBeTruthy()
+        })
+
+        expect(within(screen.getByTestId('title-action'))
+            .getByText('DRAFT'))
+            .toBeTruthy()
+        expect(within(screen.getByTestId('right-header'))
+            .getByRole('link', { name: 'Challenge' }))
+            .toBeTruthy()
+        expect(within(screen.getByTestId('right-header'))
+            .getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+
+        challengeResult = {
+            challenge: undefined,
+            error: Object.assign(new Error('Forbidden'), { status: 403 }),
+            isError: true,
+            isLoading: false,
+            mutate,
+        }
+        renderResult.rerender(renderPageElement(route, path))
+
+        await waitFor(() => {
+            expect(screen.getByText('Forbidden'))
+                .toBeTruthy()
+        })
+        expect(within(screen.getByTestId('title-action'))
+            .queryByText('DRAFT'))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('link', { name: 'Challenge' }))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('button', { name: 'Launch' }))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('button', { name: 'Cancel' }))
+            .toBeNull()
     })
 })

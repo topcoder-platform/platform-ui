@@ -179,6 +179,7 @@ describe('combineBillingAccountLineItems', () => {
                 {
                     amount: '75',
                     date: '2026-02-12T00:00:00.000Z',
+                    engagementId: 'engagement-300',
                     externalId: 'assignment-300',
                     externalName: 'Engagement Assignment',
                     externalType: 'ENGAGEMENT',
@@ -249,6 +250,7 @@ describe('combineBillingAccountLineItems', () => {
         expect(consumedRows[0])
             .toMatchObject({
                 date: '2026-02-12T00:00:00.000Z',
+                engagementId: 'engagement-300',
                 externalId: 'assignment-300',
                 externalType: 'ENGAGEMENT',
                 status: 'consumed',
