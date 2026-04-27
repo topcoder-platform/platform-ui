@@ -324,7 +324,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Task Creator</span>
                                             <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.paymentCreatorHandle)}
+                                                {formatOptionalText(paymentDetails?.taskDetails?.paymentCreatorHandle)}
                                             </p>
                                         </div>
                                         <div className={styles.infoItem}>
