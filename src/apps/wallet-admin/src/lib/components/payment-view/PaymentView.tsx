@@ -337,11 +337,11 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                         </div>
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Project Name</span>
-                                            {projectLink && paymentDetails?.taskDetails?.projectName
+                                            {buildWorkManagerProjectUrl(paymentDetails?.taskDetails) && paymentDetails?.taskDetails?.projectName
                                                 ? (
                                                     <a
                                                         className={styles.value}
-                                                        href={projectLink}
+                                                        href={buildWorkManagerProjectUrl(paymentDetails.taskDetails)}
                                                         target='_blank'
                                                         rel='noreferrer'
                                                     >
