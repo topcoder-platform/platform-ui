@@ -41,6 +41,7 @@ export interface PaymentTaskDetails {
     projectId?: string
     projectName?: string
     paymentApproverHandle?: string
+    paymentCreatorHandle?: string
 }
 
 export interface WinningPaymentDetails {

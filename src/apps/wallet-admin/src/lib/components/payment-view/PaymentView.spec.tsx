@@ -192,8 +192,8 @@ describe('PaymentView', () => {
         }
 
         mockedFetchWinningPaymentDetails.mockResolvedValue({
-            paymentCreatorHandle: 'task-creator',
             taskDetails: {
+                paymentCreatorHandle: 'task-creator',
                 paymentApproverHandle: 'approver-handle',
                 projectId: '42',
                 projectName: 'My Awesome Project',
