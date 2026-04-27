@@ -151,22 +151,6 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     size='lg'
                 />
             )}
-            {selectionActions.length > 0 && (
-                <>
-                    {selectionActions.map(action => (
-                        <Button
-                            key={action.key}
-                            primary={action.appearance !== 'secondary'}
-                            secondary={action.appearance === 'secondary'}
-                            variant={action.variant}
-                            className={styles.selectionActionButton}
-                            label={action.label}
-                            size='lg'
-                            onClick={action.onClick}
-                        />
-                    ))}
-                </>
-            )}
             <Button
                 primary
                 className={styles.resetButton}
@@ -179,6 +163,24 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     props.onResetFilters?.()
                 }}
             />
+            <div className={styles.taskApproveBtns}>
+                {selectionActions.length > 0 && (
+                    <>
+                        {selectionActions.map(action => (
+                            <Button
+                                key={action.key}
+                                primary={action.appearance !== 'secondary'}
+                                secondary={action.appearance === 'secondary'}
+                                variant={action.variant}
+                                className={styles.selectionActionButton}
+                                label={action.label}
+                                size='lg'
+                                onClick={action.onClick}
+                            />
+                        ))}
+                    </>
+                )}
+            </div>
         </div>
     )
 }

@@ -22,6 +22,12 @@
         gap: 10px;
         flex-wrap: wrap;
         min-width: 0;
+
+        [class*="InputSelect-module_textSelected"] {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
     }
 
     .filterContainer {
@@ -51,6 +57,14 @@
     .resetButton {
         flex-shrink: 0;
         margin-left: 30px;
+    }
+
+    .taskApproveBtns {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        width: 100%;
+        margin-top: 10px;
     }
 }
 
