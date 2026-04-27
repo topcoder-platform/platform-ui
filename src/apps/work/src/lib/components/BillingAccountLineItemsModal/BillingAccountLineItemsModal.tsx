@@ -13,11 +13,14 @@ import {
 } from '~/libs/ui'
 
 import { rootRoute } from '../../../config/routes.config'
+import { useFetchEngagements } from '../../hooks/useFetchEngagements'
+import type { Engagement } from '../../models'
 import {
     BillingAccountDetails,
     BillingAccountLineItem,
     combineBillingAccountLineItems,
 } from '../../services/billing-accounts.service'
+import { calculatePaymentChallengeFee } from '../../utils/payment.utils'
 import {
     calculateMemberPaymentAmount,
     getCopilotMemberPaymentsBudgetInfo,
@@ -29,8 +32,11 @@ type SortField = 'amount' | 'status' | 'date'
 type SortOrder = 'asc' | 'desc'
 
 interface BillingAccountModalLineItem extends BillingAccountLineItem {
+    challengeFeeAmount?: number
     displayAmount?: number
 }
+
+const EMPTY_ENGAGEMENT_FILTERS = {}
 
 const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
     CHALLENGE: 'Challenge',
@@ -40,6 +46,7 @@ const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], strin
 export interface BillingAccountLineItemsModalProps {
     billingAccountDetails: BillingAccountDetails
     onClose: () => void
+    projectId?: number | string
     showMemberPaymentsRemaining?: boolean
 }
 
@@ -120,18 +127,71 @@ function sortLineItems(
     })
 }
 
-function buildChallengeUrl(externalId: string): string {
-    const basePath = rootRoute.replace(/\/$/, '')
-    return `${basePath}/challenges/${encodeURIComponent(externalId)}`
+/**
+ * Normalizes optional route identifiers before using them in work-app links.
+ *
+ * @param value Raw route identifier from project or billing-account row data.
+ * @returns Trimmed string id, or `undefined` when the value is blank.
+ * @remarks Used only by billing-account line-item links to avoid invalid route segments.
+ */
+function normalizeRouteId(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalizedValue = String(value)
+        .trim()
+
+    return normalizedValue || undefined
 }
 
 /**
- * Formats the role-specific line-item amount for the Amount column.
+ * Builds an absolute work-app path with the configured root route prefix.
+ *
+ * @param path Path below the work-app root. It must start with `/`.
+ * @returns Work-app URL path safe for direct anchors.
+ * @remarks The work app runs at `/work` on non-work subdomains and `/` on the
+ * work subdomain.
+ */
+function buildWorkUrl(path: string): string {
+    const basePath = rootRoute.replace(/\/$/, '')
+    return `${basePath}${path}`
+}
+
+/**
+ * Builds the work-app challenge detail URL for a billing-account row.
+ *
+ * @param externalId Challenge id from the billing-account line item.
+ * @returns Work-app challenge URL path.
+ * @remarks Used by the billing-account details modal name column.
+ */
+function buildChallengeUrl(externalId: string): string {
+    return buildWorkUrl(`/challenges/${encodeURIComponent(externalId)}`)
+}
+
+/**
+ * Builds the work-app engagement editor URL for a billing-account row.
+ *
+ * @param projectId Project id that scopes the engagement route.
+ * @param engagementId Engagement id resolved from the line item assignment id.
+ * @returns Work-app engagement URL path.
+ * @remarks Engagement budget entries are keyed by assignment id, so callers
+ * resolve the engagement id before using this helper.
+ */
+function buildEngagementUrl(projectId: string, engagementId: string): string {
+    return buildWorkUrl(
+        `/projects/${encodeURIComponent(projectId)}/engagements/${encodeURIComponent(engagementId)}`,
+    )
+}
+
+/**
+ * Formats the role-specific line-item amount for the Member Payments column.
  *
  * @param item Line item already mapped for the current caller role.
  * @returns Formatted currency or `-` when a copilot-safe amount is unavailable.
- * @remarks Copilot rows use member payment amounts, while other roles use raw
- * billing-account line-item amounts.
+ * @remarks Copilot rows use member payment amounts without exposing markup.
+ * Other roles use the member payment amount derived from billing markup and
+ * show the fee separately.
  */
 function formatLineItemAmount(item: BillingAccountModalLineItem): string {
     return item.displayAmount === undefined
@@ -140,37 +200,142 @@ function formatLineItemAmount(item: BillingAccountModalLineItem): string {
 }
 
 /**
+ * Formats the line-item challenge fee for the manager/admin fee column.
+ *
+ * @param item Line item already mapped for the current caller role.
+ * @returns Formatted currency, or `-` when the fee cannot be calculated.
+ * @remarks Copilot rows do not receive fee values because markup is hidden for
+ * that role.
+ */
+function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
+    return item.challengeFeeAmount === undefined
+        ? '-'
+        : formatCurrency(item.challengeFeeAmount)
+}
+
+/**
+ * Resolves the member-payment amount that should be visible in the row.
+ *
+ * @param item Raw locked or consumed billing-account line item.
+ * @param billingAccountDetails Billing account detail payload containing markup when available.
+ * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
+ * @returns Member payment amount, or `undefined` for copilot rows when it cannot
+ * be safely calculated.
+ * @remarks Non-copilot rows fall back to the raw amount if markup is missing so
+ * legacy billing-account payloads keep rendering an amount.
+ */
+function getLineItemMemberPaymentAmount(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+    showMemberPaymentsRemaining: boolean | undefined,
+): number | undefined {
+    const memberPaymentAmount = item.memberPaymentAmount
+        ?? calculateMemberPaymentAmount(
+            item.amount,
+            billingAccountDetails.markup,
+        )
+
+    return memberPaymentAmount !== undefined || showMemberPaymentsRemaining
+        ? memberPaymentAmount
+        : item.amount
+}
+
+/**
  * Builds the modal row model with the amount that should be visible to the caller.
  *
  * @param item Raw locked or consumed billing-account line item.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
- * @returns A line item with `displayAmount` set to the visible amount for the caller.
+ * @returns A line item with `displayAmount` set to the visible member-payment
+ * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
  * @remarks Copilot rows prefer the API-provided member payment amount because
- * their response intentionally omits markup. When markup is still available,
- * the UI can derive the same value. The raw amount remains available for stable
- * ids and source data, but rendering and sorting use `displayAmount`.
+ * their response intentionally omits markup. Non-copilot rows derive member
+ * payments from the raw amount and billing-account markup, then render the fee
+ * in its own column.
  */
 function getDisplayLineItem(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
     showMemberPaymentsRemaining: boolean | undefined,
 ): BillingAccountModalLineItem {
-    if (!showMemberPaymentsRemaining) {
-        return {
-            ...item,
-            displayAmount: item.amount,
-        }
-    }
+    const displayAmount = getLineItemMemberPaymentAmount(
+        item,
+        billingAccountDetails,
+        showMemberPaymentsRemaining,
+    )
+    const challengeFeeAmount = showMemberPaymentsRemaining
+        ? undefined
+        : calculatePaymentChallengeFee(displayAmount, billingAccountDetails.markup)
 
     return {
         ...item,
-        displayAmount: item.memberPaymentAmount
-            ?? calculateMemberPaymentAmount(
-                item.amount,
-                billingAccountDetails.markup,
-            ),
+        challengeFeeAmount: challengeFeeAmount !== undefined && challengeFeeAmount >= 0
+            ? challengeFeeAmount
+            : undefined,
+        displayAmount,
     }
+}
+
+/**
+ * Builds a lookup from engagement assignment ids to their parent engagement ids.
+ *
+ * @param engagements Engagements fetched for the current project.
+ * @returns Map keyed by assignment id with engagement id values.
+ * @remarks Billing-account engagement rows store assignment ids, while the
+ * work-app engagement route needs the parent engagement id.
+ */
+function buildEngagementIdsByAssignmentId(engagements: Engagement[]): Map<string, string> {
+    return engagements.reduce((assignmentMap, engagement) => {
+        const engagementId = normalizeRouteId(engagement.id)
+
+        if (!engagementId) {
+            return assignmentMap
+        }
+
+        engagement.assignments.forEach(assignment => {
+            const assignmentId = normalizeRouteId(assignment.id)
+
+            if (assignmentId) {
+                assignmentMap.set(assignmentId, engagementId)
+            }
+        })
+
+        return assignmentMap
+    }, new Map<string, string>())
+}
+
+/**
+ * Resolves the link target for a modal line item name.
+ *
+ * @param item Line item rendered in the billing-account details modal.
+ * @param projectId Project id used for project-scoped engagement routes.
+ * @param engagementIdsByAssignmentId Lookup from engagement assignment ids to engagement ids.
+ * @returns Work-app URL path, or `undefined` when the row cannot be linked safely.
+ * @remarks Challenge rows link directly by external id. Engagement rows first
+ * use an explicit `engagementId` when provided, then fall back to the assignment
+ * lookup because current billing-account rows are assignment-keyed.
+ */
+function getLineItemUrl(
+    item: BillingAccountModalLineItem,
+    projectId: string | undefined,
+    engagementIdsByAssignmentId: Map<string, string>,
+): string | undefined {
+    const externalId = normalizeRouteId(item.externalId)
+
+    if (item.externalType === 'CHALLENGE' && externalId) {
+        return buildChallengeUrl(externalId)
+    }
+
+    if (item.externalType !== 'ENGAGEMENT' || !projectId) {
+        return undefined
+    }
+
+    const engagementId = normalizeRouteId(item.engagementId)
+        || (externalId ? engagementIdsByAssignmentId.get(externalId) : undefined)
+
+    return engagementId
+        ? buildEngagementUrl(projectId, engagementId)
+        : undefined
 }
 
 export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps> = (
@@ -188,6 +353,26 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
             )),
         [props.billingAccountDetails, props.showMemberPaymentsRemaining],
     )
+    const normalizedProjectId = useMemo(
+        () => normalizeRouteId(props.projectId),
+        [props.projectId],
+    )
+    const hasEngagementLineItems = useMemo(
+        () => lineItems.some(item => item.externalType === 'ENGAGEMENT' && !!item.externalId),
+        [lineItems],
+    )
+    const showChallengeFeeColumn = !props.showMemberPaymentsRemaining
+    const engagementResult = useFetchEngagements(
+        normalizedProjectId,
+        EMPTY_ENGAGEMENT_FILTERS,
+        {
+            enabled: showChallengeFeeColumn && !!normalizedProjectId && hasEngagementLineItems,
+        },
+    )
+    const engagementIdsByAssignmentId = useMemo(
+        () => buildEngagementIdsByAssignmentId(engagementResult.engagements),
+        [engagementResult.engagements],
+    )
 
     const sortedLineItems = useMemo<BillingAccountModalLineItem[]>(
         () => sortLineItems(lineItems, sortBy, sortOrder),
@@ -202,6 +387,9 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         ? styles[`budget${copilotBudgetInfo.status.charAt(0)
             .toUpperCase()}${copilotBudgetInfo.status.slice(1)}`]
         : ''
+    const tableClassName = showChallengeFeeColumn
+        ? styles.table
+        : `${styles.table} ${styles.tableWithoutFee}`
 
     const handleContainerClick = useCallback(
         (event: MouseEvent<HTMLDivElement>): void => {
@@ -317,7 +505,7 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                             No line items found for this billing account.
                         </div>
                     ) : (
-                        <table className={styles.table}>
+                        <table className={tableClassName}>
                             <thead>
                                 <tr>
                                     <th>
@@ -326,10 +514,13 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                                             onClick={handleSortAmount}
                                             type='button'
                                         >
-                                            Amount
+                                            Member Payments
                                             {renderSortIcon('amount')}
                                         </button>
                                     </th>
+                                    {showChallengeFeeColumn ? (
+                                        <th>Challenge Fee</th>
+                                    ) : undefined}
                                     <th>
                                         <button
                                             className={styles.sortButton}
@@ -357,13 +548,18 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                             <tbody>
                                 {sortedLineItems.map(item => {
                                     const displayName = item.externalName || '-'
-                                    const challengeUrl = item.externalType === 'CHALLENGE' && item.externalId
-                                        ? buildChallengeUrl(item.externalId)
-                                        : undefined
+                                    const lineItemUrl = getLineItemUrl(
+                                        item,
+                                        normalizedProjectId,
+                                        engagementIdsByAssignmentId,
+                                    )
 
                                     return (
                                         <tr key={item.id}>
                                             <td>{formatLineItemAmount(item)}</td>
+                                            {showChallengeFeeColumn ? (
+                                                <td>{formatLineItemChallengeFee(item)}</td>
+                                            ) : undefined}
                                             <td>
                                                 <span
                                                     className={
@@ -382,10 +578,10 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                                             </td>
                                             <td>{EXTERNAL_TYPE_LABELS[item.externalType]}</td>
                                             <td className={styles.nameCell}>
-                                                {challengeUrl ? (
+                                                {lineItemUrl ? (
                                                     <a
-                                                        className={styles.challengeLink}
-                                                        href={challengeUrl}
+                                                        className={styles.resourceLink}
+                                                        href={lineItemUrl}
                                                         rel='noreferrer noopener'
                                                         target='_blank'
                                                     >

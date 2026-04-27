@@ -298,6 +298,7 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
                     <BillingAccountLineItemsModal
                         billingAccountDetails={billingAccountDetailsResult.billingAccountDetails}
                         onClose={handleCloseModal}
+                        projectId={props.project.id}
                         showMemberPaymentsRemaining={props.showMemberPaymentsRemaining}
                     />
                 )

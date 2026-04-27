@@ -267,6 +267,13 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
                 })
             } catch (error) {
                 if (latestRequestKeyRef.current === requestKey) {
+                    setActiveReviews([])
+                    setPagination({
+                        page: mergedParams.page,
+                        perPage: mergedParams.perPage,
+                        totalCount: 0,
+                        totalPages: 1,
+                    })
                     handleError(error)
                 }
             } finally {
