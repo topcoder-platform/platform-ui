@@ -48,6 +48,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Autosave is implemented via `useAutosave`.
 - Delay defaults to `AUTOSAVE_DELAY_MS` (10s).
 - Autosave runs when form is dirty and valid, except in read-only view mode.
+- Autosave keeps the current editor values in place after patch responses so in-flight typing is
+  not replaced by challenge-api normalized content.
 - Status values: `idle`, `saving`, `saved`, `error`.
 - Last save time is shown in the footer.
 
@@ -63,8 +65,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the final-deliverables, stock-art, and submission-visibility controls.
 - `FinalDeliverablesField`: design-challenge file-type editor that persists the legacy `fileTypes` metadata payload used on challenge draft pages.
 - `MaximumSubmissionsField`: non-visual compatibility field that rewrites the legacy `submissionLimit` metadata to the unlimited-only payload so design challenges no longer expose submission-cap controls. It defers dirtying that automatic normalization until the editor finishes its initial resource hydration, which preserves copilot restoration before autosave/manual-save starts treating the metadata rewrite as a user change.
-- `ChallengeDescriptionField`: public markdown spec editor.
-- `ChallengePrivateDescriptionField`: optional private markdown spec editor.
+- `ChallengeDescriptionField`: public markdown spec editor with a vertically resizable editing area.
+- `ChallengePrivateDescriptionField`: optional private markdown spec editor with a vertically resizable editing area.
 - `TermsField`: advanced-option multi-select for challenge terms. The create route seeds the standard Topcoder terms entry automatically once the terms list loads, including immediately after the first draft-creation step assigns a challenge id, so the editor matches legacy work-manager defaults while still allowing the NDA toggle to add or remove the NDA term separately.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
