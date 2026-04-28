@@ -45,8 +45,8 @@ export const TalentSearchPage: FC = () => {
     const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
     const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(true)
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
-    const [onlyActive, setOnlyActive] = useState<boolean>(false)
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
+    const [onlyActive, setOnlyActive] = useState<boolean>(true)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
@@ -258,8 +258,8 @@ export const TalentSearchPage: FC = () => {
         searchGenerationRef.current += 1
         setSelectedCountries([])
         setOnlyProfileComplete(true)
-        setOnlyOpenToWork(false)
-        setOnlyActive(false)
+        setOnlyOpenToWork(true)
+        setOnlyActive(true)
         setSortBy('alphabetical')
         setSelectedSkills([])
         setHasSearched(true)
@@ -269,10 +269,10 @@ export const TalentSearchPage: FC = () => {
         runMemberSearch([], {
             countries: [],
             generation: searchGenerationRef.current,
-            openToWork: false,
+            openToWork: true,
             page: 1,
             profileComplete: true,
-            recentlyActive: false,
+            recentlyActive: true,
         })
     }, [runMemberSearch])
 
