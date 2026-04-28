@@ -64,6 +64,31 @@
     margin-top: 16px;
 }
 
+.sections {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: 16px;
+}
+
+.assignmentSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sectionTitle {
+    margin: 0;
+    color: $black-100;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+}
+
+.sectionGrid {
+    @include gridColumns(3, 2, 1);
+}
+
 .pagination {
     display: flex;
     justify-content: center;
