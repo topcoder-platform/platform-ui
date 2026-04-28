@@ -16,12 +16,16 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import {
     useFetchChallenge,
+    useFetchProject,
     useFetchResourceRoles,
     useFetchResources,
     type UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import { deleteChallenge } from '../../../lib/services'
-import { isChallengeCompletedOrCancelled } from '../../../lib/utils'
+import {
+    checkProjectAccess,
+    isChallengeCompletedOrCancelled,
+} from '../../../lib/utils'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -156,6 +160,7 @@ jest.mock('../../../lib/contexts', () => {
 })
 jest.mock('../../../lib/hooks', () => ({
     useFetchChallenge: jest.fn(),
+    useFetchProject: jest.fn(),
     useFetchResourceRoles: jest.fn(() => ({
         resourceRoles: [],
     })),
@@ -169,6 +174,7 @@ jest.mock('../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    checkProjectAccess: jest.fn(() => true),
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
     isChallengeCompletedOrCancelled: jest.fn(),
@@ -241,9 +247,11 @@ jest.mock('./ChallengeEditorPage.utils', () => ({
 }))
 
 const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
+const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedCheckProjectAccess = checkProjectAccess as jest.Mock
 const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
@@ -301,12 +309,26 @@ describe('ChallengeEditorPage', () => {
                 id: '456',
                 name: 'Edit test',
                 prizeSets: [],
+                projectId: '123',
                 status: 'DRAFT',
             },
             error: undefined,
             isLoading: false,
             mutate: jest.fn(),
         })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 12345,
+                }],
+                name: 'Allowed Project',
+                status: 'active',
+            },
+        })
+        mockedCheckProjectAccess.mockReturnValue(true)
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [],
         })
@@ -413,6 +435,76 @@ describe('ChallengeEditorPage', () => {
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+    })
+
+    it('blocks project-scoped challenge views when project access is denied', async () => {
+        mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 99999,
+                }],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+                .toBeTruthy()
+        })
+
+        expect(mockedUseFetchChallenge)
+            .toHaveBeenCalledWith(undefined)
+        expect(screen.queryByText('Challenge View Form'))
+            .toBeNull()
+        expect(screen.queryByRole('heading', { name: 'View Edit test' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+    })
+
+    it('blocks unscoped challenge views after resolving the challenge project', async () => {
+        mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 99999,
+                }],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/challenges/456/view',
+            '/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+                .toBeTruthy()
+        })
+
+        expect(mockedUseFetchChallenge)
+            .toHaveBeenCalledWith('456')
+        expect(mockedUseFetchProject)
+            .toHaveBeenCalledWith('123')
+        expect(screen.queryByText('Challenge View Form'))
+            .toBeNull()
+        expect(screen.queryByRole('heading', { name: 'View Edit test' }))
+            .toBeNull()
     })
 
     it('treats trailing-slash view routes as read-only mode', async () => {
