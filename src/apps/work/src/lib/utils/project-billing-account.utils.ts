@@ -1,6 +1,6 @@
 import type { ProjectBillingAccount } from '../services'
 
-type ProjectBillingAccountChallengeIssue = 'expired' | 'inactive' | 'insufficient-funds'
+type ProjectBillingAccountChallengeIssue = 'expired' | 'inactive' | 'insufficient-funds' | 'missing'
 export type BillingAccountBudgetStatus = 'healthy' | 'warning' | 'critical'
 
 export interface BillingAccountBudgetSource {
@@ -301,13 +301,19 @@ function isBillingAccountExpired(
  * Resolves whether a project billing account should block challenge launch actions.
  *
  * @param billingAccount Project billing-account payload resolved in the work app.
+ * @param requiresBillingAccount Whether a missing billing account should block the action.
  * @returns The blocking reason, or `undefined` when the billing account can be used.
  * @remarks Used by the challenge editor and project billing notices so the work app
  * matches the legacy launch restriction for inactive, expired, and depleted billing accounts.
  */
 export function getProjectBillingAccountChallengeIssue(
     billingAccount: ProjectBillingAccount | undefined,
+    requiresBillingAccount: boolean = false,
 ): ProjectBillingAccountChallengeIssue | undefined {
+    if (!billingAccount && requiresBillingAccount) {
+        return 'missing'
+    }
+
     const active = resolveBillingAccountActive(billingAccount)
 
     if (active === false) {
@@ -338,6 +344,8 @@ export function getProjectBillingAccountNoticeMessage(
     issue: ProjectBillingAccountChallengeIssue,
 ): string {
     switch (issue) {
+        case 'missing':
+            return 'This project does not have a billing account.'
         case 'inactive':
             return 'The billing account for this project is inactive.'
         case 'expired':
@@ -361,6 +369,8 @@ export function getProjectBillingAccountChallengeErrorMessage(
     issue: ProjectBillingAccountChallengeIssue,
 ): string {
     switch (issue) {
+        case 'missing':
+            return 'Cannot launch challenges because this project does not have a billing account.'
         case 'inactive':
             return 'Cannot launch challenges because the project billing account is inactive.'
         case 'expired':

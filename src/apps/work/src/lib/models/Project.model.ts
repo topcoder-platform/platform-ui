@@ -54,7 +54,7 @@ export interface CreateProjectPayload {
 export interface UpdateProjectPayload {
     name: string
     description: string
-    billingAccountId?: number | string
+    billingAccountId?: null | number | string
     details?: ProjectDetails
     status?: ProjectStatus
     cancelReason?: string

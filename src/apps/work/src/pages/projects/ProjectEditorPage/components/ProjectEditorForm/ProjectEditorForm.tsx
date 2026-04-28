@@ -393,7 +393,8 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 }
 
                 const payload: UpdateProjectPayload = {
-                    billingAccountId: normalizedBillingAccountId || '',
+                    // eslint-disable-next-line unicorn/no-null
+                    billingAccountId: normalizedBillingAccountId || null,
                     description: formData.description,
                     details: {
                         ...(props.projectDetail.details || {}),

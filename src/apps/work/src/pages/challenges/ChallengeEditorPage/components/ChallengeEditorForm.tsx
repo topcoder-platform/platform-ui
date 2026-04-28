@@ -2731,7 +2731,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             try {
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const projectBillingAccountIssue = isChallengeBeingActivated
-                    ? getProjectBillingAccountChallengeIssue(resolvedProjectBillingAccount)
+                    ? getProjectBillingAccountChallengeIssue(
+                        resolvedProjectBillingAccount,
+                        !!fallbackProjectId,
+                    )
                     : undefined
                 const projectBillingAccountErrorMessage = projectBillingAccountIssue
                     ? getProjectBillingAccountChallengeErrorMessage(projectBillingAccountIssue)

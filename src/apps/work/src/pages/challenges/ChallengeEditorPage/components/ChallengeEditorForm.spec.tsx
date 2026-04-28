@@ -1617,6 +1617,14 @@ describe('ChallengeEditorForm', () => {
     it('returns to view mode after launching from an edit route', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
         mockedPatchChallenge.mockResolvedValue({
             ...validDraftChallenge,
             status: 'ACTIVE',
@@ -2731,6 +2739,89 @@ describe('ChallengeEditorForm', () => {
         expect(mockedShowErrorToast)
             .toHaveBeenCalledWith(
                 'Cannot launch challenges because the project billing account is inactive.',
+            )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks launch with a clear reason when the project has no billing account', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    projectId='100578'
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because this project does not have a billing account.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Cannot launch challenges because this project does not have a billing account.',
             )
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith('Failed to save challenge')
