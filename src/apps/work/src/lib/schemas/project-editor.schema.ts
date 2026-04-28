@@ -21,7 +21,7 @@ export function createProjectEditorSchema(
         .object({
             billingAccountId: yup
                 .string()
-                .required('Billing account is required'),
+                .optional(),
             cancelReason: yup
                 .string()
                 .when('status', {

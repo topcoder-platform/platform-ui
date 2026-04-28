@@ -513,7 +513,6 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             name='billingAccountId'
                             placeholder='Search billing account by name'
                             projectId={projectId}
-                            required
                             selectedBillingAccount={selectedBillingAccount}
                             userId={props.billingAccountSearchUserId}
                         />
