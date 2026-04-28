@@ -3128,8 +3128,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 <section className={styles.section}>
                                     <h3 className={styles.sectionTitle}>Specification</h3>
                                     <div className={styles.block}>
-                                        <ChallengeDescriptionField />
-                                        <ChallengePrivateDescriptionField />
+                                        <ChallengeDescriptionField readOnly={isReadOnly} />
+                                        <ChallengePrivateDescriptionField readOnly={isReadOnly} />
                                     </div>
                                 </section>
 

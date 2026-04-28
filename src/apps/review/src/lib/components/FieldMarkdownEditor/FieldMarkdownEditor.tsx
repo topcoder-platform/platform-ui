@@ -51,6 +51,7 @@ interface Props {
     maxCharactersAllowed?: number
     textareaId?: string
     ariaLabel?: string
+    readOnly?: boolean
 }
 const errorMessages = {
     fileTooLarge:
@@ -156,6 +157,7 @@ type CodeMirrorType = keyof typeof stateStrategy | 'variable-2'
 export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     const elementRef = useRef<HTMLTextAreaElement>(null)
     const easyMDE = useRef<any>(null)
+    const isReadOnly = !!props.disabled || !!props.readOnly
     const [remainingCharacters, setRemainingCharacters] = useState(
         (props.maxCharactersAllowed || 0) - (props.initialValue?.length || 0),
     )
@@ -527,6 +529,10 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
      * Upload image
      */
     const customUploadImage = useCallback(async (file: File) => {
+        if (isReadOnly) {
+            return
+        }
+
         const editor = easyMDE.current
         if (!editor) {
             return
@@ -647,6 +653,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         afterFileUploaded,
         beforeUploadingFile,
         challengeId,
+        isReadOnly,
         resetFileInput,
         uploadAttachment,
         uploadCategory,
@@ -834,7 +841,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                     title: 'Quote',
                 },
             ],
-            uploadImage: true,
+            uploadImage: !isReadOnly,
         })
 
         easyMDE.current.codemirror.on('beforeChange', (cm: CodeMirror.Editor, change: EditorChangeCancellable) => {
@@ -873,6 +880,16 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             return
         }
 
+        easyMDE.current.codemirror.setOption('readOnly', isReadOnly
+            ? 'nocursor'
+            : false)
+    }, [isReadOnly])
+
+    useEffect(() => {
+        if (!easyMDE.current) {
+            return
+        }
+
         const incomingValue = props.initialValue ?? ''
         const editorValue = easyMDE.current.value()
 
@@ -886,6 +903,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             className={classNames(styles.container, props.className, {
                 [styles.isError]: !!props.error,
                 [styles.disabled]: !!props.disabled,
+                [styles.readOnly]: !!props.readOnly,
                 [styles.showBorder]: !!props.showBorder,
             })}
         >
