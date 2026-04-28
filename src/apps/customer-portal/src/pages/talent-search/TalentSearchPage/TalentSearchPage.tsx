@@ -44,6 +44,7 @@ export const TalentSearchPage: FC = () => {
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
+    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(true)
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
     const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
@@ -156,6 +157,7 @@ export const TalentSearchPage: FC = () => {
             generation?: number
             openToWork?: boolean
             page?: number
+            profileComplete?: boolean
             recentlyActive?: boolean
         },
     ): Promise<boolean> => {
@@ -165,6 +167,7 @@ export const TalentSearchPage: FC = () => {
         const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
+        const profileComplete = overrides?.profileComplete ?? onlyProfileComplete
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
         const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
@@ -189,6 +192,10 @@ export const TalentSearchPage: FC = () => {
 
         if (openToWork) {
             payload.openToWork = true
+        }
+
+        if (profileComplete) {
+            payload.profileComplete = true
         }
 
         if (recentlyActive) {
@@ -245,11 +252,12 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, selectedCountryCodesList])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
         searchGenerationRef.current += 1
         setSelectedCountries([])
+        setOnlyProfileComplete(true)
         setOnlyOpenToWork(false)
         setOnlyActive(false)
         setSortBy('alphabetical')
@@ -263,6 +271,7 @@ export const TalentSearchPage: FC = () => {
             generation: searchGenerationRef.current,
             openToWork: false,
             page: 1,
+            profileComplete: true,
             recentlyActive: false,
         })
     }, [runMemberSearch])
@@ -463,6 +472,18 @@ export const TalentSearchPage: FC = () => {
                                     placeholder='Select country'
                                 />
                             </div>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile complete</span>
+                            </label>
                             <label className={styles.checkboxRow}>
                                 <input
                                     type='checkbox'
