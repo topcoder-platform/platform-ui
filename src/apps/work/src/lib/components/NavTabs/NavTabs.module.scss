@@ -74,12 +74,7 @@
             li {
                 font-family: 'Nunito Sans', sans-serif;
                 margin-left: $sp-8;
-                cursor: pointer;
                 color: var(--FontColor);
-                line-height: 32px;
-                display: flex;
-                align-items: center;
-                gap: $sp-2;
 
                 &.active {
                     font-weight: 700;
@@ -125,6 +120,17 @@
             }
         }
     }
+}
+
+.tabLink {
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    line-height: 32px;
+    text-decoration: none;
+    width: 100%;
 }
 
 .tabLabel {
