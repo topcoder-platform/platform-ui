@@ -1482,6 +1482,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         !!props.challenge?.id,
     )
     const isInitialResourceHydrationPendingRef = useRef<boolean>(!!props.challenge?.id)
+    /**
+     * Keeps React state and the async hydration guard in sync.
+     *
+     * Challenge details can arrive after the first empty render during a full browser refresh. The
+     * resource-hydration promise may resolve before React flushes the state update, so the ref must
+     * be updated synchronously anywhere the pending flag changes.
+     *
+     * @param isPending whether the initial resource-backed assignment hydration is still running.
+     * @returns nothing.
+     * @throws Does not throw.
+     */
+    const setInitialResourceHydrationPending = useCallback((isPending: boolean): void => {
+        isInitialResourceHydrationPendingRef.current = isPending
+        setIsInitialResourceHydrationPending(isPending)
+    }, [])
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
@@ -1704,6 +1719,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+    const shouldDeferInitialResourceDirtyNormalization = isInitialResourceHydrationPending
+        || (!!props.challenge?.id && props.challenge.id !== currentChallengeId)
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
@@ -2064,12 +2081,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
-        setIsInitialResourceHydrationPending(!!challengeId)
+        setInitialResourceHydrationPending(!!challengeId)
 
         reset(baseFormData)
 
         if (!challengeId) {
-            setIsInitialResourceHydrationPending(false)
+            setInitialResourceHydrationPending(false)
 
             return () => {
                 isActive = false
@@ -2119,14 +2136,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             })
             .finally(() => {
                 if (isActive) {
-                    setIsInitialResourceHydrationPending(false)
+                    setInitialResourceHydrationPending(false)
                 }
             })
 
         return () => {
             isActive = false
         }
-    }, [reset])
+    }, [
+        reset,
+        setInitialResourceHydrationPending,
+    ])
 
     useEffect(() => {
         if (!onSavingChange) {
@@ -2150,10 +2170,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         currentChallengeIdRef.current = currentChallengeId
     }, [currentChallengeId])
-
-    useEffect(() => {
-        isInitialResourceHydrationPendingRef.current = isInitialResourceHydrationPending
-    }, [isInitialResourceHydrationPending])
 
     useEffect(() => {
         projectBillingAccountRef.current = projectBillingAccount
@@ -3279,7 +3295,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 <StockArtsField />
                                                 <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField
-                                                    deferDirty={isInitialResourceHydrationPending}
+                                                    deferDirty={shouldDeferInitialResourceDirtyNormalization}
                                                 />
                                             </div>
                                         </section>
