@@ -97,6 +97,7 @@ jest.mock('../../../../lib/utils', () => ({
         copilot: typeof challenge?.copilot === 'string'
             ? challenge.copilot
             : undefined,
+        createdBy: challenge?.createdBy,
         description: challenge?.description || '',
         discussionForum: challenge?.discussionForum,
         funChallenge: challenge?.funChallenge === true,
@@ -794,7 +795,7 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('renders the billing account id inside advanced options when project billing is available', () => {
+    it('renders billing metadata inside prizes and billing when project billing is available', () => {
         mockedUseFetchProjectBillingAccount.mockReturnValue({
             billingAccount: {
                 id: '80001063',
@@ -804,17 +805,30 @@ describe('ChallengeEditorForm', () => {
 
         render(
             <MemoryRouter>
-                <ChallengeEditorForm challenge={draftChallenge} />
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        createdBy: 'challenge.creator',
+                    }}
+                />
             </MemoryRouter>,
         )
 
         const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
             .closest('section')
+        const prizesBillingSection = screen.getByRole('heading', { name: 'Prizes & Billing' })
+            .closest('section')
 
-        expect(advancedOptionsSection)
+        expect(prizesBillingSection)
             .toHaveTextContent('Billing Account Id')
-        expect(advancedOptionsSection)
+        expect(prizesBillingSection)
             .toHaveTextContent('80001063')
+        expect(prizesBillingSection)
+            .toHaveTextContent('Payment Creator')
+        expect(prizesBillingSection)
+            .toHaveTextContent('challenge.creator')
+        expect(advancedOptionsSection)
+            .not.toHaveTextContent('Billing Account Id')
     })
 
     it('hides the editable timeline section for task challenges in edit mode', () => {

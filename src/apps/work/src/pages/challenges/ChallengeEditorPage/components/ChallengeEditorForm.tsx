@@ -2990,6 +2990,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.billing?.billingAccountId,
         ],
     )
+    const displayedPaymentCreator = useMemo(
+        (): string => normalizeTextValue(values.createdBy)
+            || normalizeTextValue(props.challenge?.createdBy)
+            || '-',
+        [
+            props.challenge?.createdBy,
+            values.createdBy,
+        ],
+    )
     const reviewSection = usesManualReviewers
         ? (
             <section className={styles.section}>
@@ -3180,6 +3189,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                             ? 'Estimated challenge cost:'
                                                             : undefined}
                                                     />
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Billing Account Id:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedBillingAccountId}
+                                                        </span>
+                                                    </div>
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Payment Creator:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedPaymentCreator}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </section>
@@ -3242,12 +3267,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />
-                                        <div className={styles.readOnlyField}>
-                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
-                                            <span className={styles.readOnlyFieldValue}>
-                                                {displayedBillingAccountId}
-                                            </span>
-                                        </div>
                                     </div>
                                 </section>
 
