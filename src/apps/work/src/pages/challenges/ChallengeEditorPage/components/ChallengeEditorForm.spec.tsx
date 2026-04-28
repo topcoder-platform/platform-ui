@@ -252,7 +252,14 @@ jest.mock('./AttachmentsField', () => {
     }
 })
 jest.mock('./ChallengeDescriptionField', () => ({
-    ChallengeDescriptionField: () => <></>,
+    ChallengeDescriptionField: (props: {
+        readOnly?: boolean
+    }) => (
+        <div
+            data-read-only={props.readOnly === true ? 'true' : 'false'}
+            data-testid='challenge-description-field'
+        />
+    ),
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: function ChallengeScheduleSection(props: {
@@ -359,7 +366,14 @@ jest.mock('./ChallengeNameField', () => {
     }
 })
 jest.mock('./ChallengePrivateDescriptionField', () => ({
-    ChallengePrivateDescriptionField: () => <></>,
+    ChallengePrivateDescriptionField: (props: {
+        readOnly?: boolean
+    }) => (
+        <div
+            data-read-only={props.readOnly === true ? 'true' : 'false'}
+            data-testid='challenge-private-description-field'
+        />
+    ),
 }))
 jest.mock('./ChallengePrizesField', () => ({
     ChallengePrizesField: () => <></>,
@@ -1014,6 +1028,10 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('challenge-schedule-section')
             .closest('fieldset[disabled]'))
             .toBeNull()
+        expect(screen.getByTestId('challenge-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.getByTestId('challenge-private-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
         expect(screen.queryByRole('button', { name: 'Cancel' }))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Save Challenge' }))

@@ -15,8 +15,12 @@ jest.mock('../../../../lib/components/form', () => ({
     FormMarkdownEditor: (props: {
         label: string
         name: string
+        readOnly?: boolean
     }) => (
-        <div data-testid={props.name}>
+        <div
+            data-read-only={props.readOnly === true ? 'true' : 'false'}
+            data-testid={props.name}
+        >
             {props.label}
         </div>
     ),
@@ -40,6 +44,7 @@ jest.mock('~/libs/ui', () => ({
 
 interface TestHarnessProps {
     privateDescription?: string
+    readOnly?: boolean
 }
 
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
@@ -57,7 +62,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 
     return (
         <FormProvider {...formMethods}>
-            <ChallengePrivateDescriptionField />
+            <ChallengePrivateDescriptionField readOnly={props.readOnly} />
         </FormProvider>
     )
 }
@@ -95,5 +100,14 @@ describe('ChallengePrivateDescriptionField', () => {
             .not.toBeInTheDocument()
         expect(screen.getByTestId('privateDescription'))
             .toHaveTextContent('Private Specification')
+    })
+
+    it('passes read-only mode to the private specification editor', () => {
+        render(
+            <TestHarness privateDescription='Private specification' readOnly />,
+        )
+
+        expect(screen.getByTestId('privateDescription'))
+            .toHaveAttribute('data-read-only', 'true')
     })
 })

@@ -17,6 +17,15 @@
 
     &[disabled] {
         pointer-events: none;
+
+        :global(.EasyMDEContainer) {
+            pointer-events: auto;
+        }
+
+        :global(.EasyMDEContainer .editor-statusbar),
+        :global(.EasyMDEContainer .editor-toolbar) {
+            pointer-events: none;
+        }
     }
 }
 
