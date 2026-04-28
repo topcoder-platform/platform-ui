@@ -23,6 +23,7 @@ import {
     Project,
     ProjectAttachment,
     ProjectAttachmentPayload,
+    ProjectDetails,
     ProjectInvite,
     ProjectMember,
     ProjectPhase,
@@ -44,6 +45,7 @@ export type ProjectSummary = Pick<Project,
     | 'billingAccountId'
     | 'billingAccountName'
     | 'createdAt'
+    | 'details'
     | 'id'
     | 'invites'
     | 'isInvited'
@@ -189,6 +191,21 @@ function normalizeOptionalId(value: unknown): string | undefined {
     return normalizedValue || undefined
 }
 
+/**
+ * Normalizes project details metadata into the plain object shape consumed by
+ * the work app.
+ *
+ * @param value Raw `details` payload from the Projects API.
+ * @returns Project details metadata, or `undefined` when the payload is not an object.
+ */
+function normalizeProjectDetails(value: unknown): ProjectDetails | undefined {
+    if (typeof value !== 'object' || !value || Array.isArray(value)) {
+        return undefined
+    }
+
+    return value as ProjectDetails
+}
+
 function normalizeProjectMember(member: unknown): ProjectMember | undefined {
     if (typeof member !== 'object' || !member) {
         return undefined
@@ -310,6 +327,7 @@ function normalizeProject(project: Partial<Project>): Project {
         description: typeof project.description === 'string'
             ? project.description
             : undefined,
+        details: normalizeProjectDetails(project.details),
         groups: normalizeProjectTermsOrGroups(project.groups),
         id,
         invites,
@@ -532,6 +550,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
 
     return {
         ...project,
+        details: normalizeProjectDetails(project.details),
         invites,
         isInvited: normalizeOptionalBoolean(project.isInvited),
         members,

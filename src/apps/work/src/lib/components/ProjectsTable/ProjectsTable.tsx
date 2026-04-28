@@ -144,10 +144,32 @@ function formatCurrency(amount: number, includeCents: boolean = false): string {
         .format(amount)
 }
 
-function canShowMemberPaymentsRemaining(workAppContext: WorkAppContextModel): boolean {
+/**
+ * Identifies copilot-only users whose project payment details are controlled
+ * by the project-level display flag.
+ *
+ * @param workAppContext Current work app user context.
+ * @returns `true` when the user is a copilot without admin or manager access.
+ */
+function isRestrictedCopilot(workAppContext: WorkAppContextModel): boolean {
     return workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
+}
+
+/**
+ * Resolves whether the current user may see payment details for one project row.
+ *
+ * @param workAppContext Current work app user context.
+ * @param project Project row being rendered.
+ * @returns `true` when payment amounts and the line-item modal may be shown.
+ */
+function canShowProjectPaymentDetails(
+    workAppContext: WorkAppContextModel,
+    project: Project,
+): boolean {
+    return !isRestrictedCopilot(workAppContext)
+        || project.details?.displayMemberPaymentDetailsToCopilots === true
 }
 
 function getBudgetStatusClass(
@@ -220,6 +242,7 @@ function getBillingAccountDisplay(
 interface ProjectBillingAccountCellProps {
     billingAccount: BillingAccount | undefined
     project: Project
+    showPaymentDetails: boolean
     showMemberPaymentsRemaining: boolean
 }
 
@@ -238,9 +261,13 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        isModalOpen ? normalizedBillingAccountId : undefined,
+        isModalOpen && props.showPaymentDetails
+            ? normalizedBillingAccountId
+            : undefined,
     )
-    const standardBudgetInfo = getBillingAccountBudgetInfo(props.billingAccount)
+    const standardBudgetInfo = props.showPaymentDetails
+        ? getBillingAccountBudgetInfo(props.billingAccount)
+        : undefined
     const copilotBudgetInfo = props.showMemberPaymentsRemaining
         ? getCopilotMemberPaymentsBudgetInfo(props.billingAccount)
         : undefined
@@ -280,7 +307,7 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
                     </span>
                 )
                 : undefined}
-            {normalizedBillingAccountId
+            {normalizedBillingAccountId && props.showPaymentDetails
                 ? (
                     <button
                         aria-label='View billing account details'
@@ -315,7 +342,6 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
     const sortBy: string = props.sortBy
     const sortOrder: SortOrder = props.sortOrder
     const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
-    const showMemberPaymentsRemaining: boolean = canShowMemberPaymentsRemaining(workAppContext)
     const {
         billingAccounts,
     }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
@@ -368,7 +394,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                     <ProjectBillingAccountCell
                         billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                         project={project}
-                        showMemberPaymentsRemaining={showMemberPaymentsRemaining}
+                        showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
+                            && canShowProjectPaymentDetails(workAppContext, project)}
+                        showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
                     />
                 ),
                 type: 'element',
@@ -399,7 +427,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 type: 'action',
             },
         ],
-        [billingAccountsById, canEditProject, showMemberPaymentsRemaining],
+        [billingAccountsById, canEditProject, workAppContext],
     )
 
     const forceSort = useMemo<Sort>(
@@ -456,7 +484,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                             <ProjectBillingAccountCell
                                 billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                                 project={project}
-                                showMemberPaymentsRemaining={showMemberPaymentsRemaining}
+                                showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
+                                    && canShowProjectPaymentDetails(workAppContext, project)}
+                                showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
                             />
                         )}
                         canEdit={canEditProject(project)}

@@ -221,6 +221,7 @@ interface RenderBillingAccountNoticeParams {
     billingAccountId?: number | string
     billingAccountName?: string
     canManageProject: boolean
+    displayMemberPaymentDetailsToCopilots?: boolean
     projectId: string | undefined
 }
 
@@ -234,6 +235,7 @@ function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): J
             billingAccountId={params.billingAccountId}
             billingAccountName={params.billingAccountName}
             canManageProject={params.canManageProject}
+            displayMemberPaymentDetailsToCopilots={params.displayMemberPaymentDetailsToCopilots}
             projectId={params.projectId}
         />
     )
@@ -739,6 +741,8 @@ export const ChallengesListPage: FC = () => {
                 billingAccountId: projectResult.project?.billingAccountId,
                 billingAccountName: projectResult.project?.billingAccountName,
                 canManageProject,
+                displayMemberPaymentDetailsToCopilots:
+                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots,
                 projectId: projectIdFromRoute,
             })}
             {projectIdFromRoute

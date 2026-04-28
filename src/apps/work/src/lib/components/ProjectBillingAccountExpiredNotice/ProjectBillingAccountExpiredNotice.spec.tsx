@@ -72,7 +72,10 @@ const defaultContextValue: WorkAppContextModel = {
     userRoles: [],
 }
 
-function renderNotice(contextValue: WorkAppContextModel = defaultContextValue): void {
+function renderNotice(
+    contextValue: WorkAppContextModel = defaultContextValue,
+    displayMemberPaymentDetailsToCopilots: boolean = false,
+): void {
     render(
         <WorkAppContext.Provider value={contextValue}>
             <MemoryRouter>
@@ -80,6 +83,7 @@ function renderNotice(contextValue: WorkAppContextModel = defaultContextValue): 
                     billingAccountId={80001063}
                     billingAccountName='Test Project Engagement BA'
                     canManageProject
+                    displayMemberPaymentDetailsToCopilots={displayMemberPaymentDetailsToCopilots}
                     projectId='project-1'
                 />
             </MemoryRouter>
@@ -169,11 +173,42 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             ...defaultContextValue,
             isCopilot: true,
             userRoles: ['copilot'],
-        })
+        }, true)
 
         expect(screen.getByText('Member Payments Remaining: $200.00'))
             .toBeTruthy()
         expect(screen.queryByText('$750 / $1,000 spent'))
             .toBeNull()
+    })
+
+    it('hides member payment details and billing account modal access from copilots when disabled', () => {
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails: {
+                ...billingAccountDetails,
+                budget: 1000,
+                markup: 0.25,
+                totalBudgetRemaining: 250,
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderNotice({
+            ...defaultContextValue,
+            isCopilot: true,
+            userRoles: ['copilot'],
+        })
+
+        expect(screen.queryByText('Member Payments Remaining: $200.00'))
+            .toBeNull()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
+            name: 'View billing account details',
+        }))
+            .toBeNull()
+        expect(mockedUseFetchBillingAccountDetails)
+            .toHaveBeenCalledWith(undefined)
     })
 })
