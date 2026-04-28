@@ -268,6 +268,30 @@ export function checkProjectMembership(
 }
 
 /**
+ * Returns whether the caller can open project-scoped workspace pages.
+ *
+ * Admins can access every project. Other work-app users must be listed in the
+ * project's membership payload before project details or child records can be
+ * displayed.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project project whose access should be evaluated.
+ * @returns `true` when the caller may view the project workspace; otherwise `false`.
+ */
+export function checkProjectAccess(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    if (!project) {
+        return false
+    }
+
+    return hasAdminRole(userRoles) || checkProjectMembership(project, userId)
+}
+
+/**
  * Returns whether the caller can manage project ownership and billing flows.
  *
  * Admins always qualify. Copilots, Project Managers, and Talent Managers can
