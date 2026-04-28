@@ -366,7 +366,7 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         normalizedProjectId,
         EMPTY_ENGAGEMENT_FILTERS,
         {
-            enabled: showChallengeFeeColumn && !!normalizedProjectId && hasEngagementLineItems,
+            enabled: !!normalizedProjectId && hasEngagementLineItems,
         },
     )
     const engagementIdsByAssignmentId = useMemo(

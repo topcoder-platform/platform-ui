@@ -227,6 +227,81 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/projects/project%20200/engagements/engagement-300')
     })
 
+    it('builds engagement links from assignment-backed billing rows for copilot views', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    anticipatedStart: 'IMMEDIATE',
+                    assignedMemberHandles: [],
+                    assignments: [
+                        {
+                            agreementRate: '100',
+                            endDate: '2026-03-01T00:00:00.000Z',
+                            engagementId: 'engagement-300',
+                            id: 'assignment-300',
+                            memberHandle: 'member',
+                            memberId: 123,
+                            otherRemarks: '',
+                            startDate: '2026-02-01T00:00:00.000Z',
+                            status: 'ACTIVE',
+                            termsAccepted: true,
+                        },
+                    ],
+                    compensationRange: '$100',
+                    countries: [],
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                    description: 'Engagement description',
+                    durationWeeks: 4,
+                    id: 'engagement-300',
+                    isPrivate: false,
+                    projectId: 'project 200',
+                    requiredMemberCount: 1,
+                    role: 'SOFTWARE_DEVELOPER',
+                    skills: [],
+                    status: 'Active',
+                    timezones: [],
+                    title: 'Resolved Engagement',
+                    updatedAt: '2026-01-01T00:00:00.000Z',
+                    workload: 'FULL_TIME',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 1,
+                total: 1,
+                totalPages: 1,
+            },
+            mutate: jest.fn(),
+        })
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '120',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'assignment-300',
+                    externalName: 'Resolved Engagement',
+                    externalType: 'ENGAGEMENT',
+                    memberPaymentAmount: '100',
+                },
+            ],
+            consumedBudget: 120,
+            memberPaymentsRemaining: 500,
+            totalBudgetRemaining: 880,
+        }, true, 'project 200')
+
+        const engagementLink = screen.getByRole('link', {
+            name: 'Resolved Engagement',
+        })
+
+        expect(engagementLink.getAttribute('href'))
+            .toBe('/work/projects/project%20200/engagements/engagement-300')
+    })
+
     it('renders legacy-only challenge rows as plain text', () => {
         renderModal({
             ...baseBillingAccountDetails,
