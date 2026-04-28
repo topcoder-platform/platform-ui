@@ -54,28 +54,28 @@
     gap: 24px;
 }
 
-.readOnlyField {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.readOnlyFieldLabel {
-    color: $black-80;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-.readOnlyFieldValue {
-    color: $black-100;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
 .billingSummary {
     display: flex;
     flex-wrap: wrap;
     gap: 12px 28px;
+}
+
+.billingSummaryItem {
+    align-items: baseline;
+    color: $black-80;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.billingSummaryLabel {
+    color: $black-60;
+    font-weight: 500;
+}
+
+.billingSummaryValue {
+    font-weight: 700;
 }
 
 .prizesBillingGrid {
