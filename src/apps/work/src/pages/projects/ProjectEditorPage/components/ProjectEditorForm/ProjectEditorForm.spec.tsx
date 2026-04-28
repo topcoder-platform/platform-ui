@@ -187,7 +187,7 @@ describe('ProjectEditorForm', () => {
         })
     })
 
-    it('defaults the copilot payment details flag off and submits it when selected', async () => {
+    it('defaults the copilot payment details flag on for new projects and submits it', async () => {
         render(
             <MemoryRouter>
                 <ProjectEditorForm
@@ -206,7 +206,7 @@ describe('ProjectEditorForm', () => {
         ) as HTMLInputElement
 
         expect(displayPaymentDetailsCheckbox.checked)
-            .toBe(false)
+            .toBe(true)
 
         fireEvent.change(screen.getByLabelText('Project Name'), {
             target: {
@@ -223,8 +223,6 @@ describe('ProjectEditorForm', () => {
                 value: 'Project with visible copilot payment details.',
             },
         })
-        fireEvent.click(displayPaymentDetailsCheckbox)
-
         await waitFor(() => expect((screen.getByRole('button', {
             name: 'Save project',
         }) as HTMLButtonElement).disabled)

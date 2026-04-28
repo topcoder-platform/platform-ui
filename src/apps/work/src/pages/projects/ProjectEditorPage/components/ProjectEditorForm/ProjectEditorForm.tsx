@@ -97,8 +97,9 @@ function getDefaultFormValues(
         billingAccountId,
         cancelReason: projectDetail?.cancelReason || '',
         description: projectDetail?.description || '',
-        displayMemberPaymentDetailsToCopilots:
-            projectDetail?.details?.displayMemberPaymentDetailsToCopilots === true,
+        displayMemberPaymentDetailsToCopilots: isEdit
+            ? projectDetail?.details?.displayMemberPaymentDetailsToCopilots === true
+            : true,
         groups,
         name: projectDetail?.name || '',
         status: isEdit
