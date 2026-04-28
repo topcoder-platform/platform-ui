@@ -86,6 +86,7 @@ export const FormMarkdownEditor: FC<FormMarkdownEditorProps> = (props: FormMarkd
             <div className={styles.editor}>
                 <FieldMarkdownEditor
                     ariaLabel={label}
+                    className={styles.markdownEditor}
                     disabled={disabled}
                     error={fieldState.error?.message}
                     hideErrorMessage

@@ -2785,7 +2785,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setLastSaved(savedAt)
                 setSaveStatus('saved')
 
-                reset(nextValues)
+                // Autosave should advance the saved baseline without replacing inputs users may still be editing.
+                reset(
+                    options.isAutosave
+                        ? formDataWithProjectBilling
+                        : nextValues,
+                    options.isAutosave
+                        ? { keepValues: true }
+                        : undefined,
+                )
                 onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {

@@ -254,14 +254,33 @@ jest.mock('./AttachmentsField', () => {
     }
 })
 jest.mock('./ChallengeDescriptionField', () => ({
-    ChallengeDescriptionField: (props: {
+    ChallengeDescriptionField: function ChallengeDescriptionField(props: {
         readOnly?: boolean
-    }) => (
-        <div
-            data-read-only={props.readOnly === true ? 'true' : 'false'}
-            data-testid='challenge-description-field'
-        />
-    ),
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'description',
+        })
+
+        return (
+            <div
+                data-read-only={props.readOnly === true ? 'true' : 'false'}
+                data-testid='challenge-description-field'
+            >
+                <label htmlFor='description'>
+                    Public Specification
+                    <textarea
+                        id='description'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        readOnly={props.readOnly}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+            </div>
+        )
+    },
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: function ChallengeScheduleSection(props: {
@@ -2233,6 +2252,61 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('reviewers-field')
             .getAttribute('data-reviewers'))
             .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
+    it('keeps public specification edits made while autosave is in flight', async () => {
+        const user = userEvent.setup()
+        let resolvePatch: ((challenge: Challenge) => void) | undefined
+
+        mockedPatchChallenge.mockImplementation(
+            () => new Promise(resolve => {
+                resolvePatch = resolve as (challenge: Challenge) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const specificationInput = screen.getByLabelText('Public Specification') as HTMLTextAreaElement
+        const autosavedDescription = `${validDraftChallenge.description} Autosaved markdown`
+        const currentDescription = `${autosavedDescription} plus unsaved text`
+
+        await user.type(specificationInput, ' Autosaved markdown')
+
+        const autosaveParams = mockedUseAutosave.mock
+            .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                formValues: ChallengeEditorFormData
+                onSave: (formData: ChallengeEditorFormData) => Promise<void>
+            }
+        let autosavePromise: Promise<void> = Promise.resolve()
+
+        await act(async () => {
+            autosavePromise = autosaveParams.onSave({
+                ...autosaveParams.formValues,
+                description: autosavedDescription,
+            })
+            await Promise.resolve()
+        })
+
+        await user.type(specificationInput, ' plus unsaved text')
+
+        await act(async () => {
+            resolvePatch?.({
+                ...validDraftChallenge,
+                description: 'Rendered specification from challenge-api',
+            })
+            await autosavePromise
+        })
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('12345', expect.objectContaining({
+                description: autosavedDescription,
+            }))
+        expect(specificationInput)
+            .toHaveValue(currentDescription)
     })
 
     it('keeps the review section after submission settings in read-only mode', () => {

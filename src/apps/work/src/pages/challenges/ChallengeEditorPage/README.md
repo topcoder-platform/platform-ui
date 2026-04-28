@@ -48,6 +48,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Autosave is implemented via `useAutosave`.
 - Delay defaults to `AUTOSAVE_DELAY_MS` (10s).
 - Autosave runs when form is dirty and valid, except in read-only view mode.
+- Autosave keeps the current editor values in place after patch responses so in-flight typing is
+  not replaced by challenge-api normalized content.
 - Status values: `idle`, `saving`, `saved`, `error`.
 - Last save time is shown in the footer.
 
