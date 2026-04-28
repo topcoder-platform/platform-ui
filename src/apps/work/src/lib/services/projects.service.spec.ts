@@ -258,6 +258,9 @@ describe('fetchProjectsList', () => {
         mockedGetPaginatedAsync.mockResolvedValue({
             data: [
                 {
+                    details: {
+                        displayMemberPaymentDetailsToCopilots: true,
+                    },
                     id: 200,
                     invites: [
                         {
@@ -282,6 +285,9 @@ describe('fetchProjectsList', () => {
         expect(result.projects)
             .toEqual([
                 expect.objectContaining({
+                    details: {
+                        displayMemberPaymentDetailsToCopilots: true,
+                    },
                     id: 200,
                     invites: [
                         expect.objectContaining({
@@ -344,6 +350,9 @@ describe('fetchProjectById', () => {
         const mockedGetAsync = xhrGetAsync as jest.Mock
 
         mockedGetAsync.mockResolvedValue({
+            details: {
+                displayMemberPaymentDetailsToCopilots: true,
+            },
             id: 200,
             invites: [
                 {
@@ -361,6 +370,9 @@ describe('fetchProjectById', () => {
 
         expect(result)
             .toEqual(expect.objectContaining({
+                details: {
+                    displayMemberPaymentDetailsToCopilots: true,
+                },
                 id: '200',
                 invites: [
                     expect.objectContaining({

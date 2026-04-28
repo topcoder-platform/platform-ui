@@ -232,6 +232,9 @@ describe('ProjectsTable', () => {
             [{
                 ...invitedProject,
                 billingAccountId: 80001063,
+                details: {
+                    displayMemberPaymentDetailsToCopilots: true,
+                },
             }],
             {
                 ...defaultContextValue,
@@ -243,6 +246,49 @@ describe('ProjectsTable', () => {
         expect(screen.getAllByText('Member Payments Remaining: $200.00').length)
             .toBeGreaterThan(0)
         expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+    })
+
+    it('hides payment amounts and billing details access for copilot project rows when disabled', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 525,
+                    markup: 0.25,
+                    name: 'Access BA',
+                    totalBudgetRemaining: 250,
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderTable(
+            [{
+                ...invitedProject,
+                billingAccountId: 80001063,
+                details: {
+                    displayMemberPaymentDetailsToCopilots: false,
+                },
+            }],
+            {
+                ...defaultContextValue,
+                isCopilot: true,
+                userRoles: ['copilot'],
+            },
+        )
+
+        expect(screen.queryByText('Member Payments Remaining: $200.00'))
+            .toBeNull()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
+            name: 'View billing account details',
+        }))
             .toBeNull()
     })
 })

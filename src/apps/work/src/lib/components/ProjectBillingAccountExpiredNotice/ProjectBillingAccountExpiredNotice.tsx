@@ -41,6 +41,7 @@ interface ProjectBillingAccountExpiredNoticeProps {
     billingAccountId?: number | string
     billingAccountName?: string
     canManageProject: boolean
+    displayMemberPaymentDetailsToCopilots?: boolean
     projectId: string
 }
 
@@ -65,10 +66,71 @@ function formatCurrency(amount: number, includeCents: boolean = false): string {
         .format(amount)
 }
 
-function canShowMemberPaymentsRemaining(workAppContext: WorkAppContextModel): boolean {
+/**
+ * Identifies copilot-only users whose project payment details are controlled
+ * by the project-level display flag.
+ *
+ * @param workAppContext Current work app user context.
+ * @returns `true` when the user is a copilot without admin or manager access.
+ */
+function isRestrictedCopilot(workAppContext: WorkAppContextModel): boolean {
     return workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
+}
+
+/**
+ * Resolves whether the current user may see project payment details.
+ *
+ * @param workAppContext Current work app user context.
+ * @param displayMemberPaymentDetailsToCopilots Project-level copilot display flag.
+ * @returns `true` when payment amounts and the line-item modal may be shown.
+ */
+function canShowProjectPaymentDetails(
+    workAppContext: WorkAppContextModel,
+    displayMemberPaymentDetailsToCopilots: boolean | undefined,
+): boolean {
+    return !isRestrictedCopilot(workAppContext)
+        || displayMemberPaymentDetailsToCopilots === true
+}
+
+/**
+ * Resolves whether the copilot-safe member-payment balance should be shown.
+ *
+ * @param workAppContext Current work app user context.
+ * @param showPaymentDetails Whether payment details are enabled for this project.
+ * @returns `true` when the user should see member payments remaining.
+ */
+function canShowMemberPaymentsRemaining(
+    workAppContext: WorkAppContextModel,
+    showPaymentDetails: boolean,
+): boolean {
+    return showPaymentDetails && isRestrictedCopilot(workAppContext)
+}
+
+interface VisibleBudgetInfoParams {
+    copilotBudgetInfo: CopilotMemberPaymentsBudgetInfo | undefined
+    showMemberPaymentsRemaining: boolean
+    showPaymentDetails: boolean
+    standardBudgetInfo: BillingAccountBudgetInfo | undefined
+}
+
+/**
+ * Selects the budget payload that is safe for the current user to see.
+ *
+ * @param params Standard and copilot budget variants with display flags.
+ * @returns The visible budget payload, or `undefined` when hidden.
+ */
+function getVisibleBudgetInfo(
+    params: VisibleBudgetInfoParams,
+): BillingAccountBudgetInfo | undefined {
+    if (!params.showPaymentDetails) {
+        return undefined
+    }
+
+    return params.showMemberPaymentsRemaining
+        ? params.copilotBudgetInfo
+        : params.standardBudgetInfo
 }
 
 function getBudgetStatusClass(
@@ -114,7 +176,14 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
 ) => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
     const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
-    const showMemberPaymentsRemaining: boolean = canShowMemberPaymentsRemaining(workAppContext)
+    const showPaymentDetails: boolean = canShowProjectPaymentDetails(
+        workAppContext,
+        props.displayMemberPaymentDetailsToCopilots,
+    )
+    const showMemberPaymentsRemaining: boolean = canShowMemberPaymentsRemaining(
+        workAppContext,
+        showPaymentDetails,
+    )
 
     const projectBillingAccountResult: UseFetchProjectBillingAccountResult = useFetchProjectBillingAccount(
         props.projectId,
@@ -124,7 +193,9 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
     const normalizedBillingAccountId = normalizeOptionalString(props.billingAccountId)
         || normalizeOptionalString(billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        normalizedBillingAccountId,
+        showPaymentDetails
+            ? normalizedBillingAccountId
+            : undefined,
     )
 
     const billingAccountDetailsData = billingAccountDetailsResult.billingAccountDetails
@@ -165,9 +236,12 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             ? getCopilotMemberPaymentsBudgetInfo(billingAccountDetailsData)
             : undefined
     ), [billingAccountDetailsData, showMemberPaymentsRemaining])
-    const budgetInfo = showMemberPaymentsRemaining
-        ? copilotBudgetInfo
-        : standardBudgetInfo
+    const budgetInfo = getVisibleBudgetInfo({
+        copilotBudgetInfo,
+        showMemberPaymentsRemaining,
+        showPaymentDetails,
+        standardBudgetInfo,
+    })
 
     const handleOpenModal = useCallback((): void => {
         setIsModalOpen(true)
