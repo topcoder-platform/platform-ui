@@ -12,6 +12,7 @@ import {
 } from '../../../../../lib/hooks'
 import {
     createProject,
+    updateProject,
 } from '../../../../../lib/services'
 
 import { ProjectEditorForm } from './ProjectEditorForm'
@@ -172,6 +173,7 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
     typeof useFetchProjectBillingAccount
 >
 const mockedCreateProject = createProject as jest.MockedFunction<typeof createProject>
+const mockedUpdateProject = updateProject as jest.MockedFunction<typeof updateProject>
 
 describe('ProjectEditorForm', () => {
     beforeEach(() => {
@@ -184,6 +186,11 @@ describe('ProjectEditorForm', () => {
             id: 'project-1',
             name: 'Payments Project',
             status: 'draft',
+        })
+        mockedUpdateProject.mockResolvedValue({
+            id: 'project-1',
+            name: 'Payments Project',
+            status: 'active',
         })
     })
 
@@ -238,5 +245,44 @@ describe('ProjectEditorForm', () => {
                     displayMemberPaymentDetailsToCopilots: true,
                 },
             })))
+    })
+
+    it('submits null when clearing an existing project billing account', async () => {
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        billingAccountId: '80001063',
+                        description: 'Project with billing',
+                        id: 'project-1',
+                        name: 'Payments Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.change(screen.getByLabelText('Select New Billing Account'), {
+            target: {
+                value: '',
+            },
+        })
+
+        await waitFor(() => expect((screen.getByRole('button', {
+            name: 'Save project',
+        }) as HTMLButtonElement).disabled)
+            .toBe(false))
+
+        fireEvent.click(screen.getByRole('button', {
+            name: 'Save project',
+        }))
+
+        await waitFor(() => expect(mockedUpdateProject)
+            .toHaveBeenCalledWith('project-1', expect.any(Object)))
+        expect(mockedUpdateProject.mock.calls[0]?.[1].billingAccountId)
+            .toBeNull()
     })
 })

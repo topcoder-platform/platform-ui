@@ -11,6 +11,17 @@ import {
 } from './project-billing-account.utils'
 
 describe('project-billing-account challenge gating helpers', () => {
+    it('treats missing billing accounts as blocked only when required', () => {
+        expect(getProjectBillingAccountChallengeIssue(undefined))
+            .toBeUndefined()
+        expect(getProjectBillingAccountChallengeIssue(undefined, true))
+            .toBe('missing')
+        expect(getProjectBillingAccountNoticeMessage('missing'))
+            .toBe('This project does not have a billing account.')
+        expect(getProjectBillingAccountChallengeErrorMessage('missing'))
+            .toBe('Cannot launch challenges because this project does not have a billing account.')
+    })
+
     it('treats inactive billing accounts as blocked for challenges', () => {
         const billingAccount: ProjectBillingAccount = {
             active: false,
