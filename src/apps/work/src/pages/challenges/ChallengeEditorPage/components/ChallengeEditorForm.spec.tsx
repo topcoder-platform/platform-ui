@@ -22,9 +22,13 @@ import {
     useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
+import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
 import type {
     Challenge,
     ChallengeEditorFormData,
+    WorkAppContextModel,
 } from '../../../../lib/models'
 import {
     createResource,
@@ -39,6 +43,7 @@ import {
     patchChallenge,
     fetchResourceRoles,
     fetchResources,
+    searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
     showErrorToast,
@@ -52,6 +57,8 @@ import {
 import { TermsField } from './TermsField'
 
 let mockShouldAutoDirtyDuringInitialHydration = false
+let mockShouldAutoDirtyAfterChallengeIdHydrates = false
+let mockMaximumSubmissionsDeferDirtyValues: boolean[] = []
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -78,6 +85,7 @@ jest.mock('../../../../lib/services', () => ({
     fetchResources: jest.fn(),
     fetchWorkflows: jest.fn(),
     patchChallenge: jest.fn(),
+    searchProfilesByUserIds: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
     formatLastSaved: () => '',
@@ -93,6 +101,7 @@ jest.mock('../../../../lib/utils', () => ({
         copilot: typeof challenge?.copilot === 'string'
             ? challenge.copilot
             : undefined,
+        createdBy: challenge?.createdBy,
         description: challenge?.description || '',
         discussionForum: challenge?.discussionForum,
         funChallenge: challenge?.funChallenge === true,
@@ -247,7 +256,33 @@ jest.mock('./AttachmentsField', () => {
     }
 })
 jest.mock('./ChallengeDescriptionField', () => ({
-    ChallengeDescriptionField: () => <></>,
+    ChallengeDescriptionField: function ChallengeDescriptionField(props: {
+        readOnly?: boolean
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'description',
+        })
+
+        return (
+            <div
+                data-read-only={props.readOnly === true ? 'true' : 'false'}
+                data-testid='challenge-description-field'
+            >
+                <label htmlFor='description'>
+                    Public Specification
+                    <textarea
+                        id='description'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        readOnly={props.readOnly}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+            </div>
+        )
+    },
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: function ChallengeScheduleSection(props: {
@@ -322,7 +357,11 @@ jest.mock('./ChallengeFeeField', () => ({
             markup?: number
         } | undefined
 
-        return <div data-testid='billing-markup'>{String(billing?.markup ?? '')}</div>
+        return (
+            <div data-testid='challenge-fee-field'>
+                <span data-testid='billing-markup'>{String(billing?.markup ?? '')}</span>
+            </div>
+        )
     },
 }))
 jest.mock('./ChallengeNameField', () => {
@@ -350,7 +389,14 @@ jest.mock('./ChallengeNameField', () => {
     }
 })
 jest.mock('./ChallengePrivateDescriptionField', () => ({
-    ChallengePrivateDescriptionField: () => <></>,
+    ChallengePrivateDescriptionField: (props: {
+        readOnly?: boolean
+    }) => (
+        <div
+            data-read-only={props.readOnly === true ? 'true' : 'false'}
+            data-testid='challenge-private-description-field'
+        />
+    ),
 }))
 jest.mock('./ChallengePrizesField', () => ({
     ChallengePrizesField: () => <></>,
@@ -362,7 +408,19 @@ jest.mock('./ChallengeTagsField', () => ({
     ChallengeTagsField: () => <></>,
 }))
 jest.mock('./ChallengeTotalField', () => ({
-    ChallengeTotalField: () => <></>,
+    ChallengeTotalField: (props: {
+        includeChallengeFee?: boolean
+        label?: string
+    }) => (
+        <div
+            data-include-challenge-fee={props.includeChallengeFee === false
+                ? 'false'
+                : 'true'}
+            data-testid='challenge-total-field'
+        >
+            {props.label || 'Estimated challenge total:'}
+        </div>
+    ),
 }))
 jest.mock('./ChallengeTrackField', () => ({
     ChallengeTrackField: function ChallengeTrackField() {
@@ -487,16 +545,20 @@ jest.mock('./GroupsField', () => ({
 jest.mock('./MaximumSubmissionsField', () => ({
     MaximumSubmissionsField: (props: {
         deferDirty?: boolean
-    }) => (
-        <div
-            data-defer-dirty={props.deferDirty === true
-                ? 'true'
-                : 'false'}
-            data-testid='maximum-submissions-field'
-        >
-            Maximum Submissions Field
-        </div>
-    ),
+    }) => {
+        mockMaximumSubmissionsDeferDirtyValues.push(props.deferDirty === true)
+
+        return (
+            <div
+                data-defer-dirty={props.deferDirty === true
+                    ? 'true'
+                    : 'false'}
+                data-testid='maximum-submissions-field'
+            >
+                Maximum Submissions Field
+            </div>
+        )
+    },
 }))
 jest.mock('./MarathonMatchScorerSection', () => ({
     MarathonMatchScorerSection: () => <></>,
@@ -538,9 +600,17 @@ jest.mock('./StockArtsField', () => ({
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const formContext = reactHookForm.useFormContext()
         const hasAutoDirtiedRef = React.useRef(false)
+        const challengeId = reactHookForm.useWatch({
+            control: formContext.control,
+            name: 'id',
+        })
 
         React.useEffect(() => {
             if (!mockShouldAutoDirtyDuringInitialHydration || hasAutoDirtiedRef.current) {
+                return
+            }
+
+            if (mockShouldAutoDirtyAfterChallengeIdHydrates && !challengeId) {
                 return
             }
 
@@ -552,7 +622,10 @@ jest.mock('./StockArtsField', () => ({
                 shouldDirty: true,
                 shouldValidate: false,
             })
-        }, [formContext])
+        }, [
+            challengeId,
+            formContext,
+        ])
 
         return <>Stock Arts Field</>
     },
@@ -583,6 +656,7 @@ const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as je
 const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
+const mockedSearchProfilesByUserIds = searchProfilesByUserIds as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
 const mockedTermsField = TermsField as jest.MockedFunction<typeof TermsField>
@@ -594,6 +668,19 @@ const LocationDisplay = (): JSX.Element => {
 }
 
 describe('ChallengeEditorForm', () => {
+    const copilotContextValue: WorkAppContextModel = {
+        isAdmin: false,
+        isAnonymous: false,
+        isCopilot: true,
+        isManager: false,
+        isReadOnly: false,
+        loginUserInfo: {
+            roles: ['copilot'],
+            token: 'token',
+            userId: 123,
+        } as WorkAppContextModel['loginUserInfo'],
+        userRoles: ['copilot'],
+    }
     const draftChallenge = {
         id: '12345',
         name: 'Draft challenge',
@@ -695,11 +782,14 @@ describe('ChallengeEditorForm', () => {
         mockedFetchProfile.mockResolvedValue(undefined)
         mockedFetchResourceRolesService.mockResolvedValue([])
         mockedFetchResourcesService.mockResolvedValue([])
+        mockedSearchProfilesByUserIds.mockResolvedValue([])
         mockedCreateResource.mockResolvedValue(undefined)
     })
 
     afterEach(() => {
         mockShouldAutoDirtyDuringInitialHydration = false
+        mockShouldAutoDirtyAfterChallengeIdHydrates = false
+        mockMaximumSubmissionsDeferDirtyValues = []
         jest.clearAllMocks()
     })
 
@@ -761,27 +851,48 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('renders the billing account id inside advanced options when project billing is available', () => {
+    it('renders billing metadata inside prizes and billing when project billing is available', async () => {
         mockedUseFetchProjectBillingAccount.mockReturnValue({
             billingAccount: {
                 id: '80001063',
             },
             isLoading: false,
         })
+        mockedSearchProfilesByUserIds.mockResolvedValue([{
+            handle: 'challenge.creator',
+            userId: '123456',
+        }])
 
         render(
             <MemoryRouter>
-                <ChallengeEditorForm challenge={draftChallenge} />
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        createdBy: '123456',
+                    }}
+                />
             </MemoryRouter>,
         )
 
         const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
             .closest('section')
+        const prizesBillingSection = screen.getByRole('heading', { name: 'Prizes & Billing' })
+            .closest('section')
 
-        expect(advancedOptionsSection)
+        expect(prizesBillingSection)
             .toHaveTextContent('Billing Account Id')
-        expect(advancedOptionsSection)
+        expect(prizesBillingSection)
             .toHaveTextContent('80001063')
+        expect(prizesBillingSection)
+            .toHaveTextContent('Payment Creator')
+        await waitFor(() => {
+            expect(prizesBillingSection)
+                .toHaveTextContent('challenge.creator')
+        })
+        expect(prizesBillingSection)
+            .not.toHaveTextContent('123456')
+        expect(advancedOptionsSection)
+            .not.toHaveTextContent('Billing Account Id')
     })
 
     it('hides the editable timeline section for task challenges in edit mode', () => {
@@ -967,6 +1078,10 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('challenge-schedule-section')
             .closest('fieldset[disabled]'))
             .toBeNull()
+        expect(screen.getByTestId('challenge-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.getByTestId('challenge-private-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
         expect(screen.queryByRole('button', { name: 'Cancel' }))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Save Challenge' }))
@@ -1055,6 +1170,26 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('billing-markup'))
                 .toHaveTextContent('0.33')
         })
+    })
+
+    it('uses the copilot-safe challenge billing summary for copilot-only users', () => {
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={draftChallenge}
+                        projectId='100578'
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByTestId('challenge-fee-field'))
+            .toBeNull()
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveAttribute('data-include-challenge-fee', 'false')
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveTextContent('Estimated challenge cost:')
     })
 
     it('requires an assigned member before launching a task challenge', () => {
@@ -1494,6 +1629,14 @@ describe('ChallengeEditorForm', () => {
     it('returns to view mode after launching from an edit route', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
         mockedPatchChallenge.mockResolvedValue({
             ...validDraftChallenge,
             status: 'ACTIVE',
@@ -1638,6 +1781,118 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('maximum-submissions-field'))
                 .toHaveAttribute('data-defer-dirty', 'false')
         })
+    })
+
+    it('defers compatibility normalization while asynchronously loaded assignments hydrate', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockShouldAutoDirtyDuringInitialHydration = true
+        mockShouldAutoDirtyAfterChallengeIdHydrates = true
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        const renderResult: ReturnType<typeof render> = render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByTestId('maximum-submissions-field'))
+            .toBeNull()
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                        typeId: 'design-challenge',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(mockMaximumSubmissionsDeferDirtyValues[0])
+            .toBe(true)
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'true')
+
+        await act(async () => {
+            resolveFetchedResourceRoles?.([
+                {
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                },
+                {
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                },
+            ])
+            resolveFetchedResources?.([
+                {
+                    challengeId: '12345',
+                    memberHandle: 'saved-copilot',
+                    roleId: 'copilot-role-id',
+                },
+                {
+                    challengeId: '12345',
+                    memberId: 'manual-reviewer-member-id',
+                    role: 'Reviewer',
+                    roleId: 'reviewer-role-id',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('saved-copilot')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'false')
     })
 
     it('rehydrates the copilot field from member-id-only copilot resources on refresh', async () => {
@@ -2017,6 +2272,61 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('reviewers-field')
             .getAttribute('data-reviewers'))
             .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
+    it('keeps public specification edits made while autosave is in flight', async () => {
+        const user = userEvent.setup()
+        let resolvePatch: ((challenge: Challenge) => void) | undefined
+
+        mockedPatchChallenge.mockImplementation(
+            () => new Promise(resolve => {
+                resolvePatch = resolve as (challenge: Challenge) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const specificationInput = screen.getByLabelText('Public Specification') as HTMLTextAreaElement
+        const autosavedDescription = `${validDraftChallenge.description} Autosaved markdown`
+        const currentDescription = `${autosavedDescription} plus unsaved text`
+
+        await user.type(specificationInput, ' Autosaved markdown')
+
+        const autosaveParams = mockedUseAutosave.mock
+            .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                formValues: ChallengeEditorFormData
+                onSave: (formData: ChallengeEditorFormData) => Promise<void>
+            }
+        let autosavePromise: Promise<void> = Promise.resolve()
+
+        await act(async () => {
+            autosavePromise = autosaveParams.onSave({
+                ...autosaveParams.formValues,
+                description: autosavedDescription,
+            })
+            await Promise.resolve()
+        })
+
+        await user.type(specificationInput, ' plus unsaved text')
+
+        await act(async () => {
+            resolvePatch?.({
+                ...validDraftChallenge,
+                description: 'Rendered specification from challenge-api',
+            })
+            await autosavePromise
+        })
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('12345', expect.objectContaining({
+                description: autosavedDescription,
+            }))
+        expect(specificationInput)
+            .toHaveValue(currentDescription)
     })
 
     it('keeps the review section after submission settings in read-only mode', () => {
@@ -2441,6 +2751,89 @@ describe('ChallengeEditorForm', () => {
         expect(mockedShowErrorToast)
             .toHaveBeenCalledWith(
                 'Cannot launch challenges because the project billing account is inactive.',
+            )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks launch with a clear reason when the project has no billing account', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    projectId='100578'
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because this project does not have a billing account.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Cannot launch challenges because this project does not have a billing account.',
             )
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith('Failed to save challenge')

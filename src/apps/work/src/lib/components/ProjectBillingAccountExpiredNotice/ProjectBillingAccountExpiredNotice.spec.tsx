@@ -5,6 +5,8 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import type { WorkAppContextModel } from '../../models'
 import type { BillingAccountDetails } from '../../services'
 import {
     useFetchBillingAccountDetails,
@@ -64,6 +66,35 @@ const billingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: -25,
 }
 
+const defaultContextValue: WorkAppContextModel = {
+    isAdmin: false,
+    isAnonymous: false,
+    isCopilot: false,
+    isManager: false,
+    isReadOnly: false,
+    loginUserInfo: undefined,
+    userRoles: [],
+}
+
+function renderNotice(
+    contextValue: WorkAppContextModel = defaultContextValue,
+    displayMemberPaymentDetailsToCopilots: boolean = false,
+): void {
+    render(
+        <WorkAppContext.Provider value={contextValue}>
+            <MemoryRouter>
+                <ProjectBillingAccountExpiredNotice
+                    billingAccountId={80001063}
+                    billingAccountName='Test Project Engagement BA'
+                    canManageProject
+                    displayMemberPaymentDetailsToCopilots={displayMemberPaymentDetailsToCopilots}
+                    projectId='project-1'
+                />
+            </MemoryRouter>
+        </WorkAppContext.Provider>,
+    )
+}
+
 describe('ProjectBillingAccountExpiredNotice', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -103,6 +134,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
                 />
             </MemoryRouter>,
         )
+    it('keeps billing account details and line items available when remaining funds are insufficient', () => {
+        renderNotice()
 
         expect(screen.getByText(/Billing account:/))
             .toBeTruthy()
@@ -122,5 +155,72 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeNull()
         expect(screen.queryByRole('dialog'))
             .toBeNull()
+    })
+
+    it('shows member payments remaining instead of spent and total budget for copilots', () => {
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails: {
+                ...billingAccountDetails,
+                budget: 1000,
+                markup: 0.25,
+                totalBudgetRemaining: 250,
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                markup: 0.25,
+                name: 'Test Project Engagement BA',
+                status: 'ACTIVE',
+                totalBudgetRemaining: 250,
+            },
+            isLoading: false,
+        })
+
+        renderNotice({
+            ...defaultContextValue,
+            isCopilot: true,
+            userRoles: ['copilot'],
+        }, true)
+
+        expect(screen.getByText('Member Payments Remaining: $200.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+    })
+
+    it('hides member payment details and billing account modal access from copilots when disabled', () => {
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails: {
+                ...billingAccountDetails,
+                budget: 1000,
+                markup: 0.25,
+                totalBudgetRemaining: 250,
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderNotice({
+            ...defaultContextValue,
+            isCopilot: true,
+            userRoles: ['copilot'],
+        })
+
+        expect(screen.queryByText('Member Payments Remaining: $200.00'))
+            .toBeNull()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
+            name: 'View billing account details',
+        }))
+            .toBeNull()
+        expect(mockedUseFetchBillingAccountDetails)
+            .toHaveBeenCalledWith(undefined)
     })
 })

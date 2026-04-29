@@ -20,6 +20,7 @@ import {
 import {
     buildProjectLandingPath,
     canCreateEngagement,
+    checkProjectAccess,
     getAuthAccessToken,
 } from '../../../lib/utils'
 
@@ -88,6 +89,7 @@ jest.mock('../../../lib/components', () => ({
         </button>
     ),
     ChallengesTable: () => <div>Challenges Table</div>,
+    ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     Pagination: (props: { onPerPageChange: (perPage: number) => void }) => {
         function handlePerPageChange(): void {
             props.onPerPageChange(25)
@@ -130,11 +132,17 @@ jest.mock('../../../lib/utils', () => ({
     buildProjectLandingPath: jest.fn((project: { id?: string | number }) => `/projects/${project.id}/challenges`),
     canCreateEngagement: jest.fn(() => false),
     checkCanManageProject: jest.fn(() => false),
+    checkProjectAccess: jest.fn((
+        _userRoles: string[],
+        _userId: number | string | undefined,
+        project?: { id?: string | number },
+    ) => !!project),
     getAuthAccessToken: jest.fn(() => 'token'),
     getStatusText: jest.fn((status?: string) => status || ''),
 }))
 
 const mockedBuildProjectLandingPath = buildProjectLandingPath as jest.Mock
+const mockedCheckProjectAccess = checkProjectAccess as jest.Mock
 const mockedUseFetchChallenges = useFetchChallenges as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
@@ -185,6 +193,12 @@ describe('ChallengesListPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
 
+        mockedCanCreateEngagement.mockReturnValue(false)
+        mockedCheckProjectAccess.mockImplementation((
+            _userRoles: string[],
+            _userId: number | string | undefined,
+            project?: { id?: string | number },
+        ) => !!project)
         mockedUseFetchChallenges.mockReturnValue({
             challenges: [],
             error: undefined,
@@ -251,6 +265,21 @@ describe('ChallengesListPage', () => {
     })
 
     it('does not scope project challenge queries by member id', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                members: [
+                    {
+                        userId: 12345,
+                    },
+                ],
+                name: 'Authorized Project',
+                status: 'active',
+            },
+        })
+
         renderPage('/projects/200/challenges', '/projects/:projectId/challenges')
 
         const fetchParams = mockedUseFetchChallenges.mock.calls[0][0]
@@ -259,6 +288,79 @@ describe('ChallengesListPage', () => {
             .toBe('200')
         expect(fetchParams.memberId)
             .toBeUndefined()
+        expect(fetchParams.enabled)
+            .toBe(true)
+    })
+
+    it('waits for project access before fetching project challenges', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: true,
+            project: undefined,
+        })
+
+        renderPage('/projects/200/challenges', '/projects/:projectId/challenges')
+
+        expect(mockedUseFetchChallenges)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+                projectId: '200',
+            }))
+        expect(screen.getByText('Loading'))
+            .toBeTruthy()
+    })
+
+    it('blocks project challenge details when the project cannot be loaded', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: new Error('Forbidden'),
+            isLoading: false,
+            project: undefined,
+        })
+        mockedCheckProjectAccess.mockReturnValue(false)
+
+        renderPage('/projects/200/challenges', '/projects/:projectId/challenges')
+
+        expect(mockedUseFetchChallenges)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+                projectId: '200',
+            }))
+        expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+            .toBeTruthy()
+        expect(screen.queryByText('Challenges Table'))
+            .toBeNull()
+    })
+
+    it('blocks project challenge details when the caller is not a project member', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                members: [
+                    {
+                        userId: 99999,
+                    },
+                ],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+        mockedCheckProjectAccess.mockReturnValue(false)
+
+        renderPage('/projects/200/challenges', '/projects/:projectId/challenges')
+
+        expect(mockedUseFetchChallenges)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+                projectId: '200',
+            }))
+        expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+            .toBeTruthy()
+        expect(screen.queryByText('Restricted Project'))
+            .toBeNull()
+        expect(screen.queryByText('Challenges Table'))
+            .toBeNull()
     })
 
     it('redirects invited users from the challenges route to the invitation modal route', async () => {

@@ -25,6 +25,7 @@ export type MemberSearchPayload = {
     limit: number
     openToWork?: boolean
     page: number
+    profileComplete?: boolean
     recentlyActive?: boolean
     sortBy?: 'handle' | 'matchIndex'
     sortOrder?: 'asc' | 'desc'

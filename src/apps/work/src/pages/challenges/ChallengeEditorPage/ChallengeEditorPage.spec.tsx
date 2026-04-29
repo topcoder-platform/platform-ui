@@ -16,11 +16,16 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import {
     useFetchChallenge,
+    useFetchProject,
     useFetchResourceRoles,
     useFetchResources,
+    type UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import { deleteChallenge } from '../../../lib/services'
-import { isChallengeCompletedOrCancelled } from '../../../lib/utils'
+import {
+    checkProjectAccess,
+    isChallengeCompletedOrCancelled,
+} from '../../../lib/utils'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -155,6 +160,7 @@ jest.mock('../../../lib/contexts', () => {
 })
 jest.mock('../../../lib/hooks', () => ({
     useFetchChallenge: jest.fn(),
+    useFetchProject: jest.fn(),
     useFetchResourceRoles: jest.fn(() => ({
         resourceRoles: [],
     })),
@@ -168,6 +174,7 @@ jest.mock('../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    checkProjectAccess: jest.fn(() => true),
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
     isChallengeCompletedOrCancelled: jest.fn(),
@@ -240,17 +247,26 @@ jest.mock('./ChallengeEditorPage.utils', () => ({
 }))
 
 const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
+const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedCheckProjectAccess = checkProjectAccess as jest.Mock
 const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
-function renderPage(route: string, path: string): void {
+/**
+ * Builds the routed challenge editor test tree.
+ *
+ * @param route concrete route used as the initial memory history entry.
+ * @param path route pattern registered for the page under test.
+ * @returns the challenge editor element wrapped with router and work context providers.
+ */
+function renderPageElement(route: string, path: string): JSX.Element {
     const MockWorkAppContext = mockWorkAppContext
 
-    render(
+    return (
         <MockWorkAppContext.Provider value={{
             isAdmin: false,
             isAnonymous: false,
@@ -266,8 +282,19 @@ function renderPage(route: string, path: string): void {
                     <Route path={path} element={<ChallengeEditorPage />} />
                 </Routes>
             </MemoryRouter>
-        </MockWorkAppContext.Provider>,
+        </MockWorkAppContext.Provider>
     )
+}
+
+/**
+ * Renders the challenge editor page in a memory router for route-level assertions.
+ *
+ * @param route concrete route used as the initial memory history entry.
+ * @param path route pattern registered for the page under test.
+ * @returns the React Testing Library render result.
+ */
+function renderPage(route: string, path: string): ReturnType<typeof render> {
+    return render(renderPageElement(route, path))
 }
 
 describe('ChallengeEditorPage', () => {
@@ -282,12 +309,26 @@ describe('ChallengeEditorPage', () => {
                 id: '456',
                 name: 'Edit test',
                 prizeSets: [],
+                projectId: '123',
                 status: 'DRAFT',
             },
             error: undefined,
             isLoading: false,
             mutate: jest.fn(),
         })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 12345,
+                }],
+                name: 'Allowed Project',
+                status: 'active',
+            },
+        })
+        mockedCheckProjectAccess.mockReturnValue(true)
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [],
         })
@@ -394,6 +435,76 @@ describe('ChallengeEditorPage', () => {
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+    })
+
+    it('blocks project-scoped challenge views when project access is denied', async () => {
+        mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 99999,
+                }],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+                .toBeTruthy()
+        })
+
+        expect(mockedUseFetchChallenge)
+            .toHaveBeenCalledWith(undefined)
+        expect(screen.queryByText('Challenge View Form'))
+            .toBeNull()
+        expect(screen.queryByRole('heading', { name: 'View Edit test' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+    })
+
+    it('blocks unscoped challenge views after resolving the challenge project', async () => {
+        mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 99999,
+                }],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/challenges/456/view',
+            '/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+                .toBeTruthy()
+        })
+
+        expect(mockedUseFetchChallenge)
+            .toHaveBeenCalledWith('456')
+        expect(mockedUseFetchProject)
+            .toHaveBeenCalledWith('123')
+        expect(screen.queryByText('Challenge View Form'))
+            .toBeNull()
+        expect(screen.queryByRole('heading', { name: 'View Edit test' }))
+            .toBeNull()
     })
 
     it('treats trailing-slash view routes as read-only mode', async () => {
@@ -680,5 +791,70 @@ describe('ChallengeEditorPage', () => {
             expect(mockedDeleteChallenge)
                 .toHaveBeenCalledWith('789')
         })
+    })
+
+    it('clears stale header state after a fresh challenge fetch 403', async () => {
+        const mutate = jest.fn()
+        let challengeResult: UseFetchChallengeResult = {
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate,
+        }
+        mockedUseFetchChallenge.mockImplementation(() => challengeResult)
+
+        const route = '/projects/123/challenges/456/edit'
+        const path = '/projects/:projectId/challenges/:challengeId/edit'
+        const renderResult = renderPage(route, path)
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge Editor Form'))
+                .toBeTruthy()
+        })
+
+        expect(within(screen.getByTestId('title-action'))
+            .getByText('DRAFT'))
+            .toBeTruthy()
+        expect(within(screen.getByTestId('right-header'))
+            .getByRole('link', { name: 'Challenge' }))
+            .toBeTruthy()
+        expect(within(screen.getByTestId('right-header'))
+            .getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+
+        challengeResult = {
+            challenge: undefined,
+            error: Object.assign(new Error('Forbidden'), { status: 403 }),
+            isError: true,
+            isLoading: false,
+            mutate,
+        }
+        renderResult.rerender(renderPageElement(route, path))
+
+        await waitFor(() => {
+            expect(screen.getByText('Forbidden'))
+                .toBeTruthy()
+        })
+        expect(within(screen.getByTestId('title-action'))
+            .queryByText('DRAFT'))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('link', { name: 'Challenge' }))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('button', { name: 'Launch' }))
+            .toBeNull()
+        expect(within(screen.getByTestId('right-header'))
+            .queryByRole('button', { name: 'Cancel' }))
+            .toBeNull()
     })
 })

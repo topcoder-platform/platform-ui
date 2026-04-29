@@ -66,6 +66,7 @@ export function useFetchChallenges(
         appendKey: string
         page: number
     } | undefined>(undefined)
+    const aggregatedPagesRef = useRef<Map<number, Challenge[]>>(new Map())
 
     const requestParams = useMemo(
         () => ({
@@ -169,38 +170,30 @@ export function useFetchChallenges(
         const hasSameQuery = !!previousRequest && previousRequest.appendKey === appendKey
         const isSequentialPage = hasSameQuery && page === previousRequest.page + 1
         const isSamePageRefresh = hasSameQuery && page === previousRequest.page
+        const shouldResetAggregatedPages = !previousRequest
+            || !hasSameQuery
+            || page <= 1
+            || (!isSequentialPage && !isSamePageRefresh)
 
-        if (!previousRequest || !hasSameQuery || page <= 1) {
-            setAggregatedChallenges(data.data || [])
-        } else if (isSequentialPage) {
-            setAggregatedChallenges(current => {
-                const existingIds = new Set(current.map(challenge => challenge.id))
-                const nextPageChallenges = (data.data || [])
-                    .filter(challenge => !existingIds.has(challenge.id))
+        if (shouldResetAggregatedPages) {
+            aggregatedPagesRef.current = new Map()
+        }
 
-                return [
-                    ...current,
-                    ...nextPageChallenges,
-                ]
-            })
-        } else if (isSamePageRefresh) {
-            setAggregatedChallenges(current => {
-                const existingIds = new Set(current.map(challenge => challenge.id))
-                const refreshedChallenges = (data.data || [])
-                    .filter(challenge => !existingIds.has(challenge.id))
-
-                if (!refreshedChallenges.length) {
-                    return current
+        aggregatedPagesRef.current.set(page, data.data || [])
+        const seenChallengeIds = new Set<string>()
+        const nextAggregatedChallenges = Array.from(aggregatedPagesRef.current.entries())
+            .sort(([pageA], [pageB]) => pageA - pageB)
+            .flatMap(([, challengesPage]) => challengesPage)
+            .filter(challenge => {
+                if (seenChallengeIds.has(challenge.id)) {
+                    return false
                 }
 
-                return [
-                    ...current,
-                    ...refreshedChallenges,
-                ]
+                seenChallengeIds.add(challenge.id)
+                return true
             })
-        } else {
-            setAggregatedChallenges(data.data || [])
-        }
+
+        setAggregatedChallenges(nextAggregatedChallenges)
 
         setAggregatedMetadata(data.metadata || {
             page,
@@ -215,18 +208,22 @@ export function useFetchChallenges(
         }
     }, [appendKey, appendResults, data, page, perPage])
 
-    const challenges = appendResults
-        ? aggregatedChallenges
-        : (data?.data || [])
+    let challenges: Challenge[] = []
+    let metadata: PaginationModel = {
+        page,
+        perPage,
+        total: 0,
+        totalPages: 0,
+    }
 
-    const metadata = appendResults
-        ? aggregatedMetadata
-        : (data?.metadata || {
-            page,
-            perPage,
-            total: 0,
-            totalPages: 0,
-        })
+    if (!error) {
+        challenges = appendResults
+            ? aggregatedChallenges
+            : (data?.data || [])
+        metadata = appendResults
+            ? aggregatedMetadata
+            : (data?.metadata || metadata)
+    }
 
     return {
         challenges,

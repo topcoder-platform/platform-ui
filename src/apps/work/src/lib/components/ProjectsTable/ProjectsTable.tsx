@@ -1,6 +1,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useMemo,
     useState,
 } from 'react'
@@ -19,6 +20,7 @@ import {
     BILLING_ACCOUNT_DETAILS_MODAL_ENABLED,
     PROJECT_STATUS,
 } from '../../constants'
+import { WorkAppContext } from '../../contexts/WorkAppContext'
 import {
     useFetchBillingAccountDetails,
     useFetchBillingAccounts,
@@ -30,11 +32,20 @@ import type {
 import {
     Project,
     ProjectStatusValue,
+    WorkAppContextModel,
 } from '../../models'
 import type { BillingAccount } from '../../services'
 import {
     buildProjectChallengesPath,
 } from '../../utils'
+import type {
+    BillingAccountBudgetInfo,
+    CopilotMemberPaymentsBudgetInfo,
+} from '../../utils/project-billing-account.utils'
+import {
+    getBillingAccountBudgetInfo,
+    getCopilotMemberPaymentsBudgetInfo,
+} from '../../utils/project-billing-account.utils'
 import { BillingAccountLineItemsModal } from '../BillingAccountLineItemsModal'
 import { ProjectCard } from '../ProjectCard'
 import { ProjectStatus } from '../ProjectStatus'
@@ -42,11 +53,6 @@ import { ProjectStatus } from '../ProjectStatus'
 import styles from './ProjectsTable.module.scss'
 
 type SortOrder = 'asc' | 'desc'
-
-interface BillingBudgetInfo {
-    spent: number
-    totalBudget: number
-}
 
 const NOOP_CAN_EDIT_PROJECT = (): boolean => false
 
@@ -126,47 +132,87 @@ function normalizeOptionalString(value: unknown): string | undefined {
 }
 
 /**
- * Converts optional API numeric fields into finite numbers.
- *
- * @param value Raw budget field from the billing-account API.
- * @returns A finite number, or `undefined` when the value is missing or invalid.
- */
-function normalizeOptionalNumber(value: unknown): number | undefined {
-    if (typeof value === 'number' && Number.isFinite(value)) {
-        return value
-    }
-
-    if (typeof value !== 'string') {
-        return undefined
-    }
-
-    const normalizedValue = value.trim()
-
-    if (!normalizedValue) {
-        return undefined
-    }
-
-    const parsedValue = Number(normalizedValue)
-
-    return Number.isFinite(parsedValue)
-        ? parsedValue
-        : undefined
-}
-
-/**
  * Formats budget amounts for compact project-list display.
  *
  * @param amount Dollar amount to format.
- * @returns Whole-dollar USD currency text.
+ * @param includeCents Whether to include cents in the formatted value.
+ * @returns USD currency text.
  */
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number, includeCents: boolean = false): string {
     return new Intl.NumberFormat('en-US', {
         currency: 'USD',
-        maximumFractionDigits: 0,
-        minimumFractionDigits: 0,
+        maximumFractionDigits: includeCents ? 2 : 0,
+        minimumFractionDigits: includeCents ? 2 : 0,
         style: 'currency',
     })
         .format(amount)
+}
+
+/**
+ * Identifies copilot-only users whose project payment details are controlled
+ * by the project-level display flag.
+ *
+ * @param workAppContext Current work app user context.
+ * @returns `true` when the user is a copilot without admin or manager access.
+ */
+function isRestrictedCopilot(workAppContext: WorkAppContextModel): boolean {
+    return workAppContext.isCopilot
+        && !workAppContext.isAdmin
+        && !workAppContext.isManager
+}
+
+/**
+ * Resolves whether the current user may see payment details for one project row.
+ *
+ * @param workAppContext Current work app user context.
+ * @param project Project row being rendered.
+ * @returns `true` when payment amounts and the line-item modal may be shown.
+ */
+function canShowProjectPaymentDetails(
+    workAppContext: WorkAppContextModel,
+    project: Project,
+): boolean {
+    return !isRestrictedCopilot(workAppContext)
+        || project.details?.displayMemberPaymentDetailsToCopilots === true
+}
+
+function getBudgetStatusClass(
+    budgetInfo: BillingAccountBudgetInfo | undefined,
+    showMemberPaymentsRemaining: boolean,
+): string {
+    return showMemberPaymentsRemaining && budgetInfo
+        ? styles[`budget${budgetInfo.status.charAt(0)
+            .toUpperCase()}${budgetInfo.status.slice(1)}`]
+        : ''
+}
+
+function renderBudgetDisplayContent(
+    budgetInfo: BillingAccountBudgetInfo | undefined,
+    copilotBudgetInfo: CopilotMemberPaymentsBudgetInfo | undefined,
+    showMemberPaymentsRemaining: boolean,
+): JSX.Element | undefined {
+    if (!budgetInfo) {
+        return undefined
+    }
+
+    if (showMemberPaymentsRemaining && copilotBudgetInfo) {
+        return (
+            <>
+                Member Payments Remaining:
+                {' '}
+                {formatCurrency(copilotBudgetInfo.memberPaymentsRemaining, true)}
+            </>
+        )
+    }
+
+    return (
+        <>
+            {formatCurrency(budgetInfo.spent)}
+            {' / '}
+            {formatCurrency(budgetInfo.totalBudget)}
+            {' spent'}
+        </>
+    )
 }
 
 /**
@@ -197,43 +243,11 @@ function getBillingAccountDisplay(
     return `${billingAccountName || 'Unknown'} / ${billingAccountId}`
 }
 
-/**
- * Resolves the spent/total budget values for a billing-account summary.
- *
- * @param billingAccount Matching billing-account summary from the list API.
- * @returns Spent and total budget amounts, or `undefined` when budget data is incomplete.
- */
-function getBillingAccountBudgetInfo(
-    billingAccount: BillingAccount | undefined,
-): BillingBudgetInfo | undefined {
-    const totalBudget = normalizeOptionalNumber(billingAccount?.budget)
-
-    if (totalBudget === undefined) {
-        return undefined
-    }
-
-    const lockedBudget = normalizeOptionalNumber(billingAccount?.lockedBudget)
-    const consumedBudget = normalizeOptionalNumber(billingAccount?.consumedBudget)
-    const totalBudgetRemaining = normalizeOptionalNumber(billingAccount?.totalBudgetRemaining)
-    let spent: number | undefined
-
-    if (lockedBudget !== undefined || consumedBudget !== undefined) {
-        spent = (lockedBudget || 0) + (consumedBudget || 0)
-    } else if (totalBudgetRemaining !== undefined) {
-        spent = totalBudget - totalBudgetRemaining
-    }
-
-    return spent === undefined
-        ? undefined
-        : {
-            spent: Math.max(spent, 0),
-            totalBudget,
-        }
-}
-
 interface ProjectBillingAccountCellProps {
     billingAccount: BillingAccount | undefined
     project: Project
+    showPaymentDetails: boolean
+    showMemberPaymentsRemaining: boolean
 }
 
 /**
@@ -258,6 +272,31 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const budgetInfo = BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED
         ? getBillingAccountBudgetInfo(props.billingAccount)
         : undefined
+        isModalOpen && props.showPaymentDetails
+            ? normalizedBillingAccountId
+            : undefined,
+    )
+    const standardBudgetInfo = props.showPaymentDetails
+        ? getBillingAccountBudgetInfo(props.billingAccount)
+        : undefined
+    const copilotBudgetInfo = props.showMemberPaymentsRemaining
+        ? getCopilotMemberPaymentsBudgetInfo(props.billingAccount)
+        : undefined
+    const budgetInfo = props.showMemberPaymentsRemaining
+        ? copilotBudgetInfo
+        : standardBudgetInfo
+    const budgetStatusClass = getBudgetStatusClass(
+        budgetInfo,
+        props.showMemberPaymentsRemaining,
+    )
+    const budgetDisplayClass = budgetStatusClass
+        ? `${styles.budgetDisplay} ${budgetStatusClass}`
+        : styles.budgetDisplay
+    const budgetDisplayContent = renderBudgetDisplayContent(
+        budgetInfo,
+        copilotBudgetInfo,
+        props.showMemberPaymentsRemaining,
+    )
 
     const handleOpenModal = useCallback((): void => {
         setIsModalOpen(true)
@@ -277,15 +316,12 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
             </span>
             {budgetInfo
                 ? (
-                    <span className={styles.budgetDisplay}>
-                        {formatCurrency(budgetInfo.spent)}
-                        {' / '}
-                        {formatCurrency(budgetInfo.totalBudget)}
-                        {' spent'}
+                    <span className={budgetDisplayClass}>
+                        {budgetDisplayContent}
                     </span>
                 )
                 : undefined}
-            {BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && normalizedBillingAccountId
+            {BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && normalizedBillingAccountId && props.showPaymentDetails
                 ? (
                     <button
                         aria-label='View billing account details'
@@ -303,6 +339,8 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
                     <BillingAccountLineItemsModal
                         billingAccountDetails={billingAccountDetails}
                         onClose={handleCloseModal}
+                        projectId={props.project.id}
+                        showMemberPaymentsRemaining={props.showMemberPaymentsRemaining}
                     />
                 )
                 : undefined}
@@ -317,6 +355,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
     const onSort: (fieldName: string) => void = props.onSort
     const sortBy: string = props.sortBy
     const sortOrder: SortOrder = props.sortOrder
+    const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
     const {
         billingAccounts,
     }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
@@ -369,6 +408,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                     <ProjectBillingAccountCell
                         billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                         project={project}
+                        showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
+                            && canShowProjectPaymentDetails(workAppContext, project)}
+                        showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
                     />
                 ),
                 type: 'element',
@@ -399,7 +441,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 type: 'action',
             },
         ],
-        [billingAccountsById, canEditProject],
+        [billingAccountsById, canEditProject, workAppContext],
     )
 
     const forceSort = useMemo<Sort>(
@@ -456,6 +498,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                             <ProjectBillingAccountCell
                                 billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                                 project={project}
+                                showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
+                                    && canShowProjectPaymentDetails(workAppContext, project)}
+                                showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
                             />
                         )}
                         canEdit={canEditProject(project)}

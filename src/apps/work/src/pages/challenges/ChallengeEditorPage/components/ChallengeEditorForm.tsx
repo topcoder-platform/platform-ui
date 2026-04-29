@@ -1,6 +1,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -28,6 +29,9 @@ import {
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
+import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
 import {
     useAutosave,
     useFetchChallengeTracks,
@@ -62,6 +66,7 @@ import {
     fetchResources,
     fetchWorkflows,
     patchChallenge,
+    searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
     formatLastSaved,
@@ -215,6 +220,11 @@ interface SaveChallengeOptions {
 interface SaveStatusMetadata {
     isSaveAsDraft: boolean
     payloadStatus?: string
+}
+
+interface ResolvedPaymentCreator {
+    handle: string
+    source: string
 }
 
 interface ResolvePostSaveNavigationPathParams {
@@ -420,6 +430,33 @@ function normalizeTextValue(value: unknown): string {
     }
 
     return value.trim()
+}
+
+/**
+ * Normalizes optional display tokens from API payloads and auth context.
+ *
+ * @param value Raw value that may be a string or numeric user id.
+ * @returns Trimmed string value, or an empty string when no value is available.
+ * @throws Does not throw.
+ */
+function normalizeDisplayToken(value: unknown): string {
+    if (value === undefined || value === null) {
+        return ''
+    }
+
+    return String(value)
+        .trim()
+}
+
+/**
+ * Detects creator values that need member-profile resolution before display.
+ *
+ * @param value Normalized challenge `createdBy` value.
+ * @returns `true` when the value looks like a Topcoder numeric user id.
+ * @throws Does not throw.
+ */
+function isUserIdToken(value: string): boolean {
+    return /^\d+$/.test(value)
 }
 
 function hasSameNormalizedValue(valueA: unknown, valueB: unknown): boolean {
@@ -1437,6 +1474,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 ) => {
     const location = useLocation()
     const navigate = useNavigate()
+    const workAppContext = useContext(WorkAppContext)
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
     const onChallengeCreated = props.onChallengeCreated
@@ -1477,12 +1515,28 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         !!props.challenge?.id,
     )
     const isInitialResourceHydrationPendingRef = useRef<boolean>(!!props.challenge?.id)
+    /**
+     * Keeps React state and the async hydration guard in sync.
+     *
+     * Challenge details can arrive after the first empty render during a full browser refresh. The
+     * resource-hydration promise may resolve before React flushes the state update, so the ref must
+     * be updated synchronously anywhere the pending flag changes.
+     *
+     * @param isPending whether the initial resource-backed assignment hydration is still running.
+     * @returns nothing.
+     * @throws Does not throw.
+     */
+    const setInitialResourceHydrationPending = useCallback((isPending: boolean): void => {
+        isInitialResourceHydrationPendingRef.current = isPending
+        setIsInitialResourceHydrationPending(isPending)
+    }, [])
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
+    const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: applyProjectBillingToChallengeFormData(
@@ -1699,6 +1753,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+    const shouldDeferInitialResourceDirtyNormalization = isInitialResourceHydrationPending
+        || (!!props.challenge?.id && props.challenge.id !== currentChallengeId)
+    const shouldUseCopilotBillingSummary = workAppContext.isCopilot
+        && !workAppContext.isAdmin
+        && !workAppContext.isManager
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -2056,12 +2115,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
-        setIsInitialResourceHydrationPending(!!challengeId)
+        setInitialResourceHydrationPending(!!challengeId)
 
         reset(baseFormData)
 
         if (!challengeId) {
-            setIsInitialResourceHydrationPending(false)
+            setInitialResourceHydrationPending(false)
 
             return () => {
                 isActive = false
@@ -2111,14 +2170,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             })
             .finally(() => {
                 if (isActive) {
-                    setIsInitialResourceHydrationPending(false)
+                    setInitialResourceHydrationPending(false)
                 }
             })
 
         return () => {
             isActive = false
         }
-    }, [reset])
+    }, [
+        reset,
+        setInitialResourceHydrationPending,
+    ])
 
     useEffect(() => {
         if (!onSavingChange) {
@@ -2142,10 +2204,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         currentChallengeIdRef.current = currentChallengeId
     }, [currentChallengeId])
-
-    useEffect(() => {
-        isInitialResourceHydrationPendingRef.current = isInitialResourceHydrationPending
-    }, [isInitialResourceHydrationPending])
 
     useEffect(() => {
         projectBillingAccountRef.current = projectBillingAccount
@@ -2707,7 +2765,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             try {
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const projectBillingAccountIssue = isChallengeBeingActivated
-                    ? getProjectBillingAccountChallengeIssue(resolvedProjectBillingAccount)
+                    ? getProjectBillingAccountChallengeIssue(
+                        resolvedProjectBillingAccount,
+                        !!fallbackProjectId,
+                    )
                     : undefined
                 const projectBillingAccountErrorMessage = projectBillingAccountIssue
                     ? getProjectBillingAccountChallengeErrorMessage(projectBillingAccountIssue)
@@ -2761,7 +2822,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setLastSaved(savedAt)
                 setSaveStatus('saved')
 
-                reset(nextValues)
+                // Autosave should advance the saved baseline without replacing inputs users may still be editing.
+                reset(
+                    options.isAutosave
+                        ? formDataWithProjectBilling
+                        : nextValues,
+                    options.isAutosave
+                        ? { keepValues: true }
+                        : undefined,
+                )
                 onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
@@ -2982,6 +3051,106 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.billing?.billingAccountId,
         ],
     )
+    const rawPaymentCreator = useMemo(
+        (): string => normalizeDisplayToken(values.createdBy)
+            || normalizeDisplayToken(props.challenge?.createdBy),
+        [
+            props.challenge?.createdBy,
+            values.createdBy,
+        ],
+    )
+    const isPaymentCreatorUserId = useMemo(
+        (): boolean => isUserIdToken(rawPaymentCreator),
+        [rawPaymentCreator],
+    )
+    const loginUserHandle = normalizeDisplayToken(workAppContext.loginUserInfo?.handle)
+    const loginUserId = normalizeDisplayToken(workAppContext.loginUserInfo?.userId)
+    const displayedPaymentCreator = useMemo(
+        (): string => {
+            if (resolvedPaymentCreator?.source === rawPaymentCreator) {
+                return resolvedPaymentCreator.handle
+            }
+
+            if (!rawPaymentCreator) {
+                return '-'
+            }
+
+            if (isPaymentCreatorUserId) {
+                return loginUserId === rawPaymentCreator && loginUserHandle
+                    ? loginUserHandle
+                    : '-'
+            }
+
+            return rawPaymentCreator
+        },
+        [
+            isPaymentCreatorUserId,
+            loginUserHandle,
+            loginUserId,
+            rawPaymentCreator,
+            resolvedPaymentCreator?.handle,
+            resolvedPaymentCreator?.source,
+        ],
+    )
+
+    useEffect(() => {
+        setResolvedPaymentCreator(undefined)
+
+        if (!rawPaymentCreator) {
+            return undefined
+        }
+
+        if (!isPaymentCreatorUserId) {
+            setResolvedPaymentCreator({
+                handle: rawPaymentCreator,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        if (loginUserId === rawPaymentCreator && loginUserHandle) {
+            setResolvedPaymentCreator({
+                handle: loginUserHandle,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        let isActive = true
+
+        searchProfilesByUserIds([rawPaymentCreator])
+            .then(profiles => {
+                if (!isActive) {
+                    return
+                }
+
+                const creatorProfile = profiles.find(profile => (
+                    normalizeDisplayToken(profile.userId) === rawPaymentCreator
+                ))
+                const creatorHandle = normalizeDisplayToken(creatorProfile?.handle)
+
+                setResolvedPaymentCreator(creatorHandle
+                    ? {
+                        handle: creatorHandle,
+                        source: rawPaymentCreator,
+                    }
+                    : undefined)
+            })
+            .catch(() => {
+                if (isActive) {
+                    setResolvedPaymentCreator(undefined)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        isPaymentCreatorUserId,
+        loginUserHandle,
+        loginUserId,
+        rawPaymentCreator,
+    ])
     const reviewSection = usesManualReviewers
         ? (
             <section className={styles.section}>
@@ -3120,8 +3289,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 <section className={styles.section}>
                                     <h3 className={styles.sectionTitle}>Specification</h3>
                                     <div className={styles.block}>
-                                        <ChallengeDescriptionField />
-                                        <ChallengePrivateDescriptionField />
+                                        <ChallengeDescriptionField readOnly={isReadOnly} />
+                                        <ChallengePrivateDescriptionField readOnly={isReadOnly} />
                                     </div>
                                 </section>
 
@@ -3163,8 +3332,31 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 </div>
                                                 <div className={styles.billingSummary}>
                                                     <ReviewCostField name='prizeSets' />
-                                                    <ChallengeFeeField />
-                                                    <ChallengeTotalField />
+                                                    {shouldUseCopilotBillingSummary
+                                                        ? undefined
+                                                        : <ChallengeFeeField />}
+                                                    <ChallengeTotalField
+                                                        includeChallengeFee={!shouldUseCopilotBillingSummary}
+                                                        label={shouldUseCopilotBillingSummary
+                                                            ? 'Estimated challenge cost:'
+                                                            : undefined}
+                                                    />
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Billing Account Id:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedBillingAccountId}
+                                                        </span>
+                                                    </div>
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Payment Creator:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedPaymentCreator}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </section>
@@ -3227,12 +3419,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />
-                                        <div className={styles.readOnlyField}>
-                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
-                                            <span className={styles.readOnlyFieldValue}>
-                                                {displayedBillingAccountId}
-                                            </span>
-                                        </div>
                                     </div>
                                 </section>
 
@@ -3245,7 +3431,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 <StockArtsField />
                                                 <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField
-                                                    deferDirty={isInitialResourceHydrationPending}
+                                                    deferDirty={shouldDeferInitialResourceDirtyNormalization}
                                                 />
                                             </div>
                                         </section>

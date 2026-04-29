@@ -7,6 +7,7 @@ import {
     canViewAllEngagements,
     checkCanManageProject,
     checkIsUserInvitedToProject,
+    checkProjectAccess,
     checkProjectMembership,
     getProjectMemberRole,
 } from './permissions.utils'
@@ -105,6 +106,17 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
         expect(getProjectMemberRole(managedProject, '123'))
             .toBe('manager')
+    })
+
+    it('allows project workspace access for admins and project members only', () => {
+        expect(checkProjectAccess(['administrator'], '999', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess(['Project Manager'], '123', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess(['Project Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkProjectAccess(['Project Manager'], '123', undefined))
+            .toBe(false)
     })
 
     it('matches invited users by normalized user id or email', () => {

@@ -125,6 +125,19 @@ export function renderOptionalLinkedText(
     return nodes
 }
 
+export function buildWorkAppChallengeUrl(
+    projectId?: string,
+    challengeId?: string,
+): string | undefined {
+    if (!projectId || !challengeId) {
+        return undefined
+    }
+
+    const baseUrl = EnvironmentConfig.ADMIN.WORK_MANAGER_URL.replace(/\/$/, '')
+
+    return `${baseUrl}/projects/${projectId}/challenges/${challengeId}/view`
+}
+
 export function formatOptionalDate(
     value?: string | null,
 ): string {

@@ -32,7 +32,10 @@ type TalentSearchSortOption = 'alphabetical' | 'matching-index'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
-    const searchGenerationRef = useRef<number>(0) // ← add this
+    const searchGenerationRef = useRef<number>(0)
+    const toggleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const pendingToggleAutoSearchRef = useRef<boolean>(false)
+    const hasMountedRef = useRef<boolean>(false)
 
     const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
@@ -44,8 +47,9 @@ export const TalentSearchPage: FC = () => {
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
-    const [onlyActive, setOnlyActive] = useState<boolean>(false)
+    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(true)
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
+    const [onlyActive, setOnlyActive] = useState<boolean>(true)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
@@ -90,20 +94,8 @@ export const TalentSearchPage: FC = () => {
         [hasSkillSearch],
     )
 
-    const filteredResults = useMemo(() => results.filter(talent => {
-        if (onlyActive && !talent.isRecentlyActive) {
-            return false
-        }
-
-        if (onlyOpenToWork && !talent.openToWork) {
-            return false
-        }
-
-        return true
-    }), [onlyActive, onlyOpenToWork, results])
-
     // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
-    const displayedResults = filteredResults
+    const displayedResults = results
 
     const foundMembersCount = totalResults || displayedResults.length
     const displayedResultsWithCountryName = useMemo(
@@ -156,15 +148,18 @@ export const TalentSearchPage: FC = () => {
             generation?: number
             openToWork?: boolean
             page?: number
+            profileComplete?: boolean
             recentlyActive?: boolean
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
+
         const countries = (overrides?.countries ?? selectedCountryCodesList)
             .filter(Boolean)
         const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
+        const profileComplete = overrides?.profileComplete ?? onlyProfileComplete
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
         const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
@@ -189,6 +184,10 @@ export const TalentSearchPage: FC = () => {
 
         if (openToWork) {
             payload.openToWork = true
+        }
+
+        if (profileComplete) {
+            payload.profileComplete = true
         }
 
         if (recentlyActive) {
@@ -245,13 +244,14 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, selectedCountryCodesList])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
         searchGenerationRef.current += 1
         setSelectedCountries([])
-        setOnlyOpenToWork(false)
-        setOnlyActive(false)
+        setOnlyProfileComplete(true)
+        setOnlyOpenToWork(true)
+        setOnlyActive(true)
         setSortBy('alphabetical')
         setSelectedSkills([])
         setHasSearched(true)
@@ -261,9 +261,10 @@ export const TalentSearchPage: FC = () => {
         runMemberSearch([], {
             countries: [],
             generation: searchGenerationRef.current,
-            openToWork: false,
+            openToWork: true,
             page: 1,
-            recentlyActive: false,
+            profileComplete: true,
+            recentlyActive: true,
         })
     }, [runMemberSearch])
 
@@ -336,15 +337,72 @@ export const TalentSearchPage: FC = () => {
 
     useEffect(() => {
         if ((shouldShowIntroState) || isExtractingSkills) {
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
+            }
+
+            pendingToggleAutoSearchRef.current = false
+
+            return
+        }
+
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true
+
+            if (skipNextAutoSearchRef.current) {
+                skipNextAutoSearchRef.current = false
+                pendingToggleAutoSearchRef.current = false
+                if (toggleDebounceTimerRef.current) {
+                    clearTimeout(toggleDebounceTimerRef.current)
+                    toggleDebounceTimerRef.current = undefined
+                }
+
+                return
+            }
+
+            runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
             return
         }
 
         if (skipNextAutoSearchRef.current) {
             skipNextAutoSearchRef.current = false
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
+            }
+
+            pendingToggleAutoSearchRef.current = false
+
             return
         }
 
-        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
+        const runSearch = (): void => {
+            runMemberSearch(selectedSkills, {
+                generation: searchGenerationRef.current,
+                page: 1,
+            })
+        }
+
+        const shouldDebounce = pendingToggleAutoSearchRef.current || Boolean(toggleDebounceTimerRef.current)
+
+        if (shouldDebounce) {
+            pendingToggleAutoSearchRef.current = false
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
+            }
+
+            toggleDebounceTimerRef.current = setTimeout(() => {
+                toggleDebounceTimerRef.current = undefined
+                runSearch()
+            }, 800)
+            return
+        }
+
+        // No debounce requested and no pending timer: execute immediately.
+        pendingToggleAutoSearchRef.current = false
+        runSearch()
     }, [
         hasSearched,
         hasActiveFilters,
@@ -356,6 +414,14 @@ export const TalentSearchPage: FC = () => {
         selectedSkills,
         shouldShowIntroState,
     ])
+
+    // Cleanup any pending debounced request on unmount.
+    useEffect(() => (): void => {
+        if (toggleDebounceTimerRef.current) {
+            clearTimeout(toggleDebounceTimerRef.current)
+            toggleDebounceTimerRef.current = undefined
+        }
+    }, [])
 
     const handleLoadMore = useCallback((): void => {
         if (isLoadingMore || isSearchingMembers || !hasMoreResults) {
@@ -469,6 +535,7 @@ export const TalentSearchPage: FC = () => {
                                     checked={onlyOpenToWork}
                                     className={styles.checkboxInput}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
                                         setOnlyOpenToWork(event.target.checked)
                                     }}
                                 />
@@ -481,6 +548,7 @@ export const TalentSearchPage: FC = () => {
                                     checked={onlyActive}
                                     className={styles.checkboxInput}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
                                         setOnlyActive(event.target.checked)
                                     }}
                                 />
@@ -503,6 +571,19 @@ export const TalentSearchPage: FC = () => {
                                         </button>
                                     </Tooltip>
                                 </span>
+                            </label>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile complete</span>
                             </label>
                             <div className={styles.clearFiltersWrap}>
                                 <Button secondary onClick={clearAllFilters}>

@@ -14,6 +14,7 @@ export type {
     ProjectPhase,
     ProjectPhaseProduct,
     Project,
+    ProjectDetails,
     ProjectFilters,
     ProjectStatus as ProjectStatusValue,
     ProjectType,
