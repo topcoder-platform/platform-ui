@@ -35,6 +35,7 @@ export const TalentSearchPage: FC = () => {
     const searchGenerationRef = useRef<number>(0)
     const toggleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const pendingToggleAutoSearchRef = useRef<boolean>(false)
+    const hasMountedRef = useRef<boolean>(false)
 
     const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
@@ -345,6 +346,23 @@ export const TalentSearchPage: FC = () => {
             return
         }
 
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true
+
+            if (skipNextAutoSearchRef.current) {
+                skipNextAutoSearchRef.current = false
+                pendingToggleAutoSearchRef.current = false
+                if (toggleDebounceTimerRef.current) {
+                    clearTimeout(toggleDebounceTimerRef.current)
+                }
+
+                return
+            }
+
+            runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
+            return
+        }
+
         if (skipNextAutoSearchRef.current) {
             skipNextAutoSearchRef.current = false
             if (toggleDebounceTimerRef.current) {
@@ -363,17 +381,23 @@ export const TalentSearchPage: FC = () => {
             })
         }
 
-        // Throttle auto-search: any filter dependency change schedules a single request.
-        // This prevents older intermediate requests from overwriting newer ones when the user toggles quickly.
-        pendingToggleAutoSearchRef.current = false
+        const shouldDebounce = pendingToggleAutoSearchRef.current || Boolean(toggleDebounceTimerRef.current)
 
-        if (toggleDebounceTimerRef.current) {
-            clearTimeout(toggleDebounceTimerRef.current)
+        if (shouldDebounce) {
+            pendingToggleAutoSearchRef.current = false
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+            }
+
+            toggleDebounceTimerRef.current = setTimeout(() => {
+                runSearch()
+            }, 800)
+            return
         }
 
-        toggleDebounceTimerRef.current = setTimeout(() => {
-            runSearch()
-        }, 800)
+        // No debounce requested and no pending timer: execute immediately.
+        pendingToggleAutoSearchRef.current = false
+        runSearch()
     }, [
         hasSearched,
         hasActiveFilters,
