@@ -96,7 +96,6 @@ jest.mock('../../../lib/services', () => ({
 }))
 jest.mock('../../../lib/utils', () => ({
     checkCanManageProject: jest.fn(() => true),
-    checkIsCopilotOrManager: jest.fn(() => false),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -209,6 +208,48 @@ describe('UsersManagementPage', () => {
             .getByText('Project Status: active'))
             .toBeTruthy()
         expect(screen.queryByTestId('page-back-link'))
+            .toBeNull()
+    })
+
+    it('hides member management actions when a global manager role cannot manage the project', () => {
+        mockedCheckCanManageProject.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: 200,
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+
+        renderPage('/projects/200/users', {
+            ...defaultContextValue,
+            isAdmin: false,
+            isManager: true,
+            loginUserInfo: {
+                email: 'manager@example.com',
+                exp: 0,
+                handle: 'manager-user',
+                iat: 0,
+                roles: ['project manager'],
+                userId: 12345,
+            } as WorkAppContextModel['loginUserInfo'],
+            userRoles: ['project manager'],
+        })
+
+        const pageRightHeader = screen.getByTestId('page-right-header')
+        const pageTitleAction = screen.getByTestId('page-title-action')
+
+        expect(within(pageRightHeader)
+            .queryByRole('button', { name: 'Add User' }))
+            .toBeNull()
+        expect(within(pageRightHeader)
+            .queryByRole('button', { name: 'Invite User' }))
+            .toBeNull()
+        expect(within(pageTitleAction)
+            .queryByRole('link', { name: 'Edit project' }))
             .toBeNull()
     })
 })
