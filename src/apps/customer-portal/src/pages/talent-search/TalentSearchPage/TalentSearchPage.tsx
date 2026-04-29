@@ -32,7 +32,9 @@ type TalentSearchSortOption = 'alphabetical' | 'matching-index'
 
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
-    const searchGenerationRef = useRef<number>(0) // ← add this
+    const searchGenerationRef = useRef<number>(0)
+    const toggleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const pendingToggleAutoSearchRef = useRef<boolean>(false)
 
     const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
@@ -91,20 +93,8 @@ export const TalentSearchPage: FC = () => {
         [hasSkillSearch],
     )
 
-    const filteredResults = useMemo(() => results.filter(talent => {
-        if (onlyActive && !talent.isRecentlyActive) {
-            return false
-        }
-
-        if (onlyOpenToWork && !talent.openToWork) {
-            return false
-        }
-
-        return true
-    }), [onlyActive, onlyOpenToWork, results])
-
     // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
-    const displayedResults = filteredResults
+    const displayedResults = results
 
     const foundMembersCount = totalResults || displayedResults.length
     const displayedResultsWithCountryName = useMemo(
@@ -162,6 +152,7 @@ export const TalentSearchPage: FC = () => {
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
+
         const countries = (overrides?.countries ?? selectedCountryCodesList)
             .filter(Boolean)
         const generation = overrides?.generation
@@ -345,15 +336,47 @@ export const TalentSearchPage: FC = () => {
 
     useEffect(() => {
         if ((shouldShowIntroState) || isExtractingSkills) {
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+            }
+
+            pendingToggleAutoSearchRef.current = false
+
             return
         }
 
         if (skipNextAutoSearchRef.current) {
             skipNextAutoSearchRef.current = false
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+            }
+
+            pendingToggleAutoSearchRef.current = false
+
             return
         }
 
-        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
+        const runSearch = (): void => {
+            runMemberSearch(selectedSkills, {
+                generation: searchGenerationRef.current,
+                page: 1,
+            })
+        }
+
+        // Throttle auto-search on checkbox toggles to avoid multiple overlapping requests.
+        if (pendingToggleAutoSearchRef.current) {
+            pendingToggleAutoSearchRef.current = false
+
+            if (toggleDebounceTimerRef.current) {
+                clearTimeout(toggleDebounceTimerRef.current)
+            }
+
+            toggleDebounceTimerRef.current = setTimeout(() => {
+                runSearch()
+            }, 800)
+        } else {
+            runSearch()
+        }
     }, [
         hasSearched,
         hasActiveFilters,
@@ -365,6 +388,13 @@ export const TalentSearchPage: FC = () => {
         selectedSkills,
         shouldShowIntroState,
     ])
+
+    // Cleanup any pending debounced request on unmount.
+    useEffect(() => (): void => {
+        if (toggleDebounceTimerRef.current) {
+            clearTimeout(toggleDebounceTimerRef.current)
+        }
+    }, [])
 
     const handleLoadMore = useCallback((): void => {
         if (isLoadingMore || isSearchingMembers || !hasMoreResults) {
@@ -475,21 +505,10 @@ export const TalentSearchPage: FC = () => {
                             <label className={styles.checkboxRow}>
                                 <input
                                     type='checkbox'
-                                    checked={onlyProfileComplete}
-                                    className={styles.checkboxInput}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setOnlyProfileComplete(event.target.checked)
-                                    }}
-                                />
-                                <span className={styles.toggleControl} />
-                                <span>100% Profile complete</span>
-                            </label>
-                            <label className={styles.checkboxRow}>
-                                <input
-                                    type='checkbox'
                                     checked={onlyOpenToWork}
                                     className={styles.checkboxInput}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
                                         setOnlyOpenToWork(event.target.checked)
                                     }}
                                 />
@@ -502,6 +521,7 @@ export const TalentSearchPage: FC = () => {
                                     checked={onlyActive}
                                     className={styles.checkboxInput}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
                                         setOnlyActive(event.target.checked)
                                     }}
                                 />
@@ -524,6 +544,19 @@ export const TalentSearchPage: FC = () => {
                                         </button>
                                     </Tooltip>
                                 </span>
+                            </label>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        pendingToggleAutoSearchRef.current = true
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile complete</span>
                             </label>
                             <div className={styles.clearFiltersWrap}>
                                 <Button secondary onClick={clearAllFilters}>
