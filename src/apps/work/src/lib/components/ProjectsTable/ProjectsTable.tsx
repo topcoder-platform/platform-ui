@@ -250,6 +250,159 @@ interface ProjectBillingAccountCellProps {
     showMemberPaymentsRemaining: boolean
 }
 
+interface ProjectBillingBudgetDisplayState {
+    budgetInfo: BillingAccountBudgetInfo | undefined
+    copilotBudgetInfo: CopilotMemberPaymentsBudgetInfo | undefined
+}
+
+interface RenderProjectBillingAccountModalParams {
+    billingAccountDetails: UseFetchBillingAccountDetailsResult['billingAccountDetails']
+    isModalOpen: boolean
+    onClose: () => void
+    projectId: Project['id']
+    showMemberPaymentsRemaining: boolean
+}
+
+/**
+ * Resolves whether the billing-account details hook should fetch modal data.
+ *
+ * @param isModalOpen Whether the row details modal has been opened.
+ * @param showPaymentDetails Whether the current user may see payment details.
+ * @returns `true` when the modal feature is enabled and data should be fetched.
+ */
+function canFetchProjectBillingAccountDetails(
+    isModalOpen: boolean,
+    showPaymentDetails: boolean,
+): boolean {
+    return BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen && showPaymentDetails
+}
+
+/**
+ * Selects the visible budget state for one project billing-account row.
+ *
+ * @param billingAccount Billing-account summary attached to the project row.
+ * @param showPaymentDetails Whether the current user may see payment details.
+ * @param showMemberPaymentsRemaining Whether the current user needs the copilot-safe member payment view.
+ * @returns Budget data to render, with copilot budget data included when needed.
+ */
+function getProjectBillingBudgetDisplayState(
+    billingAccount: BillingAccount | undefined,
+    showPaymentDetails: boolean,
+    showMemberPaymentsRemaining: boolean,
+): ProjectBillingBudgetDisplayState {
+    if (showMemberPaymentsRemaining) {
+        const copilotBudgetInfo = getCopilotMemberPaymentsBudgetInfo(billingAccount)
+
+        return {
+            budgetInfo: copilotBudgetInfo,
+            copilotBudgetInfo,
+        }
+    }
+
+    if (!BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || !showPaymentDetails) {
+        return {
+            budgetInfo: undefined,
+            copilotBudgetInfo: undefined,
+        }
+    }
+
+    return {
+        budgetInfo: getBillingAccountBudgetInfo(billingAccount),
+        copilotBudgetInfo: undefined,
+    }
+}
+
+/**
+ * Renders the optional billing-account budget badge for one project row.
+ *
+ * @param budgetState Budget data selected for the current user.
+ * @param showMemberPaymentsRemaining Whether the badge should render copilot-safe copy.
+ * @returns A budget badge element, or `undefined` when no budget should be shown.
+ */
+function renderProjectBillingAccountBudget(
+    budgetState: ProjectBillingBudgetDisplayState,
+    showMemberPaymentsRemaining: boolean,
+): JSX.Element | undefined {
+    if (!budgetState.budgetInfo) {
+        return undefined
+    }
+
+    const budgetStatusClass = getBudgetStatusClass(
+        budgetState.budgetInfo,
+        showMemberPaymentsRemaining,
+    )
+    const budgetDisplayClass = budgetStatusClass
+        ? `${styles.budgetDisplay} ${budgetStatusClass}`
+        : styles.budgetDisplay
+
+    return (
+        <span className={budgetDisplayClass}>
+            {renderBudgetDisplayContent(
+                budgetState.budgetInfo,
+                budgetState.copilotBudgetInfo,
+                showMemberPaymentsRemaining,
+            )}
+        </span>
+    )
+}
+
+/**
+ * Renders the billing-account line-item details button when the feature is enabled.
+ *
+ * @param billingAccountId Normalized billing-account id for the current row.
+ * @param showPaymentDetails Whether the current user may open payment details.
+ * @param onOpen Open handler for the row modal.
+ * @returns The details button, or `undefined` when unavailable.
+ */
+function renderProjectBillingAccountDetailsButton(
+    billingAccountId: string | undefined,
+    showPaymentDetails: boolean,
+    onOpen: () => void,
+): JSX.Element | undefined {
+    if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !billingAccountId || !showPaymentDetails) {
+        return undefined
+    }
+
+    return (
+        <button
+            aria-label='View billing account details'
+            className={styles.infoButton}
+            onClick={onOpen}
+            title='View billing account details'
+            type='button'
+        >
+            <IconOutline.InformationCircleIcon className={styles.infoIcon} />
+        </button>
+    )
+}
+
+/**
+ * Renders the row-level billing-account line items modal after data is loaded.
+ *
+ * @param params Modal visibility, project context, and loaded billing-account details.
+ * @returns The modal element, or `undefined` while hidden or unloaded.
+ */
+function renderProjectBillingAccountModal(
+    params: RenderProjectBillingAccountModalParams,
+): JSX.Element | undefined {
+    if (
+        !BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
+        || !params.isModalOpen
+        || !params.billingAccountDetails
+    ) {
+        return undefined
+    }
+
+    return (
+        <BillingAccountLineItemsModal
+            billingAccountDetails={params.billingAccountDetails}
+            onClose={params.onClose}
+            projectId={params.projectId}
+            showMemberPaymentsRemaining={params.showMemberPaymentsRemaining}
+        />
+    )
+}
+
 /**
  * Renders a project billing-account summary and lazily loads the line-item
  * modal only after the details button is opened.
@@ -264,37 +417,17 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen
+        canFetchProjectBillingAccountDetails(isModalOpen, props.showPaymentDetails)
             ? normalizedBillingAccountId
             : undefined,
     )
-    const billingAccountDetails = billingAccountDetailsResult.billingAccountDetails
-    const budgetInfo = BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED
-        ? getBillingAccountBudgetInfo(props.billingAccount)
-        : undefined
-        isModalOpen && props.showPaymentDetails
-            ? normalizedBillingAccountId
-            : undefined,
-    )
-    const standardBudgetInfo = props.showPaymentDetails
-        ? getBillingAccountBudgetInfo(props.billingAccount)
-        : undefined
-    const copilotBudgetInfo = props.showMemberPaymentsRemaining
-        ? getCopilotMemberPaymentsBudgetInfo(props.billingAccount)
-        : undefined
-    const budgetInfo = props.showMemberPaymentsRemaining
-        ? copilotBudgetInfo
-        : standardBudgetInfo
-    const budgetStatusClass = getBudgetStatusClass(
-        budgetInfo,
+    const budgetDisplayState = getProjectBillingBudgetDisplayState(
+        props.billingAccount,
+        props.showPaymentDetails,
         props.showMemberPaymentsRemaining,
     )
-    const budgetDisplayClass = budgetStatusClass
-        ? `${styles.budgetDisplay} ${budgetStatusClass}`
-        : styles.budgetDisplay
-    const budgetDisplayContent = renderBudgetDisplayContent(
-        budgetInfo,
-        copilotBudgetInfo,
+    const billingAccountBudget = renderProjectBillingAccountBudget(
+        budgetDisplayState,
         props.showMemberPaymentsRemaining,
     )
 
@@ -305,45 +438,27 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const handleCloseModal = useCallback((): void => {
         setIsModalOpen(false)
     }, [])
-    const shouldShowBillingAccountModal = BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
-        && isModalOpen
-        && !!billingAccountDetails
+    const billingAccountDetailsButton = renderProjectBillingAccountDetailsButton(
+        normalizedBillingAccountId,
+        props.showPaymentDetails,
+        handleOpenModal,
+    )
+    const billingAccountModal = renderProjectBillingAccountModal({
+        billingAccountDetails: billingAccountDetailsResult.billingAccountDetails,
+        isModalOpen,
+        onClose: handleCloseModal,
+        projectId: props.project.id,
+        showMemberPaymentsRemaining: props.showMemberPaymentsRemaining,
+    })
 
     return (
         <div className={styles.billingAccountCell}>
             <span className={styles.billingAccountLabel}>
                 {getBillingAccountDisplay(props.project, props.billingAccount)}
             </span>
-            {budgetInfo
-                ? (
-                    <span className={budgetDisplayClass}>
-                        {budgetDisplayContent}
-                    </span>
-                )
-                : undefined}
-            {BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && normalizedBillingAccountId && props.showPaymentDetails
-                ? (
-                    <button
-                        aria-label='View billing account details'
-                        className={styles.infoButton}
-                        onClick={handleOpenModal}
-                        title='View billing account details'
-                        type='button'
-                    >
-                        <IconOutline.InformationCircleIcon className={styles.infoIcon} />
-                    </button>
-                )
-                : undefined}
-            {shouldShowBillingAccountModal && billingAccountDetails
-                ? (
-                    <BillingAccountLineItemsModal
-                        billingAccountDetails={billingAccountDetails}
-                        onClose={handleCloseModal}
-                        projectId={props.project.id}
-                        showMemberPaymentsRemaining={props.showMemberPaymentsRemaining}
-                    />
-                )
-                : undefined}
+            {billingAccountBudget}
+            {billingAccountDetailsButton}
+            {billingAccountModal}
         </div>
     )
 }

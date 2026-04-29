@@ -13,6 +13,7 @@ import {
     BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED,
     BILLING_ACCOUNT_DETAILS_MODAL_ENABLED,
 } from '../../constants'
+import {
     WorkAppContext,
 } from '../../contexts/WorkAppContext'
 import {
@@ -51,20 +52,15 @@ interface ProjectBillingAccountExpiredNoticeProps {
     projectId: string
 }
 
-type BudgetStatus = 'healthy' | 'warning' | 'critical'
 type BillingAccountIssue = ReturnType<typeof getProjectBillingAccountChallengeIssue>
-
-interface BillingBudgetInfo {
-    spent: number
-    status: BudgetStatus
-    totalBudget: number
-}
 
 interface BillingAccountDetailsContentProps {
     billingAccountId: string
     billingAccountName: string | undefined
-    budgetInfo: BillingBudgetInfo | undefined
+    budgetDisplayContent: JSX.Element | undefined
+    budgetInfo: BillingAccountBudgetInfo | undefined
     onOpenModal: () => void
+    showDetailsButton: boolean
 }
 
 interface RenderBillingAccountContentParams {
@@ -219,30 +215,6 @@ function getVisibleBillingAccountIssue(
 }
 
 /**
- * Builds the optional spent/total budget display model from fetched billing details.
- *
- * @param billingAccountDetails Billing account details returned by the work app hook.
- * @returns Spent, total, and status information, or `undefined` while hidden or unavailable.
- */
-function getBillingAccountBudgetInfo(
-    billingAccountDetails: BillingAccountDetails | undefined,
-): BillingBudgetInfo | undefined {
-    if (!BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || !billingAccountDetails) {
-        return undefined
-    }
-
-    const totalBudget = Number(billingAccountDetails.budget) || 0
-    const remaining = Number(billingAccountDetails.totalBudgetRemaining) || 0
-    const status = getBudgetStatus(remaining, totalBudget)
-
-    return {
-        spent: Math.max(totalBudget - remaining, 0),
-        status,
-        totalBudget,
-    }
-}
-
-/**
  * Renders the visible billing account label plus optional budget and details controls.
  *
  * @param props Billing account label, optional budget data, and modal open handler.
@@ -251,10 +223,7 @@ function getBillingAccountBudgetInfo(
 const BillingAccountDetailsContent: FC<BillingAccountDetailsContentProps> = (
     props: BillingAccountDetailsContentProps,
 ) => {
-    const budgetStatusClass = props.budgetInfo
-        ? styles[`budget${props.budgetInfo.status.charAt(0)
-            .toUpperCase()}${props.budgetInfo.status.slice(1)}`]
-        : ''
+    const budgetStatusClass = getBudgetStatusClass(props.budgetInfo)
 
     return (
         <div className={styles.details}>
@@ -270,14 +239,11 @@ const BillingAccountDetailsContent: FC<BillingAccountDetailsContentProps> = (
             {props.budgetInfo
                 ? (
                     <span className={`${styles.budgetDisplay} ${budgetStatusClass}`}>
-                        {formatCurrency(props.budgetInfo.spent)}
-                        {' / '}
-                        {formatCurrency(props.budgetInfo.totalBudget)}
-                        {' spent'}
+                        {props.budgetDisplayContent}
                     </span>
                 )
                 : undefined}
-            {BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
+            {props.showDetailsButton
                 ? (
                     <button
                         aria-label='View billing account details'
@@ -299,12 +265,16 @@ const BillingAccountDetailsContent: FC<BillingAccountDetailsContentProps> = (
  * @param billingAccountDetails Billing account detail payload, if loaded.
  * @param isModalOpen Whether the details modal has been requested.
  * @param onClose Close handler passed to the modal.
+ * @param projectId Project id used to build project-scoped line-item links.
+ * @param showMemberPaymentsRemaining Whether the modal should hide markup and show copilot-safe payment values.
  * @returns The line-item modal, or `undefined` when the feature is hidden.
  */
 function renderBillingAccountModal(
     billingAccountDetails: BillingAccountDetails | undefined,
     isModalOpen: boolean,
     onClose: () => void,
+    projectId: string,
+    showMemberPaymentsRemaining: boolean,
 ): JSX.Element | undefined {
     if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !isModalOpen || !billingAccountDetails) {
         return undefined
@@ -314,6 +284,8 @@ function renderBillingAccountModal(
         <BillingAccountLineItemsModal
             billingAccountDetails={billingAccountDetails}
             onClose={onClose}
+            projectId={projectId}
+            showMemberPaymentsRemaining={showMemberPaymentsRemaining}
         />
     )
 }
@@ -384,9 +356,11 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
     const billingAccount = projectBillingAccountResult.billingAccount
     const normalizedBillingAccountId = normalizeOptionalString(props.billingAccountId)
         || normalizeOptionalString(billingAccount?.id)
+    const shouldFetchBillingAccountDetails = (BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED && showPaymentDetails)
+        || showMemberPaymentsRemaining
+        || (BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen && showPaymentDetails)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
-        showPaymentDetails
+        shouldFetchBillingAccountDetails
             ? normalizedBillingAccountId
             : undefined,
     )
@@ -419,14 +393,8 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         getProjectBillingAccountChallengeIssue(billingAccount),
     )
 
-    const budgetInfo = useMemo(
-        () => getBillingAccountBudgetInfo(billingAccountDetailsData),
-        [billingAccountDetailsData],
-    )
-    const billingAccountIssue = getProjectBillingAccountChallengeIssue(billingAccount)
-
     const standardBudgetInfo = useMemo(() => {
-        if (!billingAccountDetailsData) {
+        if (!BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || !billingAccountDetailsData) {
             return undefined
         }
 
@@ -443,6 +411,11 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         showPaymentDetails,
         standardBudgetInfo,
     })
+    const budgetDisplayContent = renderBudgetDisplayContent(
+        budgetInfo,
+        copilotBudgetInfo,
+        showMemberPaymentsRemaining,
+    )
 
     const handleOpenModal = useCallback((): void => {
         setIsModalOpen(true)
@@ -457,51 +430,10 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             <BillingAccountDetailsContent
                 billingAccountId={normalizedBillingAccountId}
                 billingAccountName={billingAccountName}
+                budgetDisplayContent={budgetDisplayContent}
                 budgetInfo={budgetInfo}
                 onOpenModal={handleOpenModal}
-    const budgetStatusClass = getBudgetStatusClass(budgetInfo)
-    const budgetDisplayContent = renderBudgetDisplayContent(
-        budgetInfo,
-        copilotBudgetInfo,
-        showMemberPaymentsRemaining,
-    )
-    const billingAccountDetailsContent = normalizedBillingAccountId
-        ? (
-            <div className={styles.details}>
-                <span>
-                    Billing account:
-                    {' '}
-                    {billingAccountName || 'Unknown'}
-                    {' '}
-                    /
-                    {' '}
-                    {normalizedBillingAccountId}
-                </span>
-                {budgetInfo && (
-                    <>
-                        <span className={`${styles.budgetDisplay} ${budgetStatusClass}`}>
-                            {budgetDisplayContent}
-                        </span>
-                        <button
-                            aria-label='View billing account details'
-                            className={styles.infoButton}
-                            onClick={handleOpenModal}
-                            type='button'
-                        >
-                            <IconOutline.InformationCircleIcon className={styles.infoIcon} />
-                        </button>
-                    </>
-                )}
-            </div>
-        )
-        : undefined
-    const billingAccountModal = isModalOpen && billingAccountDetailsData
-        ? (
-            <BillingAccountLineItemsModal
-                billingAccountDetails={billingAccountDetailsData}
-                onClose={handleCloseModal}
-                projectId={props.projectId}
-                showMemberPaymentsRemaining={showMemberPaymentsRemaining}
+                showDetailsButton={BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && showPaymentDetails}
             />
         )
         : undefined
@@ -509,6 +441,8 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         billingAccountDetailsData,
         isModalOpen,
         handleCloseModal,
+        props.projectId,
+        showMemberPaymentsRemaining,
     )
 
     return renderBillingAccountContent({
