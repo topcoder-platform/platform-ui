@@ -33,7 +33,7 @@ type TalentSearchSortOption = 'alphabetical' | 'matching-index'
 export const TalentSearchPage: FC = () => {
     const skipNextAutoSearchRef = useRef<boolean>(false)
     const searchGenerationRef = useRef<number>(0)
-    const toggleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const toggleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const pendingToggleAutoSearchRef = useRef<boolean>(false)
     const hasMountedRef = useRef<boolean>(false)
 
@@ -339,6 +339,7 @@ export const TalentSearchPage: FC = () => {
         if ((shouldShowIntroState) || isExtractingSkills) {
             if (toggleDebounceTimerRef.current) {
                 clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
             }
 
             pendingToggleAutoSearchRef.current = false
@@ -354,6 +355,7 @@ export const TalentSearchPage: FC = () => {
                 pendingToggleAutoSearchRef.current = false
                 if (toggleDebounceTimerRef.current) {
                     clearTimeout(toggleDebounceTimerRef.current)
+                    toggleDebounceTimerRef.current = undefined
                 }
 
                 return
@@ -367,6 +369,7 @@ export const TalentSearchPage: FC = () => {
             skipNextAutoSearchRef.current = false
             if (toggleDebounceTimerRef.current) {
                 clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
             }
 
             pendingToggleAutoSearchRef.current = false
@@ -387,9 +390,11 @@ export const TalentSearchPage: FC = () => {
             pendingToggleAutoSearchRef.current = false
             if (toggleDebounceTimerRef.current) {
                 clearTimeout(toggleDebounceTimerRef.current)
+                toggleDebounceTimerRef.current = undefined
             }
 
             toggleDebounceTimerRef.current = setTimeout(() => {
+                toggleDebounceTimerRef.current = undefined
                 runSearch()
             }, 800)
             return
@@ -414,6 +419,7 @@ export const TalentSearchPage: FC = () => {
     useEffect(() => (): void => {
         if (toggleDebounceTimerRef.current) {
             clearTimeout(toggleDebounceTimerRef.current)
+            toggleDebounceTimerRef.current = undefined
         }
     }, [])
 
