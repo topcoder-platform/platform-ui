@@ -43,6 +43,7 @@ import {
     patchChallenge,
     fetchResourceRoles,
     fetchResources,
+    searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
     showErrorToast,
@@ -84,6 +85,7 @@ jest.mock('../../../../lib/services', () => ({
     fetchResources: jest.fn(),
     fetchWorkflows: jest.fn(),
     patchChallenge: jest.fn(),
+    searchProfilesByUserIds: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
     formatLastSaved: () => '',
@@ -654,6 +656,7 @@ const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as je
 const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
+const mockedSearchProfilesByUserIds = searchProfilesByUserIds as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
 const mockedTermsField = TermsField as jest.MockedFunction<typeof TermsField>
@@ -779,6 +782,7 @@ describe('ChallengeEditorForm', () => {
         mockedFetchProfile.mockResolvedValue(undefined)
         mockedFetchResourceRolesService.mockResolvedValue([])
         mockedFetchResourcesService.mockResolvedValue([])
+        mockedSearchProfilesByUserIds.mockResolvedValue([])
         mockedCreateResource.mockResolvedValue(undefined)
     })
 
@@ -847,20 +851,24 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('renders billing metadata inside prizes and billing when project billing is available', () => {
+    it('renders billing metadata inside prizes and billing when project billing is available', async () => {
         mockedUseFetchProjectBillingAccount.mockReturnValue({
             billingAccount: {
                 id: '80001063',
             },
             isLoading: false,
         })
+        mockedSearchProfilesByUserIds.mockResolvedValue([{
+            handle: 'challenge.creator',
+            userId: '123456',
+        }])
 
         render(
             <MemoryRouter>
                 <ChallengeEditorForm
                     challenge={{
                         ...draftChallenge,
-                        createdBy: 'challenge.creator',
+                        createdBy: '123456',
                     }}
                 />
             </MemoryRouter>,
@@ -877,8 +885,12 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('80001063')
         expect(prizesBillingSection)
             .toHaveTextContent('Payment Creator')
+        await waitFor(() => {
+            expect(prizesBillingSection)
+                .toHaveTextContent('challenge.creator')
+        })
         expect(prizesBillingSection)
-            .toHaveTextContent('challenge.creator')
+            .not.toHaveTextContent('123456')
         expect(advancedOptionsSection)
             .not.toHaveTextContent('Billing Account Id')
     })

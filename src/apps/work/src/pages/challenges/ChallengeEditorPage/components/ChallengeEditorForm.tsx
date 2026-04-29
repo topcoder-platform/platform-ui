@@ -66,6 +66,7 @@ import {
     fetchResources,
     fetchWorkflows,
     patchChallenge,
+    searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
     formatLastSaved,
@@ -219,6 +220,11 @@ interface SaveChallengeOptions {
 interface SaveStatusMetadata {
     isSaveAsDraft: boolean
     payloadStatus?: string
+}
+
+interface ResolvedPaymentCreator {
+    handle: string
+    source: string
 }
 
 interface ResolvePostSaveNavigationPathParams {
@@ -424,6 +430,33 @@ function normalizeTextValue(value: unknown): string {
     }
 
     return value.trim()
+}
+
+/**
+ * Normalizes optional display tokens from API payloads and auth context.
+ *
+ * @param value Raw value that may be a string or numeric user id.
+ * @returns Trimmed string value, or an empty string when no value is available.
+ * @throws Does not throw.
+ */
+function normalizeDisplayToken(value: unknown): string {
+    if (value === undefined || value === null) {
+        return ''
+    }
+
+    return String(value)
+        .trim()
+}
+
+/**
+ * Detects creator values that need member-profile resolution before display.
+ *
+ * @param value Normalized challenge `createdBy` value.
+ * @returns `true` when the value looks like a Topcoder numeric user id.
+ * @throws Does not throw.
+ */
+function isUserIdToken(value: string): boolean {
+    return /^\d+$/.test(value)
 }
 
 function hasSameNormalizedValue(valueA: unknown, valueB: unknown): boolean {
@@ -1503,6 +1536,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
+    const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: applyProjectBillingToChallengeFormData(
@@ -3017,15 +3051,106 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.billing?.billingAccountId,
         ],
     )
-    const displayedPaymentCreator = useMemo(
-        (): string => normalizeTextValue(values.createdBy)
-            || normalizeTextValue(props.challenge?.createdBy)
-            || '-',
+    const rawPaymentCreator = useMemo(
+        (): string => normalizeDisplayToken(values.createdBy)
+            || normalizeDisplayToken(props.challenge?.createdBy),
         [
             props.challenge?.createdBy,
             values.createdBy,
         ],
     )
+    const isPaymentCreatorUserId = useMemo(
+        (): boolean => isUserIdToken(rawPaymentCreator),
+        [rawPaymentCreator],
+    )
+    const loginUserHandle = normalizeDisplayToken(workAppContext.loginUserInfo?.handle)
+    const loginUserId = normalizeDisplayToken(workAppContext.loginUserInfo?.userId)
+    const displayedPaymentCreator = useMemo(
+        (): string => {
+            if (resolvedPaymentCreator?.source === rawPaymentCreator) {
+                return resolvedPaymentCreator.handle
+            }
+
+            if (!rawPaymentCreator) {
+                return '-'
+            }
+
+            if (isPaymentCreatorUserId) {
+                return loginUserId === rawPaymentCreator && loginUserHandle
+                    ? loginUserHandle
+                    : '-'
+            }
+
+            return rawPaymentCreator
+        },
+        [
+            isPaymentCreatorUserId,
+            loginUserHandle,
+            loginUserId,
+            rawPaymentCreator,
+            resolvedPaymentCreator?.handle,
+            resolvedPaymentCreator?.source,
+        ],
+    )
+
+    useEffect(() => {
+        setResolvedPaymentCreator(undefined)
+
+        if (!rawPaymentCreator) {
+            return undefined
+        }
+
+        if (!isPaymentCreatorUserId) {
+            setResolvedPaymentCreator({
+                handle: rawPaymentCreator,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        if (loginUserId === rawPaymentCreator && loginUserHandle) {
+            setResolvedPaymentCreator({
+                handle: loginUserHandle,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        let isActive = true
+
+        searchProfilesByUserIds([rawPaymentCreator])
+            .then(profiles => {
+                if (!isActive) {
+                    return
+                }
+
+                const creatorProfile = profiles.find(profile => (
+                    normalizeDisplayToken(profile.userId) === rawPaymentCreator
+                ))
+                const creatorHandle = normalizeDisplayToken(creatorProfile?.handle)
+
+                setResolvedPaymentCreator(creatorHandle
+                    ? {
+                        handle: creatorHandle,
+                        source: rawPaymentCreator,
+                    }
+                    : undefined)
+            })
+            .catch(() => {
+                if (isActive) {
+                    setResolvedPaymentCreator(undefined)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        isPaymentCreatorUserId,
+        loginUserHandle,
+        loginUserId,
+        rawPaymentCreator,
+    ])
     const reviewSection = usesManualReviewers
         ? (
             <section className={styles.section}>
