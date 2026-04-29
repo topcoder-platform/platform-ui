@@ -51,6 +51,10 @@ jest.mock('../../utils', () => ({
     getAssignmentStandardHoursPerWeek: jest.fn(() => 40),
 }))
 
+jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: false,
+}))
+
 describe('PaymentFormModal', () => {
     const member: Assignment = {
         agreementRate: '821.20',

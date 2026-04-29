@@ -15,7 +15,11 @@ import {
     TableColumn,
 } from '~/libs/ui'
 
-import { PROJECT_STATUS } from '../../constants'
+import {
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED,
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED,
+    PROJECT_STATUS,
+} from '../../constants'
 import { WorkAppContext } from '../../contexts/WorkAppContext'
 import {
     useFetchBillingAccountDetails,
@@ -251,8 +255,7 @@ interface ProjectBillingAccountCellProps {
  * modal only after the details button is opened.
  *
  * @param props Project row and matching billing-account summary from the list API.
- * @returns Billing-account label, role-specific budget badge, and optional
- * line-item modal.
+ * @returns Billing-account label, with budget and line-item details shown only when enabled.
  */
 const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     props: ProjectBillingAccountCellProps,
@@ -261,6 +264,14 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
+        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen
+            ? normalizedBillingAccountId
+            : undefined,
+    )
+    const billingAccountDetails = billingAccountDetailsResult.billingAccountDetails
+    const budgetInfo = BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED
+        ? getBillingAccountBudgetInfo(props.billingAccount)
+        : undefined
         isModalOpen && props.showPaymentDetails
             ? normalizedBillingAccountId
             : undefined,
@@ -294,6 +305,9 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const handleCloseModal = useCallback((): void => {
         setIsModalOpen(false)
     }, [])
+    const shouldShowBillingAccountModal = BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
+        && isModalOpen
+        && !!billingAccountDetails
 
     return (
         <div className={styles.billingAccountCell}>
@@ -307,7 +321,7 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
                     </span>
                 )
                 : undefined}
-            {normalizedBillingAccountId && props.showPaymentDetails
+            {BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && normalizedBillingAccountId && props.showPaymentDetails
                 ? (
                     <button
                         aria-label='View billing account details'
@@ -320,10 +334,10 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
                     </button>
                 )
                 : undefined}
-            {isModalOpen && billingAccountDetailsResult.billingAccountDetails
+            {shouldShowBillingAccountModal && billingAccountDetails
                 ? (
                     <BillingAccountLineItemsModal
-                        billingAccountDetails={billingAccountDetailsResult.billingAccountDetails}
+                        billingAccountDetails={billingAccountDetails}
                         onClose={handleCloseModal}
                         projectId={props.project.id}
                         showMemberPaymentsRemaining={props.showMemberPaymentsRemaining}

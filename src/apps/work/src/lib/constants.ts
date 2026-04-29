@@ -2,6 +2,12 @@ import { EnvironmentConfig } from '~/config'
 
 export const WORK_APP_BODY_CLASS = 'work-app'
 
+export const BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
+
+export const BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+
+export const BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED = false
+
 const DEFAULT_CREATE_FORUM_TYPE_IDS = [
     '927abff4-7af9-4145-8ba1-577c16e64e2e',
     'dc876fa4-ef2d-4eee-b701-b555fcc6544c',

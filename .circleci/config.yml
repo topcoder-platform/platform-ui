@@ -226,6 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
+                              - hide_ba_details
 
             - deployQa:
                   context: org-global
