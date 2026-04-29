@@ -98,4 +98,22 @@ describe('NavTabs', () => {
         expect(screen.getByTestId('location-pathname').textContent)
             .toBe('/projects')
     })
+
+    it('leaves the current tab active when a menu link is opened with a modifier click', () => {
+        renderNavTabs('/challenges')
+
+        fireEvent.click(screen.getByRole('link', { name: 'Projects' }), {
+            ctrlKey: true,
+        })
+
+        expect(screen.getByTestId('location-pathname').textContent)
+            .toBe('/challenges')
+        expect(screen.getByRole('link', { name: 'Challenges' })
+            .closest('li')?.className)
+            .toContain('active')
+        expect(screen.getByRole('link', { name: 'Projects' })
+            .closest('li')?.className)
+            .not
+            .toContain('active')
+    })
 })
