@@ -57,6 +57,16 @@ const NavTabs: FC = () => {
 
     const handleTabClick = useCallback(
         (event: MouseEvent<HTMLAnchorElement>) => {
+            if (
+                event.button !== 0
+                || event.altKey
+                || event.ctrlKey
+                || event.metaKey
+                || event.shiftKey
+            ) {
+                return
+            }
+
             const { tabId }: { tabId?: string } = event.currentTarget.dataset
 
             if (!tabId) {
