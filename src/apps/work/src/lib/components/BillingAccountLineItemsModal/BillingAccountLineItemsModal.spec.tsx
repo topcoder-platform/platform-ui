@@ -125,33 +125,31 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/challenges/challenge%20%2F%20100')
     })
 
-    it('shows member payments and challenge fees for non-copilot users', () => {
+    it('shows challenge member payments and calculated challenge fees for non-copilot users', () => {
         renderModal({
             ...baseBillingAccountDetails,
             lockedAmounts: [
                 {
-                    amount: '125.25',
+                    amount: '50',
                     date: '2026-02-10T00:00:00.000Z',
                     externalId: 'challenge-100',
                     externalName: 'Markup Challenge',
                     externalType: 'CHALLENGE',
                 },
             ],
-            lockedBudget: 125.25,
-            markup: 0.25,
-            totalBudgetRemaining: 874.75,
+            lockedBudget: 66.5,
+            markup: 0.33,
+            totalBudgetRemaining: 933.5,
         })
 
         expect(screen.getByText('Member Payments'))
             .toBeTruthy()
         expect(screen.getByText('Challenge Fee'))
             .toBeTruthy()
-        expect(screen.getByText('$100.20'))
-            .toBeTruthy()
-        expect(screen.getByText('$25.05'))
-            .toBeTruthy()
-        expect(screen.getAllByText('$125.25'))
+        expect(screen.getAllByText('$50.00'))
             .toHaveLength(1)
+        expect(screen.getByText('$16.50'))
+            .toBeTruthy()
     })
 
     it('builds engagement links from assignment-backed billing rows', () => {
@@ -226,6 +224,10 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(engagementLink.getAttribute('href'))
             .toBe('/work/projects/project%20200/engagements/engagement-300')
+        expect(screen.getByText('$100.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$20.00'))
+            .toBeTruthy()
         expect(mockedUseFetchEngagements)
             .toHaveBeenLastCalledWith(
                 'project 200',
