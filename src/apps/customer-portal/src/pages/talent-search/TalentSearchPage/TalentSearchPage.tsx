@@ -363,20 +363,17 @@ export const TalentSearchPage: FC = () => {
             })
         }
 
-        // Throttle auto-search on checkbox toggles to avoid multiple overlapping requests.
-        if (pendingToggleAutoSearchRef.current) {
-            pendingToggleAutoSearchRef.current = false
+        // Throttle auto-search: any filter dependency change schedules a single request.
+        // This prevents older intermediate requests from overwriting newer ones when the user toggles quickly.
+        pendingToggleAutoSearchRef.current = false
 
-            if (toggleDebounceTimerRef.current) {
-                clearTimeout(toggleDebounceTimerRef.current)
-            }
-
-            toggleDebounceTimerRef.current = setTimeout(() => {
-                runSearch()
-            }, 800)
-        } else {
-            runSearch()
+        if (toggleDebounceTimerRef.current) {
+            clearTimeout(toggleDebounceTimerRef.current)
         }
+
+        toggleDebounceTimerRef.current = setTimeout(() => {
+            runSearch()
+        }, 800)
     }, [
         hasSearched,
         hasActiveFilters,
