@@ -37,31 +37,31 @@ const bulkMembersByHandlesPath = '/identity/users-by-handles'
 const BILLING_ACCOUNTS_REPORT_PATH = '/sfdc/billing-accounts'
 const SFDC_PAYMENTS_REPORT_PATH = '/sfdc/payments'
 const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
-    name: 'Billing Accounts',
-    path: BILLING_ACCOUNTS_REPORT_PATH,
     description: 'View billing-account details and SFDC payments by billing account ID.',
     method: 'GET',
+    name: 'Billing Accounts',
     parameters: [
         {
-            name: 'billingAccountId',
-            type: 'string',
             description: 'Billing account ID',
-            required: true,
             location: 'query',
+            name: 'billingAccountId',
+            required: true,
+            type: 'string',
         },
         {
-            name: 'startDate',
-            type: 'date',
             description: 'Optional start date for payment filtering (ISO 8601)',
             location: 'query',
+            name: 'startDate',
+            type: 'date',
         },
         {
-            name: 'endDate',
-            type: 'date',
             description: 'Optional end date for payment filtering (ISO 8601)',
             location: 'query',
+            name: 'endDate',
+            type: 'date',
         },
     ],
+    path: BILLING_ACCOUNTS_REPORT_PATH,
 }
 
 type ReportsPageTab = 'reports' | 'billingAccounts'
@@ -106,7 +106,8 @@ const formatPaymentDate = (iso: string): string => {
         return iso
     }
 
-    return new Date(parsed).toLocaleString()
+    return new Date(parsed)
+        .toLocaleString()
 }
 
 const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: string }[] = [
@@ -127,8 +128,11 @@ const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: s
     { key: 'winnerLastName', label: 'Winner last name' },
 ]
 
-const BillingAccountReportResults = ({ data }: { data: BillingAccountsViewData }): JSX.Element => {
-    const { billingAccount, payments } = data
+const BillingAccountReportResults = (
+    props: { data: BillingAccountsViewData },
+): JSX.Element => {
+    const billingAccount: BillingAccountsViewData['billingAccount'] = props.data.billingAccount
+    const payments: BillingAccountsViewData['payments'] = props.data.payments
 
     return (
         <div>
@@ -261,6 +265,8 @@ const formatParameterLabel = (name: string): string => (
         .replace(/^./, char => char.toUpperCase())
 )
 
+const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE = {} as BillingAccountProfileResponse
+
 type ReportActionsProps = {
     handleCsvDownload: () => void
     handleJsonDownload: () => void
@@ -361,7 +367,10 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                                         <div className={styles.paramHeaderActions}>
                                             <div className={styles.paramTypePill}>{parameter.type}</div>
                                             <Tooltip
-                                                content={`Location: ${parameter.location || 'query'} (${parameter.name})`}
+                                                content={
+                                                    `Location: ${parameter.location || 'query'} `
+                                                    + `(${parameter.name})`
+                                                }
                                                 place='top'
                                             >
                                                 <button
@@ -397,9 +406,10 @@ type ReportsPageContentProps = {
     initialTab: ReportsPageTab
 }
 
-const ReportsPageContent: FC<ReportsPageContentProps> = ({ initialTab }) => {
+// eslint-disable-next-line complexity
+const ReportsPageContent: FC<ReportsPageContentProps> = props => {
     const navigate: NavigateFunction = useNavigate()
-    const [activeTab] = useState<ReportsPageTab>(initialTab)
+    const [activeTab] = useState<ReportsPageTab>(props.initialTab)
     const [reportsIndex, setReportsIndex] = useState<ReportsIndexResponse>({})
     const [selectedBasePath, setSelectedBasePath] = useState<string>('')
     const [selectedReportPath, setSelectedReportPath] = useState<string>('')
@@ -576,7 +586,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = ({ initialTab }) => {
 
             const paymentsPromise = fetchReportJson<SfdcBillingAccountPaymentRow[]>(paymentsPath)
             const profilePromise = fetchReportJson<BillingAccountProfileResponse>(profilePath)
-                .catch(() => ({ billingAccount: null }))
+                .catch(() => EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE)
             const [profile, payments] = await Promise.all([profilePromise, paymentsPromise])
 
             setBillingAccountViewData({
@@ -770,8 +780,10 @@ const ReportsPageContent: FC<ReportsPageContentProps> = ({ initialTab }) => {
                 <PageTitle>{pageTitle}</PageTitle>
                 <p className={styles.instructions}>
                     {activeTab === 'reports'
-                        ? 'Select a base path to view available reports. Choose a report, fill required parameters, and download JSON or CSV from the reports API.'
-                        : 'Enter a billing account ID and optional start/end dates, then click View to load billing account payment data.'}
+                        ? 'Select a base path to view available reports. Choose a report, '
+                            + 'fill required parameters, and download JSON or CSV from the reports API.'
+                        : 'Enter a billing account ID and optional start/end dates, then click View '
+                            + 'to load billing account payment data.'}
                 </p>
 
                 {isLoading ? (
