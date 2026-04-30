@@ -3,15 +3,18 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: $sp-4;
 }
 
 :global([class*='ContentLayout-module_content-outer']) {
-    margin: 24px auto 0 !important;
+    margin: 0 auto 0 !important;
 }
 
 :global([class*='ContentLayout-module_content__']) {
     padding-bottom: 0 !important;
+}
+
+:global([class*='BreadCrumb-module_breadcrumb']) {
+    display: none;
 }
 
 .pageArea {
@@ -32,9 +35,9 @@
 .pageBody {
     display: grid;
     grid-template-columns: 443px 1fr;
-    gap: 40px;
+    gap: 24px;
     margin-top: -232px;
-    padding: $sp-4 $sp-12 $sp-14 $sp-12;
+    padding: $sp-2 $sp-8 $sp-10 $sp-8;
     position: relative;
     z-index: 1;
     font-family: $font-roboto;
@@ -62,17 +65,17 @@
     background: $tc-white;
     border: 0;
     border-radius: 16px;
-    padding: 32px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: $sp-3;
+    gap: $sp-2;
 }
 
 .sidebar .panel + .panel {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-top: 0;
-    padding-top: 20px;
+    padding-top: 14px;
 }
 
 .panelTitle {
@@ -107,9 +110,9 @@
 }
 
 .jobDescriptionField {
-    margin-top: 0.5rem;
+    margin-top: 0;
     :global(textarea) {
-        min-height: 442px;
+        min-height: 170px;
         resize: vertical;
         color: $black-100;
         font-size: 14px;
@@ -119,7 +122,7 @@
 
 .aiActions {
     display: flex;
-    gap: $sp-2;
+    gap: $sp-1;
 
     :global(button) {
         font-size: 14px;
@@ -134,6 +137,7 @@
 }
 
 .filterBlock {
+    margin-bottom: 2px;
     :global([class*='__value-container']) {
         min-height: 18px;
     }
@@ -175,8 +179,8 @@
     align-items: center;
     gap: $sp-2;
     color: $black-100;
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 15px;
+    line-height: 21px;
     font-weight: 400;
     position: relative;
     cursor: pointer;
@@ -242,8 +246,10 @@
 }
 
 .clearFiltersWrap {
-    margin-top: 10px;
+    margin-top: 6px;
     align-self: flex-start;
+    display: flex;
+    gap: $sp-2;
 
     :global(button) {
         font-size: 14px;
@@ -280,7 +286,7 @@
     align-items: center;
     justify-content: space-between;
     gap: $sp-3;
-    padding-top: 8px;
+    padding-top: 0;
 
     @include ltemd {
         flex-direction: column;
