@@ -368,8 +368,8 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                                             <div className={styles.paramTypePill}>{parameter.type}</div>
                                             <Tooltip
                                                 content={
-                                                    `Location: ${parameter.location || 'query'} `
-                                                    + `(${parameter.name})`
+                                                    `${parameter.description || 'No description available'}\n\n`
+        + `Location: ${parameter.location || 'query'} (${parameter.name})`
                                                 }
                                                 place='top'
                                             >
@@ -383,9 +383,6 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                                             </Tooltip>
                                         </div>
                                     </div>
-                                </div>
-                                <div className={styles.paramMeta}>
-                                    {parameter.description || '\u00A0'}
                                 </div>
                                 {props.renderParameterInput(parameter)}
                             </div>
