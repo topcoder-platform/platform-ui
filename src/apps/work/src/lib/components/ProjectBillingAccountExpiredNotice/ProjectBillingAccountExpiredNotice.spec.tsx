@@ -124,16 +124,20 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     })
 
     it('hides billing account budget and line-item details while billing details are disabled', () => {
-        render(
-            <MemoryRouter>
-                <ProjectBillingAccountExpiredNotice
-                    billingAccountId={80001063}
-                    billingAccountName='Test Project Engagement BA'
-                    canManageProject
-                    projectId='project-1'
-                />
-            </MemoryRouter>,
-        )
+        renderNotice()
+
+        expect(screen.getByText(/Billing account:/))
+            .toBeTruthy()
+        expect(screen.queryByText('$1,025 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
+            name: 'View billing account details',
+        }))
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
+    })
+
     it('keeps billing account details and line items available when remaining funds are insufficient', () => {
         renderNotice()
 
