@@ -59,12 +59,12 @@ export type SfdcBillingAccountPaymentRow = {
 
 /** Response from GET /sfdc/billing-accounts */
 export type BillingAccountProfileResponse = {
-    billingAccount: BillingAccountDetail | null
+    billingAccount?: BillingAccountDetail
 }
 
 /** Billing Accounts in-app view: profile + rows from GET /sfdc/payments */
 export type BillingAccountsViewData = {
-    billingAccount: BillingAccountDetail | null
+    billingAccount?: BillingAccountDetail
     payments: SfdcBillingAccountPaymentRow[]
 }
 

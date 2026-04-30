@@ -265,7 +265,9 @@ const formatParameterLabel = (name: string): string => (
         .replace(/^./, char => char.toUpperCase())
 )
 
-const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE = {} as BillingAccountProfileResponse
+const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE: BillingAccountProfileResponse = {
+    billingAccount: undefined,
+}
 
 type ReportActionsProps = {
     handleCsvDownload: () => void
@@ -369,7 +371,7 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                                             <Tooltip
                                                 content={
                                                     `${parameter.description || 'No description available'}\n\n`
-        + `Location: ${parameter.location || 'query'} (${parameter.name})`
+                                                    + `Location: ${parameter.location || 'query'} (${parameter.name})`
                                                 }
                                                 place='top'
                                             >
