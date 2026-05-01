@@ -27,7 +27,8 @@ interface ProjectRouteAccessGuardProps extends PropsWithChildren {
  * @param props child route content and fallback page title used while access is loading or denied.
  * @returns child route content when the project exists and the caller is an admin or project member.
  * @remarks Used by project workspace routes so unauthorized users do not mount pages that fetch project child data.
- * @throws Does not throw; project fetch failures render the standard project access denial message.
+ * Access decisions use cached project data when available, so SWR revalidation errors do not block authorized users.
+ * @throws Does not throw; missing project access renders the standard project access denial message.
  */
 export const ProjectRouteAccessGuard: FC<ProjectRouteAccessGuardProps> = (
     props: ProjectRouteAccessGuardProps,
@@ -59,7 +60,7 @@ export const ProjectRouteAccessGuard: FC<ProjectRouteAccessGuardProps> = (
         projectResult.project,
     )
 
-    if (projectResult.error || !hasProjectAccess) {
+    if (!hasProjectAccess) {
         return (
             <PageWrapper
                 breadCrumb={[]}

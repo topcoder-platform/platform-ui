@@ -141,6 +141,30 @@ describe('ProjectRouteAccessGuard', () => {
             .toBeTruthy()
     })
 
+    it('renders the protected route when cached project access survives a revalidation error', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: new Error('Network unavailable'),
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: 200,
+                members: [{
+                    userId: 12345,
+                }],
+            },
+        })
+        mockedCheckProjectAccess.mockReturnValue(true)
+
+        renderGuard('/projects/200/users')
+
+        expect(mockedCheckProjectAccess)
+            .toHaveBeenCalledWith(defaultContextValue.userRoles, 12345, expect.objectContaining({ id: 200 }))
+        expect(screen.getByText('Protected Project Users'))
+            .toBeTruthy()
+        expect(screen.queryByText(PROJECT_ACCESS_DENIED_MESSAGE))
+            .toBeNull()
+    })
+
     it('shows loading while project access is resolving', () => {
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
@@ -181,9 +205,12 @@ describe('ProjectRouteAccessGuard', () => {
             mutate: jest.fn(),
             project: undefined,
         })
+        mockedCheckProjectAccess.mockReturnValue(false)
 
         renderGuard('/projects/200/users')
 
+        expect(mockedCheckProjectAccess)
+            .toHaveBeenCalledWith(defaultContextValue.userRoles, 12345, undefined)
         expect(screen.getByText(PROJECT_ACCESS_DENIED_MESSAGE))
             .toBeTruthy()
         expect(screen.queryByText('Protected Project Users'))
