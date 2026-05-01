@@ -26,6 +26,12 @@ export const CHALLENGE_STATUS = {
     NEW: 'NEW',
 } as const
 
+export const CHALLENGE_APPROVAL_STATUS = {
+    APPROVED: 'APPROVED',
+    PENDING_APPROVAL: 'PENDING_APPROVAL',
+    REJECTED: 'REJECTED',
+} as const
+
 export const PAGE_SIZE = 10
 
 export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]

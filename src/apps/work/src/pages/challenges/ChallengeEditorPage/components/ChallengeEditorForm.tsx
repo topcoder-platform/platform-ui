@@ -1,6 +1,8 @@
 import {
+    ChangeEvent,
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -18,10 +20,12 @@ import { Button } from '~/libs/ui'
 
 import { FormCheckboxField } from '../../../../lib/components/form'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
     CREATE_FORUM_TYPE_IDS,
 } from '../../../../lib/constants'
+import { WorkAppContext } from '../../../../lib/contexts'
 import {
     AUTOSAVE_DELAY_MS,
     DESIGN_WORK_TYPES,
@@ -257,6 +261,8 @@ const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before savin
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
+const APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Challenge launch is blocked until budget approval is Approved.'
 const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
     = 'One or more saved AI workflows were disabled. '
     + 'Update the AI workflow configuration before saving or launching this challenge.'
@@ -1340,6 +1346,18 @@ function getSaveSuccessMessage(
         : 'Challenge saved successfully'
 }
 
+function getApprovalStatusText(approvalStatus: string | undefined): string {
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
+        return 'Approved'
+    }
+
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+        return 'Rejected'
+    }
+
+    return 'Pending Approval'
+}
+
 interface TaskLaunchValidationParams {
     assignedMemberId?: unknown
     currentStatus?: unknown
@@ -1435,6 +1453,7 @@ function isHandledLaunchBlockError(
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
+    const workAppContext = useContext(WorkAppContext)
     const location = useLocation()
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
@@ -1483,6 +1502,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
+    const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
+    const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
 
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: applyProjectBillingToChallengeFormData(
@@ -1681,6 +1702,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.status,
         ],
     )
+    const normalizedApprovalStatus = useMemo(
+        () => normalizeStatus(values.approvalStatus)
+            || normalizeStatus(props.challenge?.approvalStatus)
+            || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
+        [
+            props.challenge?.approvalStatus,
+            values.approvalStatus,
+        ],
+    )
+    const canApproveChallengeBudget = workAppContext.isAdmin || workAppContext.isManager
+    const arePrizeFieldsLockedForRole = normalizedChallengeStatus === CHALLENGE_STATUS.ACTIVE
+        && !canApproveChallengeBudget
+    const arePrizeFieldsDisabled = isReadOnly || arePrizeFieldsLockedForRole
+    const canRenderApprovalActions = !isReadOnly
+        && canApproveChallengeBudget
+        && !!currentChallengeId
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
@@ -1699,6 +1737,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+
+    useEffect(() => {
+        const nextReason = typeof values.approvalRejectionReason === 'string'
+            ? values.approvalRejectionReason
+            : ''
+
+        setRejectionReasonInput(nextReason)
+    }, [values.approvalRejectionReason])
+
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -2677,6 +2724,20 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
+            if (
+                isChallengeBeingActivated
+                && normalizeStatus(formData.approvalStatus) !== CHALLENGE_APPROVAL_STATUS.APPROVED
+            ) {
+                setSaveStatus('idle')
+                setSaveValidationError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+
+                if (!options.isAutosave) {
+                    showErrorToast(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+                }
+
+                throw createHandledLaunchBlockError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+            }
+
             const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
                 formData,
                 currentChallengeId,
@@ -2822,6 +2883,67 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             viewModePath,
         ],
     )
+
+    const updateApprovalStatus = useCallback(async (
+        nextApprovalStatus: string,
+        rejectionReason?: string,
+    ): Promise<void> => {
+        if (!currentChallengeId || isUpdatingApproval) {
+            return
+        }
+
+        if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED && !normalizeTextValue(rejectionReason)) {
+            showErrorToast('Rejection reason is required.')
+            return
+        }
+
+        setIsUpdatingApproval(true)
+
+        try {
+            const payload = {
+                approvalRejectionReason: nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                    ? normalizeTextValue(rejectionReason)
+                    : undefined,
+                approvalStatus: nextApprovalStatus,
+            }
+            const savedChallenge = await patchChallenge(currentChallengeId, payload)
+            const mergedFormData = {
+                ...getValues(),
+                ...transformChallengeToFormData(savedChallenge),
+            }
+
+            reset(mergedFormData)
+            setSaveValidationError(undefined)
+            showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                ? 'Challenge budget approved.'
+                : 'Challenge budget rejected.')
+        } catch (error) {
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'Failed to update approval status'
+            showErrorToast(errorMessage)
+        } finally {
+            setIsUpdatingApproval(false)
+        }
+    }, [
+        currentChallengeId,
+        getValues,
+        isUpdatingApproval,
+        reset,
+    ])
+
+    const handleApproveChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.APPROVED)
+            .catch(() => undefined)
+    }, [updateApprovalStatus])
+
+    const handleRejectChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.REJECTED, rejectionReasonInput)
+            .catch(() => undefined)
+    }, [
+        rejectionReasonInput,
+        updateApprovalStatus,
+    ])
 
     const launchChallenge = useCallback(async (): Promise<void> => {
         if (isScorerBlockingChallengeActions) {
@@ -3145,26 +3267,89 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                                 resolvedChallengeTypeAbbreviation
                                                             }
                                                             challengeTypeName={resolvedChallengeTypeName}
-                                                            disabled={isReadOnly}
+                                                            disabled={arePrizeFieldsDisabled}
                                                             name='prizeSets'
                                                         />
                                                         {showCheckpointPrizes
                                                             ? (
                                                                 <CheckpointPrizesField
-                                                                    disabled={isReadOnly}
+                                                                    disabled={arePrizeFieldsDisabled}
                                                                     name='prizeSets'
                                                                 />
                                                             )
                                                             : undefined}
                                                     </div>
                                                     <div className={styles.copilotFeeColumn}>
-                                                        <CopilotFeeField disabled={isReadOnly} name='prizeSets' />
+                                                        <CopilotFeeField
+                                                            disabled={arePrizeFieldsDisabled}
+                                                            name='prizeSets'
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className={styles.billingSummary}>
                                                     <ReviewCostField name='prizeSets' />
                                                     <ChallengeFeeField />
                                                     <ChallengeTotalField />
+                                                </div>
+                                                <div className={styles.approvalSection}>
+                                                    <div className={styles.approvalStatusRow}>
+                                                        <span className={styles.approvalStatusLabel}>
+                                                            Approval status:
+                                                        </span>
+                                                        <span className={styles.approvalStatusValue}>
+                                                            {getApprovalStatusText(normalizedApprovalStatus)}
+                                                        </span>
+                                                    </div>
+                                                    {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                                                        && normalizeTextValue(values.approvalRejectionReason)
+                                                        ? (
+                                                            <div className={styles.approvalReason}>
+                                                                {`Reason: ${values.approvalRejectionReason}`}
+                                                            </div>
+                                                        )
+                                                        : undefined}
+                                                    {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                                                        && normalizeTextValue(values.approvalApprovedBy)
+                                                        ? (
+                                                            <div className={styles.approvalReason}>
+                                                                {`Approved by ${values.approvalApprovedBy}`}
+                                                            </div>
+                                                        )
+                                                        : undefined}
+                                                    {canRenderApprovalActions
+                                                        ? (
+                                                            <>
+                                                                <textarea
+                                                                    className={styles.rejectionReasonInput}
+                                                                    disabled={isUpdatingApproval}
+                                                                    onChange={function onClick(event: ChangeEvent<HTMLTextAreaElement>) {
+                                                                        setRejectionReasonInput(event.target.value)
+                                                                    }}
+                                                                    placeholder='Reason is required to reject'
+                                                                    rows={3}
+                                                                    value={rejectionReasonInput}
+                                                                />
+                                                                <div className={styles.approvalActions}>
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Approve Budget'
+                                                                        onClick={handleApproveChallengeBudget}
+                                                                        primary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Reject Budget'
+                                                                        onClick={handleRejectChallengeBudget}
+                                                                        secondary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )
+                                                        : undefined}
                                                 </div>
                                             </div>
                                         </section>

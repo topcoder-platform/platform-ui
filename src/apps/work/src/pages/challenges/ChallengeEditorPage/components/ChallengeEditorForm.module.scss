@@ -104,6 +104,56 @@
     width: 100%;
 }
 
+.approvalSection {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 100%;
+    padding: 14px;
+}
+
+.approvalStatusRow {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.approvalStatusLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.approvalStatusValue {
+    color: $black-100;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.approvalReason {
+    color: $black-80;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.rejectionReasonInput {
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    min-height: 72px;
+    padding: 8px 10px;
+    resize: vertical;
+}
+
+.approvalActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 @media (min-width: 1024px) {
     .submissionSettingsGrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

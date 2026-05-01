@@ -701,7 +701,11 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
             confirmText={params.isLaunching
                 ? 'Launching...'
                 : 'Launch'}
-            message={`Are you ready to launch challenge ${params.challengeName}?`}
+            message={
+                `Are you ready to launch challenge ${params.challengeName}?
+
+Prizes and copilot fees are locked after launch. Contact the Project Manager for any updates post-launch.`
+            }
             onCancel={params.onLaunchCancel}
             onConfirm={params.onLaunchConfirmClick}
             title='Launch Challenge'
