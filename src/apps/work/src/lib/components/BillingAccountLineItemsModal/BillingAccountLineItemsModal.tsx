@@ -225,10 +225,10 @@ function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
  * @returns Member payment amount, or `undefined` for copilot rows when it cannot
  * be safely calculated.
  * @remarks Challenge budget rows already expose the member-payment subtotal
- * for manager/admin users. Engagement budget rows store the billing ledger
- * total, so they still need markup removed before display. Copilot rows prefer
- * API-provided member-payment amounts and fall back to the legacy markup math
- * only when that safe field is missing.
+ * for every caller. Engagement budget rows store the billing ledger total, so
+ * they still need markup removed before display. Copilot engagement rows prefer
+ * API-provided member-payment amounts and fall back to markup math only when
+ * that safe field is missing.
  */
 function getLineItemMemberPaymentAmount(
     item: BillingAccountLineItem,
@@ -239,7 +239,7 @@ function getLineItemMemberPaymentAmount(
         return item.memberPaymentAmount
     }
 
-    if (!showMemberPaymentsRemaining && item.externalType === 'CHALLENGE') {
+    if (item.externalType === 'CHALLENGE') {
         return item.amount
     }
 
@@ -261,10 +261,10 @@ function getLineItemMemberPaymentAmount(
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
- * @remarks Copilot rows prefer the API-provided member payment amount because
- * their response intentionally omits markup. Manager/admin challenge rows use
- * the raw challenge subtotal and calculate the fee from markup; engagement rows
- * derive member payments from the raw ledger amount and billing-account markup.
+ * @remarks Challenge rows use the raw member-payment subtotal for all callers.
+ * Non-copilot challenge rows also calculate the hidden fee from markup.
+ * Engagement rows derive member payments from the raw ledger amount and
+ * billing-account markup.
  */
 function getDisplayLineItem(
     item: BillingAccountLineItem,

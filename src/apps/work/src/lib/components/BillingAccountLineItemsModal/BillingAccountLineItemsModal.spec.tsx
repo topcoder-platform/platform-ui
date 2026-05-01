@@ -361,31 +361,32 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
     })
 
-    it('shows only remaining member payments and member-payment row amounts for copilots', () => {
+    it('shows only remaining member payments and challenge row amounts for copilots', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedBudget: 500,
             lockedAmounts: [
                 {
-                    amount: '125.25',
+                    amount: '50',
                     date: '2026-02-10T00:00:00.000Z',
                     externalId: 'challenge-100',
                     externalName: 'Markup Challenge',
                     externalType: 'CHALLENGE',
                 },
             ],
-            lockedBudget: 250,
-            markup: 0.25,
-            totalBudgetRemaining: 250,
+            lockedBudget: 66.5,
+            markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 433.5,
         }, true)
 
         expect(screen.getByText('Remaining member payments'))
             .toBeTruthy()
         expect(screen.getByText('$200.00'))
             .toBeTruthy()
-        expect(screen.getByText('$100.20'))
+        expect(screen.getByText('$50.00'))
             .toBeTruthy()
-        expect(screen.queryByText('$125.25'))
+        expect(screen.queryByText('$37.59'))
             .toBeNull()
         expect(screen.queryByText('Consumed'))
             .toBeNull()
