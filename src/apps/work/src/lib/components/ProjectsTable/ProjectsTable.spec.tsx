@@ -1,13 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { ReactNode } from 'react'
 import {
-    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import type { Project } from '../../models'
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import type {
+    Project,
+    WorkAppContextModel,
+} from '../../models'
 import type { BillingAccountDetails } from '../../services'
 import {
     useFetchBillingAccountDetails,
@@ -34,6 +37,8 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
 }))
 
 jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
     PROJECT_STATUS: {
         DRAFT: 'draft',
     },
@@ -94,6 +99,16 @@ const billingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: 650,
 }
 
+const defaultContextValue: WorkAppContextModel = {
+    isAdmin: false,
+    isAnonymous: false,
+    isCopilot: false,
+    isManager: false,
+    isReadOnly: false,
+    loginUserInfo: undefined,
+    userRoles: [],
+}
+
 describe('ProjectsTable', () => {
     const invitedProject: Project = {
         id: 100440,
@@ -125,17 +140,26 @@ describe('ProjectsTable', () => {
         })
     })
 
-    it('links the project name and open action to the challenges route', () => {
+    function renderTable(
+        projects: Project[],
+        contextValue: WorkAppContextModel = defaultContextValue,
+    ): void {
         render(
-            <MemoryRouter>
-                <ProjectsTable
-                    projects={[invitedProject]}
-                    sortBy='name'
-                    sortOrder='asc'
-                    onSort={jest.fn()}
-                />
-            </MemoryRouter>,
+            <WorkAppContext.Provider value={contextValue}>
+                <MemoryRouter>
+                    <ProjectsTable
+                        projects={projects}
+                        sortBy='name'
+                        sortOrder='asc'
+                        onSort={jest.fn()}
+                    />
+                </MemoryRouter>
+            </WorkAppContext.Provider>,
         )
+    }
+
+    it('links the project name and open action to the challenges route', () => {
+        renderTable([invitedProject])
 
         expect(screen.getByRole('link', { name: 'SK project1' })
             .getAttribute('href'))
@@ -145,7 +169,7 @@ describe('ProjectsTable', () => {
             .toBe('/projects/100440/challenges')
     })
 
-    it('shows project billing account spent totals and opens the line-item modal', () => {
+    it('hides billing account spent totals and line-item details while billing details are disabled', () => {
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [
                 {
@@ -168,31 +192,102 @@ describe('ProjectsTable', () => {
             isLoading: false,
         })
 
-        render(
-            <MemoryRouter>
-                <ProjectsTable
-                    projects={[{
-                        ...invitedProject,
-                        billingAccountId: 80001063,
-                    }]}
-                    sortBy='name'
-                    sortOrder='asc'
-                    onSort={jest.fn()}
-                />
-            </MemoryRouter>,
-        )
+        renderTable([{
+            ...invitedProject,
+            billingAccountId: 80001063,
+        }])
 
         expect(screen.getAllByText('Access BA / 80001063').length)
             .toBeGreaterThan(0)
-        expect(screen.getAllByText('$350 / $1,000 spent').length)
-            .toBeGreaterThan(0)
-
-        fireEvent.click(screen.getAllByRole('button', {
+        expect(screen.queryByText('$350 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
             name: 'View billing account details',
-        })[0])
+        }))
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
+    })
 
-        expect(screen.getByRole('dialog')
-            .textContent)
-            .toContain('Billing account details for 80001063')
+    it('shows member payments remaining for copilot project rows', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 525,
+                    markup: 0.25,
+                    name: 'Access BA',
+                    totalBudgetRemaining: 250,
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderTable(
+            [{
+                ...invitedProject,
+                billingAccountId: 80001063,
+                details: {
+                    displayMemberPaymentDetailsToCopilots: true,
+                },
+            }],
+            {
+                ...defaultContextValue,
+                isCopilot: true,
+                userRoles: ['copilot'],
+            },
+        )
+
+        expect(screen.getAllByText('Member Payments Remaining: $200.00').length)
+            .toBeGreaterThan(0)
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+    })
+
+    it('hides payment amounts and billing details access for copilot project rows when disabled', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 525,
+                    markup: 0.25,
+                    name: 'Access BA',
+                    totalBudgetRemaining: 250,
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderTable(
+            [{
+                ...invitedProject,
+                billingAccountId: 80001063,
+                details: {
+                    displayMemberPaymentDetailsToCopilots: false,
+                },
+            }],
+            {
+                ...defaultContextValue,
+                isCopilot: true,
+                userRoles: ['copilot'],
+            },
+        )
+
+        expect(screen.queryByText('Member Payments Remaining: $200.00'))
+            .toBeNull()
+        expect(screen.queryByText('$750 / $1,000 spent'))
+            .toBeNull()
+        expect(screen.queryByRole('button', {
+            name: 'View billing account details',
+        }))
+            .toBeNull()
     })
 })

@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable react/jsx-no-bind */
-import { ChangeEvent, FC, FocusEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FC, FocusEvent, useCallback, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 
 import { CountryLookup, useCountryLookup } from '~/libs/core'
@@ -9,8 +9,6 @@ import {
     IconOutline,
     InputMultiselect,
     InputMultiselectOption,
-    InputSelect,
-    InputSelectOption,
     InputTextarea,
     Tooltip,
 } from '~/libs/ui'
@@ -24,33 +22,30 @@ import {
     searchMembers,
     SearchTalent,
 } from '../../../lib'
-import personSearchImage from '../../../lib/assets/person-search.png'
 
 import styles from './TalentSearchPage.module.scss'
 
-type TalentSearchSortOption = 'alphabetical' | 'matching-index'
-
 export const TalentSearchPage: FC = () => {
-    const skipNextAutoSearchRef = useRef<boolean>(false)
-    const searchGenerationRef = useRef<number>(0) // ← add this
+    const searchGenerationRef = useRef<number>(0)
 
     const [lastSearchedDescription, setLastSearchedDescription] = useState<string>('')
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
     const [jobDescription, setJobDescription] = useState<string>('')
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
-    const [hasSearched, setHasSearched] = useState<boolean>(true)
+    const [hasSearched, setHasSearched] = useState<boolean>(false)
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
-    const [sortBy, setSortBy] = useState<TalentSearchSortOption>('alphabetical')
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
-    const [onlyActive, setOnlyActive] = useState<boolean>(false)
-    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(true)
+    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(false)
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
+    const [onlyActive, setOnlyActive] = useState<boolean>(true)
+    const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const [lastAppliedSearchSignature, setLastAppliedSearchSignature] = useState<string>('')
     const countryNameByCode = useMemo((): Map<string, string> => new Map(
         (countryLookup || [])
             .filter(country => country.countryCode && country.country)
@@ -77,33 +72,26 @@ export const TalentSearchPage: FC = () => {
     )
 
     const hasSkillSearch = selectedSkills.length > 0
-    const hasActiveFilters = hasSkillSearch
-        || selectedCountries.length > 0
-        || onlyOpenToWork
-        || onlyActive
-    const shouldShowIntroState = !hasSearched && !hasActiveFilters
-    const activeSort: TalentSearchSortOption = hasSkillSearch ? 'matching-index' : sortBy
-    const sortOptions = useMemo(
-        (): InputSelectOption[] => (hasSkillSearch
-            ? [{ label: 'Matching Index', value: 'matching-index' }]
-            : [{ label: 'Alphabetical', value: 'alphabetical' }]),
-        [hasSkillSearch],
+    const shouldShowIntroState = !hasSearched
+    const currentSearchSignature = useMemo(
+        (): string => JSON.stringify({
+            countries: selectedCountryCodesList
+                .slice()
+                .sort(),
+            openToWork: onlyOpenToWork,
+            profileComplete: onlyProfileComplete,
+            recentlyActive: onlyActive,
+            skills: selectedSkills
+                .map(skill => String(skill.value || '')
+                    .trim())
+                .filter(Boolean)
+                .sort(),
+        }),
+        [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedSkills],
     )
 
-    const filteredResults = useMemo(() => results.filter(talent => {
-        if (onlyActive && !talent.isRecentlyActive) {
-            return false
-        }
-
-        if (onlyOpenToWork && !talent.openToWork) {
-            return false
-        }
-
-        return true
-    }), [onlyActive, onlyOpenToWork, results])
-
     // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
-    const displayedResults = filteredResults
+    const displayedResults = results
 
     const foundMembersCount = totalResults || displayedResults.length
     const displayedResultsWithCountryName = useMemo(
@@ -156,15 +144,18 @@ export const TalentSearchPage: FC = () => {
             generation?: number
             openToWork?: boolean
             page?: number
+            profileComplete?: boolean
             recentlyActive?: boolean
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
+
         const countries = (overrides?.countries ?? selectedCountryCodesList)
             .filter(Boolean)
         const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
+        const profileComplete = overrides?.profileComplete ?? onlyProfileComplete
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
         const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
@@ -189,6 +180,10 @@ export const TalentSearchPage: FC = () => {
 
         if (openToWork) {
             payload.openToWork = true
+        }
+
+        if (profileComplete) {
+            payload.profileComplete = true
         }
 
         if (recentlyActive) {
@@ -245,27 +240,17 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, selectedCountryCodesList])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
-        searchGenerationRef.current += 1
         setSelectedCountries([])
-        setOnlyOpenToWork(false)
-        setOnlyActive(false)
-        setSortBy('alphabetical')
+        setOnlyProfileComplete(false)
+        setOnlyOpenToWork(true)
+        setOnlyActive(true)
         setSelectedSkills([])
-        setHasSearched(true)
         setErrorMessage('')
-        skipNextAutoSearchRef.current = true
         setLastSearchedDescription('')
-        runMemberSearch([], {
-            countries: [],
-            generation: searchGenerationRef.current,
-            openToWork: false,
-            page: 1,
-            recentlyActive: false,
-        })
-    }, [runMemberSearch])
+    }, [])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
         const normalizedDescription = jobDescription.trim()
@@ -307,54 +292,45 @@ export const TalentSearchPage: FC = () => {
             setSelectedSkills(extractedOptions)
 
             if (extractedOptions.length === 0) {
-                setResults([])
-                setTotalResults(0)
-                setHasSearched(true)
                 setErrorMessage('No skills were extracted from the job description.')
-                skipNextAutoSearchRef.current = true
                 return
             }
 
-            setHasSearched(true)
-            skipNextAutoSearchRef.current = true
-            const searchSucceeded = await runMemberSearch(extractedOptions, { generation, page: 1 })
-            if (searchGenerationRef.current !== generation) return
-
-            if (searchSucceeded) {
-                setLastSearchedDescription(normalizedDescription)
-            }
+            setLastSearchedDescription(normalizedDescription)
         } catch {
-            skipNextAutoSearchRef.current = true
             if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
-            setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
 
         }
-    }, [isExtractingSkills, jobDescription, runMemberSearch])
+    }, [isExtractingSkills, jobDescription])
 
-    useEffect(() => {
-        if ((shouldShowIntroState) || isExtractingSkills) {
+    const handleSearch = useCallback(async (): Promise<void> => {
+        if (isSearchingMembers || selectedSkills.length === 0) {
             return
         }
 
-        if (skipNextAutoSearchRef.current) {
-            skipNextAutoSearchRef.current = false
-            return
+        setHasSearched(true)
+        const searchSucceeded = await runMemberSearch(selectedSkills, {
+            countries: selectedCountryCodesList,
+            openToWork: onlyOpenToWork,
+            page: 1,
+            profileComplete: onlyProfileComplete,
+            recentlyActive: onlyActive,
+        })
+        if (searchSucceeded) {
+            setLastAppliedSearchSignature(currentSearchSignature)
         }
-
-        runMemberSearch(selectedSkills, { generation: searchGenerationRef.current, page: 1 })
     }, [
-        hasSearched,
-        hasActiveFilters,
-        isExtractingSkills,
+        currentSearchSignature,
+        isSearchingMembers,
         onlyActive,
         onlyOpenToWork,
+        onlyProfileComplete,
         runMemberSearch,
-        selectedCountries,
+        selectedCountryCodesList,
         selectedSkills,
-        shouldShowIntroState,
     ])
 
     const handleLoadMore = useCallback((): void => {
@@ -367,7 +343,7 @@ export const TalentSearchPage: FC = () => {
             page: currentPage + 1,
         })
     }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
-    const isSearchButtonDisabled = useMemo(
+    const isAiExtractButtonDisabled = useMemo(
         () => isExtractingSkills
         || !jobDescription.trim()
         || jobDescription.trim() === lastSearchedDescription,
@@ -375,7 +351,7 @@ export const TalentSearchPage: FC = () => {
     )
     return (
         <PageWrapper
-            pageTitle='Talent Search'
+            pageTitle=''
             className={classNames(styles.container)}
             breadCrumb={[]}
         >
@@ -384,20 +360,12 @@ export const TalentSearchPage: FC = () => {
                 <div className={styles.pageBody}>
                     <aside className={styles.sidebar}>
                         <section className={styles.panel}>
-                            <div className={styles.searchTabs}>
-                                <button
-                                    type='button'
-                                    className={classNames(styles.tabButton, styles.activeTab)}
-                                >
-                                    AI Search
-                                </button>
-                            </div>
                             <InputTextarea
                                 classNameWrapper={styles.jobDescriptionField}
                                 label='Job Description'
                                 name='jobDescription'
                                 value={jobDescription}
-                                rows={12}
+                                rows={6}
                                 onChange={(event: FocusEvent<HTMLTextAreaElement>) => {
                                     setJobDescription(event.target.value)
                                 }}
@@ -417,10 +385,10 @@ export const TalentSearchPage: FC = () => {
                                 </Button>
                                 <Button
                                     primary
-                                    disabled={isSearchButtonDisabled}
+                                    disabled={isAiExtractButtonDisabled}
                                     onClick={handleAiSearch}
                                 >
-                                    {isExtractingSkills ? 'Analyzing...' : 'Search'}
+                                    {isExtractingSkills ? 'Analyzing...' : 'AI Skill Extract'}
                                 </Button>
                             </div>
                             {errorMessage && (
@@ -429,7 +397,6 @@ export const TalentSearchPage: FC = () => {
                         </section>
 
                         <section className={styles.panel}>
-                            <p className={styles.panelTitle}>Filter</p>
                             <div className={styles.filterBlock}>
                                 <InputMultiselect
                                     className={styles.skillsMultiselect}
@@ -442,7 +409,6 @@ export const TalentSearchPage: FC = () => {
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
                                         setSelectedSkills(value)
-                                        setHasSearched(true)
                                         if (value.length === 0) {
                                             setLastSearchedDescription('')
                                         }
@@ -504,9 +470,32 @@ export const TalentSearchPage: FC = () => {
                                     </Tooltip>
                                 </span>
                             </label>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile complete</span>
+                            </label>
                             <div className={styles.clearFiltersWrap}>
                                 <Button secondary onClick={clearAllFilters}>
                                     Clear Filters
+                                </Button>
+                                <Button
+                                    primary
+                                    disabled={
+                                        selectedSkills.length === 0
+                                        || isSearchingMembers
+                                        || currentSearchSignature === lastAppliedSearchSignature
+                                    }
+                                    onClick={handleSearch}
+                                >
+                                    Search
                                 </Button>
                             </div>
                         </section>
@@ -520,12 +509,10 @@ export const TalentSearchPage: FC = () => {
                     >
                         {shouldShowIntroState && (
                             <div className={styles.emptyState}>
-                                <img
-                                    src={personSearchImage}
-                                    alt='Person search'
-                                    className={styles.emptyIcon}
-                                />
-                                <p className={styles.emptyStateTitle}>Find the right talent</p>
+                                <p className={styles.emptyStateDescription}>
+                                    Paste a job description to AI-extract skills, or enter skills manually
+                                    to find talents
+                                </p>
                             </div>
                         )}
 
@@ -540,21 +527,6 @@ export const TalentSearchPage: FC = () => {
                                             </span>
                                             &nbsp;that match your search.
                                         </p>
-                                        <div className={styles.sortControl}>
-                                            <span className={styles.sortLabel}>Sort by</span>
-                                            <InputSelect
-                                                classNameWrapper={styles.matchingIndexSelect}
-                                                name='sortBy'
-                                                options={sortOptions}
-                                                value={activeSort}
-                                                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                                    const nextSort = event.target.value || 'alphabetical'
-                                                    setSortBy(
-                                                        nextSort as TalentSearchSortOption,
-                                                    )
-                                                }}
-                                            />
-                                        </div>
                                     </div>
                                 )}
                                 {isSearchingMembers && (

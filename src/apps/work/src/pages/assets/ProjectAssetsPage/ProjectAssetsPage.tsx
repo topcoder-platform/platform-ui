@@ -739,6 +739,9 @@ export const ProjectAssetsPage: FC = () => {
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
                 canManageProject={canManageProject}
+                displayMemberPaymentDetailsToCopilots={
+                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots
+                }
                 projectId={projectId}
             />
         )

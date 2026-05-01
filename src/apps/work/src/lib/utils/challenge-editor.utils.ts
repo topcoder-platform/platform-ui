@@ -1022,6 +1022,7 @@ export function transformChallengeToFormData(
         billing,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
         copilot: getChallengeCopilotSelectorValue(challenge),
+        createdBy: normalizeOptionalString(challenge?.createdBy),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,

@@ -1,19 +1,32 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
-import { Button, InputSelect, InputSelectOption, InputText, LoadingSpinner, PageTitle } from '~/libs/ui'
+import {
+    Button,
+    IconOutline,
+    InputSelect,
+    InputSelectOption,
+    InputText,
+    LoadingSpinner,
+    PageTitle,
+    Tooltip,
+} from '~/libs/ui'
 
 import { bulkMemberLookupRouteId } from '../../config/routes.config'
 import { handleError } from '../../lib/utils'
 import {
+    BillingAccountProfileResponse,
+    BillingAccountsViewData,
     downloadBlobFile,
     downloadReportAsCsv,
     downloadReportAsJson,
+    fetchReportJson,
     fetchReportsIndex,
     ReportDefinition,
     ReportGroup,
     ReportParameter,
     ReportsIndexResponse,
+    SfdcBillingAccountPaymentRow,
 } from '../../lib/services'
 
 import { getReportParameterValidationError } from './reports-page.validation'
@@ -21,6 +34,203 @@ import styles from './ReportsPage.module.scss'
 
 const pageTitle = 'Reports'
 const bulkMembersByHandlesPath = '/identity/users-by-handles'
+const BILLING_ACCOUNTS_REPORT_PATH = '/sfdc/billing-accounts'
+const SFDC_PAYMENTS_REPORT_PATH = '/sfdc/payments'
+const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
+    description: 'View billing-account details and SFDC payments by billing account ID.',
+    method: 'GET',
+    name: 'Billing Accounts',
+    parameters: [
+        {
+            description: 'Billing account ID',
+            location: 'query',
+            name: 'billingAccountId',
+            required: true,
+            type: 'string',
+        },
+        {
+            description: 'Optional start date for payment filtering (ISO 8601)',
+            location: 'query',
+            name: 'startDate',
+            type: 'date',
+        },
+        {
+            description: 'Optional end date for payment filtering (ISO 8601)',
+            location: 'query',
+            name: 'endDate',
+            type: 'date',
+        },
+    ],
+    path: BILLING_ACCOUNTS_REPORT_PATH,
+}
+
+type ReportsPageTab = 'reports' | 'billingAccounts'
+
+const buildSfdcPaymentsQueryPath = (
+    billingAccountId: string,
+    startDate?: string,
+    endDate?: string,
+): string => {
+    const query = new URLSearchParams()
+    query.append('billingAccountIds', billingAccountId.trim())
+    const start = startDate?.trim()
+    const end = endDate?.trim()
+
+    if (start) {
+        query.append('startDate', start)
+    }
+
+    if (end) {
+        query.append('endDate', end)
+    }
+
+    return `${SFDC_PAYMENTS_REPORT_PATH}?${query.toString()}`
+}
+
+const formatReportCell = (value: unknown): string => {
+    if (value === null || value === undefined || value === '') {
+        return '—'
+    }
+
+    if (typeof value === 'boolean') {
+        return value ? 'Yes' : 'No'
+    }
+
+    return String(value)
+}
+
+const formatPaymentDate = (iso: string): string => {
+    const parsed = Date.parse(iso)
+
+    if (Number.isNaN(parsed)) {
+        return iso
+    }
+
+    return new Date(parsed)
+        .toLocaleString()
+}
+
+const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: string }[] = [
+    { key: 'paymentId', label: 'Payment ID' },
+    { key: 'paymentDate', label: 'Payment date' },
+    { key: 'billingAccountId', label: 'Billing account ID' },
+    { key: 'paymentStatus', label: 'Status' },
+    { key: 'challengeFee', label: 'Challenge fee' },
+    { key: 'paymentAmount', label: 'Payment amount' },
+    { key: 'challengeId', label: 'Challenge ID' },
+    { key: 'category', label: 'Category' },
+    { key: 'isTask', label: 'Task' },
+    { key: 'challengeName', label: 'Challenge name' },
+    { key: 'challengeStatus', label: 'Challenge status' },
+    { key: 'winnerHandle', label: 'Winner handle' },
+    { key: 'winnerId', label: 'Winner ID' },
+    { key: 'winnerFirstName', label: 'Winner first name' },
+    { key: 'winnerLastName', label: 'Winner last name' },
+]
+
+const BillingAccountReportResults = (
+    props: { data: BillingAccountsViewData },
+): JSX.Element => {
+    const billingAccount: BillingAccountsViewData['billingAccount'] = props.data.billingAccount
+    const payments: BillingAccountsViewData['payments'] = props.data.payments
+
+    return (
+        <div>
+            <div className={styles.billingSummary}>
+                <div className={styles.billingSummaryTitle}>Billing account</div>
+                {billingAccount ? (
+                    <div className={styles.billingDetailGrid}>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Name</span>
+                            <span className={styles.billingDetailValue}>{billingAccount.name}</span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Description</span>
+                            <span className={styles.billingDetailValue}>
+                                {formatReportCell(billingAccount.description)}
+                            </span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Subcontracting end customer</span>
+                            <span className={styles.billingDetailValue}>
+                                {formatReportCell(billingAccount.subcontractingEndCustomer)}
+                            </span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Status</span>
+                            <span className={styles.billingDetailValue}>{billingAccount.status}</span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Start date</span>
+                            <span className={styles.billingDetailValue}>
+                                {billingAccount.startDate
+                                    ? formatPaymentDate(String(billingAccount.startDate))
+                                    : '—'}
+                            </span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>End date</span>
+                            <span className={styles.billingDetailValue}>
+                                {billingAccount.endDate
+                                    ? formatPaymentDate(String(billingAccount.endDate))
+                                    : '—'}
+                            </span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Budget</span>
+                            <span className={styles.billingDetailValue}>
+                                {formatReportCell(billingAccount.budget)}
+                            </span>
+                        </div>
+                        <div className={styles.billingDetailItem}>
+                            <span className={styles.billingDetailLabel}>Markup</span>
+                            <span className={styles.billingDetailValue}>
+                                {formatReportCell(billingAccount.markup)}
+                            </span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className={styles.billingMissingNotice}>
+                        No billing account profile was found for this ID. Payments for this account may still
+                        appear below.
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.paymentsSection}>
+                <div className={styles.paymentsSectionTitle}>Payments</div>
+                {payments.length === 0 ? (
+                    <div className={styles.paymentsEmpty}>No payments matched the selected filters.</div>
+                ) : (
+                    <div className={styles.tableWrap}>
+                        <table className={styles.paymentsTable}>
+                            <thead>
+                                <tr>
+                                    {PAYMENT_TABLE_COLUMNS.map(col => (
+                                        <th key={col.key}>{col.label}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {payments.map(row => (
+                                    <tr key={row.paymentId}>
+                                        {PAYMENT_TABLE_COLUMNS.map(col => (
+                                            <td key={col.key}>
+                                                {col.key === 'paymentDate'
+                                                    ? formatPaymentDate(String(row[col.key]))
+                                                    : formatReportCell(row[col.key])}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
 
 const buildDownloadName = (
     name: string,
@@ -48,12 +258,25 @@ const formatMethod = (method?: string): string => (
     method ? method.toUpperCase() : 'GET'
 )
 
+const formatParameterLabel = (name: string): string => (
+    name
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/Ids\b/g, 'IDs')
+        .replace(/^./, char => char.toUpperCase())
+)
+
+const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE: BillingAccountProfileResponse = {
+    billingAccount: undefined,
+}
+
 type ReportActionsProps = {
     handleCsvDownload: () => void
     handleJsonDownload: () => void
+    handleResetFilters: () => void
     handleOpenBulkMemberLookup: () => void
     isDownloadDisabled: boolean
     isHandleLookupPostReport: boolean
+    isResetDisabled: boolean
     isPostReport: boolean
 }
 
@@ -94,6 +317,13 @@ const ReportActions = (props: ReportActionsProps): JSX.Element => {
             >
                 Download as CSV
             </Button>
+            <Button
+                secondary
+                disabled={props.isResetDisabled}
+                onClick={props.handleResetFilters}
+            >
+                Reset Filters
+            </Button>
         </div>
     )
 }
@@ -125,50 +355,74 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                 </div>
             </div>
 
-            {(props.selectedReport.parameters?.length ?? 0) > 0 && (
-                <div className={styles.params}>
-                    {props.selectedReport.parameters?.map(parameter => (
-                        <div key={parameter.name}>
-                            <div className={styles.paramLabel}>
-                                {parameter.name}
-                                {parameter.required ? ' *' : ''}
-                            </div>
-                            {parameter.description && (
-                                <div className={styles.paramMeta}>{parameter.description}</div>
-                            )}
-                            <div className={styles.paramMeta}>
-                                Location:
-                                {' '}
-                                {parameter.location || 'query'}
-                                {' '}
-                                • Type:
-                                {' '}
-                                {parameter.type}
-                            </div>
-                            {parameter.type.endsWith('[]') && (
-                                <div className={styles.paramHint}>
-                                    Use comma-separated values for lists.
+            {(props.selectedReport.parameters?.length ?? 0) > 0 ? (
+                <div className={styles.filtersPanel}>
+                    <div className={styles.params}>
+                        {props.selectedReport.parameters?.map(parameter => (
+                            <div key={parameter.name} className={styles.paramCard}>
+                                <div className={styles.paramHeader}>
+                                    <div className={styles.paramTitleRow}>
+                                        <div className={styles.paramLabel}>
+                                            {formatParameterLabel(parameter.name)}
+                                            {parameter.required ? ' *' : ''}
+                                        </div>
+                                        <div className={styles.paramHeaderActions}>
+                                            <div className={styles.paramTypePill}>{parameter.type}</div>
+                                            <Tooltip
+                                                content={(
+                                                    <>
+                                                        {parameter.description || 'No description available'}
+                                                        <br />
+                                                        {`Location: ${parameter.location || 'query'} 
+                                                        (${parameter.name})`}
+                                                    </>
+                                                )}
+                                                place='top'
+                                            >
+                                                <button
+                                                    type='button'
+                                                    className={styles.paramInfoButton}
+                                                    aria-label={`Metadata for ${parameter.name}`}
+                                                >
+                                                    <IconOutline.InformationCircleIcon />
+                                                </button>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                            {props.renderParameterInput(parameter)}
-                        </div>
-                    ))}
+                                {props.renderParameterInput(parameter)}
+                            </div>
+                        ))}
+                    </div>
+                    <div className={styles.actionsBar}>
+                        {props.reportActions}
+                    </div>
                 </div>
+            ) : (
+                props.reportActions
             )}
-
-            {props.reportActions}
         </>
     )
 }
 
-export const ReportsPage: FC = () => {
+type ReportsPageContentProps = {
+    initialTab: ReportsPageTab
+}
+
+// eslint-disable-next-line complexity
+const ReportsPageContent: FC<ReportsPageContentProps> = props => {
     const navigate: NavigateFunction = useNavigate()
+    const [activeTab] = useState<ReportsPageTab>(props.initialTab)
     const [reportsIndex, setReportsIndex] = useState<ReportsIndexResponse>({})
     const [selectedBasePath, setSelectedBasePath] = useState<string>('')
     const [selectedReportPath, setSelectedReportPath] = useState<string>('')
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [downloadingFormat, setDownloadingFormat] = useState<'json' | 'csv' | undefined>(undefined)
     const [parameterValues, setParameterValues] = useState<Record<string, string>>({})
+    const [billingAccountViewData, setBillingAccountViewData] = useState<
+        BillingAccountsViewData | undefined
+    >(undefined)
+    const [isBillingAccountViewLoading, setIsBillingAccountViewLoading] = useState<boolean>(false)
 
     useEffect(() => {
         let isMounted = true
@@ -230,15 +484,21 @@ export const ReportsPage: FC = () => {
         selectedGroup?.reports?.find(report => report.path === selectedReportPath)
     ), [selectedGroup, selectedReportPath])
 
+    const selectedReportForForm = activeTab === 'billingAccounts'
+        ? BILLING_ACCOUNTS_REPORT_DEFINITION
+        : selectedReport
+
     const handleBasePathChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSelectedBasePath(event.target.value)
         setSelectedReportPath('')
         setParameterValues({})
+        setBillingAccountViewData(undefined)
     }, [])
 
     const handleReportChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSelectedReportPath(event.target.value)
         setParameterValues({})
+        setBillingAccountViewData(undefined)
     }, [])
 
     const handleParameterChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
@@ -291,7 +551,7 @@ export const ReportsPage: FC = () => {
     }, [parameterValues])
 
     const parameterErrors = useMemo<Record<string, string>>(() => (
-        (selectedReport?.parameters ?? []).reduce<Record<string, string>>((errors, parameter) => {
+        (selectedReportForForm?.parameters ?? []).reduce<Record<string, string>>((errors, parameter) => {
             const error = getReportParameterValidationError(parameter, parameterValues[parameter.name])
 
             if (error) {
@@ -300,11 +560,54 @@ export const ReportsPage: FC = () => {
 
             return errors
         }, {})
-    ), [parameterValues, selectedReport])
+    ), [parameterValues, selectedReportForForm])
 
     const hasInvalidParameterValues = useMemo(() => (
         Object.keys(parameterErrors).length > 0
     ), [parameterErrors])
+
+    const handleBillingAccountView = useCallback(async () => {
+        if (activeTab !== 'billingAccounts' || hasInvalidParameterValues) {
+            return
+        }
+
+        const billingAccountId = parameterValues.billingAccountId?.trim()
+
+        if (!billingAccountId) {
+            return
+        }
+
+        try {
+            setIsBillingAccountViewLoading(true)
+            const profileQuery = new URLSearchParams({ billingAccountId })
+            const profilePath = `${BILLING_ACCOUNTS_REPORT_PATH}?${profileQuery.toString()}`
+            const paymentsPath = buildSfdcPaymentsQueryPath(
+                billingAccountId,
+                parameterValues.startDate,
+                parameterValues.endDate,
+            )
+
+            const paymentsPromise = fetchReportJson<SfdcBillingAccountPaymentRow[]>(paymentsPath)
+            const profilePromise = fetchReportJson<BillingAccountProfileResponse>(profilePath)
+                .catch(() => EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE)
+            const [profile, payments] = await Promise.all([profilePromise, paymentsPromise])
+
+            setBillingAccountViewData({
+                billingAccount: profile.billingAccount,
+                payments,
+            })
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsBillingAccountViewLoading(false)
+        }
+    }, [
+        activeTab,
+        hasInvalidParameterValues,
+        parameterValues.billingAccountId,
+        parameterValues.endDate,
+        parameterValues.startDate,
+    ])
 
     const handleDownload = useCallback(async (format: 'json' | 'csv') => {
         if (!selectedReport || hasInvalidParameterValues) {
@@ -338,18 +641,24 @@ export const ReportsPage: FC = () => {
         navigate(bulkMemberLookupRouteId)
     }, [navigate])
 
+    const handleResetFilters = useCallback(() => {
+        setParameterValues({})
+        setBillingAccountViewData(undefined)
+    }, [])
+
     const isDownloading = downloadingFormat !== undefined
+    const isBusy = isDownloading || isBillingAccountViewLoading
 
     const requiredParamsMissing = useMemo(() => {
-        const params = selectedReport?.parameters ?? []
+        const params = selectedReportForForm?.parameters ?? []
         return params.some(param => param.required && !(parameterValues[param.name]?.trim()))
-    }, [parameterValues, selectedReport])
+    }, [parameterValues, selectedReportForForm])
 
     const hasUnresolvedPathParams = useMemo(() => (
-        (selectedReport?.parameters ?? [])
+        (selectedReportForForm?.parameters ?? [])
             .filter(param => param.location === 'path')
             .some(param => !parameterValues[param.name]?.trim())
-    ), [parameterValues, selectedReport])
+    ), [parameterValues, selectedReportForForm])
 
     const isPostReport = selectedReport?.method?.toUpperCase() === 'POST'
     const isHandleLookupPostReport = isPostReport && selectedReport.path === bulkMembersByHandlesPath
@@ -360,6 +669,14 @@ export const ReportsPage: FC = () => {
         || hasInvalidParameterValues
         || hasUnresolvedPathParams
 
+    const billingAccountViewDisabled = !selectedReportForForm
+        || isDownloading
+        || isBillingAccountViewLoading
+        || requiredParamsMissing
+        || hasInvalidParameterValues
+        || hasUnresolvedPathParams
+    const isResetDisabled = Object.keys(parameterValues).length === 0
+
     const handleJsonDownload = useCallback(() => {
         handleDownload('json')
     }, [handleDownload])
@@ -368,20 +685,41 @@ export const ReportsPage: FC = () => {
         handleDownload('csv')
     }, [handleDownload])
 
+    const billingAccountReportActions = (
+        <div className={styles.actions}>
+            <Button
+                primary
+                disabled={billingAccountViewDisabled}
+                onClick={handleBillingAccountView}
+            >
+                View
+            </Button>
+            <Button
+                secondary
+                disabled={isResetDisabled}
+                onClick={handleResetFilters}
+            >
+                Reset Filters
+            </Button>
+        </div>
+    )
+
     const reportActions = (
         <ReportActions
             handleCsvDownload={handleCsvDownload}
             handleJsonDownload={handleJsonDownload}
+            handleResetFilters={handleResetFilters}
             handleOpenBulkMemberLookup={handleOpenBulkMemberLookup}
             isDownloadDisabled={isDownloadDisabled}
             isHandleLookupPostReport={isHandleLookupPostReport}
+            isResetDisabled={isResetDisabled}
             isPostReport={isPostReport}
         />
     )
 
     const renderParameterInput = useCallback((parameter: ReportParameter) => {
         const commonProps = {
-            label: parameter.name,
+            label: formatParameterLabel(parameter.name),
             name: parameter.name,
             placeholder: parameter.type === 'date'
                 ? 'YYYY-MM-DD'
@@ -435,14 +773,20 @@ export const ReportsPage: FC = () => {
 
     return (
         <>
-            {isDownloading && (
-                <LoadingSpinner overlay message='Generating Report…' />
+            {isBusy && (
+                <LoadingSpinner
+                    overlay
+                    message={isDownloading ? 'Generating Report…' : 'Loading billing account data…'}
+                />
             )}
             <div className={styles.page}>
                 <PageTitle>{pageTitle}</PageTitle>
                 <p className={styles.instructions}>
-                    Select a base path to view the available reports. After choosing a report, provide any
-                    required parameters and download the data as JSON or CSV directly from the reports API.
+                    {activeTab === 'reports'
+                        ? 'Select a base path to view available reports. Choose a report, '
+                            + 'fill required parameters, and download JSON or CSV from the reports API.'
+                        : 'Enter a billing account ID and optional start/end dates, then click View '
+                            + 'to load billing account payment data.'}
                 </p>
 
                 {isLoading ? (
@@ -451,47 +795,69 @@ export const ReportsPage: FC = () => {
                     </div>
                 ) : (
                     <>
-                        {basePathOptions.length ? (
-                            <div className={styles.selectors}>
-                                <InputSelect
-                                    classNameWrapper={styles.select}
-                                    label='Report category'
-                                    name='reports-base-path'
-                                    options={basePathOptions}
-                                    placeholder='Select a base path'
-                                    value={selectedBasePath}
-                                    onChange={handleBasePathChange}
-                                />
+                        {activeTab === 'reports' ? (
+                            <>
+                                {basePathOptions.length ? (
+                                    <div className={styles.selectors}>
+                                        <InputSelect
+                                            classNameWrapper={styles.select}
+                                            label='Report category'
+                                            name='reports-base-path'
+                                            options={basePathOptions}
+                                            placeholder='Select a base path'
+                                            value={selectedBasePath}
+                                            onChange={handleBasePathChange}
+                                        />
 
-                                {selectedGroup && (
-                                    <InputSelect
-                                        classNameWrapper={styles.select}
-                                        label='Report'
-                                        name='reports-path'
-                                        options={reportOptions}
-                                        placeholder='Select a report'
-                                        value={selectedReportPath}
-                                        onChange={handleReportChange}
-                                        disabled={!reportOptions.length}
-                                    />
+                                        {selectedGroup && (
+                                            <InputSelect
+                                                classNameWrapper={styles.select}
+                                                label='Report'
+                                                name='reports-path'
+                                                options={reportOptions}
+                                                placeholder='Select a report'
+                                                value={selectedReportPath}
+                                                onChange={handleReportChange}
+                                                disabled={!reportOptions.length}
+                                            />
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className={styles.emptyState}>
+                                        No reports are currently available.
+                                    </div>
                                 )}
-                            </div>
+
+                                <SelectedReportSection
+                                    renderParameterInput={renderParameterInput}
+                                    reportActions={reportActions}
+                                    selectedReport={selectedReport}
+                                />
+                            </>
                         ) : (
-                            <div className={styles.emptyState}>
-                                No reports are currently available.
-                            </div>
+                            <SelectedReportSection
+                                renderParameterInput={renderParameterInput}
+                                reportActions={billingAccountReportActions}
+                                selectedReport={BILLING_ACCOUNTS_REPORT_DEFINITION}
+                            />
                         )}
 
-                        <SelectedReportSection
-                            renderParameterInput={renderParameterInput}
-                            reportActions={reportActions}
-                            selectedReport={selectedReport}
-                        />
+                        {activeTab === 'billingAccounts' && billingAccountViewData ? (
+                            <BillingAccountReportResults data={billingAccountViewData} />
+                        ) : undefined}
                     </>
                 )}
             </div>
         </>
     )
 }
+
+export const ReportsPage: FC = () => (
+    <ReportsPageContent initialTab='reports' />
+)
+
+export const BillingAccountsPage: FC = () => (
+    <ReportsPageContent initialTab='billingAccounts' />
+)
 
 export default ReportsPage

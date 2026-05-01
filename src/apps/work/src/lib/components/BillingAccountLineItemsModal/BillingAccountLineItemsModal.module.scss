@@ -82,6 +82,27 @@
     font-weight: 600;
 }
 
+.budgetValue {
+    border-radius: 4px;
+    display: inline-flex;
+    padding: 4px 8px;
+}
+
+.budgetHealthy {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.budgetWarning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.budgetCritical {
+    background: #fee4e2;
+    color: #b42318;
+}
+
 .body {
     flex: 1;
     overflow: auto;
@@ -97,7 +118,7 @@
 
 .table {
     border-collapse: collapse;
-    min-width: 720px;
+    min-width: 820px;
     table-layout: fixed;
     width: 100%;
 }
@@ -131,26 +152,56 @@
 
 .table th:nth-child(1),
 .table td:nth-child(1) {
-    width: 16%;
+    width: 15%;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-    width: 17%;
+    width: 13%;
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-    width: 15%;
+    width: 14%;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-    width: 34%;
+    width: 13%;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
+    width: 30%;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 15%;
+}
+
+.tableWithoutFee th:nth-child(1),
+.tableWithoutFee td:nth-child(1) {
+    width: 16%;
+}
+
+.tableWithoutFee th:nth-child(2),
+.tableWithoutFee td:nth-child(2) {
+    width: 17%;
+}
+
+.tableWithoutFee th:nth-child(3),
+.tableWithoutFee td:nth-child(3) {
+    width: 15%;
+}
+
+.tableWithoutFee th:nth-child(4),
+.tableWithoutFee td:nth-child(4) {
+    width: 34%;
+}
+
+.tableWithoutFee th:nth-child(5),
+.tableWithoutFee td:nth-child(5) {
     width: 18%;
 }
 
@@ -206,13 +257,13 @@
     overflow-wrap: anywhere;
 }
 
-.challengeLink {
+.resourceLink {
     color: #137d60;
     font-weight: 500;
     text-decoration: none;
 }
 
-.challengeLink:hover {
+.resourceLink:hover {
     text-decoration: underline;
 }
 

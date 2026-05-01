@@ -30,11 +30,84 @@ const PER_PAGE = APPLICATIONS_PER_PAGE
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const IP_ADDRESS_PATTERN = /^(?:\d{1,3}\.){3}\d{1,3}$/
 const PROFILE_GATE_ERROR_MESSAGE = 'Your profile must be 100% complete before accepting this offer.'
+const ACTIVE_ASSIGNMENT_STATUSES = ['selected', 'assigned']
+const PAST_ASSIGNMENT_STATUSES = ['completed', 'terminated']
 
 type ProfileGateState = {
     engagementId: string
     message: string
 }
+
+type AssignmentSections = {
+    active: Engagement[]
+    past: Engagement[]
+}
+
+/**
+ * Normalizes assignment status values before section matching.
+ * @param status Raw assignment status from the API response.
+ * @returns Lower-case status key used by the My Assignments sections, or undefined when the status is empty.
+ */
+const getAssignmentStatusKey = (status?: string): string | undefined => {
+    const normalized = status?.trim()
+        .toLowerCase()
+
+    return normalized || undefined
+}
+
+/**
+ * Selects the assignment record that should drive a member's assignment card.
+ * @param engagement Engagement returned by the my-assignments endpoint.
+ * @param userId Authenticated member id whose assignment should be displayed.
+ * @returns The member's active assignment when present, otherwise their first past or available assignment.
+ */
+const getPreferredUserAssignment = (
+    engagement: Engagement,
+    userId?: number,
+): EngagementAssignment | undefined => {
+    if (!userId) {
+        return undefined
+    }
+
+    const userAssignments = engagement.assignments?.filter(
+        candidate => candidate.memberId === String(userId),
+    ) ?? []
+
+    return userAssignments.find(
+        candidate => ACTIVE_ASSIGNMENT_STATUSES.includes(
+            getAssignmentStatusKey(candidate.status) ?? '',
+        ),
+    ) ?? userAssignments.find(
+        candidate => PAST_ASSIGNMENT_STATUSES.includes(
+            getAssignmentStatusKey(candidate.status) ?? '',
+        ),
+    ) ?? userAssignments[0]
+}
+
+/**
+ * Splits engagements into the Active and Past sections requested for My Assignments.
+ * @param assignments Engagements returned by the my-assignments endpoint.
+ * @param getAssignment Resolves the displayed assignment for a given engagement.
+ * @returns Engagement groups for active selected/assigned work and past completed/terminated work.
+ */
+const getAssignmentSections = (
+    assignments: Engagement[],
+    getAssignment: (engagement: Engagement) => EngagementAssignment | undefined,
+): AssignmentSections => assignments.reduce<AssignmentSections>((sections, engagement) => {
+    const assignment = getAssignment(engagement)
+    const status = getAssignmentStatusKey(assignment?.status)
+
+    if (status && PAST_ASSIGNMENT_STATUSES.includes(status)) {
+        sections.past.push(engagement)
+    } else {
+        sections.active.push(engagement)
+    }
+
+    return sections
+}, {
+    active: [],
+    past: [],
+})
 
 const getBaseDomainFromHostname = (hostname: string): string | undefined => {
     const normalized = hostname.trim()
@@ -184,15 +257,9 @@ const MyAssignmentsPage: FC = () => {
         window.open(`mailto:${contactEmail}`, '_blank')
     }, [])
 
-    const getUserAssignment = useCallback((engagement: Engagement): EngagementAssignment | undefined => {
-        if (!userId) {
-            return undefined
-        }
-
-        return engagement.assignments?.find(
-            candidate => candidate.memberId === String(userId),
-        )
-    }, [userId])
+    const getUserAssignment = useCallback((engagement: Engagement): EngagementAssignment | undefined => (
+        getPreferredUserAssignment(engagement, userId)
+    ), [userId])
 
     const handleDocumentExperience = useCallback((engagement: Engagement) => {
         const assignment = getUserAssignment(engagement)
@@ -302,6 +369,10 @@ const MyAssignmentsPage: FC = () => {
 
     const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), [])
     const showEmptyState = getShowEmptyState(loading, error, assignments)
+    const assignmentSections = useMemo(
+        () => getAssignmentSections(assignments, getUserAssignment),
+        [assignments, getUserAssignment],
+    )
     const showExperienceModal = useMemo(
         () => [selectedEngagement, selectedAssignmentId].every(Boolean),
         [selectedEngagement, selectedAssignmentId],
@@ -345,66 +416,90 @@ const MyAssignmentsPage: FC = () => {
                     <Button label='Browse Engagements' secondary onClick={handleBrowseEngagements} />
                 </div>
             )}
-            {!error && (
+            {!error && loading && (
                 <div className={styles.grid}>
-                    {loading ? skeletonCards.map(card => (
+                    {skeletonCards.map(card => (
                         <div key={`skeleton-${card}`} className={styles.skeletonCard} />
-                    )) : assignments.map(engagement => {
-                        const contactEmail = normalizeContactEmail(engagement.createdByEmail)
-                        const assignment = getUserAssignment(engagement)
-                        const handleDocumentExperienceClick = function (): void {
-                            handleDocumentExperience(engagement)
-                        }
+                    ))}
+                </div>
+            )}
+            {!error && !loading && (
+                <div className={styles.sections}>
+                    {[
+                        {
+                            engagements: assignmentSections.active,
+                            id: 'active',
+                            title: 'Active',
+                        },
+                        {
+                            engagements: assignmentSections.past,
+                            id: 'past',
+                            title: 'Past',
+                        },
+                    ].filter(section => section.engagements.length > 0)
+                        .map(section => (
+                            <section key={section.id} className={styles.assignmentSection}>
+                                <h2 className={styles.sectionTitle}>{section.title}</h2>
+                                <div className={styles.sectionGrid}>
+                                    {section.engagements.map(engagement => {
+                                        const contactEmail = normalizeContactEmail(engagement.createdByEmail)
+                                        const assignment = getUserAssignment(engagement)
+                                        const handleDocumentExperienceClick = function (): void {
+                                            handleDocumentExperience(engagement)
+                                        }
 
-                        const handleAcceptOfferClick = function (): void {
-                            setProfileGateState(undefined)
+                                        const handleAcceptOfferClick = function (): void {
+                                            setProfileGateState(undefined)
 
-                            if (profileCompleteness?.isLoading) {
-                                return
-                            }
+                                            if (profileCompleteness?.isLoading) {
+                                                return
+                                            }
 
-                            if (
-                                profileCompleteness
-                                && typeof profileCompleteness.percent === 'number'
-                                && profileCompleteness.percent < 100
-                            ) {
-                                setProfileGateState({
-                                    engagementId: engagement.id,
-                                    message: PROFILE_GATE_ERROR_MESSAGE,
-                                })
-                                return
-                            }
+                                            if (
+                                                profileCompleteness
+                                                && typeof profileCompleteness.percent === 'number'
+                                                && profileCompleteness.percent < 100
+                                            ) {
+                                                setProfileGateState({
+                                                    engagementId: engagement.id,
+                                                    message: PROFILE_GATE_ERROR_MESSAGE,
+                                                })
+                                                return
+                                            }
 
-                            startTermsAgreementFlow(() => {
-                                handleOpenOfferModal(engagement, 'accept')
-                            })
-                        }
+                                            startTermsAgreementFlow(() => {
+                                                handleOpenOfferModal(engagement, 'accept')
+                                            })
+                                        }
 
-                        const handleRejectOfferClick = function (): void {
-                            handleOpenOfferModal(engagement, 'reject')
-                        }
+                                        const handleRejectOfferClick = function (): void {
+                                            handleOpenOfferModal(engagement, 'reject')
+                                        }
 
-                        return (
-                            <AssignmentCard
-                                key={engagement.id}
-                                engagement={engagement}
-                                assignment={assignment}
-                                contactEmail={contactEmail}
-                                onViewPayments={handleViewPayments}
-                                onDocumentExperience={handleDocumentExperienceClick}
-                                onAcceptOffer={handleAcceptOfferClick}
-                                onRejectOffer={handleRejectOfferClick}
-                                onContactTalentManager={handleContactTalentManager}
-                                canContactTalentManager={Boolean(contactEmail)}
-                                profileGateError={
-                                    profileGateState?.engagementId === engagement.id
-                                        ? profileGateState.message
-                                        : undefined
-                                }
-                                profileHandle={profileHandle}
-                            />
-                        )
-                    })}
+                                        return (
+                                            <AssignmentCard
+                                                key={engagement.id}
+                                                engagement={engagement}
+                                                assignment={assignment}
+                                                contactEmail={contactEmail}
+                                                onViewPayments={handleViewPayments}
+                                                onDocumentExperience={handleDocumentExperienceClick}
+                                                onAcceptOffer={handleAcceptOfferClick}
+                                                onRejectOffer={handleRejectOfferClick}
+                                                onContactTalentManager={handleContactTalentManager}
+                                                canContactTalentManager={Boolean(contactEmail)}
+                                                profileGateError={
+                                                    profileGateState?.engagementId === engagement.id
+                                                        ? profileGateState.message
+                                                        : undefined
+                                                }
+                                                profileHandle={profileHandle}
+                                            />
+                                        )
+                                    })}
+                                </div>
+                            </section>
+                        ))}
                 </div>
             )}
             {!error && assignments.length > 0 && (

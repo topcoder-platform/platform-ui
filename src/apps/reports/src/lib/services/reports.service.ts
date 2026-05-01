@@ -28,6 +28,46 @@ export type ReportGroup = {
 
 export type ReportsIndexResponse = Record<string, ReportGroup>
 
+export type BillingAccountDetail = {
+    name: string
+    description: string | null
+    subcontractingEndCustomer: string | null
+    status: string
+    startDate: string | null
+    endDate: string | null
+    budget: string | number
+    markup: string | number
+}
+
+export type SfdcBillingAccountPaymentRow = {
+    paymentId: string
+    paymentDate: string
+    billingAccountId: string
+    paymentStatus: string
+    challengeFee: string | number
+    paymentAmount: string | number
+    challengeId: string
+    category: string
+    isTask: boolean
+    challengeName: string | null
+    challengeStatus: string | null
+    winnerHandle: string
+    winnerId: string
+    winnerFirstName: string
+    winnerLastName: string
+}
+
+/** Response from GET /sfdc/billing-accounts */
+export type BillingAccountProfileResponse = {
+    billingAccount?: BillingAccountDetail
+}
+
+/** Billing Accounts in-app view: profile + rows from GET /sfdc/payments */
+export type BillingAccountsViewData = {
+    billingAccount?: BillingAccountDetail
+    payments: SfdcBillingAccountPaymentRow[]
+}
+
 const reportsDownloadClient: AxiosInstance = xhrCreateInstance()
 
 const buildReportUrl = (path: string): string => {
@@ -136,6 +176,16 @@ export const postReportFileAsCsv = (path: string, file: File): Promise<Blob> => 
 export const downloadReportAsJson = (path: string): Promise<Blob> => (
     downloadReportBlob(path, 'application/json')
 )
+
+export const fetchReportJson = async <T>(path: string): Promise<T> => {
+    if (!path) {
+        throw new Error('Report path is required')
+    }
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${EnvironmentConfig.API.V6}/reports${normalizedPath}`
+    return xhrGetAsync<T>(url, reportsDownloadClient)
+}
 
 export const downloadReportAsCsv = (path: string): Promise<Blob> => (
     downloadReportBlob(path, 'text/csv')

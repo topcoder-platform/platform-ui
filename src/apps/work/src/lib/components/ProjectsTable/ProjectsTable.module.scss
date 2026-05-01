@@ -54,6 +54,21 @@
     white-space: nowrap;
 }
 
+.budgetHealthy {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.budgetWarning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.budgetCritical {
+    background: #fee4e2;
+    color: #b42318;
+}
+
 .infoButton {
     align-items: center;
     background: none;

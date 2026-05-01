@@ -12,6 +12,10 @@ jest.mock('../../hooks', () => ({
     useFetchAssignmentPayments: (...args: unknown[]): unknown => mockUseFetchAssignmentPayments(...args),
 }))
 
+jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: false,
+}))
+
 jest.mock('~/libs/ui', () => ({
     BaseModal: (props: {
         buttons?: JSX.Element
@@ -92,9 +96,9 @@ describe('PaymentHistoryModal', () => {
             .toBeTruthy()
         expect(screen.getByText('payment.manager'))
             .toBeTruthy()
-        expect(screen.getByText('Fee:'))
-            .toBeTruthy()
-        expect(screen.getByText('$18.60'))
-            .toBeTruthy()
+        expect(screen.queryByText('Fee:'))
+            .toBeNull()
+        expect(screen.queryByText('$18.60'))
+            .toBeNull()
     })
 })

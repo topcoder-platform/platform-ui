@@ -40,7 +40,7 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
         () => workflowRuns.find(w => w.workflow.id === workflowId),
         [workflowRuns, workflowId],
     )
-    const workflow = useMemo(() => workflowRun?.workflow, [workflowRuns, workflowId])
+    const workflow = useMemo(() => workflowRun?.workflow, [workflowRun?.workflow])
     const scorecard = useMemo(() => workflow?.scorecard, [workflow])
 
     const value = useMemo<ReviewsContextModel>(

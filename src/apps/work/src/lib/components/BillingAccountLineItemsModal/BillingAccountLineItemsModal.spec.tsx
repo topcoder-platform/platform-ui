@@ -4,12 +4,17 @@ import {
     screen,
 } from '@testing-library/react'
 
+import { useFetchEngagements } from '../../hooks/useFetchEngagements'
 import type { BillingAccountDetails } from '../../services'
 
 import BillingAccountLineItemsModal from './BillingAccountLineItemsModal'
 
 jest.mock('../../../config/routes.config', () => ({
     rootRoute: '/work',
+}))
+
+jest.mock('../../hooks/useFetchEngagements', () => ({
+    useFetchEngagements: jest.fn(),
 }))
 
 jest.mock('~/config', () => ({
@@ -50,6 +55,8 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 
+const mockedUseFetchEngagements = useFetchEngagements as jest.MockedFunction<typeof useFetchEngagements>
+
 const baseBillingAccountDetails: BillingAccountDetails = {
     budget: 1000,
     consumedAmounts: [],
@@ -61,16 +68,39 @@ const baseBillingAccountDetails: BillingAccountDetails = {
     totalBudgetRemaining: 1000,
 }
 
-function renderModal(billingAccountDetails: BillingAccountDetails): ReturnType<typeof render> {
+function renderModal(
+    billingAccountDetails: BillingAccountDetails,
+    showMemberPaymentsRemaining?: boolean,
+    projectId?: number | string,
+): ReturnType<typeof render> {
     return render(
         <BillingAccountLineItemsModal
             billingAccountDetails={billingAccountDetails}
             onClose={jest.fn()}
+            projectId={projectId}
+            showMemberPaymentsRemaining={showMemberPaymentsRemaining}
         />,
     )
 }
 
 describe('BillingAccountLineItemsModal', () => {
+    beforeEach(() => {
+        mockedUseFetchEngagements.mockReset()
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 0,
+                total: 0,
+                totalPages: 0,
+            },
+            mutate: jest.fn(),
+        })
+    })
+
     it('builds challenge links under the work root for path-based deployments', () => {
         renderModal({
             ...baseBillingAccountDetails,
@@ -93,6 +123,198 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(challengeLink.getAttribute('href'))
             .toBe('/work/challenges/challenge%20%2F%20100')
+    })
+
+    it('shows challenge member payments and calculated challenge fees for non-copilot users', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: [
+                {
+                    amount: '50',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Markup Challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            lockedBudget: 66.5,
+            markup: 0.33,
+            totalBudgetRemaining: 933.5,
+        })
+
+        expect(screen.getByText('Member Payments'))
+            .toBeTruthy()
+        expect(screen.getByText('Challenge Fee'))
+            .toBeTruthy()
+        expect(screen.getAllByText('$50.00'))
+            .toHaveLength(1)
+        expect(screen.getByText('$16.50'))
+            .toBeTruthy()
+    })
+
+    it('builds engagement links from assignment-backed billing rows', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    anticipatedStart: 'IMMEDIATE',
+                    assignedMemberHandles: [],
+                    assignments: [
+                        {
+                            agreementRate: '100',
+                            endDate: '2026-03-01T00:00:00.000Z',
+                            engagementId: 'engagement-300',
+                            id: 'assignment-300',
+                            memberHandle: 'member',
+                            memberId: 123,
+                            otherRemarks: '',
+                            startDate: '2026-02-01T00:00:00.000Z',
+                            status: 'ACTIVE',
+                            termsAccepted: true,
+                        },
+                    ],
+                    compensationRange: '$100',
+                    countries: [],
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                    description: 'Engagement description',
+                    durationWeeks: 4,
+                    id: 'engagement-300',
+                    isPrivate: false,
+                    projectId: 'project 200',
+                    requiredMemberCount: 1,
+                    role: 'SOFTWARE_DEVELOPER',
+                    skills: [],
+                    status: 'Active',
+                    timezones: [],
+                    title: 'Resolved Engagement',
+                    updatedAt: '2026-01-01T00:00:00.000Z',
+                    workload: 'FULL_TIME',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 1,
+                total: 1,
+                totalPages: 1,
+            },
+            mutate: jest.fn(),
+        })
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '120',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'assignment-300',
+                    externalName: 'Resolved Engagement',
+                    externalType: 'ENGAGEMENT',
+                },
+            ],
+            consumedBudget: 120,
+            markup: 0.2,
+            totalBudgetRemaining: 880,
+        }, false, 'project 200')
+
+        const engagementLink = screen.getByRole('link', {
+            name: 'Resolved Engagement',
+        })
+
+        expect(engagementLink.getAttribute('href'))
+            .toBe('/work/projects/project%20200/engagements/engagement-300')
+        expect(screen.getByText('$100.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$20.00'))
+            .toBeTruthy()
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                'project 200',
+                { includePrivate: true },
+                { enabled: true },
+            )
+    })
+
+    it('builds engagement links from assignment-backed billing rows for copilot views', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    anticipatedStart: 'IMMEDIATE',
+                    assignedMemberHandles: [],
+                    assignments: [
+                        {
+                            agreementRate: '100',
+                            endDate: '2026-03-01T00:00:00.000Z',
+                            engagementId: 'engagement-300',
+                            id: 'assignment-300',
+                            memberHandle: 'member',
+                            memberId: 123,
+                            otherRemarks: '',
+                            startDate: '2026-02-01T00:00:00.000Z',
+                            status: 'ACTIVE',
+                            termsAccepted: true,
+                        },
+                    ],
+                    compensationRange: '$100',
+                    countries: [],
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                    description: 'Engagement description',
+                    durationWeeks: 4,
+                    id: 'engagement-300',
+                    isPrivate: false,
+                    projectId: 'project 200',
+                    requiredMemberCount: 1,
+                    role: 'SOFTWARE_DEVELOPER',
+                    skills: [],
+                    status: 'Active',
+                    timezones: [],
+                    title: 'Resolved Engagement',
+                    updatedAt: '2026-01-01T00:00:00.000Z',
+                    workload: 'FULL_TIME',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 1,
+                total: 1,
+                totalPages: 1,
+            },
+            mutate: jest.fn(),
+        })
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '120',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'assignment-300',
+                    externalName: 'Resolved Engagement',
+                    externalType: 'ENGAGEMENT',
+                    memberPaymentAmount: '100',
+                },
+            ],
+            consumedBudget: 120,
+            memberPaymentsRemaining: 500,
+            totalBudgetRemaining: 880,
+        }, true, 'project 200')
+
+        const engagementLink = screen.getByRole('link', {
+            name: 'Resolved Engagement',
+        })
+
+        expect(engagementLink.getAttribute('href'))
+            .toBe('/work/projects/project%20200/engagements/engagement-300')
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                'project 200',
+                { includePrivate: true },
+                { enabled: true },
+            )
     })
 
     it('renders legacy-only challenge rows as plain text', () => {
@@ -137,5 +359,70 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(screen.getByText('2026-02-10'))
             .toBeTruthy()
+    })
+
+    it('shows only remaining member payments and challenge row amounts for copilots', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedBudget: 500,
+            lockedAmounts: [
+                {
+                    amount: '50',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Markup Challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            lockedBudget: 66.5,
+            markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 433.5,
+        }, true)
+
+        expect(screen.getByText('Remaining member payments'))
+            .toBeTruthy()
+        expect(screen.getByText('$200.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$50.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$37.59'))
+            .toBeNull()
+        expect(screen.queryByText('Consumed'))
+            .toBeNull()
+        expect(screen.queryByText('Remaining'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
+            .toBeNull()
+    })
+
+    it('uses API-provided member-payment row amounts for copilot responses without markup', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '125.25',
+                    date: '2026-02-10T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Consumed Markup Challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '100.20',
+                },
+            ],
+            consumedBudget: 125.25,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 250,
+        }, true)
+
+        expect(screen.getByText('Remaining member payments'))
+            .toBeTruthy()
+        expect(screen.getByText('$200.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$100.20'))
+            .toBeTruthy()
+        expect(screen.queryByText('$125.25'))
+            .toBeNull()
+        expect(screen.queryByText('Remaining'))
+            .toBeNull()
     })
 })
