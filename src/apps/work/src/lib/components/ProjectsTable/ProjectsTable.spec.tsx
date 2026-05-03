@@ -39,8 +39,8 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
 
 jest.mock('../../constants', () => {
     const constants = {
-        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
-        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
+        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: true,
+        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: true,
         PROJECT_STATUS: {
             DRAFT: 'draft',
         },
@@ -149,8 +149,8 @@ describe('ProjectsTable', () => {
 
     beforeEach(() => {
         jest.clearAllMocks()
-        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
-        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = true
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
 
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [],
@@ -196,6 +196,9 @@ describe('ProjectsTable', () => {
     })
 
     it('hides billing account spent totals and line-item details while billing details are disabled', () => {
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [
                 {
@@ -233,6 +236,47 @@ describe('ProjectsTable', () => {
             .toBeNull()
         expect(screen.queryByRole('dialog'))
             .toBeNull()
+    })
+
+    it('shows billing account spent totals and line-item details when enabled', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    budget: 1000,
+                    consumedBudget: 225,
+                    id: 80001063,
+                    lockedBudget: 125,
+                    name: 'Access BA',
+                    totalBudgetRemaining: 650,
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        renderTable([{
+            ...invitedProject,
+            billingAccountId: 80001063,
+        }])
+
+        expect(screen.getAllByText('$350 / $1,000 spent').length)
+            .toBeGreaterThan(0)
+        fireEvent.click(screen.getAllByRole('button', {
+            name: 'View billing account details',
+        })[0])
+
+        expect(screen.getByRole('dialog')
+            .textContent)
+            .toContain('Billing account details for 80001063')
+        expect(mockedUseFetchBillingAccountDetails)
+            .toHaveBeenCalledWith('80001063')
     })
 
     it('shows member payments remaining for copilot project rows', () => {

@@ -37,8 +37,8 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
 
 jest.mock('../../constants', () => {
     const constants = {
-        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
-        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
+        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: true,
+        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: true,
     }
 
     Object.assign(globalThis, { mockWorkConstants: constants })
@@ -122,8 +122,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     beforeEach(() => {
         jest.clearAllMocks()
 
-        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
-        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = true
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
 
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [],
@@ -150,6 +150,9 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     })
 
     it('hides billing account budget and line-item details while billing details are disabled', () => {
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+
         renderNotice()
 
         expect(screen.getByText(/Billing account:/))
@@ -173,18 +176,19 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeTruthy()
         expect(screen.getByText(/80001063/))
             .toBeTruthy()
-        expect(screen.queryByText('$1,025 / $1,000 spent'))
-            .toBeNull()
-        expect(screen.queryByText(/The billing account for this project has insufficient remaining funds,/))
-            .toBeNull()
-        expect(screen.queryByRole('link', { name: 'click here to update' }))
-            .toBeNull()
-        expect(screen.queryByRole('button', {
+        expect(screen.getByText('$1,025 / $1,000 spent'))
+            .toBeTruthy()
+        expect(screen.getByText(/The billing account for this project has insufficient remaining funds,/))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'click here to update' }))
+            .toBeTruthy()
+        fireEvent.click(screen.getByRole('button', {
             name: 'View billing account details',
         }))
-            .toBeNull()
-        expect(screen.queryByRole('dialog'))
-            .toBeNull()
+
+        expect(screen.getByRole('dialog')
+            .textContent)
+            .toContain('Billing account details for 80001063')
     })
 
     it('shows member payments remaining instead of spent and total budget for copilots', () => {

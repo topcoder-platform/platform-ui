@@ -198,10 +198,10 @@ function renderBudgetDisplayContent(
 }
 
 /**
- * Hides budget-derived billing account notices while budget display is disabled.
+ * Hides budget-derived billing account notices when budget display is disabled.
  *
  * @param billingAccountIssue The billing account issue resolved for the project.
- * @returns The issue to display, or `undefined` when the temporary hide applies.
+ * @returns The issue to display, or `undefined` when budget display is disabled.
  */
 function getVisibleBillingAccountIssue(
     billingAccountIssue: BillingAccountIssue,
@@ -260,7 +260,7 @@ const BillingAccountDetailsContent: FC<BillingAccountDetailsContentProps> = (
 }
 
 /**
- * Renders the temporarily enabled/disabled line-item modal.
+ * Renders the gated billing-account line-item modal.
  *
  * @param billingAccountDetails Billing account detail payload, if loaded.
  * @param isModalOpen Whether the details modal has been requested.
