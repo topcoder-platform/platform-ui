@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { ReactNode } from 'react'
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -36,13 +37,19 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
     ),
 }))
 
-jest.mock('../../constants', () => ({
-    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
-    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
-    PROJECT_STATUS: {
-        DRAFT: 'draft',
-    },
-}))
+jest.mock('../../constants', () => {
+    const constants = {
+        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
+        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
+        PROJECT_STATUS: {
+            DRAFT: 'draft',
+        },
+    }
+
+    Object.assign(globalThis, { mockWorkConstants: constants })
+
+    return constants
+})
 
 jest.mock('../../utils', () => ({
     buildProjectChallengesPath: (projectId: string | number) => (
@@ -88,6 +95,22 @@ const mockedUseFetchBillingAccountDetails = useFetchBillingAccountDetails as jes
 >
 const mockedUseFetchBillingAccounts = useFetchBillingAccounts as jest.MockedFunction<typeof useFetchBillingAccounts>
 
+interface MockWorkConstants {
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: boolean
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: boolean
+}
+
+/**
+ * Returns the mutable constants mock installed for this spec.
+ *
+ * @returns Work app billing feature flag state used by mocked constants.
+ */
+function getMockWorkConstants(): MockWorkConstants {
+    return (globalThis as unknown as {
+        mockWorkConstants: MockWorkConstants
+    }).mockWorkConstants
+}
+
 const billingAccountDetails: BillingAccountDetails = {
     budget: 1000,
     consumedAmounts: [],
@@ -126,6 +149,9 @@ describe('ProjectsTable', () => {
 
     beforeEach(() => {
         jest.clearAllMocks()
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [],
             error: undefined,
@@ -227,6 +253,8 @@ describe('ProjectsTable', () => {
             isLoading: false,
         })
 
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
+
         renderTable(
             [{
                 ...invitedProject,
@@ -248,7 +276,8 @@ describe('ProjectsTable', () => {
             .toBeNull()
     })
 
-    it('hides payment amounts and billing details access for copilot project rows when disabled', () => {
+    it('hides inline payment amounts but keeps billing details available for copilot project rows '
+        + 'when disabled', () => {
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [
                 {
@@ -265,6 +294,14 @@ describe('ProjectsTable', () => {
             isError: false,
             isLoading: false,
         })
+        mockedUseFetchBillingAccountDetails.mockReturnValue({
+            billingAccountDetails,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
 
         renderTable(
             [{
@@ -285,9 +322,12 @@ describe('ProjectsTable', () => {
             .toBeNull()
         expect(screen.queryByText('$750 / $1,000 spent'))
             .toBeNull()
-        expect(screen.queryByRole('button', {
+        fireEvent.click(screen.getAllByRole('button', {
             name: 'View billing account details',
-        }))
-            .toBeNull()
+        })[0])
+
+        expect(screen.getByRole('dialog')
+            .textContent)
+            .toContain('Billing account details for 80001063')
     })
 })
