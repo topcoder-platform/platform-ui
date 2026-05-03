@@ -162,13 +162,13 @@ function isRestrictedCopilot(workAppContext: WorkAppContextModel): boolean {
 }
 
 /**
- * Resolves whether the current user may see payment details for one project row.
+ * Resolves whether the current user may see inline payment amounts for one project row.
  *
  * @param workAppContext Current work app user context.
  * @param project Project row being rendered.
- * @returns `true` when payment amounts and the line-item modal may be shown.
+ * @returns `true` when payment amounts may be shown in the row summary.
  */
-function canShowProjectPaymentDetails(
+function canShowProjectPaymentAmounts(
     workAppContext: WorkAppContextModel,
     project: Project,
 ): boolean {
@@ -246,8 +246,9 @@ function getBillingAccountDisplay(
 interface ProjectBillingAccountCellProps {
     billingAccount: BillingAccount | undefined
     project: Project
-    showPaymentDetails: boolean
+    showPaymentAmounts: boolean
     showMemberPaymentsRemaining: boolean
+    showMemberPaymentsRemainingInModal: boolean
 }
 
 interface ProjectBillingBudgetDisplayState {
@@ -267,27 +268,25 @@ interface RenderProjectBillingAccountModalParams {
  * Resolves whether the billing-account details hook should fetch modal data.
  *
  * @param isModalOpen Whether the row details modal has been opened.
- * @param showPaymentDetails Whether the current user may see payment details.
  * @returns `true` when the modal feature is enabled and data should be fetched.
  */
 function canFetchProjectBillingAccountDetails(
     isModalOpen: boolean,
-    showPaymentDetails: boolean,
 ): boolean {
-    return BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen && showPaymentDetails
+    return BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen
 }
 
 /**
  * Selects the visible budget state for one project billing-account row.
  *
  * @param billingAccount Billing-account summary attached to the project row.
- * @param showPaymentDetails Whether the current user may see payment details.
+ * @param showPaymentAmounts Whether the current user may see inline payment amounts.
  * @param showMemberPaymentsRemaining Whether the current user needs the copilot-safe member payment view.
  * @returns Budget data to render, with copilot budget data included when needed.
  */
 function getProjectBillingBudgetDisplayState(
     billingAccount: BillingAccount | undefined,
-    showPaymentDetails: boolean,
+    showPaymentAmounts: boolean,
     showMemberPaymentsRemaining: boolean,
 ): ProjectBillingBudgetDisplayState {
     if (showMemberPaymentsRemaining) {
@@ -299,7 +298,7 @@ function getProjectBillingBudgetDisplayState(
         }
     }
 
-    if (!BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || !showPaymentDetails) {
+    if (!BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || !showPaymentAmounts) {
         return {
             budgetInfo: undefined,
             copilotBudgetInfo: undefined,
@@ -350,16 +349,14 @@ function renderProjectBillingAccountBudget(
  * Renders the billing-account line-item details button when the feature is enabled.
  *
  * @param billingAccountId Normalized billing-account id for the current row.
- * @param showPaymentDetails Whether the current user may open payment details.
  * @param onOpen Open handler for the row modal.
  * @returns The details button, or `undefined` when unavailable.
  */
 function renderProjectBillingAccountDetailsButton(
     billingAccountId: string | undefined,
-    showPaymentDetails: boolean,
     onOpen: () => void,
 ): JSX.Element | undefined {
-    if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !billingAccountId || !showPaymentDetails) {
+    if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !billingAccountId) {
         return undefined
     }
 
@@ -417,13 +414,13 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        canFetchProjectBillingAccountDetails(isModalOpen, props.showPaymentDetails)
+        canFetchProjectBillingAccountDetails(isModalOpen)
             ? normalizedBillingAccountId
             : undefined,
     )
     const budgetDisplayState = getProjectBillingBudgetDisplayState(
         props.billingAccount,
-        props.showPaymentDetails,
+        props.showPaymentAmounts,
         props.showMemberPaymentsRemaining,
     )
     const billingAccountBudget = renderProjectBillingAccountBudget(
@@ -440,7 +437,6 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     }, [])
     const billingAccountDetailsButton = renderProjectBillingAccountDetailsButton(
         normalizedBillingAccountId,
-        props.showPaymentDetails,
         handleOpenModal,
     )
     const billingAccountModal = renderProjectBillingAccountModal({
@@ -448,7 +444,7 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
         isModalOpen,
         onClose: handleCloseModal,
         projectId: props.project.id,
-        showMemberPaymentsRemaining: props.showMemberPaymentsRemaining,
+        showMemberPaymentsRemaining: props.showMemberPaymentsRemainingInModal,
     })
 
     return (
@@ -524,8 +520,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                         billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                         project={project}
                         showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
-                            && canShowProjectPaymentDetails(workAppContext, project)}
-                        showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
+                            && canShowProjectPaymentAmounts(workAppContext, project)}
+                        showMemberPaymentsRemainingInModal={isRestrictedCopilot(workAppContext)}
+                        showPaymentAmounts={canShowProjectPaymentAmounts(workAppContext, project)}
                     />
                 ),
                 type: 'element',
@@ -614,8 +611,9 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                                 billingAccount={billingAccountsById.get(String(project.billingAccountId))}
                                 project={project}
                                 showMemberPaymentsRemaining={isRestrictedCopilot(workAppContext)
-                                    && canShowProjectPaymentDetails(workAppContext, project)}
-                                showPaymentDetails={canShowProjectPaymentDetails(workAppContext, project)}
+                                    && canShowProjectPaymentAmounts(workAppContext, project)}
+                                showMemberPaymentsRemainingInModal={isRestrictedCopilot(workAppContext)}
+                                showPaymentAmounts={canShowProjectPaymentAmounts(workAppContext, project)}
                             />
                         )}
                         canEdit={canEditProject(project)}
