@@ -326,6 +326,36 @@ export function checkCanManageProject(
         || normalizedRole === PROJECT_ROLES.MANAGER
 }
 
+/**
+ * Returns whether the caller can edit an existing project's core details.
+ *
+ * Admins always qualify. Non-admin callers must hold a manager-tier user role
+ * and the project's Full Access membership. Copilot membership is excluded so
+ * copilot users can keep other write access without changing project details.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project project context for the edit check.
+ * @returns `true` when the caller can edit project details.
+ */
+export function checkCanEditProjectDetails(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    if (hasAdminRole(userRoles)) {
+        return true
+    }
+
+    if (!project || !hasManagerRole(userRoles)) {
+        return false
+    }
+
+    const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)
+
+    return normalizedRole === PROJECT_ROLES.MANAGER
+}
+
 export function checkAdminOrPmOrTaskManager(
     token: string,
     project?: Project,
