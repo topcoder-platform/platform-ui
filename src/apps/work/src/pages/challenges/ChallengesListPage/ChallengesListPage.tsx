@@ -60,6 +60,7 @@ import {
 import {
     buildProjectLandingPath,
     canCreateEngagement,
+    checkCanEditProjectDetails,
     checkCanManageProject,
     checkProjectAccess,
     getAuthAccessToken,
@@ -187,7 +188,7 @@ function renderContextualActions(params: RenderContextualActionsParams): JSX.Ele
 }
 
 interface RenderProjectTitleActionParams {
-    canManageProject: boolean
+    canEditProjectDetails: boolean
     projectId: string | undefined
     projectStatus: ProjectStatusValue | undefined
 }
@@ -202,7 +203,7 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
             {params.projectStatus
                 ? <ProjectStatus status={params.projectStatus} />
                 : undefined}
-            {params.canManageProject
+            {params.canEditProjectDetails
                 ? (
                     <Link
                         aria-label='Edit project'
@@ -215,6 +216,30 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
                 : undefined}
         </div>
     )
+}
+
+/**
+ * Returns whether the project-title edit action should render.
+ *
+ * @param userRoles caller roles from the current work app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project loaded project detail for the current route.
+ * @returns `true` only after project detail is loaded and editable by the caller.
+ * @remarks Used by the project challenges page title action so admins, managers,
+ * and copilots keep the same loading behavior while sharing the narrower project
+ * detail edit permission.
+ */
+function canRenderProjectDetailsEditAction(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    return !!project
+        && checkCanEditProjectDetails(
+            userRoles,
+            userId,
+            project,
+        )
 }
 
 interface RenderBillingAccountNoticeParams {
@@ -686,6 +711,11 @@ export const ChallengesListPage: FC = () => {
         : 'Challenges'
     const canManageProject = !!projectResult.project
         && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
+    const canEditProjectDetails = canRenderProjectDetailsEditAction(
+        userRoles,
+        loginUserInfo?.userId,
+        projectResult.project,
+    )
     const isProjectActive = String(projectResult.project?.status || '')
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
@@ -710,7 +740,7 @@ export const ChallengesListPage: FC = () => {
     })
 
     const titleAction = renderProjectTitleAction({
-        canManageProject,
+        canEditProjectDetails,
         projectId: projectIdFromRoute,
         projectStatus: projectResult.project?.status,
     })

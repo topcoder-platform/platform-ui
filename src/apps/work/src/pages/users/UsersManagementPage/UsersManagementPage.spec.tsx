@@ -13,7 +13,10 @@ import {
     useFetchProject,
     useFetchProjectMembers,
 } from '../../../lib/hooks'
-import { checkCanManageProject } from '../../../lib/utils'
+import {
+    checkCanEditProjectDetails,
+    checkCanManageProject,
+} from '../../../lib/utils'
 
 import { UsersManagementPage } from './UsersManagementPage'
 
@@ -95,6 +98,7 @@ jest.mock('../../../lib/services', () => ({
     removeMemberFromProject: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    checkCanEditProjectDetails: jest.fn(() => true),
     checkCanManageProject: jest.fn(() => true),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
@@ -102,6 +106,7 @@ jest.mock('../../../lib/utils', () => ({
 
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjectMembers = useFetchProjectMembers as jest.Mock
+const mockedCheckCanEditProjectDetails = checkCanEditProjectDetails as jest.Mock
 const mockedCheckCanManageProject = checkCanManageProject as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
@@ -141,6 +146,7 @@ function renderPage(
 describe('UsersManagementPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockedCheckCanEditProjectDetails.mockReturnValue(true)
         mockedCheckCanManageProject.mockReturnValue(true)
 
         mockedUseFetchProject.mockReturnValue({
@@ -212,6 +218,7 @@ describe('UsersManagementPage', () => {
     })
 
     it('hides member management actions when a global manager role cannot manage the project', () => {
+        mockedCheckCanEditProjectDetails.mockReturnValue(false)
         mockedCheckCanManageProject.mockReturnValue(false)
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
@@ -249,6 +256,49 @@ describe('UsersManagementPage', () => {
             .queryByRole('button', { name: 'Invite User' }))
             .toBeNull()
         expect(within(pageTitleAction)
+            .queryByRole('link', { name: 'Edit project' }))
+            .toBeNull()
+    })
+
+    it('hides project edit action when a copilot can manage but cannot edit project details', () => {
+        mockedCheckCanEditProjectDetails.mockReturnValue(false)
+        mockedCheckCanManageProject.mockReturnValue(true)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: 200,
+                members: [
+                    {
+                        role: 'copilot',
+                        userId: 12345,
+                    },
+                ],
+                name: 'Copilot Project',
+                status: 'active',
+            },
+        })
+
+        renderPage('/projects/200/users', {
+            ...defaultContextValue,
+            isAdmin: false,
+            isCopilot: true,
+            loginUserInfo: {
+                email: 'copilot@example.com',
+                exp: 0,
+                handle: 'copilot-user',
+                iat: 0,
+                roles: ['copilot'],
+                userId: 12345,
+            } as WorkAppContextModel['loginUserInfo'],
+            userRoles: ['copilot'],
+        })
+
+        expect(within(screen.getByTestId('page-right-header'))
+            .getByRole('button', { name: 'Add User' }))
+            .toBeTruthy()
+        expect(within(screen.getByTestId('page-title-action'))
             .queryByRole('link', { name: 'Edit project' }))
             .toBeNull()
     })
