@@ -265,6 +265,15 @@ const formatParameterLabel = (name: string): string => (
         .replace(/^./, char => char.toUpperCase())
 )
 
+const buildParameterTooltipContent = (parameter: ReportParameter): JSX.Element => (
+    <>
+        <div>{parameter.description?.trim() || 'No description available.'}</div>
+        <div>
+            {`Location: ${parameter.location || 'query'} (${parameter.name})`}
+        </div>
+    </>
+)
+
 const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE: BillingAccountProfileResponse = {
     billingAccount: undefined,
 }
@@ -369,14 +378,7 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                                         <div className={styles.paramHeaderActions}>
                                             <div className={styles.paramTypePill}>{parameter.type}</div>
                                             <Tooltip
-                                                content={(
-                                                    <>
-                                                        {parameter.description || 'No description available'}
-                                                        <br />
-                                                        {`Location: ${parameter.location || 'query'} 
-                                                        (${parameter.name})`}
-                                                    </>
-                                                )}
+                                                content={buildParameterTooltipContent(parameter)}
                                                 place='top'
                                             >
                                                 <button
@@ -761,6 +763,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
         return (
             <InputText
                 {...commonProps}
+                forceUpdateValue
                 value={parameterValues[parameter.name] ?? ''}
                 onChange={handleParameterChange}
                 error={parameterErrors[parameter.name]}
