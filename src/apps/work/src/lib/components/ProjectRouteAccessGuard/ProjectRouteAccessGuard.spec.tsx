@@ -192,8 +192,12 @@ describe('ProjectRouteAccessGuard', () => {
 
         expect(screen.getByRole('heading', { level: 1, name: 'Users' }))
             .toBeTruthy()
-        expect(screen.getByText(PROJECT_ACCESS_DENIED_MESSAGE))
-            .toBeTruthy()
+        const supportLink = screen.getByRole('link', { name: 'support@topcoder.com' })
+
+        expect(supportLink.getAttribute('href'))
+            .toBe('mailto:support@topcoder.com')
+        expect(supportLink.closest('p')?.textContent)
+            .toBe(PROJECT_ACCESS_DENIED_MESSAGE)
         expect(screen.queryByText('Protected Project Users'))
             .toBeNull()
     })
@@ -211,8 +215,12 @@ describe('ProjectRouteAccessGuard', () => {
 
         expect(mockedCheckProjectAccess)
             .toHaveBeenCalledWith(defaultContextValue.userRoles, 12345, undefined)
-        expect(screen.getByText(PROJECT_ACCESS_DENIED_MESSAGE))
-            .toBeTruthy()
+        const supportLink = screen.getByRole('link', { name: 'support@topcoder.com' })
+
+        expect(supportLink.getAttribute('href'))
+            .toBe('mailto:support@topcoder.com')
+        expect(supportLink.closest('p')?.textContent)
+            .toBe(PROJECT_ACCESS_DENIED_MESSAGE)
         expect(screen.queryByText('Protected Project Users'))
             .toBeNull()
     })
