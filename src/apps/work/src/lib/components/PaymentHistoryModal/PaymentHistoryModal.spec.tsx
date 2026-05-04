@@ -13,7 +13,7 @@ jest.mock('../../hooks', () => ({
 }))
 
 jest.mock('../../constants', () => ({
-    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: false,
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: true,
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -48,7 +48,7 @@ describe('PaymentHistoryModal', () => {
         mockUseFetchAssignmentPayments.mockReset()
     })
 
-    it('renders clickable remarks links and the payment creator handle', async () => {
+    it('renders clickable remarks links, the payment creator handle, and fee details', async () => {
         mockUseFetchAssignmentPayments.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -96,9 +96,9 @@ describe('PaymentHistoryModal', () => {
             .toBeTruthy()
         expect(screen.getByText('payment.manager'))
             .toBeTruthy()
-        expect(screen.queryByText('Fee:'))
-            .toBeNull()
-        expect(screen.queryByText('$18.60'))
-            .toBeNull()
+        expect(screen.getByText('Fee:'))
+            .toBeTruthy()
+        expect(screen.getByText('$18.60'))
+            .toBeTruthy()
     })
 })

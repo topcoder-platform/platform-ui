@@ -35,7 +35,10 @@ import {
     ProjectFilters,
     WorkAppContextModel,
 } from '../../../lib/models'
-import { checkCanManageProject } from '../../../lib/utils'
+import {
+    checkCanEditProjectDetails,
+    checkCanManageProject,
+} from '../../../lib/utils'
 import styles from '../../../lib/components/ProjectsListPage/ProjectsListPage.module.scss'
 
 const DEFAULT_FILTERS: ProjectFilters = {
@@ -127,7 +130,7 @@ export const ProjectsListPage: FC = () => {
 
     const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
     const canEditProject = useCallback(
-        (project: Project): boolean => checkCanManageProject(userRoles, loginUserInfo?.userId, project),
+        (project: Project): boolean => checkCanEditProjectDetails(userRoles, loginUserInfo?.userId, project),
         [loginUserInfo?.userId, userRoles],
     )
 
