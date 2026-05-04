@@ -46,6 +46,19 @@ function getUniqueMatchedSkills(talent: TalentResultCardTalent): TalentResultCar
     })
 }
 
+function matchedSkillStatsLabel(skill: MatchedSkill): string {
+    const parts: string[] = []
+    if (skill.wins > 0) {
+        parts.push(`${skill.wins} wins`)
+    }
+
+    if (skill.submitted > 0) {
+        parts.push(`${skill.submitted} submissions`)
+    }
+
+    return parts.length > 0 ? `: ${parts.join(', ')}` : ''
+}
+
 function buildMatchedSkillsTooltipContent(
     count: number,
     skills: MatchedSkill[],
@@ -59,7 +72,7 @@ function buildMatchedSkillsTooltipContent(
                 {skills.map((skill: MatchedSkill) => (
                     <li key={`${skill.id}-${skill.name}`} className={styles.tooltipSkillLine}>
                         <span className={styles.tooltipSkillName}>{skill.name}</span>
-                        {`: ${skill.wins} wins, ${skill.submitted} submissions`}
+                        {matchedSkillStatsLabel(skill)}
                     </li>
                 ))}
             </ul>
