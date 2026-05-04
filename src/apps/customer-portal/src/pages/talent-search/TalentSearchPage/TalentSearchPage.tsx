@@ -46,6 +46,7 @@ export const TalentSearchPage: FC = () => {
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [lastAppliedSearchSignature, setLastAppliedSearchSignature] = useState<string>('')
+    const [showSkillMatchOnCards, setShowSkillMatchOnCards] = useState<boolean>(false)
     const countryNameByCode = useMemo((): Map<string, string> => new Map(
         (countryLookup || [])
             .filter(country => country.countryCode && country.country)
@@ -71,7 +72,6 @@ export const TalentSearchPage: FC = () => {
         [selectedCountries],
     )
 
-    const hasSkillSearch = selectedSkills.length > 0
     const shouldShowIntroState = !hasSearched
     const currentSearchSignature = useMemo(
         (): string => JSON.stringify({
@@ -312,6 +312,7 @@ export const TalentSearchPage: FC = () => {
         }
 
         setHasSearched(true)
+        const hadSkills = selectedSkills.length > 0
         const searchSucceeded = await runMemberSearch(selectedSkills, {
             countries: selectedCountryCodesList,
             openToWork: onlyOpenToWork,
@@ -321,6 +322,7 @@ export const TalentSearchPage: FC = () => {
         })
         if (searchSucceeded) {
             setLastAppliedSearchSignature(currentSearchSignature)
+            setShowSkillMatchOnCards(hadSkills)
         }
     }, [
         currentSearchSignature,
@@ -547,7 +549,7 @@ export const TalentSearchPage: FC = () => {
                                                 <TalentResultCard
                                                     key={talent.id}
                                                     talent={talent}
-                                                    showSkillMatch={hasSkillSearch}
+                                                    showSkillMatch={showSkillMatchOnCards}
                                                 />
                                             ))}
                                         </div>
