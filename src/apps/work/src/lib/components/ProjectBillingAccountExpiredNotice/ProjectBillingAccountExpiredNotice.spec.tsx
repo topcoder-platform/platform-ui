@@ -229,7 +229,7 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeNull()
     })
 
-    it('hides the inline member payment balance but keeps billing account modal access for copilots '
+    it('hides the inline member payment balance and billing account modal access for copilots '
         + 'when disabled', () => {
         mockedUseFetchBillingAccountDetails.mockReturnValue({
             billingAccountDetails: {
@@ -255,14 +255,13 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeNull()
         expect(screen.queryByText('$750 / $1,000 spent'))
             .toBeNull()
-        fireEvent.click(screen.getByRole('button', {
+        expect(screen.queryByRole('button', {
             name: 'View billing account details',
         }))
-
-        expect(screen.getByRole('dialog')
-            .textContent)
-            .toContain('Billing account details for 80001063')
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
         expect(mockedUseFetchBillingAccountDetails)
-            .toHaveBeenCalledWith('80001063')
+            .toHaveBeenCalledWith(undefined)
     })
 })

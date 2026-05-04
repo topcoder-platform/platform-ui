@@ -349,6 +349,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         showPaymentAmounts,
     )
     const showMemberPaymentsRemainingInModal: boolean = isRestrictedCopilot(workAppContext)
+    const showDetailsButton: boolean = BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && showPaymentAmounts
 
     const projectBillingAccountResult: UseFetchProjectBillingAccountResult = useFetchProjectBillingAccount(
         props.projectId,
@@ -359,7 +360,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         || normalizeOptionalString(billingAccount?.id)
     const shouldFetchBillingAccountDetails = (BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED && showPaymentAmounts)
         || showMemberPaymentsRemaining
-        || (BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen)
+        || (showDetailsButton && isModalOpen)
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
         shouldFetchBillingAccountDetails
             ? normalizedBillingAccountId
@@ -434,13 +435,13 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
                 budgetDisplayContent={budgetDisplayContent}
                 budgetInfo={budgetInfo}
                 onOpenModal={handleOpenModal}
-                showDetailsButton={BILLING_ACCOUNT_DETAILS_MODAL_ENABLED}
+                showDetailsButton={showDetailsButton}
             />
         )
         : undefined
     const billingAccountModal = renderBillingAccountModal(
         billingAccountDetailsData,
-        isModalOpen,
+        showDetailsButton && isModalOpen,
         handleCloseModal,
         props.projectId,
         showMemberPaymentsRemainingInModal,
