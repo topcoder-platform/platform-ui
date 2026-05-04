@@ -268,12 +268,16 @@ interface RenderProjectBillingAccountModalParams {
  * Resolves whether the billing-account details hook should fetch modal data.
  *
  * @param isModalOpen Whether the row details modal has been opened.
+ * @param showDetailsButton Whether this user may open billing-account details.
  * @returns `true` when the modal feature is enabled and data should be fetched.
  */
 function canFetchProjectBillingAccountDetails(
     isModalOpen: boolean,
+    showDetailsButton: boolean,
 ): boolean {
-    return BILLING_ACCOUNT_DETAILS_MODAL_ENABLED && isModalOpen
+    return BILLING_ACCOUNT_DETAILS_MODAL_ENABLED
+        && showDetailsButton
+        && isModalOpen
 }
 
 /**
@@ -350,13 +354,15 @@ function renderProjectBillingAccountBudget(
  *
  * @param billingAccountId Normalized billing-account id for the current row.
  * @param onOpen Open handler for the row modal.
+ * @param showDetailsButton Whether this user may open billing-account details.
  * @returns The details button, or `undefined` when unavailable.
  */
 function renderProjectBillingAccountDetailsButton(
     billingAccountId: string | undefined,
     onOpen: () => void,
+    showDetailsButton: boolean,
 ): JSX.Element | undefined {
-    if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !billingAccountId) {
+    if (!BILLING_ACCOUNT_DETAILS_MODAL_ENABLED || !showDetailsButton || !billingAccountId) {
         return undefined
     }
 
@@ -413,8 +419,9 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
+    const showDetailsButton = props.showPaymentAmounts
     const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        canFetchProjectBillingAccountDetails(isModalOpen)
+        canFetchProjectBillingAccountDetails(isModalOpen, showDetailsButton)
             ? normalizedBillingAccountId
             : undefined,
     )
@@ -438,10 +445,11 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const billingAccountDetailsButton = renderProjectBillingAccountDetailsButton(
         normalizedBillingAccountId,
         handleOpenModal,
+        showDetailsButton,
     )
     const billingAccountModal = renderProjectBillingAccountModal({
         billingAccountDetails: billingAccountDetailsResult.billingAccountDetails,
-        isModalOpen,
+        isModalOpen: showDetailsButton && isModalOpen,
         onClose: handleCloseModal,
         projectId: props.project.id,
         showMemberPaymentsRemaining: props.showMemberPaymentsRemainingInModal,

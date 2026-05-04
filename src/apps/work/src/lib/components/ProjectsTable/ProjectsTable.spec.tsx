@@ -320,7 +320,7 @@ describe('ProjectsTable', () => {
             .toBeNull()
     })
 
-    it('hides inline payment amounts but keeps billing details available for copilot project rows '
+    it('hides inline payment amounts and billing details for copilot project rows '
         + 'when disabled', () => {
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [
@@ -366,12 +366,11 @@ describe('ProjectsTable', () => {
             .toBeNull()
         expect(screen.queryByText('$750 / $1,000 spent'))
             .toBeNull()
-        fireEvent.click(screen.getAllByRole('button', {
+        expect(screen.queryByRole('button', {
             name: 'View billing account details',
-        })[0])
-
-        expect(screen.getByRole('dialog')
-            .textContent)
-            .toContain('Billing account details for 80001063')
+        }))
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
