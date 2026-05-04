@@ -38,6 +38,7 @@ import {
     removeMemberFromProject,
 } from '../../../lib/services'
 import {
+    checkCanEditProjectDetails,
     checkCanManageProject,
     showErrorToast,
     showSuccessToast,
@@ -55,7 +56,7 @@ function toOptionalString(value: unknown): string | undefined {
 }
 
 interface RenderProjectTitleActionParams {
-    canManageProject: boolean
+    canEditProjectDetails: boolean
     projectId: string | undefined
     projectStatus: ProjectStatusValue | undefined
 }
@@ -70,7 +71,7 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
             {params.projectStatus
                 ? <ProjectStatus status={params.projectStatus} />
                 : undefined}
-            {params.canManageProject
+            {params.canEditProjectDetails
                 ? (
                     <Link
                         aria-label='Edit project'
@@ -114,6 +115,12 @@ export const UsersManagementPage: FC = () => {
     const pageTitle = selectedProjectName || 'Project users'
     const canManageProject = !!projectResult.project
         && checkCanManageProject(
+            userRoles,
+            loginUserInfo?.userId,
+            projectResult.project,
+        )
+    const canEditProjectDetails = !!projectResult.project
+        && checkCanEditProjectDetails(
             userRoles,
             loginUserInfo?.userId,
             projectResult.project,
@@ -219,7 +226,7 @@ export const UsersManagementPage: FC = () => {
         setShowInviteUserModal(false)
     }, [])
     const titleAction = renderProjectTitleAction({
-        canManageProject,
+        canEditProjectDetails,
         projectId,
         projectStatus: projectResult.project?.status,
     })
