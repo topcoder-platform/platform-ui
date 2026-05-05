@@ -835,8 +835,16 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                     {activeTab === 'reports'
                         ? 'Select a base path to view available reports. Choose a report, '
                             + 'fill required parameters, and download JSON or CSV from the reports API.'
-                        : 'Enter a billing account ID and optional start/end dates, then click View '
-                            + 'to load billing account payment data.'}
+                        : (
+                            <>
+                                {'Enter a billing account ID and optional start/end dates, then click View '
+                                    + 'to load billing account payment data. '}
+                                <span className={styles.billingDefaultWindowNote}>
+                                    If no dates are specified, records from the past 45 days are displayed
+                                    by default.
+                                </span>
+                            </>
+                        )}
                 </p>
 
                 {isLoading ? (
