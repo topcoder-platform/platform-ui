@@ -159,6 +159,18 @@ export function canDownloadSubmissions(userRoles: string[]): boolean {
     return hasDownloadSubmissionsRole(userRoles)
 }
 
+/**
+ * Returns whether the supplied roles can view marathon match runner logs.
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` for admins, project managers, and copilots; otherwise `false`.
+ * Used by `SubmissionsSection` to show ECS runner output only to operators.
+ */
+export function canViewMarathonMatchRunnerLogs(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles)
+        || hasManagerRole(userRoles)
+        || hasCopilotRole(userRoles)
+}
+
 export function canCreateTaasProject(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || hasCopilotRole(userRoles)
 }

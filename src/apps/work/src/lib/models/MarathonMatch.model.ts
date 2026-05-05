@@ -88,6 +88,53 @@ export interface MarathonMatchTester extends MarathonMatchTesterSummary {
 }
 
 /**
+ * CloudWatch event returned for a marathon match ECS runner log stream.
+ * Used by the submission runner logs modal to render task output.
+ */
+export interface MarathonMatchRunnerLogEvent {
+    ingestionTime?: number
+    message?: string
+    timestamp?: number
+}
+
+/**
+ * Persisted submission-to-runner task mapping returned with runner logs.
+ * Used to identify which ECS task and CloudWatch stream produced the output.
+ */
+export interface MarathonMatchRunnerLogMapping {
+    id: string
+    submissionId: string
+    challengeId: string
+    taskArn: string
+    taskId: string
+    cluster: string
+    containerName: string
+    taskDefinition: string
+    phaseConfigType?: MarathonMatchConfigType
+    logGroup?: string
+    logStreamPrefix?: string
+    logStreamName?: string
+    cloudWatchLogsConsoleUrl?: string
+    createdAt: string
+    updatedAt: string
+}
+
+/**
+ * Runner log response returned by GET /submissions/:submissionId/runner-logs.
+ * Used by Work Manager to display marathon match ECS runner output.
+ */
+export interface MarathonMatchRunnerLogs {
+    submissionId: string
+    selectedTaskArn: string
+    selectedMapping: MarathonMatchRunnerLogMapping
+    mappings: MarathonMatchRunnerLogMapping[]
+    events: MarathonMatchRunnerLogEvent[]
+    nextForwardToken?: string
+    nextBackwardToken?: string
+    warning?: string
+}
+
+/**
  * Payload for creating a new marathon match scorer configuration.
  * Used by POST /challenge/:challengeId requests.
  */

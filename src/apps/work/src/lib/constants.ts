@@ -234,6 +234,11 @@ export const SUBMISSIONS_API_URL = process.env.REACT_APP_SUBMISSIONS_API_URL
     || process.env.SUBMISSIONS_API_URL
     || `${EnvironmentConfig.API.V6}/submissions`
 
+export const MARATHON_MATCH_API_URL = process.env.REACT_APP_MARATHON_MATCH_API_URL
+    || process.env.MARATHON_MATCH_API_URL
+    || EnvironmentConfig.MARATHON_MATCH_API
+    || `${EnvironmentConfig.API.V6}/marathon-match`
+
 export const COMMUNITY_APP_URL = process.env.REACT_APP_COMMUNITY_APP_URL
     || process.env.COMMUNITY_APP_URL
     || EnvironmentConfig.COMMUNITY_APP_URL

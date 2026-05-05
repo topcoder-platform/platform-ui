@@ -4,6 +4,9 @@ import { render, screen } from '@testing-library/react'
 import { SubmissionsTable } from './SubmissionsTable'
 
 jest.mock('~/libs/ui', () => ({
+    IconOutline: {
+        DocumentTextIcon: () => <svg aria-hidden='true' />,
+    },
     LoadingSpinner: () => <div>Loading</div>,
 }), {
     virtual: true,
@@ -141,5 +144,62 @@ describe('SubmissionsTable', () => {
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Download submission artifacts' }))
             .toBeTruthy()
+    })
+
+    it('renders and triggers the runner logs action when enabled', () => {
+        const onOpenRunnerLogs = jest.fn()
+
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                canViewRunnerLogs
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onOpenRunnerLogs={onOpenRunnerLogs}
+                onSort={jest.fn()}
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        screen.getByRole('button', { name: 'View runner logs' })
+            .click()
+
+        expect(onOpenRunnerLogs)
+            .toHaveBeenCalledWith('submission-1')
+    })
+
+    it('hides the runner logs action when disabled', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.queryByRole('button', { name: 'View runner logs' }))
+            .toBeNull()
     })
 })
