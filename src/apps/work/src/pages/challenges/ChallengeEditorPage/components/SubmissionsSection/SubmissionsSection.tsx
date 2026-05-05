@@ -359,7 +359,8 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
 
     const workAppContext = useContext(WorkAppContext)
     const canDownload = canDownloadSubmissions(workAppContext.userRoles)
-    const canViewRunnerLogs = isMarathonMatchChallenge(props.challenge)
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
+    const canViewRunnerLogs = isMarathonMatch
         && canViewMarathonMatchRunnerLogs(workAppContext.userRoles)
 
     const submissionsResult = useFetchSubmissions(
@@ -668,6 +669,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     onSort={handleSort}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
+                    showMarathonMatchTestProgress={isMarathonMatch}
                     submissionDownloadLoading={downloadSubmissionResult.isLoading}
                     submissions={paginatedSubmissions}
                 />
@@ -689,6 +691,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                             onSort={handleSort}
                             sortBy={sortBy}
                             sortOrder={sortOrder}
+                            showMarathonMatchTestProgress={isMarathonMatch}
                             submissionDownloadLoading={downloadSubmissionResult.isLoading}
                             submissions={sortedCheckpointSubmissions}
                         />
