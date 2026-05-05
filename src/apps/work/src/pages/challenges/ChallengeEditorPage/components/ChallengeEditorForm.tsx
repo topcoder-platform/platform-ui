@@ -18,6 +18,7 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
+import { ConfirmationModal } from '../../../../lib/components'
 import { FormCheckboxField } from '../../../../lib/components/form'
 import {
     CHALLENGE_APPROVAL_STATUS,
@@ -1554,6 +1555,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
     const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
     const formMethods = useForm<ChallengeEditorFormData>({
@@ -1763,13 +1765,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         ],
     )
     const canApproveChallengeBudget = workAppContext.isAdmin || workAppContext.isManager
+    const hasPersistedPrizeSets = useMemo(
+        () => Array.isArray(props.challenge?.prizeSets)
+            && props.challenge?.prizeSets
+                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
+        [props.challenge?.prizeSets],
+    )
+    const hasUnsavedPrizeSetChanges = useMemo(
+        () => {
+            const dirtyPrizeSets = formState.dirtyFields?.prizeSets
+            if (Array.isArray(dirtyPrizeSets)) {
+                return dirtyPrizeSets.length > 0
+            }
+
+            return !!dirtyPrizeSets
+        },
+        [formState.dirtyFields?.prizeSets],
+    )
     const arePrizeFieldsLockedForRole = normalizedChallengeStatus === CHALLENGE_STATUS.ACTIVE
         && !canApproveChallengeBudget
     const arePrizeFieldsDisabled = isReadOnly || arePrizeFieldsLockedForRole
     const canRenderApprovalActions = !isReadOnly
         && canApproveChallengeBudget
         && !!currentChallengeId
+        && hasPersistedPrizeSets
+        && !hasUnsavedPrizeSetChanges
         && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
+    const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+    const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+    const isRejectReasonMissing = !normalizeTextValue(rejectionReasonInput)
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
@@ -2985,6 +3009,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             reset(mergedFormData)
             setSaveValidationError(undefined)
+            if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+                setShowRejectBudgetModal(false)
+            }
             showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
                 ? 'Challenge budget approved.'
                 : 'Challenge budget rejected.')
@@ -3015,6 +3042,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         rejectionReasonInput,
         updateApprovalStatus,
     ])
+    const handleOpenRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(true)
+    }, [])
+
+    const handleCloseRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(false)
+    }, [])
+
+    const handleConfirmRejectChallengeBudget = useCallback((): void => {
+        handleRejectChallengeBudget()
+    }, [handleRejectChallengeBudget])
 
     const launchChallenge = useCallback(async (): Promise<void> => {
         if (isScorerBlockingChallengeActions) {
@@ -3513,37 +3551,27 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                     {canRenderApprovalActions
                                                         ? (
                                                             <>
-                                                                <textarea
-                                                                    className={styles.rejectionReasonInput}
-                                                                    disabled={isUpdatingApproval}
-                                                                    onChange={
-                                                                        function onClick(
-                                                                            event: ChangeEvent<HTMLTextAreaElement>,
-                                                                        ) {
-                                                                            setRejectionReasonInput(event.target.value)
-                                                                        }
-                                                                    }
-                                                                    placeholder='Reason is required to reject'
-                                                                    rows={3}
-                                                                    value={rejectionReasonInput}
-                                                                />
                                                                 <div className={styles.approvalActions}>
-                                                                    <Button
-                                                                        disabled={isUpdatingApproval}
-                                                                        label='Approve Budget'
-                                                                        onClick={handleApproveChallengeBudget}
-                                                                        primary
-                                                                        size='md'
-                                                                        type='button'
-                                                                    />
-                                                                    <Button
-                                                                        disabled={isUpdatingApproval}
-                                                                        label='Reject Budget'
-                                                                        onClick={handleRejectChallengeBudget}
-                                                                        secondary
-                                                                        size='md'
-                                                                        type='button'
-                                                                    />
+                                                                    {!isBudgetApproved && (
+                                                                        <Button
+                                                                            disabled={isUpdatingApproval}
+                                                                            label='Approve Budget'
+                                                                            onClick={handleApproveChallengeBudget}
+                                                                            primary
+                                                                            size='md'
+                                                                            type='button'
+                                                                        />
+                                                                    )}
+                                                                    {!isBudgetRejected && (
+                                                                        <Button
+                                                                            disabled={isUpdatingApproval}
+                                                                            label='Reject Budget'
+                                                                            onClick={handleOpenRejectBudgetModal}
+                                                                            secondary
+                                                                            size='md'
+                                                                            type='button'
+                                                                        />
+                                                                    )}
                                                                 </div>
                                                             </>
                                                         )
@@ -3642,6 +3670,33 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     )
                     : undefined}
             </form>
+            {showRejectBudgetModal
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmButtonDanger
+                        confirmDisabled={isUpdatingApproval || isRejectReasonMissing}
+                        confirmText={isUpdatingApproval
+                            ? 'Rejecting...'
+                            : 'Reject Budget'}
+                        message='Provide a rejection reason before rejecting this budget.'
+                        onCancel={handleCloseRejectBudgetModal}
+                        onConfirm={handleConfirmRejectChallengeBudget}
+                        title='Reject Budget'
+                    >
+                        <textarea
+                            className={styles.rejectionReasonInput}
+                            disabled={isUpdatingApproval}
+                            onChange={function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
+                                setRejectionReasonInput(event.target.value)
+                            }}
+                            placeholder='Reason is required to reject'
+                            rows={4}
+                            value={rejectionReasonInput}
+                        />
+                    </ConfirmationModal>
+                )
+                : undefined}
         </FormProvider>
     )
 }
