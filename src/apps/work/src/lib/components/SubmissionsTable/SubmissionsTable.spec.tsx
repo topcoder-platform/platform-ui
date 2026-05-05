@@ -4,9 +4,6 @@ import { render, screen } from '@testing-library/react'
 import { SubmissionsTable } from './SubmissionsTable'
 
 jest.mock('~/libs/ui', () => ({
-    IconOutline: {
-        DocumentTextIcon: () => <svg aria-hidden='true' />,
-    },
     LoadingSpinner: () => <div>Loading</div>,
 }), {
     virtual: true,
@@ -31,6 +28,11 @@ jest.mock('../../assets/icons/IconDownloadArtifacts.svg', () => ({
     virtual: true,
 })
 jest.mock('../../assets/icons/IconSquareDownload.svg', () => ({
+    ReactComponent: () => <svg aria-hidden='true' />,
+}), {
+    virtual: true,
+})
+jest.mock('../../assets/icons/IconRunnerLogs.svg', () => ({
     ReactComponent: () => <svg aria-hidden='true' />,
 }), {
     virtual: true,

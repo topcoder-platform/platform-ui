@@ -4,10 +4,11 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { IconOutline, LoadingSpinner } from '~/libs/ui'
+import { LoadingSpinner } from '~/libs/ui'
 
 import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
+import { ReactComponent as IconRunnerLogs } from '../../assets/icons/IconRunnerLogs.svg'
 import { ReactComponent as IconSquareDownload } from '../../assets/icons/IconSquareDownload.svg'
 import { Submission } from '../../models'
 import {
@@ -328,7 +329,7 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                                     onClick={handleRunnerLogsClick}
                                                     type='button'
                                                 >
-                                                    <IconOutline.DocumentTextIcon />
+                                                    <IconRunnerLogs />
                                                 </button>
                                             )
                                             : undefined}

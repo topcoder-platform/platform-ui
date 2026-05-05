@@ -135,6 +135,27 @@ export interface MarathonMatchRunnerLogs {
 }
 
 /**
+ * Per-submission dispatch result from a marathon match score rerun.
+ * Used by the scorer section to summarize which latest submissions were queued.
+ */
+export interface MarathonMatchRerunResult {
+    submissionId: string
+    taskArn?: string
+    taskId?: string
+    error?: string
+}
+
+/**
+ * Response returned after requesting a rerun of latest marathon match submissions.
+ * Used by the scorer section to show operator feedback after rerun dispatch.
+ */
+export interface MarathonMatchRerunResponse {
+    challengeId: string
+    submissionsQueued: number
+    results: MarathonMatchRerunResult[]
+}
+
+/**
  * Payload for creating a new marathon match scorer configuration.
  * Used by POST /challenge/:challengeId requests.
  */
