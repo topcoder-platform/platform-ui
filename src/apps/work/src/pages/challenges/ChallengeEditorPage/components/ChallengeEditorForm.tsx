@@ -2973,9 +2973,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 approvalStatus: nextApprovalStatus,
             }
             const savedChallenge = await patchChallenge(currentChallengeId, payload)
+            const savedChallengeFormData = transformChallengeToFormData(savedChallenge)
+            const currentFormData = getValues()
             const mergedFormData = {
-                ...getValues(),
-                ...transformChallengeToFormData(savedChallenge),
+                ...savedChallengeFormData,
+                ...currentFormData,
+                approvalApprovedBy: savedChallengeFormData.approvalApprovedBy,
+                approvalRejectionReason: savedChallengeFormData.approvalRejectionReason,
+                approvalStatus: savedChallengeFormData.approvalStatus,
             }
 
             reset(mergedFormData)
