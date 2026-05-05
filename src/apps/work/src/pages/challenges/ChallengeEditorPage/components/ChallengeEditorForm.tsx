@@ -3012,6 +3012,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
                 setShowRejectBudgetModal(false)
             }
+
             showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
                 ? 'Challenge budget approved.'
                 : 'Challenge budget rejected.')
