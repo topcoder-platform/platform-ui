@@ -11,6 +11,7 @@ import {
     PageTitle,
     Tooltip,
 } from '~/libs/ui'
+import { Pagination } from '~/apps/admin/src/lib'
 
 import { bulkMemberLookupRouteId } from '../../config/routes.config'
 import { handleError } from '../../lib/utils'
@@ -127,12 +128,30 @@ const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: s
     { key: 'winnerFirstName', label: 'Winner first name' },
     { key: 'winnerLastName', label: 'Winner last name' },
 ]
+const PAYMENT_ROWS_PER_PAGE_OPTIONS = [10, 25, 50]
 
 const BillingAccountReportResults = (
     props: { data: BillingAccountsViewData },
 ): JSX.Element => {
     const billingAccount: BillingAccountsViewData['billingAccount'] = props.data.billingAccount
     const payments: BillingAccountsViewData['payments'] = props.data.payments
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const [rowsPerPage, setRowsPerPage] = useState<number>(PAYMENT_ROWS_PER_PAGE_OPTIONS[0])
+    const total = payments.length
+    const totalPages = Math.max(1, Math.ceil(total / rowsPerPage))
+    const currentSliceStart = (currentPage - 1) * rowsPerPage
+    const paginatedPayments = payments.slice(currentSliceStart, currentSliceStart + rowsPerPage)
+    const showingStart = total === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1
+    const showingEnd = Math.min(currentPage * rowsPerPage, total)
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [payments])
+
+    function handleRowsPerPageChange(event: ChangeEvent<HTMLSelectElement>): void {
+        setRowsPerPage(Number(event.target.value))
+        setCurrentPage(1)
+    }
 
     return (
         <div>
@@ -199,32 +218,56 @@ const BillingAccountReportResults = (
 
             <div className={styles.paymentsSection}>
                 <div className={styles.paymentsSectionTitle}>Payments</div>
-                {payments.length === 0 ? (
+                {total === 0 ? (
                     <div className={styles.paymentsEmpty}>No payments matched the selected filters.</div>
                 ) : (
-                    <div className={styles.tableWrap}>
-                        <table className={styles.paymentsTable}>
-                            <thead>
-                                <tr>
-                                    {PAYMENT_TABLE_COLUMNS.map(col => (
-                                        <th key={col.key}>{col.label}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {payments.map(row => (
-                                    <tr key={row.paymentId}>
+                    <div className={styles.paymentsResults}>
+                        <div className={styles.tableWrap}>
+                            <table className={styles.paymentsTable}>
+                                <thead>
+                                    <tr>
                                         {PAYMENT_TABLE_COLUMNS.map(col => (
-                                            <td key={col.key}>
-                                                {col.key === 'paymentDate'
-                                                    ? formatPaymentDate(String(row[col.key]))
-                                                    : formatReportCell(row[col.key])}
-                                            </td>
+                                            <th key={col.key}>{col.label}</th>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {paginatedPayments.map(row => (
+                                        <tr key={row.paymentId}>
+                                            {PAYMENT_TABLE_COLUMNS.map(col => (
+                                                <td key={col.key}>
+                                                    {col.key === 'paymentDate'
+                                                        ? formatPaymentDate(String(row[col.key]))
+                                                        : formatReportCell(row[col.key])}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className={styles.paymentsPagination}>
+                            <div className={styles.perPageControl}>
+                                <label htmlFor='billing-payments-per-page'>Rows per page</label>
+                                <select
+                                    id='billing-payments-per-page'
+                                    value={rowsPerPage}
+                                    onChange={handleRowsPerPageChange}
+                                >
+                                    {PAYMENT_ROWS_PER_PAGE_OPTIONS.map(option => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className={styles.paginationMeta}>
+                                {`Showing ${showingStart}-${showingEnd} of ${total} payments`}
+                            </div>
+                            <Pagination
+                                page={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
@@ -425,7 +468,6 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
         BillingAccountsViewData | undefined
     >(undefined)
     const [isBillingAccountViewLoading, setIsBillingAccountViewLoading] = useState<boolean>(false)
-
     useEffect(() => {
         let isMounted = true
         setIsLoading(true)
@@ -648,6 +690,11 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
         setBillingAccountViewData(undefined)
     }, [])
 
+    const handleBillingAccountViewClick = useCallback(() => {
+        handleBillingAccountView()
+            .catch(handleError)
+    }, [handleBillingAccountView])
+
     const isDownloading = downloadingFormat !== undefined
     const isBusy = isDownloading || isBillingAccountViewLoading
 
@@ -692,7 +739,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
             <Button
                 primary
                 disabled={billingAccountViewDisabled}
-                onClick={handleBillingAccountView}
+                onClick={handleBillingAccountViewClick}
             >
                 View
             </Button>
