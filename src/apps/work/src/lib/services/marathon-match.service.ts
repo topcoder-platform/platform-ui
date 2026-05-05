@@ -6,8 +6,8 @@ import {
     xhrPostAsync,
     xhrPutAsync,
 } from '~/libs/core'
-import { EnvironmentConfig } from '~/config'
 
+import { MARATHON_MATCH_API_URL } from '../constants'
 import {
     CreateMarathonMatchConfigInput,
     CreateTesterInput,
@@ -16,14 +16,13 @@ import {
     MarathonMatchConfig,
     MarathonMatchDefaults,
     MarathonMatchPhaseConfig,
+    MarathonMatchRunnerLogs,
     MarathonMatchScoreDirection,
     MarathonMatchTester,
     MarathonMatchTesterSummary,
     UpdateMarathonMatchConfigInput,
 } from '../models'
 
-const MARATHON_MATCH_API_URL = EnvironmentConfig.MARATHON_MATCH_API
-    || `${EnvironmentConfig.API.V6}/marathon-match`
 const TESTERS_PER_PAGE = 100
 
 interface TesterListMetadata {
@@ -728,6 +727,31 @@ export async function createTesterVersion(
         return normalizedTester
     } catch (error) {
         throw normalizeError(error, 'Failed to create tester version')
+    }
+}
+
+/**
+ * Loads ECS runner logs for a marathon match submission.
+ * @param submissionId Submission identifier used in the runner-log route path.
+ * @returns Mapping metadata and CloudWatch log events for the latest runner task.
+ * @throws Error When the API request fails.
+ * Used by `SubmissionRunnerLogsModal` when a copilot or manager opens runner output.
+ */
+export async function fetchSubmissionRunnerLogs(
+    submissionId: string,
+): Promise<MarathonMatchRunnerLogs> {
+    const normalizedSubmissionId = submissionId.trim()
+
+    if (!normalizedSubmissionId) {
+        throw new Error('Submission id is required')
+    }
+
+    try {
+        return await xhrGetAsync<MarathonMatchRunnerLogs>(
+            `${MARATHON_MATCH_API_URL}/submissions/${encodeURIComponent(normalizedSubmissionId)}/runner-logs`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch submission runner logs')
     }
 }
 

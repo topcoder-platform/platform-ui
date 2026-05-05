@@ -4,7 +4,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { LoadingSpinner } from '~/libs/ui'
+import { IconOutline, LoadingSpinner } from '~/libs/ui'
 
 import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
@@ -37,11 +37,13 @@ interface ColumnConfig {
 
 interface SubmissionsTableProps {
     canDownloadSubmissions: boolean
+    canViewRunnerLogs?: boolean
     challengeId: string
     isLoading?: boolean
     isLoadingMembers?: boolean
     onDownloadSubmission: (submissionId: string) => void
     onOpenArtifacts: (submissionId: string) => void
+    onOpenRunnerLogs?: (submissionId: string) => void
     onSort: (fieldName: SubmissionSortBy) => void
     sortBy: SubmissionSortBy
     sortOrder: SortOrder
@@ -169,6 +171,15 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
         }
 
         props.onOpenArtifacts(submissionId)
+    }
+
+    function handleRunnerLogsClick(event: MouseEvent<HTMLButtonElement>): void {
+        const submissionId = event.currentTarget.dataset.submissionId
+        if (!submissionId || !props.onOpenRunnerLogs) {
+            return
+        }
+
+        props.onOpenRunnerLogs(submissionId)
     }
 
     return (
@@ -306,6 +317,21 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                         >
                                             <IconDownloadArtifacts />
                                         </button>
+
+                                        {props.canViewRunnerLogs
+                                            ? (
+                                                <button
+                                                    data-submission-id={submission.id}
+                                                    aria-label='View runner logs'
+                                                    className={styles.iconButton}
+                                                    disabled={!props.onOpenRunnerLogs}
+                                                    onClick={handleRunnerLogsClick}
+                                                    type='button'
+                                                >
+                                                    <IconOutline.DocumentTextIcon />
+                                                </button>
+                                            )
+                                            : undefined}
 
                                     </div>
                                 </td>
