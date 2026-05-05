@@ -328,7 +328,7 @@ describe('PaymentsListView', () => {
             expect(mockedGetPayments)
                 .toHaveBeenLastCalledWith(10, 0, {
                     categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: ['last30days'],
+                    date: ['last30days'],
                     status: ['PAID'],
                 })
         })

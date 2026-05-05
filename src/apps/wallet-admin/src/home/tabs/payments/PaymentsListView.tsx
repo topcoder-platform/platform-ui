@@ -195,6 +195,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isRestrictedApproverView = isApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
 
+    // eslint-disable-next-line complexity
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         // Strip 'all' sentinel values — never forward them to the API
         const activeFilters = Object.fromEntries(
