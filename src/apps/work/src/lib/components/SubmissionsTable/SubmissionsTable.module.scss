@@ -118,6 +118,38 @@
     }
 }
 
+.testStatusCell {
+    text-align: center !important;
+}
+
+.testStatusIcon {
+    align-items: center;
+    display: inline-flex;
+    height: 20px;
+    justify-content: center;
+    vertical-align: middle;
+    width: 20px;
+
+    svg {
+        display: block;
+        fill: currentcolor;
+        height: 18px;
+        width: 18px;
+    }
+}
+
+.testStatusInProgress {
+    color: #d97706;
+}
+
+.testStatusSuccess {
+    color: #137d60;
+}
+
+.testStatusFailed {
+    color: #ea1900;
+}
+
 .level-1 {
     color: #555 !important;
 }
@@ -144,6 +176,6 @@
     }
 
     .table {
-        min-width: 1080px;
+        min-width: 1180px;
     }
 }

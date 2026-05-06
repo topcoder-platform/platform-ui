@@ -1,10 +1,15 @@
 import {
     FC,
     MouseEvent,
+    ReactElement,
 } from 'react'
 import classNames from 'classnames'
 
-import { LoadingSpinner } from '~/libs/ui'
+import {
+    IconOutline,
+    IconSolid,
+    LoadingSpinner,
+} from '~/libs/ui'
 
 import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
@@ -15,6 +20,7 @@ import {
     getRatingLevel,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    getSubmissionTestProgress,
 } from '../../utils'
 
 import styles from './SubmissionsTable.module.scss'
@@ -45,6 +51,7 @@ interface SubmissionsTableProps {
     onSort: (fieldName: SubmissionSortBy) => void
     sortBy: SubmissionSortBy
     sortOrder: SortOrder
+    showMarathonMatchTestProgress?: boolean
     submissionDownloadLoading?: Record<string, boolean>
     submissions: Submission[]
 }
@@ -70,6 +77,21 @@ const BASE_COLUMNS: ColumnConfig[] = [
         label: 'Initial / Final Score',
         sortable: true,
     },
+]
+
+const MARATHON_MATCH_TEST_COLUMNS: ColumnConfig[] = [
+    {
+        label: 'Current tests process',
+    },
+    {
+        label: 'Test status',
+    },
+    {
+        label: 'Test progress',
+    },
+]
+
+const TRAILING_COLUMNS: ColumnConfig[] = [
     {
         fieldName: 'submissionId',
         label: 'Submission ID (UUID)',
@@ -79,6 +101,25 @@ const BASE_COLUMNS: ColumnConfig[] = [
         label: 'Actions',
     },
 ]
+
+/**
+ * Builds the table columns for standard and marathon submission rows.
+ * @param showMarathonMatchTestProgress Whether marathon test-progress metadata should be displayed.
+ * @returns Column config used by the table header and empty/loading colspans.
+ * Used by `SubmissionsTable` to insert marathon-only progress columns before actions.
+ */
+function getColumns(showMarathonMatchTestProgress: boolean): ColumnConfig[] {
+    return showMarathonMatchTestProgress
+        ? [
+            ...BASE_COLUMNS,
+            ...MARATHON_MATCH_TEST_COLUMNS,
+            ...TRAILING_COLUMNS,
+        ]
+        : [
+            ...BASE_COLUMNS,
+            ...TRAILING_COLUMNS,
+        ]
+}
 
 function getCreatedAt(submission: Submission): string {
     return submission.createdAt
@@ -139,10 +180,59 @@ function getEmailDisplay(
         : '-'
 }
 
+/**
+ * Renders the marathon test status icon for a submission row.
+ * @param status Normalized test status from review summation metadata.
+ * @returns Status icon element or `undefined` when no status is available.
+ * Used by `SubmissionsTable` to keep empty status cells blank.
+ */
+function renderTestStatusIcon(status: string | undefined): ReactElement | undefined {
+    if (status === 'IN PROGRESS') {
+        return (
+            <span
+                aria-label='Test status: IN PROGRESS'
+                className={classNames(styles.testStatusIcon, styles.testStatusInProgress)}
+                role='img'
+                title='IN PROGRESS'
+            >
+                <IconOutline.ClockIcon aria-hidden='true' />
+            </span>
+        )
+    }
+
+    if (status === 'SUCCESS') {
+        return (
+            <span
+                aria-label='Test status: SUCCESS'
+                className={classNames(styles.testStatusIcon, styles.testStatusSuccess)}
+                role='img'
+                title='SUCCESS'
+            >
+                <IconSolid.CheckCircleIcon aria-hidden='true' />
+            </span>
+        )
+    }
+
+    if (status === 'FAILED') {
+        return (
+            <span
+                aria-label='Test status: FAILED'
+                className={classNames(styles.testStatusIcon, styles.testStatusFailed)}
+                role='img'
+                title='FAILED'
+            >
+                <IconOutline.XCircleIcon aria-hidden='true' />
+            </span>
+        )
+    }
+
+    return undefined
+}
+
 export const SubmissionsTable: FC<SubmissionsTableProps> = (
     props: SubmissionsTableProps,
 ) => {
-    const columns = BASE_COLUMNS
+    const columns = getColumns(!!props.showMarathonMatchTestProgress)
 
     function handleSortButtonClick(event: MouseEvent<HTMLButtonElement>): void {
         const sortBy = event.currentTarget.dataset.fieldName as SubmissionSortBy | undefined
@@ -225,6 +315,9 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const submissionDate = formatDateTime(getCreatedAt(submission))
                         const initialScore = formatScore(getSubmissionInitialScore(submission))
                         const finalScore = formatScore(getSubmissionFinalScore(submission))
+                        const testProgress = props.showMarathonMatchTestProgress
+                            ? getSubmissionTestProgress(submission)
+                            : undefined
                         const reviewTab = submission.type === 'CHECKPOINT_SUBMISSION'
                             ? 'checkpoint-submission'
                             : 'submission'
@@ -275,6 +368,24 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                         {finalScore}
                                     </a>
                                 </td>
+
+                                {props.showMarathonMatchTestProgress
+                                    ? (
+                                        <>
+                                            <td>
+                                                <span>{testProgress?.process || ''}</span>
+                                            </td>
+
+                                            <td className={styles.testStatusCell}>
+                                                {renderTestStatusIcon(testProgress?.status)}
+                                            </td>
+
+                                            <td>
+                                                <span>{testProgress?.progressPercent || ''}</span>
+                                            </td>
+                                        </>
+                                    )
+                                    : undefined}
 
                                 <td>
                                     <span title={submission.id}>{submission.id}</span>

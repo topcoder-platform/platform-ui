@@ -24,6 +24,23 @@ interface ScoredSubmissionLike {
     submissions?: SubmissionScore[]
 }
 
+/**
+ * Display metadata for marathon test progress columns.
+ */
+export interface SubmissionTestProgressDisplay {
+    process?: 'provisional' | 'system'
+    progressPercent?: string
+    status?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
+}
+
+interface SubmissionTestProgressCandidate extends SubmissionTestProgressDisplay {
+    inProgressPriority: number
+    processPriority: number
+    progress?: number
+    statusPriority: number
+    updatedAt: number
+}
+
 function getPhaseStartDate(phase: ChallengePhase): string {
     const phaseStartDate = phase.actualStartDate || phase.scheduledStartDate
 
@@ -120,6 +137,197 @@ function getChallengeTypeName(type: string | ChallengeTypeRef | undefined): stri
     }
 
     return type.name
+}
+
+/**
+ * Normalizes review summation metadata test process aliases for marathon display.
+ * @param value Metadata process or legacy test type value from Review API.
+ * @returns `provisional` or `system` when the value identifies a tracked process.
+ * Used by `getSubmissionTestProgress` to avoid showing example-test metadata.
+ */
+function normalizeTestProcess(value: unknown): 'provisional' | 'system' | undefined {
+    const normalized = typeof value === 'string'
+        ? value.trim()
+            .toLowerCase()
+        : ''
+
+    if (normalized === 'system' || normalized === 'final') {
+        return 'system'
+    }
+
+    if (normalized === 'provisional') {
+        return 'provisional'
+    }
+
+    return undefined
+}
+
+/**
+ * Normalizes review summation metadata test status for marathon display.
+ * @param value Metadata status value from Review API.
+ * @returns Supported UI status or `undefined` when the status is absent/unknown.
+ * Used by `getSubmissionTestProgress` before choosing the current summation.
+ */
+function normalizeTestStatus(value: unknown): 'FAILED' | 'IN PROGRESS' | 'SUCCESS' | undefined {
+    const normalized = typeof value === 'string'
+        ? value.trim()
+            .toUpperCase()
+        : ''
+
+    if (normalized === 'FAILED' || normalized === 'IN PROGRESS' || normalized === 'SUCCESS') {
+        return normalized
+    }
+
+    return undefined
+}
+
+/**
+ * Normalizes review summation metadata progress into the supported 0-to-1 range.
+ * @param value Metadata progress value from Review API.
+ * @returns Clamped numeric progress or `undefined` when no finite value exists.
+ * Used by `getSubmissionTestProgress` to format percent text.
+ */
+function normalizeTestProgress(value: unknown): number | undefined {
+    const progress = typeof value === 'string'
+        ? Number(value)
+        : value
+
+    if (typeof progress !== 'number' || !Number.isFinite(progress)) {
+        return undefined
+    }
+
+    return Math.min(Math.max(progress, 0), 1)
+}
+
+/**
+ * Resolves the best timestamp available for ordering test progress summations.
+ * @param entry Review summation containing marathon metadata.
+ * @returns Epoch milliseconds or 0 when no parseable timestamp exists.
+ * Used by `getSubmissionTestProgress` to choose the latest non-running process.
+ */
+function getTestProgressUpdatedAt(entry: ReviewSummation): number {
+    const updatedAt = entry.metadata?.testProgressDetails?.updatedAt
+        || entry.updatedAt
+        || entry.createdAt
+        || ''
+    const parsedTimestamp = Date.parse(updatedAt)
+
+    return Number.isFinite(parsedTimestamp)
+        ? parsedTimestamp
+        : 0
+}
+
+/**
+ * Builds a sortable marathon test-progress candidate from review summation metadata.
+ * @param entry Review summation returned with optional metadata from Review API.
+ * @returns Candidate display data or `undefined` when no marathon progress metadata exists.
+ * Used by `getSubmissionTestProgress` to select the current process for a submission row.
+ */
+function toSubmissionTestProgressCandidate(
+    entry: ReviewSummation,
+): SubmissionTestProgressCandidate | undefined {
+    const process = normalizeTestProcess(
+        entry.metadata?.testProcess
+        ?? entry.metadata?.testType,
+    )
+    const status = normalizeTestStatus(entry.metadata?.testStatus)
+    const progress = normalizeTestProgress(entry.metadata?.testProgress)
+    let statusPriority = 0
+
+    if (status === 'FAILED') {
+        statusPriority = 2
+    } else if (status === 'SUCCESS') {
+        statusPriority = 1
+    }
+
+    if (!process && !status && progress === undefined) {
+        return undefined
+    }
+
+    return {
+        inProgressPriority: status === 'IN PROGRESS'
+            ? 1
+            : 0,
+        process,
+        processPriority: process === 'system'
+            ? 1
+            : 0,
+        progress,
+        progressPercent: progress === undefined
+            ? undefined
+            : `${Math.round(progress * 100)}%`,
+        status,
+        statusPriority,
+        updatedAt: getTestProgressUpdatedAt(entry),
+    }
+}
+
+/**
+ * Returns display-ready marathon match test progress for one submission.
+ * @param submission Submission-like object containing Review API summations.
+ * @returns Current process, status, and percent text when present in summation metadata.
+ * Used by `SubmissionsTable` to render marathon-only test progress columns.
+ */
+export function getSubmissionTestProgress(
+    submission: Pick<ScoredSubmissionLike, 'reviewSummation'>,
+): SubmissionTestProgressDisplay {
+    const candidates = (submission.reviewSummation || [])
+        .map(entry => toSubmissionTestProgressCandidate(entry))
+        .filter((entry): entry is SubmissionTestProgressCandidate => !!entry)
+        .sort((first, second) => (
+            second.inProgressPriority - first.inProgressPriority
+            || second.updatedAt - first.updatedAt
+            || second.processPriority - first.processPriority
+            || second.statusPriority - first.statusPriority
+        ))
+
+    if (!candidates.length) {
+        return {}
+    }
+
+    const current = candidates[0]
+
+    return {
+        process: current.process,
+        progressPercent: current.progressPercent,
+        status: current.status,
+    }
+}
+
+/**
+ * Normalizes challenge type labels for equality checks.
+ * @param value Challenge type name, abbreviation, or tag value.
+ * @returns Lowercase alphanumeric text with separators removed.
+ * Used by `isMarathonMatchChallenge` to compare inconsistent API payload shapes.
+ */
+function normalizeChallengeTypeToken(value: unknown): string {
+    return typeof value === 'string'
+        ? value.replace(/[^a-zA-Z0-9]/g, '')
+            .toLowerCase()
+        : ''
+}
+
+/**
+ * Returns whether the challenge is a Marathon Match.
+ * @param challenge Challenge payload from the challenge API.
+ * @returns `true` when the type or tags identify Marathon Match.
+ * Used by the submissions view to enable marathon-only test progress columns.
+ */
+export function isMarathonMatchChallenge(challenge: Pick<Challenge, 'tags' | 'type'>): boolean {
+    const typeName = getChallengeTypeName(challenge.type)
+    const typeAbbreviation = typeof challenge.type === 'object'
+        ? challenge.type?.abbreviation
+        : undefined
+    const typeTokens = [
+        typeName,
+        typeAbbreviation,
+        ...(Array.isArray(challenge.tags)
+            ? challenge.tags
+            : []),
+    ].map(normalizeChallengeTypeToken)
+
+    return typeTokens.includes('marathonmatch')
+        || typeTokens.includes('mm')
 }
 
 export function getStatusText(status?: string, selfService: boolean = false): string {

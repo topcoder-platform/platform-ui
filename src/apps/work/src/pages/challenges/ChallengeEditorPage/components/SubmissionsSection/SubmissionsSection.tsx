@@ -32,6 +32,7 @@ import {
     canDownloadSubmissions,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    isMarathonMatchChallenge,
     showErrorToast,
 } from '../../../../../lib/utils'
 import { ReactComponent as LockIcon } from '../../../../../lib/assets/icons/lock.svg'
@@ -353,6 +354,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
 
     const workAppContext = useContext(WorkAppContext)
     const canDownload = canDownloadSubmissions(workAppContext.userRoles)
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
 
     const submissionsResult = useFetchSubmissions(
         props.challengeId,
@@ -648,6 +650,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     onSort={handleSort}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
+                    showMarathonMatchTestProgress={isMarathonMatch}
                     submissionDownloadLoading={downloadSubmissionResult.isLoading}
                     submissions={paginatedSubmissions}
                 />
@@ -667,6 +670,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                             onSort={handleSort}
                             sortBy={sortBy}
                             sortOrder={sortOrder}
+                            showMarathonMatchTestProgress={isMarathonMatch}
                             submissionDownloadLoading={downloadSubmissionResult.isLoading}
                             submissions={sortedCheckpointSubmissions}
                         />

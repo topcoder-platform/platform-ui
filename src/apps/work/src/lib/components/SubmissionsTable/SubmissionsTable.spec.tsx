@@ -4,6 +4,13 @@ import { render, screen } from '@testing-library/react'
 import { SubmissionsTable } from './SubmissionsTable'
 
 jest.mock('~/libs/ui', () => ({
+    IconOutline: {
+        ClockIcon: (): JSX.Element => <svg data-testid='clock-icon' />,
+        XCircleIcon: (): JSX.Element => <svg data-testid='x-circle-icon' />,
+    },
+    IconSolid: {
+        CheckCircleIcon: (): JSX.Element => <svg data-testid='check-circle-icon' />,
+    },
     LoadingSpinner: () => <div>Loading</div>,
 }), {
     virtual: true,
@@ -21,6 +28,28 @@ jest.mock('../../utils', () => ({
     getSubmissionInitialScore: (submission: { review?: Array<{ initialScore?: number }> }) => (
         submission.review?.[0]?.initialScore ?? 0
     ),
+    getSubmissionTestProgress: (
+        submission: {
+            reviewSummation?: Array<{
+                metadata?: {
+                    testProcess?: 'provisional' | 'system'
+                    testProgress?: number
+                    testStatus?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
+                }
+            }>
+        },
+    ) => {
+        const metadata = submission.reviewSummation?.[0]?.metadata
+        const progress = metadata?.testProgress
+
+        return {
+            process: metadata?.testProcess,
+            progressPercent: typeof progress === 'number'
+                ? `${Math.round(progress * 100)}%`
+                : undefined,
+            status: metadata?.testStatus,
+        }
+    },
 }))
 jest.mock('../../assets/icons/IconDownloadArtifacts.svg', () => ({
     ReactComponent: () => <svg aria-hidden='true' />,
@@ -140,6 +169,87 @@ describe('SubmissionsTable', () => {
         expect(screen.getByRole('button', { name: 'Download submission' }))
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Download submission artifacts' }))
+            .toBeTruthy()
+    })
+
+    it('renders marathon test progress columns when enabled', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        reviewSummation: [
+                            {
+                                metadata: {
+                                    testProcess: 'system',
+                                    testProgress: 0.75,
+                                    testStatus: 'IN PROGRESS',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-2',
+                        id: 'submission-2',
+                        reviewSummation: [
+                            {
+                                metadata: {
+                                    testProcess: 'provisional',
+                                    testProgress: 1,
+                                    testStatus: 'SUCCESS',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-3',
+                        id: 'submission-3',
+                        reviewSummation: [
+                            {
+                                metadata: {
+                                    testProcess: 'system',
+                                    testProgress: 0.2,
+                                    testStatus: 'FAILED',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByText('Current tests process'))
+            .toBeTruthy()
+        expect(screen.getByText('Test status'))
+            .toBeTruthy()
+        expect(screen.getByText('Test progress'))
+            .toBeTruthy()
+        expect(screen.getByText('75%'))
+            .toBeTruthy()
+        expect(screen.getByText('100%'))
+            .toBeTruthy()
+        expect(screen.getByText('20%'))
+            .toBeTruthy()
+        expect(screen.getByRole('img', { name: 'Test status: IN PROGRESS' }))
+            .toBeTruthy()
+        expect(screen.getByRole('img', { name: 'Test status: SUCCESS' }))
+            .toBeTruthy()
+        expect(screen.getByRole('img', { name: 'Test status: FAILED' }))
             .toBeTruthy()
     })
 })

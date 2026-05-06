@@ -34,7 +34,7 @@
     .filterWrap {
         min-width: 280px;
         max-width: 360px;
-    
+
         @include ltemd {
             max-width: unset;
             min-width: unset;
