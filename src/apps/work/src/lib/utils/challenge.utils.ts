@@ -311,7 +311,7 @@ function normalizeChallengeTypeToken(value: unknown): string {
  * Returns whether the challenge is a Marathon Match.
  * @param challenge Challenge payload from the challenge API.
  * @returns `true` when the type or tags identify Marathon Match.
- * Used by the submissions view to expose marathon-only runner log actions.
+ * Used by the submissions view to enable marathon-only test progress columns.
  */
 export function isMarathonMatchChallenge(challenge: Pick<Challenge, 'tags' | 'type'>): boolean {
     const typeName = getChallengeTypeName(challenge.type)

@@ -14,13 +14,7 @@ import styles from './ChallengePrivateDescriptionField.module.scss'
 
 const specificationTemplateLink = 'https://github.com/topcoder-platform-templates/specification-templates'
 
-export interface ChallengePrivateDescriptionFieldProps {
-    readOnly?: boolean
-}
-
-export const ChallengePrivateDescriptionField: FC<ChallengePrivateDescriptionFieldProps> = (
-    props: ChallengePrivateDescriptionFieldProps,
-) => {
+export const ChallengePrivateDescriptionField: FC = () => {
     const formContext = useFormContext()
     const privateDescription = formContext.watch('privateDescription') as string | undefined
     const [isVisible, setIsVisible] = useState<boolean>(!!privateDescription)
@@ -71,7 +65,6 @@ export const ChallengePrivateDescriptionField: FC<ChallengePrivateDescriptionFie
             <FormMarkdownEditor
                 label='Private Specification'
                 name='privateDescription'
-                readOnly={props.readOnly}
             />
         </div>
     )

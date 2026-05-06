@@ -16,7 +16,7 @@ export type EngagementStatus =
 
 export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
-export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
+export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'TERMINATED'
 
 export interface Assignment {
     agreementRate: string
@@ -110,7 +110,6 @@ export interface AssignmentPayment {
     description?: string
     details?: Array<{
         amount?: number
-        challengeFee?: number | string
         grossAmount?: number
         hoursWorked?: number | string
         totalAmount?: number

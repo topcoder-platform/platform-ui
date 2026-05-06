@@ -58,10 +58,7 @@ import {
     removeProjectAttachment,
     updateProjectAttachment,
 } from '../../../lib/services'
-import {
-    checkCanEditProjectDetails,
-    checkCanManageProject,
-} from '../../../lib/utils'
+import { checkCanManageProject } from '../../../lib/utils'
 
 import styles from './ProjectAssetsPage.module.scss'
 
@@ -323,12 +320,6 @@ export const ProjectAssetsPage: FC = () => {
     const attachmentsResult = useFetchProjectAttachments(projectId || undefined)
     const canManageProject = !!projectResult.project
         && checkCanManageProject(
-            workAppContext.userRoles,
-            workAppContext.loginUserInfo?.userId,
-            projectResult.project,
-        )
-    const canEditProjectDetails = !!projectResult.project
-        && checkCanEditProjectDetails(
             workAppContext.userRoles,
             workAppContext.loginUserInfo?.userId,
             projectResult.project,
@@ -748,9 +739,6 @@ export const ProjectAssetsPage: FC = () => {
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
                 canManageProject={canManageProject}
-                displayMemberPaymentDetailsToCopilots={
-                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots
-                }
                 projectId={projectId}
             />
         )
@@ -758,7 +746,7 @@ export const ProjectAssetsPage: FC = () => {
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
-                {canEditProjectDetails
+                {canManageProject
                     ? (
                         <Link
                             aria-label='Edit project'

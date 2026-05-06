@@ -65,6 +65,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
     const isSubmitting = props.isSubmitting === true
 
+    const minStartDate = useMemo(() => new Date(), [])
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
             .resolvedOptions()
@@ -190,6 +191,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
                     <StartDateTimeInput
                         label='Billing start date'
+                        minDate={minStartDate}
                         preventOpenOnFocus
                         showTimeSelect={false}
                         showTimezone={false}

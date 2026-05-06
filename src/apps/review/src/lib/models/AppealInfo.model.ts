@@ -5,7 +5,6 @@ import { BackendAppealResponse } from './BackendAppealResponse.model'
  */
 export interface AppealInfo {
     id: string
-    reviewId?: string
     reviewItemCommentId: string
     content: string
     appealResponse?: BackendAppealResponse

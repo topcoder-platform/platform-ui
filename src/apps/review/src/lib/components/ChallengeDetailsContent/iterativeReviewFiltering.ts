@@ -142,167 +142,6 @@ function countIterativeReviewPhases(challengePhases: BackendPhase[] | undefined)
         .includes('iterative review')).length
 }
 
-interface OrderedIterativePhase {
-    id: string
-    phaseTypeId?: string
-}
-
-function getOrderedIterativePhases(challengePhases: BackendPhase[] | undefined): OrderedIterativePhase[] {
-    const iterativePhases = (challengePhases ?? [])
-        .map((phase, index) => ({
-            id: normalizeIdentifier(phase.id),
-            index,
-            phaseTypeId: normalizeIdentifier(phase.phaseId),
-            startedAt: parseSortableDate(phase.actualStartDate ?? phase.scheduledStartDate),
-        }))
-        .filter(phase => Boolean(phase.id))
-        .filter(phase => (challengePhases?.[phase.index].name ?? '')
-            .toLowerCase()
-            .includes('iterative review'))
-        .sort((left, right) => {
-            const leftStartedAt = Number.isFinite(left.startedAt)
-                ? left.startedAt
-                : Number.POSITIVE_INFINITY
-            const rightStartedAt = Number.isFinite(right.startedAt)
-                ? right.startedAt
-                : Number.POSITIVE_INFINITY
-
-            if (leftStartedAt !== rightStartedAt) {
-                return leftStartedAt - rightStartedAt
-            }
-
-            return left.index - right.index
-        })
-
-    return iterativePhases
-        .map(phase => ({
-            id: phase.id,
-            phaseTypeId: phase.phaseTypeId,
-        } as OrderedIterativePhase))
-        .filter((phase): phase is OrderedIterativePhase => Boolean(phase.id))
-}
-
-function getAiFailedSubmissionIdsForSelectedIterativePhase(
-    sourceRows: SubmissionInfo[],
-    challengePhases: BackendPhase[] | undefined,
-    phaseIdFilterSet: Set<string>,
-    aiReviewDecisionsBySubmissionId?: Record<string, AiReviewDecision>,
-): Set<string> {
-    const orderedIterativePhases = getOrderedIterativePhases(challengePhases)
-    if (!orderedIterativePhases.length) {
-        return new Set<string>()
-    }
-
-    const assignedIterativePhaseIds = new Set<string>()
-    sourceRows.forEach(submission => {
-        const reviewPhaseId = normalizeIdentifier(submission.review?.phaseId)
-        if (!reviewPhaseId) {
-            return
-        }
-
-        const matchedByPhaseId = orderedIterativePhases.find(phase => phase.id === reviewPhaseId)
-        if (matchedByPhaseId) {
-            assignedIterativePhaseIds.add(matchedByPhaseId.id)
-            return
-        }
-
-        const matchedByPhaseTypeId = orderedIterativePhases.filter(
-            phase => phase.phaseTypeId === reviewPhaseId,
-        )
-        if (matchedByPhaseTypeId.length === 1) {
-            assignedIterativePhaseIds.add(matchedByPhaseTypeId[0].id)
-        }
-    })
-
-    const unassignedIterativePhaseIds = orderedIterativePhases
-        .map(phase => phase.id)
-        .filter(phaseId => !assignedIterativePhaseIds.has(phaseId))
-
-    if (!unassignedIterativePhaseIds.length) {
-        return new Set<string>()
-    }
-
-    const selectedPhase = orderedIterativePhases.find(phase => phaseIdFilterSet.has(phase.id))
-        ?? (() => {
-            const matchedByPhaseTypeId = orderedIterativePhases.filter(
-                phase => Boolean(phase.phaseTypeId && phaseIdFilterSet.has(phase.phaseTypeId)),
-            )
-
-            if (matchedByPhaseTypeId.length === 1) {
-                return matchedByPhaseTypeId[0]
-            }
-
-            return undefined
-        })()
-
-    const aiFailedRows = sourceRows
-        .filter(submission => !normalizeIdentifier(submission.review?.phaseId))
-        .filter(submission => shouldTreatAsAiFailedSubmission(submission, aiReviewDecisionsBySubmissionId))
-        .map((submission, index) => ({
-            index,
-            reviewCreatedAt: parseSortableDate(submission.review?.createdAt),
-            submission,
-            submittedAt: parseSortableDate(submission.submittedDate),
-        }))
-        .sort((left, right) => {
-            const leftSubmittedAt = Number.isFinite(left.submittedAt)
-                ? left.submittedAt
-                : Number.POSITIVE_INFINITY
-            const rightSubmittedAt = Number.isFinite(right.submittedAt)
-                ? right.submittedAt
-                : Number.POSITIVE_INFINITY
-
-            if (leftSubmittedAt !== rightSubmittedAt) {
-                return leftSubmittedAt - rightSubmittedAt
-            }
-
-            const leftReviewCreatedAt = Number.isFinite(left.reviewCreatedAt)
-                ? left.reviewCreatedAt
-                : Number.POSITIVE_INFINITY
-            const rightReviewCreatedAt = Number.isFinite(right.reviewCreatedAt)
-                ? right.reviewCreatedAt
-                : Number.POSITIVE_INFINITY
-
-            if (leftReviewCreatedAt !== rightReviewCreatedAt) {
-                return leftReviewCreatedAt - rightReviewCreatedAt
-            }
-
-            return left.index - right.index
-        })
-
-    if (!aiFailedRows.length) {
-        return new Set<string>()
-    }
-
-    if (!selectedPhase) {
-        return new Set<string>()
-    }
-
-    const selectedPhaseIndex = unassignedIterativePhaseIds.findIndex(phaseId => phaseId === selectedPhase.id)
-    if (selectedPhaseIndex < 0) {
-        return new Set<string>()
-    }
-
-    if (unassignedIterativePhaseIds.length === 1) {
-        return new Set(
-            aiFailedRows
-                .map(row => normalizeIdentifier(row.submission.id))
-                .filter((id): id is string => Boolean(id)),
-        )
-    }
-
-    const isLastIterativePhase = selectedPhaseIndex === unassignedIterativePhaseIds.length - 1
-    const assignedRows = isLastIterativePhase
-        ? aiFailedRows.slice(selectedPhaseIndex)
-        : aiFailedRows.slice(selectedPhaseIndex, selectedPhaseIndex + 1)
-
-    return new Set(
-        assignedRows
-            .map(row => normalizeIdentifier(row.submission.id))
-            .filter((id): id is string => Boolean(id)),
-    )
-}
-
 /**
  * Collect resource ids assigned to iterative-review roles.
  *
@@ -449,13 +288,6 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
     const iterativeReviewerResourceIds = collectIterativeReviewerResourceIds(reviewerResources)
 
     if (phaseIdFilterSet?.size) {
-        const aiFailedSubmissionIdsForSelectedPhase = getAiFailedSubmissionIdsForSelectedIterativePhase(
-            sourceRows,
-            challengePhases,
-            phaseIdFilterSet,
-            aiReviewDecisionsBySubmissionId,
-        )
-
         const filteredRows = sourceRows.filter(submission => {
             const reviewPhaseId = normalizeIdentifier(submission.review?.phaseId)
             if (reviewPhaseId) {
@@ -463,8 +295,7 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
             }
 
             if (shouldTreatAsAiFailedSubmission(submission, aiReviewDecisionsBySubmissionId)) {
-                const submissionId = normalizeIdentifier(submission.id)
-                return submissionId ? aiFailedSubmissionIdsForSelectedPhase.has(submissionId) : false
+                return true
             }
 
             // New WM F2F flows can surface assigned submissions before the review row has a phase id.

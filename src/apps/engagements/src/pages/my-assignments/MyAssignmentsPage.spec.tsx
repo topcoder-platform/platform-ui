@@ -102,7 +102,6 @@ jest.mock('../../components', () => ({
     }) => (
         <article data-testid={`assignment-card-${props.engagement.id}`}>
             <h2>{props.engagement.title}</h2>
-            <span>{props.assignment?.status}</span>
             {props.assignment?.status?.toLowerCase() === 'selected' && (
                 <button type='button' onClick={props.onAcceptOffer}>
                     Accept Offer
@@ -199,51 +198,5 @@ describe('MyAssignmentsPage', () => {
             .not.toBeInTheDocument()
         expect(screen.getAllByText(gateMessage))
             .toHaveLength(1)
-    })
-
-    it('groups selected and assigned assignments before completed and terminated assignments', async () => {
-        mockGetMyAssignedEngagements.mockResolvedValue({
-            data: [
-                buildEngagement('eng-completed', 'Completed Engagement', 'completed'),
-                buildEngagement('eng-selected', 'Selected Engagement', 'selected'),
-                buildEngagement('eng-terminated', 'Terminated Engagement', 'terminated'),
-                buildEngagement('eng-assigned', 'Assigned Engagement', 'assigned'),
-            ],
-            page: 1,
-            perPage: 20,
-            total: 4,
-            totalPages: 1,
-        })
-
-        render(<MyAssignmentsPage />)
-
-        const activeHeading = await screen.findByRole('heading', { name: 'Active' })
-        const pastHeading = screen.getByRole('heading', { name: 'Past' })
-        const activeSection = activeHeading.closest('section') as HTMLElement
-        const pastSection = pastHeading.closest('section') as HTMLElement
-
-        const headingLabels = screen.getAllByRole('heading')
-            .map(heading => heading.textContent)
-
-        expect(headingLabels.indexOf('Active'))
-            .toBeLessThan(headingLabels.indexOf('Past'))
-        expect(within(activeSection)
-            .getByText('Selected Engagement'))
-            .toBeInTheDocument()
-        expect(within(activeSection)
-            .getByText('Assigned Engagement'))
-            .toBeInTheDocument()
-        expect(within(activeSection)
-            .queryByText('Completed Engagement'))
-            .not.toBeInTheDocument()
-        expect(within(activeSection)
-            .queryByText('Terminated Engagement'))
-            .not.toBeInTheDocument()
-        expect(within(pastSection)
-            .getByText('Completed Engagement'))
-            .toBeInTheDocument()
-        expect(within(pastSection)
-            .getByText('Terminated Engagement'))
-            .toBeInTheDocument()
     })
 })

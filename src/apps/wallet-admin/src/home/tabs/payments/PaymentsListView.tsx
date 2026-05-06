@@ -19,13 +19,11 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
 
-type PaymentRoleView = 'admin' | 'paymentApprover' | 'wiproTaasAdmin'
+type PaymentRoleView = 'admin' | 'engagementApprover' | 'wiproTaasAdmin'
 type SelectedPaymentAction = 'approve' | 'reject'
 
-const taskPaymentCategory = 'TASK_PAYMENT'
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
 const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
-const approverAllowedCategories = [taskPaymentCategory, engagementPaymentCategory]
 const taasPaymentCategory = 'TAAS_PAYMENT'
 const topgearPaymentCategory = 'TOPGEAR_PAYMENT'
 const defaultPageSize = 10
@@ -174,8 +172,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isWiproTaasAdmin = hasRole('Wipro TaaS Admin')
     const hasPaymentAdminRole = hasRole('Payment Admin')
     const isPaymentAdmin = hasPaymentAdminRole || isWiproTaasAdmin
-    const isPaymentApprover = hasRole('Payment Approver')
-    const canToggleRoleView = isPaymentAdmin && isPaymentApprover
+    const isEngagementPaymentApprover = hasRole('Engagement Payment Approver')
+    const canToggleRoleView = isPaymentAdmin && (isEngagementPaymentApprover)
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
@@ -183,110 +181,62 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [paymentRoleView, setPaymentRoleView] = React.useState<PaymentRoleView>(
-        isPaymentAdmin ? 'admin' : 'paymentApprover',
+        isPaymentAdmin ? 'admin' : 'engagementApprover',
     )
-    const isApproverView = isPaymentApprover && (
-        !isPaymentAdmin || paymentRoleView === 'paymentApprover'
+    const isEngagementApproverView = isEngagementPaymentApprover && (
+        !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
 
-    const restrictedCategory = isWiproTaasAdmin && !hasPaymentAdminRole ? taasPaymentCategory : undefined
-    const restrictedDefaultStatus = isApproverView ? restrictedRoleDefaultStatus : undefined
-    const isRestrictedApproverView = isApproverView
+    const restrictedCategory = isEngagementApproverView
+        ? engagementPaymentCategory
+        : (isWiproTaasAdmin && !hasPaymentAdminRole ? taasPaymentCategory : undefined)
+    const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
+    const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-
+    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
-        // Strip 'all' sentinel values — never forward them to the API
-        const activeFilters = Object.fromEntries(
-            Object.entries(filters)
-                .filter(([, v]) => v.length > 0 && v[0] !== 'all'),
-        )
-
-        if (restrictedCategory) {
-            // WiproTaasAdmin scoped to a single category
-            let statusFilter: Record<string, string[]> = {}
-            if (filters.status && filters.status[0] !== 'all') {
-                statusFilter = { status: activeFilters.status }
-            }
-
-            return {
-                ...activeFilters,
-                category: [restrictedCategory],
-                ...statusFilter,
-            }
+        if (!restrictedCategory) {
+            return filters
         }
 
-        if (isApproverView) {
-            // Payment Approver: restrict to allowed categories, default status ON_HOLD_ADMIN
-            let statusFilter: Record<string, string[]> = {}
-            if (filters.status && filters.status[0] !== 'all') {
-                statusFilter = { status: activeFilters.status }
-            } else if (!filters.status && restrictedDefaultStatus) {
-                statusFilter = { status: [restrictedDefaultStatus] }
-            }
-
-            let categoryFilter: Record<string, string[]> = {}
-            if (
-                activeFilters.category
-                && approverAllowedCategories.includes(activeFilters.category[0])
-            ) {
-                categoryFilter = { category: activeFilters.category }
-            } else if (!filters.category || filters.category[0] === 'all') {
-                categoryFilter = { categories: ([] as string[]).concat(approverAllowedCategories) }
-            }
-
-            const rest = { ...activeFilters }
-            delete rest.category
-
-            return {
-                ...rest,
-                ...categoryFilter,
-                ...statusFilter,
-            }
+        return {
+            ...filters,
+            category: [restrictedCategory],
+            ...(hasSelectedStatusFilter
+                ? { status: filters.status }
+                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
         }
-
-        return activeFilters
-    }, [filters, restrictedCategory, restrictedDefaultStatus, isApproverView])
-
+    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
-            .some(([key, value]) => key !== 'category' && key !== 'categories' && value.length > 0),
+            .some(([key, value]) => key !== 'category' && value.length > 0),
         [appliedFilters],
     )
     const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
-        if (restrictedCategory) {
-            const statusOverride = filters.status?.[0] !== 'all' ? filters.status?.[0] : undefined
-
-            return {
-                category: restrictedCategory,
-                ...(statusOverride ? { status: statusOverride } : {}),
-            }
+        if (!restrictedCategory) {
+            return {} as Record<string, string>
         }
 
-        if (isApproverView) {
-            const statusOverride = filters.status?.[0] !== 'all' ? filters.status?.[0] : undefined
+        const statusOverride = filters.status?.[0] ?? restrictedDefaultStatus
 
-            return {
-                ...(statusOverride ? { status: statusOverride } : {}),
-            }
+        return {
+            category: restrictedCategory,
+            ...(statusOverride ? { status: statusOverride } : {}),
         }
-
-        return {} as Record<string, string>
-    }, [filters.status, restrictedCategory, isApproverView])
+    }, [filters.status, restrictedCategory, restrictedDefaultStatus])
 
     const defaultDropdownValues = React.useMemo<Record<string, string>>(() => {
         const defaults: Record<string, string> = {}
 
         if (!restrictedCategory) {
+            defaults.status = filters.status?.[0] ?? 'all'
             defaults.category = filters.category?.[0] ?? 'all'
         }
 
         defaults.date = filters.date?.[0] ?? 'all'
 
-        // Fall back to the restricted default if no filter is applied
-        defaults.status = filters.status?.[0] ?? (restrictedDefaultStatus || 'all')
-
         return defaults
-    }, [filters.category, filters.date, filters.status, restrictedCategory, restrictedDefaultStatus])
+    }, [filters.category, filters.date, filters.status, restrictedCategory])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -586,14 +536,14 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             >
                                 Admin View
                             </button>
-                            {isPaymentApprover && (
+                            {isEngagementPaymentApprover && (
                                 <button
                                     type='button'
-                                    aria-pressed={isApproverView}
-                                    className={`${styles.roleViewButton} ${isApproverView ? styles.roleViewButtonActive : ''}`}
-                                    onClick={() => onRoleViewChange('paymentApprover')}
+                                    aria-pressed={isEngagementApproverView}
+                                    className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                    onClick={() => onRoleViewChange('engagementApprover')}
                                 >
-                                    Approver View
+                                    Engagement Approver View
                                 </button>
                             )}
                         </div>
@@ -663,27 +613,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ],
                             type: 'dropdown',
                         },
-                        ...(isWiproTaasAdmin && !hasPaymentAdminRole ? [] : isApproverView ? [
-                            {
-                                key: 'category',
-                                label: 'Payment Type',
-                                options: [
-                                    {
-                                        label: 'All',
-                                        value: 'all',
-                                    },
-                                    {
-                                        label: 'Task Payments',
-                                        value: taskPaymentCategory,
-                                    },
-                                    {
-                                        label: 'Engagement Payments',
-                                        value: engagementPaymentCategory,
-                                    },
-                                ],
-                                type: 'dropdown',
-                            },
-                        ] as Filter[] : [
+                        ...(isRestrictedApproverView || (isWiproTaasAdmin && !hasPaymentAdminRole) ? [] : [
                             {
                                 key: 'category',
                                 label: 'Type',
@@ -773,11 +703,20 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
+                        /*    setFilters({
+                            ...filters,
+                            [key]: value,
+                        }) */
+                        setFilters(prev => {
+                            const newFilters = { ...prev }
+                            if (value[0] === 'all') {
+                                delete newFilters[key]
+                            } else {
+                                newFilters[key] = value
+                            }
 
-                        setFilters(prev => ({
-                            ...prev,
-                            [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
-                        }))
+                            return newFilters
+                        })
                         setSelectedPayments({})
                     }}
                     onResetFilters={() => {

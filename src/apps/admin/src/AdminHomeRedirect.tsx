@@ -5,7 +5,7 @@ import { reportsRootRoute } from '~/apps/reports'
 import { ProfileContextData, useProfileContext } from '~/libs/core'
 
 import { manageChallengeRouteId } from './config/routes.config'
-import { isAdministrator } from './lib/utils/access'
+import { isAdministrator } from './lib/utils'
 
 /**
  * Redirects authenticated admin-app users to the first route they can access.

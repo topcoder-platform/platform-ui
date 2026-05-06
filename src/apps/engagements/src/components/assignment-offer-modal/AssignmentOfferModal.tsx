@@ -5,9 +5,9 @@ import { BaseModal, Button } from '~/libs/ui'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import {
     formatCurrencyAmount,
+    formatDate,
     formatStandardHoursPerWeek,
-} from '../../lib/utils/currency.utils'
-import { formatDate } from '../../lib/utils/date.utils'
+} from '../../lib/utils'
 
 import styles from './AssignmentOfferModal.module.scss'
 

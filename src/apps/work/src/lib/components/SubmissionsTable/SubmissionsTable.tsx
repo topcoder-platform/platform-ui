@@ -13,7 +13,6 @@ import {
 
 import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
-import { ReactComponent as IconRunnerLogs } from '../../assets/icons/IconRunnerLogs.svg'
 import { ReactComponent as IconSquareDownload } from '../../assets/icons/IconSquareDownload.svg'
 import { Submission } from '../../models'
 import {
@@ -44,13 +43,11 @@ interface ColumnConfig {
 
 interface SubmissionsTableProps {
     canDownloadSubmissions: boolean
-    canViewRunnerLogs?: boolean
     challengeId: string
     isLoading?: boolean
     isLoadingMembers?: boolean
     onDownloadSubmission: (submissionId: string) => void
     onOpenArtifacts: (submissionId: string) => void
-    onOpenRunnerLogs?: (submissionId: string) => void
     onSort: (fieldName: SubmissionSortBy) => void
     sortBy: SubmissionSortBy
     sortOrder: SortOrder
@@ -264,15 +261,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
         props.onOpenArtifacts(submissionId)
     }
 
-    function handleRunnerLogsClick(event: MouseEvent<HTMLButtonElement>): void {
-        const submissionId = event.currentTarget.dataset.submissionId
-        if (!submissionId || !props.onOpenRunnerLogs) {
-            return
-        }
-
-        props.onOpenRunnerLogs(submissionId)
-    }
-
     return (
         <div className={styles.container}>
             <table className={styles.table}>
@@ -429,21 +417,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                         >
                                             <IconDownloadArtifacts />
                                         </button>
-
-                                        {props.canViewRunnerLogs
-                                            ? (
-                                                <button
-                                                    data-submission-id={submission.id}
-                                                    aria-label='View runner logs'
-                                                    className={styles.iconButton}
-                                                    disabled={!props.onOpenRunnerLogs}
-                                                    onClick={handleRunnerLogsClick}
-                                                    type='button'
-                                                >
-                                                    <IconRunnerLogs />
-                                                </button>
-                                            )
-                                            : undefined}
 
                                     </div>
                                 </td>

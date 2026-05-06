@@ -6,13 +6,7 @@ import styles from './ChallengeDescriptionField.module.scss'
 
 const specificationTemplateLink = 'https://github.com/topcoder-platform-templates/specification-templates'
 
-export interface ChallengeDescriptionFieldProps {
-    readOnly?: boolean
-}
-
-export const ChallengeDescriptionField: FC<ChallengeDescriptionFieldProps> = (
-    props: ChallengeDescriptionFieldProps,
-) => (
+export const ChallengeDescriptionField: FC = () => (
     <div className={styles.container}>
         <p className={styles.templateLink}>
             Access specification templates
@@ -29,7 +23,6 @@ export const ChallengeDescriptionField: FC<ChallengeDescriptionFieldProps> = (
         <FormMarkdownEditor
             label='Public Specification'
             name='description'
-            readOnly={props.readOnly}
             required
         />
     </div>

@@ -19,8 +19,6 @@ import { ChallengeTotalField } from './ChallengeTotalField'
 
 interface TestHarnessProps {
     challengeFee?: number
-    includeChallengeFee?: boolean
-    label?: string
     markup?: number
     prizeSets: PrizeSet[]
     reviewers?: Reviewer[]
@@ -49,10 +47,7 @@ const TestHarness: FC<TestHarnessProps> = props => {
 
     return (
         <FormProvider {...formMethods}>
-            <ChallengeTotalField
-                includeChallengeFee={props.includeChallengeFee}
-                label={props.label}
-            />
+            <ChallengeTotalField />
         </FormProvider>
     )
 }
@@ -137,51 +132,6 @@ describe('ChallengeTotalField', () => {
         )
 
         expect(screen.getByText('$2,041.80'))
-            .toBeTruthy()
-    })
-
-    it('can omit challenge fee and use a copilot-safe cost label', () => {
-        render(
-            <TestHarness
-                includeChallengeFee={false}
-                label='Estimated challenge cost:'
-                markup={0.1}
-                prizeSets={[
-                    {
-                        prizes: [
-                            {
-                                type: 'USD',
-                                value: 100,
-                            },
-                        ],
-                        type: 'PLACEMENT',
-                    },
-                    {
-                        prizes: [
-                            {
-                                type: 'USD',
-                                value: 20,
-                            },
-                        ],
-                        type: 'COPILOT',
-                    },
-                ]}
-                reviewers={[
-                    {
-                        baseCoefficient: 0.15,
-                        incrementalCoefficient: 0,
-                        isMemberReview: true,
-                        memberReviewerCount: 1,
-                        phaseId: 'review-phase',
-                        scorecardId: 'scorecard-id',
-                    },
-                ]}
-            />,
-        )
-
-        expect(screen.getByText('Estimated challenge cost:'))
-            .toBeTruthy()
-        expect(screen.getByText('$135.00'))
             .toBeTruthy()
     })
 })

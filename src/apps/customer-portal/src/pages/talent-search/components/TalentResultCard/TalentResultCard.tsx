@@ -30,7 +30,6 @@ interface TalentResultCardTalent {
 
 interface TalentResultCardProps {
     talent: TalentResultCardTalent
-    showSkillMatch: boolean
 }
 
 function getUniqueMatchedSkills(talent: TalentResultCardTalent): TalentResultCardTalent['matchedSkills'] {
@@ -46,19 +45,6 @@ function getUniqueMatchedSkills(talent: TalentResultCardTalent): TalentResultCar
     })
 }
 
-function matchedSkillStatsLabel(skill: MatchedSkill): string {
-    const parts: string[] = []
-    if (skill.wins > 0) {
-        parts.push(`${skill.wins} wins`)
-    }
-
-    if (skill.submitted > 0) {
-        parts.push(`${skill.submitted} submissions`)
-    }
-
-    return parts.length > 0 ? `: ${parts.join(', ')}` : ''
-}
-
 function buildMatchedSkillsTooltipContent(
     count: number,
     skills: MatchedSkill[],
@@ -72,7 +58,7 @@ function buildMatchedSkillsTooltipContent(
                 {skills.map((skill: MatchedSkill) => (
                     <li key={`${skill.id}-${skill.name}`} className={styles.tooltipSkillLine}>
                         <span className={styles.tooltipSkillName}>{skill.name}</span>
-                        {matchedSkillStatsLabel(skill)}
+                        {`: ${skill.wins} wins, ${skill.submitted} submissions`}
                     </li>
                 ))}
             </ul>
@@ -82,7 +68,6 @@ function buildMatchedSkillsTooltipContent(
 
 export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultCardProps) => {
     const talent: TalentResultCardTalent = props.talent
-    const showSkillMatch = props.showSkillMatch
     const uniqueSkills = useMemo(() => getUniqueMatchedSkills(talent), [talent])
     const isVerifiedProfile = talent.isVerified === true
     const displayName = String(talent.name || '')
@@ -120,11 +105,9 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     <div className={styles.headContent}>
                         <div className={styles.cardHeader}>
                             <span className={styles.handleText}>{displayHandle}</span>
-                            {showSkillMatch && (
-                                <span className={styles.matchPill}>
-                                    {`${talent.matchIndex}% Match`}
-                                </span>
-                            )}
+                            <span className={styles.matchPill}>
+                                {`${talent.matchIndex}% Match`}
+                            </span>
                         </div>
                         <p className={styles.nameText}>{talent.name}</p>
                         <div className={styles.locationRow}>
@@ -165,29 +148,27 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     </div>
                 </div>
             </div>
-            <div className={classNames(styles.cardFooter, !showSkillMatch && styles.cardFooterWithoutMatch)}>
-                {showSkillMatch && (
-                    <div className={styles.footerMatched}>
-                        <span className={styles.matchedSkillsText}>
-                            {`${uniqueSkills.length} ${matchedSkillLabel}`}
-                        </span>
-                        {uniqueSkills.length > 0 && (
-                            <Tooltip
-                                className={styles.matchedSkillsTooltip}
-                                content={buildMatchedSkillsTooltipContent(uniqueSkills.length, uniqueSkills)}
-                                place='top'
+            <div className={styles.cardFooter}>
+                <div className={styles.footerMatched}>
+                    <span className={styles.matchedSkillsText}>
+                        {`${uniqueSkills.length} ${matchedSkillLabel}`}
+                    </span>
+                    {uniqueSkills.length > 0 && (
+                        <Tooltip
+                            className={styles.matchedSkillsTooltip}
+                            content={buildMatchedSkillsTooltipContent(uniqueSkills.length, uniqueSkills)}
+                            place='top'
+                        >
+                            <button
+                                type='button'
+                                className={styles.infoButton}
+                                aria-label='Matched skills details'
                             >
-                                <button
-                                    type='button'
-                                    className={styles.infoButton}
-                                    aria-label='Matched skills details'
-                                >
-                                    <IconOutline.InformationCircleIcon className={styles.infoIcon} />
-                                </button>
-                            </Tooltip>
-                        )}
-                    </div>
-                )}
+                                <IconOutline.InformationCircleIcon className={styles.infoIcon} />
+                            </button>
+                        </Tooltip>
+                    )}
+                </div>
                 <a
                     className={styles.experienceLink}
                     href={profileUrl}

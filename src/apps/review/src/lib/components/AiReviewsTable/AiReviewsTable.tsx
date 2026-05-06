@@ -275,8 +275,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
         const failedReviewersText = failedGatingReviewers.length
             ? `Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.
-                This submission is automatically failed regardless of Overall Score.`
-            : `This submission is failed because ${hasSubmitterRole ? 'your' : 'the'}
+                This submission failed regardless of Overall Score because it failed one or more of AI Gating Reviews.`
+            : `This submission failed because ${hasSubmitterRole ? 'your' : 'the'}
                 Overall Score is bellow minimum threshold.`
 
         // Message text varies by role
@@ -293,7 +293,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
 
         if (hasSubmitterRole) {
-            return 'Submission Locked - Your submission will not be reviewed in the Review Phase.'
+            return 'Submission Locked - Your submission won\'t be reviewed during the Review Phase.'
         }
 
         return 'Submission Locked - This submission doesn\'t have to be reviewed in Review Phase.'

@@ -18,7 +18,6 @@ import {
 } from '../../../../../lib/constants'
 import {
     FormBillingAccountAutocomplete,
-    FormCheckboxField,
     FormGroupsSelect,
     FormRadioGroup,
     FormSelectField,
@@ -67,7 +66,6 @@ interface ProjectEditorFormValues {
     billingAccountId: string
     cancelReason: string
     description: string
-    displayMemberPaymentDetailsToCopilots: boolean
     groups: string[]
     name: string
     status: ProjectStatusValue | ''
@@ -97,9 +95,6 @@ function getDefaultFormValues(
         billingAccountId,
         cancelReason: projectDetail?.cancelReason || '',
         description: projectDetail?.description || '',
-        displayMemberPaymentDetailsToCopilots: isEdit
-            ? projectDetail?.details?.displayMemberPaymentDetailsToCopilots === true
-            : true,
         groups,
         name: projectDetail?.name || '',
         status: isEdit
@@ -368,10 +363,6 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     const payload: CreateProjectPayload = {
                         billingAccountId: normalizedBillingAccountId,
                         description: formData.description,
-                        details: {
-                            displayMemberPaymentDetailsToCopilots:
-                                formData.displayMemberPaymentDetailsToCopilots,
-                        },
                         groups,
                         name: formData.name,
                         terms,
@@ -393,14 +384,8 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 }
 
                 const payload: UpdateProjectPayload = {
-                    // eslint-disable-next-line unicorn/no-null
-                    billingAccountId: normalizedBillingAccountId || null,
+                    billingAccountId: normalizedBillingAccountId || '',
                     description: formData.description,
-                    details: {
-                        ...(props.projectDetail.details || {}),
-                        displayMemberPaymentDetailsToCopilots:
-                            formData.displayMemberPaymentDetailsToCopilots,
-                    },
                     groups,
                     name: formData.name,
                     terms,
@@ -528,6 +513,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             name='billingAccountId'
                             placeholder='Search billing account by name'
                             projectId={projectId}
+                            required
                             selectedBillingAccount={selectedBillingAccount}
                             userId={props.billingAccountSearchUserId}
                         />
@@ -562,11 +548,6 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                         <FormGroupsSelect
                             label='Intended Work Groups'
                             name='groups'
-                        />
-
-                        <FormCheckboxField
-                            label='Display member payment details to copilots'
-                            name='displayMemberPaymentDetailsToCopilots'
                         />
                     </div>
                 </section>

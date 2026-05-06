@@ -1,7 +1,7 @@
 import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
-import { isAdministrator } from '~/apps/admin/src/lib/utils/access'
+import { isAdministrator } from '~/apps/admin/src/lib/utils'
 import {
     billingAccountRouteId,
     defaultReviewersRouteId,

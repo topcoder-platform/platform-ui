@@ -82,8 +82,6 @@ jest.mock('../../../lib/constants', () => ({
     PROJECTS_PAGE_SIZE: 10,
 }))
 jest.mock('../../../lib/utils', () => ({
-    checkCanEditProjectDetails:
-        jest.requireActual('../../../lib/utils/permissions.utils').checkCanEditProjectDetails,
     checkCanManageProject: jest.requireActual('../../../lib/utils/permissions.utils').checkCanManageProject,
 }))
 

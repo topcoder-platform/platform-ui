@@ -1,6 +1,5 @@
 import {
     FC,
-    useCallback,
     useMemo,
 } from 'react'
 import moment from 'moment-timezone'
@@ -12,11 +11,6 @@ import {
 
 interface EngagementLocationFieldsProps {
     disabled?: boolean
-}
-
-const ANY_OPTION: FormSelectOption = {
-    label: 'Any',
-    value: 'Any',
 }
 
 function formatTimezoneLabel(timezone: string): string {
@@ -65,14 +59,11 @@ function formatTimezoneLabel(timezone: string): string {
 }
 
 function getTimezoneOptions(): FormSelectOption[] {
-    return [
-        ANY_OPTION,
-        ...moment.tz.names()
-            .map(timezone => ({
-                label: formatTimezoneLabel(timezone),
-                value: timezone,
-            })),
-    ]
+    return moment.tz.names()
+        .map(timezone => ({
+            label: formatTimezoneLabel(timezone),
+            value: timezone,
+        }))
 }
 
 function getCountryOptions(): FormSelectOption[] {
@@ -86,10 +77,7 @@ function getCountryOptions(): FormSelectOption[] {
             value: countryCode,
         }))
 
-    return [
-        ANY_OPTION,
-        ...options.sort((optionA, optionB) => optionA.label.localeCompare(optionB.label)),
-    ]
+    return options.sort((optionA, optionB) => optionA.label.localeCompare(optionB.label))
 }
 
 export const EngagementLocationFields: FC<EngagementLocationFieldsProps> = (
@@ -97,23 +85,6 @@ export const EngagementLocationFields: FC<EngagementLocationFieldsProps> = (
 ) => {
     const timezoneOptions = useMemo(() => getTimezoneOptions(), [])
     const countryOptions = useMemo(() => getCountryOptions(), [])
-    /**
-     * Preserves the legacy "Any" sentinel as a mutually exclusive selection.
-     *
-     * @param selected Select value emitted by the form field.
-     * @returns Normalized form values for react-hook-form state.
-     */
-    const toAnyOnlyFieldValue = useCallback((selected: unknown): string[] => {
-        const selectedOptions = Array.isArray(selected)
-            ? selected
-            : []
-
-        if (selectedOptions.some(option => option.value === ANY_OPTION.value)) {
-            return [ANY_OPTION.value]
-        }
-
-        return selectedOptions.map(option => option.value)
-    }, [])
 
     return (
         <>
@@ -125,7 +96,6 @@ export const EngagementLocationFields: FC<EngagementLocationFieldsProps> = (
                 options={timezoneOptions}
                 placeholder='Select timezones'
                 required
-                toFieldValue={toAnyOnlyFieldValue}
             />
 
             <FormSelectField
@@ -136,7 +106,6 @@ export const EngagementLocationFields: FC<EngagementLocationFieldsProps> = (
                 options={countryOptions}
                 placeholder='Select countries'
                 required
-                toFieldValue={toAnyOnlyFieldValue}
             />
         </>
     )

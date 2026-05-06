@@ -65,9 +65,6 @@ export interface ChallengeTerm {
 
 export interface Challenge {
     id: string
-    approvalApprovedBy?: string
-    approvalRejectionReason?: string
-    approvalStatus?: string
     assignedMemberId?: string
     attachments?: Attachment[]
     billing?: {

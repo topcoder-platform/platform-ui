@@ -89,7 +89,6 @@ function normalizeWorkflow(workflow: Partial<Workflow>): Workflow | undefined {
     }
 
     return {
-        disabled: (workflow as Record<string, unknown>).disabled === true,
         id,
         name,
         scorecardId: workflow.scorecardId !== undefined && workflow.scorecardId !== null

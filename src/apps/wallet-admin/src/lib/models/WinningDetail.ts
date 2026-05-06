@@ -37,18 +37,10 @@ export interface PaymentWorkLog {
     remarks?: string
 }
 
-export interface PaymentTaskDetails {
-    projectId?: string
-    projectName?: string
-    paymentApproverHandle?: string
-    paymentCreatorHandle?: string
-}
-
 export interface WinningPaymentDetails {
     engagementDetails?: PaymentEngagementDetails
     paymentCreatorHandle?: string
     workLog?: PaymentWorkLog
-    taskDetails?: PaymentTaskDetails
 }
 
 export interface Winning {

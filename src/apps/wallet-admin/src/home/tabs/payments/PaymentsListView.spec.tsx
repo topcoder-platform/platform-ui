@@ -221,10 +221,10 @@ describe('PaymentsListView', () => {
         jest.clearAllMocks()
     })
 
-    it('defaults the approver view to the On Hold (Admin) status filter and both allowed categories', async () => {
+    it('defaults the engagement approver view to the On Hold (Admin) status filter', async () => {
         render(
             <PaymentsListView
-                profile={{ roles: ['Payment Approver'] } as any}
+                profile={{ roles: ['Engagement Payment Approver'] } as any}
             />,
         )
 
@@ -232,13 +232,14 @@ describe('PaymentsListView', () => {
 
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
-                categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                category: ['ENGAGEMENT_PAYMENT'],
                 status: ['ON_HOLD_ADMIN'],
             })
         expect(mockFilterBar)
             .toHaveBeenCalled()
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
+                category: 'ENGAGEMENT_PAYMENT',
                 status: 'ON_HOLD_ADMIN',
             }))
     })
@@ -265,7 +266,7 @@ describe('PaymentsListView', () => {
     it('applies the default approver status after switching from admin view', async () => {
         render(
             <PaymentsListView
-                profile={{ roles: ['Payment Admin', 'Payment Approver'] } as any}
+                profile={{ roles: ['Payment Admin', 'Engagement Payment Approver'] } as any}
             />,
         )
 
@@ -274,18 +275,19 @@ describe('PaymentsListView', () => {
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {})
 
-        fireEvent.click(screen.getByRole('button', { name: 'Approver View' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Engagement Approver View' }))
 
         await screen.findByText('No payments match your filters.')
 
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
-                categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                category: ['ENGAGEMENT_PAYMENT'],
                 status: ['ON_HOLD_ADMIN'],
             })
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
+                category: 'ENGAGEMENT_PAYMENT',
                 status: 'ON_HOLD_ADMIN',
             }))
     })
@@ -312,7 +314,7 @@ describe('PaymentsListView', () => {
     it('lets an explicit status filter override the default approver status', async () => {
         render(
             <PaymentsListView
-                profile={{ roles: ['Payment Approver'] } as any}
+                profile={{ roles: ['Engagement Payment Approver'] } as any}
             />,
         )
 
@@ -325,13 +327,14 @@ describe('PaymentsListView', () => {
         await waitFor(() => {
             expect(mockedGetPayments)
                 .toHaveBeenLastCalledWith(10, 0, {
-                    categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                    category: ['ENGAGEMENT_PAYMENT'],
                     status: ['PAID'],
                 })
         })
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
+                category: 'ENGAGEMENT_PAYMENT',
                 status: 'PAID',
             }))
     })
@@ -364,7 +367,7 @@ describe('PaymentsListView', () => {
             }))
     })
 
-    it('lets approvers reject selected on hold admin payments with an audit note', async () => {
+    it('lets engagement approvers reject selected on hold admin payments with an audit note', async () => {
         mockedGetPayments.mockResolvedValue(paymentsResponse as any)
         mockedGetMemberHandle.mockResolvedValue(new Map([
             [111, 'sathya22in'],
@@ -373,7 +376,7 @@ describe('PaymentsListView', () => {
 
         render(
             <PaymentsListView
-                profile={{ roles: ['Payment Approver'] } as any}
+                profile={{ roles: ['Engagement Payment Approver'] } as any}
             />,
         )
 

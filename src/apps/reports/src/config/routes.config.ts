@@ -10,4 +10,3 @@ export const rootRoute: string
 
 export const reportsPageRouteId = 'reports'
 export const bulkMemberLookupRouteId = 'bulk-member-lookup'
-export const billingAccountsPageRouteId = 'billing-accounts'

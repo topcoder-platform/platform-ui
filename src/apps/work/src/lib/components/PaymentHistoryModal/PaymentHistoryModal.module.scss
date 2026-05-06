@@ -36,22 +36,10 @@
 }
 
 .itemHeader {
-    align-items: flex-start;
+    align-items: center;
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
-}
-
-.amountBlock {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.amount {
-    color: #2a2a2a;
-    font-size: 16px;
-    font-weight: 700;
 }
 
 .status {
@@ -80,7 +68,7 @@
     font-size: 12px;
 }
 
-.metaRow {
+.paymentCreator {
     color: #5b5b5b;
     display: flex;
     flex-wrap: wrap;
@@ -88,7 +76,7 @@
     gap: 4px;
 }
 
-.metaLabel {
+.paymentCreatorLabel {
     font-weight: 600;
 }
 

@@ -7,7 +7,7 @@ import { filter } from 'lodash'
 import {
     MappingReviewAppeal,
 } from '../models'
-import { fetchAllAppealsWithReviewIds } from '../services'
+import { fetchAppealsWithReviewId } from '../services'
 
 export interface useFetchAppealQueueProps {
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
@@ -35,11 +35,9 @@ export function useFetchAppealQueue(): useFetchAppealQueueProps {
             return
         }
 
-        const nextIds = Array.from(new Set(idLoadQueue.current))
-            .filter(id => !mappingReviewAppealRef.current[id])
-        idLoadQueue.current = []
-
-        if (!nextIds.length) {
+        const nextId = idLoadQueue.current[0]
+        idLoadQueue.current = idLoadQueue.current.slice(1)
+        if (mappingReviewAppealRef.current[nextId]) {
             fetchNextDataInQueue()
             return
         }
@@ -51,29 +49,24 @@ export function useFetchAppealQueue(): useFetchAppealQueueProps {
         }
 
         const fetchDataFail = (): void => {
-            nextIds.forEach(id => {
-                mappingReviewAppealRef.current[id] = {
-                    finishAppeals: 0,
-                    totalAppeals: 0,
-                }
-            })
+            mappingReviewAppealRef.current[nextId] = {
+                finishAppeals: 0,
+                totalAppeals: 0,
+            }
             setMappingReviewAppeal({
                 ...mappingReviewAppealRef.current,
             })
             finish()
         }
 
-        fetchAllAppealsWithReviewIds(nextIds)
+        // Fetch appeal datas
+        fetchAppealsWithReviewId(1, 100, nextId)
             .then(res => {
-                nextIds.forEach(id => {
-                    const reviewAppeals = res.filter(item => item.reviewId === id)
-
-                    mappingReviewAppealRef.current[id] = {
-                        finishAppeals: filter(reviewAppeals, item => !!item.appealResponse)
-                            .length,
-                        totalAppeals: reviewAppeals.length,
-                    }
-                })
+                mappingReviewAppealRef.current[nextId] = {
+                    finishAppeals: filter(res, item => !!item.appealResponse)
+                        .length,
+                    totalAppeals: res.length,
+                }
                 setMappingReviewAppeal({
                     ...mappingReviewAppealRef.current,
                 })

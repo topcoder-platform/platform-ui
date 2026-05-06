@@ -39,10 +39,7 @@ import {
     usersRouteId,
 } from './config/routes.config'
 import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
-import {
-    ErrorMessage,
-    ProjectRouteAccessGuard,
-} from './lib/components'
+import { ErrorMessage } from './lib/components'
 import { WorkAppContext } from './lib/contexts'
 import { WorkAppContextModel } from './lib/models'
 import { canViewAllEngagements } from './lib/utils'
@@ -181,12 +178,6 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <Rewrite to='/projects/:projectId/challenges' />,
-                route: '/projects/:projectId',
-                title: 'Project Overview',
-            },
-            {
-                authRequired: true,
                 element: <ChallengeEditorPage />,
                 id: challengeCreateRouteId,
                 route: '/projects/:projectId/challenges/new',
@@ -225,11 +216,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Project Assets'>
-                        <ProjectAssetsPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <ProjectAssetsPage />,
                 id: projectAssetsRouteId,
                 route: '/projects/:projectId/assets',
                 title: 'Project Assets',
@@ -268,76 +255,48 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Engagements'>
-                        <EngagementsListPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementsListPage />,
                 route: '/projects/:projectId/engagements',
                 title: 'Engagements',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Create Engagement'>
-                        <EngagementEditorPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementEditorPage />,
                 id: engagementCreateRouteId,
                 route: '/projects/:projectId/engagements/new',
                 title: 'Create Engagement',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Edit Engagement'>
-                        <EngagementEditorPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementEditorPage />,
                 id: engagementEditRouteId,
                 route: '/projects/:projectId/engagements/:engagementId',
                 title: 'Edit Engagement',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Applications'>
-                        <ApplicationsListPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <ApplicationsListPage />,
                 id: engagementApplicationsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/applications',
                 title: 'Applications',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Assignments'>
-                        <EngagementPaymentPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementPaymentPage />,
                 id: engagementAssignmentsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments',
                 title: 'Assignments',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Feedback'>
-                        <EngagementFeedbackPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementFeedbackPage />,
                 id: engagementFeedbackRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/feedback',
                 title: 'Feedback',
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Experience'>
-                        <EngagementExperiencePage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <EngagementExperiencePage />,
                 id: engagementExperienceRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/experience',
                 title: 'Experience',
@@ -384,11 +343,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: (
-                    <ProjectRouteAccessGuard pageTitle='Users'>
-                        <UsersManagementPage />
-                    </ProjectRouteAccessGuard>
-                ),
+                element: <UsersManagementPage />,
                 id: usersRouteId,
                 route: '/projects/:projectId/users',
                 title: 'Users',

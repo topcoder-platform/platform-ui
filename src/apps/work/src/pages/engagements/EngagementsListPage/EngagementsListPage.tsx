@@ -241,7 +241,7 @@ function renderMembersAssignedCell(
     const count = getAssignedMembersCount(engagement)
     const handles = getAssignedMemberHandles(engagement)
 
-    const hasAssignmentsRoute = !!engagementProjectId && !!engagement.id
+    const hasAssignmentsRoute = !!engagementProjectId && !!engagement.id && count > 0
     const countElement = hasAssignmentsRoute
         ? (
             <Link
@@ -769,9 +769,6 @@ export const EngagementsListPage: FC = () => {
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
                 canManageProject={canManageProject}
-                displayMemberPaymentDetailsToCopilots={
-                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots
-                }
                 projectId={projectId}
             />
         )

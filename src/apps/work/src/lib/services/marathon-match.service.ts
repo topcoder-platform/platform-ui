@@ -6,8 +6,8 @@ import {
     xhrPostAsync,
     xhrPutAsync,
 } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
 
-import { MARATHON_MATCH_API_URL } from '../constants'
 import {
     CreateMarathonMatchConfigInput,
     CreateTesterInput,
@@ -16,15 +16,14 @@ import {
     MarathonMatchConfig,
     MarathonMatchDefaults,
     MarathonMatchPhaseConfig,
-    MarathonMatchRerunResponse,
-    MarathonMatchRerunResult,
-    MarathonMatchRunnerLogs,
     MarathonMatchScoreDirection,
     MarathonMatchTester,
     MarathonMatchTesterSummary,
     UpdateMarathonMatchConfigInput,
 } from '../models'
 
+const MARATHON_MATCH_API_URL = EnvironmentConfig.MARATHON_MATCH_API
+    || `${EnvironmentConfig.API.V6}/marathon-match`
 const TESTERS_PER_PAGE = 100
 
 interface TesterListMetadata {
@@ -406,68 +405,6 @@ function normalizeTesterCollection(response: unknown): MarathonMatchTesterSummar
 }
 
 /**
- * Normalizes a raw per-submission rerun result into the UI rerun-result model.
- * @param result Raw result object from POST /challenge/:challengeId/rerun.
- * @returns A normalized rerun result when a submission id is present; otherwise `undefined`.
- * Used by `normalizeMarathonMatchRerunResponse` to discard malformed result rows.
- */
-function normalizeMarathonMatchRerunResult(
-    result: unknown,
-): MarathonMatchRerunResult | undefined {
-    if (typeof result !== 'object' || !result) {
-        return undefined
-    }
-
-    const typedResult = result as Record<string, unknown>
-    const submissionId = normalizeText(typedResult.submissionId)
-
-    if (!submissionId) {
-        return undefined
-    }
-
-    return {
-        error: normalizeText(typedResult.error),
-        submissionId,
-        taskArn: normalizeText(typedResult.taskArn),
-        taskId: normalizeText(typedResult.taskId),
-    }
-}
-
-/**
- * Normalizes a raw marathon match rerun response.
- * @param response Raw response from POST /challenge/:challengeId/rerun.
- * @returns The normalized rerun response when required fields are present; otherwise `undefined`.
- * Used by `rerunMarathonMatchScores` before resolving the API call.
- */
-function normalizeMarathonMatchRerunResponse(
-    response: unknown,
-): MarathonMatchRerunResponse | undefined {
-    if (typeof response !== 'object' || !response) {
-        return undefined
-    }
-
-    const typedResponse = response as Record<string, unknown>
-    const challengeId = normalizeText(typedResponse.challengeId)
-    const submissionsQueued = normalizeNumber(typedResponse.submissionsQueued)
-
-    if (!challengeId || submissionsQueued === undefined) {
-        return undefined
-    }
-
-    const rawResults = Array.isArray(typedResponse.results)
-        ? typedResponse.results
-        : []
-
-    return {
-        challengeId,
-        results: rawResults
-            .map(normalizeMarathonMatchRerunResult)
-            .filter((result): result is MarathonMatchRerunResult => !!result),
-        submissionsQueued,
-    }
-}
-
-/**
  * Extracts tester-list pagination metadata from the response payload.
  * Used by `fetchTesters` to keep paging resilient when header metadata is absent.
  */
@@ -637,33 +574,6 @@ export async function updateMarathonMatchConfig(
 }
 
 /**
- * Requests a rerun of the latest submissions for a marathon match challenge.
- * @param challengeId Challenge identifier used in the rerun route path.
- * @returns Dispatch summary including queued submissions and per-submission launch results.
- * @throws Error When the API request fails or returns an invalid rerun response.
- * Used by `MarathonMatchScorerSection` when an operator clicks `Rerun scores`.
- */
-export async function rerunMarathonMatchScores(
-    challengeId: string,
-): Promise<MarathonMatchRerunResponse> {
-    try {
-        const response = await xhrPostAsync<Record<string, never>, unknown>(
-            `${MARATHON_MATCH_API_URL}/challenge/${encodeURIComponent(challengeId.trim())}/rerun`,
-            {},
-        )
-        const normalizedResponse = normalizeMarathonMatchRerunResponse(response)
-
-        if (!normalizedResponse) {
-            throw new Error('Marathon match rerun response was invalid')
-        }
-
-        return normalizedResponse
-    } catch (error) {
-        throw normalizeError(error, 'Failed to rerun marathon match scores')
-    }
-}
-
-/**
  * Lists available testers for scorer configuration.
  * @param params Optional tester-name filter and pagination controls.
  * Pass `fetchAll: false` to read only the requested page; otherwise all pages are merged.
@@ -818,31 +728,6 @@ export async function createTesterVersion(
         return normalizedTester
     } catch (error) {
         throw normalizeError(error, 'Failed to create tester version')
-    }
-}
-
-/**
- * Loads ECS runner logs for a marathon match submission.
- * @param submissionId Submission identifier used in the runner-log route path.
- * @returns Mapping metadata and CloudWatch log events for the latest runner task.
- * @throws Error When the API request fails.
- * Used by `SubmissionRunnerLogsModal` when a copilot or manager opens runner output.
- */
-export async function fetchSubmissionRunnerLogs(
-    submissionId: string,
-): Promise<MarathonMatchRunnerLogs> {
-    const normalizedSubmissionId = submissionId.trim()
-
-    if (!normalizedSubmissionId) {
-        throw new Error('Submission id is required')
-    }
-
-    try {
-        return await xhrGetAsync<MarathonMatchRunnerLogs>(
-            `${MARATHON_MATCH_API_URL}/submissions/${encodeURIComponent(normalizedSubmissionId)}/runner-logs`,
-        )
-    } catch (error) {
-        throw normalizeError(error, 'Failed to fetch submission runner logs')
     }
 }
 

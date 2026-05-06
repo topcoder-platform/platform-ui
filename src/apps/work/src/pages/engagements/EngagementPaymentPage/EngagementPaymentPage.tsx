@@ -38,7 +38,6 @@ import {
 import {
     useFetchEngagement,
     useFetchProject,
-    useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
     Assignment,
@@ -51,7 +50,6 @@ import {
 import {
     calculateAssignmentRatePerWeek,
     deserializeTentativeAssignmentDate,
-    getCountableEngagementAssignments,
     normalizeAssignmentStatus,
     sanitizePositiveNumericInput,
     serializeTentativeAssignmentDate,
@@ -246,7 +244,7 @@ function buildAssignmentDetailsUpdatePayload(
     const assignmentIdText = String(assignmentId)
 
     return {
-        assignmentDetails: getCountableEngagementAssignments(assignments)
+        assignmentDetails: assignments
             .map(assignment => {
                 const baseEntry = buildAssignmentDetailsPayloadEntry(assignment)
 
@@ -582,7 +580,6 @@ export const EngagementPaymentPage: FC = () => {
 
     const engagementResult = useFetchEngagement(engagementId)
     const projectResult = useFetchProject(projectId)
-    const projectBillingAccountResult = useFetchProjectBillingAccount(projectId)
 
     const assignments = useMemo(() => {
         if (!Array.isArray(engagementResult.engagement?.assignments)) {
@@ -616,8 +613,7 @@ export const EngagementPaymentPage: FC = () => {
             return
         }
 
-        const billingAccountId = projectBillingAccountResult.billingAccount?.id
-            || projectResult.project?.billingAccountId
+        const billingAccountId = projectResult.project?.billingAccountId
 
         if (!billingAccountId) {
             showErrorToast('Billing account is required to create payment')
@@ -653,11 +649,7 @@ export const EngagementPaymentPage: FC = () => {
         } finally {
             setIsSubmittingPayment(false)
         }
-    }, [
-        paymentMember,
-        projectBillingAccountResult.billingAccount?.id,
-        projectResult.project?.billingAccountId,
-    ])
+    }, [paymentMember, projectResult.project?.billingAccountId])
 
     const handleTerminateConfirm = useCallback(async (reason: string): Promise<void> => {
         if (!terminateMember) {
@@ -861,10 +853,7 @@ export const EngagementPaymentPage: FC = () => {
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>
-                                                    Billing Start Date
-                                                    <span aria-hidden='true' className={styles.required}>*</span>
-                                                </span>
+                                                <span className={styles.label}>Billing Start</span>
                                                 <span className={styles.value}>{formatDate(assignment.startDate)}</span>
                                             </div>
                                             <div>
@@ -872,17 +861,11 @@ export const EngagementPaymentPage: FC = () => {
                                                 <span className={styles.value}>{formatDurationMonths(assignment.durationMonths)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>
-                                                    Rate Per Hour
-                                                    <span aria-hidden='true' className={styles.required}>*</span>
-                                                </span>
+                                                <span className={styles.label}>Rate Per Hour</span>
                                                 <span className={styles.value}>{formatCurrency(assignment.ratePerHour)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>
-                                                    Standard Hours Per Week
-                                                    <span aria-hidden='true' className={styles.required}>*</span>
-                                                </span>
+                                                <span className={styles.label}>Hours Per Week</span>
                                                 <span className={styles.value}>
                                                     {assignment.standardHoursPerWeek || '-'}
                                                 </span>
@@ -984,9 +967,7 @@ export const EngagementPaymentPage: FC = () => {
             />
 
             <PaymentFormModal
-                billingAccountId={projectBillingAccountResult.billingAccount?.id
-                    || projectResult.project?.billingAccountId}
-                billingAccountMarkup={projectBillingAccountResult.billingAccount?.markup}
+                billingAccountId={projectResult.project?.billingAccountId}
                 engagementName={engagementResult.engagement?.title}
                 isSubmitting={isSubmittingPayment}
                 member={paymentMember}

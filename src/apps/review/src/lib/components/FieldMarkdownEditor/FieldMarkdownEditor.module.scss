@@ -34,15 +34,6 @@ $error-line-height: 14px;
         pointer-events: none;
     }
 
-    &.readOnly {
-        :global {
-            .editor-statusbar,
-            .editor-toolbar {
-                pointer-events: none;
-            }
-        }
-    }
-
     :global {
         .EasyMDEContainer {
             height: 100px;

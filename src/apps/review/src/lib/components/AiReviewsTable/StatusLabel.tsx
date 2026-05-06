@@ -8,7 +8,7 @@ interface StatusLabelProps {
     hideLabel?: boolean
     label?: string
     score?: number
-    status: 'pending' | 'failed' | 'passed' | 'failed-score' | 'human-override'
+    status: 'pending' | 'failed' | 'passed' | 'failed-score'
     action?: ReactNode
     isAiIcon?: boolean
 }

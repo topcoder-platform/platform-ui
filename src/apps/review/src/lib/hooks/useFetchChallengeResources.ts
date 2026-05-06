@@ -17,10 +17,7 @@ export interface useFetchChallengeResourcesProps {
     reviewers: BackendResource[]
     myResources: BackendResource[]
     myRoles: string[]
-    error: Error | undefined
-    isError: boolean
     isLoading: boolean
-    retry: () => Promise<BackendResource[] | undefined>
     resourceMemberIdMapping: {
         [memberId: string]: BackendResource
     }
@@ -46,7 +43,6 @@ export function useFetchChallengeResources(
         data: resources,
         error: fetchResourcesError,
         isValidating: isLoading,
-        mutate,
     }: SWRResponse<BackendResource[], Error> = useSWR<BackendResource[], Error>(
         `resourceBaseUrl/resources?challengeId=${challengeId}`,
         {
@@ -124,27 +120,12 @@ export function useFetchChallengeResources(
     }, [resourcesWithRoleName, resourceRoleReviewer])
 
     return {
-        error: fetchResourcesError,
-        isError: !!fetchResourcesError,
         isLoading,
-        myResources: fetchResourcesError
-            ? []
-            : myResources,
-        myRoles: fetchResourcesError
-            ? []
-            : myRoles,
-        registrants: fetchResourcesError
-            ? []
-            : registrants,
-        resourceMemberIdMapping: fetchResourcesError
-            ? {}
-            : resourceMemberIdMapping,
-        resources: fetchResourcesError
-            ? []
-            : resourcesWithRoleName,
-        retry: () => mutate(),
-        reviewers: fetchResourcesError
-            ? []
-            : reviewers,
+        myResources,
+        myRoles,
+        registrants,
+        resourceMemberIdMapping,
+        resources: resourcesWithRoleName,
+        reviewers,
     }
 }

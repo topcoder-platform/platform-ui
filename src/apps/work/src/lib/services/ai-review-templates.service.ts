@@ -132,7 +132,6 @@ function normalizeTemplate(
         challengeType,
         createdAt: normalizeText(typedTemplate.createdAt),
         description: normalizeText(typedTemplate.description) || '',
-        disabled: normalizeBoolean(typedTemplate.disabled) === true,
         formula: typeof typedTemplate.formula === 'object' && typedTemplate.formula
             ? typedTemplate.formula as Record<string, unknown>
             : undefined,
