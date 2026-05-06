@@ -12,7 +12,6 @@ export interface BackendAppealBase {
 export interface BackendAppeal extends BackendAppealBase {
     resourceId: string
     id: string
-    reviewId?: string
     appealResponse?: BackendAppealResponse
     createdAt: string
     createdBy: string
@@ -31,7 +30,6 @@ export function convertBackendAppeal(data: BackendAppeal): AppealInfo {
         appealResponse: data.appealResponse,
         content: data.content,
         id: data.id,
-        reviewId: data.reviewId,
         reviewItemCommentId: data.reviewItemCommentId,
     }
 }

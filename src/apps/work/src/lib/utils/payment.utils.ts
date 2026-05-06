@@ -30,37 +30,6 @@ function toOptionalString(value: unknown): string | undefined {
     return normalized || undefined
 }
 
-type AssignmentPaymentDetail = NonNullable<AssignmentPayment['details']>[number]
-
-function getFirstPaymentDetail(
-    payment: AssignmentPayment,
-): AssignmentPaymentDetail | undefined {
-    return Array.isArray(payment.details) && payment.details.length > 0
-        ? payment.details[0]
-        : undefined
-}
-
-/**
- * Normalizes billing markup into a decimal multiplier for payment fee math.
- *
- * Stored markup can arrive as either a decimal fraction like `0.15` or a
- * whole percentage like `15`. Missing or invalid inputs return `undefined`.
- *
- * @param billingMarkup raw billing markup from project billing-account data.
- * @returns normalized decimal markup, or `undefined` when unavailable.
- */
-function normalizeBillingMarkup(billingMarkup: unknown): number | undefined {
-    const parsedMarkup = toNumber(billingMarkup)
-
-    if (parsedMarkup === undefined) {
-        return undefined
-    }
-
-    return parsedMarkup > 1
-        ? parsedMarkup / 100
-        : parsedMarkup
-}
-
 export function formatCurrency(value: unknown): string {
     const parsed = toNumber(value)
 
@@ -76,61 +45,15 @@ export function getPaymentAmount(payment: AssignmentPayment): number | undefined
         return toNumber(payment.amount)
     }
 
-    const firstDetail = getFirstPaymentDetail(payment)
+    if (Array.isArray(payment.details) && payment.details.length > 0) {
+        const firstDetail = payment.details[0]
 
-    if (firstDetail) {
-        const totalAmount = toNumber(firstDetail.totalAmount)
-
-        if (totalAmount !== undefined) {
-            return totalAmount
-        }
-
-        const grossAmount = toNumber(firstDetail.grossAmount)
-
-        if (grossAmount !== undefined) {
-            return grossAmount
-        }
-
-        return toNumber(firstDetail.amount)
+        return toNumber(firstDetail.totalAmount)
+            || toNumber(firstDetail.grossAmount)
+            || toNumber(firstDetail.amount)
     }
 
     return undefined
-}
-
-/**
- * Resolves the persisted challenge fee associated with a payment.
- *
- * Engagement payments store the manager-entered payment amount separately from
- * the billing-account fee. When finance returns the fee explicitly, this
- * helper uses that field. For older payloads it falls back to a positive
- * `totalAmount - grossAmount` delta when present.
- *
- * @param payment payment record returned by the finance API.
- * @returns challenge fee rounded to two decimals, or `undefined` when no fee
- * is available on the payment.
- */
-export function getPaymentChallengeFee(
-    payment: AssignmentPayment,
-): number | undefined {
-    const firstDetail = getFirstPaymentDetail(payment)
-    const persistedChallengeFee = toNumber(firstDetail?.challengeFee)
-
-    if (persistedChallengeFee !== undefined && persistedChallengeFee >= 0) {
-        return Number(persistedChallengeFee.toFixed(2))
-    }
-
-    const totalAmount = toNumber(firstDetail?.totalAmount)
-    const grossAmount = toNumber(firstDetail?.grossAmount)
-
-    if (
-        totalAmount === undefined
-        || grossAmount === undefined
-        || totalAmount <= grossAmount
-    ) {
-        return undefined
-    }
-
-    return Number((totalAmount - grossAmount).toFixed(2))
 }
 
 export function getPaymentStatus(payment: AssignmentPayment): string {
@@ -243,33 +166,6 @@ export function calculatePaymentAmount(
     }
 
     return Number((parsedHoursWorked * parsedRatePerHour).toFixed(2))
-}
-
-/**
- * Calculates the billing-account fee preview for an engagement payment.
- *
- * @param amount manager-entered payment amount before fee.
- * @param billingMarkup raw billing-account markup from the project billing
- * details. Accepts decimal or whole-percentage values.
- * @returns calculated fee rounded to two decimals, or `undefined` when the
- * inputs are incomplete or invalid.
- */
-export function calculatePaymentChallengeFee(
-    amount: unknown,
-    billingMarkup: unknown,
-): number | undefined {
-    const parsedAmount = toNumber(amount)
-    const normalizedMarkup = normalizeBillingMarkup(billingMarkup)
-
-    if (
-        parsedAmount === undefined
-        || parsedAmount < 0
-        || normalizedMarkup === undefined
-    ) {
-        return undefined
-    }
-
-    return Number((parsedAmount * normalizedMarkup).toFixed(2))
 }
 
 export function getPaymentRemarks(payment: AssignmentPayment): string {

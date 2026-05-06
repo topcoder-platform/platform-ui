@@ -12,11 +12,6 @@ export const copilotBaseUrl = `${EnvironmentConfig.API.V6}/projects`
 
 const PAGE_SIZE = 20
 
-type CopilotApplicationApiResponse = Omit<CopilotApplication, 'id' | 'userId'> & {
-    id: number | string
-    userId: number | string
-}
-
 /**
  * Creates a CopilotOpportunity object by merging the provided data and its nested data,
  * setting specific properties, and formatting the createdAt date.
@@ -29,23 +24,6 @@ function copilotOpportunityFactory(data: any): CopilotOpportunity {
         ...data,
         ...data.data,
         projectName: data.project?.name,
-    }
-}
-
-/**
- * Normalizes copilot application identifiers that the API may serialize as strings.
- *
- * The copilot opportunity UI joins applications to member records and the signed-in profile
- * using numeric ids, so we coerce the API payload into the shape expected by the UI.
- *
- * @param data - Raw copilot application returned by the API.
- * @returns A copilot application with numeric identifiers.
- */
-function copilotApplicationFactory(data: CopilotApplicationApiResponse): CopilotApplication {
-    return {
-        ...data,
-        id: Number(data.id),
-        userId: Number(data.userId),
     }
 }
 
@@ -166,8 +144,8 @@ export const useCopilotApplications = (opportunityId?: string): CopilotApplicati
         ? buildUrl(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
         : undefined
 
-    const fetcher = (urlp: string): Promise<CopilotApplication[]> => xhrGetAsync<CopilotApplicationApiResponse[]>(urlp)
-        .then(data => data.map(copilotApplicationFactory))
+    const fetcher = (urlp: string): Promise<CopilotApplication[]> => xhrGetAsync<CopilotApplication[]>(urlp)
+        .then(data => data)
         .catch(() => [])
 
     return useSWR(url, fetcher)

@@ -541,22 +541,6 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         () => templates.find(template => template.id === configuration.templateId),
         [configuration.templateId, templates],
     )
-    const activeTemplates = useMemo(
-        () => templates.filter(template => template.disabled !== true),
-        [templates],
-    )
-    const activeWorkflows = useMemo(
-        () => availableWorkflows.filter(workflow => workflow.disabled !== true),
-        [availableWorkflows],
-    )
-    const activeWorkflowIdSet = useMemo(
-        () => new Set(activeWorkflows.map(workflow => normalizeReviewerText(workflow.id))),
-        [activeWorkflows],
-    )
-    const activeTemplateIdSet = useMemo(
-        () => new Set(activeTemplates.map(template => normalizeReviewerText(template.id))),
-        [activeTemplates],
-    )
     const normalizedConfiguration = useMemo(
         (): SaveAiReviewConfigInput | undefined => (
             normalizedChallengeId
@@ -570,56 +554,10 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         [configuration, configurationMode, normalizedChallengeId],
     )
     const validationErrors = useMemo(
-        () => {
-            if (!normalizedConfiguration) {
-                return []
-            }
-
-            const errors = validateAiReviewConfiguration(normalizedConfiguration)
-
-            const selectedTemplateId = normalizeReviewerText(configuration.templateId)
-            if (
-                configurationMode === 'template'
-                && selectedTemplateId
-                && !templatesLoading
-                && templates.length > 0
-                && !activeTemplateIdSet.has(selectedTemplateId)
-            ) {
-                errors.push('Selected AI review template is deactivated. Please select an active template.')
-            }
-
-            if (
-                configurationMode === 'manual'
-                && !isWorkflowsLoading
-                && availableWorkflows.length > 0
-            ) {
-                const hasDeactivatedWorkflow = (configuration.workflows || [])
-                    .map(workflow => normalizeReviewerText(workflow.workflowId))
-                    .filter(Boolean)
-                    .some(workflowId => !activeWorkflowIdSet.has(workflowId))
-
-                if (hasDeactivatedWorkflow) {
-                    errors.push(
-                        'One or more selected AI workflows are deactivated. '
-                        + 'Please select active workflows only.',
-                    )
-                }
-            }
-
-            return errors
-        },
-        [
-            activeTemplateIdSet,
-            activeWorkflowIdSet,
-            configuration.templateId,
-            configuration.workflows,
-            configurationMode,
-            availableWorkflows,
-            isWorkflowsLoading,
-            normalizedConfiguration,
-            templates,
-            templatesLoading,
-        ],
+        () => (normalizedConfiguration
+            ? validateAiReviewConfiguration(normalizedConfiguration)
+            : []),
+        [normalizedConfiguration],
     )
     const hasPersistedConfigForCurrentChallenge = useMemo(
         () => (
@@ -716,7 +654,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
 
     const handleTemplateSelect = useCallback(
         (templateId: string): void => {
-            const selected = activeTemplates.find(template => template.id === templateId)
+            const selected = templates.find(template => template.id === templateId)
             if (!selected) {
                 setConfiguration(previousConfiguration => ({
                     ...previousConfiguration,
@@ -734,7 +672,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                 workflows: selected.workflows.map(toDraftWorkflow),
             })
         },
-        [activeTemplates],
+        [templates],
     )
 
     const performModeSwitch = useCallback(async (targetMode: ConfigurationMode): Promise<void> => {
@@ -1185,7 +1123,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                                     value={configuration.templateId || ''}
                                 >
                                     <option value=''>Select template</option>
-                                    {activeTemplates.map(template => (
+                                    {templates.map(template => (
                                         <option key={template.id} value={template.id}>
                                             {template.title}
                                         </option>
@@ -1253,7 +1191,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                                 {(configuration.workflows || []).map((workflow, index) => (
                                     <ManualWorkflowEditor
                                         assignedWorkflowIds={assignedWorkflowIds}
-                                        availableWorkflows={activeWorkflows}
+                                        availableWorkflows={availableWorkflows}
                                         key={getWorkflowDraftKey(workflow)}
                                         onRemove={removeWorkflow}
                                         onUpdate={updateWorkflow}

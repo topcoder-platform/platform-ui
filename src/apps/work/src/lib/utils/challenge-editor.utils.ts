@@ -1,4 +1,3 @@
-/* eslint-disable complexity */
 import {
     DESIGN_WORK_TYPES,
     PHASE_DURATION_MAX_HOURS,
@@ -9,7 +8,6 @@ import {
     SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS,
 } from '../constants/challenge-editor.constants'
 import {
-    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
 } from '../constants'
 import {
@@ -1004,8 +1002,6 @@ export function transformChallengeToFormData(
     const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
     const status = normalizeOptionalString(challenge?.status)
         ?.toUpperCase()
-    const approvalStatus = normalizeOptionalString(challenge?.approvalStatus)
-        ?.toUpperCase()
     const billing = normalizeBillingInfo(challenge?.billing)
     const normalizedPrizeSets = normalizePrizeSets(challenge?.prizeSets)
     const prizeSetsForForm = challenge?.id && status !== CHALLENGE_STATUS.NEW
@@ -1013,16 +1009,11 @@ export function transformChallengeToFormData(
         : ensurePlacementPrizeSet(normalizedPrizeSets)
 
     return {
-        approvalApprovedBy: normalizeStringValue(challenge?.approvalApprovedBy) || undefined,
-        approvalRejectionReason: normalizeStringValue(challenge?.approvalRejectionReason) || undefined,
-        approvalStatus: approvalStatus
-            || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         assignedMemberId: getChallengeAssignedMemberSelectorValue(challenge),
         attachments: normalizeAttachments(challenge?.attachments),
         billing,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
         copilot: getChallengeCopilotSelectorValue(challenge),
-        createdBy: normalizeOptionalString(challenge?.createdBy),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
@@ -1082,8 +1073,6 @@ export function transformFormDataToChallenge(
     const reviewType = normalizeReviewType(formData.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const status = normalizeOptionalString(formData.status)
         ?.toUpperCase()
-    const approvalStatus = normalizeOptionalString(formData.approvalStatus)
-        ?.toUpperCase()
     const billing = normalizeBillingInfo(formData.billing)
     const prizeSets = formData.funChallenge === true
         ? []
@@ -1094,11 +1083,6 @@ export function transformFormDataToChallenge(
     )
 
     const challenge: Partial<Challenge> = {
-        approvalApprovedBy: normalizeOptionalString(formData.approvalApprovedBy)
-            || undefined,
-        approvalRejectionReason: normalizeOptionalString(formData.approvalRejectionReason)
-            || undefined,
-        approvalStatus: approvalStatus || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
         billing,
         challengeFee: normalizeOptionalNumber(formData.challengeFee),

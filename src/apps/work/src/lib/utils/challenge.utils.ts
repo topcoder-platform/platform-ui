@@ -122,42 +122,6 @@ function getChallengeTypeName(type: string | ChallengeTypeRef | undefined): stri
     return type.name
 }
 
-/**
- * Normalizes challenge type labels for equality checks.
- * @param value Challenge type name, abbreviation, or tag value.
- * @returns Lowercase alphanumeric text with separators removed.
- * Used by `isMarathonMatchChallenge` to compare inconsistent API payload shapes.
- */
-function normalizeChallengeTypeToken(value: unknown): string {
-    return typeof value === 'string'
-        ? value.replace(/[^a-zA-Z0-9]/g, '')
-            .toLowerCase()
-        : ''
-}
-
-/**
- * Returns whether the challenge is a Marathon Match.
- * @param challenge Challenge payload from the challenge API.
- * @returns `true` when the type or tags identify Marathon Match.
- * Used by the submissions view to expose marathon-only runner log actions.
- */
-export function isMarathonMatchChallenge(challenge: Pick<Challenge, 'tags' | 'type'>): boolean {
-    const typeName = getChallengeTypeName(challenge.type)
-    const typeAbbreviation = typeof challenge.type === 'object'
-        ? challenge.type?.abbreviation
-        : undefined
-    const typeTokens = [
-        typeName,
-        typeAbbreviation,
-        ...(Array.isArray(challenge.tags)
-            ? challenge.tags
-            : []),
-    ].map(normalizeChallengeTypeToken)
-
-    return typeTokens.includes('marathonmatch')
-        || typeTokens.includes('mm')
-}
-
 export function getStatusText(status?: string, selfService: boolean = false): string {
     const normalizedStatus = normalizeStatus(status)
 

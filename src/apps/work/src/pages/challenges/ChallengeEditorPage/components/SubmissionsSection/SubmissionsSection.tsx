@@ -15,7 +15,6 @@ import { Button } from '~/libs/ui'
 import {
     ArtifactsModal,
     Pagination,
-    SubmissionRunnerLogsModal,
     type SubmissionSortBy,
     SubmissionsTable,
 } from '../../../../../lib/components'
@@ -31,10 +30,8 @@ import { fetchMembersByUserIds } from '../../../../../lib/services'
 import type { MemberProfile } from '../../../../../lib/services'
 import {
     canDownloadSubmissions,
-    canViewMarathonMatchRunnerLogs,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
-    isMarathonMatchChallenge,
     showErrorToast,
 } from '../../../../../lib/utils'
 import { ReactComponent as LockIcon } from '../../../../../lib/assets/icons/lock.svg'
@@ -345,11 +342,8 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
-    const [selectedRunnerLogsSubmissionId, setSelectedRunnerLogsSubmissionId]
-        = useState<string>('')
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
     const [showArtifactsModal, setShowArtifactsModal] = useState<boolean>(false)
-    const [showRunnerLogsModal, setShowRunnerLogsModal] = useState<boolean>(false)
     const [sortBy, setSortBy] = useState<SubmissionSortBy>('createdAt')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
@@ -359,8 +353,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
 
     const workAppContext = useContext(WorkAppContext)
     const canDownload = canDownloadSubmissions(workAppContext.userRoles)
-    const canViewRunnerLogs = isMarathonMatchChallenge(props.challenge)
-        && canViewMarathonMatchRunnerLogs(workAppContext.userRoles)
 
     const submissionsResult = useFetchSubmissions(
         props.challengeId,
@@ -529,16 +521,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         setShowArtifactsModal(false)
     }, [])
 
-    const handleOpenRunnerLogs = useCallback((submissionId: string): void => {
-        setSelectedRunnerLogsSubmissionId(submissionId)
-        setShowRunnerLogsModal(true)
-    }, [])
-
-    const handleCloseRunnerLogs = useCallback((): void => {
-        setSelectedRunnerLogsSubmissionId('')
-        setShowRunnerLogsModal(false)
-    }, [])
-
     const handleSort = useCallback((fieldName: SubmissionSortBy): void => {
         setSortOrder(currentSortOrder => {
             if (sortBy === fieldName) {
@@ -658,13 +640,11 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
             <div className={styles.tableWrapper}>
                 <SubmissionsTable
                     canDownloadSubmissions={canDownload}
-                    canViewRunnerLogs={canViewRunnerLogs}
                     challengeId={props.challengeId}
                     isLoading={submissionsResult.isLoading}
                     isLoadingMembers={isMembersLoading}
                     onDownloadSubmission={handleDownloadSubmission}
                     onOpenArtifacts={handleOpenArtifacts}
-                    onOpenRunnerLogs={handleOpenRunnerLogs}
                     onSort={handleSort}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
@@ -679,13 +659,11 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         <h4 className={styles.checkpointTitle}>Round 1 (Checkpoint) Submissions</h4>
                         <SubmissionsTable
                             canDownloadSubmissions={canDownload}
-                            canViewRunnerLogs={canViewRunnerLogs}
                             challengeId={props.challengeId}
                             isLoading={false}
                             isLoadingMembers={isMembersLoading}
                             onDownloadSubmission={handleDownloadSubmission}
                             onOpenArtifacts={handleOpenArtifacts}
-                            onOpenRunnerLogs={handleOpenRunnerLogs}
                             onSort={handleSort}
                             sortBy={sortBy}
                             sortOrder={sortOrder}
@@ -712,15 +690,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     <ArtifactsModal
                         onClose={handleCloseArtifacts}
                         submissionId={selectedSubmissionId}
-                    />
-                )
-                : undefined}
-
-            {showRunnerLogsModal && selectedRunnerLogsSubmissionId
-                ? (
-                    <SubmissionRunnerLogsModal
-                        onClose={handleCloseRunnerLogs}
-                        submissionId={selectedRunnerLogsSubmissionId}
                     />
                 )
                 : undefined}

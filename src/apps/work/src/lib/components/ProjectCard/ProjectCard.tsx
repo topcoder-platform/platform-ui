@@ -1,6 +1,5 @@
-import type {
+import {
     FC,
-    ReactNode,
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
@@ -17,7 +16,6 @@ import { ProjectStatus } from '../ProjectStatus'
 import styles from './ProjectCard.module.scss'
 
 interface ProjectCardProps {
-    billingAccountContent?: ReactNode
     canEdit?: boolean
     project: Project
     selected?: boolean
@@ -51,13 +49,6 @@ export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
                     <span className={styles.metaValue}>{lastActivity}</span>
                 </div>
             </Link>
-            {props.billingAccountContent
-                ? (
-                    <div className={styles.billingAccount}>
-                        {props.billingAccountContent}
-                    </div>
-                )
-                : undefined}
             {props.canEdit
                 ? (
                     <div className={styles.actions}>

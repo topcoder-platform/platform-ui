@@ -67,6 +67,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         props.initialValue?.standardHoursPerWeek || '',
     )
 
+    const minStartDate = useMemo(() => new Date(), [])
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
             .resolvedOptions()
@@ -185,6 +186,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                     </p>
                     <StartDateTimeInput
                         label='Engagement start date *'
+                        minDate={minStartDate}
                         onChange={value => {
                             setStartDate(value || undefined)
                             setErrors(previous => ({

@@ -205,7 +205,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
         placementSetIndex,
     ])
 
-    const nonIncreasingOrderError = useMemo(() => {
+    const descendingError = useMemo(() => {
         if (!Array.isArray(placementPrizes) || placementPrizes.length < 2) {
             return undefined
         }
@@ -217,9 +217,9 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
             if (
                 previousPrize > 0
                 && currentPrize > 0
-                && currentPrize > previousPrize
+                && currentPrize >= previousPrize
             ) {
-                return 'Each subsequent prize must be less than or equal to the one above it.'
+                return 'Each subsequent prize must be less than the one above it.'
             }
         }
 
@@ -328,7 +328,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
         ? fieldState.error.message
         : undefined
     const showPrizeRowLabels = fields.length > 0
-    const errorMessage = fieldError || nonIncreasingOrderError
+    const errorMessage = fieldError || descendingError
     const prizeTypeFieldName = `${props.name}-type`
     const fieldLabelId = `${props.name}-label`
     const usdOptionId = `${prizeTypeFieldName}-usd`
@@ -422,7 +422,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                 <div className={styles.prizeInputField}>
                                     <PrizeInput
                                         disabled={props.disabled}
-                                        error={hasValueError || !!nonIncreasingOrderError}
+                                        error={hasValueError || !!descendingError}
                                         onChange={prizeValueChangeHandlers[index]}
                                         prizeType={currentPrizeType}
                                         value={prizeValue}

@@ -14,10 +14,7 @@ export interface useFetchChallengeSubmissionsProps {
     challengeSubmissions: BackendSubmission[]
     deletedLegacySubmissionIds: Set<string>
     deletedSubmissionIds: Set<string>
-    error: Error | undefined
-    isError: boolean
     isLoading: boolean
-    retry: () => Promise<BackendSubmission[] | undefined>
 }
 
 interface ChallengeSubmissionsMemoResult {
@@ -55,7 +52,6 @@ export function useFetchChallengeSubmissions(
         data: challengeSubmissions,
         error,
         isValidating: isLoading,
-        mutate,
     }: SWRResponse<BackendSubmission[], Error> = useSWR<
         BackendSubmission[],
         Error
@@ -155,7 +151,8 @@ export function useFetchChallengeSubmissions(
 
     const allowViewAllSubmissionsForDesign = useMemo<boolean>(
         () => Boolean(
-            challengeVisibility?.isDesign
+            challengeVisibility
+            && challengeVisibility.isDesign
             && challengeVisibility.isCompleted
             && challengeVisibility.submissionsViewable,
         ),
@@ -249,25 +246,10 @@ export function useFetchChallengeSubmissions(
         allowViewAllSubmissionsForDesign,
     ])
 
-    if (error) {
-        return {
-            challengeSubmissions: [],
-            deletedLegacySubmissionIds: new Set<string>(),
-            deletedSubmissionIds: new Set<string>(),
-            error,
-            isError: true,
-            isLoading,
-            retry: () => mutate(),
-        }
-    }
-
     return {
         challengeSubmissions: filteredSubmissions,
         deletedLegacySubmissionIds,
         deletedSubmissionIds,
-        error,
-        isError: false,
         isLoading,
-        retry: () => mutate(),
     }
 }

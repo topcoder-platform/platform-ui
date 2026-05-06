@@ -30,7 +30,6 @@ export interface Scorecard {
 }
 
 export interface Workflow {
-    disabled?: boolean
     id: string
     name: string
     scorecardId?: string

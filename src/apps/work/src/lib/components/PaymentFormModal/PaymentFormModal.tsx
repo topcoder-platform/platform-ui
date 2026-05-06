@@ -18,9 +18,6 @@ import {
 } from '~/libs/ui'
 
 import {
-    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED,
-} from '../../constants'
-import {
     Assignment,
 } from '../../models'
 import {
@@ -28,10 +25,7 @@ import {
     getAssignmentRatePerHour,
     getAssignmentStandardHoursPerWeek,
 } from '../../utils'
-import {
-    calculatePaymentChallengeFee,
-    formatCurrency,
-} from '../../utils/payment.utils'
+import { formatCurrency } from '../../utils/payment.utils'
 
 import styles from './PaymentFormModal.module.scss'
 
@@ -44,7 +38,6 @@ export interface PaymentFormData {
 
 interface PaymentFormModalProps {
     billingAccountId?: number | string
-    billingAccountMarkup?: number
     engagementName?: string
     isSubmitting?: boolean
     member: Assignment | undefined
@@ -157,12 +150,6 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const amount = useMemo(
         () => calculatePaymentAmount(hoursWorked, ratePerHour),
         [hoursWorked, ratePerHour],
-    )
-    const challengeFee = useMemo(
-        () => (BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
-            ? calculatePaymentChallengeFee(amount, props.billingAccountMarkup)
-            : undefined),
-        [amount, props.billingAccountMarkup],
     )
     const paymentTitle = useMemo(
         () => {
@@ -294,14 +281,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         <span className={styles.infoLabel}>Rate Per Week</span>
                         <span className={styles.infoValue}>{formatCurrency(props.member?.agreementRate)}</span>
                     </div>
-                    {BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
-                        ? (
-                            <div className={styles.infoItem}>
-                                <span className={styles.infoLabel}>Billing Account</span>
-                                <span className={styles.infoValue}>{props.billingAccountId || 'Unavailable'}</span>
-                            </div>
-                        )
-                        : undefined}
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Billing Account</span>
+                        <span className={styles.infoValue}>{props.billingAccountId || 'Unavailable'}</span>
+                    </div>
                 </div>
 
                 <div className={styles.fieldRow}>
@@ -375,15 +358,6 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             ? ''
                             : amount.toFixed(2)}
                     />
-                    {challengeFee !== undefined
-                        ? (
-                            <p className={styles.helperText}>
-                                <span className={styles.helperLabel}>Fee:</span>
-                                {' '}
-                                {formatCurrency(challengeFee)}
-                            </p>
-                        )
-                        : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>

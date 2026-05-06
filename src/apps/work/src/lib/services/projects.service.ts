@@ -23,7 +23,6 @@ import {
     Project,
     ProjectAttachment,
     ProjectAttachmentPayload,
-    ProjectDetails,
     ProjectInvite,
     ProjectMember,
     ProjectPhase,
@@ -45,7 +44,6 @@ export type ProjectSummary = Pick<Project,
     | 'billingAccountId'
     | 'billingAccountName'
     | 'createdAt'
-    | 'details'
     | 'id'
     | 'invites'
     | 'isInvited'
@@ -82,7 +80,6 @@ export interface ProjectBillingAccount {
     endDate?: string
     id?: string
     markup?: number
-    memberPaymentsRemaining?: number
     name?: string
     startDate?: string
     status?: string
@@ -189,21 +186,6 @@ function normalizeOptionalId(value: unknown): string | undefined {
     const normalizedValue = normalizeId(value)
 
     return normalizedValue || undefined
-}
-
-/**
- * Normalizes project details metadata into the plain object shape consumed by
- * the work app.
- *
- * @param value Raw `details` payload from the Projects API.
- * @returns Project details metadata, or `undefined` when the payload is not an object.
- */
-function normalizeProjectDetails(value: unknown): ProjectDetails | undefined {
-    if (typeof value !== 'object' || !value || Array.isArray(value)) {
-        return undefined
-    }
-
-    return value as ProjectDetails
 }
 
 function normalizeProjectMember(member: unknown): ProjectMember | undefined {
@@ -327,7 +309,6 @@ function normalizeProject(project: Partial<Project>): Project {
         description: typeof project.description === 'string'
             ? project.description
             : undefined,
-        details: normalizeProjectDetails(project.details),
         groups: normalizeProjectTermsOrGroups(project.groups),
         id,
         invites,
@@ -550,7 +531,6 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
 
     return {
         ...project,
-        details: normalizeProjectDetails(project.details),
         invites,
         isInvited: normalizeOptionalBoolean(project.isInvited),
         members,
@@ -790,7 +770,6 @@ export async function fetchProjectBillingAccount(
             endDate?: unknown
             id?: unknown
             markup?: unknown
-            memberPaymentsRemaining?: unknown
             name?: unknown
             startDate?: unknown
             status?: unknown
@@ -814,8 +793,6 @@ export async function fetchProjectBillingAccount(
             id: billingAccountId,
             markup: normalizeOptionalNumber(billingAccount?.markup)
                 ?? normalizeOptionalNumber(billingAccountDetails?.markup),
-            memberPaymentsRemaining: normalizeOptionalNumber(billingAccount?.memberPaymentsRemaining)
-                ?? normalizeOptionalNumber(billingAccountDetails?.memberPaymentsRemaining),
             name: normalizeOptionalString(billingAccount?.name)
                 || normalizeOptionalString(billingAccountDetails?.name),
             startDate: normalizeOptionalString(billingAccount?.startDate)
@@ -830,7 +807,6 @@ export async function fetchProjectBillingAccount(
             normalizedBillingAccount.active === undefined
             && !normalizedBillingAccount.id
             && normalizedBillingAccount.markup === undefined
-            && normalizedBillingAccount.memberPaymentsRemaining === undefined
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate

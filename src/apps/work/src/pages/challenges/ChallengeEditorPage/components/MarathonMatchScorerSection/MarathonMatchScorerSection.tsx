@@ -27,12 +27,10 @@ import {
     fetchMarathonMatchDefaults,
     fetchTester,
     fetchTesters,
-    rerunMarathonMatchScores,
     updateMarathonMatchConfig,
 } from '../../../../../lib/services'
 import {
     showErrorToast,
-    showInfoToast,
     showSuccessToast,
 } from '../../../../../lib/utils'
 
@@ -666,10 +664,8 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     })
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [isSaving, setIsSaving] = useState<boolean>(false)
-    const [isRerunning, setIsRerunning] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
-    const [rerunError, setRerunError] = useState<string | undefined>()
     const [testerLoadError, setTesterLoadError] = useState<string | undefined>()
     const [showNewTesterModal, setShowNewTesterModal] = useState<boolean>(false)
     const [showNewVersionModal, setShowNewVersionModal] = useState<boolean>(false)
@@ -1063,7 +1059,6 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         setIsLoading(true)
         setLoadError(undefined)
         setSaveError(undefined)
-        setRerunError(undefined)
         setTesterLoadError(undefined)
         setSelectedTester(undefined)
 
@@ -1255,55 +1250,6 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         ? maxTesterVersionByName[currentVersionTarget.name]
         : undefined
     const isReadyToSave = !!draft && !isSaving && !hasBlockingError && hasUnsavedChanges
-    const canRerunScores = !!config
-        && !hasUnsavedChanges
-        && !hasBlockingError
-        && !isRerunning
-
-    const handleRerunScores = useCallback(
-        async (): Promise<void> => {
-            if (!canRerunScores) {
-                return
-            }
-
-            setIsRerunning(true)
-            setRerunError(undefined)
-
-            try {
-                const rerunResponse = await rerunMarathonMatchScores(challengeId)
-                const failedCount = rerunResponse.results
-                    .filter(result => !!result.error)
-                    .length
-                const launchedCount = rerunResponse.submissionsQueued - failedCount
-
-                if (rerunResponse.submissionsQueued === 0) {
-                    showInfoToast('No latest submissions found to rerun')
-                } else if (failedCount > 0) {
-                    showErrorToast(
-                        `Rerun queued ${launchedCount}/${rerunResponse.submissionsQueued} submissions`,
-                    )
-                } else {
-                    showSuccessToast(`Rerun queued ${rerunResponse.submissionsQueued} submissions`)
-                }
-            } catch (error) {
-                const errorMessage = getErrorMessage(error, 'Failed to rerun marathon match scores')
-
-                setRerunError(errorMessage)
-                showErrorToast(errorMessage)
-            } finally {
-                setIsRerunning(false)
-            }
-        },
-        [
-            canRerunScores,
-            challengeId,
-        ],
-    )
-
-    const handleRerunScoresClick = useCallback((): void => {
-        handleRerunScores()
-            .catch(() => undefined)
-    }, [handleRerunScores])
 
     if (loadError && !draft) {
         return <div className={styles.error}>{loadError}</div>
@@ -1412,10 +1358,6 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     ? <div className={styles.error}>{testerLoadError}</div>
                     : undefined}
 
-                {rerunError
-                    ? <div className={styles.error}>{rerunError}</div>
-                    : undefined}
-
                 {selectedTester
                     ? (
                         <div className={styles.summaryGrid}>
@@ -1441,26 +1383,6 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     : testers.length === 0
                         ? <div className={styles.emptyState}>No scorers found yet. Create one to continue.</div>
                         : undefined}
-
-                {config
-                    ? (
-                        <div className={styles.rerunActions}>
-                            <div>
-                                <h4>Score Operations</h4>
-                                <p>Queue the latest submissions for scoring with the saved scorer config.</p>
-                            </div>
-                            <Button
-                                disabled={!canRerunScores}
-                                label={isRerunning ? 'Rerunning...' : 'Rerun scores'}
-                                loading={isRerunning}
-                                onClick={handleRerunScoresClick}
-                                secondary
-                                size='sm'
-                                type='button'
-                            />
-                        </div>
-                    )
-                    : undefined}
             </section>
 
             <section className={styles.sectionCard}>

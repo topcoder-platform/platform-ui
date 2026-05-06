@@ -24,7 +24,6 @@ export interface FormMarkdownEditorProps {
     name: string
     onBlur?: () => void
     placeholder?: string
-    readOnly?: boolean
     required?: boolean
     uploadCategory?: string
 }
@@ -38,7 +37,6 @@ export const FormMarkdownEditor: FC<FormMarkdownEditorProps> = (props: FormMarkd
     const name = props.name
     const onBlur = props.onBlur
     const placeholder = props.placeholder
-    const readOnly = props.readOnly
     const required = props.required
     const uploadCategory = props.uploadCategory
 
@@ -86,7 +84,6 @@ export const FormMarkdownEditor: FC<FormMarkdownEditorProps> = (props: FormMarkd
             <div className={styles.editor}>
                 <FieldMarkdownEditor
                     ariaLabel={label}
-                    className={styles.markdownEditor}
                     disabled={disabled}
                     error={fieldState.error?.message}
                     hideErrorMessage
@@ -96,7 +93,6 @@ export const FormMarkdownEditor: FC<FormMarkdownEditorProps> = (props: FormMarkd
                     onBlur={handleBlur}
                     onChange={field.onChange}
                     placeholder={placeholder}
-                    readOnly={readOnly}
                     showBorder
                     uploadAttachment={handleUploadAttachment}
                     uploadCategory={uploadCategory}

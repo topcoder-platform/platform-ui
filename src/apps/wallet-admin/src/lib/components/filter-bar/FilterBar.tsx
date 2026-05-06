@@ -151,20 +151,8 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     size='lg'
                 />
             )}
-            <Button
-                primary
-                className={styles.resetButton}
-                label='Reset'
-                size='lg'
-                disabled={props.hasActiveFilters === undefined ? selectedValue.size === 0 : !props.hasActiveFilters}
-                onClick={() => {
-                    selectedMembers.current = []
-                    setSelectedValue(new Map())
-                    props.onResetFilters?.()
-                }}
-            />
             {selectionActions.length > 0 && (
-                <div className={styles.taskApproveBtns}>
+                <>
                     {selectionActions.map(action => (
                         <Button
                             key={action.key}
@@ -177,8 +165,20 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                             onClick={action.onClick}
                         />
                     ))}
-                </div>
+                </>
             )}
+            <Button
+                primary
+                className={styles.resetButton}
+                label='Reset'
+                size='lg'
+                disabled={props.hasActiveFilters === undefined ? selectedValue.size === 0 : !props.hasActiveFilters}
+                onClick={() => {
+                    selectedMembers.current = []
+                    setSelectedValue(new Map())
+                    props.onResetFilters?.()
+                }}
+            />
         </div>
     )
 }

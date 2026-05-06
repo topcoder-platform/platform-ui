@@ -6,9 +6,3 @@ export * from './number'
 export * from './string'
 export * from './others'
 export * from './access'
-export {
-    administratorOnlyRoles,
-    adminReportsAccessRoles,
-    canAccessAdminReports,
-    isAdministrator,
-} from './access'

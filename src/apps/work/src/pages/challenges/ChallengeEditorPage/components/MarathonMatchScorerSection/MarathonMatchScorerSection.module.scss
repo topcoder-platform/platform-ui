@@ -110,16 +110,14 @@
 
 .inlineActions,
 .footerActions,
-.modalActions,
-.rerunActions {
+.modalActions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
 .inlineActions,
-.footerActions,
-.rerunActions {
+.footerActions {
     align-items: flex-end;
     justify-content: flex-end;
 }
@@ -226,24 +224,6 @@
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-}
-
-.rerunActions {
-    border-top: 1px solid $black-10;
-    justify-content: space-between;
-    padding-top: 16px;
-}
-
-.rerunActions h4 {
-    color: $black-80;
-    margin: 0;
-}
-
-.rerunActions p {
-    color: $black-60;
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 4px 0 0;
 }
 
 .validationCard {

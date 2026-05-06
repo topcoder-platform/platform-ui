@@ -40,9 +40,7 @@ export function useFetchChallenge(challengeId?: string): UseFetchChallengeResult
         )
 
     return {
-        challenge: error
-            ? undefined
-            : data,
+        challenge: data,
         error,
         isError: !!error,
         isLoading: !!challengeId && !data && !error,

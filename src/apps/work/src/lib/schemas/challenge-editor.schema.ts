@@ -59,7 +59,7 @@ const prizeSetSchema = yup.object({
         .default([])
         .test(
             'descending-prizes',
-            'Placement prizes must stay the same or decrease for lower placements',
+            'Placement prizes must be in descending order',
             function validateDescendingPrizes(prizes: unknown): boolean {
                 const prizeSetType = this.parent?.type
 
@@ -78,7 +78,7 @@ const prizeSetSchema = yup.object({
                     if (
                         previousValue > 0
                         && currentValue > 0
-                        && currentValue > previousValue
+                        && currentValue >= previousValue
                     ) {
                         return false
                     }

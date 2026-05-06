@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { PropsWithChildren } from 'react'
 import {
-    fireEvent,
     render,
     screen,
     waitFor,
@@ -37,24 +36,10 @@ function createWrapper(cache: Map<string, unknown>) {
 }
 
 const TestComponent = (): JSX.Element => {
-    const {
-        challenge,
-        error,
-        mutate,
-    }: UseFetchChallengeResult = useFetchChallenge('challenge-1')
-
-    function handleRefresh(): void {
-        mutate()
-            .catch(() => undefined)
-    }
+    const { challenge }: UseFetchChallengeResult = useFetchChallenge('challenge-1')
 
     return (
-        <>
-            <button onClick={handleRefresh} type='button'>
-                Refresh
-            </button>
-            <div>{error?.message || challenge?.name || 'Loading'}</div>
-        </>
+        <div>{challenge?.name || 'Loading'}</div>
     )
 }
 
@@ -99,35 +84,5 @@ describe('useFetchChallenge', () => {
             expect(mockedFetchChallenge)
                 .toHaveBeenCalledTimes(2)
         })
-    })
-
-    it('does not expose cached challenge details after a fresh fetch errors', async () => {
-        const cache = new Map<string, unknown>()
-        const wrapper = createWrapper(cache)
-
-        mockedFetchChallenge
-            .mockResolvedValueOnce({
-                id: 'challenge-1',
-                name: 'Restricted challenge',
-            } as never)
-            .mockRejectedValueOnce(new Error('Forbidden'))
-
-        render(<TestComponent />, {
-            wrapper,
-        })
-
-        await waitFor(() => {
-            expect(screen.getByText('Restricted challenge'))
-                .toBeTruthy()
-        })
-
-        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
-
-        await waitFor(() => {
-            expect(screen.queryByText('Restricted challenge'))
-                .toBeNull()
-        })
-        expect(screen.getByText('Forbidden'))
-            .toBeTruthy()
     })
 })

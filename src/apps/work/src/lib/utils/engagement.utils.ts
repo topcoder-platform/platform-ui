@@ -394,15 +394,11 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
 
     const skills = normalizeEngagementSkills(data)
 
-    const assignedMemberHandles = assignments.length > 0
-        ? getCountableEngagementAssignments(assignments)
-            .map(assignment => normalizeString(assignment.memberHandle))
+    const assignedMemberHandles = Array.isArray(data.assignedMemberHandles)
+        ? data.assignedMemberHandles
+            .map(value => normalizeString(value))
             .filter(Boolean)
-        : (Array.isArray(data.assignedMemberHandles)
-            ? data.assignedMemberHandles
-                .map(value => normalizeString(value))
-                .filter(Boolean)
-            : [])
+        : []
 
     const countries = Array.isArray(data.countries)
         ? data.countries

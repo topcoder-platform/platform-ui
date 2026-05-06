@@ -15,11 +15,7 @@ import classNames from 'classnames'
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { TabsNavItem } from '~/libs/ui'
 
-import {
-    billingAccountsPageRouteId,
-    bulkMemberLookupRouteId,
-    reportsPageRouteId,
-} from '../../../config/routes.config'
+import { bulkMemberLookupRouteId, reportsPageRouteId } from '../../../config/routes.config'
 
 import styles from './NavTabs.module.scss'
 
@@ -37,10 +33,6 @@ const NavTabs: FC = () => {
         {
             id: bulkMemberLookupRouteId,
             title: 'Bulk Member Lookup',
-        },
-        {
-            id: billingAccountsPageRouteId,
-            title: 'Billing Accounts',
         },
     ], [])
 

@@ -26,7 +26,7 @@ interface CollapsibleAiReviewsRowProps {
 
 export function normalizeDecisionStatus(
     status?: AiReviewDecisionStatus,
-): 'passed' | 'failed-score' | 'pending' | 'failed' | 'human-override' {
+): 'passed' | 'failed-score' | 'pending' | 'failed' {
     if (!status || status === 'PENDING') {
         return 'pending'
     }
@@ -41,10 +41,6 @@ export function normalizeDecisionStatus(
 
     if (status === 'ERROR') {
         return 'failed'
-    }
-
-    if (status === 'HUMAN_OVERRIDE') {
-        return 'human-override'
     }
 
     return 'pending'

@@ -32,11 +32,6 @@ jest.mock('../../assets/icons/IconSquareDownload.svg', () => ({
 }), {
     virtual: true,
 })
-jest.mock('../../assets/icons/IconRunnerLogs.svg', () => ({
-    ReactComponent: () => <svg aria-hidden='true' />,
-}), {
-    virtual: true,
-})
 jest.mock('./SubmissionsTable.module.scss', () => new Proxy({}, {
     get: (_target, property) => String(property),
 }))
@@ -146,62 +141,5 @@ describe('SubmissionsTable', () => {
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Download submission artifacts' }))
             .toBeTruthy()
-    })
-
-    it('renders and triggers the runner logs action when enabled', () => {
-        const onOpenRunnerLogs = jest.fn()
-
-        render(
-            <SubmissionsTable
-                canDownloadSubmissions
-                canViewRunnerLogs
-                challengeId='challenge-123'
-                onDownloadSubmission={jest.fn()}
-                onOpenArtifacts={jest.fn()}
-                onOpenRunnerLogs={onOpenRunnerLogs}
-                onSort={jest.fn()}
-                sortBy='createdAt'
-                sortOrder='desc'
-                submissions={[
-                    {
-                        challengeId: 'challenge-123',
-                        createdBy: 'member-1',
-                        id: 'submission-1',
-                        type: 'SUBMISSION',
-                    },
-                ]}
-            />,
-        )
-
-        screen.getByRole('button', { name: 'View runner logs' })
-            .click()
-
-        expect(onOpenRunnerLogs)
-            .toHaveBeenCalledWith('submission-1')
-    })
-
-    it('hides the runner logs action when disabled', () => {
-        render(
-            <SubmissionsTable
-                canDownloadSubmissions
-                challengeId='challenge-123'
-                onDownloadSubmission={jest.fn()}
-                onOpenArtifacts={jest.fn()}
-                onSort={jest.fn()}
-                sortBy='createdAt'
-                sortOrder='desc'
-                submissions={[
-                    {
-                        challengeId: 'challenge-123',
-                        createdBy: 'member-1',
-                        id: 'submission-1',
-                        type: 'SUBMISSION',
-                    },
-                ]}
-            />,
-        )
-
-        expect(screen.queryByRole('button', { name: 'View runner logs' }))
-            .toBeNull()
     })
 })

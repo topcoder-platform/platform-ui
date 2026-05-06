@@ -7,18 +7,6 @@ import _ from 'lodash'
 import { SUBMISSION_REPROCESS_TOPICS } from '../../config/busEvent.config'
 import { Challenge, MemberSubmission } from '../models'
 
-const CONTEST_SUBMISSION_TYPE = 'CONTEST_SUBMISSION'
-const CHECKPOINT_SUBMISSION_TYPE = 'CHECKPOINT_SUBMISSION'
-const CHECKPOINT_MANUAL_UPLOAD_PHASES = new Set([
-    'checkpoint screening',
-    'checkpoint review',
-])
-
-const normalizePhaseName = (value?: string): string => (
-    value?.trim()
-        .toLowerCase() ?? ''
-)
-
 /**
  * Check if the challenge is a marathon match challenge
  * @param challenge challenge info
@@ -53,29 +41,6 @@ export function getSubmissionReprocessTopic(
     }
 
     return undefined
-}
-
-/**
- * Resolve the submission type used by the admin manual-upload flow.
- * Checkpoint uploads are only valid once checkpoint review phases are active,
- * so the admin UI switches to checkpoint submission type whenever the
- * challenge is currently in Checkpoint Screening or Checkpoint Review.
- * @param challenge challenge info
- * @returns submission type expected by review-api-v6 manual upload endpoint
- */
-export function resolveManualUploadSubmissionType(
-    challenge?: Challenge,
-): string {
-    const hasOpenCheckpointManualUploadPhase = (challenge?.phases ?? []).some(
-        phase => phase?.isOpen
-            && CHECKPOINT_MANUAL_UPLOAD_PHASES.has(
-                normalizePhaseName(phase?.name),
-            ),
-    )
-
-    return hasOpenCheckpointManualUploadPhase
-        ? CHECKPOINT_SUBMISSION_TYPE
-        : CONTEST_SUBMISSION_TYPE
 }
 
 /**

@@ -10,7 +10,6 @@ import {
 import {
     useFormContext,
 } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 
 import {
     FormCheckboxField,
@@ -33,11 +32,6 @@ interface EngagementPrivateSectionForm {
     assignmentDetails: AssignmentDetailsFormValue[]
     isPrivate: boolean
     requiredMemberCount?: number | string
-}
-
-interface EngagementPrivateSectionProps {
-    assignmentManagementPath?: string
-    lockedAssignedMemberHandles?: string[]
 }
 
 function toNumber(value: unknown): number {
@@ -89,22 +83,6 @@ function getAssignmentLabel(index: number, count: number): string {
 }
 
 /**
- * Normalizes persisted assignment handles before comparing them against form slots.
- *
- * @param handles member handles from existing active assignment rows.
- * @returns trimmed member handles, preserving slot order.
- */
-function normalizeLockedAssignedMemberHandles(
-    handles: string[] | undefined,
-): string[] {
-    return Array.isArray(handles)
-        ? handles.map(handle => String(handle || '')
-            .trim())
-            .filter(Boolean)
-        : []
-}
-
-/**
  * Creates an empty assignment-details value for form slots that no longer map
  * to the currently selected member handle.
  *
@@ -122,21 +100,13 @@ function createEmptyAssignmentDetails(): AssignmentDetailsFormValue {
     }
 }
 
-export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
-    props: EngagementPrivateSectionProps,
-) => {
+export const EngagementPrivateSection: FC = () => {
     const formContext = useFormContext<EngagementPrivateSectionForm>()
 
     const [activeAssignmentIndex, setActiveAssignmentIndex] = useState<number | undefined>()
 
     const isPrivate = formContext.watch('isPrivate') === true
     const requiredMemberCount = toNumber(formContext.watch('requiredMemberCount'))
-    const lockedAssignedMemberHandles = useMemo(
-        () => normalizeLockedAssignedMemberHandles(props.lockedAssignedMemberHandles),
-        [props.lockedAssignedMemberHandles],
-    )
-    const lockedAssignmentCount = lockedAssignedMemberHandles.length
-    const hasLockedAssignments = lockedAssignmentCount > 0
 
     const assignedMemberHandles = formContext.watch('assignedMemberHandles') || []
     const assignmentDetails = formContext.watch('assignmentDetails') || []
@@ -148,11 +118,8 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
     )?.message
 
     const assignmentIndices = useMemo(
-        () => Array.from(
-            { length: Math.max(requiredMemberCount, lockedAssignmentCount) },
-            (_, index) => index,
-        ),
-        [lockedAssignmentCount, requiredMemberCount],
+        () => Array.from({ length: requiredMemberCount }, (_, index) => index),
+        [requiredMemberCount],
     )
 
     useEffect(() => {
@@ -160,19 +127,10 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
             return
         }
 
-        if (
-            requiredMemberCount < 1
-            || activeAssignmentIndex >= Math.max(requiredMemberCount, lockedAssignmentCount)
-            || lockedAssignedMemberHandles[activeAssignmentIndex]
-        ) {
+        if (requiredMemberCount < 1 || activeAssignmentIndex >= requiredMemberCount) {
             setActiveAssignmentIndex(undefined)
         }
-    }, [
-        activeAssignmentIndex,
-        lockedAssignedMemberHandles,
-        lockedAssignmentCount,
-        requiredMemberCount,
-    ])
+    }, [activeAssignmentIndex, requiredMemberCount])
 
     const activeMemberHandle = activeAssignmentIndex !== undefined
         ? assignedMemberHandles[activeAssignmentIndex]
@@ -195,7 +153,6 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
             <h3 className={styles.sectionTitle}>Private</h3>
 
             <FormCheckboxField
-                disabled={hasLockedAssignments}
                 label='Private engagement'
                 name='isPrivate'
             />
@@ -203,14 +160,12 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
             {isPrivate
                 ? (
                     <>
-                        {assignmentIndices.length > 0
+                        {requiredMemberCount > 0
                             ? (
                                 <>
                                     <div className={styles.assignmentList}>
                                         {assignmentIndices.map(index => {
-                                            const lockedMemberHandle = lockedAssignedMemberHandles[index]
-                                            const isLockedAssignment = !!lockedMemberHandle
-                                            const memberHandle = lockedMemberHandle || assignedMemberHandles[index]
+                                            const memberHandle = assignedMemberHandles[index]
                                             const nextAssignmentDetail = assignmentDetails[index]
                                             const assignmentDetail = (
                                                 nextAssignmentDetail
@@ -223,45 +178,32 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                             return (
                                                 <div key={`assignment-row-${index}`} className={styles.assignmentRow}>
                                                     <div className={styles.assignmentInput}>
-                                                        {isLockedAssignment
-                                                            ? (
-                                                                <div className={styles.readOnlyAssignment}>
-                                                                    <span className={styles.readOnlyLabel}>
-                                                                        {getAssignmentLabel(index, assignmentIndices.length)}
-                                                                    </span>
-                                                                    <span className={styles.readOnlyValue}>
-                                                                        {lockedMemberHandle}
-                                                                    </span>
-                                                                </div>
-                                                            )
-                                                            : (
-                                                                <FormUserAutocomplete
-                                                                    label={getAssignmentLabel(index, assignmentIndices.length)}
-                                                                    name={`assignedMemberHandles.${index}`}
-                                                                    onValueChange={value => {
-                                                                        if (value === memberHandle) {
-                                                                            return
-                                                                        }
+                                                        <FormUserAutocomplete
+                                                            label={getAssignmentLabel(index, requiredMemberCount)}
+                                                            name={`assignedMemberHandles.${index}`}
+                                                            onValueChange={value => {
+                                                                if (value === memberHandle) {
+                                                                    return
+                                                                }
 
-                                                                        const nextAssignmentDetails = [...assignmentDetails]
-                                                                        nextAssignmentDetails[index] = createEmptyAssignmentDetails()
+                                                                const nextAssignmentDetails = [...assignmentDetails]
+                                                                nextAssignmentDetails[index] = createEmptyAssignmentDetails()
 
-                                                                        formContext.setValue('assignmentDetails', nextAssignmentDetails, {
-                                                                            shouldDirty: true,
-                                                                            shouldValidate: true,
-                                                                        })
+                                                                formContext.setValue('assignmentDetails', nextAssignmentDetails, {
+                                                                    shouldDirty: true,
+                                                                    shouldValidate: true,
+                                                                })
 
-                                                                        if (!value) {
-                                                                            return
-                                                                        }
+                                                                if (!value) {
+                                                                    return
+                                                                }
 
-                                                                        setActiveAssignmentIndex(index)
-                                                                    }}
-                                                                    placeholder='Search user handle'
-                                                                    required
-                                                                    valueField='handle'
-                                                                />
-                                                            )}
+                                                                setActiveAssignmentIndex(index)
+                                                            }}
+                                                            placeholder='Search user handle'
+                                                            required
+                                                            valueField='handle'
+                                                        />
                                                     </div>
 
                                                     <div className={styles.assignmentActions}>
@@ -297,48 +239,30 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                                                         {' '}
                                                                         {formatCurrency(assignmentDetail.agreementRate)}
                                                                     </span>
-                                                                    {!isLockedAssignment
-                                                                        ? (
-                                                                            <button
-                                                                                className={styles.editLink}
-                                                                                onClick={() => setActiveAssignmentIndex(index)}
-                                                                                type='button'
-                                                                            >
-                                                                                Edit
-                                                                            </button>
-                                                                        )
-                                                                        : undefined}
+                                                                    <button
+                                                                        className={styles.editLink}
+                                                                        onClick={() => setActiveAssignmentIndex(index)}
+                                                                        type='button'
+                                                                    >
+                                                                        Edit
+                                                                    </button>
                                                                 </div>
                                                             )
                                                             : (
-                                                                isLockedAssignment
-                                                                    ? undefined
-                                                                    : (
-                                                                        <>
-                                                                            <button
-                                                                                className={styles.actionButton}
-                                                                                disabled={!memberHandle}
-                                                                                onClick={() => setActiveAssignmentIndex(index)}
-                                                                                type='button'
-                                                                            >
-                                                                                Add Details
-                                                                            </button>
-                                                                            <div className={styles.detailsText}>
-                                                                                No details added
-                                                                            </div>
-                                                                        </>
-                                                                    )
+                                                                <>
+                                                                    <button
+                                                                        className={styles.actionButton}
+                                                                        disabled={!memberHandle}
+                                                                        onClick={() => setActiveAssignmentIndex(index)}
+                                                                        type='button'
+                                                                    >
+                                                                        Add Details
+                                                                    </button>
+                                                                    <div className={styles.detailsText}>
+                                                                        No details added
+                                                                    </div>
+                                                                </>
                                                             )}
-                                                        {isLockedAssignment && props.assignmentManagementPath
-                                                            ? (
-                                                                <Link
-                                                                    className={styles.assignmentLink}
-                                                                    to={props.assignmentManagementPath}
-                                                                >
-                                                                    Assignments
-                                                                </Link>
-                                                            )
-                                                            : undefined}
                                                     </div>
                                                 </div>
                                             )

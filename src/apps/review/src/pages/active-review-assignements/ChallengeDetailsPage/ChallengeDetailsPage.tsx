@@ -23,7 +23,6 @@ import {
     ChallengeDetailsContent,
     ChallengeLinks,
     ChallengePhaseInfo,
-    ChallengeScopedErrorState,
     ChallengeTimeline,
     ChallengeTimelineAction,
     ChallengeTimelineRow,
@@ -281,8 +280,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         myResources,
         challengeSubmissions,
         isLoadingChallengeSubmissions,
-        hasChallengeScopedFetchError,
-        retryChallengeScopedFetches,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole }: useRoleProps = useRole()
@@ -1793,14 +1790,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
             className={classNames(styles.container, props.className)}
-            titleUrl={challengeInfo && !hasChallengeScopedFetchError
-                ? `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`
-                : undefined}
+            titleUrl={`${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`}
             breadCrumb={breadCrumb}
         >
-            {hasChallengeScopedFetchError ? (
-                <ChallengeScopedErrorState onRetry={retryChallengeScopedFetches} />
-            ) : isLoadingChallengeInfo ? (
+            {isLoadingChallengeInfo ? (
                 <TableLoading />
             ) : (!isLoadingAnything && hasChallengeInfo && !canViewChallenge) ? (
                 <div className={styles.permissionDeniedMessage}>

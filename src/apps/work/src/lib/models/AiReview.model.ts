@@ -37,7 +37,6 @@ export interface AiReviewTemplate {
     challengeTrack: string
     challengeType: string
     createdAt?: string | Date
-    disabled?: boolean
     description: string
     formula?: Record<string, unknown>
     id: string

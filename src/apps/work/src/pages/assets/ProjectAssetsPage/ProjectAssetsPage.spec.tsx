@@ -4,7 +4,6 @@ import type { Context, PropsWithChildren, ReactNode } from 'react'
 import {
     render,
     screen,
-    within,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -14,10 +13,6 @@ import {
     useFetchProjectAttachments,
     useFetchProjectMembers,
 } from '../../../lib/hooks'
-import {
-    checkCanEditProjectDetails,
-    checkCanManageProject,
-} from '../../../lib/utils'
 
 import { ProjectAssetsPage } from './ProjectAssetsPage'
 
@@ -121,15 +116,12 @@ jest.mock('../../../lib/services', () => ({
     updateProjectAttachment: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
-    checkCanEditProjectDetails: jest.fn(() => false),
     checkCanManageProject: jest.fn(() => false),
 }))
 
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjectAttachments = useFetchProjectAttachments as jest.Mock
 const mockedUseFetchProjectMembers = useFetchProjectMembers as jest.Mock
-const mockedCheckCanEditProjectDetails = checkCanEditProjectDetails as jest.Mock
-const mockedCheckCanManageProject = checkCanManageProject as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: true,
@@ -168,8 +160,6 @@ function renderPage(
 describe('ProjectAssetsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
-        mockedCheckCanEditProjectDetails.mockReturnValue(false)
-        mockedCheckCanManageProject.mockReturnValue(false)
 
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
@@ -210,63 +200,5 @@ describe('ProjectAssetsPage', () => {
             .toBeNull()
         expect(screen.getByText('Assets Library'))
             .toBeTruthy()
-    })
-
-    it('hides project edit action when a copilot can manage but cannot edit project details', () => {
-        mockedCheckCanManageProject.mockReturnValue(true)
-        mockedUseFetchProject.mockReturnValue({
-            error: undefined,
-            isLoading: false,
-            mutate: jest.fn(),
-            project: {
-                id: 200,
-                members: [
-                    {
-                        role: 'copilot',
-                        userId: 12345,
-                    },
-                ],
-                name: 'Copilot Project',
-            },
-        })
-
-        renderPage('/projects/200/assets', {
-            ...defaultContextValue,
-            isAdmin: false,
-            isCopilot: true,
-            loginUserInfo: {
-                email: 'copilot@example.com',
-                exp: 0,
-                handle: 'copilot-user',
-                iat: 0,
-                roles: ['copilot'],
-                userId: 12345,
-            } as WorkAppContextModel['loginUserInfo'],
-            userRoles: ['copilot'],
-        })
-
-        expect(within(screen.getByTestId('page-title-action'))
-            .queryByRole('link', { name: 'Edit project' }))
-            .toBeNull()
-    })
-
-    it('shows project edit action when project detail editing is allowed', () => {
-        mockedCheckCanEditProjectDetails.mockReturnValue(true)
-        mockedUseFetchProject.mockReturnValue({
-            error: undefined,
-            isLoading: false,
-            mutate: jest.fn(),
-            project: {
-                id: 200,
-                name: 'Payment Testing',
-            },
-        })
-
-        renderPage('/projects/200/assets')
-
-        expect(within(screen.getByTestId('page-title-action'))
-            .getByRole('link', { name: 'Edit project' })
-            .getAttribute('href'))
-            .toBe('/projects/200/edit')
     })
 })

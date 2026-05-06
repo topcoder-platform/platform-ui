@@ -8,17 +8,11 @@ import { AiReviewConfig, AiReviewDecision } from './AiReview.model'
  */
 export interface ChallengeDetailContextModel {
     challengeId?: string
-    challengeInfoError?: Error
     isLoadingChallengeInfo: boolean
-    challengeResourcesError?: Error
     isLoadingChallengeResources: boolean
     challengeInfo?: ChallengeInfo
     challengeSubmissions: BackendSubmission[]
-    challengeSubmissionsError?: Error
     isLoadingChallengeSubmissions: boolean
-    challengeScopedFetchError?: Error
-    hasChallengeScopedFetchError: boolean
-    retryChallengeScopedFetches: () => void
     myResources: BackendResource[]
     myRoles: string[]
     resources: BackendResource[]

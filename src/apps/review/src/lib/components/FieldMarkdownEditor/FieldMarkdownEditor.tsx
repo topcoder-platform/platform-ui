@@ -51,7 +51,6 @@ interface Props {
     maxCharactersAllowed?: number
     textareaId?: string
     ariaLabel?: string
-    readOnly?: boolean
 }
 const errorMessages = {
     fileTooLarge:
@@ -153,24 +152,10 @@ const toggleStrategy = {
 }
 
 type CodeMirrorType = keyof typeof stateStrategy | 'variable-2'
-type UploadImageHandler = (file: File) => Promise<void>
-
-const readOnlyUploadEvents = [
-    'dragend',
-    'dragenter',
-    'dragleave',
-    'dragover',
-    'drop',
-    'paste',
-]
 
 export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     const elementRef = useRef<HTMLTextAreaElement>(null)
     const easyMDE = useRef<any>(null)
-    const customUploadImageRef = useRef<UploadImageHandler>(async () => undefined)
-    const isReadOnlyRef = useRef(false)
-    const isReadOnly = !!props.disabled || !!props.readOnly
-    isReadOnlyRef.current = isReadOnly
     const [remainingCharacters, setRemainingCharacters] = useState(
         (props.maxCharactersAllowed || 0) - (props.initialValue?.length || 0),
     )
@@ -542,10 +527,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
      * Upload image
      */
     const customUploadImage = useCallback(async (file: File) => {
-        if (isReadOnlyRef.current) {
-            return
-        }
-
         const editor = easyMDE.current
         if (!editor) {
             return
@@ -670,7 +651,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         uploadAttachment,
         uploadCategory,
     ])
-    customUploadImageRef.current = customUploadImage
 
     useOnComponentDidMount(() => {
         easyMDE.current = new EasyMDE({
@@ -693,7 +673,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 sbProgress: 'Uploading #file_name#: #progress#%',
                 sizeUnits: ' B, KB, MB',
             },
-            imageUploadFunction: file => customUploadImageRef.current(file),
+            imageUploadFunction: file => customUploadImage(file),
             initialValue: props.initialValue ?? '',
             insertTexts: {
                 file: ['[](', '#url#)'],
@@ -890,39 +870,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
 
     useEffect(() => {
         if (!easyMDE.current) {
-            return undefined
-        }
-
-        easyMDE.current.codemirror.setOption('readOnly', isReadOnly
-            ? 'nocursor'
-            : false)
-
-        const wrapper = easyMDE.current.codemirror.getWrapperElement()
-        const blockReadOnlyUpload = (event: Event): void => {
-            if (!isReadOnlyRef.current) {
-                return
-            }
-
-            event.preventDefault()
-            event.stopPropagation()
-            event.stopImmediatePropagation()
-        }
-
-        if (isReadOnly) {
-            readOnlyUploadEvents.forEach(eventName => {
-                wrapper.addEventListener(eventName, blockReadOnlyUpload, true)
-            })
-        }
-
-        return () => {
-            readOnlyUploadEvents.forEach(eventName => {
-                wrapper.removeEventListener(eventName, blockReadOnlyUpload, true)
-            })
-        }
-    }, [isReadOnly])
-
-    useEffect(() => {
-        if (!easyMDE.current) {
             return
         }
 
@@ -939,7 +886,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             className={classNames(styles.container, props.className, {
                 [styles.isError]: !!props.error,
                 [styles.disabled]: !!props.disabled,
-                [styles.readOnly]: !!props.readOnly,
                 [styles.showBorder]: !!props.showBorder,
             })}
         >

@@ -1,13 +1,7 @@
-import {
-    FC,
-    useCallback,
-} from 'react'
+import { FC } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 
-import {
-    ErrorMessage,
-    LoadingSpinner,
-} from '../../../lib/components'
+import { LoadingSpinner } from '../../../lib/components'
 import {
     useFetchChallenge,
     UseFetchChallengeResult,
@@ -54,26 +48,12 @@ function buildProjectChallengeViewPath(projectId: string, challengeId: string): 
     return `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/view`
 }
 
-/**
- * Resolves the generic challenge-load error text for the redirect helper.
- *
- * @param error challenge fetch error returned by the challenge hook.
- * @returns an error message suitable for the existing work app error panel.
- */
-function getChallengeErrorMessage(error: Error | undefined): string {
-    return error?.message || 'Something went wrong while loading the challenge.'
-}
-
 export const ChallengeRouteRedirectPage: FC = () => {
     const routeParams: Readonly<{
         challengeId?: string
     }> = useParams<'challengeId'>()
     const challengeId = normalizeRouteParam(routeParams.challengeId)
     const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
-    const handleRetry = useCallback((): void => {
-        challengeResult.mutate()
-            .catch(() => undefined)
-    }, [challengeResult])
 
     if (!challengeId) {
         return <Navigate replace to='/challenges' />
@@ -81,15 +61,6 @@ export const ChallengeRouteRedirectPage: FC = () => {
 
     if (challengeResult.isLoading) {
         return <LoadingSpinner />
-    }
-
-    if (challengeResult.isError) {
-        return (
-            <ErrorMessage
-                message={getChallengeErrorMessage(challengeResult.error)}
-                onRetry={handleRetry}
-            />
-        )
     }
 
     const projectId = normalizeProjectId(challengeResult.challenge?.projectId)
