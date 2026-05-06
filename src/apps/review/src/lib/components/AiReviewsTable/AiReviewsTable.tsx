@@ -315,7 +315,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 {!reviewerRows.length && loading && (
                     <div className={styles.mobileLoading}>Loading...</div>
                 )}
-
                 {reviewerRows.map(row => (
                     <div
                         key={row.id}
