@@ -6,6 +6,7 @@ export interface ProjectEditorSchemaData {
     billingAccountId?: string
     name: string
     description: string
+    displayMemberPaymentDetailsToCopilots?: boolean
     type?: string
     status?: string
     cancelReason?: string
@@ -21,7 +22,7 @@ export function createProjectEditorSchema(
         .object({
             billingAccountId: yup
                 .string()
-                .required('Billing account is required'),
+                .optional(),
             cancelReason: yup
                 .string()
                 .when('status', {
@@ -32,6 +33,9 @@ export function createProjectEditorSchema(
             description: yup
                 .string()
                 .required('Description is required'),
+            displayMemberPaymentDetailsToCopilots: yup
+                .boolean()
+                .optional(),
             groups: yup
                 .array()
                 .of(yup.string()

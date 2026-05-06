@@ -12,6 +12,10 @@ jest.mock('../../hooks', () => ({
     useFetchAssignmentPayments: (...args: unknown[]): unknown => mockUseFetchAssignmentPayments(...args),
 }))
 
+jest.mock('../../constants', () => ({
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: true,
+}))
+
 jest.mock('~/libs/ui', () => ({
     BaseModal: (props: {
         buttons?: JSX.Element
@@ -44,7 +48,7 @@ describe('PaymentHistoryModal', () => {
         mockUseFetchAssignmentPayments.mockReset()
     })
 
-    it('renders clickable remarks links and the payment creator handle', async () => {
+    it('renders clickable remarks links, the payment creator handle, and fee details', async () => {
         mockUseFetchAssignmentPayments.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -58,6 +62,13 @@ describe('PaymentHistoryModal', () => {
                     },
                     createdAt: '2026-03-31T00:00:00.000Z',
                     createdByHandle: 'payment.manager',
+                    details: [
+                        {
+                            challengeFee: 18.6,
+                            grossAmount: 120,
+                            totalAmount: 120,
+                        },
+                    ],
                     id: 'payment-1',
                     title: 'Salesforce support',
                 },
@@ -84,6 +95,10 @@ describe('PaymentHistoryModal', () => {
         expect(screen.getByText('Payment Creator:'))
             .toBeTruthy()
         expect(screen.getByText('payment.manager'))
+            .toBeTruthy()
+        expect(screen.getByText('Fee:'))
+            .toBeTruthy()
+        expect(screen.getByText('$18.60'))
             .toBeTruthy()
     })
 })

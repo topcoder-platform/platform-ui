@@ -132,6 +132,14 @@ jest.mock('../../../../lib/utils', () => ({
             ? 'On Hold'
             : status
     ),
+    getCountableEngagementAssignments: (assignments: Array<{ status?: string }> = []) => (
+        assignments.filter(assignment => !['COMPLETED', 'OFFER_REJECTED', 'TERMINATED'].includes(
+            String(assignment.status || '')
+                .trim()
+                .replace(/[\s-]+/g, '_')
+                .toUpperCase(),
+        ))
+    ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -490,6 +498,125 @@ describe('EngagementEditorForm', () => {
                     }),
                 )
         })
+    })
+
+    it('preserves existing assignments while keeping terminal history out of the edit payload', async () => {
+        const user = userEvent.setup()
+        const activeAssignment = {
+            agreementRate: '800',
+            durationMonths: 3,
+            endDate: '',
+            engagementId: 'engagement-history',
+            id: 'assignment-active',
+            memberHandle: 'active_member',
+            memberId: '111',
+            otherRemarks: 'active notes',
+            ratePerHour: '20',
+            standardHoursPerWeek: 40,
+            startDate: '2026-05-01T00:00:00.000Z',
+            status: 'ASSIGNED',
+            termsAccepted: true,
+        }
+        const terminatedAssignment = {
+            ...activeAssignment,
+            agreementRate: '600',
+            endDate: '2026-04-01T00:00:00.000Z',
+            id: 'assignment-terminated',
+            memberHandle: 'terminated_member',
+            memberId: '222',
+            status: 'TERMINATED',
+            terminationReason: 'Finished early',
+        }
+
+        mockedUpdateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: ['active_member'],
+            assignments: [activeAssignment, terminatedAssignment],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'History engagement description',
+            durationWeeks: 4,
+            id: 'engagement-history',
+            isPrivate: true,
+            projectId: '123',
+            requiredMemberCount: 2,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'Open',
+            timezones: ['America/New_York'],
+            title: 'History engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: ['active_member'],
+                        assignments: [activeAssignment, terminatedAssignment],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'History engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-history',
+                        isPrivate: true,
+                        projectId: '123',
+                        requiredMemberCount: 2,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'History engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const requiredMembersField = screen.getByLabelText('Required Members')
+
+        await user.clear(requiredMembersField)
+        await user.type(requiredMembersField, '0')
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedUpdateEngagement)
+                .toHaveBeenCalled()
+        })
+
+        const payload = mockedUpdateEngagement.mock.calls[0][1] as {
+            assignedMemberHandles?: string[]
+            assignmentDetails?: Array<{ memberHandle: string }>
+            requiredMemberCount?: number
+        }
+
+        expect(payload.requiredMemberCount)
+            .toBe(1)
+        expect(payload.assignedMemberHandles)
+            .toEqual(['active_member'])
+        expect(payload.assignmentDetails)
+            .toHaveLength(1)
+        expect(payload.assignmentDetails?.[0])
+            .toEqual(expect.objectContaining({
+                memberHandle: 'active_member',
+            }))
     })
 
     it('redirects to the saved parent project engagements list after creating an engagement', async () => {

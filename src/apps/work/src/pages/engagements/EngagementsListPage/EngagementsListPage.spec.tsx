@@ -22,6 +22,7 @@ import {
     canViewAllEngagements,
     checkTalentManager,
     formatEngagementStatus,
+    getAssignedMembersCount,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -182,6 +183,7 @@ const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
 const mockedCanViewAllEngagements = canViewAllEngagements as jest.Mock
 const mockedCheckTalentManager = checkTalentManager as jest.Mock
 const mockedFormatEngagementStatus = formatEngagementStatus as jest.Mock
+const mockedGetAssignedMembersCount = getAssignedMembersCount as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
 
@@ -517,6 +519,46 @@ describe('EngagementsListPage', () => {
         expect(screen.getByRole('link', { name: sampleEngagement.title })
             .getAttribute('href'))
             .toBe('/projects/200/engagements/111/assignments')
+    })
+
+    it('links zero assigned member counts to the assignees page when completed assignments exist', () => {
+        mockedGetAssignedMembersCount.mockReturnValue(0)
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    ...sampleEngagement,
+                    assignments: [
+                        {
+                            agreementRate: '1000',
+                            endDate: '2026-04-30T00:00:00.000Z',
+                            engagementId: 111,
+                            id: 'assignment-1',
+                            memberHandle: 'finished_member',
+                            memberId: 123,
+                            otherRemarks: '',
+                            startDate: '2026-04-01T00:00:00.000Z',
+                            status: 'COMPLETED',
+                            termsAccepted: true,
+                        },
+                    ],
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        const row = screen.getByText(sampleEngagement.title)
+            .closest('tr') as HTMLTableRowElement
+        const zeroCountLinks = within(row)
+            .getAllByRole('link', { name: '0' })
+
+        expect(zeroCountLinks.some(link => (
+            link.getAttribute('href') === '/projects/200/engagements/111/assignments'
+        )))
+            .toBe(true)
     })
 
     it('scopes all-engagements fetches to member projects for talent managers', async () => {

@@ -5,8 +5,10 @@ import type { Project } from '../models'
 import {
     canCreateEngagement,
     canViewAllEngagements,
+    checkCanEditProjectDetails,
     checkCanManageProject,
     checkIsUserInvitedToProject,
+    checkProjectAccess,
     checkProjectMembership,
     getProjectMemberRole,
 } from './permissions.utils'
@@ -39,6 +41,10 @@ describe('permissions.utils project management helpers', () => {
             {
                 role: 'customer',
                 userId: 456,
+            },
+            {
+                role: 'copilot',
+                userId: 789,
             },
         ],
         name: 'Managed project',
@@ -76,6 +82,20 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
     })
 
+    it('requires full access membership for project details edits', () => {
+        expect(checkCanEditProjectDetails(['Talent Manager'], '123', managedProject))
+            .toBe(true)
+        expect(checkCanEditProjectDetails(['Talent Manager'], '789', managedProject))
+            .toBe(false)
+        expect(checkCanEditProjectDetails(['Project Manager'], '456', managedProject))
+            .toBe(false)
+    })
+
+    it('allows admins to edit project details without membership', () => {
+        expect(checkCanEditProjectDetails(['administrator'], '999', managedProject))
+            .toBe(true)
+    })
+
     it('limits engagement creation to admins and talent managers', () => {
         expect(canCreateEngagement(['copilot']))
             .toBe(false)
@@ -105,6 +125,17 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
         expect(getProjectMemberRole(managedProject, '123'))
             .toBe('manager')
+    })
+
+    it('allows project workspace access for admins and project members only', () => {
+        expect(checkProjectAccess(['administrator'], '999', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess(['Project Manager'], '123', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess(['Project Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkProjectAccess(['Project Manager'], '123', undefined))
+            .toBe(false)
     })
 
     it('matches invited users by normalized user id or email', () => {

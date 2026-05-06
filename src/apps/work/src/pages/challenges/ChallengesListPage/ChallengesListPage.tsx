@@ -33,6 +33,7 @@ import {
 import {
     ChallengesFilter,
     ChallengesTable,
+    ErrorMessage,
     Pagination,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
@@ -59,13 +60,16 @@ import {
 import {
     buildProjectLandingPath,
     canCreateEngagement,
+    checkCanEditProjectDetails,
     checkCanManageProject,
+    checkProjectAccess,
     getAuthAccessToken,
     getStatusText,
 } from '../../../lib/utils'
 
 import styles from './ChallengesListPage.module.scss'
 
+const PROJECT_ACCESS_DENIED_MESSAGE = 'You don’t have access to this project. Please contact support@topcoder.com.'
 const DEFAULT_FILTERS: ChallengeFilters = {
     endDateEnd: undefined,
     endDateStart: undefined,
@@ -184,7 +188,7 @@ function renderContextualActions(params: RenderContextualActionsParams): JSX.Ele
 }
 
 interface RenderProjectTitleActionParams {
-    canManageProject: boolean
+    canEditProjectDetails: boolean
     projectId: string | undefined
     projectStatus: ProjectStatusValue | undefined
 }
@@ -199,7 +203,7 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
             {params.projectStatus
                 ? <ProjectStatus status={params.projectStatus} />
                 : undefined}
-            {params.canManageProject
+            {params.canEditProjectDetails
                 ? (
                     <Link
                         aria-label='Edit project'
@@ -214,10 +218,35 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
     )
 }
 
+/**
+ * Returns whether the project-title edit action should render.
+ *
+ * @param userRoles caller roles from the current work app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project loaded project detail for the current route.
+ * @returns `true` only after project detail is loaded and editable by the caller.
+ * @remarks Used by the project challenges page title action so admins, managers,
+ * and copilots keep the same loading behavior while sharing the narrower project
+ * detail edit permission.
+ */
+function canRenderProjectDetailsEditAction(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    return !!project
+        && checkCanEditProjectDetails(
+            userRoles,
+            userId,
+            project,
+        )
+}
+
 interface RenderBillingAccountNoticeParams {
     billingAccountId?: number | string
     billingAccountName?: string
     canManageProject: boolean
+    displayMemberPaymentDetailsToCopilots?: boolean
     projectId: string | undefined
 }
 
@@ -231,6 +260,7 @@ function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): J
             billingAccountId={params.billingAccountId}
             billingAccountName={params.billingAccountName}
             canManageProject={params.canManageProject}
+            displayMemberPaymentDetailsToCopilots={params.displayMemberPaymentDetailsToCopilots}
             projectId={params.projectId}
         />
     )
@@ -344,6 +374,22 @@ interface DashboardMemberScopeState {
     scopedMemberId?: number
 }
 
+interface ProjectRouteAccessParams {
+    isProjectLoading: boolean
+    project?: Project
+    projectError?: Error
+    projectId?: string
+    shouldRedirectToProjectLanding: boolean
+    userId?: number | string
+    userRoles: string[]
+}
+
+interface ProjectRouteAccessState {
+    canFetchProjectChallenges: boolean
+    isDenied: boolean
+    isLoading: boolean
+}
+
 interface ResolveDashboardMemberScopeParams {
     isPrivilegedUser: boolean
     selectedProjectId?: number | string
@@ -374,6 +420,35 @@ function resolveDashboardMemberScope(
     return {
         isWaitingForMemberScope: params.userId === undefined,
         scopedMemberId: params.userId,
+    }
+}
+
+/**
+ * Resolves project-route access state before project-scoped child records load.
+ *
+ * @param params current route, project loading, redirect, and caller identity state.
+ * @returns whether child challenge records can load and whether to show loading or denial UI.
+ * @remarks Used by direct project challenge URLs so unauthorized callers do not
+ * receive challenge listings before project membership is verified.
+ */
+function resolveProjectRouteAccess(
+    params: ProjectRouteAccessParams,
+): ProjectRouteAccessState {
+    if (!params.projectId) {
+        return {
+            canFetchProjectChallenges: true,
+            isDenied: false,
+            isLoading: false,
+        }
+    }
+
+    const hasProjectAccess = checkProjectAccess(params.userRoles, params.userId, params.project)
+    const isLoading = params.isProjectLoading || params.shouldRedirectToProjectLanding
+
+    return {
+        canFetchProjectChallenges: hasProjectAccess && !params.projectError,
+        isDenied: !isLoading && (!!params.projectError || !hasProjectAccess),
+        isLoading,
     }
 }
 
@@ -449,6 +524,32 @@ export const ChallengesListPage: FC = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(DEFAULT_SORT_ORDER)
     const isPrivilegedUser = isAdmin || isManager
     const selectedProjectId = projectIdFromRoute || filters.projectId
+    const projectResult: UseFetchProjectResult = useFetchProject(projectIdFromRoute)
+    const accessToken = useMemo(
+        () => getAuthAccessToken(loginUserInfo),
+        [loginUserInfo],
+    )
+    const currentProjectChallengesPath = useMemo(
+        () => getProjectChallengesPath(projectIdFromRoute),
+        [projectIdFromRoute],
+    )
+    const projectLandingPath = useMemo(
+        () => getProjectLandingPath(projectIdFromRoute, projectResult.project, accessToken),
+        [accessToken, projectIdFromRoute, projectResult.project],
+    )
+    const shouldRedirectToProjectLanding = useMemo(
+        () => shouldRedirectToProjectLandingPath(currentProjectChallengesPath, projectLandingPath),
+        [currentProjectChallengesPath, projectLandingPath],
+    )
+    const projectRouteAccess = resolveProjectRouteAccess({
+        isProjectLoading: projectResult.isLoading,
+        project: projectResult.project,
+        projectError: projectResult.error,
+        projectId: projectIdFromRoute,
+        shouldRedirectToProjectLanding,
+        userId: loginUserInfo?.userId,
+        userRoles,
+    })
     const {
         isWaitingForMemberScope,
         scopedMemberId,
@@ -460,7 +561,7 @@ export const ChallengesListPage: FC = () => {
 
     const fetchParams: UseFetchChallengesParams = {
         ...filters,
-        enabled: !isWaitingForMemberScope,
+        enabled: !isWaitingForMemberScope && projectRouteAccess.canFetchProjectChallenges,
         memberId: scopedMemberId,
         page,
         perPage,
@@ -471,7 +572,6 @@ export const ChallengesListPage: FC = () => {
 
     const challengesResult: UseFetchChallengesResult = useFetchChallenges(fetchParams)
     const challengeTypesResult: UseFetchChallengeTypesResult = useFetchChallengeTypes()
-    const projectResult: UseFetchProjectResult = useFetchProject(projectIdFromRoute)
     const projectsResult: UseFetchProjectsResult = useFetchProjects({
         memberOnly: !isPrivilegedUser,
     })
@@ -587,22 +687,6 @@ export const ChallengesListPage: FC = () => {
             .sort((projectA, projectB) => projectA.label.localeCompare(projectB.label)),
         [projectsResult.projects],
     )
-    const accessToken = useMemo(
-        () => getAuthAccessToken(loginUserInfo),
-        [loginUserInfo],
-    )
-    const currentProjectChallengesPath = useMemo(
-        () => getProjectChallengesPath(projectIdFromRoute),
-        [projectIdFromRoute],
-    )
-    const projectLandingPath = useMemo(
-        () => getProjectLandingPath(projectIdFromRoute, projectResult.project, accessToken),
-        [accessToken, projectIdFromRoute, projectResult.project],
-    )
-    const shouldRedirectToProjectLanding = useMemo(
-        () => shouldRedirectToProjectLandingPath(currentProjectChallengesPath, projectLandingPath),
-        [currentProjectChallengesPath, projectLandingPath],
-    )
 
     useEffect(() => {
         setFilters(currentFilters => ({
@@ -627,6 +711,11 @@ export const ChallengesListPage: FC = () => {
         : 'Challenges'
     const canManageProject = !!projectResult.project
         && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
+    const canEditProjectDetails = canRenderProjectDetailsEditAction(
+        userRoles,
+        loginUserInfo?.userId,
+        projectResult.project,
+    )
     const isProjectActive = String(projectResult.project?.status || '')
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
@@ -651,13 +740,24 @@ export const ChallengesListPage: FC = () => {
     })
 
     const titleAction = renderProjectTitleAction({
-        canManageProject,
+        canEditProjectDetails,
         projectId: projectIdFromRoute,
         projectStatus: projectResult.project?.status,
     })
 
-    if (shouldRedirectToProjectLanding) {
+    if (projectRouteAccess.isLoading) {
         return <TableLoading />
+    }
+
+    if (projectRouteAccess.isDenied) {
+        return (
+            <PageWrapper
+                pageTitle='Challenges'
+                breadCrumb={[]}
+            >
+                <ErrorMessage message={PROJECT_ACCESS_DENIED_MESSAGE} />
+            </PageWrapper>
+        )
     }
 
     return (
@@ -671,6 +771,8 @@ export const ChallengesListPage: FC = () => {
                 billingAccountId: projectResult.project?.billingAccountId,
                 billingAccountName: projectResult.project?.billingAccountName,
                 canManageProject,
+                displayMemberPaymentDetailsToCopilots:
+                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots,
                 projectId: projectIdFromRoute,
             })}
             {projectIdFromRoute

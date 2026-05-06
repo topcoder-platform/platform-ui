@@ -1,7 +1,7 @@
 /**
  * Context provider for challenge detail page
  */
-import { FC, PropsWithChildren, useContext, useMemo } from 'react'
+import { FC, PropsWithChildren, useCallback, useContext, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { convertBackendSubmissionToSubmissionInfo } from '../models'
@@ -35,7 +35,9 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     // fetch challenge info
     const {
         challengeInfo,
+        error: challengeInfoError,
         isLoading: isLoadingChallengeInfo,
+        retry: retryChallengeInfo,
     }: useFetchChallengeInfoProps = useFetchChallengeInfo(challengeId)
 
     // fetch challenge resources
@@ -45,7 +47,9 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         reviewers,
         myResources,
         myRoles,
+        error: challengeResourcesError,
         isLoading: isLoadingChallengeResources,
+        retry: retryChallengeResources,
         resourceMemberIdMapping,
     }: useFetchChallengeResourcesProps = useFetchChallengeResources(challengeId)
     const submissionViewer = useMemo(
@@ -80,15 +84,13 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
 
             return { isCompleted, isDesign, submissionsViewable }
         },
-        [
-            challengeInfo?.track?.name,
-            challengeInfo?.status,
-            challengeInfo?.metadata,
-        ],
+        [challengeInfo],
     )
     const {
         challengeSubmissions,
+        error: challengeSubmissionsError,
         isLoading: isLoadingChallengeSubmissions,
+        retry: retryChallengeSubmissions,
     }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(
         challengeId,
         submissionViewer,
@@ -135,6 +137,22 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         () => isLoadingChallengeInfo,
         [isLoadingChallengeInfo],
     )
+    const challengeScopedFetchError = useMemo(
+        () => challengeInfoError ?? challengeResourcesError ?? challengeSubmissionsError,
+        [challengeInfoError, challengeResourcesError, challengeSubmissionsError],
+    )
+    const retryChallengeScopedFetches = useCallback((): void => {
+        Promise.resolve(retryChallengeInfo())
+            .catch(() => undefined)
+        Promise.resolve(retryChallengeResources())
+            .catch(() => undefined)
+        Promise.resolve(retryChallengeSubmissions())
+            .catch(() => undefined)
+    }, [
+        retryChallengeInfo,
+        retryChallengeResources,
+        retryChallengeSubmissions,
+    ])
 
     const value = useMemo<ChallengeDetailContextModel>(
         () => ({
@@ -142,7 +160,12 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             aiReviewDecisionsBySubmissionId,
             challengeId,
             challengeInfo: enrichedChallengeInfo,
+            challengeInfoError,
+            challengeResourcesError,
+            challengeScopedFetchError,
             challengeSubmissions,
+            challengeSubmissionsError,
+            hasChallengeScopedFetchError: !!challengeScopedFetchError,
             isLoadingAiReviewConfig,
             isLoadingAiReviewDecisions,
             isLoadingChallengeInfo: isLoadingChallengeInfoCombined,
@@ -153,12 +176,17 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             registrants,
             resourceMemberIdMapping,
             resources,
+            retryChallengeScopedFetches,
             reviewers,
         }),
         [
             challengeId,
             enrichedChallengeInfo,
+            challengeInfoError,
+            challengeResourcesError,
+            challengeScopedFetchError,
             challengeSubmissions,
+            challengeSubmissionsError,
             isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
             isLoadingChallengeSubmissions,
@@ -169,6 +197,7 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             myResources,
             myRoles,
             registrants,
+            retryChallengeScopedFetches,
             resourceMemberIdMapping,
             resources,
             reviewers,

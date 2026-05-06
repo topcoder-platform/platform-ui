@@ -193,24 +193,50 @@ function normalizeGroupMember(value: unknown): GroupMember | undefined {
 }
 
 export async function fetchGroups(filters?: { name?: string }): Promise<Group[]> {
-    const query = new URLSearchParams({
-        page: '1',
-        perPage: String(GROUPS_PER_PAGE),
-    })
-
-    const groupNameFilter = filters?.name?.trim()
-    if (groupNameFilter) {
-        query.set('name', groupNameFilter)
-    }
-
     try {
-        const response = await xhrGetPaginatedAsync<Group[]>(
-            `${GROUPS_API_URL}?${query.toString()}`,
-        )
+        const buildGroupsUrl = (page: number): string => {
+            const query = new URLSearchParams({
+                page: String(page),
+                perPage: String(GROUPS_PER_PAGE),
+            })
+            const groupNameFilter = filters?.name?.trim()
 
-        return (response.data || [])
+            if (groupNameFilter) {
+                query.set('name', groupNameFilter)
+            }
+
+            return `${GROUPS_API_URL}?${query.toString()}`
+        }
+
+        const firstPageResponse = await xhrGetPaginatedAsync<Group[]>(
+            buildGroupsUrl(1),
+        )
+        const firstPageGroups = (firstPageResponse.data || [])
             .map(group => normalizeGroup(group))
             .filter((group): group is Group => !!group)
+
+        if ((firstPageResponse.totalPages || 1) <= 1) {
+            return firstPageGroups
+        }
+
+        const extraPageNumbers = Array.from({
+            length: firstPageResponse.totalPages - 1,
+        }, (_, index) => index + 2)
+
+        const extraPageResponses = await Promise.all(extraPageNumbers
+            .map(pageNumber => xhrGetPaginatedAsync<Group[]>(
+                buildGroupsUrl(pageNumber),
+            )))
+
+        const extraPageGroups = extraPageResponses
+            .flatMap(response => response.data || [])
+            .map(group => normalizeGroup(group))
+            .filter((group): group is Group => !!group)
+
+        return [
+            ...firstPageGroups,
+            ...extraPageGroups,
+        ]
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch groups')
     }

@@ -1,9 +1,15 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
+const BILLING_ACCOUNTS_LOOKUP_PAGE_SIZE = 1000
+
 export interface BillingAccount {
     active?: boolean
-    markup?: number
+    budget?: number | string
+    consumedBudget?: number | string
+    lockedBudget?: number | string
+    markup?: number | string
+    memberPaymentsRemaining?: number | string
     endDate?: string
     id: number | string
     name: string
@@ -11,6 +17,45 @@ export interface BillingAccount {
     status?: string
     totalBudgetRemaining?: number
     [key: string]: unknown
+}
+
+export type BillingAccountLineItemStatus = 'locked' | 'consumed'
+export type BillingAccountExternalType = 'CHALLENGE' | 'ENGAGEMENT'
+
+export interface BillingAccountBudgetEntry {
+    amount: number | string
+    challengeId?: string
+    date: string
+    engagementId?: string
+    externalId?: string
+    externalName: string | null
+    externalType: BillingAccountExternalType
+    memberPaymentAmount?: number | string
+}
+
+export type BillingAccountLockedAmount = BillingAccountBudgetEntry
+export type BillingAccountConsumedAmount = BillingAccountBudgetEntry
+
+export interface BillingAccountLineItem {
+    id: string
+    amount: number
+    challengeId?: string
+    date: string
+    engagementId?: string
+    externalId?: string
+    externalName?: string | null
+    externalType: BillingAccountExternalType
+    memberPaymentAmount?: number
+    status: BillingAccountLineItemStatus
+}
+
+export interface BillingAccountDetails extends BillingAccount {
+    budget: number
+    lockedBudget: number
+    consumedBudget: number
+    totalBudgetRemaining: number
+    lockedAmounts: BillingAccountLockedAmount[]
+    consumedAmounts: BillingAccountConsumedAmount[]
 }
 
 interface BillingAccountsResponse {
@@ -93,14 +138,91 @@ function createSearchQuery(params: SearchBillingAccountsParams): string {
 }
 
 /**
- * Fetches billing accounts using default API pagination.
+ * Creates a deterministic UI-only row key from the source bucket and stable row context.
+ *
+ * @param status The source budget bucket for the row.
+ * @param item The raw external budget entry returned by the billing account API.
+ * @param index The entry index within its source bucket, used to keep repeated rows unique.
+ * @returns A row key suitable for React rendering.
+ */
+function createLineItemKey(
+    status: BillingAccountLineItemStatus,
+    item: BillingAccountBudgetEntry,
+    index: number,
+): string {
+    return [
+        status,
+        item.externalType,
+        item.externalId || item.challengeId || 'unknown',
+        item.date || 'unknown-date',
+        item.amount,
+        index,
+    ]
+        .map(value => encodeURIComponent(String(value)))
+        .join('-')
+}
+
+/**
+ * Converts an API budget entry into a UI line item without aliasing legacy challenge ids.
+ *
+ * @param status The budget bucket the API entry came from.
+ * @param item The raw external budget entry returned by the billing account API.
+ * @param index The entry index within its source bucket, used in the generated row key.
+ * @returns A normalized line item with numeric amount, original date, display
+ * fallback for nullable external names, optional canonical external id,
+ * optional engagement id, optional legacy challenge id, optional copilot-safe
+ * member payment amount, and a deterministic UI row key.
+ */
+function createLineItem(
+    status: BillingAccountLineItemStatus,
+    item: BillingAccountBudgetEntry,
+    index: number,
+): BillingAccountLineItem {
+    const normalizedExternalName = item.externalName
+        || item.externalId
+        || item.challengeId
+    const lineItem: BillingAccountLineItem = {
+        amount: Number(item.amount),
+        date: item.date,
+        externalType: item.externalType,
+        id: createLineItemKey(status, item, index),
+        status,
+    }
+
+    if (normalizedExternalName) {
+        lineItem.externalName = normalizedExternalName
+    }
+
+    if (item.challengeId) {
+        lineItem.challengeId = item.challengeId
+    }
+
+    if (item.engagementId) {
+        lineItem.engagementId = item.engagementId
+    }
+
+    if (item.externalId) {
+        lineItem.externalId = item.externalId
+    }
+
+    const memberPaymentAmount = Number(item.memberPaymentAmount)
+
+    if (Number.isFinite(memberPaymentAmount)) {
+        lineItem.memberPaymentAmount = memberPaymentAmount
+    }
+
+    return lineItem
+}
+
+/**
+ * Fetches billing accounts using a large lookup page for project-list joins.
  *
  * Returns only accounts with both `id` and `name`, sorted by name.
  */
 export async function fetchBillingAccounts(): Promise<BillingAccount[]> {
     try {
         const response = await xhrGetAsync<BillingAccount[] | BillingAccountsResponse>(
-            `${EnvironmentConfig.API.V6}/billing-accounts`,
+            `${EnvironmentConfig.API.V6}/billing-accounts?perPage=${BILLING_ACCOUNTS_LOOKUP_PAGE_SIZE}`,
         )
 
         return normalizeBillingAccounts(extractBillingAccounts(response))
@@ -133,10 +255,16 @@ export async function searchBillingAccounts(
 
 /**
  * Fetches a single billing account by its identifier.
+ *
+ * The detail payload includes budget totals plus locked and consumed external
+ * entries with `amount`, optional copilot-safe `memberPaymentAmount`, `date`,
+ * optional canonical `externalId`, optional `engagementId`, `externalType`,
+ * and nullable `externalName`. Top-level `id` and `name` remain available
+ * for lookup labels.
  */
 export async function fetchBillingAccountById(
     billingAccountId: string,
-): Promise<BillingAccount> {
+): Promise<BillingAccountDetails> {
     const normalizedBillingAccountId = billingAccountId.trim()
 
     if (!normalizedBillingAccountId) {
@@ -144,10 +272,32 @@ export async function fetchBillingAccountById(
     }
 
     try {
-        return await xhrGetAsync<BillingAccount>(
+        return await xhrGetAsync<BillingAccountDetails>(
             `${EnvironmentConfig.API.V6}/billing-accounts/${encodeURIComponent(normalizedBillingAccountId)}`,
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch billing account details')
     }
+}
+
+/**
+ * Combines locked and consumed external budget entries into UI line items.
+ *
+ * @param details Billing account details containing locked and consumed entry arrays.
+ * @returns Normalized line items with numeric amounts, optional engagement
+ * ids, optional member payment amounts, API dates, external metadata,
+ * status, and UI row keys.
+ */
+export function combineBillingAccountLineItems(
+    details: BillingAccountDetails,
+): BillingAccountLineItem[] {
+    const lockedItems: BillingAccountLineItem[] = (details.lockedAmounts || []).map(
+        (item, index) => createLineItem('locked', item, index),
+    )
+
+    const consumedItems: BillingAccountLineItem[] = (details.consumedAmounts || []).map(
+        (item, index) => createLineItem('consumed', item, index),
+    )
+
+    return [...lockedItems, ...consumedItems]
 }

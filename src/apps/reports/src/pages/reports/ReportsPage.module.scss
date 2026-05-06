@@ -9,6 +9,16 @@
     max-width: 720px;
 }
 
+.billingDefaultWindowNote {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #fff4d6;
+    color: #5f4a00;
+    font-weight: 500;
+}
+
 .selectors {
     display: flex;
     flex-wrap: wrap;
@@ -26,26 +36,97 @@
     gap: 4px;
 }
 
+.filtersPanel {
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid #e4e6e9;
+    border-radius: 8px;
+    background: #fcfcfd;
+}
+
 .params {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px 50px;
+    margin-top: 0;
+    align-items: start;
+}
+
+@media (max-width: 1200px) {
+    .params {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .params {
+        grid-template-columns: 1fr;
+    }
+}
+
+.paramCard {
+    display: grid;
+    grid-template-rows: auto auto;
+    row-gap: 8px;
+    align-content: start;
+}
+
+.paramHeader {
+    min-height: 28px;
+}
+
+.paramTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.paramHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .paramLabel {
     font-weight: 600;
+    color: #2f3338;
 }
 
-.paramMeta {
-    color: #6b6f75;
-    font-size: 12px;
+.paramTypePill {
+    font-size: 11px;
+    color: #5e6369;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
 }
 
-.paramHint {
+.actionsBar {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid #eceef1;
+}
+
+.paramInfoButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 0;
+    padding: 0;
+    border-radius: 50%;
+    background: transparent;
     color: #6b6f75;
-    font-size: 12px;
-    font-style: italic;
+    cursor: pointer;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .reportTitle {
@@ -93,4 +174,134 @@
 .emptyState {
     font-style: italic;
     color: #6b6f75;
+}
+
+.billingSummary {
+    margin-top: 8px;
+    padding: 16px;
+    border: 1px solid #e4e6e9;
+    border-radius: 6px;
+    background: #fafbfc;
+}
+
+.billingSummaryTitle {
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.billingDetailGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 24px;
+}
+
+.billingDetailItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.billingDetailLabel {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b6f75;
+}
+
+.billingDetailValue {
+    font-size: 14px;
+    color: #1a1d21;
+    word-break: break-word;
+}
+
+.billingMissingNotice {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: #494f55;
+    font-size: 14px;
+}
+
+.paymentsSection {
+    margin-top: 24px;
+}
+
+.paymentsResults {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.paymentsSectionTitle {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.tableWrap {
+    overflow-x: auto;
+    border: 1px solid #e4e6e9;
+    border-radius: 6px;
+}
+
+.paymentsPagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.perPageControl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.perPageControl label {
+    color: #565a5f;
+    font-size: 13px;
+}
+
+.perPageControl select {
+    min-width: 72px;
+    padding: 5px 8px;
+    border: 1px solid #d7d9dd;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.paginationMeta {
+    color: #565a5f;
+    font-size: 13px;
+}
+
+.paymentsTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.paymentsTable th,
+.paymentsTable td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e4e6e9;
+    vertical-align: top;
+}
+
+.paymentsTable th {
+    background: #f3f4f6;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.paymentsTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.paymentsEmpty {
+    margin-top: 8px;
+    color: #6b6f75;
+    font-style: italic;
 }

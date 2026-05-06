@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable react/jsx-no-bind */
-import { ChangeEvent, FC, FocusEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FC, FocusEvent, useCallback, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 
 import { CountryLookup, useCountryLookup } from '~/libs/core'
@@ -9,8 +9,6 @@ import {
     IconOutline,
     InputMultiselect,
     InputMultiselectOption,
-    InputSelect,
-    InputSelectOption,
     InputTextarea,
     Tooltip,
 } from '~/libs/ui'
@@ -24,7 +22,6 @@ import {
     searchMembers,
     SearchTalent,
 } from '../../../lib'
-import personSearchImage from '../../../lib/assets/person-search.png'
 
 import styles from './TalentSearchPage.module.scss'
 
@@ -38,7 +35,8 @@ export const TalentSearchPage: FC = () => {
     const [hasSearched, setHasSearched] = useState<boolean>(false)
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
-    const [selectedCountry, setSelectedCountry] = useState<string>('all')
+    const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
+    const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(false)
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
     const [onlyActive, setOnlyActive] = useState<boolean>(true)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
@@ -46,46 +44,73 @@ export const TalentSearchPage: FC = () => {
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
     const [currentPage, setCurrentPage] = useState<number>(1)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
-    // const breadCrumb = useMemo(
-    //     () => [{ index: 1, label: 'Talent Search' }],
-    //     [],
-    // )
-    const countryOptions = useMemo(
-        (): InputSelectOption[] => [
-            { label: 'All Countries', value: 'all' },
-            ...((countryLookup || [])
-                .map(country => ({
-                    label: country.country,
-                    value: country.countryCode,
-                }))
-                .filter(option => option.label && option.value)
-                .sort((a, b) => String(a.label)
-                    .localeCompare(String(b.label)))),
-        ],
+    const [lastAppliedSearchSignature, setLastAppliedSearchSignature] = useState<string>('')
+    const [showSkillMatchOnCards, setShowSkillMatchOnCards] = useState<boolean>(false)
+    const countryNameByCode = useMemo((): Map<string, string> => new Map(
+        (countryLookup || [])
+            .filter(country => country.countryCode && country.country)
+            .map(country => [country.countryCode.toUpperCase(), country.country]),
+    ), [countryLookup])
+    const countryFilterOptions = useMemo(
+        (): InputMultiselectOption[] => (countryLookup || [])
+            .map(country => ({
+                label: country.country,
+                value: country.countryCode,
+            }))
+            .filter(option => option.label && option.value)
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label))),
         [countryLookup],
     )
+    const selectedCountryCodesList = useMemo(
+        (): string[] => selectedCountries
+            .map(country => String(country.value || '')
+                .trim()
+                .toUpperCase())
+            .filter(Boolean),
+        [selectedCountries],
+    )
 
-    const filteredResults = useMemo(() => results.filter(talent => {
-        if (selectedCountry !== 'all') {
-            const selectedCountryOption = countryOptions.find(option => option.value === selectedCountry)
-            const selectedCountryName = typeof selectedCountryOption?.label === 'string'
-                ? selectedCountryOption.label
-                : ''
-            const normalizedLocation = talent.location.toLowerCase()
+    const shouldShowIntroState = !hasSearched
+    const currentSearchSignature = useMemo(
+        (): string => JSON.stringify({
+            countries: selectedCountryCodesList
+                .slice()
+                .sort(),
+            openToWork: onlyOpenToWork,
+            profileComplete: onlyProfileComplete,
+            recentlyActive: onlyActive,
+            skills: selectedSkills
+                .map(skill => String(skill.value || '')
+                    .trim())
+                .filter(Boolean)
+                .sort(),
+        }),
+        [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedSkills],
+    )
 
-            if (!selectedCountryName || !normalizedLocation.includes(selectedCountryName.toLowerCase())) {
-                return false
+    // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
+    const displayedResults = results
+
+    const foundMembersCount = totalResults || displayedResults.length
+    const displayedResultsWithCountryName = useMemo(
+        () => displayedResults.map(talent => {
+            const code = String(talent.location || '')
+                .trim()
+                .toUpperCase()
+            const countryName = countryNameByCode.get(code)
+
+            if (!countryName) {
+                return talent
             }
-        }
 
-        if (onlyActive && !talent.isRecentlyActive) {
-            return false
-        }
-
-        return true
-    }), [countryOptions, onlyActive, results, selectedCountry])
-
+            return {
+                ...talent,
+                location: countryName,
+            }
+        }),
+        [countryNameByCode, displayedResults],
+    )
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -98,26 +123,43 @@ export const TalentSearchPage: FC = () => {
             setSkillOptionsLoading(false)
         }
     }, [])
+    const loadCountryOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        const normalizedQuery = query.trim()
+            .toLowerCase()
+        if (!normalizedQuery) {
+            return countryFilterOptions
+        }
+
+        return countryFilterOptions.filter(option => String(option.label || '')
+            .toLowerCase()
+            .includes(normalizedQuery))
+    }, [countryFilterOptions])
 
     const runMemberSearch = useCallback(async (
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            countries?: string[]
+            generation?: number
             openToWork?: boolean
             page?: number
+            profileComplete?: boolean
             recentlyActive?: boolean
         },
     ): Promise<boolean> => {
         const append = overrides?.append === true
+
+        const countries = (overrides?.countries ?? selectedCountryCodesList)
+            .filter(Boolean)
+        const generation = overrides?.generation
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
         const page = overrides?.page ?? 1
+        const profileComplete = overrides?.profileComplete ?? onlyProfileComplete
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-
+        const hasSkills = skillsToSearch.length > 0
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
-            openToWork,
             page,
-            recentlyActive,
             skills: skillsToSearch
                 .map(skill => String(skill.value || '')
                     .trim())
@@ -127,7 +169,24 @@ export const TalentSearchPage: FC = () => {
                     wins: 1,
                 })),
             skillSearchType: 'OR',
-            verifiedProfile: true,
+            sortBy: hasSkills ? 'matchIndex' : 'handle',
+            sortOrder: hasSkills ? 'desc' : 'asc',
+        }
+
+        if (countries.length > 0) {
+            payload.countries = countries
+        }
+
+        if (openToWork) {
+            payload.openToWork = true
+        }
+
+        if (profileComplete) {
+            payload.profileComplete = true
+        }
+
+        if (recentlyActive) {
+            payload.recentlyActive = true
         }
 
         if (append) {
@@ -138,11 +197,14 @@ export const TalentSearchPage: FC = () => {
         }
 
         setErrorMessage('')
-
         try {
             const response = await searchMembers(payload)
-            const fetchedData = Array.isArray(response?.data) ? response.data : []
+            // If generation was provided and has changed, discard stale results
+            if (generation !== undefined && searchGenerationRef.current !== generation) {
+                return false
+            }
 
+            const fetchedData = Array.isArray(response?.data) ? response.data : []
             setResults(prevResults => {
                 if (!append) {
                     return fetchedData
@@ -156,7 +218,6 @@ export const TalentSearchPage: FC = () => {
                         merged.push(item)
                     }
                 })
-
                 return merged
             })
             setTotalResults(Number(response?.total || 0))
@@ -180,17 +241,14 @@ export const TalentSearchPage: FC = () => {
                 setIsLoading(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList])
 
     const clearAllFilters = useCallback((): void => {
-        setSelectedCountry('all')
+        setSelectedCountries([])
+        setOnlyProfileComplete(false)
         setOnlyOpenToWork(true)
         setOnlyActive(true)
         setSelectedSkills([])
-        setHasSearched(false)
-        setResults([])
-        setTotalResults(0)
-        setCurrentPage(1)
         setErrorMessage('')
         setLastSearchedDescription('')
     }, [])
@@ -206,6 +264,8 @@ export const TalentSearchPage: FC = () => {
 
         try {
             const extractedSkillsResult = await extractSkillsFromText(normalizedDescription)
+            if (searchGenerationRef.current !== generation) return
+
             const extractedSkills = Array.isArray(extractedSkillsResult?.matches)
                 ? extractedSkillsResult.matches
                 : []
@@ -231,9 +291,6 @@ export const TalentSearchPage: FC = () => {
             setSelectedSkills(extractedOptions)
 
             if (extractedOptions.length === 0) {
-                setResults([])
-                setTotalResults(0)
-                setHasSearched(true)
                 setErrorMessage('No skills were extracted from the job description.')
                 return
             }
@@ -245,38 +302,45 @@ export const TalentSearchPage: FC = () => {
                 setLastSearchedDescription(normalizedDescription)
             }
         } catch {
-            // Prevent stale auto-search when extraction fails and loading flips to false.
-            skipNextAutoSearchRef.current = true
+            if (searchGenerationRef.current !== generation) return
             setErrorMessage('Failed to extract skills. Please try again.')
-            setHasSearched(true)
         } finally {
             setIsExtractingSkills(false)
 
         }
-    }, [isExtractingSkills, jobDescription, runMemberSearch])
+    }, [isExtractingSkills, jobDescription])
 
-    useEffect(() => {
-        if (!hasSearched || isExtractingSkills || selectedSkills.length === 0) {
+    const handleSearch = useCallback(async (): Promise<void> => {
+        if (isSearchingMembers || selectedSkills.length === 0) {
             return
         }
 
-        if (skipNextAutoSearchRef.current) {
-            skipNextAutoSearchRef.current = false
-            return
+        setHasSearched(true)
+        const hadSkills = selectedSkills.length > 0
+        const searchSucceeded = await runMemberSearch(selectedSkills, {
+            countries: selectedCountryCodesList,
+            openToWork: onlyOpenToWork,
+            page: 1,
+            profileComplete: onlyProfileComplete,
+            recentlyActive: onlyActive,
+        })
+        if (searchSucceeded) {
+            setLastAppliedSearchSignature(currentSearchSignature)
+            setShowSkillMatchOnCards(hadSkills)
         }
-
-        runMemberSearch(selectedSkills)
     }, [
-        hasSearched,
-        isExtractingSkills,
+        currentSearchSignature,
+        isSearchingMembers,
         onlyActive,
         onlyOpenToWork,
+        onlyProfileComplete,
         runMemberSearch,
+        selectedCountryCodesList,
         selectedSkills,
     ])
 
     const handleLoadMore = useCallback((): void => {
-        if (isLoadingMore || isSearchingMembers || !hasMoreResults || selectedSkills.length === 0) {
+        if (isLoadingMore || isSearchingMembers || !hasMoreResults) {
             return
         }
 
@@ -285,7 +349,7 @@ export const TalentSearchPage: FC = () => {
             page: currentPage + 1,
         })
     }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
-    const isSearchButtonDisabled = useMemo(
+    const isAiExtractButtonDisabled = useMemo(
         () => isExtractingSkills
         || !jobDescription.trim()
         || jobDescription.trim() === lastSearchedDescription,
@@ -293,7 +357,7 @@ export const TalentSearchPage: FC = () => {
     )
     return (
         <PageWrapper
-            pageTitle='Talent Search'
+            pageTitle=''
             className={classNames(styles.container)}
             breadCrumb={[]}
         >
@@ -302,20 +366,12 @@ export const TalentSearchPage: FC = () => {
                 <div className={styles.pageBody}>
                     <aside className={styles.sidebar}>
                         <section className={styles.panel}>
-                            <div className={styles.searchTabs}>
-                                <button
-                                    type='button'
-                                    className={classNames(styles.tabButton, styles.activeTab)}
-                                >
-                                    AI Search
-                                </button>
-                            </div>
                             <InputTextarea
                                 classNameWrapper={styles.jobDescriptionField}
                                 label='Job Description'
                                 name='jobDescription'
                                 value={jobDescription}
-                                rows={12}
+                                rows={6}
                                 onChange={(event: FocusEvent<HTMLTextAreaElement>) => {
                                     setJobDescription(event.target.value)
                                 }}
@@ -325,6 +381,7 @@ export const TalentSearchPage: FC = () => {
                                     secondary
                                     disabled={isExtractingSkills}
                                     onClick={() => {
+                                        searchGenerationRef.current += 1
                                         setJobDescription('')
                                         setErrorMessage('')
                                         setLastSearchedDescription('')
@@ -334,10 +391,10 @@ export const TalentSearchPage: FC = () => {
                                 </Button>
                                 <Button
                                     primary
-                                    disabled={isSearchButtonDisabled}
+                                    disabled={isAiExtractButtonDisabled}
                                     onClick={handleAiSearch}
                                 >
-                                    {isExtractingSkills ? 'Analyzing...' : 'Search'}
+                                    {isExtractingSkills ? 'Analyzing...' : 'AI Skill Extract'}
                                 </Button>
                             </div>
                             {errorMessage && (
@@ -346,7 +403,6 @@ export const TalentSearchPage: FC = () => {
                         </section>
 
                         <section className={styles.panel}>
-                            <p className={styles.panelTitle}>Filter</p>
                             <div className={styles.filterBlock}>
                                 <InputMultiselect
                                     className={styles.skillsMultiselect}
@@ -367,13 +423,15 @@ export const TalentSearchPage: FC = () => {
                                 />
                             </div>
                             <div className={styles.filterBlock}>
-                                <InputSelect
+                                <InputMultiselect
                                     label='Country'
                                     name='country'
-                                    options={countryOptions}
-                                    value={selectedCountry}
+                                    options={countryFilterOptions}
+                                    onFetchOptions={loadCountryOptions}
+                                    value={selectedCountries}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setSelectedCountry(event.target.value || 'all')
+                                        const value = (event.target.value || []) as InputMultiselectOption[]
+                                        setSelectedCountries(value)
                                     }}
                                     placeholder='Select country'
                                 />
@@ -419,9 +477,32 @@ export const TalentSearchPage: FC = () => {
                                     </Tooltip>
                                 </span>
                             </label>
+                            <label className={styles.checkboxRow}>
+                                <input
+                                    type='checkbox'
+                                    checked={onlyProfileComplete}
+                                    className={styles.checkboxInput}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setOnlyProfileComplete(event.target.checked)
+                                    }}
+                                />
+                                <span className={styles.toggleControl} />
+                                <span>100% Profile complete</span>
+                            </label>
                             <div className={styles.clearFiltersWrap}>
                                 <Button secondary onClick={clearAllFilters}>
                                     Clear Filters
+                                </Button>
+                                <Button
+                                    primary
+                                    disabled={
+                                        selectedSkills.length === 0
+                                        || isSearchingMembers
+                                        || currentSearchSignature === lastAppliedSearchSignature
+                                    }
+                                    onClick={handleSearch}
+                                >
+                                    Search
                                 </Button>
                             </div>
                         </section>
@@ -430,62 +511,63 @@ export const TalentSearchPage: FC = () => {
                     <section
                         className={classNames(
                             styles.resultsPanel,
-                            !hasSearched && styles.resultsPanelEmpty,
+                            shouldShowIntroState && styles.resultsPanelEmpty,
                         )}
                     >
-                        {!hasSearched && (
+                        {shouldShowIntroState && (
                             <div className={styles.emptyState}>
-                                <img
-                                    src={personSearchImage}
-                                    alt='Person search'
-                                    className={styles.emptyIcon}
-                                />
-                                <p className={styles.emptyStateTitle}>Find the right talent</p>
                                 <p className={styles.emptyStateDescription}>
-                                    Paste a job description on the left and hit&nbsp;
-                                    <span className={styles.emptyStateSearchText}>Search</span>
-                                    &nbsp;- Our AI will match you with the
-                                    best candidates from our network.
+                                    Paste a job description to AI-extract skills, or enter skills manually
+                                    to find talents
                                 </p>
                             </div>
                         )}
 
-                        {hasSearched && (
+                        {!shouldShowIntroState && (
                             <div className={styles.resultsContent}>
-                                {isLoading ? (
+                                {!isSearchingMembers && (
+                                    <div className={styles.resultsTop}>
+                                        <p className={styles.foundText}>
+                                            We have found&nbsp;
+                                            <span className={styles.foundTextCount}>
+                                                {`${foundMembersCount} members`}
+                                            </span>
+                                            &nbsp;that match your search.
+                                        </p>
+                                    </div>
+                                )}
+                                {isSearchingMembers && (
                                     <div className={styles.emptyState}>
                                         <h4>Searching talent...</h4>
                                     </div>
-                                ) : (
+                                )}
+                                {!isSearchingMembers && displayedResults.length === 0 && (
+                                    <div className={styles.emptyState}>
+                                        <h4>No matching talent found</h4>
+                                        <p>Try changing filters or using a different job description.</p>
+                                    </div>
+                                )}
+                                {!isSearchingMembers && displayedResults.length > 0 && (
                                     <>
-
-                                        {filteredResults.length === 0 ? (
-                                            <div className={styles.emptyState}>
-                                                <h4>No matching talent found</h4>
-                                                <p>Try changing filters or using a different job description.</p>
+                                        <div className={styles.cardsGrid}>
+                                            {displayedResultsWithCountryName.map(talent => (
+                                                <TalentResultCard
+                                                    key={talent.id}
+                                                    talent={talent}
+                                                    showSkillMatch={showSkillMatchOnCards}
+                                                />
+                                            ))}
+                                        </div>
+                                        {hasMoreResults && (
+                                            <div className={styles.loadMoreWrap}>
+                                                <Button
+                                                    secondary
+                                                    disabled={isLoadingMore}
+                                                    onClick={handleLoadMore}
+                                                >
+                                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
+                                                </Button>
                                             </div>
-                                        ) : (
-                                            <>
-                                                <div className={styles.cardsGrid}>
-                                                    {filteredResults.map(talent => (
-                                                        <TalentResultCard
-                                                            key={talent.id}
-                                                            talent={talent}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                {hasMoreResults && (
-                                                    <div className={styles.loadMoreWrap}>
-                                                        <Button
-                                                            secondary
-                                                            disabled={isLoadingMore}
-                                                            onClick={handleLoadMore}
-                                                        >
-                                                            {isLoadingMore ? 'Loading...' : 'Load More Members'}
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </>
                                         )}
                                     </>
                                 )}
