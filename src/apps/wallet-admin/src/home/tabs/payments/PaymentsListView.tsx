@@ -29,6 +29,7 @@ const approverAllowedCategories = [taskPaymentCategory, engagementPaymentCategor
 const taasPaymentCategory = 'TAAS_PAYMENT'
 const topgearPaymentCategory = 'TOPGEAR_PAYMENT'
 const defaultPageSize = 10
+const approverDefaultDateFilter = 'last30days'
 
 interface PaymentsListViewProps {
     profile: UserProfile
@@ -194,6 +195,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isRestrictedApproverView = isApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
 
+    // eslint-disable-next-line complexity
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         // Strip 'all' sentinel values — never forward them to the API
         const activeFilters = Object.fromEntries(
@@ -224,6 +226,13 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 statusFilter = { status: [restrictedDefaultStatus] }
             }
 
+            let dateFilter: Record<string, string[]> = {}
+            if (filters.date && filters.date[0] !== 'all') {
+                dateFilter = { date: activeFilters.date }
+            } else if (!filters.date) {
+                dateFilter = { date: [approverDefaultDateFilter] }
+            }
+
             let categoryFilter: Record<string, string[]> = {}
             if (
                 activeFilters.category
@@ -241,6 +250,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 ...rest,
                 ...categoryFilter,
                 ...statusFilter,
+                ...dateFilter,
             }
         }
 
@@ -280,13 +290,13 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             defaults.category = filters.category?.[0] ?? 'all'
         }
 
-        defaults.date = filters.date?.[0] ?? 'all'
+        defaults.date = filters.date?.[0] ?? (isApproverView ? approverDefaultDateFilter : 'all')
 
         // Fall back to the restricted default if no filter is applied
         defaults.status = filters.status?.[0] ?? (restrictedDefaultStatus || 'all')
 
         return defaults
-    }, [filters.category, filters.date, filters.status, restrictedCategory, restrictedDefaultStatus])
+    }, [filters.category, filters.date, filters.status, restrictedCategory, restrictedDefaultStatus, isApproverView])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
