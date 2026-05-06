@@ -189,6 +189,70 @@ describe('challenge-editor schema fun challenge prize validation', () => {
             .resolves
             .toBeTruthy()
     })
+
+    it('allows equal lower placement prizes when funChallenge is false', async () => {
+        await expect(
+            challengeBasicInfoSchema.validate({
+                ...baseBasicInfo,
+                funChallenge: false,
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('rejects lower placement prizes that increase when funChallenge is false', async () => {
+        await expect(
+            challengeBasicInfoSchema.validate({
+                ...baseBasicInfo,
+                funChallenge: false,
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 60,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow('Placement prizes must stay the same or decrease for lower placements')
+    })
 })
 
 describe('challenge-editor schema reviewer slot assignment validation', () => {

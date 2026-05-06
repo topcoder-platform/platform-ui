@@ -21,7 +21,20 @@ import {
 
 import styles from './ChallengeTotalField.module.scss'
 
-export const ChallengeTotalField: FC = () => {
+interface ChallengeTotalFieldProps {
+    /**
+     * Whether the displayed total should include the derived billing challenge fee.
+     */
+    includeChallengeFee?: boolean
+    /**
+     * Summary label displayed beside the formatted total.
+     */
+    label?: string
+}
+
+export const ChallengeTotalField: FC<ChallengeTotalFieldProps> = (
+    props: ChallengeTotalFieldProps,
+) => {
     const formContext: UseFormReturn<ChallengeEditorFormData> = useFormContext<ChallengeEditorFormData>()
     const control = formContext.control
     const watchedBilling = useWatch({
@@ -74,10 +87,15 @@ export const ChallengeTotalField: FC = () => {
                 : 0
         )
 
-        return challengeTotal + challengeFee
+        return challengeTotal + (
+            props.includeChallengeFee === false
+                ? 0
+                : challengeFee
+        )
     }, [
         calculatedChallengeFee,
         challengeTotal,
+        props.includeChallengeFee,
         watchedChallengeFee,
     ])
     const formattedValue = useMemo(
@@ -87,7 +105,7 @@ export const ChallengeTotalField: FC = () => {
 
     return (
         <div className={styles.lineItem}>
-            <span className={styles.label}>Estimated challenge total:</span>
+            <span className={styles.label}>{props.label || 'Estimated challenge total:'}</span>
             <span className={styles.value}>{formattedValue}</span>
         </div>
     )

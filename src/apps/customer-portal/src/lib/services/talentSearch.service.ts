@@ -21,16 +21,20 @@ export type SearchTalent = {
 }
 
 export type MemberSearchPayload = {
+    countries?: string[]
     limit: number
-    openToWork: boolean
+    openToWork?: boolean
     page: number
-    recentlyActive: boolean
+    profileComplete?: boolean
+    recentlyActive?: boolean
+    sortBy?: 'handle' | 'matchIndex'
+    sortOrder?: 'asc' | 'desc'
     skillSearchType: 'OR'
     skills: Array<{
         id: string
         wins: number
     }>
-    verifiedProfile: boolean
+    verifiedProfile?: boolean
 }
 
 export type MemberSearchResponse = {

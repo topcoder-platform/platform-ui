@@ -34,15 +34,20 @@ import {
 import { WorkAppContext } from '../../../lib/contexts'
 import {
     useFetchChallenge,
+    useFetchProject,
     useFetchResourceRoles,
     useFetchResources,
 } from '../../../lib/hooks'
-import type { UseFetchChallengeResult } from '../../../lib/hooks'
+import type {
+    UseFetchChallengeResult,
+    UseFetchProjectResult,
+} from '../../../lib/hooks'
 import {
     deleteChallenge,
     patchChallenge,
 } from '../../../lib/services'
 import {
+    checkProjectAccess,
     extractErrorMessage,
     getStatusText,
     isChallengeCompletedOrCancelled,
@@ -85,6 +90,7 @@ const CANCEL_CHALLENGE_STATUSES: string[] = [
 const NO_TASK_ASSIGNEE_MESSAGE = 'Task is not assigned yet'
 const MARK_COMPLETE_TOOLTIP_MESSAGE
     = 'This will close the task and generate a payment for the assignee and copilot.'
+const PROJECT_ACCESS_DENIED_MESSAGE = 'You don’t have access to this project. Please contact support@topcoder.com.'
 
 interface EditorTabsProps {
     activeTab: EditorTab
@@ -122,6 +128,8 @@ interface ChallengeEditorBodyProps {
     canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
+    isProjectAccessDenied: boolean
+    isProjectAccessLoading: boolean
     isExistingChallenge: boolean
     isLaunchDisabled: boolean
     isReadOnly: boolean
@@ -140,7 +148,75 @@ interface ChallengeEditorBodyProps {
 
 interface ChallengeQuickLinksProps {
     challenge: UseFetchChallengeResult['challenge']
-    challengeId?: string
+}
+
+interface ChallengeProjectAccessParams {
+    hasChallengeProjectMismatch: boolean
+    isProjectLoading: boolean
+    project?: UseFetchProjectResult['project']
+    projectError?: Error
+    projectId?: string
+    userId?: number | string
+    userRoles: string[]
+}
+
+interface ChallengeProjectAccessState {
+    isDenied: boolean
+    isLoading: boolean
+}
+
+/**
+ * Normalizes a project identifier from route, challenge, or created challenge data.
+ *
+ * @param projectId project id value that may be a number, string, or absent.
+ * @returns trimmed project id text when present; otherwise `undefined`.
+ */
+function normalizeProjectId(projectId: number | string | undefined): string | undefined {
+    if (projectId === undefined || projectId === null) {
+        return undefined
+    }
+
+    const normalizedProjectId = String(projectId)
+        .trim()
+
+    return normalizedProjectId || undefined
+}
+
+/**
+ * Resolves whether challenge editor content can render for a project-owned challenge.
+ *
+ * @param params project lookup, route/challenge ownership, and caller identity state.
+ * @returns loading and denied flags used to hide challenge details until access is confirmed.
+ */
+function resolveChallengeProjectAccess(
+    params: ChallengeProjectAccessParams,
+): ChallengeProjectAccessState {
+    if (!params.projectId) {
+        return {
+            isDenied: params.hasChallengeProjectMismatch,
+            isLoading: false,
+        }
+    }
+
+    if (params.isProjectLoading) {
+        return {
+            isDenied: false,
+            isLoading: true,
+        }
+    }
+
+    const hasProjectAccess = checkProjectAccess(
+        params.userRoles,
+        params.userId,
+        params.project,
+    )
+
+    return {
+        isDenied: params.hasChallengeProjectMismatch
+            || !!params.projectError
+            || !hasProjectAccess,
+        isLoading: false,
+    }
 }
 
 function getErrorMessage(error: Error | undefined): string {
@@ -210,6 +286,7 @@ function shouldShowDeleteAction(
 function useResolvedChallengeStatus(
     challengeId: string | undefined,
     fetchedChallengeStatus: string | undefined,
+    shouldResetChallengeStatus: boolean,
 ): [
     string | undefined,
     (status?: string) => void,
@@ -221,6 +298,15 @@ function useResolvedChallengeStatus(
         lastFetchedChallengeStatusRef.current = undefined
         setChallengeStatus(undefined)
     }, [challengeId])
+
+    useEffect(() => {
+        if (!shouldResetChallengeStatus) {
+            return
+        }
+
+        lastFetchedChallengeStatusRef.current = undefined
+        setChallengeStatus(undefined)
+    }, [shouldResetChallengeStatus])
 
     useEffect(() => {
         if (
@@ -701,7 +787,11 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
             confirmText={params.isLaunching
                 ? 'Launching...'
                 : 'Launch'}
-            message={`Are you ready to launch challenge ${params.challengeName}?`}
+            message={
+                `Are you ready to launch challenge ${params.challengeName}?
+
+Prizes and copilot fees are locked after launch. Contact the Project Manager for any updates post-launch.`
+            }
             onCancel={params.onLaunchCancel}
             onConfirm={params.onLaunchConfirmClick}
             title='Launch Challenge'
@@ -852,6 +942,14 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
 const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
     props: ChallengeEditorBodyProps,
 ) => {
+    if (props.isProjectAccessLoading) {
+        return <LoadingSpinner />
+    }
+
+    if (props.isProjectAccessDenied) {
+        return <ErrorMessage message={PROJECT_ACCESS_DENIED_MESSAGE} />
+    }
+
     if (props.challengeResult.isLoading) {
         return <LoadingSpinner />
     }
@@ -900,7 +998,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 function renderChallengeQuickLinks(
     props: ChallengeQuickLinksProps,
 ): JSX.Element | undefined {
-    const resolvedChallengeId = props.challenge?.id || props.challengeId
+    const resolvedChallengeId = props.challenge?.id
 
     if (!resolvedChallengeId) {
         return undefined
@@ -954,7 +1052,7 @@ export const ChallengeEditorPage: FC = () => {
     const params: Readonly<{ challengeId?: string; projectId?: string }>
         = useParams<'challengeId' | 'projectId'>()
     const challengeId = params.challengeId
-    const routeProjectId = params.projectId
+    const routeProjectId = normalizeProjectId(params.projectId)
 
     const isExistingChallenge = !!challengeId
     const isViewMode = isChallengeEditorViewPath(location.pathname)
@@ -967,13 +1065,34 @@ export const ChallengeEditorPage: FC = () => {
     const [createdChallenge, setCreatedChallenge] = useState<CreatedChallengeState | undefined>()
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
     const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false)
-    const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
+    const workAppContext = useContext(WorkAppContext)
+    const routeProjectResult: UseFetchProjectResult = useFetchProject(routeProjectId)
+    const canFetchProjectRouteChallenge = !routeProjectId
+        || (
+            !routeProjectResult.isLoading
+            && !routeProjectResult.error
+            && checkProjectAccess(
+                workAppContext.userRoles,
+                workAppContext.loginUserInfo?.userId,
+                routeProjectResult.project,
+            )
+        )
+    const challengeResult: UseFetchChallengeResult = useFetchChallenge(
+        canFetchProjectRouteChallenge
+            ? challengeId
+            : undefined,
+    )
     const [
         challengeStatus,
         handleChallengeStatusChange,
     ] = useResolvedChallengeStatus(
         challengeId,
         challengeResult.challenge?.status,
+        isExistingChallenge
+            && (
+                challengeResult.isError
+                || (!challengeResult.isLoading && !challengeResult.challenge)
+            ),
     )
     const handleRetry = useCallback((): void => {
         challengeResult.mutate()
@@ -999,12 +1118,13 @@ export const ChallengeEditorPage: FC = () => {
         handleChallengeStatusChange(challenge.status)
     }, [handleChallengeStatusChange])
 
-    const challengeProjectId = challengeResult.challenge?.projectId
-        ? String(challengeResult.challenge.projectId)
-        : undefined
-    const createdChallengeProjectId = createdChallenge?.projectId
-        ? String(createdChallenge.projectId)
-        : undefined
+    const challengeProjectId = normalizeProjectId(challengeResult.challenge?.projectId)
+    const createdChallengeProjectId = normalizeProjectId(createdChallenge?.projectId)
+    const challengeProjectResult: UseFetchProjectResult = useFetchProject(
+        routeProjectId
+            ? undefined
+            : challengeProjectId,
+    )
     const projectId = routeProjectId || challengeProjectId || createdChallengeProjectId
     const persistedChallengeId = challengeId || createdChallenge?.id
     const isCreatedChallenge = !isExistingChallenge && !!createdChallenge?.id
@@ -1037,18 +1157,22 @@ export const ChallengeEditorPage: FC = () => {
         }
     }, [challengeId])
 
-    const pageTitle = getChallengeEditorPageTitle(
-        challengeId,
-        isViewMode,
-        challengeResult.challenge?.name,
-    )
+    const hasSuccessfulCurrentChallengeFetch = !isExistingChallenge
+        || (
+            !challengeResult.isError
+            && !challengeResult.isLoading
+            && !!challengeResult.challenge
+        )
+    const currentChallenge = hasSuccessfulCurrentChallengeFetch
+        ? challengeResult.challenge
+        : undefined
     const effectiveChallengeStatus = challengeStatus
         || createdChallenge?.status
-        || challengeResult.challenge?.status
-    const headerChallenge = challengeResult.challenge
+        || currentChallenge?.status
+    const headerChallenge = currentChallenge
         ? {
-            ...challengeResult.challenge,
-            status: effectiveChallengeStatus || challengeResult.challenge.status,
+            ...currentChallenge,
+            status: effectiveChallengeStatus || currentChallenge.status,
         }
         : undefined
     const canLaunchChallenge = shouldShowLaunchAction(
@@ -1174,21 +1298,51 @@ export const ChallengeEditorPage: FC = () => {
 
         navigate(editChallengePath)
     }, [editChallengePath, navigate])
-    const challengeQuickLinks = renderChallengeQuickLinks({
-        challenge: challengeResult.challenge,
-        challengeId,
+    const projectAccessResult = routeProjectId
+        ? routeProjectResult
+        : challengeProjectResult
+    const hasChallengeProjectMismatch = !!routeProjectId
+        && !!challengeProjectId
+        && routeProjectId !== challengeProjectId
+    const projectAccessState = resolveChallengeProjectAccess({
+        hasChallengeProjectMismatch,
+        isProjectLoading: projectAccessResult.isLoading,
+        project: projectAccessResult.project,
+        projectError: projectAccessResult.error,
+        projectId,
+        userId: workAppContext.loginUserInfo?.userId,
+        userRoles: workAppContext.userRoles,
     })
-    const canEditChallenge = isViewMode
+    const canRenderChallengeDetails = !projectAccessState.isDenied && !projectAccessState.isLoading
+    const pageTitle = getChallengeEditorPageTitle(
+        challengeId,
+        isViewMode,
+        canRenderChallengeDetails
+            ? challengeResult.challenge?.name
+            : undefined,
+    )
+    const challengeQuickLinks = renderChallengeQuickLinks({
+        challenge: canRenderChallengeDetails
+            ? currentChallenge
+            : undefined,
+    })
+    const canEditChallenge = hasSuccessfulCurrentChallengeFetch
+        && canRenderChallengeDetails
+        && isViewMode
         && !!editChallengePath
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
-        canCancelChallenge,
-        canCompleteTask,
-        canDeleteChallenge,
+        canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,
+        canCompleteTask: canRenderChallengeDetails && canCompleteTask,
+        canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
         canEditChallenge,
-        canLaunchChallenge,
-        challenge: headerChallenge,
-        challengeId: persistedChallengeId,
+        canLaunchChallenge: canRenderChallengeDetails && canLaunchChallenge,
+        challenge: canRenderChallengeDetails
+            ? headerChallenge
+            : undefined,
+        challengeId: canRenderChallengeDetails
+            ? persistedChallengeId
+            : undefined,
         challengeName: launchChallengeName,
         challengeQuickLinks,
         isDeleting,
@@ -1200,7 +1354,7 @@ export const ChallengeEditorPage: FC = () => {
         onLaunchOpen: handleLaunchOpen,
     })
     const deleteModal = renderDeleteModal({
-        canDeleteChallenge,
+        canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
         challengeName: deleteChallengeName,
         isDeleting,
         onDeleteCancel: handleDeleteCancel,
@@ -1208,7 +1362,7 @@ export const ChallengeEditorPage: FC = () => {
         showDeleteModal,
     })
     const launchModal = renderLaunchModal({
-        canLaunchChallenge,
+        canLaunchChallenge: canRenderChallengeDetails && canLaunchChallenge,
         challengeName: launchChallengeName,
         isLaunching,
         onLaunchCancel: handleLaunchCancel,
@@ -1216,18 +1370,22 @@ export const ChallengeEditorPage: FC = () => {
         showLaunchModal,
     })
     const titleAction = renderTitleAction(
-        isExistingChallenge || isCreatedChallenge,
+        canRenderChallengeDetails
+            && ((isExistingChallenge && hasSuccessfulCurrentChallengeFetch) || isCreatedChallenge),
         effectiveChallengeStatus,
     )
     const launchButtonLabel = isLaunching
         ? 'Launching...'
         : 'Launch'
     const isLaunchDisabled = isLaunching || isSavingChallenge
+    const backUrl = canRenderChallengeDetails
+        ? challengesListPath
+        : getChallengesListPath()
 
     return (
         <>
             <PageWrapper
-                backUrl={challengesListPath}
+                backUrl={backUrl}
                 breadCrumb={[]}
                 pageTitle={pageTitle}
                 rightHeader={rightHeader}
@@ -1239,6 +1397,8 @@ export const ChallengeEditorPage: FC = () => {
                         canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
+                        isProjectAccessDenied={projectAccessState.isDenied}
+                        isProjectAccessLoading={projectAccessState.isLoading}
                         isExistingChallenge={isExistingChallenge}
                         isLaunchDisabled={isLaunchDisabled}
                         isReadOnly={isViewMode}

@@ -21,7 +21,11 @@ import type {
 import {
     useFetchEngagement,
     useFetchProject,
+    useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
+import {
+    partiallyUpdateEngagement,
+} from '../../../lib/services'
 
 import {
     EditAssignmentModal,
@@ -92,6 +96,7 @@ jest.mock('../../../lib/components/form', () => ({
 jest.mock('../../../lib/hooks', () => ({
     useFetchEngagement: jest.fn(),
     useFetchProject: jest.fn(),
+    useFetchProjectBillingAccount: jest.fn(),
 }))
 
 jest.mock('../../../lib/services', () => ({
@@ -101,7 +106,7 @@ jest.mock('../../../lib/services', () => ({
 }))
 
 jest.mock('../../../lib/utils', () => ({
-    calculateAssignmentRatePerWeek: jest.fn((ratePerHour?: string, standardHoursPerWeek?: string) => {
+    calculateAssignmentRatePerWeek: (ratePerHour?: string, standardHoursPerWeek?: string) => {
         const rate = Number(ratePerHour || 0)
         const hours = Number(standardHoursPerWeek || 0)
 
@@ -109,38 +114,46 @@ jest.mock('../../../lib/utils', () => ({
             ? (rate * hours)
                 .toFixed(2)
             : ''
-    }),
-    deserializeTentativeAssignmentDate: jest.fn((value?: string) => (
+    },
+    deserializeTentativeAssignmentDate: (value?: string) => (
         value
             ? new Date(value)
             : undefined
-    )),
-    normalizeAssignmentStatus: jest.fn((status: string) => status),
-    sanitizePositiveNumericInput: jest.fn((value: string) => value),
-    serializeTentativeAssignmentDate: jest.fn((value: Date) => value.toISOString()),
+    ),
+    getCountableEngagementAssignments: (assignments: Array<{ status?: string }> = []) => (
+        assignments.filter(assignment => !['COMPLETED', 'OFFER_REJECTED', 'TERMINATED'].includes(
+            String(assignment.status || '')
+                .trim()
+                .replace(/[\s-]+/g, '_')
+                .toUpperCase(),
+        ))
+    ),
+    normalizeAssignmentStatus: (status: string) => status,
+    sanitizePositiveNumericInput: (value: string) => value,
+    serializeTentativeAssignmentDate: (value: Date) => value.toISOString(),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
-    toPositiveInteger: jest.fn((value: string) => {
+    toPositiveInteger: (value: string) => {
         const parsed = Number.parseInt(value, 10)
 
         return Number.isFinite(parsed) && parsed > 0
             ? parsed
             : undefined
-    }),
-    toPositiveNumber: jest.fn((value: string) => {
+    },
+    toPositiveNumber: (value: string) => {
         const parsed = Number(value)
 
         return Number.isFinite(parsed) && parsed > 0
             ? parsed
             : undefined
-    }),
-    toPositiveNumberWithMaxDecimalPlaces: jest.fn((value: string) => {
+    },
+    toPositiveNumberWithMaxDecimalPlaces: (value: string) => {
         const parsed = Number(value)
 
         return Number.isFinite(parsed) && parsed > 0
             ? parsed
             : undefined
-    }),
+    },
 }))
 
 jest.mock('../../../lib/utils/payment.utils', () => ({
@@ -165,9 +178,22 @@ const assignment: Assignment = {
 
 const mockedUseFetchEngagement = useFetchEngagement as jest.MockedFunction<typeof useFetchEngagement>
 const mockedUseFetchProject = useFetchProject as jest.MockedFunction<typeof useFetchProject>
+const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.MockedFunction<
+    typeof useFetchProjectBillingAccount
+>
+const mockedPartiallyUpdateEngagement = partiallyUpdateEngagement as jest.MockedFunction<
+    typeof partiallyUpdateEngagement
+>
 
 beforeEach(() => {
     jest.clearAllMocks()
+    mockedUseFetchProjectBillingAccount.mockReturnValue({
+        billingAccount: {
+            id: 'billing-account-1',
+            markup: 0.15,
+        },
+        isLoading: false,
+    } as unknown as ReturnType<typeof useFetchProjectBillingAccount>)
 })
 
 describe('EngagementPaymentPage', () => {
@@ -193,7 +219,7 @@ describe('EngagementPaymentPage', () => {
             },
         } as unknown as ReturnType<typeof useFetchProject>)
 
-        render(
+        const renderedPage: ReturnType<typeof render> = render(
             <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
                 <Routes>
                     <Route
@@ -203,9 +229,19 @@ describe('EngagementPaymentPage', () => {
                 </Routes>
             </MemoryRouter>,
         )
+        const container: HTMLElement = renderedPage.container
 
         expect(screen.queryByText('testing 123'))
             .toBeNull()
+        const labels: Array<string | null> = Array.from(container.querySelectorAll('.label'))
+            .map(element => element.textContent)
+
+        expect(labels)
+            .toEqual(expect.arrayContaining([
+                'Billing Start Date*',
+                'Rate Per Hour*',
+                'Standard Hours Per Week*',
+            ]))
 
         fireEvent.click(screen.getByRole('button', {
             name: 'View other remarks for testaws1',
@@ -231,6 +267,84 @@ describe('EngagementPaymentPage', () => {
             expect(screen.queryByText('testing 123'))
                 .toBeNull()
         })
+    })
+
+    it('updates active assignment details without resubmitting terminal assignment history', async () => {
+        const mutateEngagement = jest.fn()
+            .mockResolvedValue(undefined)
+        const terminatedAssignment: Assignment = {
+            ...assignment,
+            agreementRate: '200.00',
+            endDate: '2026-04-01T00:00:00.000Z',
+            id: 'assignment-terminated',
+            memberHandle: 'finished_member',
+            memberId: '67890',
+            status: 'TERMINATED',
+            terminationReason: 'Completed elsewhere',
+        }
+
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [assignment, terminatedAssignment],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: mutateEngagement,
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        mockedPartiallyUpdateEngagement.mockResolvedValue({
+            assignments: [assignment, terminatedAssignment],
+            title: 'Test Engagement',
+        } as any)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+        fireEvent.click(within(await screen.findByRole('dialog'))
+            .getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockedPartiallyUpdateEngagement)
+                .toHaveBeenCalled()
+        })
+
+        const payload = mockedPartiallyUpdateEngagement.mock.calls[0][1] as {
+            assignmentDetails?: Array<{ memberHandle?: string }>
+        }
+
+        expect(payload.assignmentDetails)
+            .toHaveLength(1)
+        expect(payload.assignmentDetails?.[0])
+            .toEqual(expect.objectContaining({
+                memberHandle: 'testaws1',
+            }))
+        expect(payload.assignmentDetails)
+            .toEqual(expect.not.arrayContaining([
+                expect.objectContaining({
+                    memberHandle: 'finished_member',
+                }),
+            ]))
     })
 })
 

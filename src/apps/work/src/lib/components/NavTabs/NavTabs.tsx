@@ -10,20 +10,19 @@ import {
     useRef,
     useState,
 } from 'react'
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { IconOutline } from '~/libs/ui'
 
-import { WorkAppContext } from '../../contexts'
+import { WorkAppContext } from '../../contexts/WorkAppContext'
 import { WorkAppContextModel } from '../../models'
 
 import { getTabIdFromPathName, getTabsConfig } from './config'
 import styles from './NavTabs.module.scss'
 
 const NavTabs: FC = () => {
-    const navigate: NavigateFunction = useNavigate()
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
@@ -57,28 +56,32 @@ const NavTabs: FC = () => {
     }, [isOpen])
 
     const handleTabClick = useCallback(
-        (event: MouseEvent<HTMLLIElement>) => {
-            const {
-                tabId,
-                tabUrl,
-            }: { tabId?: string; tabUrl?: string } = event.currentTarget.dataset
+        (event: MouseEvent<HTMLAnchorElement>) => {
+            if (
+                event.button !== 0
+                || event.altKey
+                || event.ctrlKey
+                || event.metaKey
+                || event.shiftKey
+            ) {
+                return
+            }
+
+            const { tabId }: { tabId?: string } = event.currentTarget.dataset
 
             if (!tabId) {
                 return
             }
 
-            if (tabUrl) {
-                setIsOpen(false)
-                window.open(tabUrl, '_blank', 'noopener,noreferrer')
-                return
-            }
-
             setActiveTab(tabId)
             setIsOpen(false)
-            navigate(tabId)
         },
-        [navigate],
+        [],
     )
+
+    const handleExternalTabClick = useCallback(() => {
+        setIsOpen(false)
+    }, [])
 
     useClickOutside(triggerRef.current, () => setIsOpen(false))
 
@@ -102,16 +105,30 @@ const NavTabs: FC = () => {
                             <li
                                 key={tab.id}
                                 className={isActive ? `${styles.active}` : ''}
-                                data-tab-id={tab.id}
-                                data-tab-url={tab.url || undefined}
-                                onClick={handleTabClick}
                             >
-                                <span className={styles.tabLabel}>{tab.title}</span>
-                                {tab.url && (
-                                    <IconOutline.ExternalLinkIcon
-                                        aria-hidden='true'
-                                        className={styles.externalIcon}
-                                    />
+                                {tab.url ? (
+                                    <a
+                                        className={styles.tabLink}
+                                        href={tab.url}
+                                        onClick={handleExternalTabClick}
+                                        rel='noopener noreferrer'
+                                        target='_blank'
+                                    >
+                                        <span className={styles.tabLabel}>{tab.title}</span>
+                                        <IconOutline.ExternalLinkIcon
+                                            aria-hidden='true'
+                                            className={styles.externalIcon}
+                                        />
+                                    </a>
+                                ) : (
+                                    <Link
+                                        className={styles.tabLink}
+                                        data-tab-id={tab.id}
+                                        onClick={handleTabClick}
+                                        to={tab.id}
+                                    >
+                                        <span className={styles.tabLabel}>{tab.title}</span>
+                                    </Link>
                                 )}
                             </li>
                         )

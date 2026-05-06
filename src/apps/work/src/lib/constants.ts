@@ -2,6 +2,12 @@ import { EnvironmentConfig } from '~/config'
 
 export const WORK_APP_BODY_CLASS = 'work-app'
 
+export const BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = true
+
+export const BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
+
+export const BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED = true
+
 const DEFAULT_CREATE_FORUM_TYPE_IDS = [
     '927abff4-7af9-4145-8ba1-577c16e64e2e',
     'dc876fa4-ef2d-4eee-b701-b555fcc6544c',
@@ -24,6 +30,12 @@ export const CHALLENGE_STATUS = {
     COMPLETED: 'COMPLETED',
     DRAFT: 'DRAFT',
     NEW: 'NEW',
+} as const
+
+export const CHALLENGE_APPROVAL_STATUS = {
+    APPROVED: 'APPROVED',
+    PENDING_APPROVAL: 'PENDING_APPROVAL',
+    REJECTED: 'REJECTED',
 } as const
 
 export const PAGE_SIZE = 10
@@ -221,6 +233,11 @@ export const RESOURCE_ROLES_API_URL = normalizeApiUrlForEnvironment(rawResourceR
 export const SUBMISSIONS_API_URL = process.env.REACT_APP_SUBMISSIONS_API_URL
     || process.env.SUBMISSIONS_API_URL
     || `${EnvironmentConfig.API.V6}/submissions`
+
+export const MARATHON_MATCH_API_URL = process.env.REACT_APP_MARATHON_MATCH_API_URL
+    || process.env.MARATHON_MATCH_API_URL
+    || EnvironmentConfig.MARATHON_MATCH_API
+    || `${EnvironmentConfig.API.V6}/marathon-match`
 
 export const COMMUNITY_APP_URL = process.env.REACT_APP_COMMUNITY_APP_URL
     || process.env.COMMUNITY_APP_URL

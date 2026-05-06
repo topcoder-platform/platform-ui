@@ -140,6 +140,21 @@ describe('challenge-editor utils wiproAllowed mapping', () => {
     })
 })
 
+describe('challenge-editor utils creator mapping', () => {
+    it('keeps the challenge creator handle in form data', () => {
+        const result = transformChallengeToFormData({
+            createdBy: ' challenge.creator ',
+            description: 'Public specification',
+            name: 'Creator Challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.createdBy)
+            .toBe('challenge.creator')
+    })
+})
+
 describe('challenge-editor utils billing markup mapping', () => {
     it('keeps billing markup when converting challenge to form data', () => {
         const result = transformChallengeToFormData({

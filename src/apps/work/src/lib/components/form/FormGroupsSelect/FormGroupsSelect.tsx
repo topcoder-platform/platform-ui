@@ -23,7 +23,6 @@ import {
 } from '../../../models'
 import {
     createGroup,
-    fetchGroupById,
     fetchGroups,
 } from '../../../services'
 import { FormFieldWrapper } from '../FormFieldWrapper'
@@ -178,26 +177,37 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
 
         let isMounted = true
 
-        Promise.all(missingGroupIds.map(async groupId => {
-            try {
-                const group = await fetchGroupById(groupId)
-
-                return toOption(group)
-            } catch {
-                return {
-                    label: groupId,
-                    value: groupId,
-                }
-            }
-        }))
-            .then(resolvedOptions => {
+        fetchGroups()
+            .then(accessibleGroups => {
                 if (!isMounted) {
                     return
                 }
 
+                const accessibleGroupsById = new Map(
+                    accessibleGroups.map(group => [group.id, toOption(group)]),
+                )
+                const resolvedOptions = missingGroupIds.map(groupId => (
+                    accessibleGroupsById.get(groupId) || {
+                        label: groupId,
+                        value: groupId,
+                    }
+                ))
+
                 setOptionCache(previousOptions => mergeOptions(previousOptions, resolvedOptions))
             })
-            .catch(() => undefined)
+            .catch(() => {
+                if (!isMounted) {
+                    return
+                }
+
+                setOptionCache(previousOptions => mergeOptions(
+                    previousOptions,
+                    missingGroupIds.map(groupId => ({
+                        label: groupId,
+                        value: groupId,
+                    })),
+                ))
+            })
 
         return () => {
             isMounted = false
