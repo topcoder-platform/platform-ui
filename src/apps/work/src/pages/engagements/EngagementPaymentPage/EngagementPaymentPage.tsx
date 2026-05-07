@@ -61,10 +61,16 @@ import {
     toPositiveNumber,
     toPositiveNumberWithMaxDecimalPlaces,
 } from '../../../lib/utils'
+import {
+    getProjectBillingAccountEngagementPaymentErrorMessage,
+    getProjectBillingAccountEngagementPaymentIssue,
+} from '../../../lib/utils/project-billing-account.utils'
 import { formatCurrency } from '../../../lib/utils/payment.utils'
 import { ReactComponent as IconComment } from '../../../lib/assets/icons/icon-comment.svg'
 
 import styles from './EngagementPaymentPage.module.scss'
+
+const BILLING_ACCOUNT_DETAILS_LOADING_PAYMENT_MESSAGE = 'Billing account details are still loading. Please try again.'
 
 function formatDate(value?: string): string {
     if (!value) {
@@ -595,6 +601,12 @@ export const EngagementPaymentPage: FC = () => {
     const pageTitle = engagementResult.engagement?.title
         ? `${engagementResult.engagement.title} Assignees`
         : 'Assignees'
+    const billingAccountPaymentIssue = getProjectBillingAccountEngagementPaymentIssue(
+        projectBillingAccountResult.billingAccount,
+    )
+    const billingAccountPaymentErrorMessage = billingAccountPaymentIssue
+        ? getProjectBillingAccountEngagementPaymentErrorMessage(billingAccountPaymentIssue)
+        : undefined
     const backUrl = useMemo(() => {
         const locationState = location.state as AssignmentsLocationState | null
         const stateBackUrl = String(locationState?.backUrl || '')
@@ -613,6 +625,16 @@ export const EngagementPaymentPage: FC = () => {
         data: PaymentFormData,
     ): Promise<void> => {
         if (!paymentMember) {
+            return
+        }
+
+        if (projectBillingAccountResult.isLoading) {
+            showErrorToast(BILLING_ACCOUNT_DETAILS_LOADING_PAYMENT_MESSAGE)
+            return
+        }
+
+        if (billingAccountPaymentErrorMessage) {
+            showErrorToast(billingAccountPaymentErrorMessage)
             return
         }
 
@@ -654,10 +676,26 @@ export const EngagementPaymentPage: FC = () => {
             setIsSubmittingPayment(false)
         }
     }, [
+        billingAccountPaymentErrorMessage,
         paymentMember,
         projectBillingAccountResult.billingAccount?.id,
+        projectBillingAccountResult.isLoading,
         projectResult.project?.billingAccountId,
     ])
+
+    const handlePayClick = useCallback((assignment: Assignment): void => {
+        if (projectBillingAccountResult.isLoading) {
+            showErrorToast(BILLING_ACCOUNT_DETAILS_LOADING_PAYMENT_MESSAGE)
+            return
+        }
+
+        if (billingAccountPaymentErrorMessage) {
+            showErrorToast(billingAccountPaymentErrorMessage)
+            return
+        }
+
+        setPaymentMember(assignment)
+    }, [billingAccountPaymentErrorMessage, projectBillingAccountResult.isLoading])
 
     const handleTerminateConfirm = useCallback(async (reason: string): Promise<void> => {
         if (!terminateMember) {
@@ -939,7 +977,7 @@ export const EngagementPaymentPage: FC = () => {
                                                             />
                                                             <Button
                                                                 label='Pay'
-                                                                onClick={() => setPaymentMember(assignment)}
+                                                                onClick={() => handlePayClick(assignment)}
                                                                 variant='linkblue'
                                                                 primary
                                                                 size='sm'
