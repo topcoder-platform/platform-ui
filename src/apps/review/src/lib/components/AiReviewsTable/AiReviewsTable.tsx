@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { FC, MouseEvent as ReactMouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -274,8 +275,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
 
         const failedReviewersText = failedGatingReviewers.length
-            ? `Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.
-                This submission is automatically failed regardless of Overall Score.`
+            ? `This submission failed regardless of Overall Score because it failed one or more of the AI Gating Reviews.
+                Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.`
             : `This submission is failed because ${hasSubmitterRole ? 'your' : 'the'}
                 Overall Score is bellow minimum threshold.`
 
@@ -293,10 +294,10 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
 
         if (hasSubmitterRole) {
-            return 'Submission Locked - Your submission will not be reviewed in the Review Phase.'
+            return 'Submission Locked - Your submission won\'t be reviewed during the Review Phase.'
         }
 
-        return 'Submission Locked - This submission doesn\'t have to be reviewed in Review Phase.'
+        return 'Submission Locked - This submission won\'t be reviewed during the Review Phase.'
     }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
     if (isTablet) {
