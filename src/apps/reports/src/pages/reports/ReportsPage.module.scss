@@ -227,6 +227,12 @@
     margin-top: 24px;
 }
 
+.paymentsResults {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .paymentsSectionTitle {
     font-weight: 600;
     margin-bottom: 8px;
@@ -236,6 +242,38 @@
     overflow-x: auto;
     border: 1px solid #e4e6e9;
     border-radius: 6px;
+}
+
+.paymentsPagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.perPageControl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.perPageControl label {
+    color: #565a5f;
+    font-size: 13px;
+}
+
+.perPageControl select {
+    min-width: 72px;
+    padding: 5px 8px;
+    border: 1px solid #d7d9dd;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.paginationMeta {
+    color: #565a5f;
+    font-size: 13px;
 }
 
 .paymentsTable {
