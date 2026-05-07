@@ -279,6 +279,47 @@ describe('ProjectsTable', () => {
             .toHaveBeenCalledWith('80001063')
     })
 
+    it('loads billing account detail budgets for project managers when the list '
+        + 'lookup has no budget', () => {
+        mockedUseFetchBillingAccounts.mockReturnValue({
+            billingAccounts: [
+                {
+                    id: 80001063,
+                    name: 'Access BA',
+                },
+            ],
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        })
+        mockedUseFetchBillingAccountDetails.mockImplementation(billingAccountId => ({
+            billingAccountDetails: billingAccountId === '80001063'
+                ? billingAccountDetails
+                : undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+        }))
+
+        renderTable(
+            [{
+                ...invitedProject,
+                billingAccountId: 80001063,
+                billingAccountName: 'Access BA',
+            }],
+            {
+                ...defaultContextValue,
+                isManager: true,
+                userRoles: ['Topcoder Project Manager'],
+            },
+        )
+
+        expect(screen.getAllByText('$350 / $1,000 spent').length)
+            .toBeGreaterThan(0)
+        expect(mockedUseFetchBillingAccountDetails)
+            .toHaveBeenCalledWith('80001063')
+    })
+
     it('shows member payments remaining for copilot project rows', () => {
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [

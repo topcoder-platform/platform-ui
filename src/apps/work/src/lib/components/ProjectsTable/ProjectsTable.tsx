@@ -408,7 +408,9 @@ function renderProjectBillingAccountModal(
 
 /**
  * Renders a project billing-account summary and lazily loads the line-item
- * modal only after the details button is opened.
+ * modal only after the details button is opened. When the list lookup does
+ * not include budget totals, it uses the billing-account detail payload as
+ * the inline budget fallback.
  *
  * @param props Project row and matching billing-account summary from the list API.
  * @returns Billing-account label, with budget and line-item details shown only when enabled.
@@ -420,16 +422,29 @@ const ProjectBillingAccountCell: FC<ProjectBillingAccountCellProps> = (
     const normalizedBillingAccountId = normalizeOptionalString(props.project.billingAccountId)
         || normalizeOptionalString(props.billingAccount?.id)
     const showDetailsButton = props.showPaymentAmounts
-    const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
-        canFetchProjectBillingAccountDetails(isModalOpen, showDetailsButton)
-            ? normalizedBillingAccountId
-            : undefined,
-    )
-    const budgetDisplayState = getProjectBillingBudgetDisplayState(
+    const summaryBudgetDisplayState = getProjectBillingBudgetDisplayState(
         props.billingAccount,
         props.showPaymentAmounts,
         props.showMemberPaymentsRemaining,
     )
+    const shouldFetchBillingAccountDetailsForBudget = !!normalizedBillingAccountId
+        && props.showPaymentAmounts
+        && !summaryBudgetDisplayState.budgetInfo
+        && (BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED || props.showMemberPaymentsRemaining)
+    const billingAccountDetailsResult: UseFetchBillingAccountDetailsResult = useFetchBillingAccountDetails(
+        shouldFetchBillingAccountDetailsForBudget
+        || canFetchProjectBillingAccountDetails(isModalOpen, showDetailsButton)
+            ? normalizedBillingAccountId
+            : undefined,
+    )
+    const detailsBudgetDisplayState = getProjectBillingBudgetDisplayState(
+        billingAccountDetailsResult.billingAccountDetails,
+        props.showPaymentAmounts,
+        props.showMemberPaymentsRemaining,
+    )
+    const budgetDisplayState = summaryBudgetDisplayState.budgetInfo
+        ? summaryBudgetDisplayState
+        : detailsBudgetDisplayState
     const billingAccountBudget = renderProjectBillingAccountBudget(
         budgetDisplayState,
         props.showMemberPaymentsRemaining,
