@@ -11,6 +11,9 @@ import type {
 } from '../models'
 
 import {
+    fetchBillingAccountById,
+} from './billing-accounts.service'
+import {
     searchProfilesByUserIds,
 } from './users.service'
 
@@ -146,6 +149,89 @@ async function hydratePaymentCreatorHandles(
     }
 }
 
+/**
+ * Hydrates payment details with billing account names for payment history rows.
+ *
+ * @param payments payment rows returned by the finance API.
+ * @returns the original rows with `details[].billingAccountName` added when a
+ * billing account lookup succeeds.
+ *
+ * @remarks Lookup failures are ignored so payment history can still display
+ * the stored BA ID returned by finance.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+async function hydratePaymentBillingAccountNames(
+    payments: AssignmentPayment[],
+): Promise<AssignmentPayment[]> {
+    const billingAccountIds = Array.from(new Set(
+        payments
+            .flatMap(payment => payment.details || [])
+            .map(detail => String(detail.billingAccount || '')
+                .trim())
+            .filter(Boolean),
+    ))
+
+    if (!billingAccountIds.length) {
+        return payments
+    }
+
+    const billingAccountNamesById = new Map<string, string>()
+
+    await Promise.all(billingAccountIds.map(async billingAccountId => {
+        try {
+            const billingAccount = await fetchBillingAccountById(billingAccountId)
+            const billingAccountName = String(billingAccount.name || '')
+                .trim()
+
+            if (billingAccountName) {
+                billingAccountNamesById.set(billingAccountId, billingAccountName)
+            }
+        } catch {
+            // Keep payment history usable even when a billing-account lookup fails.
+        }
+    }))
+
+    if (!billingAccountNamesById.size) {
+        return payments
+    }
+
+    return payments.map(payment => {
+        if (!payment.details?.length) {
+            return payment
+        }
+
+        let changed = false
+        const details = payment.details.map(detail => {
+            if (detail.billingAccountName) {
+                return detail
+            }
+
+            const billingAccountId = String(detail.billingAccount || '')
+                .trim()
+            const billingAccountName = billingAccountNamesById.get(billingAccountId)
+
+            if (!billingAccountName) {
+                return detail
+            }
+
+            changed = true
+
+            return {
+                ...detail,
+                billingAccountName,
+            }
+        })
+
+        return changed
+            ? {
+                ...payment,
+                details,
+            }
+            : payment
+    })
+}
+
 export async function createMemberPayment(
     assignmentId: number | string,
     memberId: number | string,
@@ -207,7 +293,9 @@ export async function fetchAssignmentPayments(
             `${TC_FINANCE_API_URL}/winnings/by-external-id/${assignmentId}`,
         )
 
-        return hydratePaymentCreatorHandles(normalizePaymentsResponse(response))
+        const payments = await hydratePaymentCreatorHandles(normalizePaymentsResponse(response))
+
+        return hydratePaymentBillingAccountNames(payments)
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch payment history')
     }

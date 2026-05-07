@@ -4,6 +4,8 @@ import type {
 } from '../models'
 import {
     calculatePaymentChallengeFee,
+    getPaymentBillingAccountId,
+    getPaymentBillingAccountName,
     getPaymentChallengeFee,
 } from './payment.utils'
 
@@ -42,5 +44,23 @@ describe('payment.utils', () => {
 
         expect(getPaymentChallengeFee(payment))
             .toBe(72)
+    })
+
+    it('reads billing account details from the first payment detail', () => {
+        const payment: AssignmentPayment = {
+            details: [
+                {
+                    billingAccount: 80001063,
+                    billingAccountName: 'BA For Marios',
+                    grossAmount: 480,
+                    totalAmount: 480,
+                },
+            ],
+        }
+
+        expect(getPaymentBillingAccountId(payment))
+            .toBe('80001063')
+        expect(getPaymentBillingAccountName(payment))
+            .toBe('BA For Marios')
     })
 })
