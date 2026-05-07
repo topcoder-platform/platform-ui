@@ -26,6 +26,9 @@ import {
 import {
     partiallyUpdateEngagement,
 } from '../../../lib/services'
+import {
+    showErrorToast,
+} from '../../../lib/utils'
 
 import {
     EditAssignmentModal,
@@ -69,7 +72,11 @@ jest.mock('../../../lib/components', () => ({
     CompleteAssignmentModal: (): JSX.Element => <></>,
     ErrorMessage: (props: { message: string }): JSX.Element => <div>{props.message}</div>,
     LoadingSpinner: (): JSX.Element => <div>Loading</div>,
-    PaymentFormModal: (): JSX.Element => <></>,
+    PaymentFormModal: (props: { open: boolean }): JSX.Element => (
+        props.open
+            ? <div>Create Payment</div>
+            : <></>
+    ),
     PaymentHistoryModal: (): JSX.Element => <></>,
     TerminateAssignmentModal: (): JSX.Element => <></>,
 }))
@@ -184,6 +191,7 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
 const mockedPartiallyUpdateEngagement = partiallyUpdateEngagement as jest.MockedFunction<
     typeof partiallyUpdateEngagement
 >
+const mockedShowErrorToast = showErrorToast as jest.MockedFunction<typeof showErrorToast>
 
 beforeEach(() => {
     jest.clearAllMocks()
@@ -345,6 +353,107 @@ describe('EngagementPaymentPage', () => {
                     memberHandle: 'finished_member',
                 }),
             ]))
+    })
+
+    it('blocks payment creation when the project billing account is expired', () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [assignment],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                endDate: '2000-01-01T00:00:00.000Z',
+                id: 'billing-account-1',
+                markup: 0.15,
+            },
+            isLoading: false,
+        } as unknown as ReturnType<typeof useFetchProjectBillingAccount>)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Pay' }))
+
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Cannot create engagement payments because the project billing account is expired.')
+        expect(screen.queryByText('Create Payment'))
+            .toBeNull()
+    })
+
+    it('blocks payment creation when the project billing account is inactive', () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [assignment],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: false,
+                id: 'billing-account-1',
+                markup: 0.15,
+            },
+            isLoading: false,
+        } as unknown as ReturnType<typeof useFetchProjectBillingAccount>)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Pay' }))
+
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Cannot create engagement payments because the project billing account is inactive.')
+        expect(screen.queryByText('Create Payment'))
+            .toBeNull()
     })
 })
 
