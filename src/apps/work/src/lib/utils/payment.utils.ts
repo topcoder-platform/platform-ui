@@ -30,6 +30,17 @@ function toOptionalString(value: unknown): string | undefined {
     return normalized || undefined
 }
 
+function toOptionalDisplayString(value: unknown): string | undefined {
+    if (value === null || value === undefined) {
+        return undefined
+    }
+
+    const normalized = String(value)
+        .trim()
+
+    return normalized || undefined
+}
+
 type AssignmentPaymentDetail = NonNullable<AssignmentPayment['details']>[number]
 
 function getFirstPaymentDetail(
@@ -167,6 +178,38 @@ export function getPaymentHoursWorked(payment: AssignmentPayment): string {
 
     return Number(parsedValue.toFixed(2))
         .toString()
+}
+
+/**
+ * Resolves the billing account id stored on a payment detail.
+ *
+ * @param payment payment record returned by the finance API.
+ * @returns billing account id from the first payment detail, or an empty
+ * string when finance did not return one.
+ *
+ * @remarks Used by the payment history modal to show the BA ID charged for a
+ * member payment.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+export function getPaymentBillingAccountId(payment: AssignmentPayment): string {
+    return toOptionalDisplayString(getFirstPaymentDetail(payment)?.billingAccount) || ''
+}
+
+/**
+ * Resolves the hydrated billing account name stored on a payment detail.
+ *
+ * @param payment payment record returned by the finance API.
+ * @returns billing account name from the first payment detail, or an empty
+ * string when it has not been hydrated.
+ *
+ * @remarks Used by the payment history modal to show the BA name charged for a
+ * member payment.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+export function getPaymentBillingAccountName(payment: AssignmentPayment): string {
+    return toOptionalDisplayString(getFirstPaymentDetail(payment)?.billingAccountName) || ''
 }
 
 export function getAssignmentStatus(member: Partial<Assignment>): string {

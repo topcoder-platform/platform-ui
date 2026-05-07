@@ -64,6 +64,8 @@ describe('PaymentHistoryModal', () => {
                     createdByHandle: 'payment.manager',
                     details: [
                         {
+                            billingAccount: '80001063',
+                            billingAccountName: 'BA For Marios',
                             challengeFee: 18.6,
                             grossAmount: 120,
                             totalAmount: 120,
@@ -99,6 +101,14 @@ describe('PaymentHistoryModal', () => {
         expect(screen.getByText('Fee:'))
             .toBeTruthy()
         expect(screen.getByText('$18.60'))
+            .toBeTruthy()
+        expect(screen.getByText('BA ID:'))
+            .toBeTruthy()
+        expect(screen.getByText('80001063'))
+            .toBeTruthy()
+        expect(screen.getByText('BA Name:'))
+            .toBeTruthy()
+        expect(screen.getByText('BA For Marios'))
             .toBeTruthy()
     })
 })
