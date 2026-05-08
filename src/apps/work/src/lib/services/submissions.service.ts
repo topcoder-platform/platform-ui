@@ -216,6 +216,7 @@ function normalizeReviewSummation(reviewSummation: unknown): ReviewSummation | u
         aggregateScore: toOptionalNumber(typedReviewSummation.aggregateScore),
         createdAt: toOptionalString(typedReviewSummation.createdAt ?? typedReviewSummation.created),
         id: toOptionalString(typedReviewSummation.id),
+        isExample: toOptionalBoolean(typedReviewSummation.isExample),
         isFinal: toOptionalBoolean(typedReviewSummation.isFinal),
         isPassing: toOptionalBoolean(typedReviewSummation.isPassing),
         isProvisional: toOptionalBoolean(typedReviewSummation.isProvisional),

@@ -5,7 +5,10 @@ import {
     useMemo,
 } from 'react'
 
-import { LoadingSpinner } from '~/libs/ui'
+import {
+    IconOutline,
+    LoadingSpinner,
+} from '~/libs/ui'
 
 import { useFetchSubmissionRunnerLogs } from '../../hooks'
 import {
@@ -98,6 +101,14 @@ export const SubmissionRunnerLogsModal: FC<SubmissionRunnerLogsModalProps> = (
             >
                 <header className={styles.header}>
                     <h4 className={styles.title}>Runner Logs</h4>
+                    <button
+                        aria-label='Close'
+                        className={styles.closeButton}
+                        onClick={props.onClose}
+                        type='button'
+                    >
+                        <IconOutline.XIcon className={styles.closeIcon} />
+                    </button>
                     <span className={styles.submissionId} title={props.submissionId}>
                         {props.submissionId}
                     </span>

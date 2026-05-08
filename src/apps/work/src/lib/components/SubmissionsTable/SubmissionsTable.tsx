@@ -21,6 +21,8 @@ import {
     getRatingLevel,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    getSubmissionProvisionalScore,
+    getSubmissionSystemScore,
     getSubmissionTestProgress,
 } from '../../utils'
 
@@ -131,9 +133,9 @@ function getCreatedAt(submission: Submission): string {
         || ''
 }
 
-function formatScore(value?: number): string {
+function formatScore(value?: number, emptyValue: string = 'N/A'): string {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
-        return 'N/A'
+        return emptyValue
     }
 
     return value.toFixed(2)
@@ -325,8 +327,17 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const handleDisplay = getHandleDisplay(submission, !!props.isLoadingMembers)
                         const emailDisplay = getEmailDisplay(submission, !!props.isLoadingMembers)
                         const submissionDate = formatDateTime(getCreatedAt(submission))
-                        const initialScore = formatScore(getSubmissionInitialScore(submission))
-                        const finalScore = formatScore(getSubmissionFinalScore(submission))
+                        const initialScoreValue = props.showMarathonMatchTestProgress
+                            ? getSubmissionProvisionalScore(submission)
+                            : getSubmissionInitialScore(submission)
+                        const finalScoreValue = props.showMarathonMatchTestProgress
+                            ? getSubmissionSystemScore(submission)
+                            : getSubmissionFinalScore(submission)
+                        const emptyScoreValue = props.showMarathonMatchTestProgress
+                            ? '-'
+                            : 'N/A'
+                        const initialScore = formatScore(initialScoreValue, emptyScoreValue)
+                        const finalScore = formatScore(finalScoreValue, emptyScoreValue)
                         const testProgress = props.showMarathonMatchTestProgress
                             ? getSubmissionTestProgress(submission)
                             : undefined

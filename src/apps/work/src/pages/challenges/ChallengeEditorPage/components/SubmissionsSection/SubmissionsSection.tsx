@@ -34,6 +34,8 @@ import {
     canViewMarathonMatchRunnerLogs,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    getSubmissionProvisionalScore,
+    getSubmissionSystemScore,
     isMarathonMatchChallenge,
     showErrorToast,
 } from '../../../../../lib/utils'
@@ -125,6 +127,7 @@ function parseDateToTimestamp(value: string): number {
 function resolveSortValue(
     submission: Submission,
     sortBy: SubmissionSortBy,
+    useMarathonMatchScores: boolean,
 ): number | string {
     if (sortBy === 'memberHandle') {
         return normalizeValue(submission.memberHandle)
@@ -137,11 +140,15 @@ function resolveSortValue(
     }
 
     if (sortBy === 'initialScore') {
-        return getSubmissionInitialScore(submission)
+        return useMarathonMatchScores
+            ? getSubmissionProvisionalScore(submission) ?? -1
+            : getSubmissionInitialScore(submission)
     }
 
     if (sortBy === 'finalScore') {
-        return getSubmissionFinalScore(submission)
+        return useMarathonMatchScores
+            ? getSubmissionSystemScore(submission) ?? -1
+            : getSubmissionFinalScore(submission)
     }
 
     if (sortBy === 'submissionId') {
@@ -156,12 +163,13 @@ function sortSubmissions(
     submissions: Submission[],
     sortBy: SubmissionSortBy,
     sortOrder: SortOrder,
+    useMarathonMatchScores: boolean,
 ): Submission[] {
     const sortedSubmissions = [...submissions]
 
     sortedSubmissions.sort((submissionA, submissionB) => {
-        const valueA = resolveSortValue(submissionA, sortBy)
-        const valueB = resolveSortValue(submissionB, sortBy)
+        const valueA = resolveSortValue(submissionA, sortBy, useMarathonMatchScores)
+        const valueB = resolveSortValue(submissionB, sortBy, useMarathonMatchScores)
 
         if (valueA === valueB) {
             return 0
@@ -288,7 +296,11 @@ function matchesFilterDateRange(
     return true
 }
 
-function matchesFilterScore(submission: Submission, minScore: string): boolean {
+function matchesFilterScore(
+    submission: Submission,
+    minScore: string,
+    useMarathonMatchScores: boolean,
+): boolean {
     if (!minScore) {
         return true
     }
@@ -298,7 +310,11 @@ function matchesFilterScore(submission: Submission, minScore: string): boolean {
         return true
     }
 
-    return getSubmissionFinalScore(submission) >= minimumScore
+    const score = useMarathonMatchScores
+        ? getSubmissionSystemScore(submission)
+        : getSubmissionFinalScore(submission)
+
+    return score !== undefined && score >= minimumScore
 }
 
 function matchesFilterHandle(submission: Submission, handleFilter: string): boolean {
@@ -314,7 +330,11 @@ function matchesFilterHandle(submission: Submission, handleFilter: string): bool
         .includes(normalizedHandleFilter)
 }
 
-function matchesFilters(submission: Submission, filters: FilterState): boolean {
+function matchesFilters(
+    submission: Submission,
+    filters: FilterState,
+    useMarathonMatchScores: boolean,
+): boolean {
     if (!matchesFilterHandle(submission, filters.handle)) {
         return false
     }
@@ -323,7 +343,7 @@ function matchesFilters(submission: Submission, filters: FilterState): boolean {
         return false
     }
 
-    return matchesFilterScore(submission, filters.minScore)
+    return matchesFilterScore(submission, filters.minScore, useMarathonMatchScores)
 }
 
 function toDownloadAllItems(submissions: Submission[]): DownloadAllItem[] {
@@ -465,17 +485,21 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     )
 
     const filteredSubmissions = useMemo<Submission[]>(() => (
-        enrichedSubmissions.filter(submission => matchesFilters(submission, filters))
+        enrichedSubmissions.filter(
+            submission => matchesFilters(submission, filters, isMarathonMatch),
+        )
     ), [
         enrichedSubmissions,
         filters,
+        isMarathonMatch,
     ])
 
     const sortedSubmissions = useMemo<Submission[]>(() => sortSubmissions(
         filteredSubmissions,
         sortBy,
         sortOrder,
-    ), [filteredSubmissions, sortBy, sortOrder])
+        isMarathonMatch,
+    ), [filteredSubmissions, isMarathonMatch, sortBy, sortOrder])
 
     const paginatedSubmissions = useMemo<Submission[]>(() => {
         const startIndex = (page - 1) * perPage
@@ -494,8 +518,10 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         ),
         sortBy,
         sortOrder,
+        isMarathonMatch,
     ), [
         checkpointSubmissions,
+        isMarathonMatch,
         memberCache,
         sortBy,
         sortOrder,

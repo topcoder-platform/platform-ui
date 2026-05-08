@@ -28,6 +28,20 @@ jest.mock('../../utils', () => ({
     getSubmissionInitialScore: (submission: { review?: Array<{ initialScore?: number }> }) => (
         submission.review?.[0]?.initialScore ?? 0
     ),
+    getSubmissionProvisionalScore: (
+        submission: { reviewSummation?: Array<{ aggregateScore?: number, isProvisional?: boolean }> },
+    ) => (
+        submission.reviewSummation
+            ?.find(item => item.isProvisional === true)
+            ?.aggregateScore
+    ),
+    getSubmissionSystemScore: (
+        submission: { reviewSummation?: Array<{ aggregateScore?: number, isFinal?: boolean }> },
+    ) => (
+        submission.reviewSummation
+            ?.find(item => item.isFinal === true)
+            ?.aggregateScore
+    ),
     getSubmissionTestProgress: (
         submission: {
             reviewSummation?: Array<{
@@ -313,5 +327,67 @@ describe('SubmissionsTable', () => {
             .toBeTruthy()
         expect(screen.getByRole('img', { name: 'Test status: FAILED' }))
             .toBeTruthy()
+    })
+
+    it('renders marathon scores from provisional and system summations only', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        review: [
+                            {
+                                finalScore: 95,
+                                initialScore: 90,
+                            },
+                        ],
+                        reviewSummation: [
+                            {
+                                aggregateScore: 12,
+                                isProvisional: true,
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-2',
+                        id: 'submission-2',
+                        review: [
+                            {
+                                finalScore: 85,
+                                initialScore: 80,
+                            },
+                        ],
+                        reviewSummation: [
+                            {
+                                aggregateScore: 20,
+                                isFinal: true,
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: '12.00 / -' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: '- / 20.00' }))
+            .toBeTruthy()
+        expect(screen.queryByRole('link', { name: '90.00 / 95.00' }))
+            .toBeNull()
+        expect(screen.queryByRole('link', { name: '80.00 / 85.00' }))
+            .toBeNull()
     })
 })
