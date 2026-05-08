@@ -127,6 +127,48 @@ function getScoreFromSummation(
     return toValidScore(matchedSummation?.aggregateScore)
 }
 
+/**
+ * Resolves the marathon scoring phase represented by a review summation.
+ * @param entry Review summation returned by Review API.
+ * @returns `provisional`, `system`, or `undefined` when the summation is not a scored marathon phase.
+ * Used by strict marathon score helpers so progress/example reviews do not leak into score display.
+ */
+function getReviewSummationTestProcess(
+    entry: ReviewSummation,
+): 'provisional' | 'system' | undefined {
+    const metadataProcess = normalizeTestProcess(
+        entry.metadata?.testProcess
+        ?? entry.metadata?.testType,
+    )
+
+    if (metadataProcess) {
+        return metadataProcess
+    }
+
+    const metadataStage = typeof entry.metadata?.stage === 'string'
+        ? entry.metadata.stage.trim()
+            .toLowerCase()
+        : ''
+
+    if (metadataStage === 'final') {
+        return 'system'
+    }
+
+    if (entry.isFinal === true) {
+        return 'system'
+    }
+
+    if (entry.isProvisional === true) {
+        return 'provisional'
+    }
+
+    if (entry.isFinal === false && entry.isExample !== true) {
+        return 'provisional'
+    }
+
+    return undefined
+}
+
 function getChallengeTypeName(type: string | ChallengeTypeRef | undefined): string | undefined {
     if (!type) {
         return undefined
@@ -382,6 +424,28 @@ export function getProvisionalScore(submission: ScoredSubmissionLike): number {
     return getSubmissionInitialScore(submission)
 }
 
+/**
+ * Returns only the provisional marathon score for a submission.
+ * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @returns Provisional score, or `undefined` when provisional scoring has not produced a valid score.
+ * Used by marathon submission score display to avoid falling back to unrelated review scores.
+ */
+export function getSubmissionProvisionalScore(
+    submission: ScoredSubmissionLike,
+): number | undefined {
+    const legacyProvisionalScore = toValidScore(
+        submission.submissions?.[0]?.provisionalScore,
+    )
+    if (legacyProvisionalScore !== undefined) {
+        return legacyProvisionalScore
+    }
+
+    return getScoreFromSummation(
+        submission.reviewSummation,
+        item => getReviewSummationTestProcess(item) === 'provisional',
+    )
+}
+
 export function getSubmissionInitialScore(submission: ScoredSubmissionLike): number {
     const initialScoreFromReviews = getAverageScore(
         (submission.review || [])
@@ -392,17 +456,7 @@ export function getSubmissionInitialScore(submission: ScoredSubmissionLike): num
         return initialScoreFromReviews
     }
 
-    const legacyProvisionalScore = toValidScore(
-        submission.submissions?.[0]?.provisionalScore,
-    )
-    if (legacyProvisionalScore !== undefined) {
-        return legacyProvisionalScore
-    }
-
-    const provisionalSummationScore = getScoreFromSummation(
-        submission.reviewSummation,
-        item => item.isProvisional === true || item.isFinal === false,
-    )
+    const provisionalSummationScore = getSubmissionProvisionalScore(submission)
     if (provisionalSummationScore !== undefined) {
         return provisionalSummationScore
     }
@@ -419,6 +473,28 @@ export function getFinalScore(submission: ScoredSubmissionLike): number {
     return getSubmissionFinalScore(submission)
 }
 
+/**
+ * Returns only the system marathon score for a submission.
+ * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @returns System score, or `undefined` when system scoring has not produced a valid score.
+ * Used by marathon submission score display to show pending/unavailable system scores as empty.
+ */
+export function getSubmissionSystemScore(
+    submission: ScoredSubmissionLike,
+): number | undefined {
+    const legacyFinalScore = toValidScore(
+        submission.submissions?.[0]?.finalScore,
+    )
+    if (legacyFinalScore !== undefined) {
+        return legacyFinalScore
+    }
+
+    return getScoreFromSummation(
+        submission.reviewSummation,
+        item => getReviewSummationTestProcess(item) === 'system',
+    )
+}
+
 export function getSubmissionFinalScore(submission: ScoredSubmissionLike): number {
     const finalScoreFromReviews = getAverageScore(
         (submission.review || [])
@@ -428,17 +504,7 @@ export function getSubmissionFinalScore(submission: ScoredSubmissionLike): numbe
         return finalScoreFromReviews
     }
 
-    const legacyFinalScore = toValidScore(
-        submission.submissions?.[0]?.finalScore,
-    )
-    if (legacyFinalScore !== undefined) {
-        return legacyFinalScore
-    }
-
-    const finalSummationScore = getScoreFromSummation(
-        submission.reviewSummation,
-        item => item.isFinal === true,
-    )
+    const finalSummationScore = getSubmissionSystemScore(submission)
     if (finalSummationScore !== undefined) {
         return finalSummationScore
     }

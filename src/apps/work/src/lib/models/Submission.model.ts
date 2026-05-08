@@ -43,6 +43,7 @@ export interface ReviewSummation {
     aggregateScore?: number
     createdAt?: string
     id?: string
+    isExample?: boolean
     isFinal?: boolean
     isPassing?: boolean
     isProvisional?: boolean
