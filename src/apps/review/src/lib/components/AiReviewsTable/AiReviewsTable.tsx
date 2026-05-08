@@ -278,7 +278,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             ? `This submission failed regardless of Overall Score because it failed one or more of the AI Gating Reviews.
                 Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.`
             : `This submission is failed because ${hasSubmitterRole ? 'your' : 'the'}
-                Overall Score is bellow minimum threshold.`
+                Overall Score is below minimum threshold.`
 
         // Message text varies by role
         const roleBasedText = hasSubmitterRole
