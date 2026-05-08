@@ -15,6 +15,9 @@
 
     display: flex;
     gap: $sp-2;
+
+    flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .lockedTitle {
@@ -28,8 +31,9 @@
 .lockedMessage {
     margin-top: $sp-1;
     font-size: 14px;
-    max-width: 720px;
-    white-space: normal;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .reRunIcon {
@@ -145,4 +149,10 @@
         margin-right: $sp-1;
     }
 
+}
+
+@media (max-width: 768px) {
+    .lockedBanner {
+        flex-direction: column;
+    }
 }
