@@ -59,6 +59,23 @@ function formatStatus(status: string): string {
     }
 }
 
+function isIdVerificationComplete(paymentStatus?: WinningDetail['paymentStatus']): boolean {
+    if (!paymentStatus) {
+        return false
+    }
+
+    const statusWithAliases = paymentStatus as WinningDetail['paymentStatus'] & {
+        idVerificationPassed?: boolean
+        identityVerificationComplete?: boolean
+    }
+
+    return Boolean(
+        statusWithAliases.idVerificationComplete
+        || statusWithAliases.idVerificationPassed
+        || statusWithAliases.identityVerificationComplete,
+    )
+}
+
 const formatCurrency = (amountStr: string, currency: string): string => {
     let amount: number
     try {
@@ -130,9 +147,11 @@ function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, 
 
     if (status === 'ON_HOLD') {
         if (!payment.paymentStatus?.payoutSetupComplete) {
-            status = 'On Hold (Payment Provider)'
+            status = 'On Hold (Payment provider)'
         } else if (!payment.paymentStatus?.taxFormSetupComplete) {
             status = 'On Hold (Tax Form)'
+        } else if (!isIdVerificationComplete(payment.paymentStatus)) {
+            status = 'On Hold (ID Verification)'
         } else {
             status = 'On Hold (Member)'
         }
