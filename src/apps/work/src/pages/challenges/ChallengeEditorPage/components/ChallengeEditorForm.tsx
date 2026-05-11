@@ -3566,26 +3566,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                         on the budget before launching the challenge
                                                     </div>
                                                 )}
-                                                {!isReadOnly && (
-                                                    <>
-                                                        {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
-                                                            && normalizeTextValue(values.approvalRejectionReason)
-                                                            ? (
-                                                                <div className={styles.approvalReason}>
-                                                                    {`Reason: ${values.approvalRejectionReason}`}
-                                                                </div>
-                                                            )
-                                                            : undefined}
-                                                        {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
-                                                            && normalizeTextValue(values.approvalApprovedBy)
-                                                            ? (
-                                                                <div className={styles.approvalReason}>
-                                                                    {`Approved by ${values.approvalApprovedBy}`}
-                                                                </div>
-                                                            )
-                                                            : undefined}
-                                                    </>
-                                                )}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                                                    && normalizeTextValue(values.approvalRejectionReason)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Reason: ${values.approvalRejectionReason}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                                                    && normalizeTextValue(values.approvalApprovedBy)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Approved by ${values.approvalApprovedBy}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
                                                 {canRenderApprovalActions
                                                     ? (
                                                         <>

@@ -437,6 +437,68 @@ describe('ChallengeEditorPage', () => {
             .toBe('lg')
     })
 
+    it('disables launch when challenge budget is not approved', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                approvalStatus: 'PENDING_APPROVAL',
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+            .toBe(true)
+    })
+
+    it('keeps launch enabled when challenge budget is approved', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                approvalStatus: 'APPROVED',
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+            .toBe(false)
+    })
+
     it('blocks project-scoped challenge views when project access is denied', async () => {
         mockedCheckProjectAccess.mockReturnValue(false)
         mockedUseFetchProject.mockReturnValue({
