@@ -59,6 +59,23 @@ function formatStatus(status: string): string {
     }
 }
 
+function isIdVerificationComplete(paymentStatus?: WinningDetail['paymentStatus']): boolean {
+    if (!paymentStatus) {
+        return false
+    }
+
+    const statusWithAliases = paymentStatus as WinningDetail['paymentStatus'] & {
+        idVerificationPassed?: boolean
+        identityVerificationComplete?: boolean
+    }
+
+    return Boolean(
+        statusWithAliases.idVerificationComplete
+        || statusWithAliases.idVerificationPassed
+        || statusWithAliases.identityVerificationComplete,
+    )
+}
+
 export const formatCurrency = (amountStr: string, currency: string): string => {
     let amount: number
     try {
@@ -123,7 +140,19 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 grossPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
                 id: payment.id,
                 releaseDate: formattedReleaseDate,
-                status: formatStatus(payment.details[0].status),
+                status: (
+                    payment.details[0].status === 'ON_HOLD'
+                        ? (
+                            !payment.paymentStatus?.payoutSetupComplete
+                                ? 'On Hold (Payment provider)'
+                                : !payment.paymentStatus?.taxFormSetupComplete
+                                    ? 'On Hold (Tax Form)'
+                                    : !isIdVerificationComplete(payment.paymentStatus)
+                                        ? 'On Hold (ID Verification)'
+                                        : 'On Hold'
+                        )
+                        : formatStatus(payment.details[0].status)
+                ),
                 type: payment.category.replaceAll('_', ' ')
                     .toLowerCase(),
             }

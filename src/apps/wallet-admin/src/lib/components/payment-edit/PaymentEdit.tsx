@@ -189,7 +189,8 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
             const isMemberHold = [
                 'On Hold (Member)',
                 'On Hold (Tax Form)',
-                'On Hold (Payment Provider)',
+                'On Hold (Payment provider)',
+                'On Hold (ID Verification)',
             ].includes(props.payment.status)
 
             return [

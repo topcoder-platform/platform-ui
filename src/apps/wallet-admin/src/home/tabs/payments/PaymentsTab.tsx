@@ -14,7 +14,7 @@ interface ListViewProps {
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [paymentsCollapsed, setPaymentsCollapsed] = useState(false)
-    const [pointsCollapsed, setPointsCollapsed] = useState(false)
+    const [pointsCollapsed, setPointsCollapsed] = useState(true)
 
     return (
         <div className={styles.container}>

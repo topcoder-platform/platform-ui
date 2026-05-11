@@ -17,6 +17,7 @@ export interface PaymentDetail {
 export interface PayoutStatus {
     payoutSetupComplete: boolean;
     taxFormSetupComplete: boolean;
+    idVerificationComplete?: boolean;
 }
 
 export interface PaymentEngagementDetails {

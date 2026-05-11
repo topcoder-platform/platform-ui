@@ -44,4 +44,9 @@ export interface WinningDetail {
     createdAt: string
     releaseDate: string
     datePaid: string
+    paymentStatus?: {
+        payoutSetupComplete?: boolean
+        taxFormSetupComplete?: boolean
+        idVerificationComplete?: boolean
+    }
 }
