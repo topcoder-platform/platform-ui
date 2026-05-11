@@ -3014,6 +3014,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
                 setShowApproveBudgetModal(false)
             }
+
             if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
                 setShowRejectBudgetModal(false)
             }
@@ -3561,7 +3562,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 </div>
                                                 {isBudgetPending && (
                                                     <div className={styles.approvalStatusRow}>
-                                                        Kindly obtain Project Manager approval on the budget before launching the challenge
+                                                        Kindly obtain Project Manager approval
+                                                        on the budget before launching the challenge
                                                     </div>
                                                 )}
                                                 {!isReadOnly && (
@@ -3620,7 +3622,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
                         </>
                     )
-                : undefined}
+                    : undefined}
 
                 {isChallengeCreated && showEditableTimelineSection
                     ? (
