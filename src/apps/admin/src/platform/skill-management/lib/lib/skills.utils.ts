@@ -9,7 +9,7 @@ export interface GroupedSkills {
 }
 
 export const isSkillArchived = (skill: StandardizedSkill): boolean => (
-    !!skill.deleted_at
+    !!skill.deletedAt
 )
 
 export const groupSkillsByCategory = (skills: StandardizedSkill[]): GroupedSkills => {
