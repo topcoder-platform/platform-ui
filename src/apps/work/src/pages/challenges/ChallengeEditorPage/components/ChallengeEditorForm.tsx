@@ -1792,6 +1792,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         && hasPersistedPrizeSets
         && !hasUnsavedPrizeSetChanges
         && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
+    const isBudgetPending = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL
     const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
     const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
     const isRejectReasonMissing = !normalizeTextValue(rejectionReasonInput)
@@ -3558,6 +3559,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                         {getApprovalStatusText(normalizedApprovalStatus)}
                                                     </span>
                                                 </div>
+                                                {isBudgetPending && (
+                                                    <div className={styles.approvalStatusRow}>
+                                                        Kindly obtain Project Manager approval on the budget before launching the challenge
+                                                    </div>
+                                                )}
                                                 {!isReadOnly && (
                                                     <>
                                                         {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
