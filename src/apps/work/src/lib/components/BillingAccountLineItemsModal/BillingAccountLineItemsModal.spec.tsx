@@ -125,31 +125,33 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/challenges/challenge%20%2F%20100')
     })
 
-    it('shows challenge member payments and calculated challenge fees for non-copilot users', () => {
+    it('shows challenge member payments without recalculating fees on the ledger total', () => {
         renderModal({
             ...baseBillingAccountDetails,
             lockedAmounts: [
                 {
-                    amount: '50',
+                    amount: '13.3',
                     date: '2026-02-10T00:00:00.000Z',
                     externalId: 'challenge-100',
                     externalName: 'Markup Challenge',
                     externalType: 'CHALLENGE',
                 },
             ],
-            lockedBudget: 66.5,
+            lockedBudget: 13.3,
             markup: 0.33,
-            totalBudgetRemaining: 933.5,
+            totalBudgetRemaining: 986.7,
         })
 
         expect(screen.getByText('Member Payments'))
             .toBeTruthy()
         expect(screen.getByText('Challenge Fee'))
             .toBeTruthy()
-        expect(screen.getAllByText('$50.00'))
+        expect(screen.getAllByText('$10.00'))
             .toHaveLength(1)
-        expect(screen.getByText('$16.50'))
+        expect(screen.getByText('$3.30'))
             .toBeTruthy()
+        expect(screen.queryByText('$4.39'))
+            .toBeNull()
     })
 
     it('builds engagement links from assignment-backed billing rows', () => {
@@ -361,7 +363,7 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
     })
 
-    it('shows only remaining member payments and challenge row amounts for copilots', () => {
+    it('shows only remaining member payments and derived row amounts for copilots', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedBudget: 500,
@@ -384,9 +386,9 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
         expect(screen.getByText('$200.00'))
             .toBeTruthy()
-        expect(screen.getByText('$50.00'))
+        expect(screen.getByText('$37.59'))
             .toBeTruthy()
-        expect(screen.queryByText('$37.59'))
+        expect(screen.queryByText('$50.00'))
             .toBeNull()
         expect(screen.queryByText('Consumed'))
             .toBeNull()
