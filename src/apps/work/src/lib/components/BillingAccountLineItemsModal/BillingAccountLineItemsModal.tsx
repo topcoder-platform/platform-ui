@@ -224,9 +224,10 @@ function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns Member payment amount, or `undefined` for copilot rows when it cannot
  * be safely calculated.
- * @remarks Challenge budget rows already expose the member-payment subtotal
- * for every caller. Engagement budget rows store the billing ledger total, so
- * they still need markup removed before display. Copilot engagement rows prefer
+ * @remarks Challenge budget rows already expose the visible challenge cost for
+ * every caller, so API-provided member-payment aliases are ignored for those
+ * rows. Engagement budget rows store the billing ledger total, so they still
+ * need markup removed before display. Copilot engagement rows prefer
  * API-provided member-payment amounts and fall back to markup math only when
  * that safe field is missing.
  */
@@ -235,12 +236,12 @@ function getLineItemMemberPaymentAmount(
     billingAccountDetails: BillingAccountDetails,
     showMemberPaymentsRemaining: boolean | undefined,
 ): number | undefined {
-    if (item.memberPaymentAmount !== undefined) {
-        return item.memberPaymentAmount
-    }
-
     if (item.externalType === 'CHALLENGE') {
         return item.amount
+    }
+
+    if (item.memberPaymentAmount !== undefined) {
+        return item.memberPaymentAmount
     }
 
     const memberPaymentAmount = calculateMemberPaymentAmount(
@@ -261,7 +262,7 @@ function getLineItemMemberPaymentAmount(
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
- * @remarks Challenge rows use the raw member-payment subtotal for all callers.
+ * @remarks Challenge rows use the raw visible challenge cost for all callers.
  * Non-copilot challenge rows also calculate the hidden fee from markup.
  * Engagement rows derive member payments from the raw ledger amount and
  * billing-account markup.

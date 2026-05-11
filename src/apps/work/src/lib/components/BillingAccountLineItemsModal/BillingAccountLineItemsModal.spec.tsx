@@ -396,16 +396,40 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
-    it('uses API-provided member-payment row amounts for copilot responses without markup', () => {
+    it('shows challenge row amounts for copilots when API member-payment aliases include markup math', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: [
+                {
+                    amount: '9.15',
+                    date: '2026-05-08T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Test',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '6.88',
+                },
+            ],
+            lockedBudget: 9.15,
+            memberPaymentsRemaining: 273413.64,
+            totalBudgetRemaining: 273413.64,
+        }, true)
+
+        expect(screen.getByText('$9.15'))
+            .toBeTruthy()
+        expect(screen.queryByText('$6.88'))
+            .toBeNull()
+    })
+
+    it('uses API-provided engagement member-payment row amounts for copilot responses without markup', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedAmounts: [
                 {
                     amount: '125.25',
                     date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Consumed Markup Challenge',
-                    externalType: 'CHALLENGE',
+                    externalId: 'engagement-100',
+                    externalName: 'Consumed Markup Engagement',
+                    externalType: 'ENGAGEMENT',
                     memberPaymentAmount: '100.20',
                 },
             ],
