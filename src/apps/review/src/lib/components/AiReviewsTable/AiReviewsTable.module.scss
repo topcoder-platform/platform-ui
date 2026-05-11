@@ -152,7 +152,36 @@
 }
 
 @media (max-width: 768px) {
+    .wrap {
+        overflow: visible;
+    }
+
     .lockedBanner {
         flex-direction: column;
+        margin-left: $sp-1;
+        margin-right: $sp-1;
+        padding: $sp-3 $sp-2;
+        gap: $sp-1;
+    }
+
+    .lockedTitle {
+        width: 100%;
+    }
+
+    .lockedMessage {
+        width: 100%;
+        margin-top: $sp-2;
+    }
+
+    .mobileRow {
+        flex-direction: column;
+        padding-left: $sp-2;
+        padding-right: $sp-2;
+
+        > * {
+            flex: 0 0 auto;
+            width: 100%;
+            margin-bottom: $sp-1;
+        }
     }
 }
