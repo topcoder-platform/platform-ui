@@ -226,7 +226,9 @@ jest.mock('./components', () => {
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
                     <button
-                        onClick={() => props.onChallengeApprovalStatusChange?.('APPROVED')}
+                        onClick={function handleChallengeApproval() {
+                            props.onChallengeApprovalStatusChange?.('APPROVED')
+                        }}
                         type='button'
                     >
                         Mock approve budget
