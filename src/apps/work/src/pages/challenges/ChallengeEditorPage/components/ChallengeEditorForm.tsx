@@ -206,6 +206,7 @@ interface ChallengeEditorFormProps {
     onChallengeCreated?: (
         challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
     ) => void
+    onChallengeApprovalStatusChange?: (status?: string) => void
     onChallengeStatusChange?: (status?: string) => void
     onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
@@ -1496,6 +1497,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isReadOnly = props.isReadOnly === true
     const onChallengeCreated = props.onChallengeCreated
     const onChallengeStatusChange = props.onChallengeStatusChange
+    const onChallengeApprovalStatusChange = props.onChallengeApprovalStatusChange
     const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
     const onSavingChange = props.onSavingChange
@@ -3022,6 +3024,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
                 ? 'Challenge budget approved.'
                 : 'Challenge budget rejected.')
+            onChallengeApprovalStatusChange?.(normalizeStatus(nextApprovalStatus))
         } catch (error) {
             const errorMessage = error instanceof Error
                 ? error.message
@@ -3035,6 +3038,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         getValues,
         isUpdatingApproval,
         reset,
+        onChallengeApprovalStatusChange,
     ])
 
     const handleApproveChallengeBudget = useCallback((): void => {
