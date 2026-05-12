@@ -125,32 +125,34 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/challenges/challenge%20%2F%20100')
     })
 
-    it('shows challenge member payments without recalculating fees on the ledger total', () => {
+    it('shows challenge member payments without removing markup from the stored subtotal', () => {
         renderModal({
             ...baseBillingAccountDetails,
             lockedAmounts: [
                 {
-                    amount: '13.3',
-                    date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Markup Challenge',
+                    amount: '28.6',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '5fdf48d2-811f-4914-b713-9e5f423c907d',
+                    externalName: 'Copilot and Admin with reviews',
                     externalType: 'CHALLENGE',
                 },
             ],
-            lockedBudget: 13.3,
+            lockedBudget: 28.6,
             markup: 0.33,
-            totalBudgetRemaining: 986.7,
+            totalBudgetRemaining: 971.4,
         })
 
         expect(screen.getByText('Member Payments'))
             .toBeTruthy()
         expect(screen.getByText('Challenge Fee'))
             .toBeTruthy()
-        expect(screen.getAllByText('$10.00'))
-            .toHaveLength(1)
-        expect(screen.getByText('$3.30'))
+        expect(screen.getAllByText('$28.60'))
+            .toHaveLength(2)
+        expect(screen.getByText('$9.44'))
             .toBeTruthy()
-        expect(screen.queryByText('$4.39'))
+        expect(screen.queryByText('$21.50'))
+            .toBeNull()
+        expect(screen.queryByText('$7.10'))
             .toBeNull()
     })
 
@@ -363,7 +365,7 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
     })
 
-    it('shows only remaining member payments and derived row amounts for copilots', () => {
+    it('shows only remaining member payments and derived engagement row amounts for copilots', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedBudget: 500,
@@ -371,9 +373,9 @@ describe('BillingAccountLineItemsModal', () => {
                 {
                     amount: '50',
                     date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Markup Challenge',
-                    externalType: 'CHALLENGE',
+                    externalId: 'engagement-100',
+                    externalName: 'Markup Engagement',
+                    externalType: 'ENGAGEMENT',
                 },
             ],
             lockedBudget: 66.5,
@@ -412,6 +414,7 @@ describe('BillingAccountLineItemsModal', () => {
                 },
             ],
             lockedBudget: 9.15,
+            markup: 0.33,
             memberPaymentsRemaining: 273413.64,
             totalBudgetRemaining: 273413.64,
         }, true)
