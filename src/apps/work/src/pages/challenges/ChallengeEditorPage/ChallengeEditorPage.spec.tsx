@@ -13,6 +13,7 @@ import {
     within,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
 
 import {
     useFetchChallenge,
@@ -117,6 +118,11 @@ jest.mock('../../../lib/components', () => ({
     LoadingSpinner: () => <div>Loading</div>,
 }))
 jest.mock('../../../lib/constants', () => ({
+    CHALLENGE_APPROVAL_STATUS: {
+        APPROVED: 'APPROVED',
+        PENDING_APPROVAL: 'PENDING_APPROVAL',
+        REJECTED: 'REJECTED',
+    },
     CHALLENGE_STATUS: {
         ACTIVE: 'ACTIVE',
         CANCELLED_CLIENT_REQUEST: 'CANCELLED_CLIENT_REQUEST',
@@ -193,6 +199,7 @@ jest.mock('./components', () => {
                 projectId: string
                 status: string
             }) => void
+            onChallengeApprovalStatusChange?: (status?: string) => void
             isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
@@ -218,6 +225,14 @@ jest.mock('./components', () => {
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
+                    <button
+                        onClick={function handleChallengeApproval() {
+                            props.onChallengeApprovalStatusChange?.('APPROVED')
+                        }}
+                        type='button'
+                    >
+                        Mock approve budget
+                    </button>
                     {!props.isReadOnly
                         ? (
                             <button
@@ -494,6 +509,44 @@ describe('ChallengeEditorPage', () => {
             expect(screen.getByText('Challenge View Form'))
                 .toBeTruthy()
         })
+
+        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+            .toBe(false)
+    })
+
+    it('enables launch immediately after approving the budget from the form', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                approvalStatus: 'PENDING_APPROVAL',
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+            .toBe(true)
+
+        await user.click(screen.getByRole('button', { name: 'Mock approve budget' }))
 
         expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
             .toBe(false)
