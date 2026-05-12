@@ -26,7 +26,10 @@ import {
     ErrorMessage,
     LoadingSpinner,
 } from '../../../lib/components'
-import { checkCanManageProject } from '../../../lib/utils'
+import {
+    checkCanEditProjectDetails,
+    checkCanManageProject,
+} from '../../../lib/utils'
 
 import {
     ProjectEditorForm,
@@ -119,7 +122,7 @@ export const ProjectEditorPage: FC = () => {
 
     const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
     const canManageProject = !!projectResult.project
-        && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
+        && checkCanEditProjectDetails(userRoles, loginUserInfo?.userId, projectResult.project)
     const shouldRedirect = shouldRedirectToProjects(
         isEdit,
         canCreateProject,

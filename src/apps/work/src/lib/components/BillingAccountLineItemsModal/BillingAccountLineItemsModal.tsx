@@ -192,8 +192,8 @@ function buildEngagementUrl(projectId: string, engagementId: string): string {
  * @param item Line item already mapped for the current caller role.
  * @returns Formatted currency or `-` when a copilot-safe amount is unavailable.
  * @remarks Copilot rows use member payment amounts without exposing markup.
- * Other roles use the member payment amount derived from billing markup and
- * show the fee separately.
+ * Manager/admin rows derive the payment amount from the billing ledger total
+ * when markup is available.
  */
 function formatLineItemAmount(item: BillingAccountModalLineItem): string {
     return item.displayAmount === undefined
@@ -216,30 +216,67 @@ function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
 }
 
 /**
+ * Resolves the challenge member-payment amount that should be visible in the row.
+ *
+ * @param item Raw locked or consumed billing-account challenge line item.
+ * @param billingAccountDetails Billing account detail payload containing markup when available.
+ * @returns Member payment amount for the challenge row.
+ * @remarks Locked challenge rows store member payments directly. Consumed
+ * challenge rows store the final billing-account charge, so the billing markup
+ * is removed once to recover the member-payment subtotal.
+ */
+function getChallengeMemberPaymentAmount(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+): number {
+    if (item.status === 'locked') {
+        return item.amount
+    }
+
+    return calculateMemberPaymentAmount(
+        item.amount,
+        billingAccountDetails.markup,
+    ) ?? item.amount
+}
+
+/**
+ * Resolves the engagement member-payment amount that should be visible in the row.
+ *
+ * @param item Raw locked or consumed billing-account engagement line item.
+ * @param billingAccountDetails Billing account detail payload containing markup when available.
+ * @returns Member payment amount when it can be derived.
+ * @remarks Engagement rows prefer API-provided member-payment amounts. When
+ * only the billing-account charge is available, markup is removed once.
+ */
+function getEngagementMemberPaymentAmount(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+): number | undefined {
+    if (item.memberPaymentAmount !== undefined) {
+        return item.memberPaymentAmount
+    }
+
+    return calculateMemberPaymentAmount(
+        item.amount,
+        billingAccountDetails.markup,
+    )
+}
+
+/**
  * Resolves the member-payment amount that should be visible in the row.
  *
  * @param item Raw locked or consumed billing-account line item.
  * @param billingAccountDetails Billing account detail payload containing markup when available.
- * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
- * @returns Member payment amount, or `undefined` for copilot rows when it cannot
- * be safely calculated.
- * @remarks Non-copilot rows fall back to the raw amount if markup is missing so
- * legacy billing-account payloads keep rendering an amount.
+ * @returns Member payment amount when it can be derived.
+ * @remarks This is the only row amount used for display and fee calculation.
  */
 function getLineItemMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
-    showMemberPaymentsRemaining: boolean | undefined,
 ): number | undefined {
-    const memberPaymentAmount = item.memberPaymentAmount
-        ?? calculateMemberPaymentAmount(
-            item.amount,
-            billingAccountDetails.markup,
-        )
-
-    return memberPaymentAmount !== undefined || showMemberPaymentsRemaining
-        ? memberPaymentAmount
-        : item.amount
+    return item.externalType === 'CHALLENGE'
+        ? getChallengeMemberPaymentAmount(item, billingAccountDetails)
+        : getEngagementMemberPaymentAmount(item, billingAccountDetails)
 }
 
 /**
@@ -247,27 +284,23 @@ function getLineItemMemberPaymentAmount(
  *
  * @param item Raw locked or consumed billing-account line item.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
- * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
+ * @param showChallengeFee Whether the caller can see billing challenge fees.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
- * @remarks Copilot rows prefer the API-provided member payment amount because
- * their response intentionally omits markup. Non-copilot rows derive member
- * payments from the raw amount and billing-account markup, then render the fee
- * in its own column.
+ * @remarks Copilots receive the same member-payment amount but no fee value.
  */
 function getDisplayLineItem(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
-    showMemberPaymentsRemaining: boolean | undefined,
+    showChallengeFee: boolean,
 ): BillingAccountModalLineItem {
     const displayAmount = getLineItemMemberPaymentAmount(
         item,
         billingAccountDetails,
-        showMemberPaymentsRemaining,
     )
-    const challengeFeeAmount = showMemberPaymentsRemaining
-        ? undefined
-        : calculatePaymentChallengeFee(displayAmount, billingAccountDetails.markup)
+    const challengeFeeAmount = showChallengeFee
+        ? calculatePaymentChallengeFee(displayAmount, billingAccountDetails.markup)
+        : undefined
 
     return {
         ...item,
@@ -345,15 +378,16 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
 ) => {
     const [sortBy, setSortBy] = useState<SortField>('date')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+    const showChallengeFeeColumn = !props.showMemberPaymentsRemaining
 
     const lineItems = useMemo<BillingAccountModalLineItem[]>(
         () => combineBillingAccountLineItems(props.billingAccountDetails)
             .map(item => getDisplayLineItem(
                 item,
                 props.billingAccountDetails,
-                props.showMemberPaymentsRemaining,
+                showChallengeFeeColumn,
             )),
-        [props.billingAccountDetails, props.showMemberPaymentsRemaining],
+        [props.billingAccountDetails, showChallengeFeeColumn],
     )
     const normalizedProjectId = useMemo(
         () => normalizeRouteId(props.projectId),
@@ -363,7 +397,6 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         () => lineItems.some(item => item.externalType === 'ENGAGEMENT' && !!item.externalId),
         [lineItems],
     )
-    const showChallengeFeeColumn = !props.showMemberPaymentsRemaining
     const engagementResult = useFetchEngagements(
         normalizedProjectId,
         ENGAGEMENT_ASSIGNMENT_FILTERS,

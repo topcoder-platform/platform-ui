@@ -38,8 +38,8 @@ import {
     removeMemberFromProject,
 } from '../../../lib/services'
 import {
+    checkCanEditProjectDetails,
     checkCanManageProject,
-    checkIsCopilotOrManager,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -56,7 +56,7 @@ function toOptionalString(value: unknown): string | undefined {
 }
 
 interface RenderProjectTitleActionParams {
-    canManageProject: boolean
+    canEditProjectDetails: boolean
     projectId: string | undefined
     projectStatus: ProjectStatusValue | undefined
 }
@@ -71,7 +71,7 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
             {params.projectStatus
                 ? <ProjectStatus status={params.projectStatus} />
                 : undefined}
-            {params.canManageProject
+            {params.canEditProjectDetails
                 ? (
                     <Link
                         aria-label='Edit project'
@@ -98,9 +98,6 @@ export const UsersManagementPage: FC = () => {
     const [showInviteUserModal, setShowInviteUserModal] = useState<boolean>(false)
 
     const {
-        isAdmin,
-        isCopilot,
-        isManager,
         loginUserInfo,
         userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
@@ -116,15 +113,19 @@ export const UsersManagementPage: FC = () => {
 
     const selectedProjectName = toOptionalString(projectResult.project?.name)
     const pageTitle = selectedProjectName || 'Project users'
-    const loginHandle = loginUserInfo?.handle || ''
-    const canManageMembers = (isAdmin || isCopilot || isManager)
-        || checkIsCopilotOrManager(members, loginHandle)
     const canManageProject = !!projectResult.project
         && checkCanManageProject(
             userRoles,
             loginUserInfo?.userId,
             projectResult.project,
         )
+    const canEditProjectDetails = !!projectResult.project
+        && checkCanEditProjectDetails(
+            userRoles,
+            loginUserInfo?.userId,
+            projectResult.project,
+        )
+    const canManageMembers = canManageProject
 
     const hasMembers = members.length > 0
     const hasDeclinedInvites = declinedInvites.length > 0
@@ -225,7 +226,7 @@ export const UsersManagementPage: FC = () => {
         setShowInviteUserModal(false)
     }, [])
     const titleAction = renderProjectTitleAction({
-        canManageProject,
+        canEditProjectDetails,
         projectId,
         projectStatus: projectResult.project?.status,
     })
@@ -392,7 +393,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {showAddUserModal && projectId
+            {showAddUserModal && projectId && canManageMembers
                 ? (
                     <AddUserModal
                         onClose={closeAddUserModal}
@@ -404,7 +405,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {showInviteUserModal && projectId
+            {showInviteUserModal && projectId && canManageMembers
                 ? (
                     <InviteUserModal
                         invitedMembers={invites}

@@ -15,6 +15,7 @@ import { Button } from '~/libs/ui'
 import {
     ArtifactsModal,
     Pagination,
+    SubmissionRunnerLogsModal,
     type SubmissionSortBy,
     SubmissionsTable,
 } from '../../../../../lib/components'
@@ -30,8 +31,12 @@ import { fetchMembersByUserIds } from '../../../../../lib/services'
 import type { MemberProfile } from '../../../../../lib/services'
 import {
     canDownloadSubmissions,
+    canViewMarathonMatchRunnerLogs,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    getSubmissionProvisionalScore,
+    getSubmissionSystemScore,
+    isMarathonMatchChallenge,
     showErrorToast,
 } from '../../../../../lib/utils'
 import { ReactComponent as LockIcon } from '../../../../../lib/assets/icons/lock.svg'
@@ -122,6 +127,7 @@ function parseDateToTimestamp(value: string): number {
 function resolveSortValue(
     submission: Submission,
     sortBy: SubmissionSortBy,
+    useMarathonMatchScores: boolean,
 ): number | string {
     if (sortBy === 'memberHandle') {
         return normalizeValue(submission.memberHandle)
@@ -134,11 +140,15 @@ function resolveSortValue(
     }
 
     if (sortBy === 'initialScore') {
-        return getSubmissionInitialScore(submission)
+        return useMarathonMatchScores
+            ? getSubmissionProvisionalScore(submission) ?? -1
+            : getSubmissionInitialScore(submission)
     }
 
     if (sortBy === 'finalScore') {
-        return getSubmissionFinalScore(submission)
+        return useMarathonMatchScores
+            ? getSubmissionSystemScore(submission) ?? -1
+            : getSubmissionFinalScore(submission)
     }
 
     if (sortBy === 'submissionId') {
@@ -153,12 +163,13 @@ function sortSubmissions(
     submissions: Submission[],
     sortBy: SubmissionSortBy,
     sortOrder: SortOrder,
+    useMarathonMatchScores: boolean,
 ): Submission[] {
     const sortedSubmissions = [...submissions]
 
     sortedSubmissions.sort((submissionA, submissionB) => {
-        const valueA = resolveSortValue(submissionA, sortBy)
-        const valueB = resolveSortValue(submissionB, sortBy)
+        const valueA = resolveSortValue(submissionA, sortBy, useMarathonMatchScores)
+        const valueB = resolveSortValue(submissionB, sortBy, useMarathonMatchScores)
 
         if (valueA === valueB) {
             return 0
@@ -285,7 +296,11 @@ function matchesFilterDateRange(
     return true
 }
 
-function matchesFilterScore(submission: Submission, minScore: string): boolean {
+function matchesFilterScore(
+    submission: Submission,
+    minScore: string,
+    useMarathonMatchScores: boolean,
+): boolean {
     if (!minScore) {
         return true
     }
@@ -295,7 +310,11 @@ function matchesFilterScore(submission: Submission, minScore: string): boolean {
         return true
     }
 
-    return getSubmissionFinalScore(submission) >= minimumScore
+    const score = useMarathonMatchScores
+        ? getSubmissionSystemScore(submission)
+        : getSubmissionFinalScore(submission)
+
+    return score !== undefined && score >= minimumScore
 }
 
 function matchesFilterHandle(submission: Submission, handleFilter: string): boolean {
@@ -311,7 +330,11 @@ function matchesFilterHandle(submission: Submission, handleFilter: string): bool
         .includes(normalizedHandleFilter)
 }
 
-function matchesFilters(submission: Submission, filters: FilterState): boolean {
+function matchesFilters(
+    submission: Submission,
+    filters: FilterState,
+    useMarathonMatchScores: boolean,
+): boolean {
     if (!matchesFilterHandle(submission, filters.handle)) {
         return false
     }
@@ -320,7 +343,7 @@ function matchesFilters(submission: Submission, filters: FilterState): boolean {
         return false
     }
 
-    return matchesFilterScore(submission, filters.minScore)
+    return matchesFilterScore(submission, filters.minScore, useMarathonMatchScores)
 }
 
 function toDownloadAllItems(submissions: Submission[]): DownloadAllItem[] {
@@ -342,8 +365,11 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [selectedRunnerLogsSubmissionId, setSelectedRunnerLogsSubmissionId]
+        = useState<string>('')
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
     const [showArtifactsModal, setShowArtifactsModal] = useState<boolean>(false)
+    const [showRunnerLogsModal, setShowRunnerLogsModal] = useState<boolean>(false)
     const [sortBy, setSortBy] = useState<SubmissionSortBy>('createdAt')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
@@ -353,6 +379,9 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
 
     const workAppContext = useContext(WorkAppContext)
     const canDownload = canDownloadSubmissions(workAppContext.userRoles)
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
+    const canViewRunnerLogs = isMarathonMatch
+        && canViewMarathonMatchRunnerLogs(workAppContext.userRoles)
 
     const submissionsResult = useFetchSubmissions(
         props.challengeId,
@@ -456,17 +485,21 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     )
 
     const filteredSubmissions = useMemo<Submission[]>(() => (
-        enrichedSubmissions.filter(submission => matchesFilters(submission, filters))
+        enrichedSubmissions.filter(
+            submission => matchesFilters(submission, filters, isMarathonMatch),
+        )
     ), [
         enrichedSubmissions,
         filters,
+        isMarathonMatch,
     ])
 
     const sortedSubmissions = useMemo<Submission[]>(() => sortSubmissions(
         filteredSubmissions,
         sortBy,
         sortOrder,
-    ), [filteredSubmissions, sortBy, sortOrder])
+        isMarathonMatch,
+    ), [filteredSubmissions, isMarathonMatch, sortBy, sortOrder])
 
     const paginatedSubmissions = useMemo<Submission[]>(() => {
         const startIndex = (page - 1) * perPage
@@ -485,8 +518,10 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         ),
         sortBy,
         sortOrder,
+        isMarathonMatch,
     ), [
         checkpointSubmissions,
+        isMarathonMatch,
         memberCache,
         sortBy,
         sortOrder,
@@ -519,6 +554,16 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const handleCloseArtifacts = useCallback((): void => {
         setSelectedSubmissionId('')
         setShowArtifactsModal(false)
+    }, [])
+
+    const handleOpenRunnerLogs = useCallback((submissionId: string): void => {
+        setSelectedRunnerLogsSubmissionId(submissionId)
+        setShowRunnerLogsModal(true)
+    }, [])
+
+    const handleCloseRunnerLogs = useCallback((): void => {
+        setSelectedRunnerLogsSubmissionId('')
+        setShowRunnerLogsModal(false)
     }, [])
 
     const handleSort = useCallback((fieldName: SubmissionSortBy): void => {
@@ -640,14 +685,17 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
             <div className={styles.tableWrapper}>
                 <SubmissionsTable
                     canDownloadSubmissions={canDownload}
+                    canViewRunnerLogs={canViewRunnerLogs}
                     challengeId={props.challengeId}
                     isLoading={submissionsResult.isLoading}
                     isLoadingMembers={isMembersLoading}
                     onDownloadSubmission={handleDownloadSubmission}
                     onOpenArtifacts={handleOpenArtifacts}
+                    onOpenRunnerLogs={handleOpenRunnerLogs}
                     onSort={handleSort}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
+                    showMarathonMatchTestProgress={isMarathonMatch}
                     submissionDownloadLoading={downloadSubmissionResult.isLoading}
                     submissions={paginatedSubmissions}
                 />
@@ -659,14 +707,17 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         <h4 className={styles.checkpointTitle}>Round 1 (Checkpoint) Submissions</h4>
                         <SubmissionsTable
                             canDownloadSubmissions={canDownload}
+                            canViewRunnerLogs={canViewRunnerLogs}
                             challengeId={props.challengeId}
                             isLoading={false}
                             isLoadingMembers={isMembersLoading}
                             onDownloadSubmission={handleDownloadSubmission}
                             onOpenArtifacts={handleOpenArtifacts}
+                            onOpenRunnerLogs={handleOpenRunnerLogs}
                             onSort={handleSort}
                             sortBy={sortBy}
                             sortOrder={sortOrder}
+                            showMarathonMatchTestProgress={isMarathonMatch}
                             submissionDownloadLoading={downloadSubmissionResult.isLoading}
                             submissions={sortedCheckpointSubmissions}
                         />
@@ -690,6 +741,15 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     <ArtifactsModal
                         onClose={handleCloseArtifacts}
                         submissionId={selectedSubmissionId}
+                    />
+                )
+                : undefined}
+
+            {showRunnerLogsModal && selectedRunnerLogsSubmissionId
+                ? (
+                    <SubmissionRunnerLogsModal
+                        onClose={handleCloseRunnerLogs}
+                        submissionId={selectedRunnerLogsSubmissionId}
                     />
                 )
                 : undefined}

@@ -5,6 +5,8 @@
 - `ChallengeEditorPage.tsx`: route-level page for create, edit, and read-only view challenge modes.
   Existing challenges keep the same `Details`, `Resources`, and `Submissions` tabs in both edit and
   view routes; view mode only makes the details tab read-only and suppresses edit-only form controls.
+  Marathon Match submissions show an operator-only runner-log action that opens the ECS runner output
+  returned by the marathon-match API.
   The read-only `Review` section also renders a configuration summary before the human/AI tabs so AI
   gating details remain visible even though the surrounding form fieldset is disabled.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for

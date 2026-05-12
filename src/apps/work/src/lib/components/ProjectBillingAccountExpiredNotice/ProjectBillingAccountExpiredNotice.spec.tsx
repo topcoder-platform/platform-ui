@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -34,10 +35,16 @@ jest.mock('../BillingAccountLineItemsModal', () => ({
     ),
 }))
 
-jest.mock('../../constants', () => ({
-    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: false,
-    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: false,
-}))
+jest.mock('../../constants', () => {
+    const constants = {
+        BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: true,
+        BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: true,
+    }
+
+    Object.assign(globalThis, { mockWorkConstants: constants })
+
+    return constants
+})
 
 jest.mock('~/libs/ui', () => ({
     IconOutline: {
@@ -54,6 +61,22 @@ const mockedUseFetchBillingAccounts = useFetchBillingAccounts as jest.MockedFunc
 const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.MockedFunction<
     typeof useFetchProjectBillingAccount
 >
+
+interface MockWorkConstants {
+    BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED: boolean
+    BILLING_ACCOUNT_DETAILS_MODAL_ENABLED: boolean
+}
+
+/**
+ * Returns the mutable constants mock installed for this spec.
+ *
+ * @returns Work app billing feature flag state used by mocked constants.
+ */
+function getMockWorkConstants(): MockWorkConstants {
+    return (globalThis as unknown as {
+        mockWorkConstants: MockWorkConstants
+    }).mockWorkConstants
+}
 
 const billingAccountDetails: BillingAccountDetails = {
     budget: 1000,
@@ -99,6 +122,9 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     beforeEach(() => {
         jest.clearAllMocks()
 
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = true
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
+
         mockedUseFetchBillingAccounts.mockReturnValue({
             billingAccounts: [],
             error: undefined,
@@ -124,6 +150,9 @@ describe('ProjectBillingAccountExpiredNotice', () => {
     })
 
     it('hides billing account budget and line-item details while billing details are disabled', () => {
+        getMockWorkConstants().BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = false
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = false
+
         renderNotice()
 
         expect(screen.getByText(/Billing account:/))
@@ -147,18 +176,19 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeTruthy()
         expect(screen.getByText(/80001063/))
             .toBeTruthy()
-        expect(screen.queryByText('$1,025 / $1,000 spent'))
-            .toBeNull()
-        expect(screen.queryByText(/The billing account for this project has insufficient remaining funds,/))
-            .toBeNull()
-        expect(screen.queryByRole('link', { name: 'click here to update' }))
-            .toBeNull()
-        expect(screen.queryByRole('button', {
+        expect(screen.getByText('$1,025 / $1,000 spent'))
+            .toBeTruthy()
+        expect(screen.getByText(/The billing account for this project has insufficient remaining funds,/))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'click here to update' }))
+            .toBeTruthy()
+        fireEvent.click(screen.getByRole('button', {
             name: 'View billing account details',
         }))
-            .toBeNull()
-        expect(screen.queryByRole('dialog'))
-            .toBeNull()
+
+        expect(screen.getByRole('dialog')
+            .textContent)
+            .toContain('Billing account details for 80001063')
     })
 
     it('shows member payments remaining instead of spent and total budget for copilots', () => {
@@ -185,6 +215,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             isLoading: false,
         })
 
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
+
         renderNotice({
             ...defaultContextValue,
             isCopilot: true,
@@ -197,7 +229,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             .toBeNull()
     })
 
-    it('hides member payment details and billing account modal access from copilots when disabled', () => {
+    it('hides the inline member payment balance and billing account modal access for copilots '
+        + 'when disabled', () => {
         mockedUseFetchBillingAccountDetails.mockReturnValue({
             billingAccountDetails: {
                 ...billingAccountDetails,
@@ -209,6 +242,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
             isError: false,
             isLoading: false,
         })
+
+        getMockWorkConstants().BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
 
         renderNotice({
             ...defaultContextValue,
@@ -223,6 +258,8 @@ describe('ProjectBillingAccountExpiredNotice', () => {
         expect(screen.queryByRole('button', {
             name: 'View billing account details',
         }))
+            .toBeNull()
+        expect(screen.queryByRole('dialog'))
             .toBeNull()
         expect(mockedUseFetchBillingAccountDetails)
             .toHaveBeenCalledWith(undefined)

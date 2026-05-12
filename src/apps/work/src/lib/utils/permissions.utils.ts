@@ -159,6 +159,18 @@ export function canDownloadSubmissions(userRoles: string[]): boolean {
     return hasDownloadSubmissionsRole(userRoles)
 }
 
+/**
+ * Returns whether the supplied roles can view marathon match runner logs.
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` for admins, project managers, and copilots; otherwise `false`.
+ * Used by `SubmissionsSection` to show ECS runner output only to operators.
+ */
+export function canViewMarathonMatchRunnerLogs(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles)
+        || hasManagerRole(userRoles)
+        || hasCopilotRole(userRoles)
+}
+
 export function canCreateTaasProject(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || hasCopilotRole(userRoles)
 }
@@ -324,6 +336,36 @@ export function checkCanManageProject(
 
     return normalizedRole === PROJECT_ROLES.COPILOT
         || normalizedRole === PROJECT_ROLES.MANAGER
+}
+
+/**
+ * Returns whether the caller can edit an existing project's core details.
+ *
+ * Admins always qualify. Non-admin callers must hold a manager-tier user role
+ * and the project's Full Access membership. Copilot membership is excluded so
+ * copilot users can keep other write access without changing project details.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project project context for the edit check.
+ * @returns `true` when the caller can edit project details.
+ */
+export function checkCanEditProjectDetails(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    if (hasAdminRole(userRoles)) {
+        return true
+    }
+
+    if (!project || !hasManagerRole(userRoles)) {
+        return false
+    }
+
+    const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)
+
+    return normalizedRole === PROJECT_ROLES.MANAGER
 }
 
 export function checkAdminOrPmOrTaskManager(

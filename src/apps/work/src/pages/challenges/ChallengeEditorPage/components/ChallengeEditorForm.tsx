@@ -1,4 +1,5 @@
 import {
+    ChangeEvent,
     FC,
     useCallback,
     useContext,
@@ -17,8 +18,10 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
+import { ConfirmationModal } from '../../../../lib/components'
 import { FormCheckboxField } from '../../../../lib/components/form'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
     CREATE_FORUM_TYPE_IDS,
@@ -203,6 +206,7 @@ interface ChallengeEditorFormProps {
     onChallengeCreated?: (
         challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
     ) => void
+    onChallengeApprovalStatusChange?: (status?: string) => void
     onChallengeStatusChange?: (status?: string) => void
     onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
@@ -267,6 +271,8 @@ const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before savin
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
+const APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Challenge launch is blocked until budget approval is Approved.'
 const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
     = 'One or more saved AI workflows were disabled. '
     + 'Update the AI workflow configuration before saving or launching this challenge.'
@@ -1377,6 +1383,18 @@ function getSaveSuccessMessage(
         : 'Challenge saved successfully'
 }
 
+function getApprovalStatusText(approvalStatus: string | undefined): string {
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
+        return 'Approved'
+    }
+
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+        return 'Rejected'
+    }
+
+    return 'Pending Approval'
+}
+
 interface TaskLaunchValidationParams {
     assignedMemberId?: unknown
     currentStatus?: unknown
@@ -1479,6 +1497,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isReadOnly = props.isReadOnly === true
     const onChallengeCreated = props.onChallengeCreated
     const onChallengeStatusChange = props.onChallengeStatusChange
+    const onChallengeApprovalStatusChange = props.onChallengeApprovalStatusChange
     const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
     const onSavingChange = props.onSavingChange
@@ -1536,6 +1555,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
+    const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
+    const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    const [showApproveBudgetModal, setShowApproveBudgetModal] = useState<boolean>(false)
+    const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
     const formMethods = useForm<ChallengeEditorFormData>({
@@ -1735,6 +1758,46 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.status,
         ],
     )
+    const normalizedApprovalStatus = useMemo(
+        () => normalizeStatus(values.approvalStatus)
+            || normalizeStatus(props.challenge?.approvalStatus)
+            || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
+        [
+            props.challenge?.approvalStatus,
+            values.approvalStatus,
+        ],
+    )
+    const canApproveChallengeBudget = workAppContext.isAdmin || workAppContext.isManager
+    const hasPersistedPrizeSets = useMemo(
+        () => Array.isArray(props.challenge?.prizeSets)
+            && props.challenge?.prizeSets
+                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
+        [props.challenge?.prizeSets],
+    )
+    const hasUnsavedPrizeSetChanges = useMemo(
+        () => {
+            const dirtyPrizeSets = formState.dirtyFields?.prizeSets
+            if (Array.isArray(dirtyPrizeSets)) {
+                return dirtyPrizeSets.length > 0
+            }
+
+            return !!dirtyPrizeSets
+        },
+        [formState.dirtyFields?.prizeSets],
+    )
+    const arePrizeFieldsLockedForRole = normalizedChallengeStatus === CHALLENGE_STATUS.ACTIVE
+        && !canApproveChallengeBudget
+    const arePrizeFieldsDisabled = isReadOnly || arePrizeFieldsLockedForRole
+    const canRenderApprovalActions = isReadOnly
+        && canApproveChallengeBudget
+        && !!currentChallengeId
+        && hasPersistedPrizeSets
+        && !hasUnsavedPrizeSetChanges
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
+    const isBudgetPending = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL
+    const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+    const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+    const isRejectReasonMissing = !normalizeTextValue(rejectionReasonInput)
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
@@ -1753,6 +1816,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+
+    useEffect(() => {
+        const nextReason = typeof values.approvalRejectionReason === 'string'
+            ? values.approvalRejectionReason
+            : ''
+
+        setRejectionReasonInput(nextReason)
+    }, [values.approvalRejectionReason])
+
     const shouldDeferInitialResourceDirtyNormalization = isInitialResourceHydrationPending
         || (!!props.challenge?.id && props.challenge.id !== currentChallengeId)
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
@@ -2735,6 +2807,20 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
+            if (
+                isChallengeBeingActivated
+                && normalizeStatus(formData.approvalStatus) !== CHALLENGE_APPROVAL_STATUS.APPROVED
+            ) {
+                setSaveStatus('idle')
+                setSaveValidationError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+
+                if (!options.isAutosave) {
+                    showErrorToast(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+                }
+
+                throw createHandledLaunchBlockError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+            }
+
             const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
                 formData,
                 currentChallengeId,
@@ -2891,6 +2977,105 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             viewModePath,
         ],
     )
+
+    const updateApprovalStatus = useCallback(async (
+        nextApprovalStatus: string,
+        rejectionReason?: string,
+    ): Promise<void> => {
+        if (!currentChallengeId || isUpdatingApproval) {
+            return
+        }
+
+        if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED && !normalizeTextValue(rejectionReason)) {
+            showErrorToast('Rejection reason is required.')
+            return
+        }
+
+        setIsUpdatingApproval(true)
+
+        try {
+            const payload = {
+                approvalRejectionReason: nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                    ? normalizeTextValue(rejectionReason)
+                    : undefined,
+                approvalStatus: nextApprovalStatus,
+            }
+            const savedChallenge = await patchChallenge(currentChallengeId, payload)
+            const savedChallengeFormData = transformChallengeToFormData(savedChallenge)
+            const currentFormData = getValues()
+            const mergedFormData = {
+                ...savedChallengeFormData,
+                ...currentFormData,
+                approvalApprovedBy: savedChallengeFormData.approvalApprovedBy,
+                approvalRejectionReason: savedChallengeFormData.approvalRejectionReason,
+                approvalStatus: savedChallengeFormData.approvalStatus,
+            }
+
+            reset(mergedFormData)
+            setSaveValidationError(undefined)
+            if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
+                setShowApproveBudgetModal(false)
+            }
+
+            if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+                setShowRejectBudgetModal(false)
+            }
+
+            showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                ? 'Challenge budget approved.'
+                : 'Challenge budget rejected.')
+            onChallengeApprovalStatusChange?.(normalizeStatus(nextApprovalStatus))
+        } catch (error) {
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'Failed to update approval status'
+            showErrorToast(errorMessage)
+        } finally {
+            setIsUpdatingApproval(false)
+        }
+    }, [
+        currentChallengeId,
+        getValues,
+        isUpdatingApproval,
+        reset,
+        onChallengeApprovalStatusChange,
+    ])
+
+    const handleApproveChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.APPROVED)
+            .catch(() => undefined)
+    }, [updateApprovalStatus])
+
+    const handleOpenApproveBudgetModal = useCallback((): void => {
+        setShowApproveBudgetModal(true)
+    }, [])
+
+    const handleCloseApproveBudgetModal = useCallback((): void => {
+        setShowApproveBudgetModal(false)
+    }, [])
+
+    const handleConfirmApproveChallengeBudget = useCallback((): void => {
+        handleApproveChallengeBudget()
+    }, [handleApproveChallengeBudget])
+
+    const handleRejectChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.REJECTED, rejectionReasonInput)
+            .catch(() => undefined)
+    }, [
+        rejectionReasonInput,
+        updateApprovalStatus,
+    ])
+    const handleOpenRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(true)
+    }, [])
+
+    const handleCloseRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(false)
+    }, [])
+
+    const handleConfirmRejectChallengeBudget = useCallback((): void => {
+        handleRejectChallengeBudget()
+    }, [handleRejectChallengeBudget])
 
     const launchChallenge = useCallback(async (): Promise<void> => {
         if (isScorerBlockingChallengeActions) {
@@ -3224,11 +3409,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     return (
         <FormProvider {...formMethods}>
             <form className={styles.form} onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} ref={formElementRef}>
-                <fieldset className={styles.formContent} disabled={isReadOnly}>
-                    <input type='hidden' {...formMethods.register('id')} />
-                    <input type='hidden' {...formMethods.register('status')} />
+                <input type='hidden' {...formMethods.register('id')} />
+                <input type='hidden' {...formMethods.register('status')} />
 
-                    <section className={styles.section}>
+                <section className={styles.section}>
+                    <fieldset className={styles.formContent} disabled={isReadOnly}>
                         <h3 className={styles.sectionTitle}>Basic Information</h3>
                         <div className={styles.grid}>
                             <ChallengeNameField />
@@ -3248,10 +3433,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 ? <DesignWorkTypeField disabled={isReadOnly || isChallengeCreated} />
                                 : undefined}
                         </div>
-                    </section>
+                    </fieldset>
+                </section>
 
-                    {!isChallengeCreated
-                        ? (
+                {!isChallengeCreated
+                    ? (
+                        <fieldset className={styles.formContent} disabled={isReadOnly}>
                             <div className={styles.footer}>
                                 <div className={styles.statusArea}>
                                     {statusText
@@ -3280,33 +3467,39 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     />
                                 </div>
                             </div>
-                        )
-                        : undefined}
+                        </fieldset>
+                    )
+                    : undefined}
 
-                    {isChallengeCreated
-                        ? (
-                            <>
-                                <section className={styles.section}>
+                {isChallengeCreated
+                    ? (
+                        <>
+                            <section className={styles.section}>
+                                <fieldset className={styles.formContent} disabled={isReadOnly}>
                                     <h3 className={styles.sectionTitle}>Specification</h3>
                                     <div className={styles.block}>
                                         <ChallengeDescriptionField readOnly={isReadOnly} />
                                         <ChallengePrivateDescriptionField readOnly={isReadOnly} />
                                     </div>
-                                </section>
+                                </fieldset>
+                            </section>
 
-                                <section className={styles.section}>
+                            <section className={styles.section}>
+                                <fieldset className={styles.formContent} disabled={isReadOnly}>
                                     <h3 className={styles.sectionTitle}>Metadata</h3>
                                     <div className={styles.grid}>
                                         <ChallengeTagsField />
                                         <ChallengeSkillsField />
                                     </div>
-                                </section>
+                                </fieldset>
+                            </section>
 
-                                {showPrizesAndBillingSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
-                                            <div className={styles.prizesBillingGrid}>
+                            {showPrizesAndBillingSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
+                                        <div className={styles.prizesBillingGrid}>
+                                            <fieldset className={styles.formContent} disabled={isReadOnly}>
                                                 <div className={styles.prizeInputs}>
                                                     <div className={styles.challengePrizesColumn}>
                                                         <ChallengePrizesField
@@ -3314,20 +3507,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                                 resolvedChallengeTypeAbbreviation
                                                             }
                                                             challengeTypeName={resolvedChallengeTypeName}
-                                                            disabled={isReadOnly}
+                                                            disabled={arePrizeFieldsDisabled}
                                                             name='prizeSets'
                                                         />
                                                         {showCheckpointPrizes
                                                             ? (
                                                                 <CheckpointPrizesField
-                                                                    disabled={isReadOnly}
+                                                                    disabled={arePrizeFieldsDisabled}
                                                                     name='prizeSets'
                                                                 />
                                                             )
                                                             : undefined}
                                                     </div>
                                                     <div className={styles.copilotFeeColumn}>
-                                                        <CopilotFeeField disabled={isReadOnly} name='prizeSets' />
+                                                        <CopilotFeeField
+                                                            disabled={arePrizeFieldsDisabled}
+                                                            name='prizeSets'
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className={styles.billingSummary}>
@@ -3358,15 +3554,75 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                         </span>
                                                     </div>
                                                 </div>
+                                            </fieldset>
+                                            <div className={styles.approvalSection}>
+                                                <div className={styles.approvalStatusRow}>
+                                                    <span className={styles.approvalStatusLabel}>
+                                                        Budget Approval Status:
+                                                    </span>
+                                                    <span className={styles.approvalStatusValue}>
+                                                        {getApprovalStatusText(normalizedApprovalStatus)}
+                                                    </span>
+                                                </div>
+                                                {isBudgetPending && (
+                                                    <div className={styles.approvalStatusRow}>
+                                                        Kindly obtain Project Manager approval
+                                                        on the budget before launching the challenge
+                                                    </div>
+                                                )}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                                                    && normalizeTextValue(values.approvalRejectionReason)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Reason: ${values.approvalRejectionReason}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                                                    && normalizeTextValue(values.approvalApprovedBy)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Approved by ${values.approvalApprovedBy}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                                {canRenderApprovalActions
+                                                    ? (
+                                                        <>
+                                                            <div className={styles.approvalActions}>
+                                                                {!isBudgetApproved && (
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Approve Budget'
+                                                                        onClick={handleOpenApproveBudgetModal}
+                                                                        primary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                )}
+                                                                {!isBudgetRejected && (
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Reject Budget'
+                                                                        onClick={handleOpenRejectBudgetModal}
+                                                                        secondary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )
+                                                    : undefined}
                                             </div>
-                                        </section>
-                                    )
-                                    : undefined}
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
 
-                            </>
-                        )
-                        : undefined}
-                </fieldset>
+                        </>
+                    )
+                    : undefined}
 
                 {isChallengeCreated && showEditableTimelineSection
                     ? (
@@ -3451,6 +3707,48 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     )
                     : undefined}
             </form>
+            {showApproveBudgetModal
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmDisabled={isUpdatingApproval}
+                        confirmText={isUpdatingApproval
+                            ? 'Approving...'
+                            : 'Approve Budget'}
+                        message='Are you sure you want to approve this challenge budget?'
+                        onCancel={handleCloseApproveBudgetModal}
+                        onConfirm={handleConfirmApproveChallengeBudget}
+                        title='Approve Budget'
+                    />
+                )
+                : undefined}
+            {showRejectBudgetModal
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmButtonDanger
+                        confirmDisabled={isUpdatingApproval || isRejectReasonMissing}
+                        confirmText={isUpdatingApproval
+                            ? 'Rejecting...'
+                            : 'Reject Budget'}
+                        message='Provide a rejection reason before rejecting this budget.'
+                        onCancel={handleCloseRejectBudgetModal}
+                        onConfirm={handleConfirmRejectChallengeBudget}
+                        title='Reject Budget'
+                    >
+                        <textarea
+                            className={styles.rejectionReasonInput}
+                            disabled={isUpdatingApproval}
+                            onChange={function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
+                                setRejectionReasonInput(event.target.value)
+                            }}
+                            placeholder='Reason is required to reject'
+                            rows={4}
+                            value={rejectionReasonInput}
+                        />
+                    </ConfirmationModal>
+                )
+                : undefined}
         </FormProvider>
     )
 }

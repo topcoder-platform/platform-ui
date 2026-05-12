@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
     render,
+    screen,
 } from '@testing-library/react'
 
 import type { Assignment } from '../../models'
@@ -52,7 +53,7 @@ jest.mock('../../utils', () => ({
 }))
 
 jest.mock('../../constants', () => ({
-    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: false,
+    BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: true,
 }))
 
 describe('PaymentFormModal', () => {
@@ -91,5 +92,25 @@ describe('PaymentFormModal', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 preventOpenOnFocus: true,
             }))
+    })
+
+    it('shows billing account id when enabled', () => {
+        render(
+            <PaymentFormModal
+                billingAccountId={80001063}
+                billingAccountMarkup={0.25}
+                engagementName='Engagement'
+                member={member}
+                onCancel={jest.fn()}
+                onConfirm={jest.fn()}
+                open
+                projectName='Project'
+            />,
+        )
+
+        expect(screen.getByText('Billing Account'))
+            .toBeTruthy()
+        expect(screen.getByText('80001063'))
+            .toBeTruthy()
     })
 })

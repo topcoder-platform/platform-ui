@@ -1,6 +1,7 @@
 import type { ProjectBillingAccount } from '../services'
 
 type ProjectBillingAccountChallengeIssue = 'expired' | 'inactive' | 'insufficient-funds' | 'missing'
+type ProjectBillingAccountEngagementPaymentIssue = 'expired' | 'inactive'
 export type BillingAccountBudgetStatus = 'healthy' | 'warning' | 'critical'
 
 export interface BillingAccountBudgetSource {
@@ -334,6 +335,31 @@ export function getProjectBillingAccountChallengeIssue(
 }
 
 /**
+ * Resolves whether a project billing account should block engagement payment creation.
+ *
+ * @param billingAccount Project billing-account payload resolved in the work app.
+ * @returns The lifecycle blocking reason, or `undefined` when engagement payments can proceed.
+ * @remarks Engagement payments are blocked only by billing-account lifecycle
+ * state here. Missing billing account ids are handled by the payment submission
+ * flow because it can fall back to the project payload id.
+ */
+export function getProjectBillingAccountEngagementPaymentIssue(
+    billingAccount: ProjectBillingAccount | undefined,
+): ProjectBillingAccountEngagementPaymentIssue | undefined {
+    const active = resolveBillingAccountActive(billingAccount)
+
+    if (active === false) {
+        return 'inactive'
+    }
+
+    if (isBillingAccountExpired(billingAccount)) {
+        return 'expired'
+    }
+
+    return undefined
+}
+
+/**
  * Builds the project-page notice text for an invalid billing account.
  *
  * @param issue The billing-account challenge issue that should be shown to the user.
@@ -379,5 +405,26 @@ export function getProjectBillingAccountChallengeErrorMessage(
             return 'Cannot launch challenges because the project billing account has insufficient remaining funds.'
         default:
             return 'Cannot launch challenges because the project billing account is invalid.'
+    }
+}
+
+/**
+ * Builds the payment-time error message for an invalid billing account lifecycle state.
+ *
+ * @param issue The billing-account lifecycle issue that should block engagement payment creation.
+ * @returns The message shown when the work app blocks an engagement payment attempt.
+ * @remarks Used by the engagement assignment payment flow so users get a clear
+ * failure reason before any finance API call is attempted.
+ */
+export function getProjectBillingAccountEngagementPaymentErrorMessage(
+    issue: ProjectBillingAccountEngagementPaymentIssue,
+): string {
+    switch (issue) {
+        case 'inactive':
+            return 'Cannot create engagement payments because the project billing account is inactive.'
+        case 'expired':
+            return 'Cannot create engagement payments because the project billing account is expired.'
+        default:
+            return 'Cannot create engagement payments because the project billing account is invalid.'
     }
 }

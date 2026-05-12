@@ -895,6 +895,51 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveTextContent('Billing Account Id')
     })
 
+    it('shows approval confirmation before approving budget', async () => {
+        const user = userEvent.setup()
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['manager'],
+        }
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            approvalApprovedBy: 'manager.user',
+            approvalStatus: 'APPROVED',
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={validDraftChallenge}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Approve Budget' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(screen.getByText('Are you sure you want to approve this challenge budget?'))
+            .toBeInTheDocument()
+
+        await user.click(
+            within(screen.getByRole('dialog'))
+                .getByRole('button', { name: 'Approve Budget' }),
+        )
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    approvalStatus: 'APPROVED',
+                }))
+        })
+    })
+
     it('hides the editable timeline section for task challenges in edit mode', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [{

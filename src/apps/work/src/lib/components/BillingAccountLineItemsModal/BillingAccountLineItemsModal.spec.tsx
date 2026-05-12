@@ -125,33 +125,60 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/challenges/challenge%20%2F%20100')
     })
 
-    it('shows member payments and challenge fees for non-copilot users', () => {
+    it('shows challenge member payments without removing markup from the stored subtotal', () => {
         renderModal({
             ...baseBillingAccountDetails,
             lockedAmounts: [
                 {
-                    amount: '125.25',
-                    date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Markup Challenge',
+                    amount: '28.6',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '5fdf48d2-811f-4914-b713-9e5f423c907d',
+                    externalName: 'Copilot and Admin with reviews',
                     externalType: 'CHALLENGE',
                 },
             ],
-            lockedBudget: 125.25,
-            markup: 0.25,
-            totalBudgetRemaining: 874.75,
+            lockedBudget: 28.6,
+            markup: 0.33,
+            totalBudgetRemaining: 971.4,
         })
 
         expect(screen.getByText('Member Payments'))
             .toBeTruthy()
         expect(screen.getByText('Challenge Fee'))
             .toBeTruthy()
-        expect(screen.getByText('$100.20'))
+        expect(screen.getAllByText('$28.60'))
+            .toHaveLength(2)
+        expect(screen.getByText('$9.44'))
             .toBeTruthy()
-        expect(screen.getByText('$25.05'))
+        expect(screen.queryByText('$21.50'))
+            .toBeNull()
+        expect(screen.queryByText('$7.10'))
+            .toBeNull()
+    })
+
+    it('removes markup once from consumed challenge charges before showing member payments', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            consumedBudget: 33.25,
+            markup: 0.33,
+            totalBudgetRemaining: 966.75,
+        })
+
+        expect(screen.getByText('$25.00'))
             .toBeTruthy()
-        expect(screen.getAllByText('$125.25'))
-            .toHaveLength(1)
+        expect(screen.getByText('$8.25'))
+            .toBeTruthy()
+        expect(screen.queryByText('$10.97'))
+            .toBeNull()
     })
 
     it('builds engagement links from assignment-backed billing rows', () => {
@@ -226,6 +253,10 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(engagementLink.getAttribute('href'))
             .toBe('/work/projects/project%20200/engagements/engagement-300')
+        expect(screen.getByText('$100.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$20.00'))
+            .toBeTruthy()
         expect(mockedUseFetchEngagements)
             .toHaveBeenLastCalledWith(
                 'project 200',
@@ -359,31 +390,32 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
     })
 
-    it('shows only remaining member payments and member-payment row amounts for copilots', () => {
+    it('shows only remaining member payments and derived engagement row amounts for copilots', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedBudget: 500,
             lockedAmounts: [
                 {
-                    amount: '125.25',
+                    amount: '50',
                     date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Markup Challenge',
-                    externalType: 'CHALLENGE',
+                    externalId: 'engagement-100',
+                    externalName: 'Markup Engagement',
+                    externalType: 'ENGAGEMENT',
                 },
             ],
-            lockedBudget: 250,
-            markup: 0.25,
-            totalBudgetRemaining: 250,
+            lockedBudget: 66.5,
+            markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 433.5,
         }, true)
 
         expect(screen.getByText('Remaining member payments'))
             .toBeTruthy()
         expect(screen.getByText('$200.00'))
             .toBeTruthy()
-        expect(screen.getByText('$100.20'))
+        expect(screen.getByText('$37.59'))
             .toBeTruthy()
-        expect(screen.queryByText('$125.25'))
+        expect(screen.queryByText('$50.00'))
             .toBeNull()
         expect(screen.queryByText('Consumed'))
             .toBeNull()
@@ -393,16 +425,67 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
-    it('uses API-provided member-payment row amounts for copilot responses without markup', () => {
+    it('shows challenge row amounts for copilots when API member-payment aliases include markup math', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: [
+                {
+                    amount: '9.15',
+                    date: '2026-05-08T00:00:00.000Z',
+                    externalId: 'challenge-100',
+                    externalName: 'Test',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '6.88',
+                },
+            ],
+            lockedBudget: 9.15,
+            markup: 0.33,
+            memberPaymentsRemaining: 273413.64,
+            totalBudgetRemaining: 273413.64,
+        }, true)
+
+        expect(screen.getByText('$9.15'))
+            .toBeTruthy()
+        expect(screen.queryByText('$6.88'))
+            .toBeNull()
+    })
+
+    it('shows consumed challenge member payments without challenge fees for copilots', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            consumedBudget: 33.25,
+            markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 966.75,
+        }, true)
+
+        expect(screen.getByText('$25.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$33.25'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
+            .toBeNull()
+    })
+
+    it('uses API-provided engagement member-payment row amounts for copilot responses without markup', () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedAmounts: [
                 {
                     amount: '125.25',
                     date: '2026-02-10T00:00:00.000Z',
-                    externalId: 'challenge-100',
-                    externalName: 'Consumed Markup Challenge',
-                    externalType: 'CHALLENGE',
+                    externalId: 'engagement-100',
+                    externalName: 'Consumed Markup Engagement',
+                    externalType: 'ENGAGEMENT',
                     memberPaymentAmount: '100.20',
                 },
             ],

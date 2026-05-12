@@ -5,6 +5,7 @@ import type { Project } from '../models'
 import {
     canCreateEngagement,
     canViewAllEngagements,
+    checkCanEditProjectDetails,
     checkCanManageProject,
     checkIsUserInvitedToProject,
     checkProjectAccess,
@@ -41,6 +42,10 @@ describe('permissions.utils project management helpers', () => {
                 role: 'customer',
                 userId: 456,
             },
+            {
+                role: 'copilot',
+                userId: 789,
+            },
         ],
         name: 'Managed project',
         status: 'active',
@@ -75,6 +80,20 @@ describe('permissions.utils project management helpers', () => {
     it('blocks project managers from editing projects without manager access', () => {
         expect(checkCanManageProject(['Project Manager'], '456', managedProject))
             .toBe(false)
+    })
+
+    it('requires full access membership for project details edits', () => {
+        expect(checkCanEditProjectDetails(['Talent Manager'], '123', managedProject))
+            .toBe(true)
+        expect(checkCanEditProjectDetails(['Talent Manager'], '789', managedProject))
+            .toBe(false)
+        expect(checkCanEditProjectDetails(['Project Manager'], '456', managedProject))
+            .toBe(false)
+    })
+
+    it('allows admins to edit project details without membership', () => {
+        expect(checkCanEditProjectDetails(['administrator'], '999', managedProject))
+            .toBe(true)
     })
 
     it('limits engagement creation to admins and talent managers', () => {

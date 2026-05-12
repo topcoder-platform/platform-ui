@@ -1,4 +1,6 @@
 export type SubmissionStatus = 'active' | 'completed' | 'deleted' | 'failed' | 'pending' | string
+export type MarathonMatchTestProcess = 'provisional' | 'system' | string
+export type MarathonMatchTestStatus = 'FAILED' | 'IN PROGRESS' | 'SUCCESS' | string
 
 export interface SubmissionReview {
     createdAt?: string
@@ -14,15 +16,41 @@ export interface SubmissionReview {
     typeId?: string
 }
 
+export interface ReviewSummationTestProgressDetails {
+    completedTests?: number
+    failedTests?: number
+    message?: string
+    progress?: number
+    reviewId?: string
+    status?: MarathonMatchTestStatus
+    testProcess?: MarathonMatchTestProcess
+    totalTests?: number
+    updatedAt?: string
+    [key: string]: unknown
+}
+
+export interface ReviewSummationMetadata {
+    reviewTypeId?: string
+    testProcess?: MarathonMatchTestProcess
+    testProgress?: number
+    testProgressDetails?: ReviewSummationTestProgressDetails
+    testStatus?: MarathonMatchTestStatus
+    testType?: MarathonMatchTestProcess
+    [key: string]: unknown
+}
+
 export interface ReviewSummation {
     aggregateScore?: number
     createdAt?: string
     id?: string
+    isExample?: boolean
     isFinal?: boolean
     isPassing?: boolean
     isProvisional?: boolean
     memberId?: string
+    metadata?: ReviewSummationMetadata
     submissionId?: string
+    updatedAt?: string
 }
 
 export interface Submission {

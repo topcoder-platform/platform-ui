@@ -7,6 +7,8 @@ import {
     getCopilotMemberPaymentsBudgetInfo,
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
+    getProjectBillingAccountEngagementPaymentErrorMessage,
+    getProjectBillingAccountEngagementPaymentIssue,
     getProjectBillingAccountNoticeMessage,
 } from './project-billing-account.utils'
 
@@ -30,10 +32,14 @@ describe('project-billing-account challenge gating helpers', () => {
 
         expect(getProjectBillingAccountChallengeIssue(billingAccount))
             .toBe('inactive')
+        expect(getProjectBillingAccountEngagementPaymentIssue(billingAccount))
+            .toBe('inactive')
         expect(getProjectBillingAccountNoticeMessage('inactive'))
             .toBe('The billing account for this project is inactive.')
         expect(getProjectBillingAccountChallengeErrorMessage('inactive'))
             .toBe('Cannot launch challenges because the project billing account is inactive.')
+        expect(getProjectBillingAccountEngagementPaymentErrorMessage('inactive'))
+            .toBe('Cannot create engagement payments because the project billing account is inactive.')
     })
 
     it('treats expired billing accounts as blocked for challenges', () => {
@@ -45,6 +51,10 @@ describe('project-billing-account challenge gating helpers', () => {
 
         expect(getProjectBillingAccountChallengeIssue(billingAccount))
             .toBe('expired')
+        expect(getProjectBillingAccountEngagementPaymentIssue(billingAccount))
+            .toBe('expired')
+        expect(getProjectBillingAccountEngagementPaymentErrorMessage('expired'))
+            .toBe('Cannot create engagement payments because the project billing account is expired.')
     })
 
     it('treats depleted billing accounts as blocked for challenges', () => {

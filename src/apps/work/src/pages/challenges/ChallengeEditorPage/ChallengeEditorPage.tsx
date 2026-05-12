@@ -27,6 +27,7 @@ import {
     LoadingSpinner,
 } from '../../../lib/components'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     COMMUNITY_APP_URL,
     REVIEW_APP_URL,
@@ -116,6 +117,7 @@ interface ChallengeEditorContentProps {
     isReadOnly: boolean
     launchButtonLabel: string
     onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
@@ -135,6 +137,7 @@ interface ChallengeEditorBodyProps {
     isReadOnly: boolean
     launchButtonLabel: string
     onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
     onDetailsTabClick: () => void
@@ -231,6 +234,16 @@ function getErrorMessage(error: Error | undefined): string {
     }
 
     return typedError.message || 'Something went wrong while loading the challenge.'
+}
+
+function normalizeStatus(status: string | undefined): string {
+    return (status || '')
+        .trim()
+        .toUpperCase()
+}
+
+function isBudgetApprovedForLaunch(approvalStatus: string | undefined): boolean {
+    return normalizeStatus(approvalStatus) === CHALLENGE_APPROVAL_STATUS.APPROVED
 }
 
 function getTabClassName(activeTab: EditorTab, tab: EditorTab): string {
@@ -677,6 +690,7 @@ interface RenderHeaderActionParams {
     challengeQuickLinks?: JSX.Element
     challengeName: string
     isDeleting: boolean
+    isLaunchDisabled: boolean
     isLaunching: boolean
     isSaving: boolean
     onChallengeUpdated: () => void
@@ -705,7 +719,7 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
         actions.push(
             <Button
                 key='launch'
-                disabled={params.isLaunching || params.isSaving}
+                disabled={params.isLaunchDisabled}
                 label={params.isLaunching
                     ? 'Launching...'
                     : 'Launch'}
@@ -787,7 +801,11 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
             confirmText={params.isLaunching
                 ? 'Launching...'
                 : 'Launch'}
-            message={`Are you ready to launch challenge ${params.challengeName}?`}
+            message={
+                `Are you ready to launch challenge ${params.challengeName}?
+
+Prizes and copilot fees are locked after launch. Contact the Project Manager for any updates post-launch.`
+            }
             onCancel={params.onLaunchCancel}
             onConfirm={params.onLaunchConfirmClick}
             title='Launch Challenge'
@@ -890,6 +908,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -926,6 +945,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             isReadOnly={props.isReadOnly}
             launchButtonLabel={props.launchButtonLabel}
             onChallengeCreated={props.onChallengeCreated}
+            onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
             onChallengeStatusChange={props.onChallengeStatusChange}
             onLaunchOpen={props.onLaunchOpen}
             onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -981,6 +1001,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -1057,6 +1078,7 @@ export const ChallengeEditorPage: FC = () => {
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
     const [isSavingChallenge, setIsSavingChallenge] = useState<boolean>(false)
+    const [challengeApprovalStatus, setChallengeApprovalStatus] = useState<string | undefined>()
     const [launchAction, setLaunchAction] = useState<(() => Promise<void>) | undefined>()
     const [createdChallenge, setCreatedChallenge] = useState<CreatedChallengeState | undefined>()
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
@@ -1150,6 +1172,7 @@ export const ChallengeEditorPage: FC = () => {
     useEffect(() => {
         if (challengeId) {
             setCreatedChallenge(undefined)
+            setChallengeApprovalStatus(undefined)
         }
     }, [challengeId])
 
@@ -1192,18 +1215,24 @@ export const ChallengeEditorPage: FC = () => {
         activeTab,
         headerChallenge,
     )
+    const isBudgetApproved = isBudgetApprovedForLaunch(
+        challengeApprovalStatus || headerChallenge?.approvalStatus,
+    )
+    const isLaunchDisabled = isLaunching || isSavingChallenge || !isBudgetApproved
     const handleSavingChange = useCallback((isSaving: boolean): void => {
         setIsSavingChallenge(isSaving)
     }, [])
+    const handleChallengeApprovalStatusChange = useCallback((status?: string): void => {
+        setChallengeApprovalStatus(status)
+    }, [])
     const handleLaunchOpen = useCallback((): void => {
-        if (isLaunching || isSavingChallenge) {
+        if (isLaunchDisabled) {
             return
         }
 
         setShowLaunchModal(true)
     }, [
-        isLaunching,
-        isSavingChallenge,
+        isLaunchDisabled,
     ])
     const launchChallengeName = challengeResult.challenge?.name || 'Challenge'
     const handleLaunchCancel = useCallback((): void => {
@@ -1342,6 +1371,7 @@ export const ChallengeEditorPage: FC = () => {
         challengeName: launchChallengeName,
         challengeQuickLinks,
         isDeleting,
+        isLaunchDisabled,
         isLaunching,
         isSaving: isSavingChallenge,
         onChallengeUpdated: handleChallengeUpdated,
@@ -1373,7 +1403,6 @@ export const ChallengeEditorPage: FC = () => {
     const launchButtonLabel = isLaunching
         ? 'Launching...'
         : 'Launch'
-    const isLaunchDisabled = isLaunching || isSavingChallenge
     const backUrl = canRenderChallengeDetails
         ? challengesListPath
         : getChallengesListPath()
@@ -1400,6 +1429,7 @@ export const ChallengeEditorPage: FC = () => {
                         isReadOnly={isViewMode}
                         launchButtonLabel={launchButtonLabel}
                         onChallengeCreated={handleChallengeCreated}
+                        onChallengeApprovalStatusChange={handleChallengeApprovalStatusChange}
                         onChallengeStatusChange={handleChallengeStatusChange}
                         onLaunchOpen={handleLaunchOpen}
                         onDetailsTabClick={handleDetailsTabClick}
