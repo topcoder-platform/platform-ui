@@ -117,6 +117,7 @@ interface ChallengeEditorContentProps {
     isReadOnly: boolean
     launchButtonLabel: string
     onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
@@ -136,6 +137,7 @@ interface ChallengeEditorBodyProps {
     isReadOnly: boolean
     launchButtonLabel: string
     onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
     onDetailsTabClick: () => void
@@ -906,6 +908,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -942,6 +945,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             isReadOnly={props.isReadOnly}
             launchButtonLabel={props.launchButtonLabel}
             onChallengeCreated={props.onChallengeCreated}
+            onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
             onChallengeStatusChange={props.onChallengeStatusChange}
             onLaunchOpen={props.onLaunchOpen}
             onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -997,6 +1001,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
@@ -1073,6 +1078,7 @@ export const ChallengeEditorPage: FC = () => {
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
     const [isSavingChallenge, setIsSavingChallenge] = useState<boolean>(false)
+    const [challengeApprovalStatus, setChallengeApprovalStatus] = useState<string | undefined>()
     const [launchAction, setLaunchAction] = useState<(() => Promise<void>) | undefined>()
     const [createdChallenge, setCreatedChallenge] = useState<CreatedChallengeState | undefined>()
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
@@ -1166,6 +1172,7 @@ export const ChallengeEditorPage: FC = () => {
     useEffect(() => {
         if (challengeId) {
             setCreatedChallenge(undefined)
+            setChallengeApprovalStatus(undefined)
         }
     }, [challengeId])
 
@@ -1208,10 +1215,15 @@ export const ChallengeEditorPage: FC = () => {
         activeTab,
         headerChallenge,
     )
-    const isBudgetApproved = isBudgetApprovedForLaunch(headerChallenge?.approvalStatus)
+    const isBudgetApproved = isBudgetApprovedForLaunch(
+        challengeApprovalStatus || headerChallenge?.approvalStatus,
+    )
     const isLaunchDisabled = isLaunching || isSavingChallenge || !isBudgetApproved
     const handleSavingChange = useCallback((isSaving: boolean): void => {
         setIsSavingChallenge(isSaving)
+    }, [])
+    const handleChallengeApprovalStatusChange = useCallback((status?: string): void => {
+        setChallengeApprovalStatus(status)
     }, [])
     const handleLaunchOpen = useCallback((): void => {
         if (isLaunchDisabled) {
@@ -1417,6 +1429,7 @@ export const ChallengeEditorPage: FC = () => {
                         isReadOnly={isViewMode}
                         launchButtonLabel={launchButtonLabel}
                         onChallengeCreated={handleChallengeCreated}
+                        onChallengeApprovalStatusChange={handleChallengeApprovalStatusChange}
                         onChallengeStatusChange={handleChallengeStatusChange}
                         onLaunchOpen={handleLaunchOpen}
                         onDetailsTabClick={handleDetailsTabClick}
