@@ -192,9 +192,8 @@ function buildEngagementUrl(projectId: string, engagementId: string): string {
  * @param item Line item already mapped for the current caller role.
  * @returns Formatted currency or `-` when a copilot-safe amount is unavailable.
  * @remarks Copilot rows use member payment amounts without exposing markup.
- * Manager/admin challenge rows use the challenge subtotal returned by the
- * billing-account API, while engagement rows still derive the payment amount
- * from the billing ledger total.
+ * Manager/admin rows derive the payment amount from the billing ledger total
+ * when markup is available.
  */
 function formatLineItemAmount(item: BillingAccountModalLineItem): string {
     return item.displayAmount === undefined
@@ -224,23 +223,18 @@ function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns Member payment amount, or `undefined` for copilot rows when it cannot
  * be safely calculated.
- * @remarks Challenge budget rows already expose the visible challenge cost for
- * every caller, so API-provided member-payment aliases are ignored for those
- * rows. Engagement budget rows store the billing ledger total, so they still
- * need markup removed before display. Copilot engagement rows prefer
- * API-provided member-payment amounts and fall back to markup math only when
- * that safe field is missing.
+ * @remarks Billing budget rows store the ledger total, so markup is removed
+ * when available. Copilot engagement rows prefer API-provided member-payment
+ * amounts and fall back to markup math only when that safe field is missing.
+ * Challenge rows ignore API-provided aliases and fall back to raw ledger
+ * amounts when markup is unavailable.
  */
 function getLineItemMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
     showMemberPaymentsRemaining: boolean | undefined,
 ): number | undefined {
-    if (item.externalType === 'CHALLENGE') {
-        return item.amount
-    }
-
-    if (item.memberPaymentAmount !== undefined) {
+    if (item.externalType !== 'CHALLENGE' && item.memberPaymentAmount !== undefined) {
         return item.memberPaymentAmount
     }
 
@@ -248,6 +242,10 @@ function getLineItemMemberPaymentAmount(
         item.amount,
         billingAccountDetails.markup,
     )
+
+    if (item.externalType === 'CHALLENGE') {
+        return memberPaymentAmount ?? item.amount
+    }
 
     return memberPaymentAmount !== undefined || showMemberPaymentsRemaining
         ? memberPaymentAmount
@@ -262,10 +260,9 @@ function getLineItemMemberPaymentAmount(
  * @param showMemberPaymentsRemaining Whether the caller needs the copilot-safe view.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
- * @remarks Challenge rows use the raw visible challenge cost for all callers.
- * Non-copilot challenge rows also calculate the hidden fee from markup.
- * Engagement rows derive member payments from the raw ledger amount and
- * billing-account markup.
+ * @remarks Rows derive member payments from the raw ledger amount and
+ * billing-account markup when possible. Non-copilot rows also calculate the
+ * hidden fee from the displayed member-payment amount.
  */
 function getDisplayLineItem(
     item: BillingAccountLineItem,
