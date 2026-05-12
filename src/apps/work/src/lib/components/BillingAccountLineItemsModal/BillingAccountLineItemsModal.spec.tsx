@@ -156,6 +156,31 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
+    it('removes markup once from consumed challenge charges before showing member payments', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            consumedBudget: 33.25,
+            markup: 0.33,
+            totalBudgetRemaining: 966.75,
+        })
+
+        expect(screen.getByText('$25.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$8.25'))
+            .toBeTruthy()
+        expect(screen.queryByText('$10.97'))
+            .toBeNull()
+    })
+
     it('builds engagement links from assignment-backed billing rows', () => {
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [
@@ -422,6 +447,32 @@ describe('BillingAccountLineItemsModal', () => {
         expect(screen.getByText('$9.15'))
             .toBeTruthy()
         expect(screen.queryByText('$6.88'))
+            .toBeNull()
+    })
+
+    it('shows consumed challenge member payments without challenge fees for copilots', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            consumedBudget: 33.25,
+            markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 966.75,
+        }, true)
+
+        expect(screen.getByText('$25.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$33.25'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
             .toBeNull()
     })
 
