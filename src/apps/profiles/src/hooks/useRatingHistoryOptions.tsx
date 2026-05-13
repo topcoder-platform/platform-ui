@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { cloneDeep, get } from 'lodash'
+import { cloneDeep } from 'lodash'
 import Highcharts from 'highcharts'
 
 import { getRatingColor, StatsHistory, TC_RATING_COLORS } from '~/libs/core'
@@ -45,12 +45,50 @@ export const RATING_CHART_CONFIG: Highcharts.Options = {
 }
 
 /**
+ * Converts raw track history records into Highcharts rating points.
+ *
+ * @param trackHistory - Raw track history entries from the member stats API.
+ * @returns Chronologically sorted chart points. Entries without a finite date or rating are omitted
+ * because they do not represent a rating change and would split the line in Highcharts.
+ */
+export function getRatingHistoryData(trackHistory: Array<StatsHistory>): Highcharts.PointOptionsObject[] {
+    return trackHistory
+        .reduce<Highcharts.PointOptionsObject[]>((points, challenge) => {
+            const date: number | undefined = typeof challenge.date === 'number' && Number.isFinite(challenge.date)
+                ? challenge.date
+                : challenge.ratingDate
+            const rating: number | undefined = typeof challenge.rating === 'number' && Number.isFinite(challenge.rating)
+                ? challenge.rating
+                : challenge.newRating
+
+            if (
+                typeof date !== 'number'
+                || !Number.isFinite(date)
+                || typeof rating !== 'number'
+                || !Number.isFinite(rating)
+            ) {
+                return points
+            }
+
+            points.push({
+                color: getRatingColor(rating),
+                name: challenge.challengeName,
+                x: date,
+                y: rating,
+            })
+
+            return points
+        }, [])
+        .sort((a, b) => (a.x as number) - (b.x as number))
+}
+
+/**
  * Custom hook to generate Highcharts options for a rating history chart.
  *
- * @param {Array<StatsHistory> | undefined} trackHistory - The array of historical stats data.
- * @param {string} seriesName - The name of the series for the chart.
- * @returns {Highcharts.Options | undefined} - Highcharts options for the rating history chart or
- * undefined if data is empty.
+ * @param trackHistory - The array of historical stats data.
+ * @param seriesName - The name of the series for the chart.
+ * @returns Highcharts options for the rating history chart, or undefined when there are no rated
+ * history entries to draw.
  */
 export function useRatingHistoryOptions(
     trackHistory: Array<StatsHistory> | undefined,
@@ -64,9 +102,8 @@ export function useRatingHistoryOptions(
         // Return undefined if the track history data is empty
         if (!trackHistory?.length) return undefined
 
-        // Determine the date and rating fields based on the first entry in the track history
-        const dateField: string = get(trackHistory[0], 'date') ? 'date' : 'ratingDate'
-        const ratingField: string = get(trackHistory[0], 'rating') ? 'rating' : 'newRating'
+        const historyData: Highcharts.PointOptionsObject[] = getRatingHistoryData(trackHistory)
+        if (!historyData.length) return undefined
 
         // Configure series for the chart
         options.plotOptions = {
@@ -81,13 +118,7 @@ export function useRatingHistoryOptions(
 
         options.series = [{
             color: 'transparent',
-            data: trackHistory.sort((a, b) => get(b, dateField) - get(a, dateField))
-                .map((challenge: StatsHistory) => ({
-                    color: getRatingColor(challenge.newRating ?? challenge.rating),
-                    name: challenge.challengeName,
-                    x: get(challenge, dateField),
-                    y: get(challenge, ratingField),
-                })),
+            data: historyData,
             name: seriesName,
             type: 'line',
         }]
