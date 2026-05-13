@@ -23,6 +23,14 @@ import styles from './styles.module.scss'
 
 const MIN_OVERVIEW_LENGTH = 50
 
+// Safely strips HTML tags using the DOM parser instead of regex
+// to avoid incomplete multi-character sanitization (CodeQL js/incomplete-multi-character-sanitization)
+function stripHtml(html: string): string {
+    const doc = new DOMParser()
+        .parseFromString(html, 'text/html')
+    return doc.body.textContent ?? ''
+}
+
 const editableFields = [
     'projectId',
     'opportunityTitle',
@@ -270,8 +278,8 @@ const CopilotRequestForm: FC<{}> = () => {
 
     // Check if overview has enough content for AI processing
     const canGenerateSkills = useMemo(() => {
-        const plainText = formValues.overview?.replace(/<[^>]*>/g, '')
-            .trim() || ''
+        const plainText = stripHtml(formValues.overview || '')
+            .trim()
         return plainText.length >= MIN_OVERVIEW_LENGTH && !isGeneratingSkills
     }, [formValues.overview, isGeneratingSkills])
 
@@ -294,11 +302,8 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: (() => {
-                    const plainText = formValues.overview?.replace(/<[^>]*>/g, '')
-                        .trim() || ''
-                    return plainText.length < 10
-                })(),
+                condition: stripHtml(formValues.overview || '')
+                    .trim().length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -591,8 +596,9 @@ const CopilotRequestForm: FC<{}> = () => {
                         </div>
                         {!canGenerateSkills
                             && formValues.overview
-&& (formValues.overview?.replace(/<[^>]*>/g, '')
-    .trim().length ?? 0) < MIN_OVERVIEW_LENGTH
+    && stripHtml(formValues.overview || '')
+        .trim().length < MIN_OVERVIEW_LENGTH
+
                             && (
                                 <p className={styles.helperText}>
                                     Add at least
