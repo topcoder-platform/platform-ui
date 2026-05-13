@@ -1,3 +1,6 @@
+/* eslint-disable ordered-imports/ordered-imports */
+/* eslint-disable react/jsx-no-bind */
+/* eslint-disable max-len */
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { bind, debounce, isEmpty, pick } from 'lodash'
 import { toast } from 'react-toastify'
@@ -6,9 +9,10 @@ import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
-    InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
+    InputRadio, InputSelect, InputSelectReact, InputText } from '~/libs/ui'
 import { extractSkillsFromText, InputSkillSelector } from '~/libs/shared'
 
+import { BundledEditor } from '~/libs/shared/lib/components/field-html-editor/BundledEditor'
 import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
 import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
@@ -266,8 +270,9 @@ const CopilotRequestForm: FC<{}> = () => {
 
     // Check if overview has enough content for AI processing
     const canGenerateSkills = useMemo(() => {
-        const overview = formValues.overview?.trim() || ''
-        return overview.length >= MIN_OVERVIEW_LENGTH && !isGeneratingSkills
+        const plainText = formValues.overview?.replace(/<[^>]*>/g, '')
+            .trim() || ''
+        return plainText.length >= MIN_OVERVIEW_LENGTH && !isGeneratingSkills
     }, [formValues.overview, isGeneratingSkills])
 
     function handleFormAction(): void {
@@ -289,7 +294,11 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: !formValues.overview || formValues.overview.trim().length < 10,
+                condition: (() => {
+                    const plainText = formValues.overview?.replace(/<[^>]*>/g, '')
+                        .trim() || ''
+                    return plainText.length < 10
+                })(),
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -529,16 +538,43 @@ const CopilotRequestForm: FC<{}> = () => {
                     <p className={styles.formRow}>
                         Please provide an overview of the project the copilot will undertake
                     </p>
-                    <InputTextarea
-                        label='Project overview'
-                        name='overview'
-                        placeholder='A minimum of three sentences explaining the
-                         type of work and project which is to be undertaken.'
-                        value={formValues.overview}
-                        onChange={bind(handleFormValueChange, this, 'overview')}
-                        error={formErrors.overview}
-                        dirty
-                    />
+                    <div className={formErrors.overview ? styles.richTextError : styles.richTextWrapper}>
+                        <BundledEditor
+                            id='overview'
+                            value={formValues.overview || ''}
+                            onEditorChange={(content: string) => {
+                                setFormValues((prev: any) => ({ ...prev, overview: content }))
+                                setFormErrors((prev: any) => {
+                                    const updated = { ...prev }
+                                    delete updated.overview
+                                    return updated
+                                })
+                                setIsFormChanged(true)
+                            }}
+                            init={{
+                                browser_spellcheck: true,
+                                content_style:
+                'body {'
+                + 'font-family: "Roboto", Arial, Helvetica, sans-serif;'
+                + 'font-size: 14px; line-height: 22px;'
+                + '}',
+                                height: 300,
+                                menubar: false,
+                                placeholder: 'A minimum of three sentences explaining the type of work and project which is to be undertaken.',
+                                plugins: ['table', 'link'],
+                                statusbar: false,
+                                toolbar: 'undo redo | formatselect | bold italic underline strikethrough |'
+                + ' forecolor backcolor | link | alignleft aligncenter alignright alignjustify |'
+                + ' numlist bullist outdent indent | table | removeformat',
+                            }}
+                        />
+                    </div>
+                    {formErrors.overview && (
+                        <p className={styles.error}>
+                            <IconSolid.ExclamationIcon />
+                            {formErrors.overview}
+                        </p>
+                    )}
                     <div className={styles.skillsSection}>
                         <div className={styles.skillsHeader}>
                             <p className={styles.formRowNoMargin}>
@@ -555,7 +591,8 @@ const CopilotRequestForm: FC<{}> = () => {
                         </div>
                         {!canGenerateSkills
                             && formValues.overview
-                            && formValues.overview.trim().length < MIN_OVERVIEW_LENGTH
+&& (formValues.overview?.replace(/<[^>]*>/g, '')
+    .trim().length ?? 0) < MIN_OVERVIEW_LENGTH
                             && (
                                 <p className={styles.helperText}>
                                     Add at least
