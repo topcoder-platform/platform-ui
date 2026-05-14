@@ -1,4 +1,5 @@
 export interface ChallengeFilters {
+    approvalStatus?: string | string[]
     memberId?: number | string
     name?: string
     type?: string

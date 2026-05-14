@@ -9,6 +9,7 @@ import {
     TASK_MANAGER_ROLES,
 } from '../../../../config/index.config'
 import {
+    budgetApprovalsRouteId,
     challengesRouteId,
     engagementsRouteId,
     groupsRouteId,
@@ -27,6 +28,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     }
 
     const isAdmin = hasAnyRole(userRoles, ADMIN_ROLES)
+    const isManager = hasAnyRole(userRoles, [...MANAGER_ROLES, ...TASK_MANAGER_ROLES])
     const canViewEngagements = canViewAllEngagements(userRoles)
 
     const tabs: TabsNavItem[] = [
@@ -48,6 +50,12 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
             id: projectsRouteId,
             title: 'Projects',
         },
+        ...(isAdmin || isManager
+            ? [{
+                id: budgetApprovalsRouteId,
+                title: 'Budget Approvals',
+            }]
+            : []),
         {
             id: taasRouteId,
             title: 'TaaS Projects',
@@ -55,7 +63,6 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     )
 
     const isCopilot = hasAnyRole(userRoles, COPILOT_ROLES)
-    const isManager = hasAnyRole(userRoles, [...MANAGER_ROLES, ...TASK_MANAGER_ROLES])
 
     if (isAdmin || isCopilot || isManager) {
         tabs.push({

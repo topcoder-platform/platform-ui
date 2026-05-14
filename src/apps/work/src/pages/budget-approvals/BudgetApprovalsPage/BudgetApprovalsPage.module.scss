@@ -1,0 +1,77 @@
+.searchRow {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    margin-bottom: 20px;
+}
+
+.searchField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.searchInput {
+    border: 1px solid #d4d4d4;
+    border-radius: 4px;
+    font-size: 14px;
+    min-height: 40px;
+    padding: 8px 12px;
+}
+
+.summaryRow {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.errorBanner {
+    background: #fff5f5;
+    border: 1px solid #f5c2c7;
+    border-radius: 6px;
+    color: #8c1d28;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        border-bottom: 1px solid #e8e8e8;
+        padding: 12px 10px;
+        text-align: left;
+    }
+
+    th {
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+}
+
+.actionHeader {
+    text-align: center;
+    width: 80px;
+}
+
+.actionCell {
+    text-align: center;
+}
+
+.actionLink {
+    color: inherit;
+    display: inline-flex;
+}
+
+.actionIcon {
+    height: 16px;
+    width: 16px;
+}
+
+.emptyCell {
+    color: #666;
+    text-align: center;
+}
