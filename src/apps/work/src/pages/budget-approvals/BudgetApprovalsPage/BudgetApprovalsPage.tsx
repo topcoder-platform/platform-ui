@@ -6,8 +6,8 @@ import {
     useState,
 } from 'react'
 import { Link } from 'react-router-dom'
+import Select, { SingleValue } from 'react-select'
 
-import { TableLoading } from '~/apps/admin/src/lib'
 import { PageWrapper } from '~/apps/review/src/lib'
 import { IconOutline } from '~/libs/ui'
 
@@ -32,6 +32,11 @@ import {
 } from '../../../lib/models'
 
 import styles from './BudgetApprovalsPage.module.scss'
+
+interface ProjectOption {
+    label: string
+    value: string
+}
 
 function normalizeSearchValue(value: string): string {
     return value
@@ -70,7 +75,7 @@ export const BudgetApprovalsPage: FC = () => {
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const [challengeNameSearch, setChallengeNameSearch] = useState<string>('')
-    const [projectNameSearch, setProjectNameSearch] = useState<string>('')
+    const [selectedProjectId, setSelectedProjectId] = useState<string>('')
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
 
@@ -85,6 +90,7 @@ export const BudgetApprovalsPage: FC = () => {
         name: normalizeSearchValue(challengeNameSearch) || undefined,
         page,
         perPage,
+        projectId: selectedProjectId || undefined,
         sortBy: 'updated',
         sortOrder: 'desc',
         status: CHALLENGE_STATUS.DRAFT,
@@ -111,14 +117,19 @@ export const BudgetApprovalsPage: FC = () => {
         return map
     }, [projectsResult.projects])
 
-    const accessibleProjectIds = useMemo(
-        () => new Set(projectsResult.projects.map(project => String(project.id || ''))),
+    const projectOptions = useMemo<ProjectOption[]>(
+        () => projectsResult.projects
+            .filter(project => !!project.id)
+            .map(project => ({
+                label: project.name || String(project.id),
+                value: String(project.id),
+            })),
         [projectsResult.projects],
     )
 
-    const normalizedProjectNameSearch = useMemo(
-        () => normalizeSearchValue(projectNameSearch),
-        [projectNameSearch],
+    const selectedProjectOption = useMemo<ProjectOption | undefined>(
+        () => projectOptions.find(opt => opt.value === selectedProjectId) ?? undefined,
+        [projectOptions, selectedProjectId],
     )
 
     const filteredChallenges = useMemo(
@@ -126,33 +137,9 @@ export const BudgetApprovalsPage: FC = () => {
             .filter(challenge => {
                 const projectId = getProjectId(challenge)
 
-                if (!projectId) {
-                    return false
-                }
-
-                if (isAdmin) {
-                    return true
-                }
-
-                return accessibleProjectIds.has(projectId)
-            })
-            .filter(challenge => {
-                if (!normalizedProjectNameSearch) {
-                    return true
-                }
-
-                const projectName = getProjectName(projectMap, getProjectId(challenge))
-
-                return normalizeSearchValue(projectName)
-                    .includes(normalizedProjectNameSearch)
+                return !!projectId
             }),
-        [
-            accessibleProjectIds,
-            challengesResult.challenges,
-            isAdmin,
-            normalizedProjectNameSearch,
-            projectMap,
-        ],
+        [challengesResult.challenges],
     )
 
     function handleChallengeNameSearch(event: ChangeEvent<HTMLInputElement>): void {
@@ -160,8 +147,8 @@ export const BudgetApprovalsPage: FC = () => {
         setPage(1)
     }
 
-    function handleProjectNameSearch(event: ChangeEvent<HTMLInputElement>): void {
-        setProjectNameSearch(event.target.value)
+    function handleProjectSelect(option: SingleValue<ProjectOption>): void {
+        setSelectedProjectId(option?.value ?? '')
         setPage(1)
     }
 
@@ -172,10 +159,6 @@ export const BudgetApprovalsPage: FC = () => {
     function handlePerPageChange(newPerPage: number): void {
         setPerPage(newPerPage)
         setPage(1)
-    }
-
-    if (challengesResult.isLoading || (!isAdmin && projectsResult.isLoading)) {
-        return <TableLoading />
     }
 
     const errorMessage = challengesResult.error?.message || projectsResult.error?.message
@@ -193,14 +176,17 @@ export const BudgetApprovalsPage: FC = () => {
 
             <div className={styles.searchRow}>
                 <div className={styles.searchField}>
-                    <label htmlFor='budget-approvals-project-search'>Project name</label>
-                    <input
-                        id='budget-approvals-project-search'
-                        className={styles.searchInput}
-                        onChange={handleProjectNameSearch}
+                    <label htmlFor='budget-approvals-project-select'>Project</label>
+                    <Select
+                        inputId='budget-approvals-project-select'
+                        className='react-select-container'
+                        classNamePrefix='select'
+                        isClearable
+                        isLoading={projectsResult.isLoading}
+                        onChange={handleProjectSelect}
+                        options={projectOptions}
                         placeholder='Search project name'
-                        type='text'
-                        value={projectNameSearch}
+                        value={selectedProjectOption}
                     />
                 </div>
                 <div className={styles.searchField}>
@@ -235,7 +221,11 @@ export const BudgetApprovalsPage: FC = () => {
                         ? (
                             <tr>
                                 <td colSpan={3} className={styles.emptyCell}>
-                                    No pending budget approvals found.
+                                    {challengesResult.isLoading || (!isAdmin && projectsResult.isLoading) ? (
+                                        'Loading ...'
+                                    ) : (
+                                        'No pending budget approvals found.'
+                                    )}
                                 </td>
                             </tr>
                         )
