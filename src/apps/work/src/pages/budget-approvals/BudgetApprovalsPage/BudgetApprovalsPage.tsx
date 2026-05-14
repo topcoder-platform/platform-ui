@@ -8,7 +8,6 @@ import {
 import { Link } from 'react-router-dom'
 import Select, { SingleValue } from 'react-select'
 
-import { TableLoading } from '~/apps/admin/src/lib'
 import { PageWrapper } from '~/apps/review/src/lib'
 import { IconOutline } from '~/libs/ui'
 
@@ -32,12 +31,12 @@ import {
     WorkAppContextModel,
 } from '../../../lib/models'
 
+import styles from './BudgetApprovalsPage.module.scss'
+
 interface ProjectOption {
     label: string
     value: string
 }
-
-import styles from './BudgetApprovalsPage.module.scss'
 
 function normalizeSearchValue(value: string): string {
     return value
@@ -128,8 +127,8 @@ export const BudgetApprovalsPage: FC = () => {
         [projectsResult.projects],
     )
 
-    const selectedProjectOption = useMemo<ProjectOption | null>(
-        () => projectOptions.find(opt => opt.value === selectedProjectId) ?? null,
+    const selectedProjectOption = useMemo<ProjectOption | undefined>(
+        () => projectOptions.find(opt => opt.value === selectedProjectId) ?? undefined,
         [projectOptions, selectedProjectId],
     )
 
