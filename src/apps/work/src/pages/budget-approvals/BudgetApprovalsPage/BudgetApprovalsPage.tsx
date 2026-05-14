@@ -14,8 +14,10 @@ import { IconOutline } from '~/libs/ui'
 import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
+    PAGE_SIZE,
 } from '../../../lib/constants'
 import { WorkAppContext } from '../../../lib/contexts'
+import { Pagination } from '../../../lib/components'
 import {
     useFetchChallenges,
     UseFetchChallengesParams,
@@ -35,12 +37,6 @@ function normalizeSearchValue(value: string): string {
     return value
         .trim()
         .toLowerCase()
-}
-
-function normalizeStatus(value: unknown): string {
-    return String(value || '')
-        .trim()
-        .toUpperCase()
 }
 
 function getProjectId(challenge: Challenge): string {
@@ -66,6 +62,7 @@ function getProjectName(
     return projectMap.get(projectId)?.name || projectId || 'Unknown project'
 }
 
+// eslint-disable-next-line complexity
 export const BudgetApprovalsPage: FC = () => {
     const {
         isAdmin,
@@ -74,6 +71,8 @@ export const BudgetApprovalsPage: FC = () => {
 
     const [challengeNameSearch, setChallengeNameSearch] = useState<string>('')
     const [projectNameSearch, setProjectNameSearch] = useState<string>('')
+    const [page, setPage] = useState<number>(1)
+    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
 
     const memberId = isAdmin
         ? undefined
@@ -83,8 +82,9 @@ export const BudgetApprovalsPage: FC = () => {
         approvalStatus: CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         enabled: isAdmin || memberId !== undefined,
         memberId,
-        page: 1,
-        perPage: 100,
+        name: normalizeSearchValue(challengeNameSearch) || undefined,
+        page,
+        perPage,
         sortBy: 'updated',
         sortOrder: 'desc',
         status: CHALLENGE_STATUS.DRAFT,
@@ -116,11 +116,6 @@ export const BudgetApprovalsPage: FC = () => {
         [projectsResult.projects],
     )
 
-    const normalizedChallengeNameSearch = useMemo(
-        () => normalizeSearchValue(challengeNameSearch),
-        [challengeNameSearch],
-    )
-
     const normalizedProjectNameSearch = useMemo(
         () => normalizeSearchValue(projectNameSearch),
         [projectNameSearch],
@@ -128,11 +123,6 @@ export const BudgetApprovalsPage: FC = () => {
 
     const filteredChallenges = useMemo(
         () => challengesResult.challenges
-            .filter(challenge => normalizeStatus(challenge.status) === CHALLENGE_STATUS.DRAFT)
-            .filter(
-                challenge => normalizeStatus(challenge.approvalStatus)
-                    === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
-            )
             .filter(challenge => {
                 const projectId = getProjectId(challenge)
 
@@ -145,14 +135,6 @@ export const BudgetApprovalsPage: FC = () => {
                 }
 
                 return accessibleProjectIds.has(projectId)
-            })
-            .filter(challenge => {
-                if (!normalizedChallengeNameSearch) {
-                    return true
-                }
-
-                return normalizeSearchValue(challenge.name)
-                    .includes(normalizedChallengeNameSearch)
             })
             .filter(challenge => {
                 if (!normalizedProjectNameSearch) {
@@ -168,7 +150,6 @@ export const BudgetApprovalsPage: FC = () => {
             accessibleProjectIds,
             challengesResult.challenges,
             isAdmin,
-            normalizedChallengeNameSearch,
             normalizedProjectNameSearch,
             projectMap,
         ],
@@ -176,10 +157,21 @@ export const BudgetApprovalsPage: FC = () => {
 
     function handleChallengeNameSearch(event: ChangeEvent<HTMLInputElement>): void {
         setChallengeNameSearch(event.target.value)
+        setPage(1)
     }
 
     function handleProjectNameSearch(event: ChangeEvent<HTMLInputElement>): void {
         setProjectNameSearch(event.target.value)
+        setPage(1)
+    }
+
+    function handlePageChange(newPage: number): void {
+        setPage(newPage)
+    }
+
+    function handlePerPageChange(newPerPage: number): void {
+        setPerPage(newPerPage)
+        setPage(1)
     }
 
     if (challengesResult.isLoading || (!isAdmin && projectsResult.isLoading)) {
@@ -187,6 +179,8 @@ export const BudgetApprovalsPage: FC = () => {
     }
 
     const errorMessage = challengesResult.error?.message || projectsResult.error?.message
+    const totalPendingApprovals = challengesResult.metadata.total ?? 0
+    const shouldShowPagination = !errorMessage && totalPendingApprovals > 0
 
     return (
         <PageWrapper
@@ -223,7 +217,7 @@ export const BudgetApprovalsPage: FC = () => {
             </div>
 
             <div className={styles.summaryRow}>
-                {filteredChallenges.length}
+                {totalPendingApprovals}
                 {' '}
                 pending approvals
             </div>
@@ -253,10 +247,12 @@ export const BudgetApprovalsPage: FC = () => {
                             return (
                                 <tr key={challenge.id}>
                                     <td>
-                                        <Link to={buildProjectPath(projectId)}>{projectName}</Link>
+                                        <Link className={styles.nameLink} to={buildProjectPath(projectId)}>
+                                            {projectName}
+                                        </Link>
                                     </td>
                                     <td>
-                                        <Link to={challengePath}>{challenge.name}</Link>
+                                        <Link className={styles.nameLink} to={challengePath}>{challenge.name}</Link>
                                     </td>
                                     <td className={styles.actionCell}>
                                         <Link
@@ -272,6 +268,19 @@ export const BudgetApprovalsPage: FC = () => {
                         })}
                 </tbody>
             </table>
+
+            {shouldShowPagination
+                ? (
+                    <Pagination
+                        itemLabel='pending approvals'
+                        onPageChange={handlePageChange}
+                        onPerPageChange={handlePerPageChange}
+                        page={challengesResult.metadata.page ?? page}
+                        perPage={challengesResult.metadata.perPage ?? perPage}
+                        total={totalPendingApprovals}
+                    />
+                )
+                : undefined}
         </PageWrapper>
     )
 }
