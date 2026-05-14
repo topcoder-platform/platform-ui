@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
     useCallback,
@@ -91,6 +94,10 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 
+jest.mock('./AiReviewTab.module.scss', () => ({}), {
+    virtual: true,
+})
+
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedCreateAiReviewConfig = createAiReviewConfig as jest.Mock
@@ -169,7 +176,7 @@ describe('AiReviewTab review mode options', () => {
         },
     )
 
-    it('shows only AI_GATING as a visible review mode option for standard configs', async () => {
+    it('shows AI_GATING and AI_ONLY as visible review mode options for standard configs', async () => {
         render(
             <AiReviewTab
                 challengeId='challenge-1'
@@ -185,12 +192,13 @@ describe('AiReviewTab review mode options', () => {
         )
             .toEqual([
                 'AI_GATING',
+                'AI_ONLY',
             ])
         expect(screen.getByRole('option', { name: 'AI_GATING' })).not.toBeNull()
         expect(
-            screen.queryByRole('option', { name: 'AI_ONLY (legacy)' }),
+            screen.getByRole('option', { name: 'AI_ONLY' }),
         )
-            .toBeNull()
+            .not.toBeNull()
     })
 
     it('does not refetch the persisted AI review config when the parent callback changes', async () => {
@@ -262,7 +270,7 @@ describe('AiReviewTab review mode options', () => {
             .toBeNull()
     })
 
-    it('keeps legacy AI_ONLY configs visible without exposing AI_ONLY in the dropdown list', async () => {
+    it('supports AI_ONLY configs with both options now available in the dropdown', async () => {
         mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
             ...baseConfiguration,
             autoFinalize: true,
@@ -280,17 +288,14 @@ describe('AiReviewTab review mode options', () => {
         const visibleOptionLabels = Array.from(reviewModeSelect.querySelectorAll('option'))
             .filter(option => !option.hidden)
             .map(option => option.textContent)
-        const legacyOption = reviewModeSelect.querySelector('option[hidden]')
 
         expect(visibleOptionLabels)
             .toEqual([
                 'AI_GATING',
+                'AI_ONLY',
             ])
-        expect(legacyOption?.textContent)
-            .toBe('AI_ONLY (legacy)')
-        expect(screen.getByText(
-            'AI_ONLY is a legacy configuration and is no longer available for new setups.',
-        )).not.toBeNull()
+        expect((reviewModeSelect as HTMLSelectElement).value)
+            .toBe('AI_ONLY')
     })
 
     it('renders manual workflow headings with a space before the workflow number', async () => {
