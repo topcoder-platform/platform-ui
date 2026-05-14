@@ -17,6 +17,7 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProject,
     useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
@@ -67,6 +68,7 @@ jest.mock('../../../../lib/hooks', () => ({
     useAutosave: jest.fn(),
     useFetchChallengeTracks: jest.fn(),
     useFetchChallengeTypes: jest.fn(),
+    useFetchProject: jest.fn(),
     useFetchProjectBillingAccount: jest.fn(),
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
@@ -190,7 +192,11 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('~/config', () => ({
+    AppSubdomain: {
+        work: 'work',
+    },
     EnvironmentConfig: {
+        SUBDOMAIN: 'work',
         ADMIN: {
             DIRECT_URL: 'https://example.com/direct',
             REVIEW_UI_URL: 'https://example.com/review',
@@ -640,6 +646,7 @@ jest.mock('./TermsField', () => ({
 const mockedUseAutosave = useAutosave as jest.Mock
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
@@ -684,6 +691,7 @@ describe('ChallengeEditorForm', () => {
     const draftChallenge = {
         id: '12345',
         name: 'Draft challenge',
+        projectId: '3001',
         status: 'DRAFT',
     } as Challenge
     const validDraftChallenge = {
@@ -752,6 +760,20 @@ describe('ChallengeEditorForm', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [],
             isLoading: false,
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: '3001',
+                members: [{
+                    role: 'manager',
+                    userId: 123,
+                }],
+                name: 'Project 3001',
+                status: 'active',
+            },
         })
         mockedUseFetchProjectBillingAccount.mockReturnValue({
             billingAccount: undefined,
@@ -938,6 +960,45 @@ describe('ChallengeEditorForm', () => {
                     approvalStatus: 'APPROVED',
                 }))
         })
+    })
+
+    it('hides budget approval actions for manager users without full access', () => {
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: '3001',
+                members: [{
+                    role: 'customer',
+                    userId: 123,
+                }],
+                name: 'Project 3001',
+                status: 'active',
+            },
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={validDraftChallenge}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Approve Budget' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Reject Budget' }))
+            .toBeNull()
     })
 
     it('hides the editable timeline section for task challenges in edit mode', () => {

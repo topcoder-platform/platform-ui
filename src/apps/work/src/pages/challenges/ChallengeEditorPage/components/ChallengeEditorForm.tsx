@@ -39,6 +39,7 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProject,
     useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
@@ -72,6 +73,7 @@ import {
     searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
+    checkCanEditProjectDetails,
     formatLastSaved,
     showErrorToast,
     showSuccessToast,
@@ -1516,6 +1518,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         (): string | undefined => resolveMatchingChallengeViewPath(location.pathname),
         [location.pathname],
     )
+    const projectResult = useFetchProject(fallbackProjectId)
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
     const projectBillingAccountRef = useRef(projectBillingAccount)
@@ -1767,7 +1770,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.approvalStatus,
         ],
     )
-    const canApproveChallengeBudget = workAppContext.isAdmin || workAppContext.isManager
+    const canApproveChallengeBudget = checkCanEditProjectDetails(
+        workAppContext.userRoles,
+        workAppContext.loginUserInfo?.userId,
+        projectResult.project,
+    )
     const hasPersistedPrizeSets = useMemo(
         () => Array.isArray(props.challenge?.prizeSets)
             && props.challenge?.prizeSets
