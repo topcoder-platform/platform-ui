@@ -13,6 +13,7 @@ import {
 } from '~/libs/core'
 
 import {
+    budgetApprovalsRouteId,
     challengeCreateRouteId,
     challengeEditRouteId,
     challengesRouteId,
@@ -63,6 +64,10 @@ const ChallengeRouteRedirectPage: LazyLoadedComponent = lazyLoad(
 
 const ProjectsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/projects/ProjectsListPage'),
+)
+
+const BudgetApprovalsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/budget-approvals/BudgetApprovalsPage'),
 )
 
 const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
@@ -144,6 +149,16 @@ const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) 
 
     if (!canViewAllEngagements(contextValue.userRoles)) {
         return <ErrorMessage message='You need Admin or Talent Manager role to view all engagements.' />
+    }
+
+    return <>{props.children}</>
+}
+
+const BudgetApprovalsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
+    const contextValue: WorkAppContextModel = useContext(WorkAppContext)
+
+    if (!contextValue.isAdmin && !contextValue.isManager) {
+        return <ErrorMessage message='You need Admin or Manager role to view Budget Approvals.' />
     }
 
     return <>{props.children}</>
@@ -240,6 +255,17 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: projectsRouteId,
                 route: projectsRouteId,
                 title: 'Projects',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <BudgetApprovalsRouteGuard>
+                        <BudgetApprovalsPage />
+                    </BudgetApprovalsRouteGuard>
+                ),
+                id: budgetApprovalsRouteId,
+                route: budgetApprovalsRouteId,
+                title: 'Budget Approvals',
             },
             {
                 authRequired: true,
