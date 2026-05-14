@@ -1,9 +1,21 @@
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+    ChangeEvent,
+    Dispatch,
+    FC,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
+import { format as formatIsoDate, isValid, parseISO } from 'date-fns'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import {
+    BaseModal,
     Button,
     IconOutline,
+    InputDatePicker,
     InputSelect,
     InputSelectOption,
     InputText,
@@ -16,6 +28,7 @@ import { Pagination } from '~/apps/admin/src/lib'
 import { bulkMemberLookupRouteId } from '../../config/routes.config'
 import { handleError } from '../../lib/utils'
 import {
+    BillingAccountDetail,
     BillingAccountProfileResponse,
     BillingAccountsViewData,
     downloadBlobFile,
@@ -30,7 +43,7 @@ import {
     SfdcBillingAccountPaymentRow,
 } from '../../lib/services'
 
-import { getReportParameterValidationError } from './reports-page.validation'
+import { getReportParameterValidationError, isValidReportDateValue } from './reports-page.validation'
 import styles from './ReportsPage.module.scss'
 
 const pageTitle = 'Reports'
@@ -38,15 +51,16 @@ const bulkMembersByHandlesPath = '/identity/users-by-handles'
 const BILLING_ACCOUNTS_REPORT_PATH = '/sfdc/billing-accounts'
 const SFDC_PAYMENTS_REPORT_PATH = '/sfdc/payments'
 const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
-    description: 'View billing-account details and SFDC payments by billing account ID.',
+    description:
+        'View SFDC payments across all billing accounts by default. Optionally filter by billing account ID and dates.',
     method: 'GET',
     name: 'Billing Accounts',
     parameters: [
         {
-            description: 'Billing account ID',
+            description: 'Optional billing account ID to narrow payments to a single account.',
             location: 'query',
             name: 'billingAccountId',
-            required: true,
+            required: false,
             type: 'string',
         },
         {
@@ -68,12 +82,17 @@ const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
 type ReportsPageTab = 'reports' | 'billingAccounts'
 
 const buildSfdcPaymentsQueryPath = (
-    billingAccountId: string,
+    billingAccountId: string | undefined,
     startDate?: string,
     endDate?: string,
 ): string => {
     const query = new URLSearchParams()
-    query.append('billingAccountIds', billingAccountId.trim())
+    const trimmedBa = billingAccountId?.trim()
+
+    if (trimmedBa) {
+        query.append('billingAccountIds', trimmedBa)
+    }
+
     const start = startDate?.trim()
     const end = endDate?.trim()
 
@@ -85,7 +104,8 @@ const buildSfdcPaymentsQueryPath = (
         query.append('endDate', end)
     }
 
-    return `${SFDC_PAYMENTS_REPORT_PATH}?${query.toString()}`
+    const queryString = query.toString()
+    return queryString ? `${SFDC_PAYMENTS_REPORT_PATH}?${queryString}` : SFDC_PAYMENTS_REPORT_PATH
 }
 
 const formatReportCell = (value: unknown): string => {
@@ -130,13 +150,177 @@ const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: s
 ]
 const PAYMENT_ROWS_PER_PAGE_OPTIONS = [10, 25, 50]
 
+type BillingAccountDateParamInputProps = {
+    label: string
+    parameterErrors: Record<string, string>
+    parameterName: 'startDate' | 'endDate'
+    parameterValues: Record<string, string>
+    setParameterValues: Dispatch<SetStateAction<Record<string, string>>>
+}
+
+function billingAccountDatePickerBounds(
+    parameterName: 'startDate' | 'endDate',
+    parsedStart: Date | undefined,
+    parsedEnd: Date | undefined,
+): { maxDate?: Date; minDate?: Date } {
+    const startOk = !!parsedStart && isValid(parsedStart)
+    const endOk = !!parsedEnd && isValid(parsedEnd)
+
+    if (parameterName === 'endDate' && startOk) {
+        return { maxDate: undefined, minDate: parsedStart }
+    }
+
+    if (parameterName === 'startDate' && endOk) {
+        return { maxDate: parsedEnd, minDate: undefined }
+    }
+
+    return {}
+}
+
+const BillingAccountDateParamInput: FC<BillingAccountDateParamInputProps> = (
+    props: BillingAccountDateParamInputProps,
+) => {
+    const startRaw = props.parameterValues.startDate?.trim()
+    const endRaw = props.parameterValues.endDate?.trim()
+    const parsedStart = startRaw && isValidReportDateValue(startRaw) ? parseISO(startRaw) : undefined
+    const parsedEnd = endRaw && isValidReportDateValue(endRaw) ? parseISO(endRaw) : undefined
+    const rawValue = props.parameterValues[props.parameterName]?.trim()
+    const selectedDate = rawValue && isValidReportDateValue(rawValue) ? parseISO(rawValue) : undefined
+    const dateBounds = billingAccountDatePickerBounds(
+        props.parameterName,
+        parsedStart,
+        parsedEnd,
+    )
+
+    function handleDateChange(date: Date | null): void {
+        props.setParameterValues(previous => ({
+            ...previous,
+            [props.parameterName]: date && isValid(date) ? formatIsoDate(date, 'yyyy-MM-dd') : '',
+        }))
+    }
+
+    return (
+        <InputDatePicker
+            label={props.label}
+            disabled={false}
+            date={selectedDate && isValid(selectedDate) ? selectedDate : undefined}
+            onChange={handleDateChange}
+            error={props.parameterErrors[props.parameterName]}
+            dirty={!!props.parameterErrors[props.parameterName]}
+            hint='Select a calendar date (stored as YYYY-MM-DD for the API).'
+            isClearable
+            maxDate={dateBounds.maxDate}
+            minDate={dateBounds.minDate}
+        />
+    )
+}
+
+type BillingAccountIdCellProps = {
+    rawId: unknown
+    onOpen: (id: string) => void
+}
+
+const BillingAccountIdCell: FC<BillingAccountIdCellProps> = (props: BillingAccountIdCellProps) => {
+    const displayed = formatReportCell(props.rawId)
+
+    function handleClick(): void {
+        props.onOpen(String(props.rawId))
+    }
+
+    if (displayed === '—') {
+        return <>{displayed}</>
+    }
+
+    return (
+        <button
+            type='button'
+            className={styles.billingAccountIdLink}
+            onClick={handleClick}
+        >
+            {displayed}
+        </button>
+    )
+}
+
+const BillingAccountSummaryBody = (props: {
+    billingAccount: BillingAccountDetail | undefined
+    billingAccountIdLabel: string
+}): JSX.Element => (
+    <>
+        <div className={styles.billingModalMeta}>
+            {`Billing account ID: ${props.billingAccountIdLabel}`}
+        </div>
+        {props.billingAccount ? (
+            <div className={styles.billingDetailGrid}>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Name</span>
+                    <span className={styles.billingDetailValue}>{props.billingAccount.name}</span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Description</span>
+                    <span className={styles.billingDetailValue}>
+                        {formatReportCell(props.billingAccount.description)}
+                    </span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Subcontracting end customer</span>
+                    <span className={styles.billingDetailValue}>
+                        {formatReportCell(props.billingAccount.subcontractingEndCustomer)}
+                    </span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Status</span>
+                    <span className={styles.billingDetailValue}>{props.billingAccount.status}</span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Start date</span>
+                    <span className={styles.billingDetailValue}>
+                        {props.billingAccount.startDate
+                            ? formatPaymentDate(String(props.billingAccount.startDate))
+                            : '—'}
+                    </span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>End date</span>
+                    <span className={styles.billingDetailValue}>
+                        {props.billingAccount.endDate
+                            ? formatPaymentDate(String(props.billingAccount.endDate))
+                            : '—'}
+                    </span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Budget</span>
+                    <span className={styles.billingDetailValue}>
+                        {formatReportCell(props.billingAccount.budget)}
+                    </span>
+                </div>
+                <div className={styles.billingDetailItem}>
+                    <span className={styles.billingDetailLabel}>Markup</span>
+                    <span className={styles.billingDetailValue}>
+                        {formatReportCell(props.billingAccount.markup)}
+                    </span>
+                </div>
+            </div>
+        ) : (
+            <div className={styles.billingMissingNotice}>
+                No billing account profile was found for this ID.
+            </div>
+        )}
+    </>
+)
+
 const BillingAccountReportResults = (
     props: { data: BillingAccountsViewData },
 ): JSX.Element => {
-    const billingAccount: BillingAccountsViewData['billingAccount'] = props.data.billingAccount
     const payments: BillingAccountsViewData['payments'] = props.data.payments
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [rowsPerPage, setRowsPerPage] = useState<number>(PAYMENT_ROWS_PER_PAGE_OPTIONS[0])
+    const [modalBaId, setModalBaId] = useState<string | undefined>(undefined)
+    const [modalProfile, setModalProfile] = useState<BillingAccountDetail | undefined>(undefined)
+    const [modalLoading, setModalLoading] = useState<boolean>(false)
+    const openBillingProfileModal = useCallback((id: string) => {
+        setModalBaId(id)
+    }, [])
     const total = payments.length
     const totalPages = Math.max(1, Math.ceil(total / rowsPerPage))
     const currentSliceStart = (currentPage - 1) * rowsPerPage
@@ -148,73 +332,94 @@ const BillingAccountReportResults = (
         setCurrentPage(1)
     }, [payments])
 
+    useEffect(() => {
+        if (!modalBaId) {
+            setModalProfile(undefined)
+            setModalLoading(false)
+            return undefined
+        }
+
+        let cancelled = false
+        setModalLoading(true)
+        setModalProfile(undefined)
+
+        const profileQuery = new URLSearchParams({ billingAccountId: modalBaId })
+        const profilePath = `${BILLING_ACCOUNTS_REPORT_PATH}?${profileQuery.toString()}`
+
+        fetchReportJson<BillingAccountProfileResponse>(profilePath)
+            .then(response => {
+                if (!cancelled) {
+                    setModalProfile(response.billingAccount)
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setModalProfile(undefined)
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setModalLoading(false)
+                }
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [modalBaId])
+
     function handleRowsPerPageChange(event: ChangeEvent<HTMLSelectElement>): void {
         setRowsPerPage(Number(event.target.value))
         setCurrentPage(1)
     }
 
+    function handleCloseBillingModal(): void {
+        setModalBaId(undefined)
+    }
+
+    function renderPaymentCell(
+        row: SfdcBillingAccountPaymentRow,
+        colKey: keyof SfdcBillingAccountPaymentRow,
+    ): JSX.Element | string {
+        const value = row[colKey]
+
+        if (colKey === 'paymentDate') {
+            return formatPaymentDate(String(value))
+        }
+
+        if (colKey === 'billingAccountId') {
+            return <BillingAccountIdCell rawId={value} onOpen={openBillingProfileModal} />
+        }
+
+        return formatReportCell(value)
+    }
+
     return (
         <div>
-            <div className={styles.billingSummary}>
-                <div className={styles.billingSummaryTitle}>Billing account</div>
-                {billingAccount ? (
-                    <div className={styles.billingDetailGrid}>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Name</span>
-                            <span className={styles.billingDetailValue}>{billingAccount.name}</span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Description</span>
-                            <span className={styles.billingDetailValue}>
-                                {formatReportCell(billingAccount.description)}
-                            </span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Subcontracting end customer</span>
-                            <span className={styles.billingDetailValue}>
-                                {formatReportCell(billingAccount.subcontractingEndCustomer)}
-                            </span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Status</span>
-                            <span className={styles.billingDetailValue}>{billingAccount.status}</span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Start date</span>
-                            <span className={styles.billingDetailValue}>
-                                {billingAccount.startDate
-                                    ? formatPaymentDate(String(billingAccount.startDate))
-                                    : '—'}
-                            </span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>End date</span>
-                            <span className={styles.billingDetailValue}>
-                                {billingAccount.endDate
-                                    ? formatPaymentDate(String(billingAccount.endDate))
-                                    : '—'}
-                            </span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Budget</span>
-                            <span className={styles.billingDetailValue}>
-                                {formatReportCell(billingAccount.budget)}
-                            </span>
-                        </div>
-                        <div className={styles.billingDetailItem}>
-                            <span className={styles.billingDetailLabel}>Markup</span>
-                            <span className={styles.billingDetailValue}>
-                                {formatReportCell(billingAccount.markup)}
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className={styles.billingMissingNotice}>
-                        No billing account profile was found for this ID. Payments for this account may still
-                        appear below.
+            <BaseModal
+                open={modalBaId !== undefined}
+                onClose={handleCloseBillingModal}
+                title='Billing account'
+                size='lg'
+                buttons={(
+                    <Button secondary onClick={handleCloseBillingModal}>
+                        Close
+                    </Button>
+                )}
+            >
+                {modalBaId === undefined ? undefined : (
+                    <div className={styles.billingModalBody}>
+                        {modalLoading ? (
+                            <div className={styles.billingModalLoading}>Loading billing account…</div>
+                        ) : (
+                            <BillingAccountSummaryBody
+                                billingAccount={modalProfile}
+                                billingAccountIdLabel={modalBaId}
+                            />
+                        )}
                     </div>
                 )}
-            </div>
+            </BaseModal>
 
             <div className={styles.paymentsSection}>
                 <div className={styles.paymentsSectionTitle}>Payments</div>
@@ -235,11 +440,7 @@ const BillingAccountReportResults = (
                                     {paginatedPayments.map(row => (
                                         <tr key={row.paymentId}>
                                             {PAYMENT_TABLE_COLUMNS.map(col => (
-                                                <td key={col.key}>
-                                                    {col.key === 'paymentDate'
-                                                        ? formatPaymentDate(String(row[col.key]))
-                                                        : formatReportCell(row[col.key])}
-                                                </td>
+                                                <td key={col.key}>{renderPaymentCell(row, col.key)}</td>
                                             ))}
                                         </tr>
                                     ))}
@@ -316,10 +517,6 @@ const buildParameterTooltipContent = (parameter: ReportParameter): JSX.Element =
         </div>
     </>
 )
-
-const EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE: BillingAccountProfileResponse = {
-    billingAccount: undefined,
-}
 
 type ReportActionsProps = {
     handleCsvDownload: () => void
@@ -610,67 +807,67 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
         Object.keys(parameterErrors).length > 0
     ), [parameterErrors])
 
-    const handleBillingAccountView = useCallback(async () => {
-        if (activeTab !== 'billingAccounts' || hasInvalidParameterValues) {
-            return
-        }
-
-        const billingAccountId = parameterValues.billingAccountId?.trim()
-
-        if (!billingAccountId) {
-            return
-        }
-
+    const fetchBillingPaymentsForParams = useCallback(async (params: Record<string, string>) => {
         try {
             setIsBillingAccountViewLoading(true)
-            const profileQuery = new URLSearchParams({ billingAccountId })
-            const profilePath = `${BILLING_ACCOUNTS_REPORT_PATH}?${profileQuery.toString()}`
+            const billingAccountId = params.billingAccountId?.trim()
             const paymentsPath = buildSfdcPaymentsQueryPath(
-                billingAccountId,
-                parameterValues.startDate,
-                parameterValues.endDate,
+                billingAccountId || undefined,
+                params.startDate,
+                params.endDate,
             )
-
-            const paymentsPromise = fetchReportJson<SfdcBillingAccountPaymentRow[]>(paymentsPath)
-            const profilePromise = fetchReportJson<BillingAccountProfileResponse>(profilePath)
-                .catch(() => EMPTY_BILLING_ACCOUNT_PROFILE_RESPONSE)
-            const [profile, payments] = await Promise.all([profilePromise, paymentsPromise])
-
-            setBillingAccountViewData({
-                billingAccount: profile.billingAccount,
-                payments,
-            })
+            const payments = await fetchReportJson<SfdcBillingAccountPaymentRow[]>(paymentsPath)
+            setBillingAccountViewData({ payments })
         } catch (error) {
             handleError(error)
         } finally {
             setIsBillingAccountViewLoading(false)
         }
+    }, [])
+
+    useEffect(() => {
+        if (activeTab !== 'billingAccounts') {
+            return undefined
+        }
+
+        fetchBillingPaymentsForParams({})
+            .catch(handleError)
+
+        return undefined
+    }, [activeTab, fetchBillingPaymentsForParams])
+
+    const handleBillingAccountView = useCallback(() => {
+        if (activeTab !== 'billingAccounts' || hasInvalidParameterValues) {
+            return
+        }
+
+        fetchBillingPaymentsForParams(parameterValues)
+            .catch(handleError)
     }, [
         activeTab,
+        fetchBillingPaymentsForParams,
         hasInvalidParameterValues,
-        parameterValues.billingAccountId,
-        parameterValues.endDate,
-        parameterValues.startDate,
+        parameterValues,
     ])
 
-    const handleDownload = useCallback(async (format: 'json' | 'csv') => {
+    const handleDownload = useCallback(async (downloadFormat: 'json' | 'csv') => {
         if (!selectedReport || hasInvalidParameterValues) {
             return
         }
 
         try {
-            setDownloadingFormat(format)
+            setDownloadingFormat(downloadFormat)
 
             const requestPath = buildReportPathWithParams(selectedReport)
 
-            const blob = format === 'json'
+            const blob = downloadFormat === 'json'
                 ? await downloadReportAsJson(requestPath)
                 : await downloadReportAsCsv(requestPath)
 
             const challengeIdSuffix = parameterValues.challengeId?.trim()
             const fileName = buildDownloadName(
                 selectedReport.name,
-                format,
+                downloadFormat,
                 challengeIdSuffix,
             )
             downloadBlobFile(blob, fileName)
@@ -687,12 +884,18 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
 
     const handleResetFilters = useCallback(() => {
         setParameterValues({})
+
+        if (activeTab === 'billingAccounts') {
+            fetchBillingPaymentsForParams({})
+                .catch(handleError)
+            return
+        }
+
         setBillingAccountViewData(undefined)
-    }, [])
+    }, [activeTab, fetchBillingPaymentsForParams])
 
     const handleBillingAccountViewClick = useCallback(() => {
         handleBillingAccountView()
-            .catch(handleError)
     }, [handleBillingAccountView])
 
     const isDownloading = downloadingFormat !== undefined
@@ -721,9 +924,8 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
     const billingAccountViewDisabled = !selectedReportForForm
         || isDownloading
         || isBillingAccountViewLoading
-        || requiredParamsMissing
         || hasInvalidParameterValues
-        || hasUnresolvedPathParams
+
     const isResetDisabled = Object.keys(parameterValues).length === 0
 
     const handleJsonDownload = useCallback(() => {
@@ -766,6 +968,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
         />
     )
 
+    // eslint-disable-next-line complexity -- mirrors report parameter types (text, select, billing dates)
     const renderParameterInput = useCallback((parameter: ReportParameter) => {
         const commonProps = {
             label: formatParameterLabel(parameter.name),
@@ -775,27 +978,32 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                 : (parameter.type.endsWith('[]') ? 'Comma-separated values' : 'Enter value'),
         }
 
-        if (parameter.type === 'boolean') {
-            const options: InputSelectOption[] = [
-                { label: 'True', value: 'true' },
-                { label: 'False', value: 'false' },
-            ]
+        const isBillingDateField = selectedReportForForm?.path === BILLING_ACCOUNTS_REPORT_PATH
+            && parameter.type === 'date'
+            && (parameter.name === 'startDate' || parameter.name === 'endDate')
 
+        if (isBillingDateField) {
             return (
-                <InputSelect
-                    {...commonProps}
-                    options={options}
-                    value={parameterValues[parameter.name] ?? ''}
-                    onChange={createSelectParamChange(parameter.name)}
+                <BillingAccountDateParamInput
+                    label={formatParameterLabel(parameter.name)}
+                    parameterErrors={parameterErrors}
+                    parameterName={parameter.name as 'startDate' | 'endDate'}
+                    parameterValues={parameterValues}
+                    setParameterValues={setParameterValues}
                 />
             )
         }
 
-        if (parameter.type === 'enum') {
-            const options: InputSelectOption[] = (parameter.options ?? []).map(option => ({
-                label: option,
-                value: option,
-            }))
+        if (parameter.type === 'boolean' || parameter.type === 'enum') {
+            const options: InputSelectOption[] = parameter.type === 'boolean'
+                ? [
+                    { label: 'True', value: 'true' },
+                    { label: 'False', value: 'false' },
+                ]
+                : (parameter.options ?? []).map(option => ({
+                    label: option,
+                    value: option,
+                }))
 
             return (
                 <InputSelect
@@ -819,7 +1027,14 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                 hint={parameter.type === 'date' ? 'Use ISO 8601 format (e.g. 2024-01-31)' : undefined}
             />
         )
-    }, [createSelectParamChange, handleParameterChange, parameterErrors, parameterValues])
+    }, [
+        createSelectParamChange,
+        handleParameterChange,
+        parameterErrors,
+        parameterValues,
+        selectedReportForForm?.path,
+        setParameterValues,
+    ])
 
     return (
         <>
@@ -837,8 +1052,9 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                             + 'fill required parameters, and download JSON or CSV from the reports API.'
                         : (
                             <>
-                                {'Enter a billing account ID and optional start/end dates, then click View '
-                                    + 'to load billing account payment data. '}
+                                {'Payments load for all billing accounts by default. Optionally narrow by billing '
+                                    + 'account ID and dates, then click View. Open a billing account profile from '
+                                    + 'the Billing account ID column in the table. '}
                                 <span className={styles.billingDefaultWindowNote}>
                                     If no dates are specified, records from the past 45 days are displayed
                                     by default.

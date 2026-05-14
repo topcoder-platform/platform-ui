@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 .page {
     display: flex;
     flex-direction: column;
@@ -176,17 +177,35 @@
     color: #6b6f75;
 }
 
-.billingSummary {
-    margin-top: 8px;
-    padding: 16px;
-    border: 1px solid #e4e6e9;
-    border-radius: 6px;
-    background: #fafbfc;
+.billingAccountIdLink {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font: inherit;
+    text-align: inherit;
 }
 
-.billingSummaryTitle {
-    font-weight: 600;
-    margin-bottom: 12px;
+.billingAccountIdLink:hover {
+    color: #0a58ca;
+}
+
+.billingModalBody {
+    min-width: 280px;
+    padding-top: 4px;
+}
+
+.billingModalMeta {
+    font-size: 13px;
+    color: #6b6f75;
+    margin-bottom: 14px;
+}
+
+.billingModalLoading {
+    padding: 16px 0;
+    color: #494f55;
 }
 
 .billingDetailGrid {
