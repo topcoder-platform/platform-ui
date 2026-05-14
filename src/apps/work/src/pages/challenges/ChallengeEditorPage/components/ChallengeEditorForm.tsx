@@ -1800,7 +1800,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         && !!currentChallengeId
         && hasPersistedPrizeSets
         && !hasUnsavedPrizeSetChanges
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.APPROVED
         && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.COMPLETED
+        && !(normalizedChallengeStatus ?? '').startsWith(CHALLENGE_STATUS.CANCELLED)
     const isBudgetPending = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL
     const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
     const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED

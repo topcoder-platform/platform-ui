@@ -196,7 +196,6 @@ jest.mock('~/config', () => ({
         work: 'work',
     },
     EnvironmentConfig: {
-        SUBDOMAIN: 'work',
         ADMIN: {
             DIRECT_URL: 'https://example.com/direct',
             REVIEW_UI_URL: 'https://example.com/review',
@@ -212,6 +211,7 @@ jest.mock('~/config', () => ({
         DIRECT_PROJECT_URL: 'https://example.com/direct-project',
         ENGAGEMENTS_URL: 'https://example.com/engagements',
         REVIEW_APP_URL: 'https://example.com/review',
+        SUBDOMAIN: 'work',
         TC_DOMAIN: 'example.com',
         TC_FINANCE_API: 'https://example.com/finance',
         TOPCODER_URL: 'https://example.com/topcoder',
@@ -989,6 +989,33 @@ describe('ChallengeEditorForm', () => {
                 <WorkAppContext.Provider value={managerContextValue}>
                     <ChallengeEditorForm
                         challenge={validDraftChallenge}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Approve Budget' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Reject Budget' }))
+            .toBeNull()
+    })
+
+    it('hides budget approval actions when challenge status is approved', () => {
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...validDraftChallenge,
+                            status: 'APPROVED',
+                        }}
                         isReadOnly
                     />
                 </WorkAppContext.Provider>
