@@ -3571,7 +3571,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                         {getApprovalStatusText(normalizedApprovalStatus)}
                                                     </span>
                                                 </div>
-                                                {isBudgetPending && (
+                                                {isBudgetPending && !canApproveChallengeBudget && (
                                                     <div className={styles.approvalStatusRow}>
                                                         Kindly obtain Project Manager approval
                                                         on the budget before launching the challenge
