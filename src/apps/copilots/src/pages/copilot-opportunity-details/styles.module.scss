@@ -10,16 +10,22 @@
     justify-content: center;
     text-transform: uppercase;
     font-family: $font-barlow-condensed;
-    font-size: 50px;
+    font-size: 40px;
     font-weight: $font-weight-medium;
     margin-top: $sp-2;
     padding: $sp-6 0;
     color: $teal-100;
+    text-align: left;
+    word-break: break-word;
+    line-height: 1.2;         
+        
 }
 
 @media (max-width: 767px) {
     .header {
-        line-height: 48px;
+        font-size: 32px;         
+        line-height: 38px;
+
     }
 }
 
@@ -90,3 +96,4 @@
 .textCaps {
     text-transform: capitalize;
 }
+
