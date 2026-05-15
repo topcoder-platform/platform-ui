@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
+import { toast } from 'react-toastify'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
@@ -168,7 +169,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             setWinnings(winningsData)
             setPagination(payments.pagination)
         } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError)
+            const message = apiError instanceof Error ? apiError.message : 'Failed to fetch winnings'
+            toast.error(message)
         } finally {
             setIsLoading(false)
         }
