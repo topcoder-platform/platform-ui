@@ -132,16 +132,6 @@ export const BudgetApprovalsPage: FC = () => {
         [projectOptions, selectedProjectId],
     )
 
-    const filteredChallenges = useMemo(
-        () => challengesResult.challenges
-            .filter(challenge => {
-                const projectId = getProjectId(challenge)
-
-                return !!projectId
-            }),
-        [challengesResult.challenges],
-    )
-
     function handleChallengeNameSearch(event: ChangeEvent<HTMLInputElement>): void {
         setChallengeNameSearch(event.target.value)
         setPage(1)
@@ -217,7 +207,7 @@ export const BudgetApprovalsPage: FC = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredChallenges.length === 0
+                    {challengesResult.challenges.length === 0
                         ? (
                             <tr>
                                 <td colSpan={3} className={styles.emptyCell}>
@@ -229,7 +219,7 @@ export const BudgetApprovalsPage: FC = () => {
                                 </td>
                             </tr>
                         )
-                        : filteredChallenges.map(challenge => {
+                        : challengesResult.challenges.map(challenge => {
                             const projectId = getProjectId(challenge)
                             const projectName = getProjectName(projectMap, projectId)
                             const challengePath = buildChallengePath(challenge, projectId)
