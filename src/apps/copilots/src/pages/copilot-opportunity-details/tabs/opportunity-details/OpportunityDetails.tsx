@@ -15,9 +15,9 @@ const OpportunityDetails: FC<{
             </div>
             <h2 className={styles.subHeading}> Description </h2>
             {props.opportunity?.overview && (
-                <div dangerouslySetInnerHTML={{
-                    __html: props.opportunity.overview.replace(/\n/g, '<br />'),
-                }}
+                <div
+                    className={styles.overviewContent}
+                    dangerouslySetInnerHTML={{ __html: props.opportunity.overview }}
                 />
             )}
         </div>
