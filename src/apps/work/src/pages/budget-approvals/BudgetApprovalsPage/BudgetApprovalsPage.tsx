@@ -86,7 +86,6 @@ export const BudgetApprovalsPage: FC = () => {
     const challengeFetchParams: UseFetchChallengesParams = {
         approvalStatus: CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         enabled: isAdmin || memberId !== undefined,
-        memberId,
         name: normalizeSearchValue(challengeNameSearch) || undefined,
         page,
         perPage,
