@@ -248,9 +248,9 @@ describe('PaymentsListView', () => {
             .toHaveBeenCalled()
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: ['ON_HOLD_ADMIN'],
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
                 date: 'last30days',
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -300,9 +300,9 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: ['ON_HOLD_ADMIN'],
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
                 date: 'last30days',
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -349,9 +349,9 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: ['PAID'],
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
                 date: 'last30days',
+                status: ['PAID'],
             }))
     })
 
