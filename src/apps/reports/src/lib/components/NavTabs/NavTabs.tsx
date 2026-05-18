@@ -40,7 +40,7 @@ const NavTabs: FC = () => {
         },
         {
             id: billingAccountsPageRouteId,
-            title: 'Billing Accounts',
+            title: 'SFDC Payments',
         },
     ], [])
 
