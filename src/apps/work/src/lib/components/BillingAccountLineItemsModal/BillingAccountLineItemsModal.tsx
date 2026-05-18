@@ -301,8 +301,9 @@ function getLineItemChallengeMarkup(
  * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
  * @returns Member payment amount for the challenge row.
  * @remarks Locked challenge rows store member payments directly. Consumed
- * challenge rows store the final billing-account charge, so the billing markup
- * is removed once using the challenge's own billing markup.
+ * challenge rows prefer the API-provided member-payment subtotal when present.
+ * Older payloads only expose the final billing-account charge, so the billing
+ * markup is removed once using the challenge's own billing markup.
  */
 function getChallengeMemberPaymentAmount(
     item: BillingAccountLineItem,
@@ -311,6 +312,10 @@ function getChallengeMemberPaymentAmount(
 ): number | undefined {
     if (item.status === 'locked') {
         return item.amount
+    }
+
+    if (item.memberPaymentAmount !== undefined) {
+        return item.memberPaymentAmount
     }
 
     const challengeMarkup = getLineItemChallengeMarkup(
@@ -327,6 +332,65 @@ function getChallengeMemberPaymentAmount(
         item.amount,
         challengeMarkup,
     )
+}
+
+/**
+ * Resolves a persisted challenge fee from a consumed billing row.
+ *
+ * @param item Raw billing-account line item.
+ * @returns Fee amount derived from the ledger charge and API-provided member
+ * payment subtotal, or `undefined` when the row does not expose both values.
+ * @remarks Completed challenge rows can expose the exact member-payment
+ * subtotal even when markup is hidden from the current caller, so the
+ * difference is the safest fee value for the manager/admin fee column.
+ */
+function getConsumedChallengeFeeAmount(
+    item: BillingAccountLineItem,
+): number | undefined {
+    if (
+        item.externalType !== 'CHALLENGE'
+        || item.status !== 'consumed'
+        || item.memberPaymentAmount === undefined
+    ) {
+        return undefined
+    }
+
+    const feeAmount = Number((item.amount - item.memberPaymentAmount).toFixed(2))
+
+    return feeAmount >= 0
+        ? feeAmount
+        : undefined
+}
+
+/**
+ * Resolves the row challenge fee amount for callers allowed to see markup.
+ *
+ * @param item Raw locked or consumed billing-account line item.
+ * @param displayAmount Member-payment amount selected for display.
+ * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
+ * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
+ * @returns Persisted consumed challenge fee, calculated markup fee, or
+ * `undefined` when the fee cannot be derived.
+ * @remarks Consumed challenge rows with an explicit member subtotal do not
+ * need challenge markup hydration to show the correct fee.
+ */
+function getLineItemChallengeFeeAmount(
+    item: BillingAccountLineItem,
+    displayAmount: number | undefined,
+    billingAccountDetails: BillingAccountDetails,
+    challengeDetailsById: ChallengeDetailsById | undefined,
+): number | undefined {
+    const consumedChallengeFeeAmount = getConsumedChallengeFeeAmount(item)
+
+    if (consumedChallengeFeeAmount !== undefined) {
+        return consumedChallengeFeeAmount
+    }
+
+    const challengeMarkup = item.externalType === 'CHALLENGE'
+        ? getLineItemChallengeMarkup(item, billingAccountDetails, challengeDetailsById)
+        : billingAccountDetails.markup
+
+    return calculatePaymentChallengeFee(displayAmount, challengeMarkup)
 }
 
 /**
@@ -392,11 +456,13 @@ function getDisplayLineItem(
         billingAccountDetails,
         challengeDetailsById,
     )
-    const challengeMarkup = item.externalType === 'CHALLENGE'
-        ? getLineItemChallengeMarkup(item, billingAccountDetails, challengeDetailsById)
-        : billingAccountDetails.markup
     const challengeFeeAmount = showChallengeFee
-        ? calculatePaymentChallengeFee(displayAmount, challengeMarkup)
+        ? getLineItemChallengeFeeAmount(
+            item,
+            displayAmount,
+            billingAccountDetails,
+            challengeDetailsById,
+        )
         : undefined
 
     return {
