@@ -209,6 +209,14 @@ const paymentsResponse = {
     ],
 }
 
+const TOPCODER_TAB_CATEGORIES = [
+    'TASK_PAYMENT',
+    'CONTEST_PAYMENT',
+    'COPILOT_PAYMENT',
+    'REVIEW_BOARD_PAYMENT',
+    'ENGAGEMENT_PAYMENT',
+]
+
 describe('PaymentsListView', () => {
     beforeEach(() => {
         mockFilterBar.mockClear()
@@ -240,7 +248,9 @@ describe('PaymentsListView', () => {
             .toHaveBeenCalled()
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'ON_HOLD_ADMIN',
+                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                date: 'last30days',
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -273,7 +283,9 @@ describe('PaymentsListView', () => {
         await screen.findByText('Member earnings will appear here.')
 
         expect(mockedGetPayments)
-            .toHaveBeenLastCalledWith(10, 0, {})
+            .toHaveBeenLastCalledWith(10, 0, {
+                categories: TOPCODER_TAB_CATEGORIES,
+            })
 
         fireEvent.click(screen.getByRole('button', { name: 'Approver View' }))
 
@@ -288,7 +300,9 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'ON_HOLD_ADMIN',
+                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                date: 'last30days',
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -302,13 +316,13 @@ describe('PaymentsListView', () => {
         await screen.findByText('Member earnings will appear here.')
 
         expect(mockedGetPayments)
-            .toHaveBeenLastCalledWith(10, 0, {})
-        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
-            .toEqual({
-                category: 'all',
-                date: 'all',
-                status: 'all',
+            .toHaveBeenLastCalledWith(10, 0, {
+                categories: TOPCODER_TAB_CATEGORIES,
             })
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+            .toEqual(expect.objectContaining({
+                category: TOPCODER_TAB_CATEGORIES,
+            }))
     })
 
     it('lets an explicit status filter override the default approver status', async () => {
@@ -335,7 +349,9 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'PAID',
+                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                date: 'last30days',
+                status: ['PAID'],
             }))
     })
 
@@ -363,7 +379,7 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: 'TAAS_PAYMENT',
-                status: 'PAID',
+                status: ['PAID'],
             }))
     })
 
@@ -431,7 +447,7 @@ describe('PaymentsListView', () => {
             })
     })
 
-    it('includes the topgear payment type in the category filter options', async () => {
+    it('scopes the type filter to topcoder categories and lists Topgear winnings on its own tab', async () => {
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Admin'] } as any}
@@ -443,9 +459,19 @@ describe('PaymentsListView', () => {
         const filterProps = mockFilterBar.mock.calls.at(-1)?.[0]
         const typeFilter = filterProps.filters.find((filter: any) => filter.key === 'category')
 
-        expect(typeFilter.options.some((option: any) => (
-            option.value === 'TOPGEAR_PAYMENT' && option.label === 'Topgear Payment'
-        )))
-            .toBe(true)
+        expect(typeFilter.options.some((option: any) => option.value === 'TOPGEAR_PAYMENT'))
+            .toBe(false)
+
+        expect(screen.getByRole('tab', { name: 'Topgear' }))
+            .toBeTruthy()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Topgear' }))
+
+        await waitFor(() => {
+            expect(mockedGetPayments)
+                .toHaveBeenLastCalledWith(10, 0, {
+                    category: ['TOPGEAR_PAYMENT'],
+                })
+        })
     })
 })
