@@ -75,54 +75,11 @@ const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
             name: 'endDate',
             type: 'date',
         },
-        {
-            description: 'Optional payment category group',
-            location: 'query',
-            name: 'paymentCategory',
-            options: ['TAAS_PAYMENT', 'TOPGEAR_PAYMENT', 'POINTS_AWARD', 'TOPCODER'],
-            type: 'enum',
-        },
     ],
     path: BILLING_ACCOUNTS_REPORT_PATH,
 }
 
 type ReportsPageTab = 'reports' | 'billingAccounts'
-
-/** API category values excluded from the Topcoder filter group. */
-const BILLING_TOPCODER_EXCLUDED_CATEGORIES = [
-    'TAAS_PAYMENT',
-    'TOPGEAR_PAYMENT',
-    'POINTS_AWARD',
-] as const
-
-/** UI-only value for payments whose category is not TaaS, Topgear, or Points. */
-const BILLING_TOPCODER_CATEGORY_FILTER = 'TOPCODER'
-
-const BILLING_PAYMENT_CATEGORY_OPTIONS: InputSelectOption[] = [
-    { label: 'All categories', value: '' },
-    { label: 'TaaS', value: 'TAAS_PAYMENT' },
-    { label: 'Topgear', value: 'TOPGEAR_PAYMENT' },
-    { label: 'Points', value: 'POINTS_AWARD' },
-    { label: 'Topcoder', value: BILLING_TOPCODER_CATEGORY_FILTER },
-]
-
-const filterBillingPaymentsByCategory = (
-    payments: SfdcBillingAccountPaymentRow[],
-    paymentCategory?: string,
-): SfdcBillingAccountPaymentRow[] => {
-    const filter = paymentCategory?.trim()
-
-    if (!filter) {
-        return payments
-    }
-
-    if (filter === BILLING_TOPCODER_CATEGORY_FILTER) {
-        const excludedCategories = new Set<string>(BILLING_TOPCODER_EXCLUDED_CATEGORIES)
-        return payments.filter(row => !excludedCategories.has(row.category))
-    }
-
-    return payments.filter(row => row.category === filter)
-}
 
 const buildSfdcPaymentsQueryPath = (
     billingAccountId: string | undefined,
@@ -860,9 +817,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                 params.endDate,
             )
             const payments = await fetchReportJson<SfdcBillingAccountPaymentRow[]>(paymentsPath)
-            setBillingAccountViewData({
-                payments: filterBillingPaymentsByCategory(payments, params.paymentCategory),
-            })
+            setBillingAccountViewData({ payments })
         } catch (error) {
             handleError(error)
         } finally {
@@ -1023,22 +978,9 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                 : (parameter.type.endsWith('[]') ? 'Comma-separated values' : 'Enter value'),
         }
 
-        const isBillingForm = selectedReportForForm?.path === BILLING_ACCOUNTS_REPORT_PATH
-
-        const isBillingDateField = isBillingForm
+        const isBillingDateField = selectedReportForForm?.path === BILLING_ACCOUNTS_REPORT_PATH
             && parameter.type === 'date'
             && (parameter.name === 'startDate' || parameter.name === 'endDate')
-
-        if (isBillingForm && parameter.name === 'paymentCategory') {
-            return (
-                <InputSelect
-                    {...commonProps}
-                    options={BILLING_PAYMENT_CATEGORY_OPTIONS}
-                    value={parameterValues.paymentCategory ?? ''}
-                    onChange={createSelectParamChange('paymentCategory')}
-                />
-            )
-        }
 
         if (isBillingDateField) {
             return (
@@ -1111,8 +1053,8 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                         : (
                             <>
                                 {'Payments load for all billing accounts by default. Optionally narrow by billing '
-                                    + 'account ID, dates, or category, then click View. Open a billing account profile '
-                                    + 'from the Billing account ID column in the table. '}
+                                    + 'account ID and dates, then click View. Open a billing account profile from '
+                                    + 'the Billing account ID column in the table. '}
                                 <span className={styles.billingDefaultWindowNote}>
                                     If no dates are specified, records from the past 45 days are displayed
                                     by default.
