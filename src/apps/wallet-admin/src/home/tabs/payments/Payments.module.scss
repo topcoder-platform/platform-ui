@@ -62,35 +62,6 @@
             color: white;
         }
 
-        .paymentListingTabs {
-            display: flex;
-            align-items: flex-end;
-            gap: $sp-6;
-            margin-bottom: $sp-4;
-            border-bottom: 1px solid $black-20;
-        }
-
-        .paymentListingTab {
-            border: none;
-            background: transparent;
-            padding: $sp-2 0;
-            margin-bottom: -1px;
-            cursor: pointer;
-            color: $black-60;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-
-            &:focus-visible {
-                outline: 2px solid $turq-160;
-                outline-offset: 2px;
-            }
-        }
-
-        .paymentListingTabActive {
-            color: $turq-160;
-            border-bottom-color: $turq-160;
-        }
-
         .centered {
             height: 200px;
             display: flex;
