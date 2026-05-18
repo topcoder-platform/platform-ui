@@ -34,6 +34,7 @@ interface TableProps<T> {
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort | undefined) => void
+    readonly rowClassName?: (data: T) => string | undefined
     readonly removeDefaultSort?: boolean
     readonly colWidth?: colWidthType | undefined,
     readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
@@ -248,6 +249,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     allRows={sortedData}
                     onRowClick={props.onRowClick}
                     columns={props.columns}
+                    className={props.rowClassName?.(sorted)}
                     index={index}
                     showExpand={props.showExpand}
                     expandMode={props.expandMode}

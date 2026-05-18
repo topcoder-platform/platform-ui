@@ -10,7 +10,7 @@ import {
     fetchActiveReviews,
 } from '../services'
 
-import { useFetchActiveReviews } from './useFetchActiveReviews'
+import { transformAssignments, useFetchActiveReviews } from './useFetchActiveReviews'
 import type { useFetchActiveReviewsProps } from './useFetchActiveReviews'
 
 jest.mock('~/config', () => ({
@@ -106,5 +106,30 @@ describe('useFetchActiveReviews', () => {
         })
         expect(screen.getByText('No active reviews'))
             .toBeTruthy()
+    })
+
+    it('marks topgear tasks with submissions and closed iterative review phase', () => {
+        const [assignment] = transformAssignments([
+            {
+                challengeEndDate: '2026-01-01T00:00:00.000Z',
+                challengeId: 'challenge-1',
+                challengeName: 'Topgear Problem',
+                challengeTypeId: 'topgear-task-type',
+                challengeTypeName: 'Topgear Task',
+                currentPhaseEndDate: '2026-01-01T00:00:00.000Z',
+                currentPhaseName: 'Topgear Submission',
+                hasAIReview: false,
+                isIterativeReviewPhaseOpen: false,
+                numOfSubmissions: 2,
+                resourceRoleName: 'Reviewer',
+                reviewProgress: 0,
+                timeLeftInCurrentPhase: 0,
+            },
+        ])
+
+        expect(assignment.numOfSubmissions)
+            .toBe(2)
+        expect(assignment.hasIterativeReviewIssue)
+            .toBe(true)
     })
 })
