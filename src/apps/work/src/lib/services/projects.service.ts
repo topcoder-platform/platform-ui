@@ -559,6 +559,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
 
 function buildProjectsUrl(page: number, memberOnly: boolean): string {
     const query = new URLSearchParams({
+        fields: 'members',
         page: String(page),
         perPage: String(PROJECTS_PER_PAGE),
         sort: 'lastActivityAt desc',

@@ -5,6 +5,7 @@ export interface ChallengeFilters {
     type?: string
     status?: string | string[]
     projectId?: number | string
+    projectIds?: (number | string)[]
     startDateStart?: string
     startDateEnd?: string
     endDateStart?: string

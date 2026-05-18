@@ -15,6 +15,7 @@ import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     PAGE_SIZE,
+    PROJECT_ROLES,
 } from '../../../lib/constants'
 import { WorkAppContext } from '../../../lib/contexts'
 import { Pagination } from '../../../lib/components'
@@ -79,23 +80,7 @@ export const BudgetApprovalsPage: FC = () => {
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
 
-    const memberId = isAdmin
-        ? undefined
-        : loginUserInfo?.userId
-
-    const challengeFetchParams: UseFetchChallengesParams = {
-        approvalStatus: CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
-        enabled: isAdmin || memberId !== undefined,
-        name: normalizeSearchValue(challengeNameSearch) || undefined,
-        page,
-        perPage,
-        projectId: selectedProjectId || undefined,
-        sortBy: 'updated',
-        sortOrder: 'desc',
-        status: CHALLENGE_STATUS.DRAFT,
-    }
-
-    const challengesResult: UseFetchChallengesResult = useFetchChallenges(challengeFetchParams)
+    const userId = loginUserInfo?.userId
 
     const projectsResult: UseFetchProjectsResult = useFetchProjects({
         memberOnly: !isAdmin,
@@ -116,14 +101,70 @@ export const BudgetApprovalsPage: FC = () => {
         return map
     }, [projectsResult.projects])
 
+    /**
+     * For non-admins, restrict project options to projects where the user has
+     * "full write" access (manager or copilot project membership role).
+     * Admins see all projects.
+     */
+    const accessibleProjects = useMemo(
+        () => {
+            if (isAdmin) {
+                return projectsResult.projects
+            }
+
+            return projectsResult.projects.filter(project => {
+                const normalizedUserId = userId !== undefined ? String(userId) : undefined
+
+                if (!normalizedUserId || !Array.isArray(project.members)) {
+                    return false
+                }
+
+                const memberRole = project.members
+                    .find(m => m.userId !== undefined && String(m.userId) === normalizedUserId)
+                    ?.role
+                    ?.toLowerCase()
+                    ?.trim()
+
+                return memberRole === PROJECT_ROLES.MANAGER || memberRole === PROJECT_ROLES.COPILOT
+            })
+        },
+        [isAdmin, projectsResult.projects, userId],
+    )
+
+    const fullWriteProjectIds = useMemo(
+        () => accessibleProjects
+            .filter(project => !!project.id)
+            .map(project => String(project.id)),
+        [accessibleProjects],
+    )
+
+    // For non-admins: pass all full-write project IDs when no specific project is selected,
+    // or a single projectId when one is explicitly selected.
+    // Fetch is enabled once we know whether the user is admin or have loaded their projects.
+    const isProjectsReady = isAdmin || !projectsResult.isLoading
+    const challengeFetchParams: UseFetchChallengesParams = {
+        approvalStatus: CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
+        enabled: isProjectsReady,
+        name: normalizeSearchValue(challengeNameSearch) || undefined,
+        page,
+        perPage,
+        projectId: selectedProjectId || undefined,
+        projectIds: !isAdmin && !selectedProjectId ? fullWriteProjectIds : undefined,
+        sortBy: 'updated',
+        sortOrder: 'desc',
+        status: CHALLENGE_STATUS.DRAFT,
+    }
+
+    const challengesResult: UseFetchChallengesResult = useFetchChallenges(challengeFetchParams)
+
     const projectOptions = useMemo<ProjectOption[]>(
-        () => projectsResult.projects
+        () => accessibleProjects
             .filter(project => !!project.id)
             .map(project => ({
                 label: project.name || String(project.id),
                 value: String(project.id),
             })),
-        [projectsResult.projects],
+        [accessibleProjects],
     )
 
     const selectedProjectOption = useMemo<ProjectOption | undefined>(
