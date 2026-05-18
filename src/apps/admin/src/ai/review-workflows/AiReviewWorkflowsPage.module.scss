@@ -1,0 +1,83 @@
+@import '@libs/ui/styles/includes';
+
+.table {
+    margin-bottom: $sp-4;
+
+    tbody tr:nth-child(odd) {
+        background-color: $black-5;
+    }
+}
+
+.mobileTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: $sp-4;
+
+    tbody tr {
+        td {
+            padding: $sp-2 $sp-4 !important;
+            border-radius: 0 !important;
+            background-color: $tc-white !important;
+
+            &:first-child {
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                color: $black-60;
+                white-space: nowrap;
+                width: 120px;
+            }
+        }
+
+        // 5 fields per workflow, alternate every other workflow
+        &:nth-child(10n+1) td,
+        &:nth-child(10n+2) td,
+        &:nth-child(10n+3) td,
+        &:nth-child(10n+4) td,
+        &:nth-child(10n+5) td {
+            background-color: $black-5 !important;
+        }
+    }
+}
+
+.link {
+    color: $link-blue-dark;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.cellText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 250px;
+}
+
+.nameCell {
+    word-break: break-word;
+    white-space: normal;
+}
+
+.nameLink {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $link-blue-dark;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+    word-break: break-word;
+    white-space: normal;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.toggle {
+    cursor: pointer;
+}
