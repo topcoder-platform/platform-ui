@@ -328,6 +328,10 @@ function buildChallengeQuery(
             }
         })
 
+    if (Array.isArray(filters.projectIds) && filters.projectIds.length > 0) {
+        filters.projectIds.forEach(id => query.append('projectIds[]', String(id)))
+    }
+
     return query.toString()
 }
 
