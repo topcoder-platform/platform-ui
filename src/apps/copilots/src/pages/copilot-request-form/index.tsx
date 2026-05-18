@@ -1,9 +1,11 @@
 import { FC, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { bind, debounce, isEmpty, pick } from 'lodash'
+import { mutate } from 'swr'
 import { toast } from 'react-toastify'
 import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText } from '~/libs/ui'
@@ -35,12 +37,13 @@ const editableFields = [
     'tzRestrictions',
     'numHoursPerWeek',
 ]
-
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate = useNavigate()
     const routeParams: Params<string> = useParams()
+    const requestUrl = routeParams.requestId
+        ? `${EnvironmentConfig.API.V6}/projects/copilots/requests/${routeParams.requestId}` : undefined
     const [params] = useSearchParams()
 
     const [formValues, setFormValues] = useState<any>({})
@@ -385,6 +388,10 @@ const CopilotRequestForm: FC<{}> = () => {
                         copilotRequestData ? 'Copilot request updated successfully'
                             : 'Copilot request sent successfully',
                     )
+                    if (requestUrl) {
+                        mutate(requestUrl)
+                    }
+
                     setFormValues({
                         complexity: '',
                         numHoursPerWeek: '',
@@ -431,7 +438,7 @@ const CopilotRequestForm: FC<{}> = () => {
     )
     useEffect(() => {
         overviewInitialized.current = false
-    }, [editorKey])
+    }, [copilotRequestData])
     return (
         <div className={classNames('d-flex flex-column justify-content-center align-items-center', styles.container)}>
             <div className={styles.form}>
