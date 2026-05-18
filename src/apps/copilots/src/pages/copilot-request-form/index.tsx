@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { bind, debounce, isEmpty, pick } from 'lodash'
 import { toast } from 'react-toastify'
 import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -194,7 +194,9 @@ const CopilotRequestForm: FC<{}> = () => {
         setIsFormChanged(true)
     }
 
+    const overviewInitialized = useRef<boolean>(false)
     function handleOverviewChange(content: string): void {
+        overviewInitialized.current = true
         setFormValues((prev: any) => ({ ...prev, overview: content }))
         setFormErrors((prev: any) => {
             const updated = { ...prev }
@@ -399,6 +401,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setIsFormChanged(false)
                     setFormErrors({})
                     setPaymentType('')
+                    overviewInitialized.current = false
                     // Added a small timeout for the toast to be visible properly to the users
                     setTimeout(() => {
                         navigate(`${rootRoute}/requests`)
@@ -422,7 +425,13 @@ const CopilotRequestForm: FC<{}> = () => {
         handleProjectSearch(inputValue)
             .then(callback)
     }, 300), [])
-
+    const editorKey = useMemo(
+        () => (copilotRequestData?.id ?? 'new'),
+        [copilotRequestData?.id],
+    )
+    useEffect(() => {
+        overviewInitialized.current = false
+    }, [editorKey])
     return (
         <div className={classNames('d-flex flex-column justify-content-center align-items-center', styles.container)}>
             <div className={styles.form}>
@@ -548,11 +557,12 @@ const CopilotRequestForm: FC<{}> = () => {
                         Please provide an overview of the project the copilot will undertake
                     </p>
                     <FieldHtmlEditor
+                        key={editorKey}
                         label='Project overview'
                         name='overview'
                         placeholder='A minimum of three sentences explaining the
                          type of work and project which is to be undertaken.'
-                        value={formValues.overview}
+                        value={overviewInitialized.current ? undefined : formValues.overview}
                         onChange={handleOverviewChange}
                         error={formErrors.overview}
                         dirty
