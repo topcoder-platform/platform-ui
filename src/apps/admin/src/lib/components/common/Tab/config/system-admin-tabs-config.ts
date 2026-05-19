@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import { isAdministrator } from '~/apps/admin/src/lib/utils/access'
 import {
+    aiReviewTemplatesRouteId,
     aiReviewWorkflowsRouteId,
     aiRouteId,
     billingAccountRouteId,
@@ -90,6 +91,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
             {
                 id: `${aiRouteId}/${aiReviewWorkflowsRouteId}`,
                 title: 'AI Review Workflows',
+            },
+            {
+                id: `${aiRouteId}/${aiReviewTemplatesRouteId}`,
+                title: 'AI Review Templates',
             },
         ],
         id: aiRouteId,
