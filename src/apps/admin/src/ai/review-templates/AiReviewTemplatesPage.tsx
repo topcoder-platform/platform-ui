@@ -1,6 +1,6 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
+import { BaseModal, Button, IconOutline, InputSelect, InputSelectOption } from '~/libs/ui'
 
 import { PageWrapper, TableLoading, TableNoRecord } from '../../lib'
 import { TableWrapper } from '../../lib/components/common/TableWrapper'
@@ -10,6 +10,7 @@ import { AiWorkflow } from '../../lib/services/ai-workflows.service'
 import {
     AiReviewTemplate,
     AiReviewTemplatesFilter,
+    deleteAiReviewTemplate,
     getAiReviewTemplates,
     TemplateWorkflowItem,
 } from '../../lib/services/ai-templates.service'
@@ -64,6 +65,8 @@ const WorkflowItem: FC<WorkflowItemProps> = (props: WorkflowItemProps) => {
 interface TemplateItemProps {
     template: AiReviewTemplate
     onWorkflowClick: (workflow: AiWorkflow) => void
+    onEdit: (template: AiReviewTemplate) => void
+    onDelete: (template: AiReviewTemplate) => void
 }
 
 const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
@@ -73,6 +76,16 @@ const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
     const handleToggleExpand = useCallback(() => {
         setExpanded(prev => !prev)
     }, [])
+
+    const handleEditClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        props.onEdit(props.template)
+    }, [props])
+
+    const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        props.onDelete(props.template)
+    }, [props])
 
     return (
         <div className={styles.templateItem}>
@@ -90,18 +103,25 @@ const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
                         </span>
                     </div>
                     <div className={styles.templateHeaderRight}>
-                        <span className={styles.templateMeta}>
-                            {props.template.challengeTrack}
-                            {' / '}
-                            {props.template.challengeType}
-                        </span>
-                        <span className={styles.modeBadge}>{props.template.mode}</span>
-                        <span className={styles.thresholdBadge}>
-                            Pass:
-                            {' '}
-                            {props.template.minPassingThreshold}
-                            %
-                        </span>
+                        {props.template.disabled && (
+                            <span className={styles.disabledBadge}>Disabled</span>
+                        )}
+                        <button
+                            type='button'
+                            className={styles.editButton}
+                            onClick={handleEditClick}
+                            title='Edit template'
+                        >
+                            <IconOutline.PencilIcon />
+                        </button>
+                        <button
+                            type='button'
+                            className={styles.deleteButton}
+                            onClick={handleDeleteClick}
+                            title='Delete template'
+                        >
+                            <IconOutline.TrashIcon />
+                        </button>
                     </div>
                 </div>
                 {props.template.description && (
@@ -109,6 +129,20 @@ const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
                         {props.template.description}
                     </div>
                 )}
+                <div className={styles.templateMetas}>
+                    <span className={styles.templateMeta}>
+                        {props.template.challengeTrack}
+                        {' / '}
+                        {props.template.challengeType}
+                    </span>
+                    <span className={styles.modeBadge}>{props.template.mode}</span>
+                    <span className={styles.thresholdBadge}>
+                        Pass:
+                        {' '}
+                        {props.template.minPassingThreshold}
+                        %
+                    </span>
+                </div>
             </div>
             {expanded && workflows.length > 0 && (
                 <div className={styles.workflowsTree}>
@@ -135,19 +169,38 @@ export const AiReviewTemplatesPage: FC = () => {
         open: false,
     })
     const [createModalOpen, setCreateModalOpen] = useState(false)
+    const [editTemplate, setEditTemplate] = useState<AiReviewTemplate | undefined>(undefined)
+    const [deleteModal, setDeleteModal] = useState<{ open: boolean; template?: AiReviewTemplate }>({
+        open: false,
+    })
+    const [isDeleting, setIsDeleting] = useState(false)
 
-    const trackOptions: InputSelectOption[] = useMemo(() => [
-        { label: 'All Tracks', value: '' },
-        ...tracks.map(t => {
+    const trackOptions: InputSelectOption[] = useMemo(() => {
+        const seen = new Set<string>()
+        const options: InputSelectOption[] = [{ label: 'All Tracks', value: '' }]
+        for (const t of tracks) {
             const trackValue: string = (t as ChallengeTrack & { track?: string }).track || t.name.toUpperCase()
-            return { label: t.name, value: trackValue }
-        }),
-    ], [tracks])
+            if (!seen.has(trackValue)) {
+                seen.add(trackValue)
+                options.push({ label: t.name, value: trackValue })
+            }
+        }
 
-    const typeOptions: InputSelectOption[] = useMemo(() => [
-        { label: 'All Types', value: '' },
-        ...types.map(t => ({ label: t.name, value: t.abbreviation })),
-    ], [types])
+        return options
+    }, [tracks])
+
+    const typeOptions: InputSelectOption[] = useMemo(() => {
+        const seen = new Set<string>()
+        const options: InputSelectOption[] = [{ label: 'All Types', value: '' }]
+        for (const t of types) {
+            if (!seen.has(t.abbreviation)) {
+                seen.add(t.abbreviation)
+                options.push({ label: t.name, value: t.abbreviation })
+            }
+        }
+
+        return options
+    }, [types])
 
     useEffect(() => {
         getChallengeTracks()
@@ -195,16 +248,45 @@ export const AiReviewTemplatesPage: FC = () => {
     }, [])
 
     const handleOpenCreateModal = useCallback(() => {
+        setEditTemplate(undefined)
         setCreateModalOpen(true)
     }, [])
 
     const handleCloseCreateModal = useCallback(() => {
         setCreateModalOpen(false)
+        setEditTemplate(undefined)
+    }, [])
+
+    const handleEditClick = useCallback((template: AiReviewTemplate) => {
+        setEditTemplate(template)
+        setCreateModalOpen(true)
     }, [])
 
     const handleTemplateCreated = useCallback(() => {
         loadTemplates(filter)
     }, [filter, loadTemplates])
+
+    const handleDeleteClick = useCallback((template: AiReviewTemplate) => {
+        setDeleteModal({ open: true, template })
+    }, [])
+
+    const handleCloseDeleteModal = useCallback(() => {
+        setDeleteModal({ open: false })
+    }, [])
+
+    const handleConfirmDelete = useCallback(async () => {
+        if (!deleteModal.template) return
+        setIsDeleting(true)
+        try {
+            await deleteAiReviewTemplate(deleteModal.template.id)
+            setDeleteModal({ open: false })
+            loadTemplates(filter)
+        } catch {
+            // Error handling can be added here
+        } finally {
+            setIsDeleting(false)
+        }
+    }, [deleteModal.template, filter, loadTemplates])
 
     const hasFilters: boolean = !!filter.challengeTrack || !!filter.challengeType
 
@@ -260,6 +342,8 @@ export const AiReviewTemplatesPage: FC = () => {
                                 key={template.id}
                                 template={template}
                                 onWorkflowClick={handleWorkflowClick}
+                                onEdit={handleEditClick}
+                                onDelete={handleDeleteClick}
                             />
                         ))}
                     </div>
@@ -276,7 +360,40 @@ export const AiReviewTemplatesPage: FC = () => {
                 open={createModalOpen}
                 onClose={handleCloseCreateModal}
                 onCreated={handleTemplateCreated}
+                template={editTemplate}
             />
+
+            <BaseModal
+                title='Delete Template'
+                open={deleteModal.open}
+                onClose={handleCloseDeleteModal}
+                buttons={(
+                    <>
+                        <Button
+                            secondary
+                            size='lg'
+                            label='Cancel'
+                            onClick={handleCloseDeleteModal}
+                            disabled={isDeleting}
+                        />
+                        <Button
+                            primary
+                            variant='danger'
+                            size='lg'
+                            label='Delete'
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            loading={isDeleting}
+                        />
+                    </>
+                )}
+            >
+                Are you sure you want to delete the template
+                {' '}
+                &quot;
+                {deleteModal.template?.title || deleteModal.template?.id}
+                &quot;? This action cannot be undone.
+            </BaseModal>
         </PageWrapper>
     )
 }

@@ -7,6 +7,7 @@ import {
     useForm,
     UseFormReturn,
 } from 'react-hook-form'
+import { toast } from 'react-toastify'
 import _ from 'lodash'
 
 import {
@@ -26,7 +27,13 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { ChallengeTrack, ChallengeType } from '../../lib/models'
 import { getChallengeTracks, getChallengeTypes } from '../../lib/services/challenge-management.service'
 import { AiWorkflow, getAiWorkflows } from '../../lib/services/ai-workflows.service'
-import { createAiReviewTemplate, CreateAiReviewTemplateRequest } from '../../lib/services/ai-templates.service'
+import {
+    AiReviewTemplate,
+    createAiReviewTemplate,
+    CreateAiReviewTemplateRequest,
+    updateAiReviewTemplate,
+    UpdateAiReviewTemplateRequest,
+} from '../../lib/services/ai-templates.service'
 
 import styles from './CreateTemplateModal.module.scss'
 
@@ -113,24 +120,37 @@ interface Props {
     onClose: () => void
     onCreated: () => void
     open: boolean
+    template?: AiReviewTemplate
 }
 
 export const CreateTemplateModal: FC<Props> = (props: Props) => {
+    const isEditMode = !!props.template
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [tracks, setTracks] = useState<ChallengeTrack[]>([])
     const [types, setTypes] = useState<ChallengeType[]>([])
     const [workflows, setWorkflows] = useState<AiWorkflow[]>([])
     const [isLoadingData, setIsLoadingData] = useState(true)
 
-    const {
-        register,
-        handleSubmit,
-        control,
-        formState: { errors, isDirty },
-        reset,
-        watch,
-    }: UseFormReturn<FormValues> = useForm<FormValues>({
-        defaultValues: {
+    const getDefaultValues = useCallback((): FormValues => {
+        if (props.template) {
+            return {
+                autoFinalize: props.template.autoFinalize,
+                challengeTrack: props.template.challengeTrack,
+                challengeType: props.template.challengeType,
+                description: props.template.description || '',
+                disabled: props.template.disabled,
+                minPassingThreshold: props.template.minPassingThreshold,
+                mode: props.template.mode,
+                title: props.template.title,
+                workflows: (props.template.workflows || []).map(w => ({
+                    isGating: w.isGating,
+                    weightPercent: w.weightPercent,
+                    workflowId: w.workflowId,
+                })),
+            }
+        }
+
+        return {
             autoFinalize: false,
             challengeTrack: '',
             challengeType: '',
@@ -140,7 +160,18 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
             mode: 'AI_GATING',
             title: '',
             workflows: [],
-        },
+        }
+    }, [props.template])
+
+    const {
+        register,
+        handleSubmit,
+        control,
+        formState: { errors, isDirty },
+        reset,
+        watch,
+    }: UseFormReturn<FormValues> = useForm<FormValues>({
+        defaultValues: getDefaultValues(),
         mode: 'all',
         resolver: yupResolver(schema) as never,
     })
@@ -182,6 +213,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
 
     useEffect(() => {
         if (props.open) {
+            reset(getDefaultValues())
             setIsLoadingData(true)
             Promise.all([
                 getChallengeTracks(),
@@ -200,7 +232,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
                 })
                 .finally(() => setIsLoadingData(false))
         }
-    }, [props.open])
+    }, [props.open, props.template, getDefaultValues, reset])
 
     const handleClose = useCallback(() => {
         if (!isSubmitting) {
@@ -221,41 +253,55 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
             formula[w.workflowId] = w.weightPercent / 100
         })
 
-        const request: CreateAiReviewTemplateRequest = {
-            autoFinalize: data.autoFinalize,
-            challengeTrack: data.challengeTrack,
-            challengeType: data.challengeType,
-            description: data.description || '',
-            disabled: data.disabled,
-            formula,
-            minPassingThreshold: data.minPassingThreshold,
-            mode: data.mode,
-            title: data.title,
-            workflows: data.workflows.map(w => ({
-                isGating: w.isGating,
-                weightPercent: w.weightPercent,
-                workflowId: w.workflowId,
-            })),
-        }
+        const workflowsData = data.workflows.map(w => ({
+            isGating: w.isGating,
+            weightPercent: w.weightPercent,
+            workflowId: w.workflowId,
+        }))
 
-        createAiReviewTemplate(request)
+        const submitPromise = isEditMode && props.template
+            ? updateAiReviewTemplate(props.template.id, {
+                autoFinalize: data.autoFinalize,
+                description: data.description || '',
+                disabled: data.disabled,
+                formula,
+                minPassingThreshold: data.minPassingThreshold,
+                mode: data.mode,
+                title: data.title,
+                workflows: workflowsData,
+            } as UpdateAiReviewTemplateRequest)
+            : createAiReviewTemplate({
+                autoFinalize: data.autoFinalize,
+                challengeTrack: data.challengeTrack,
+                challengeType: data.challengeType,
+                description: data.description || '',
+                disabled: data.disabled,
+                formula,
+                minPassingThreshold: data.minPassingThreshold,
+                mode: data.mode,
+                title: data.title,
+                workflows: workflowsData,
+            } as CreateAiReviewTemplateRequest)
+
+        submitPromise
             .then(() => {
+                toast.success(isEditMode ? 'Template updated successfully' : 'Template created successfully')
                 reset()
                 props.onCreated()
                 props.onClose()
             })
-            .catch(() => {
-                // Error handling done via toast in xhr
+            .catch((error: Error) => {
+                toast.error(error.message || (isEditMode ? 'Failed to update template' : 'Failed to create template'))
             })
             .finally(() => setIsSubmitting(false))
-    }, [props, reset])
+    }, [isEditMode, props, reset])
 
     return (
         <BaseModal
             allowBodyScroll
             blockScroll
             size='body'
-            title='Create Review Template'
+            title={isEditMode ? 'Edit Review Template' : 'Create Review Template'}
             onClose={handleClose}
             open={props.open}
         >
@@ -297,7 +343,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
                                         onChange={controlProps.field.onChange}
                                         error={_.get(errors, 'challengeTrack.message')}
                                         dirty
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || isEditMode}
                                         tabIndex={0}
                                     />
                                 )
@@ -319,7 +365,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
                                         onChange={controlProps.field.onChange}
                                         error={_.get(errors, 'challengeType.message')}
                                         dirty
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || isEditMode}
                                         tabIndex={0}
                                     />
                                 )
@@ -534,7 +580,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
                             size='lg'
                             disabled={isSubmitting || !isDirty}
                         >
-                            Create Template
+                            {isEditMode ? 'Update Template' : 'Create Template'}
                         </Button>
                     </div>
 
