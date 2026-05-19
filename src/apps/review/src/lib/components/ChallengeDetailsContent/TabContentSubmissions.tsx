@@ -18,6 +18,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
+import { handleError } from '~/apps/admin/src/lib/utils'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
@@ -46,6 +47,10 @@ import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
+import {
+    canReprocessTopgearSubmission,
+    reprocessTopgearSubmission,
+} from '../../services'
 
 import { canDownloadSubmissionFromSubmissionsTab } from './submissionDownloadPermissions'
 import styles from './TabContentSubmissions.module.scss'
@@ -81,6 +86,12 @@ export const TabContentSubmissions: FC<Props> = props => {
     }: UseRolePermissionsResult = useRolePermissions()
 
     const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const [isReprocessingSubmission, setIsReprocessingSubmission] = useState<IsRemovingType>({})
+
+    const canShowTopgearReprocess = useMemo(
+        () => canReprocessTopgearSubmission(challengeInfo, isAdmin),
+        [challengeInfo, isAdmin],
+    )
 
     const isCompletedDesignChallenge = useMemo(() => {
         if (!challengeInfo) return false
@@ -210,6 +221,52 @@ export const TabContentSubmissions: FC<Props> = props => {
             openHistoryModalForKey(memberId || undefined, submissionId)
         },
         [openHistoryModalForKey],
+    )
+
+    const handleReprocessSubmission = useCallback(
+        async (event: MouseEvent<HTMLButtonElement>): Promise<void> => {
+            event.stopPropagation()
+            event.preventDefault()
+
+            const submissionId = event.currentTarget.dataset.submissionId
+            if (!submissionId) {
+                return
+            }
+
+            const submission = submissionMetaById.get(submissionId)
+            if (!submission) {
+                toast.error('Submission could not be found for reprocess', {
+                    toastId: `topgear-submission-reprocess-${submissionId}`,
+                })
+                return
+            }
+
+            setIsReprocessingSubmission(previous => ({
+                ...previous,
+                [submissionId]: true,
+            }))
+
+            try {
+                await reprocessTopgearSubmission({
+                    submission,
+                    submissionInfo: submissionInfoById.get(submissionId),
+                })
+                toast.success('Reprocess submission request sent', {
+                    toastId: `topgear-submission-reprocess-${submissionId}`,
+                })
+            } catch (error) {
+                handleError(error as Error)
+            } finally {
+                setIsReprocessingSubmission(previous => ({
+                    ...previous,
+                    [submissionId]: false,
+                }))
+            }
+        },
+        [
+            submissionInfoById,
+            submissionMetaById,
+        ],
     )
 
     const resolveSubmissionMeta = useCallback(
@@ -353,6 +410,19 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 >
                                     <IconOutline.DocumentDuplicateIcon />
                                 </button>
+                                {canShowTopgearReprocess && (
+                                    <button
+                                        type='button'
+                                        className={styles.copyButton}
+                                        aria-label='Reprocess Topgear submission'
+                                        title='Reprocess Topgear submission'
+                                        onClick={handleReprocessSubmission}
+                                        data-submission-id={submission.id}
+                                        disabled={Boolean(isReprocessingSubmission[submission.id])}
+                                    >
+                                        <IconOutline.RefreshIcon />
+                                    </button>
+                                )}
                             </span>
                         )
                     },
@@ -458,9 +528,12 @@ export const TabContentSubmissions: FC<Props> = props => {
             restrictionMessage,
             props.downloadSubmission,
             props.isDownloading,
+            isReprocessingSubmission,
             historyByMember,
             handleHistoryButtonClick,
+            handleReprocessSubmission,
             shouldShowHistoryActions,
+            canShowTopgearReprocess,
             isAdmin,
             isProjectManager,
             hasCopilotRole,
