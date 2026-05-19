@@ -2,6 +2,7 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { fetchChallenge } from '~/apps/work/src/lib/services/challenges.service'
 
 import { WalletDetails } from '../models/WalletDetails'
 import {
@@ -266,6 +267,25 @@ export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAud
  * finance enrichment call fails. Wallet-admin retries those lookups with the
  * authenticated user so the modal still renders engagement details.
  */
+
+async function enrichTaskDescription(
+    winning: Winning,
+    paymentDetails: WinningPaymentDetails,
+): Promise<void> {
+    if (!winning.externalId || !paymentDetails.taskDetails) {
+        return
+    }
+
+    try {
+        const challenge = await fetchChallenge(winning.externalId)
+        if (challenge.description) {
+            paymentDetails.taskDetails.description = challenge.description
+        }
+    } catch {
+        // Fall through — keep whatever description the finance API returned
+    }
+}
+
 export async function fetchWinningPaymentDetails(
     winning: Winning,
 ): Promise<WinningPaymentDetails> {
@@ -279,10 +299,19 @@ export async function fetchWinningPaymentDetails(
 
     const paymentDetails = response.data || {}
 
-    if (
-        winning.type.toLowerCase() !== 'engagement payment'
-        || paymentDetails.engagementDetails
-    ) {
+    if (winning.type.toLowerCase() !== 'engagement payment') {
+        if (winning.type.toLowerCase() === 'task payment') {
+            await enrichTaskDescription(winning, paymentDetails)
+        }
+
+        return paymentDetails
+    }
+
+    if (paymentDetails.engagementDetails) {
+        return paymentDetails
+    }
+
+    if (paymentDetails.engagementDetails) {
         return paymentDetails
     }
 
