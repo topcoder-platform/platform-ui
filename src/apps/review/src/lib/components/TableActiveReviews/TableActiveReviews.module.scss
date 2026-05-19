@@ -42,6 +42,22 @@
     vertical-align: middle;
 }
 
+.iterativeReviewIssueRow {
+    td {
+        background-color: rgba($red-25, 0.45) !important;
+        border-bottom: 1px solid $red-140;
+        border-top: 1px solid $red-140;
+
+        &:first-child {
+            border-left: 1px solid $red-140;
+        }
+
+        &:last-child {
+            border-right: 1px solid $red-140;
+        }
+    }
+}
+
 .blockMyRoles {
     display: flex;
     flex-direction: column;

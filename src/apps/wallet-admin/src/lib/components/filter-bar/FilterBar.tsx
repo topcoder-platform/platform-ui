@@ -1,9 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
-import React, { ChangeEvent, useEffect, useRef } from 'react'
-import Select, { MultiValue } from 'react-select'
-import classNames from 'classnames'
+import React, { ChangeEvent, useRef } from 'react'
 
-import { Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
+import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     InputHandleAutocomplete,
     MembersAutocompeteResult,
@@ -16,12 +14,10 @@ type FilterOptions = {
     value: string;
 };
 
-const SELECT_ALL_SENTINEL = '__select_all__'
-
 export type Filter = {
     key: string;
     label: string;
-    type: 'input' | 'dropdown' | 'member_autocomplete' | 'multi_dropdown' | 'date';
+    type: 'input' | 'dropdown' | 'member_autocomplete';
     options?: FilterOptions[];
 };
 
@@ -48,36 +44,8 @@ interface FilterBarProps {
     selectedCount?: number;
     onBulkClick?: () => void;
     selectionActions?: FilterBarSelectionAction[];
-    selectedValueOverrides?: Record<string, string | string[]>;
+    selectedValueOverrides?: Record<string, string>;
     hasActiveFilters?: boolean;
-}
-
-function parseIsoDateOnly(value: string | undefined): Date | undefined {
-    if (!value) {
-        return undefined
-    }
-
-    const [y, m, d] = value.split('-')
-        .map(part => parseInt(part, 10))
-    if (!y || !m || !d) {
-        return undefined
-    }
-
-    return new Date(y, m - 1, d)
-}
-
-function formatIsoDateOnly(date: Date | null): string[] {
-    if (!date) {
-        return []
-    }
-
-    const y = date.getFullYear()
-    const mo = String(date.getMonth() + 1)
-        .padStart(2, '0')
-    const day = String(date.getDate())
-        .padStart(2, '0')
-
-    return [`${y}-${mo}-${day}`]
 }
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
@@ -94,33 +62,11 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             }]
             : [])
 
-    useEffect(() => {
-        props.filters.forEach(filter => {
-            if (filter.type !== 'multi_dropdown') {
-                return
-            }
-
-            const override = props.selectedValueOverrides?.[filter.key]
-            const next = Array.isArray(override)
-                ? override
-                : (override ? [override] : [])
-            setSelectedValue(prev => {
-                const cur = (prev.get(filter.key) as string[] | undefined) ?? []
-                if (cur.length === next.length && cur.every((v, i) => v === next[i])) {
-                    return prev
-                }
-
-                return new Map(prev.set(filter.key, next))
-            })
-        })
-    }, [props.filters, props.selectedValueOverrides])
-
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
             tabIndex={index}
-            value={typeof props.selectedValueOverrides?.[filter.key] === 'string'
-                ? props.selectedValueOverrides?.[filter.key] as string
-                : selectedValue.get(filter.key) as string
+            value={props.selectedValueOverrides?.[filter.key]
+                ?? selectedValue.get(filter.key) as string
                 ?? (filter.key === 'pageSize' ? '10' : '')}
             options={filter.options ?? []}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
@@ -133,74 +79,6 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             placeholder={filter.label}
         />
     )
-
-    const renderMultiDropdown = (index: number, filter: Filter): JSX.Element => {
-        const baseOptions = filter.options ?? []
-        const menuOptions = [
-            { label: 'Select All', value: SELECT_ALL_SENTINEL },
-            ...baseOptions,
-        ]
-        const override = props.selectedValueOverrides?.[filter.key]
-        const valuesFromParent: string[] = Array.isArray(override)
-            ? override as string[]
-            : (override ? [override as string] : (selectedValue.get(filter.key) as string[] | undefined) ?? [])
-        const selectedOptions = baseOptions.filter(o => valuesFromParent.includes(o.value))
-
-        return (
-            <div className={classNames(styles.filter, styles.multiSelectWrap)}>
-                <span className={classNames('body-small-bold', styles.multiSelectLabel)}>
-                    {filter.label}
-                </span>
-                <Select
-                    classNamePrefix='wallet-admin-ms'
-                    inputId={`${filter.key}-multiselect`}
-                    isMulti
-                    closeMenuOnSelect={false}
-                    hideSelectedOptions={false}
-                    tabIndex={index}
-                    placeholder={filter.label}
-                    options={menuOptions}
-                    value={selectedOptions}
-                    onChange={(raw: MultiValue<FilterOptions>) => {
-                        const picked = raw.map(o => o.value)
-                        if (picked.includes(SELECT_ALL_SENTINEL)) {
-                            const allValues = baseOptions.map(o => o.value)
-                            setSelectedValue(new Map(selectedValue.set(filter.key, allValues)))
-                            props.onFilterChange(filter.key, allValues)
-
-                            return
-                        }
-
-                        setSelectedValue(new Map(selectedValue.set(filter.key, picked)))
-                        props.onFilterChange(filter.key, picked)
-                    }}
-                />
-            </div>
-        )
-    }
-
-    const renderDate = (index: number, filter: Filter): JSX.Element => {
-        const override = props.selectedValueOverrides?.[filter.key]
-        const iso = typeof override === 'string'
-            ? override
-            : undefined
-
-        return (
-            <div className={classNames(styles.filter, styles.dateFilterWrap)} key={filter.key}>
-                <InputDatePicker
-                    tabIndex={index}
-                    label={filter.label}
-                    disabled={false}
-                    date={parseIsoDateOnly(iso)}
-                    placeholder='Date'
-                    onChange={(date: Date | null) => {
-                        props.onFilterChange(filter.key, formatIsoDateOnly(date))
-                    }}
-                    isClearable
-                />
-            </div>
-        )
-    }
 
     const renderMemberAutoComplete = (index: number, filter: Filter): JSX.Element => (
         <InputHandleAutocomplete
@@ -218,55 +96,50 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
         />
     )
 
-    const renderFilterControl = (index: number, filter: Filter): JSX.Element => {
-        if (filter.type === 'dropdown') {
-            return renderDropdown(index, filter)
-        }
-
-        if (filter.type === 'multi_dropdown') {
-            return renderMultiDropdown(index, filter)
-        }
-
-        if (filter.type === 'date') {
-            return renderDate(index, filter)
-        }
-
-        if (filter.type === 'member_autocomplete') {
-            return renderMemberAutoComplete(index, filter)
-        }
-
-        return (
-            <InputText
-                key={filter.key}
-                name={filter.label}
-                className={styles.filterInput}
-                type='text'
-                tabIndex={index}
-                label={filter.label}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    setSelectedValue(new Map(selectedValue.set(filter.key, event.target.value)))
-                    props.onFilterChange(filter.key, [event.target.value])
-                }}
-            />
-        )
-    }
-
     return (
         <div className={styles.FilterBar}>
             <div className={styles.firstFilter}>
                 {props.filters.slice(0, 1)
-                    .map((filter, index) => (
-                        <div key={filter.key} className={styles.firstFilterElement}>
-                            {renderFilterControl(index, filter)}
+                    .map((options, index) => (
+                        <div key={options.key} className={styles.firstFilterElement}>
+                            {options.type === 'dropdown' && renderDropdown(index, options)}
+                            {options.type === 'input' && (
+                                <InputText
+                                    key={options.key}
+                                    name={options.label}
+                                    className={styles.filterInput}
+                                    type='text'
+                                    tabIndex={index}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setSelectedValue(new Map(selectedValue.set(options.key, event.target.value)))
+                                        props.onFilterChange(options.key, [event.target.value])
+                                    }}
+                                />
+                            )}
+                            {options.type === 'member_autocomplete' && renderMemberAutoComplete(index, options)}
                         </div>
                     ))}
             </div>
             <div className={styles.flexStretch} />
             <div className={styles.remainingFilters}>
                 {props.filters.slice(1)
-                    .map((filter, index) => (
-                        <div key={filter.key} className={styles.filter}>
-                            {renderFilterControl(index + 1, filter)}
+                    .map((options, index) => (
+                        <div key={options.key} className={styles.filter}>
+                            {options.type === 'dropdown' && renderDropdown(index + 1, options)}
+                            {options.type === 'input' && (
+                                <InputText
+                                    key={options.key}
+                                    name={options.label}
+                                    className={styles.filterInput}
+                                    type='text'
+                                    tabIndex={index + 1}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setSelectedValue(new Map(selectedValue.set(options.key, event.target.value)))
+                                        props.onFilterChange(options.key, [event.target.value])
+                                    }}
+                                />
+                            )}
+                            {options.type === 'member_autocomplete' && renderMemberAutoComplete(index + 1, options)}
                         </div>
                     ))}
             </div>
