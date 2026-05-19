@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable complexity */
 
 import {
     FC,

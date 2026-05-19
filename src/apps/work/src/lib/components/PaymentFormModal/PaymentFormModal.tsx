@@ -133,10 +133,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const isSubmitting = props.isSubmitting === true
 
     const [errors, setErrors] = useState<ValidationErrors>({})
-    const [fromDate, setFromDate] = useState<Date | null>(null)
+    const [fromDate, setFromDate] = useState<Date | undefined>(undefined)
     const [hoursWorked, setHoursWorked] = useState<string>('')
     const [remarks, setRemarks] = useState<string>('')
-    const [toDate, setToDate] = useState<Date | null>(null)
+    const [toDate, setToDate] = useState<Date | undefined>(undefined)
 
     const ratePerHour = useMemo(
         () => getAssignmentRatePerHour(props.member || {}),
@@ -185,10 +185,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
     const resetState = useCallback((): void => {
         setErrors({})
-        setFromDate(null)
+        setFromDate(undefined)
         setHoursWorked('')
         setRemarks('')
-        setToDate(null)
+        setToDate(undefined)
     }, [props.member])
 
     useEffect(() => {
@@ -390,7 +390,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             ? (
                                 <span className={styles.helperText}>
                                     {' '}
-                                    Expected: {expectedHoursLabel}
+                                    Expected:
+                                    {' '}
+                                    {expectedHoursLabel}
                                 </span>
                             )
                             : undefined}

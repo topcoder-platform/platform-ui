@@ -233,7 +233,11 @@ export function getAssignmentPaymentCycle(member: Partial<Assignment>): string {
 export function getAssignmentStandardHoursPerDay(
     member: Partial<Assignment>,
 ): number | string | undefined {
-    if (member.standardHoursPerDay !== undefined && member.standardHoursPerDay !== null && member.standardHoursPerDay !== '') {
+    if (
+        member.standardHoursPerDay !== undefined
+        && member.standardHoursPerDay !== null
+        && member.standardHoursPerDay !== ''
+    ) {
         return member.standardHoursPerDay
     }
 
@@ -255,7 +259,11 @@ export function getAssignmentStandardHoursPerDay(
 export function getAssignmentStandardHoursPerWeek(
     member: Partial<Assignment>,
 ): number | string | undefined {
-    if (member.standardHoursPerWeek !== undefined && member.standardHoursPerWeek !== null && member.standardHoursPerWeek !== '') {
+    if (
+        member.standardHoursPerWeek !== undefined
+        && member.standardHoursPerWeek !== null
+        && member.standardHoursPerWeek !== ''
+    ) {
         return member.standardHoursPerWeek
     }
 
