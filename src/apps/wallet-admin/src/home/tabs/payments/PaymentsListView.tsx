@@ -29,7 +29,26 @@ const approverAllowedCategories = [taskPaymentCategory, engagementPaymentCategor
 const taasPaymentCategory = 'TAAS_PAYMENT'
 const topgearPaymentCategory = 'TOPGEAR_PAYMENT'
 const defaultPageSize = 10
-const approverDefaultDateFilter = 'last30days'
+function formatIsoDateOnly(date: Date): string {
+    const y = date.getFullYear()
+    const mo = String(date.getMonth() + 1)
+        .padStart(2, '0')
+    const day = String(date.getDate())
+        .padStart(2, '0')
+
+    return `${y}-${mo}-${day}`
+}
+
+function getApproverDefaultDateRange(): { dateFrom: string, dateTo: string } {
+    const dateTo = new Date()
+    const dateFrom = new Date()
+    dateFrom.setMonth(dateFrom.getMonth() - 3)
+
+    return {
+        dateFrom: formatIsoDateOnly(dateFrom),
+        dateTo: formatIsoDateOnly(dateTo),
+    }
+}
 
 type PaymentListingTab = 'topcoder' | 'topgear' | 'taas'
 
@@ -321,12 +340,9 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 statusFilter = { status: [restrictedDefaultStatus] }
             }
 
-            let dateFilter: Record<string, string[]> = {}
-            if (submittedFilters.date?.length && submittedFilters.date[0] !== 'all') {
-                dateFilter = { date: activeFilters.date }
-            } else if (!submittedFilters.date?.length) {
-                dateFilter = { date: [approverDefaultDateFilter] }
-            }
+            const approverDefaultDates = getApproverDefaultDateRange()
+            const dateFrom = submittedFilters.dateFrom?.[0] ?? approverDefaultDates.dateFrom
+            const dateTo = submittedFilters.dateTo?.[0] ?? approverDefaultDates.dateTo
 
             const pickedApproverTypes = (submittedFilters.category ?? [])
                 .filter(c => approverAllowedCategories.includes(c))
@@ -338,12 +354,15 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             delete rest.category
             delete rest.date
             delete rest.status
+            delete rest.dateFrom
+            delete rest.dateTo
 
             return {
                 ...rest,
                 categories,
                 ...statusFilter,
-                ...dateFilter,
+                dateFrom: [dateFrom],
+                dateTo: [dateTo],
             }
         }
 
@@ -396,11 +415,26 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         [draftFilters, submittedFilters],
     )
 
-    const hasActiveFilters = React.useMemo(
-        () => Object.entries(appliedFilters)
-            .some(([key, value]) => key !== 'category' && key !== 'categories' && value.length > 0),
-        [appliedFilters],
-    )
+    const hasActiveFilters = React.useMemo(() => {
+        const approverDefaultDates = isApproverView ? getApproverDefaultDateRange() : undefined
+
+        return Object.entries(appliedFilters)
+            .some(([key, value]) => {
+                if (key === 'category' || key === 'categories') {
+                    return false
+                }
+
+                if (approverDefaultDates && key === 'dateFrom' && value[0] === approverDefaultDates.dateFrom) {
+                    return false
+                }
+
+                if (approverDefaultDates && key === 'dateTo' && value[0] === approverDefaultDates.dateTo) {
+                    return false
+                }
+
+                return value.length > 0
+            })
+    }, [appliedFilters, isApproverView])
     const selectedValueOverrides = React.useMemo<Record<string, string | string[]>>(() => {
         if (restrictedCategory) {
             return {
@@ -412,6 +446,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         }
 
         if (isApproverView) {
+            const approverDefaultDates = getApproverDefaultDateRange()
+
             return {
                 ...(draftFilters.status !== undefined
                     ? { status: draftFilters.status }
@@ -419,6 +455,12 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 ...(draftFilters.category !== undefined
                     ? { category: draftFilters.category }
                     : { category: [...approverAllowedCategories] }),
+                dateFrom: draftFilters.dateFrom !== undefined
+                    ? draftFilters.dateFrom[0]
+                    : approverDefaultDates.dateFrom,
+                dateTo: draftFilters.dateTo !== undefined
+                    ? draftFilters.dateTo[0]
+                    : approverDefaultDates.dateTo,
             }
         }
 
@@ -457,11 +499,18 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         }
 
         if (isApproverView) {
+            const approverDefaultDates = getApproverDefaultDateRange()
+
             const approverDefaults: Record<string, string | string[]> = {
                 category: draftFilters.category !== undefined
                     ? draftFilters.category
                     : [...approverAllowedCategories],
-                date: draftFilters.date?.[0] ?? approverDefaultDateFilter,
+                dateFrom: draftFilters.dateFrom !== undefined
+                    ? draftFilters.dateFrom[0]
+                    : approverDefaultDates.dateFrom,
+                dateTo: draftFilters.dateTo !== undefined
+                    ? draftFilters.dateTo[0]
+                    : approverDefaultDates.dateTo,
                 status: draftFilters.status !== undefined
                     ? draftFilters.status
                     : [restrictedDefaultStatus ?? 'ON_HOLD_ADMIN'],
@@ -480,7 +529,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         return topcoderDefaults
     }, [
         draftFilters.category,
-        draftFilters.date,
+        draftFilters.dateFrom,
+        draftFilters.dateTo,
         draftFilters.status,
         restrictedCategory,
         restrictedDefaultStatus,
@@ -680,8 +730,14 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             ...prev,
             currentPage: 1,
         }))
-        setDraftFilters(prev => withoutFilterKey(prev, 'category'))
-        setSubmittedFilters(prev => withoutFilterKey(prev, 'category'))
+        setDraftFilters(prev => withoutFilterKey(
+            withoutFilterKey(withoutFilterKey(withoutFilterKey(prev, 'category'), 'date'), 'dateFrom'),
+            'dateTo',
+        ))
+        setSubmittedFilters(prev => withoutFilterKey(
+            withoutFilterKey(withoutFilterKey(withoutFilterKey(prev, 'category'), 'date'), 'dateFrom'),
+            'dateTo',
+        ))
     }, [paymentRoleView])
 
     const onPaymentListingTabChange = useCallback((tab: PaymentListingTab) => {
@@ -815,14 +871,14 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     type: 'multi_dropdown',
                 },
                 {
-                    key: 'date',
-                    label: 'Date',
-                    options: [
-                        { label: 'Last 7 days', value: 'last7days' },
-                        { label: 'Last 30 days', value: 'last30days' },
-                        { label: 'All', value: 'all' },
-                    ],
-                    type: 'dropdown',
+                    key: 'dateFrom',
+                    label: 'Date from',
+                    type: 'date',
+                },
+                {
+                    key: 'dateTo',
+                    label: 'Date to',
+                    type: 'date',
                 },
                 pageSizeFilter,
             ]

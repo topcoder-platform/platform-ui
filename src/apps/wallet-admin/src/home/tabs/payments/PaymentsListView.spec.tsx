@@ -217,6 +217,27 @@ const TOPCODER_TAB_CATEGORIES = [
     'ENGAGEMENT_PAYMENT',
 ]
 
+function getApproverDefaultDateRangeForTest(): { dateFrom: string, dateTo: string } {
+    const dateTo = new Date()
+    const dateFrom = new Date()
+    dateFrom.setMonth(dateFrom.getMonth() - 3)
+
+    const format = (date: Date): string => {
+        const y = date.getFullYear()
+        const mo = String(date.getMonth() + 1)
+            .padStart(2, '0')
+        const day = String(date.getDate())
+            .padStart(2, '0')
+
+        return `${y}-${mo}-${day}`
+    }
+
+    return {
+        dateFrom: format(dateFrom),
+        dateTo: format(dateTo),
+    }
+}
+
 const ALL_STATUS_FILTER_VALUES = [
     'OWED',
     'ON_HOLD_ADMIN',
@@ -241,6 +262,8 @@ describe('PaymentsListView', () => {
     })
 
     it('defaults the approver view to the On Hold (Admin) status filter and both allowed categories', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Approver'] } as any}
@@ -252,7 +275,8 @@ describe('PaymentsListView', () => {
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
                 categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: ['last30days'],
+                dateFrom: [approverDates.dateFrom],
+                dateTo: [approverDates.dateTo],
                 status: ['ON_HOLD_ADMIN'],
             })
         expect(mockFilterBar)
@@ -260,7 +284,8 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: 'last30days',
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
                 status: ['ON_HOLD_ADMIN'],
             }))
     })
@@ -286,6 +311,8 @@ describe('PaymentsListView', () => {
     })
 
     it('applies the default approver status after switching from admin view', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Admin', 'Payment Approver'] } as any}
@@ -306,14 +333,16 @@ describe('PaymentsListView', () => {
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
                 categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: ['last30days'],
+                dateFrom: [approverDates.dateFrom],
+                dateTo: [approverDates.dateTo],
                 status: ['ON_HOLD_ADMIN'],
             })
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: 'last30days',
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
                 status: ['ON_HOLD_ADMIN'],
             }))
     })
@@ -339,6 +368,8 @@ describe('PaymentsListView', () => {
     })
 
     it('lets an explicit status filter override the default approver status', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Approver'] } as any}
@@ -357,7 +388,8 @@ describe('PaymentsListView', () => {
             expect(mockedGetPayments)
                 .toHaveBeenLastCalledWith(10, 0, {
                     categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                    date: ['last30days'],
+                    dateFrom: [approverDates.dateFrom],
+                    dateTo: [approverDates.dateTo],
                     status: ['PAID'],
                 })
         })
@@ -365,7 +397,8 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: 'last30days',
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
                 status: ['PAID'],
             }))
     })
