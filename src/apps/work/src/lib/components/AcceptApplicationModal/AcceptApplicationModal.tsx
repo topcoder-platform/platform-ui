@@ -33,8 +33,10 @@ export interface AcceptApplicationFormData {
     agreementRate: string
     durationMonths: number
     otherRemarks?: string
+    paymentCycle: string
     ratePerHour: string
     startDate: string
+    standardHoursPerDay: number
     standardHoursPerWeek: number
 }
 
@@ -48,9 +50,10 @@ interface AcceptApplicationModalProps {
 
 interface ValidationErrors {
     durationMonths?: string
+    paymentCycle?: string
     ratePerHour?: string
     startDate?: string
-    standardHoursPerWeek?: string
+    standardHoursPerDay?: string
 }
 
 const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
@@ -59,9 +62,10 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
     const [durationMonths, setDurationMonths] = useState<string>('')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [otherRemarks, setOtherRemarks] = useState<string>('')
+    const [paymentCycle, setPaymentCycle] = useState<string>('WEEKLY')
     const [ratePerHour, setRatePerHour] = useState<string>('')
     const [startDate, setStartDate] = useState<Date | undefined>()
-    const [standardHoursPerWeek, setStandardHoursPerWeek] = useState<string>('')
+    const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>('')
 
     const isSubmitting = props.isSubmitting === true
 
@@ -72,17 +76,29 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         [],
     )
     const agreementRate = useMemo(
-        () => calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
-        [ratePerHour, standardHoursPerWeek],
+        () => {
+            const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
+                standardHoursPerDay,
+                2,
+            )
+
+            if (parsedStandardHoursPerDay === undefined) {
+                return ''
+            }
+
+            return calculateAssignmentRatePerWeek(ratePerHour, parsedStandardHoursPerDay * 5)
+        },
+        [ratePerHour, standardHoursPerDay],
     )
 
     const resetState = useCallback((): void => {
         setDurationMonths('')
         setErrors({})
         setOtherRemarks('')
+        setPaymentCycle('WEEKLY')
         setRatePerHour('')
         setStartDate(undefined)
-        setStandardHoursPerWeek('')
+        setStandardHoursPerDay('')
     }, [])
 
     const handleCancel = useCallback((): void => {
@@ -94,10 +110,13 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         const nextErrors: ValidationErrors = {}
         const parsedDurationMonths = toPositiveInteger(durationMonths)
         const parsedRatePerHour = toPositiveNumber(ratePerHour)
-        const parsedStandardHoursPerWeek = toPositiveNumberWithMaxDecimalPlaces(
-            standardHoursPerWeek,
+        const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
+            standardHoursPerDay,
             2,
         )
+        const normalizedPaymentCycle = String(paymentCycle || 'WEEKLY')
+            .trim()
+            .toUpperCase()
 
         if (!startDate) {
             nextErrors.startDate = 'Billing start date is required.'
@@ -111,9 +130,13 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
             nextErrors.ratePerHour = 'Rate per hour must be a positive number.'
         }
 
-        if (parsedStandardHoursPerWeek === undefined) {
-            nextErrors.standardHoursPerWeek = 'Standard hours per week must be a '
+        if (parsedStandardHoursPerDay === undefined) {
+            nextErrors.standardHoursPerDay = 'Standard hours per day must be a '
                 + 'positive number with up to 2 decimal places.'
+        }
+
+        if (!['WEEKLY', 'FORTNIGHTLY', 'MONTHLY'].includes(normalizedPaymentCycle)) {
+            nextErrors.paymentCycle = 'Payment cycle must be Weekly, Fortnightly, or Monthly.'
         }
 
         if (Object.keys(nextErrors).length > 0) {
@@ -125,7 +148,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
             !startDate
             || parsedDurationMonths === undefined
             || parsedRatePerHour === undefined
-            || parsedStandardHoursPerWeek === undefined
+            || parsedStandardHoursPerDay === undefined
         ) {
             return
         }
@@ -134,8 +157,10 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
             agreementRate,
             durationMonths: parsedDurationMonths,
             otherRemarks: otherRemarks.trim() || undefined,
+            paymentCycle: normalizedPaymentCycle,
             ratePerHour: parsedRatePerHour.toString(),
-            standardHoursPerWeek: parsedStandardHoursPerWeek,
+            standardHoursPerDay: parsedStandardHoursPerDay,
+            standardHoursPerWeek: Number((parsedStandardHoursPerDay * 5).toFixed(2)),
             startDate: serializeTentativeAssignmentDate(startDate),
         })
 
@@ -144,10 +169,11 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         agreementRate,
         durationMonths,
         otherRemarks,
+        paymentCycle,
         props,
         ratePerHour,
         resetState,
-        standardHoursPerWeek,
+        standardHoursPerDay,
         startDate,
     ])
 
@@ -257,43 +283,52 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='accept-application-standard-hours'>
-                        Standard hours per week *
+                        Standard hours per day *
                     </label>
                     <input
                         id='accept-application-standard-hours'
                         className={styles.input}
                         inputMode='decimal'
                         onChange={event => {
-                            setStandardHoursPerWeek(
+                            setStandardHoursPerDay(
                                 sanitizePositiveNumericInput(event.target.value, 2),
                             )
                             setErrors(previous => ({
                                 ...previous,
-                                standardHoursPerWeek: undefined,
+                                standardHoursPerDay: undefined,
                             }))
                         }}
                         pattern='[0-9.]*'
                         type='text'
-                        value={standardHoursPerWeek}
+                        value={standardHoursPerDay}
                     />
-                    {errors.standardHoursPerWeek
-                        ? <p className={styles.error}>{errors.standardHoursPerWeek}</p>
+                    {errors.standardHoursPerDay
+                        ? <p className={styles.error}>{errors.standardHoursPerDay}</p>
                         : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <label className={styles.label} htmlFor='accept-application-rate'>
-                        Assignment rate per week *
+                    <label className={styles.label} htmlFor='accept-application-payment-cycle'>
+                        Payment cycle *
                     </label>
-                    <input
-                        id='accept-application-rate'
+                    <select
+                        id='accept-application-payment-cycle'
                         className={styles.input}
-                        readOnly
-                        type='text'
-                        value={agreementRate}
-                    />
-                    {!agreementRate
-                        ? <p className={styles.error}>Assignment rate is calculated after entering hourly details.</p>
+                        onChange={event => {
+                            setPaymentCycle(event.target.value)
+                            setErrors(previous => ({
+                                ...previous,
+                                paymentCycle: undefined,
+                            }))
+                        }}
+                        value={paymentCycle}
+                    >
+                        <option value='WEEKLY'>Weekly</option>
+                        <option value='FORTNIGHTLY'>Fortnightly</option>
+                        <option value='MONTHLY'>Monthly</option>
+                    </select>
+                    {errors.paymentCycle
+                        ? <p className={styles.error}>{errors.paymentCycle}</p>
                         : undefined}
                 </div>
 

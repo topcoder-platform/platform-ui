@@ -27,9 +27,11 @@ interface EngagementAssignmentContextResponse {
     engagementId: string
     engagementTitle: string
     otherRemarks?: string | null
+    paymentCycle?: string | null
     projectId: string
     projectName?: string
     ratePerHour?: string | null
+    standardHoursPerDay?: number | null
     standardHoursPerWeek?: number | null
     startDate?: string | null
 }
@@ -40,7 +42,9 @@ interface EngagementAssignmentResponse {
     memberHandle?: string | null
     memberId?: number | string | null
     otherRemarks?: string | null
+    paymentCycle?: string | null
     ratePerHour?: string | null
+    standardHoursPerDay?: number | string | null
     standardHoursPerWeek?: number | string | null
     startDate?: string | null
 }
@@ -106,6 +110,11 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
 function mapAssignmentContextToEngagementDetails(
     context: EngagementAssignmentContextResponse,
 ): PaymentEngagementDetails {
+    const standardHoursPerDay = normalizeOptionalNumber(context.standardHoursPerDay)
+        ?? (normalizeOptionalNumber(context.standardHoursPerWeek) !== undefined
+            ? Number((Number(context.standardHoursPerWeek) / 5).toFixed(2))
+            : undefined)
+
     return {
         assignmentId: normalizeOptionalString(context.assignmentId),
         billingStartDate: normalizeOptionalString(context.startDate),
@@ -113,9 +122,11 @@ function mapAssignmentContextToEngagementDetails(
         engagementId: normalizeOptionalString(context.engagementId),
         engagementTitle: normalizeOptionalString(context.engagementTitle),
         otherRemarks: normalizeOptionalString(context.otherRemarks),
+        paymentCycle: normalizeOptionalString(context.paymentCycle) || 'WEEKLY',
         projectId: normalizeOptionalString(context.projectId),
         projectName: normalizeOptionalString(context.projectName),
         ratePerHour: normalizeOptionalString(context.ratePerHour),
+        standardHoursPerDay,
         standardHoursPerWeek: normalizeOptionalNumber(context.standardHoursPerWeek),
     }
 }
@@ -198,6 +209,10 @@ function buildEngagementDetailsFromEngagement(
     }
 
     const assignment = findMatchingEngagementAssignment(engagement.assignments, winning)
+    const standardHoursPerDay = normalizeOptionalNumber(assignment?.standardHoursPerDay)
+        ?? (normalizeOptionalNumber(assignment?.standardHoursPerWeek) !== undefined
+            ? Number((Number(assignment?.standardHoursPerWeek) / 5).toFixed(2))
+            : undefined)
 
     return {
         assignmentId: normalizeOptionalString(assignment?.id) || normalizeOptionalString(winning.assignmentId),
@@ -206,6 +221,7 @@ function buildEngagementDetailsFromEngagement(
         engagementId,
         engagementTitle: normalizeOptionalString(engagement.title),
         otherRemarks: normalizeOptionalString(assignment?.otherRemarks),
+        paymentCycle: normalizeOptionalString(assignment?.paymentCycle) || 'WEEKLY',
         projectId:
             normalizeOptionalString(engagement.projectId)
             || normalizeOptionalString(engagement.project?.id),
@@ -213,6 +229,7 @@ function buildEngagementDetailsFromEngagement(
             normalizeOptionalString(engagement.projectName)
             || normalizeOptionalString(engagement.project?.name),
         ratePerHour: normalizeOptionalString(assignment?.ratePerHour),
+        standardHoursPerDay,
         standardHoursPerWeek: normalizeOptionalNumber(assignment?.standardHoursPerWeek),
     }
 }

@@ -264,9 +264,15 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             </p>
                                         </div>
                                         <div className={styles.infoItem}>
-                                            <span className={styles.label}>Standard Hours per Week</span>
+                                            <span className={styles.label}>Standard Hours per Day</span>
                                             <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.engagementDetails?.standardHoursPerWeek)}
+                                                {formatOptionalText(paymentDetails?.engagementDetails?.standardHoursPerDay)}
+                                            </p>
+                                        </div>
+                                        <div className={styles.infoItem}>
+                                            <span className={styles.label}>Payment Cycle</span>
+                                            <p className={styles.value}>
+                                                {formatOptionalText(paymentDetails?.engagementDetails?.paymentCycle) || 'WEEKLY'}
                                             </p>
                                         </div>
                                         <div className={styles.infoItem}>

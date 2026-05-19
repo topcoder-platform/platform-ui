@@ -132,6 +132,22 @@ function toOptionalNumberishValue(value: unknown): number | string | undefined {
     return undefined
 }
 
+function toStandardHoursPerDay(value: unknown): number | string | undefined {
+    const normalized = toOptionalNumberishValue(value)
+
+    if (normalized === undefined) {
+        return undefined
+    }
+
+    const parsedValue = Number(normalized)
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+        return undefined
+    }
+
+    return Number((parsedValue / 5).toFixed(2))
+}
+
 function toIdentifierValue(...values: unknown[]): number | string {
     for (const value of values) {
         if (typeof value === 'number' && Number.isFinite(value)) {
@@ -310,6 +326,11 @@ function normalizeAssignment(
     const ratePerHour = toOptionalString(
         assignment.ratePerHour ?? assignment.rate_per_hour,
     )
+    const standardHoursPerDay = toOptionalNumberishValue(
+        assignment.standardHoursPerDay ?? assignment.standard_hours_per_day,
+    ) ?? toStandardHoursPerDay(
+        assignment.standardHoursPerWeek ?? assignment.standard_hours_per_week,
+    )
     const standardHoursPerWeek = toOptionalNumberishValue(
         assignment.standardHoursPerWeek ?? assignment.standard_hours_per_week,
     )
@@ -317,7 +338,13 @@ function normalizeAssignment(
         assignment.agreementRate
         ?? assignment.agreement_rate
         ?? assignment.rate
-        ?? calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
+        ?? calculateAssignmentRatePerWeek(
+            ratePerHour,
+            standardHoursPerWeek
+                ?? (standardHoursPerDay !== undefined
+                    ? Number(standardHoursPerDay) * 5
+                    : undefined),
+        ),
     )
 
     return {
@@ -356,7 +383,12 @@ function normalizeAssignment(
             ?? assignment.other_remarks
             ?? assignment.remarks,
         ),
+        paymentCycle: normalizeString(
+            assignment.paymentCycle
+            ?? assignment.payment_cycle,
+        ) || 'WEEKLY',
         ratePerHour,
+        standardHoursPerDay,
         standardHoursPerWeek,
         startDate: toIsoString(
             assignment.startDate

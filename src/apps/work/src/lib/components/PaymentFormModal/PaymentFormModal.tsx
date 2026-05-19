@@ -25,8 +25,10 @@ import {
 } from '../../models'
 import {
     calculatePaymentAmount,
+    getAssignmentPaymentCycle,
     getAssignmentRatePerHour,
-    getAssignmentStandardHoursPerWeek,
+    getAssignmentStandardHoursPerDay,
+    getExpectedHoursLabel,
 } from '../../utils'
 import {
     calculatePaymentChallengeFee,
@@ -55,11 +57,10 @@ interface PaymentFormModalProps {
 }
 
 interface ValidationErrors {
+    fromDate?: string
     hoursWorked?: string
-    weekEnding?: string
+    toDate?: string
 }
-
-const SATURDAY_DAY_INDEX = 6
 
 function normalizeTitleSegment(value?: string): string {
     return String(value || '')
@@ -68,46 +69,32 @@ function normalizeTitleSegment(value?: string): string {
 
 function formatTitleDate(value: Date): string {
     return value.toLocaleDateString('en-US', {
-        day: '2-digit',
+        day: 'numeric',
         month: 'short',
         year: 'numeric',
     })
 }
 
-function formatWeekEndingTitle(value?: Date | null): string {
-    if (!value) {
+function formatWorkPeriodTitle(fromDate?: Date | null, toDate?: Date | null): string {
+    if (!fromDate || !toDate) {
         return ''
     }
 
-    return `Week Ending: ${formatTitleDate(value)}`
+    return `Work Period ${formatTitleDate(fromDate)} - ${formatTitleDate(toDate)}`
 }
 
 function buildPaymentTitle(
     projectName?: string,
     engagementName?: string,
-    weekEndingTitle?: string,
+    workPeriodTitle?: string,
 ): string {
     return [
         normalizeTitleSegment(projectName),
         normalizeTitleSegment(engagementName),
-        normalizeTitleSegment(weekEndingTitle),
+        normalizeTitleSegment(workPeriodTitle),
     ]
         .filter(Boolean)
         .join(' - ')
-}
-
-function getDefaultWeekEndingDate(): Date {
-    const defaultDate = new Date()
-    defaultDate.setHours(0, 0, 0, 0)
-
-    const daysUntilSaturday = (SATURDAY_DAY_INDEX - defaultDate.getDay() + 7) % 7
-    defaultDate.setDate(defaultDate.getDate() + daysUntilSaturday)
-
-    return defaultDate
-}
-
-function isSaturday(value?: Date | null): boolean {
-    return Boolean(value) && value?.getDay() === SATURDAY_DAY_INDEX
 }
 
 function normalizePositiveValue(value: unknown): string {
@@ -125,12 +112,12 @@ function normalizePositiveValue(value: unknown): string {
         .toString()
 }
 
-const WeekEndingInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+const DateInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
     (props, ref): JSX.Element => (
         <input
             {...props}
             className={`${styles.input} ${String(props.className || '')}`.trim()}
-            placeholder='Week ending: ...'
+            placeholder={props.placeholder || 'Select date'}
             readOnly
             ref={ref}
             type='text'
@@ -138,7 +125,7 @@ const WeekEndingInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInp
     ),
 )
 
-WeekEndingInput.displayName = 'WeekEndingInput'
+DateInput.displayName = 'DateInput'
 
 const PaymentFormModal: FC<PaymentFormModalProps> = (
     props: PaymentFormModalProps,
@@ -146,9 +133,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const isSubmitting = props.isSubmitting === true
 
     const [errors, setErrors] = useState<ValidationErrors>({})
+    const [fromDate, setFromDate] = useState<Date | null>(null)
     const [hoursWorked, setHoursWorked] = useState<string>('')
     const [remarks, setRemarks] = useState<string>('')
-    const [weekEndingDate, setWeekEndingDate] = useState<Date | null>(() => getDefaultWeekEndingDate())
+    const [toDate, setToDate] = useState<Date | null>(null)
 
     const ratePerHour = useMemo(
         () => getAssignmentRatePerHour(props.member || {}),
@@ -164,26 +152,43 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
             : undefined),
         [amount, props.billingAccountMarkup],
     )
+    const paymentCycle = useMemo(
+        () => getAssignmentPaymentCycle(props.member || {}),
+        [props.member],
+    )
+    const standardHoursPerDay = useMemo(
+        () => getAssignmentStandardHoursPerDay(props.member || {}),
+        [props.member],
+    )
+    const expectedHoursLabel = useMemo(
+        () => getExpectedHoursLabel(props.member || {}),
+        [props.member],
+    )
     const paymentTitle = useMemo(
         () => {
-            if (!isSaturday(weekEndingDate)) {
+            if (!fromDate || !toDate) {
+                return ''
+            }
+
+            if (fromDate.getTime() > toDate.getTime()) {
                 return ''
             }
 
             return buildPaymentTitle(
                 props.projectName,
                 props.engagementName,
-                formatWeekEndingTitle(weekEndingDate),
+                formatWorkPeriodTitle(fromDate, toDate),
             )
         },
-        [props.engagementName, props.projectName, weekEndingDate],
+        [fromDate, props.engagementName, props.projectName, toDate],
     )
 
     const resetState = useCallback((): void => {
         setErrors({})
-        setHoursWorked(normalizePositiveValue(getAssignmentStandardHoursPerWeek(props.member || {})))
+        setFromDate(null)
+        setHoursWorked('')
         setRemarks('')
-        setWeekEndingDate(getDefaultWeekEndingDate())
+        setToDate(null)
     }, [props.member])
 
     useEffect(() => {
@@ -204,12 +209,20 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         const nextErrors: ValidationErrors = {}
         const parsedHoursWorked = Number(hoursWorked)
 
-        if (!weekEndingDate) {
-            nextErrors.weekEnding = 'Week ending date is required.'
-        } else if (!isSaturday(weekEndingDate)) {
-            nextErrors.weekEnding = 'Week ending date must be a Saturday.'
-        } else if (!paymentTitle.trim()) {
-            nextErrors.weekEnding = 'Payment title cannot be generated from week ending.'
+        if (!fromDate) {
+            nextErrors.fromDate = 'From date is required.'
+        }
+
+        if (!toDate) {
+            nextErrors.toDate = 'To date is required.'
+        }
+
+        if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
+            nextErrors.toDate = 'To date must be the same day or after the from date.'
+        }
+
+        if (!paymentTitle.trim()) {
+            nextErrors.fromDate = nextErrors.fromDate || 'Payment title cannot be generated from the selected period.'
         }
 
         if (!Number.isFinite(parsedHoursWorked) || parsedHoursWorked <= 0) {
@@ -230,8 +243,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         }
 
         if (
-            !weekEndingDate
-            || !isSaturday(weekEndingDate)
+            !fromDate
+            || !toDate
+            || fromDate.getTime() > toDate.getTime()
             || !paymentTitle.trim()
             || !Number.isFinite(parsedHoursWorked)
             || parsedHoursWorked <= 0
@@ -256,7 +270,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         })
 
         resetState()
-    }, [amount, hoursWorked, paymentTitle, props, ratePerHour, remarks, resetState, weekEndingDate])
+    }, [amount, fromDate, hoursWorked, paymentTitle, props, ratePerHour, remarks, resetState, toDate])
 
     return (
         <BaseModal
@@ -291,8 +305,12 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         <span className={styles.infoValue}>{formatCurrency(ratePerHour)}</span>
                     </div>
                     <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Rate Per Week</span>
-                        <span className={styles.infoValue}>{formatCurrency(props.member?.agreementRate)}</span>
+                        <span className={styles.infoLabel}>Payment Cycle</span>
+                        <span className={styles.infoValue}>{paymentCycle}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Standard Hours Per Day</span>
+                        <span className={styles.infoValue}>{normalizePositiveValue(standardHoursPerDay) || '-'}</span>
                     </div>
                     {BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED
                         ? (
@@ -306,25 +324,52 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
                 <div className={styles.fieldRow}>
                     <span className={styles.label}>
-                        Week ending *
+                        From *
                     </span>
                     <DatePicker
-                        customInput={<WeekEndingInput />}
+                        customInput={<DateInput />}
                         dateFormat='MM/dd/yyyy'
                         disabled={isSubmitting}
-                        filterDate={isSaturday}
                         onChange={date => {
-                            setWeekEndingDate(date)
+                            setFromDate(date)
                             setErrors(previous => ({
                                 ...previous,
-                                weekEnding: undefined,
+                                fromDate: undefined,
                             }))
                         }}
-                        placeholderText='Week ending: ...'
+                        placeholderText='From: ...'
                         preventOpenOnFocus
                         portalId='react-date-portal'
                         popperPlacement='bottom-start'
-                        selected={weekEndingDate}
+                        selected={fromDate}
+                    />
+
+                    {errors.fromDate
+                        ? <p className={styles.error}>{errors.fromDate}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <span className={styles.label}>
+                        To *
+                    </span>
+                    <DatePicker
+                        customInput={<DateInput />}
+                        dateFormat='MM/dd/yyyy'
+                        disabled={isSubmitting}
+                        minDate={fromDate || undefined}
+                        onChange={date => {
+                            setToDate(date)
+                            setErrors(previous => ({
+                                ...previous,
+                                toDate: undefined,
+                            }))
+                        }}
+                        placeholderText='To: ...'
+                        preventOpenOnFocus
+                        portalId='react-date-portal'
+                        popperPlacement='bottom-start'
+                        selected={toDate}
                     />
                     {paymentTitle
                         ? (
@@ -333,14 +378,22 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             </p>
                         )
                         : undefined}
-                    {errors.weekEnding
-                        ? <p className={styles.error}>{errors.weekEnding}</p>
+                    {errors.toDate
+                        ? <p className={styles.error}>{errors.toDate}</p>
                         : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='payment-hours-worked'>
                         Hours worked *
+                        {expectedHoursLabel
+                            ? (
+                                <span className={styles.helperText}>
+                                    {' '}
+                                    Expected: {expectedHoursLabel}
+                                </span>
+                            )
+                            : undefined}
                     </label>
                     <input
                         id='payment-hours-worked'
