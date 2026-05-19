@@ -5,6 +5,7 @@ import {
     useMemo,
     useState,
 } from 'react'
+import useSWR from 'swr'
 
 import {
     Button,
@@ -14,12 +15,16 @@ import {
 
 import { rootRoute } from '../../../config/routes.config'
 import { useFetchEngagements } from '../../hooks/useFetchEngagements'
-import type { Engagement } from '../../models'
+import type {
+    Challenge,
+    Engagement,
+} from '../../models'
 import {
     BillingAccountDetails,
     BillingAccountLineItem,
     combineBillingAccountLineItems,
 } from '../../services/billing-accounts.service'
+import { fetchChallenge } from '../../services/challenges.service'
 import { calculatePaymentChallengeFee } from '../../utils/payment.utils'
 import {
     calculateMemberPaymentAmount,
@@ -30,6 +35,7 @@ import styles from './BillingAccountLineItemsModal.module.scss'
 
 type SortField = 'amount' | 'status' | 'date'
 type SortOrder = 'asc' | 'desc'
+type ChallengeDetailsById = Map<string, Challenge>
 
 interface BillingAccountModalLineItem extends BillingAccountLineItem {
     challengeFeeAmount?: number
@@ -39,6 +45,8 @@ interface BillingAccountModalLineItem extends BillingAccountLineItem {
 const ENGAGEMENT_ASSIGNMENT_FILTERS = {
     includePrivate: true,
 }
+
+const EMPTY_CHALLENGE_DETAILS_BY_ID: ChallengeDetailsById = new Map<string, Challenge>()
 
 const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
     CHALLENGE: 'Challenge',
@@ -216,27 +224,173 @@ function formatLineItemChallengeFee(item: BillingAccountModalLineItem): string {
 }
 
 /**
+ * Collects challenge ids from billing-account line items that can be hydrated from challenge-api.
+ *
+ * @param items Normalized billing-account line items.
+ * @returns Unique challenge ids from canonical external ids.
+ * @remarks Legacy-only challenge rows do not expose a canonical external id,
+ * so they are intentionally excluded from challenge billing hydration.
+ */
+function getChallengeLineItemIds(items: BillingAccountLineItem[]): string[] {
+    return Array.from(new Set(
+        items
+            .filter(item => item.externalType === 'CHALLENGE')
+            .map(item => normalizeRouteId(item.externalId))
+            .filter((id): id is string => !!id),
+    ))
+}
+
+/**
+ * Fetches challenge details for billing-account rows without failing the whole modal.
+ *
+ * @param challengeIds Challenge ids referenced by billing-account line items.
+ * @returns A map of successfully loaded challenges keyed by id.
+ * @remarks A missing challenge leaves that row without hydrated billing markup
+ * rather than blocking the rest of the billing-account details modal.
+ */
+async function fetchChallengeDetailsById(
+    challengeIds: string[],
+): Promise<ChallengeDetailsById> {
+    const entries = await Promise.all(challengeIds.map(async challengeId => {
+        try {
+            const challenge = await fetchChallenge(challengeId)
+
+            return [challengeId, challenge] as const
+        } catch {
+            return undefined
+        }
+    }))
+
+    return new Map(
+        entries.filter((entry): entry is readonly [string, Challenge] => !!entry),
+    )
+}
+
+/**
+ * Resolves the billing markup that applies to a row's challenge fee.
+ *
+ * @param item Billing-account line item being displayed.
+ * @param billingAccountDetails Billing account detail payload.
+ * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
+ * @returns Challenge-specific markup, billing-account fallback for legacy
+ * rows, or `undefined` when the challenge row is still being hydrated.
+ * @remarks Canonical challenge rows use challenge billing markup so `0` markup
+ * challenges do not inherit the billing account default fee.
+ */
+function getLineItemChallengeMarkup(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+    challengeDetailsById: ChallengeDetailsById | undefined,
+): unknown {
+    const challengeId = item.externalType === 'CHALLENGE'
+        ? normalizeRouteId(item.externalId)
+        : undefined
+
+    if (!challengeId) {
+        return billingAccountDetails.markup
+    }
+
+    return challengeDetailsById?.get(challengeId)?.billing?.markup
+}
+
+/**
  * Resolves the challenge member-payment amount that should be visible in the row.
  *
  * @param item Raw locked or consumed billing-account challenge line item.
  * @param billingAccountDetails Billing account detail payload containing markup when available.
+ * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
  * @returns Member payment amount for the challenge row.
  * @remarks Locked challenge rows store member payments directly. Consumed
- * challenge rows store the final billing-account charge, so the billing markup
- * is removed once to recover the member-payment subtotal.
+ * challenge rows prefer the API-provided member-payment subtotal when present.
+ * Older payloads only expose the final billing-account charge, so the billing
+ * markup is removed once using the challenge's own billing markup.
  */
 function getChallengeMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
-): number {
+    challengeDetailsById: ChallengeDetailsById | undefined,
+): number | undefined {
     if (item.status === 'locked') {
         return item.amount
     }
 
+    if (item.memberPaymentAmount !== undefined) {
+        return item.memberPaymentAmount
+    }
+
+    const challengeMarkup = getLineItemChallengeMarkup(
+        item,
+        billingAccountDetails,
+        challengeDetailsById,
+    )
+
+    if (challengeMarkup === undefined) {
+        return undefined
+    }
+
     return calculateMemberPaymentAmount(
         item.amount,
-        billingAccountDetails.markup,
-    ) ?? item.amount
+        challengeMarkup,
+    )
+}
+
+/**
+ * Resolves a persisted challenge fee from a consumed billing row.
+ *
+ * @param item Raw billing-account line item.
+ * @returns Fee amount derived from the ledger charge and API-provided member
+ * payment subtotal, or `undefined` when the row does not expose both values.
+ * @remarks Completed challenge rows can expose the exact member-payment
+ * subtotal even when markup is hidden from the current caller, so the
+ * difference is the safest fee value for the manager/admin fee column.
+ */
+function getConsumedChallengeFeeAmount(
+    item: BillingAccountLineItem,
+): number | undefined {
+    if (
+        item.externalType !== 'CHALLENGE'
+        || item.status !== 'consumed'
+        || item.memberPaymentAmount === undefined
+    ) {
+        return undefined
+    }
+
+    const feeAmount = Number((item.amount - item.memberPaymentAmount).toFixed(2))
+
+    return feeAmount >= 0
+        ? feeAmount
+        : undefined
+}
+
+/**
+ * Resolves the row challenge fee amount for callers allowed to see markup.
+ *
+ * @param item Raw locked or consumed billing-account line item.
+ * @param displayAmount Member-payment amount selected for display.
+ * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
+ * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
+ * @returns Persisted consumed challenge fee, calculated markup fee, or
+ * `undefined` when the fee cannot be derived.
+ * @remarks Consumed challenge rows with an explicit member subtotal do not
+ * need challenge markup hydration to show the correct fee.
+ */
+function getLineItemChallengeFeeAmount(
+    item: BillingAccountLineItem,
+    displayAmount: number | undefined,
+    billingAccountDetails: BillingAccountDetails,
+    challengeDetailsById: ChallengeDetailsById | undefined,
+): number | undefined {
+    const consumedChallengeFeeAmount = getConsumedChallengeFeeAmount(item)
+
+    if (consumedChallengeFeeAmount !== undefined) {
+        return consumedChallengeFeeAmount
+    }
+
+    const challengeMarkup = item.externalType === 'CHALLENGE'
+        ? getLineItemChallengeMarkup(item, billingAccountDetails, challengeDetailsById)
+        : billingAccountDetails.markup
+
+    return calculatePaymentChallengeFee(displayAmount, challengeMarkup)
 }
 
 /**
@@ -273,9 +427,10 @@ function getEngagementMemberPaymentAmount(
 function getLineItemMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
+    challengeDetailsById: ChallengeDetailsById | undefined,
 ): number | undefined {
     return item.externalType === 'CHALLENGE'
-        ? getChallengeMemberPaymentAmount(item, billingAccountDetails)
+        ? getChallengeMemberPaymentAmount(item, billingAccountDetails, challengeDetailsById)
         : getEngagementMemberPaymentAmount(item, billingAccountDetails)
 }
 
@@ -284,6 +439,7 @@ function getLineItemMemberPaymentAmount(
  *
  * @param item Raw locked or consumed billing-account line item.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
+ * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
  * @param showChallengeFee Whether the caller can see billing challenge fees.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
@@ -292,14 +448,21 @@ function getLineItemMemberPaymentAmount(
 function getDisplayLineItem(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
+    challengeDetailsById: ChallengeDetailsById | undefined,
     showChallengeFee: boolean,
 ): BillingAccountModalLineItem {
     const displayAmount = getLineItemMemberPaymentAmount(
         item,
         billingAccountDetails,
+        challengeDetailsById,
     )
     const challengeFeeAmount = showChallengeFee
-        ? calculatePaymentChallengeFee(displayAmount, billingAccountDetails.markup)
+        ? getLineItemChallengeFeeAmount(
+            item,
+            displayAmount,
+            billingAccountDetails,
+            challengeDetailsById,
+        )
         : undefined
 
     return {
@@ -379,15 +542,42 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
     const [sortBy, setSortBy] = useState<SortField>('date')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
     const showChallengeFeeColumn = !props.showMemberPaymentsRemaining
+    const rawLineItems = useMemo<BillingAccountLineItem[]>(
+        () => combineBillingAccountLineItems(props.billingAccountDetails),
+        [props.billingAccountDetails],
+    )
+    const challengeLineItemIds = useMemo(
+        () => getChallengeLineItemIds(rawLineItems),
+        [rawLineItems],
+    )
+    const challengeDetailsResult = useSWR<ChallengeDetailsById>(
+        challengeLineItemIds.length > 0
+            ? ['work/billing-account-line-item-challenges', challengeLineItemIds.join(',')]
+            : undefined,
+        () => fetchChallengeDetailsById(challengeLineItemIds),
+        {
+            errorRetryCount: 2,
+            shouldRetryOnError: true,
+        },
+    )
+    const challengeDetailsById = challengeLineItemIds.length > 0
+        ? challengeDetailsResult.data
+        : EMPTY_CHALLENGE_DETAILS_BY_ID
 
     const lineItems = useMemo<BillingAccountModalLineItem[]>(
-        () => combineBillingAccountLineItems(props.billingAccountDetails)
+        () => rawLineItems
             .map(item => getDisplayLineItem(
                 item,
                 props.billingAccountDetails,
+                challengeDetailsById,
                 showChallengeFeeColumn,
             )),
-        [props.billingAccountDetails, showChallengeFeeColumn],
+        [
+            challengeDetailsById,
+            props.billingAccountDetails,
+            rawLineItems,
+            showChallengeFeeColumn,
+        ],
     )
     const normalizedProjectId = useMemo(
         () => normalizeRouteId(props.projectId),

@@ -2,10 +2,13 @@
 import {
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import { useFetchEngagements } from '../../hooks/useFetchEngagements'
+import type { Challenge } from '../../models'
 import type { BillingAccountDetails } from '../../services'
+import { fetchChallenge } from '../../services/challenges.service'
 
 import BillingAccountLineItemsModal from './BillingAccountLineItemsModal'
 
@@ -15,6 +18,10 @@ jest.mock('../../../config/routes.config', () => ({
 
 jest.mock('../../hooks/useFetchEngagements', () => ({
     useFetchEngagements: jest.fn(),
+}))
+
+jest.mock('../../services/challenges.service', () => ({
+    fetchChallenge: jest.fn(),
 }))
 
 jest.mock('~/config', () => ({
@@ -56,6 +63,8 @@ jest.mock('~/libs/ui', () => ({
 })
 
 const mockedUseFetchEngagements = useFetchEngagements as jest.MockedFunction<typeof useFetchEngagements>
+const mockedFetchChallenge = fetchChallenge as jest.MockedFunction<typeof fetchChallenge>
+let challengeMarkupById: Map<string, number>
 
 const baseBillingAccountDetails: BillingAccountDetails = {
     budget: 1000,
@@ -85,6 +94,16 @@ function renderModal(
 
 describe('BillingAccountLineItemsModal', () => {
     beforeEach(() => {
+        challengeMarkupById = new Map<string, number>()
+        mockedFetchChallenge.mockReset()
+        mockedFetchChallenge.mockImplementation(async (challengeId: string): Promise<Challenge> => ({
+            billing: {
+                markup: challengeMarkupById.get(challengeId) ?? 0.33,
+            },
+            id: challengeId,
+            name: `Challenge ${challengeId}`,
+            status: 'ACTIVE',
+        }))
         mockedUseFetchEngagements.mockReset()
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [],
@@ -125,7 +144,7 @@ describe('BillingAccountLineItemsModal', () => {
             .toBe('/work/challenges/challenge%20%2F%20100')
     })
 
-    it('shows challenge member payments without removing markup from the stored subtotal', () => {
+    it('shows challenge member payments without removing markup from the stored subtotal', async () => {
         renderModal({
             ...baseBillingAccountDetails,
             lockedAmounts: [
@@ -146,17 +165,19 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeTruthy()
         expect(screen.getByText('Challenge Fee'))
             .toBeTruthy()
-        expect(screen.getAllByText('$28.60'))
-            .toHaveLength(2)
-        expect(screen.getByText('$9.44'))
-            .toBeTruthy()
+        await waitFor(() => {
+            expect(screen.getAllByText('$28.60'))
+                .toHaveLength(2)
+            expect(screen.getByText('$9.44'))
+                .toBeTruthy()
+        })
         expect(screen.queryByText('$21.50'))
             .toBeNull()
         expect(screen.queryByText('$7.10'))
             .toBeNull()
     })
 
-    it('removes markup once from consumed challenge charges before showing member payments', () => {
+    it('removes challenge markup once from consumed challenge charges before showing member payments', async () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedAmounts: [
@@ -173,11 +194,75 @@ describe('BillingAccountLineItemsModal', () => {
             totalBudgetRemaining: 966.75,
         })
 
-        expect(screen.getByText('$25.00'))
-            .toBeTruthy()
-        expect(screen.getByText('$8.25'))
-            .toBeTruthy()
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$8.25'))
+                .toBeTruthy()
+        })
         expect(screen.queryByText('$10.97'))
+            .toBeNull()
+    })
+
+    it('uses consumed challenge member-payment subtotals when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
+            totalBudgetRemaining: 966.75,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$8.25'))
+                .toBeTruthy()
+        })
+        expect(screen.getAllByText('$33.25'))
+            .toHaveLength(1)
+        expect(screen.queryByText('$10.97'))
+            .toBeNull()
+    })
+
+    it('uses zero challenge markup instead of billing-account default markup for consumed charges', async () => {
+        challengeMarkupById.set('0f4c801c-4d4d-4ac2-8e2e-60aeb16379d2', 0)
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '9',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '0f4c801c-4d4d-4ac2-8e2e-60aeb16379d2',
+                    externalName: 'Member payment retest 1',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            consumedBudget: 9,
+            markup: 0.33,
+            totalBudgetRemaining: 991,
+        })
+
+        await waitFor(() => {
+            expect(screen.getAllByText('$9.00'))
+                .toHaveLength(2)
+            expect(screen.getAllByText('$0.00'))
+                .toHaveLength(2)
+        })
+        expect(screen.queryByText('$6.77'))
+            .toBeNull()
+        expect(screen.queryByText('$2.23'))
             .toBeNull()
     })
 
@@ -450,7 +535,7 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
-    it('shows consumed challenge member payments without challenge fees for copilots', () => {
+    it('shows consumed challenge member payments without challenge fees for copilots', async () => {
         renderModal({
             ...baseBillingAccountDetails,
             consumedAmounts: [
@@ -468,8 +553,40 @@ describe('BillingAccountLineItemsModal', () => {
             totalBudgetRemaining: 966.75,
         }, true)
 
-        expect(screen.getByText('$25.00'))
-            .toBeTruthy()
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$33.25'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
+            .toBeNull()
+    })
+
+    it('uses consumed challenge member-payment subtotals for copilots when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 966.75,
+        }, true)
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+        })
         expect(screen.queryByText('$33.25'))
             .toBeNull()
         expect(screen.queryByText('Challenge Fee'))

@@ -1,13 +1,15 @@
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { bind, debounce, isEmpty, pick } from 'lodash'
+import { mutate } from 'swr'
 import { toast } from 'react-toastify'
 import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
-    InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
-import { extractSkillsFromText, InputSkillSelector } from '~/libs/shared'
+    InputRadio, InputSelect, InputSelectReact, InputText } from '~/libs/ui'
+import { extractSkillsFromText, FieldHtmlEditor, InputSkillSelector } from '~/libs/shared'
 
 import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
@@ -35,12 +37,13 @@ const editableFields = [
     'tzRestrictions',
     'numHoursPerWeek',
 ]
-
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate = useNavigate()
     const routeParams: Params<string> = useParams()
+    const requestUrl = routeParams.requestId
+        ? `${EnvironmentConfig.API.V6}/projects/copilots/requests/${routeParams.requestId}` : undefined
     const [params] = useSearchParams()
 
     const [formValues, setFormValues] = useState<any>({})
@@ -194,6 +197,18 @@ const CopilotRequestForm: FC<{}> = () => {
         setIsFormChanged(true)
     }
 
+    const overviewInitialized = useRef<boolean>(false)
+    function handleOverviewChange(content: string): void {
+        overviewInitialized.current = true
+        setFormValues((prev: any) => ({ ...prev, overview: content }))
+        setFormErrors((prev: any) => {
+            const updated = { ...prev }
+            delete updated.overview
+            return updated
+        })
+        setIsFormChanged(true)
+    }
+
     function handleSkillsChange(ev: any): void {
         const options = (ev.target.value as unknown) as InputMultiselectOption[]
         const updatedSkills = options.map(v => ({
@@ -265,8 +280,15 @@ const CopilotRequestForm: FC<{}> = () => {
     }
 
     // Check if overview has enough content for AI processing
+    function stripHtml(html: string): string {
+        const doc = new DOMParser()
+            .parseFromString(html, 'text/html')
+        return doc.body.textContent || ''
+    }
+
     const canGenerateSkills = useMemo(() => {
-        const overview = formValues.overview?.trim() || ''
+        const overview = stripHtml(formValues.overview || '')
+            .trim()
         return overview.length >= MIN_OVERVIEW_LENGTH && !isGeneratingSkills
     }, [formValues.overview, isGeneratingSkills])
 
@@ -289,7 +311,8 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: !formValues.overview || formValues.overview.trim().length < 10,
+                condition: stripHtml(formValues.overview || '')
+                    .trim().length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -365,6 +388,10 @@ const CopilotRequestForm: FC<{}> = () => {
                         copilotRequestData ? 'Copilot request updated successfully'
                             : 'Copilot request sent successfully',
                     )
+                    if (requestUrl) {
+                        mutate(requestUrl)
+                    }
+
                     setFormValues({
                         complexity: '',
                         numHoursPerWeek: '',
@@ -381,6 +408,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setIsFormChanged(false)
                     setFormErrors({})
                     setPaymentType('')
+                    overviewInitialized.current = false
                     // Added a small timeout for the toast to be visible properly to the users
                     setTimeout(() => {
                         navigate(`${rootRoute}/requests`)
@@ -404,7 +432,13 @@ const CopilotRequestForm: FC<{}> = () => {
         handleProjectSearch(inputValue)
             .then(callback)
     }, 300), [])
-
+    const editorKey = useMemo(
+        () => (copilotRequestData?.id ?? 'new'),
+        [copilotRequestData?.id],
+    )
+    useEffect(() => {
+        overviewInitialized.current = false
+    }, [copilotRequestData])
     return (
         <div className={classNames('d-flex flex-column justify-content-center align-items-center', styles.container)}>
             <div className={styles.form}>
@@ -529,13 +563,14 @@ const CopilotRequestForm: FC<{}> = () => {
                     <p className={styles.formRow}>
                         Please provide an overview of the project the copilot will undertake
                     </p>
-                    <InputTextarea
+                    <FieldHtmlEditor
+                        key={editorKey}
                         label='Project overview'
                         name='overview'
                         placeholder='A minimum of three sentences explaining the
                          type of work and project which is to be undertaken.'
-                        value={formValues.overview}
-                        onChange={bind(handleFormValueChange, this, 'overview')}
+                        value={overviewInitialized.current ? undefined : formValues.overview}
+                        onChange={handleOverviewChange}
                         error={formErrors.overview}
                         dirty
                     />
@@ -555,7 +590,8 @@ const CopilotRequestForm: FC<{}> = () => {
                         </div>
                         {!canGenerateSkills
                             && formValues.overview
-                            && formValues.overview.trim().length < MIN_OVERVIEW_LENGTH
+                            && stripHtml(formValues.overview)
+                                .trim().length < MIN_OVERVIEW_LENGTH
                             && (
                                 <p className={styles.helperText}>
                                     Add at least

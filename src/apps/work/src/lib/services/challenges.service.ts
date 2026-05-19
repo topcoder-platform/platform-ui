@@ -84,6 +84,28 @@ function normalizeStatusValue(status: string | string[] | undefined): string | u
     return status.toUpperCase()
 }
 
+function normalizeApprovalStatusValue(
+    approvalStatus: string | string[] | undefined,
+): string | undefined {
+    if (!approvalStatus) {
+        return undefined
+    }
+
+    if (Array.isArray(approvalStatus)) {
+        const normalized = approvalStatus
+            .map(item => item.toUpperCase())
+            .filter(Boolean)
+
+        if (!normalized.length) {
+            return undefined
+        }
+
+        return normalized.join(',')
+    }
+
+    return approvalStatus.toUpperCase()
+}
+
 function asIsoDateString(value: unknown): string | undefined {
     if (!value) {
         return undefined
@@ -277,7 +299,9 @@ function buildChallengeQuery(
     const query = new URLSearchParams()
 
     const normalizedStatus = normalizeStatusValue(filters.status)
+    const normalizedApprovalStatus = normalizeApprovalStatusValue(filters.approvalStatus)
     const values: Record<string, string | undefined> = {
+        approvalStatus: normalizedApprovalStatus,
         endDateEnd: asIsoDateString(filters.endDateEnd),
         endDateStart: asIsoDateString(filters.endDateStart),
         memberId: filters.memberId !== undefined
@@ -303,6 +327,10 @@ function buildChallengeQuery(
                 query.set(key, value)
             }
         })
+
+    if (Array.isArray(filters.projectIds) && filters.projectIds.length > 0) {
+        filters.projectIds.forEach(id => query.append('projectIds[]', String(id)))
+    }
 
     return query.toString()
 }

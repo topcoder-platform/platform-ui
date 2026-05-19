@@ -15,6 +15,7 @@ interface Props<T> {
     readonly columns: ReadonlyArray<MobileTableColumn<T>[]>
     readonly data: ReadonlyArray<T>
     className?: string
+    readonly rowClassName?: (data: T) => string | undefined
 }
 
 function getKey(key: (string | number)[]): string {
@@ -33,10 +34,13 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
                         {props.columns.map((itemColumns, indexColumns) => (
                             <tr
                                 key={getKey([indexData, indexColumns])}
-                                className={classNames({
-                                    [styles.isEvenRow]: indexData % 2 === 1,
-                                    [styles.isOddRow]: indexData % 2 === 0,
-                                })}
+                                className={classNames(
+                                    props.rowClassName?.(itemData),
+                                    {
+                                        [styles.isEvenRow]: indexData % 2 === 1,
+                                        [styles.isOddRow]: indexData % 2 === 0,
+                                    },
+                                )}
                             >
                                 {itemColumns.map(
                                     (itemItemColumns, indexItemColumns) => (

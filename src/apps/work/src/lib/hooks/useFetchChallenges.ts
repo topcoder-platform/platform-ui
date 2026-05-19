@@ -19,6 +19,16 @@ import {
     FetchChallengesResponse,
 } from '../services'
 
+function toFilterKeyValue(value: string | string[] | undefined): string {
+    if (!value) {
+        return ''
+    }
+
+    return Array.isArray(value)
+        ? value.join(',')
+        : value
+}
+
 export interface UseFetchChallengesParams extends ChallengeFilters {
     page?: number
     perPage?: number
@@ -37,6 +47,7 @@ export interface UseFetchChallengesResult {
 
 export function useFetchChallenges(
     {
+        approvalStatus,
         appendResults = false,
         endDateEnd,
         enabled = true,
@@ -46,6 +57,7 @@ export function useFetchChallenges(
         page = 1,
         perPage = PAGE_SIZE,
         projectId,
+        projectIds,
         sortBy = 'startDate',
         sortOrder = 'desc',
         startDateEnd,
@@ -71,11 +83,13 @@ export function useFetchChallenges(
     const requestParams = useMemo(
         () => ({
             filters: {
+                approvalStatus,
                 endDateEnd,
                 endDateStart,
                 memberId,
                 name,
                 projectId,
+                projectIds,
                 sortBy,
                 sortOrder,
                 startDateEnd,
@@ -89,6 +103,7 @@ export function useFetchChallenges(
             },
         }),
         [
+            approvalStatus,
             endDateEnd,
             endDateStart,
             memberId,
@@ -96,6 +111,7 @@ export function useFetchChallenges(
             page,
             perPage,
             projectId,
+            projectIds,
             sortBy,
             sortOrder,
             startDateEnd,
@@ -107,23 +123,24 @@ export function useFetchChallenges(
 
     const appendKey = useMemo(
         () => [
+            toFilterKeyValue(approvalStatus),
             endDateEnd || '',
             endDateStart || '',
             String(memberId ?? ''),
             name || '',
             String(projectId ?? ''),
+            (projectIds ?? []).join(','),
             sortBy || '',
             sortOrder || '',
             startDateEnd || '',
             startDateStart || '',
-            Array.isArray(status)
-                ? status.join(',')
-                : (status || ''),
+            toFilterKeyValue(status),
             type || '',
             String(perPage),
         ]
             .join('|'),
         [
+            approvalStatus,
             endDateEnd,
             endDateStart,
             memberId,

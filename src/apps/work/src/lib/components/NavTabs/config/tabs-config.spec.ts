@@ -30,4 +30,23 @@ describe('getTabsConfig', () => {
             .not
             .toContain('engagements')
     })
+
+    it('shows the budget approvals tab for admin users', () => {
+        expect(getTabsConfig(['administrator'], false)
+            .map(tab => tab.id))
+            .toContain('budget-approvals')
+    })
+
+    it('shows the budget approvals tab for manager users', () => {
+        expect(getTabsConfig(['project manager'], false)
+            .map(tab => tab.id))
+            .toContain('budget-approvals')
+    })
+
+    it('keeps the budget approvals tab hidden for copilot-only users', () => {
+        expect(getTabsConfig(['copilot'], false)
+            .map(tab => tab.id))
+            .not
+            .toContain('budget-approvals')
+    })
 })
