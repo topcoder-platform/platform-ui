@@ -360,10 +360,16 @@ export async function exportSearchResults(
     const filteredFilters: Record<string, string | string[]> = {}
 
     for (const key in filters) {
-        if (['categories'].includes(key)) {
+        if (['categories', 'winnerIds'].includes(key)) {
             filteredFilters[key] = filters[key]
         } else if (filters[key].length > 0 && key !== 'pageSize') {
-            filteredFilters[key] = filters[key][0]
+            if (key === 'status' && filters[key].length > 1) {
+                filteredFilters[key] = filters[key]
+            } else if (key === 'status') {
+                filteredFilters[key] = filters[key][0]
+            } else {
+                filteredFilters[key] = filters[key][0]
+            }
         }
     }
 
@@ -402,10 +408,16 @@ export async function fetchWinnings(
     const filteredFilters: Record<string, string | string[]> = {}
 
     for (const key in filters) {
-        if (['categories'].includes(key)) {
+        if (['categories', 'winnerIds'].includes(key)) {
             filteredFilters[key] = filters[key]
         } else if (filters[key].length > 0 && key !== 'pageSize') {
-            filteredFilters[key] = filters[key][0]
+            if (key === 'status' && filters[key].length > 1) {
+                filteredFilters[key] = filters[key]
+            } else if (key === 'status') {
+                filteredFilters[key] = filters[key][0]
+            } else {
+                filteredFilters[key] = filters[key][0]
+            }
         }
     }
 
