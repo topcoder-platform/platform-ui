@@ -25,6 +25,7 @@ import {
     formatOptionalDate,
     formatOptionalText,
     renderOptionalLinkedText,
+    stripHtml,
 } from './payment-view.utils'
 
 import styles from './PaymentView.module.scss'
@@ -331,9 +332,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             <span className={styles.label}>Task Description</span>
                                             <p className={styles.remarksValue}>
                                                 {paymentDetails?.taskDetails?.description
-                                                    ? paymentDetails.taskDetails.description
-                                                        .replace(/<[^>]*>/g, '')
-                                                        .substring(0, 500)
+                                                    ? stripHtml(paymentDetails.taskDetails.description)
                                                     : '-'}
                                             </p>
                                         </div>
