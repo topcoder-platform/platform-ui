@@ -121,6 +121,11 @@ export const transformAssignments = (
                 / normalizedReviewProgressValues.length,
             )
             : undefined
+        const numOfSubmissions = base.numOfSubmissions ?? 0
+        const hasIterativeReviewIssue = base.challengeTypeName?.trim()
+            .toLowerCase() === 'topgear task'
+            && numOfSubmissions > 0
+            && base.isIterativeReviewPhaseOpen === false
 
         const currentIndex = index
         index += 1
@@ -142,9 +147,11 @@ export const transformAssignments = (
                     .format(TABLE_DATE_FORMAT)
                 : undefined,
             hasAIReview: base.hasAIReview,
+            hasIterativeReviewIssue,
             id: base.challengeId,
             index: currentIndex,
             name: base.challengeName,
+            numOfSubmissions,
             resourceRoles,
             reviewProgress: aggregatedReviewProgress,
             status: base.status,

@@ -24,6 +24,8 @@ export interface BackendMyReviewAssignment {
     timeLeftInCurrentPhase: number | null
     resourceRoleName: string
     reviewProgress: number | null
+    numOfSubmissions?: number | null
+    isIterativeReviewPhaseOpen?: boolean | null
     winners?: BackendMyReviewAssignmentWinner[] | null
     status?: string
 }
