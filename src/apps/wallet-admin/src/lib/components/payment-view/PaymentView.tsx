@@ -330,11 +330,14 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Task Description</span>
                                             <p className={styles.remarksValue}>
-                                                {props.payment.description
-                                                    ? props.payment.description.substring(0, 500)
+                                                {paymentDetails?.taskDetails?.description
+                                                    ? paymentDetails.taskDetails.description
+                                                        .replace(/<[^>]*>/g, '')
+                                                        .substring(0, 500)
                                                     : '-'}
                                             </p>
                                         </div>
+
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Project Name</span>
                                             {buildWorkManagerProjectUrl(paymentDetails?.taskDetails) && paymentDetails?.taskDetails?.projectName
