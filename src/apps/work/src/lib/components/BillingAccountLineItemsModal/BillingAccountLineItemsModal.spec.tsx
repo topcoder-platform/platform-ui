@@ -204,6 +204,37 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
+    it('uses consumed challenge member-payment subtotals when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
+            totalBudgetRemaining: 966.75,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$8.25'))
+                .toBeTruthy()
+        })
+        expect(screen.getAllByText('$33.25'))
+            .toHaveLength(1)
+        expect(screen.queryByText('$10.97'))
+            .toBeNull()
+    })
+
     it('uses zero challenge markup instead of billing-account default markup for consumed charges', async () => {
         challengeMarkupById.set('0f4c801c-4d4d-4ac2-8e2e-60aeb16379d2', 0)
 
@@ -518,6 +549,36 @@ describe('BillingAccountLineItemsModal', () => {
             ],
             consumedBudget: 33.25,
             markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 966.75,
+        }, true)
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$33.25'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
+            .toBeNull()
+    })
+
+    it('uses consumed challenge member-payment subtotals for copilots when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
             memberPaymentsRemaining: 200,
             totalBudgetRemaining: 966.75,
         }, true)
