@@ -331,7 +331,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         dateFormat='MM/dd/yyyy'
                         disabled={isSubmitting}
                         onChange={date => {
-                            setFromDate(date)
+                            setFromDate(date ?? undefined)
                             setErrors(previous => ({
                                 ...previous,
                                 fromDate: undefined,
@@ -359,7 +359,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         disabled={isSubmitting}
                         minDate={fromDate || undefined}
                         onChange={date => {
-                            setToDate(date)
+                            setToDate(date ?? undefined)
                             setErrors(previous => ({
                                 ...previous,
                                 toDate: undefined,
