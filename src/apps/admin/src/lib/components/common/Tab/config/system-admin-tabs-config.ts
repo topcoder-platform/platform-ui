@@ -3,6 +3,9 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import { isAdministrator } from '~/apps/admin/src/lib/utils/access'
 import {
+    aiReviewTemplatesRouteId,
+    aiReviewWorkflowsRouteId,
+    aiRouteId,
     billingAccountRouteId,
     defaultReviewersRouteId,
     gamificationAdminRouteId,
@@ -82,6 +85,20 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         id: paymentsRouteId,
         title: 'Payments',
+    },
+    {
+        children: [
+            {
+                id: `${aiRouteId}/${aiReviewWorkflowsRouteId}`,
+                title: 'AI Review Workflows',
+            },
+            {
+                id: `${aiRouteId}/${aiReviewTemplatesRouteId}`,
+                title: 'AI Review Templates',
+            },
+        ],
+        id: aiRouteId,
+        title: 'AI',
     },
 ]
 

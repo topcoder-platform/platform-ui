@@ -7,6 +7,9 @@ import {
 } from '~/libs/core'
 
 import {
+    aiReviewTemplatesRouteId,
+    aiReviewWorkflowsRouteId,
+    aiRouteId,
     billingAccountRouteId,
     defaultReviewersRouteId,
     gamificationAdminRouteId,
@@ -171,6 +174,16 @@ const TermsUsersPage: LazyLoadedComponent = lazyLoad(
 const PaymentsPage: LazyLoadedComponent = lazyLoad(
     () => import('./payments/PaymentsPage'),
     'PaymentsPage',
+)
+
+const Ai: LazyLoadedComponent = lazyLoad(() => import('./ai/Ai'))
+const AiReviewWorkflowsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./ai/review-workflows/AiReviewWorkflowsPage'),
+    'AiReviewWorkflowsPage',
+)
+const AiReviewTemplatesPage: LazyLoadedComponent = lazyLoad(
+    () => import('./ai/review-templates/AiReviewTemplatesPage'),
+    'AiReviewTemplatesPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -417,6 +430,25 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 id: paymentsRouteId,
                 rolesRequired: administratorOnlyRoles,
                 route: paymentsRouteId,
+            },
+            // AI Module
+            {
+                children: [
+                    {
+                        element: <AiReviewWorkflowsPage />,
+                        id: 'ai-review-workflows-page',
+                        route: aiReviewWorkflowsRouteId,
+                    },
+                    {
+                        element: <AiReviewTemplatesPage />,
+                        id: 'ai-review-templates-page',
+                        route: aiReviewTemplatesRouteId,
+                    },
+                ],
+                element: <Ai />,
+                id: aiRouteId,
+                rolesRequired: administratorOnlyRoles,
+                route: aiRouteId,
             },
         ],
         domain: AppSubdomain.admin,
