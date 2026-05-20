@@ -41,6 +41,10 @@ interface SubmissionTestProgressCandidate extends SubmissionTestProgressDisplay 
     updatedAt: number
 }
 
+const MARATHON_MATCH_TYPE_IDS = new Set([
+    '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+])
+
 function getPhaseStartDate(phase: ChallengePhase): string {
     const phaseStartDate = phase.actualStartDate || phase.scheduledStartDate
 
@@ -352,14 +356,20 @@ function normalizeChallengeTypeToken(value: unknown): string {
 /**
  * Returns whether the challenge is a Marathon Match.
  * @param challenge Challenge payload from the challenge API.
- * @returns `true` when the type or tags identify Marathon Match.
+ * @returns `true` when the type, type ID, or tags identify Marathon Match.
  * Used by the submissions view to expose marathon-only runner log actions.
  */
-export function isMarathonMatchChallenge(challenge: Pick<Challenge, 'tags' | 'type'>): boolean {
+export function isMarathonMatchChallenge(
+    challenge: Pick<Challenge, 'tags' | 'type' | 'typeId'>,
+): boolean {
     const typeName = getChallengeTypeName(challenge.type)
     const typeAbbreviation = typeof challenge.type === 'object'
         ? challenge.type?.abbreviation
         : undefined
+    const typeId = typeof challenge.typeId === 'string'
+        ? challenge.typeId.trim()
+            .toLowerCase()
+        : ''
     const typeTokens = [
         typeName,
         typeAbbreviation,
@@ -370,6 +380,7 @@ export function isMarathonMatchChallenge(challenge: Pick<Challenge, 'tags' | 'ty
 
     return typeTokens.includes('marathonmatch')
         || typeTokens.includes('mm')
+        || MARATHON_MATCH_TYPE_IDS.has(typeId)
 }
 
 export function getStatusText(status?: string, selfService: boolean = false): string {

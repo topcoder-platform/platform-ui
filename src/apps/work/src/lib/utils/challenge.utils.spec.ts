@@ -1,6 +1,7 @@
 import {
     getSubmissionProvisionalScore,
     getSubmissionSystemScore,
+    isMarathonMatchChallenge,
 } from './challenge.utils'
 
 jest.mock('../constants', () => ({
@@ -13,6 +14,26 @@ jest.mock('../constants', () => ({
 }))
 
 describe('challenge utils', () => {
+    describe('isMarathonMatchChallenge', () => {
+        it('recognizes Marathon Match from the canonical challenge type id', () => {
+            expect(isMarathonMatchChallenge({
+                typeId: '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+            }))
+                .toBe(true)
+        })
+
+        it('returns false when no Marathon Match identifiers are present', () => {
+            expect(isMarathonMatchChallenge({
+                tags: ['development'],
+                type: {
+                    name: 'Code',
+                },
+                typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+            }))
+                .toBe(false)
+        })
+    })
+
     describe('getSubmissionProvisionalScore', () => {
         it('returns only provisional marathon scores', () => {
             expect(getSubmissionProvisionalScore({

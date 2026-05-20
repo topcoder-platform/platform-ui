@@ -14,6 +14,7 @@ interface ChallengeHistoryCardProps {
 }
 
 const ChallengeHistoryCard: FC<ChallengeHistoryCardProps> = props => {
+    const challengeTitle = props.challenge.challengeName || `Challenge ${props.challenge.challengeId}`
     const rating = props.challenge.newRating ?? props.challenge.rating
     const placement = props.challenge.placement
 
@@ -27,7 +28,7 @@ const ChallengeHistoryCard: FC<ChallengeHistoryCardProps> = props => {
             <div className={styles.contentWrap}>
                 <div className={styles.title}>
                     <span className='body-small-bold'>
-                        {props.challenge.challengeName}
+                        {challengeTitle}
                     </span>
                 </div>
                 <div className={styles.statsWrap}>
