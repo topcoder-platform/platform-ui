@@ -12,14 +12,7 @@ import {
     fetchWinningPaymentDetails,
     getMemberHandle,
 } from '../../services/wallet'
-import PaymentAgreementBanner from './PaymentAgreementBanner'
-import PaymentDetailsSummaryRow from './PaymentDetailsSummaryRow'
-import PaymentDetailsTabs, { PaymentDetailsTabOption } from './PaymentDetailsTabs'
-import PaymentAuditHistoryTab from './tabs/PaymentAuditHistoryTab'
-import PaymentEngagementDetailsTab from './tabs/PaymentEngagementDetailsTab'
-import PaymentGeneralInfoTab from './tabs/PaymentGeneralInfoTab'
-import PaymentTaskDetailsTab from './tabs/PaymentTaskDetailsTab'
-import PaymentWorkLogTab from './tabs/PaymentWorkLogTab'
+
 import {
     buildWorkAppChallengeUrl,
     buildWorkManagerAssignmentUrl,
@@ -30,7 +23,14 @@ import {
     resolvePaymentApproverHandle,
     resolveTaskCreatorHandle,
 } from './payment-view.utils'
-
+import PaymentAgreementBanner from './PaymentAgreementBanner'
+import PaymentAuditHistoryTab from './tabs/PaymentAuditHistoryTab'
+import PaymentDetailsSummaryRow from './PaymentDetailsSummaryRow'
+import PaymentDetailsTabs, { PaymentDetailsTabOption } from './PaymentDetailsTabs'
+import PaymentEngagementDetailsTab from './tabs/PaymentEngagementDetailsTab'
+import PaymentGeneralInfoTab from './tabs/PaymentGeneralInfoTab'
+import PaymentTaskDetailsTab from './tabs/PaymentTaskDetailsTab'
+import PaymentWorkLogTab from './tabs/PaymentWorkLogTab'
 import styles from './PaymentView.module.scss'
 
 interface PaymentViewProps {

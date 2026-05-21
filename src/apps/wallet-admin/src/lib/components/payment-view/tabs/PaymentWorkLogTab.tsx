@@ -2,7 +2,6 @@ import { FC } from 'react'
 
 import { PaymentWorkLog } from '../../../models/WinningDetail'
 import { formatOptionalText, renderOptionalLinkedText } from '../payment-view.utils'
-
 import styles from '../PaymentView.module.scss'
 
 interface PaymentWorkLogTabProps {

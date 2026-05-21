@@ -103,10 +103,10 @@ describe('PaymentView', () => {
                 billingStartDate: '2026-02-16T00:00:00.000Z',
                 durationMonths: 12,
                 engagementId: 'engagement-456',
+                paymentApproverHandle: 'TonyJ',
                 paymentCycle: 'weekly',
                 projectId: 'project-789',
                 projectName: 'Test Project Engagement BA',
-                paymentApproverHandle: 'TonyJ',
                 ratePerHour: '50',
                 standardHoursPerDay: 8,
             },
@@ -241,21 +241,27 @@ describe('PaymentView', () => {
 
         const taskDetailsPanel = screen.getByRole('tabpanel')
 
-        expect(within(taskDetailsPanel).getByText('Task Creator'))
+        expect(within(taskDetailsPanel)
+            .getByText('Task Creator'))
             .toBeTruthy()
-        expect(within(taskDetailsPanel).getByText('wendell'))
+        expect(within(taskDetailsPanel)
+            .getByText('wendell'))
             .toBeTruthy()
-        expect(within(taskDetailsPanel).getByText('Project Name'))
+        expect(within(taskDetailsPanel)
+            .getByText('Project Name'))
             .toBeTruthy()
-        expect(within(taskDetailsPanel).getByText('Task Description'))
+        expect(within(taskDetailsPanel)
+            .getByText('Task Description'))
             .toBeTruthy()
-        expect(within(taskDetailsPanel).getByText(
-            'Deliver clean, production-ready HTML, CSS, and JavaScript.',
-        ))
+        expect(within(taskDetailsPanel)
+            .getByText(
+                'Deliver clean, production-ready HTML, CSS, and JavaScript.',
+            ))
             .toBeTruthy()
-        const projectLink = within(taskDetailsPanel).getByRole('link', {
-            name: 'General Electric Front End Task',
-        })
+        const projectLink = within(taskDetailsPanel)
+            .getByRole('link', {
+                name: 'General Electric Front End Task',
+            })
         expect(projectLink.getAttribute('href'))
             .toBe('https://challenges.example.com/projects/42')
     })

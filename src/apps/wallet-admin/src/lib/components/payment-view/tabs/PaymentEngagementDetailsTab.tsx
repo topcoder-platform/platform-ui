@@ -8,7 +8,6 @@ import {
     getEngagementHoursPerDay,
     renderOptionalLinkedText,
 } from '../payment-view.utils'
-
 import styles from '../PaymentView.module.scss'
 
 interface PaymentEngagementDetailsTabProps {
@@ -77,7 +76,9 @@ const PaymentEngagementDetailsTab: FC<PaymentEngagementDetailsTabProps> = (
                     <span className={styles.label}>Duration</span>
                     <p className={styles.value}>
                         {props.engagementDetails.durationMonths
-                            ? `${props.engagementDetails.durationMonths} month${props.engagementDetails.durationMonths === 1 ? '' : 's'}`
+                            ? `${props.engagementDetails.durationMonths} month${
+                                props.engagementDetails.durationMonths === 1 ? '' : 's'
+                            }`
                             : '-'}
                     </p>
                 </div>

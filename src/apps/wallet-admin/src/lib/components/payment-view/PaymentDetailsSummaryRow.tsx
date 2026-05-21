@@ -1,8 +1,7 @@
-import classNames from 'classnames'
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { formatCurrencyAmount, formatOptionalText } from './payment-view.utils'
-
 import styles from './PaymentView.module.scss'
 
 interface PaymentDetailsSummaryRowProps {

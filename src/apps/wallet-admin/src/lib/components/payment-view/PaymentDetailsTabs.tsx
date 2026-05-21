@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 import { FC } from 'react'
 import classNames from 'classnames'
 

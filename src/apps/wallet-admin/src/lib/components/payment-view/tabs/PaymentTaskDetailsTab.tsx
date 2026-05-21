@@ -2,7 +2,6 @@ import { FC } from 'react'
 
 import { Winning, WinningPaymentDetails } from '../../../models/WinningDetail'
 import { formatOptionalText, resolveTaskCreatorHandle } from '../payment-view.utils'
-
 import styles from '../PaymentView.module.scss'
 
 interface PaymentTaskDetailsTabProps {

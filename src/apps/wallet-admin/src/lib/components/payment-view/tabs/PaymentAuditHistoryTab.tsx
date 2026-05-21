@@ -2,7 +2,6 @@ import { FC, ReactNode } from 'react'
 
 import { WinningsAudit } from '../../../models/WinningsAudit'
 import { formatAuditTimestamp } from '../payment-view.utils'
-
 import styles from '../PaymentView.module.scss'
 
 interface PaymentAuditHistoryTabProps {

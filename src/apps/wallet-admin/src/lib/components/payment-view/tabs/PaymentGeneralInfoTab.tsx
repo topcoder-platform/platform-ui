@@ -1,7 +1,6 @@
 import { FC } from 'react'
 
 import { Winning } from '../../../models/WinningDetail'
-
 import styles from '../PaymentView.module.scss'
 
 interface PaymentGeneralInfoTabProps {
