@@ -44,6 +44,7 @@ import {
     getSubmissionHistoryKey,
     isAppealsPhase,
     isAppealsResponsePhase,
+    isMarathonMatchChallenge,
 } from '../../utils'
 import type { AggregatedSubmissionReviews } from '../../utils'
 import {
@@ -171,6 +172,10 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
 
     const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
+        [challengeInfo],
+    )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
         [challengeInfo],
     )
 
@@ -426,6 +431,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                     canDisplayScores,
                     canViewScorecard: isChallengeCompleted || isOwnedSubmission,
                     isAppealsTab: false,
+                    useAggregateScore: useAggregateReviewScore,
                 }
 
                 return renderReviewScoreCell(submission, scoreConfig)
@@ -444,6 +450,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
 
                 const result = resolveSubmissionReviewResult(submission, {
                     minimumPassingScoreByScorecardId,
+                    preferAggregateScore: useAggregateReviewScore,
                 })
                 if (result === 'PASS') {
                     return (
@@ -489,6 +496,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                     canDisplayScores,
                     canViewScorecard: isChallengeCompleted || isOwnedSubmission,
                     isAppealsTab: false,
+                    useAggregateScore: useAggregateReviewScore,
                 }
 
                 return renderScoreCell(submission, submission.reviewerIndex, scoreConfig)
@@ -585,6 +593,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         restrictToLatest,
         shouldShowHistoryActions,
         shouldRestrictSubmitterToOwnSubmission,
+        useAggregateReviewScore,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(

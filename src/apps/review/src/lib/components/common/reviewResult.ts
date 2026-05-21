@@ -301,14 +301,46 @@ const extractMinimumPassingScoreFromMetadata = (metadata: unknown): number | und
 }
 /* eslint-enable complexity, no-continue */
 
-const resolveReviewScore = (submission: SubmissionRow): number | undefined => {
+/**
+ * Resolves the review summation aggregate score from a submission row.
+ *
+ * @param submission - Submission row that may include a Review API summation aggregate score.
+ * @returns Finite aggregate score, or undefined when no score is available.
+ */
+const resolveAggregateScore = (submission: SubmissionRow): number | undefined => {
+    const aggregateScore = submission.aggregateScore
+    if (typeof aggregateScore === 'number' && Number.isFinite(aggregateScore)) {
+        return aggregateScore
+    }
+
+    return undefined
+}
+
+/**
+ * Resolves the score used for pass/fail decisions.
+ *
+ * @param submission - Submission row containing review and summation scores.
+ * @param preferAggregateScore - True when summation scores should take priority over scorecard scores.
+ * @returns Finite score for outcome evaluation, or undefined when no score is available.
+ */
+const resolveReviewScore = (
+    submission: SubmissionRow,
+    preferAggregateScore: boolean,
+): number | undefined => {
+    if (preferAggregateScore) {
+        const aggregateScore = resolveAggregateScore(submission)
+        if (aggregateScore !== undefined) {
+            return aggregateScore
+        }
+    }
+
     const aggregatedAverage = submission.aggregated?.averageFinalScore
     if (typeof aggregatedAverage === 'number' && Number.isFinite(aggregatedAverage)) {
         return aggregatedAverage
     }
 
-    const aggregateScore = submission.aggregateScore
-    if (typeof aggregateScore === 'number' && Number.isFinite(aggregateScore)) {
+    const aggregateScore = resolveAggregateScore(submission)
+    if (aggregateScore !== undefined) {
         return aggregateScore
     }
 
@@ -431,6 +463,7 @@ const resolveForcedOutcome = (
 }
 
 export interface ResolveSubmissionReviewResultOptions {
+    preferAggregateScore?: boolean
     minimumPassingScoreByScorecardId?: Map<string, number | undefined>
     defaultMinimumPassingScore?: number
 }
@@ -440,6 +473,7 @@ export function resolveSubmissionReviewResult(
     options: ResolveSubmissionReviewResultOptions = {},
 ): ReviewOutcome | undefined {
     const {
+        preferAggregateScore = false,
         minimumPassingScoreByScorecardId,
         defaultMinimumPassingScore,
     }: ResolveSubmissionReviewResultOptions = options
@@ -461,7 +495,7 @@ export function resolveSubmissionReviewResult(
         defaultMinimumPassingScore,
     )
 
-    const reviewScore = resolveReviewScore(submission)
+    const reviewScore = resolveReviewScore(submission, preferAggregateScore)
 
     const scoreOutcome = resolveScoreOutcome(reviewScore, minimumPassingScore)
 
