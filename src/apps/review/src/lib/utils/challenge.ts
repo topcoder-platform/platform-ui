@@ -276,6 +276,10 @@ function normalizeChallengeKey(value?: string): string {
         .replace(/[^a-z0-9]/g, '')
 }
 
+const MARATHON_MATCH_TYPE_IDS = new Set([
+    '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+])
+
 /**
  * Check whether a challenge should follow First2Finish-specific UI rules.
  *
@@ -289,6 +293,27 @@ export function isFirst2FinishChallenge(
     const trackName = normalizeChallengeKey(challengeInfo?.track?.name)
 
     return typeName === 'first2finish' || trackName === 'first2finish'
+}
+
+/**
+ * Check whether a challenge should follow Marathon Match-specific score display rules.
+ *
+ * @param challengeInfo - Challenge metadata containing type name, abbreviation, and type ID.
+ * @returns True when the type metadata identifies the challenge as Marathon Match.
+ */
+export function isMarathonMatchChallenge(
+    challengeInfo?: Pick<ChallengeInfo, 'type' | 'typeId'>,
+): boolean {
+    const typeName = normalizeChallengeKey(challengeInfo?.type?.name)
+    const typeAbbreviation = normalizeChallengeKey(challengeInfo?.type?.abbreviation)
+    const typeId = (challengeInfo?.typeId ?? '')
+        .trim()
+        .toLowerCase()
+
+    return typeName === 'marathonmatch'
+        || typeAbbreviation === 'mm'
+        || typeAbbreviation === 'marathonmatch'
+        || MARATHON_MATCH_TYPE_IDS.has(typeId)
 }
 
 function normalizeEntityId(value: unknown): string | undefined {

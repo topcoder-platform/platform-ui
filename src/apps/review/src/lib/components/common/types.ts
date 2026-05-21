@@ -84,6 +84,8 @@ export interface ScoreVisibilityConfig {
     canDisplayScores: (submission: SubmissionRow) => boolean
     /** Whether the viewer can navigate to the detailed scorecard for the submission. */
     canViewScorecard: boolean
+    /** True when the table should render the submission aggregate score instead of scorecard links. */
+    useAggregateScore?: boolean
     /** Tooltip message shown when scorecard access is restricted. */
     viewOwnScorecardTooltip?: string
     /** True when the parent table is rendered within the appeals tab. */
