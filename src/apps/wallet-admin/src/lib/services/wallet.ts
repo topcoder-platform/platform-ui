@@ -43,6 +43,7 @@ interface ChallengePaymentSummaryResponse {
 export interface ChallengePaymentSummary {
     budgetApproverHandle?: string
     creatorHandle?: string
+    paymentApproverHandle?: string
 }
 
 interface EngagementAssignmentContextResponse {
@@ -649,8 +650,9 @@ async function resolveUserRefAsMemberHandle(userRef: string): Promise<string> {
  * payments from challenge-api.
  *
  * @param challengeId challenge id stored on the winning `externalId`.
- * @returns `creatorHandle` from `createdBy` and `budgetApproverHandle` from
- * `approvalApprovedBy`, each resolved to a member handle when needed.
+ * @returns `creatorHandle` from `createdBy`, `budgetApproverHandle` and
+ * `paymentApproverHandle` from `approvalApprovedBy`, each resolved to a member
+ * handle when needed.
  * @remarks Challenge payments should not use finance `paymentCreatorHandle`
  * because finance can return a client id instead of the creator handle.
  */
@@ -671,7 +673,7 @@ export async function fetchChallengePaymentSummary(
         const createdBy = normalizeOptionalString(challenge.createdBy)
         const approvalApprovedBy = normalizeOptionalString(challenge.approvalApprovedBy)
 
-        const [creatorHandle, budgetApproverHandle] = await Promise.all([
+        const [creatorHandle, approvalApproverHandle] = await Promise.all([
             createdBy ? resolveUserRefAsMemberHandle(createdBy) : Promise.resolve(undefined),
             approvalApprovedBy
                 ? resolveUserRefAsMemberHandle(approvalApprovedBy)
@@ -679,8 +681,9 @@ export async function fetchChallengePaymentSummary(
         ])
 
         return {
-            budgetApproverHandle,
+            budgetApproverHandle: approvalApproverHandle,
             creatorHandle,
+            paymentApproverHandle: approvalApproverHandle,
         }
     } catch {
         return {}

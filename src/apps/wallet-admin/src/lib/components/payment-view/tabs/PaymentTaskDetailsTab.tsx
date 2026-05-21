@@ -3,12 +3,14 @@ import { FC } from 'react'
 import { Winning, WinningPaymentDetails } from '../../../models/WinningDetail'
 import {
     formatOptionalText,
+    resolvePaymentApproverHandle,
     resolveTaskCreatorHandle,
     stripHtml,
 } from '../payment-view.utils'
 import styles from '../PaymentView.module.scss'
 
 interface PaymentTaskDetailsTabProps {
+    readonly challengePaymentApproverHandle?: string
     readonly errorMessage?: string
     readonly isLoading: boolean
     readonly payment: Winning
@@ -30,6 +32,11 @@ const PaymentTaskDetailsTab: FC<PaymentTaskDetailsTabProps> = (
     const taskDescription = props.paymentDetails?.taskDetails?.taskDescription
         ?? props.payment.description
     const taskCreatorHandle = resolveTaskCreatorHandle(props.paymentDetails)
+    const paymentApproverHandle = resolvePaymentApproverHandle(
+        props.paymentDetails,
+        true,
+        props.challengePaymentApproverHandle,
+    )
 
     return (
         <div className={styles.tabPanelContent}>
@@ -69,7 +76,7 @@ const PaymentTaskDetailsTab: FC<PaymentTaskDetailsTabProps> = (
             <div className={styles.infoItemFull}>
                 <span className={styles.label}>Payment Approver</span>
                 <p className={styles.value}>
-                    {formatOptionalText(props.paymentDetails?.taskDetails?.paymentApproverHandle)}
+                    {formatOptionalText(paymentApproverHandle)}
                 </p>
             </div>
         </div>

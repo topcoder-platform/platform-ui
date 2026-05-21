@@ -219,6 +219,7 @@ describe('fetchChallengePaymentSummary', () => {
             .toEqual({
                 budgetApproverHandle: 'kartik',
                 creatorHandle: 'wendell',
+                paymentApproverHandle: 'kartik',
             })
         expect(mockedGetAsync)
             .toHaveBeenCalledWith(
@@ -244,6 +245,7 @@ describe('fetchChallengePaymentSummary', () => {
             .toEqual({
                 budgetApproverHandle: 'kartik',
                 creatorHandle: 'wendell',
+                paymentApproverHandle: 'kartik',
             })
     })
 })

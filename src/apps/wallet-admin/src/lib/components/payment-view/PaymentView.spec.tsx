@@ -266,6 +266,43 @@ describe('PaymentView', () => {
             .toBe('https://challenges.example.com/projects/42')
     })
 
+    it('falls back to challenge approvalApprovedBy for task payment approver when finance omits it', async () => {
+        const taskPayment: Winning = {
+            ...payment,
+            description: 'Pay period test task - 1st Place',
+            externalId: 'challenge-uuid-1',
+            type: 'task payment',
+        }
+
+        mockedFetchChallengePaymentSummary.mockResolvedValue({
+            budgetApproverHandle: 'mess',
+            paymentApproverHandle: 'mess',
+        })
+
+        mockedFetchWinningPaymentDetails.mockResolvedValue({
+            taskDetails: {
+                paymentCreatorHandle: 'TCConnCopilot',
+                projectId: '42',
+                projectName: 'General Electric Front End Task',
+            },
+        })
+
+        render(<PaymentView payment={taskPayment} />)
+
+        await waitFor(() => {
+            expect(mockedFetchChallengePaymentSummary)
+                .toHaveBeenCalledWith('challenge-uuid-1')
+        })
+
+        const paymentApproverLabel = await screen.findByText('Payment Approver')
+        const summaryPaymentApprover = paymentApproverLabel.closest('[class*="summaryItem"]')
+
+        await waitFor(() => {
+            expect(summaryPaymentApprover?.textContent)
+                .toContain('mess')
+        })
+    })
+
     it('renders contest payment details with challenge creator and budget approver labels', async () => {
         const contestPayment: Winning = {
             ...payment,

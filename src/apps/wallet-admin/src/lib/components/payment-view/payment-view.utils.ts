@@ -372,10 +372,13 @@ export function resolvePaymentApproverHandle(
         engagementDetails?: { paymentApproverHandle?: string }
         taskDetails?: { paymentApproverHandle?: string }
     },
+    challengePaymentApproverHandle?: string,
     isTaskPayment: boolean = false,
+
 ): string | undefined {
     if (isTaskPayment) {
         return paymentDetails?.taskDetails?.paymentApproverHandle
+            ?? challengePaymentApproverHandle
     }
 
     return paymentDetails?.engagementDetails?.paymentApproverHandle
