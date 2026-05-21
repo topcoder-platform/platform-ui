@@ -42,6 +42,7 @@ import {
 import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
+    isMarathonMatchChallenge,
     isReviewPhase,
     isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
@@ -191,6 +192,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
+        [challengeInfo],
+    )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
         [challengeInfo],
     )
 
@@ -470,8 +475,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             canDisplayScores: () => true,
             canViewScorecard: true,
             isAppealsTab: false,
+            useAggregateScore: useAggregateReviewScore,
         }),
-        [],
+        [useAggregateReviewScore],
     )
 
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
@@ -967,6 +973,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
                     const result = resolveSubmissionReviewResult(row, {
                         minimumPassingScoreByScorecardId,
+                        preferAggregateScore: useAggregateReviewScore,
                     })
                     if (result === 'PASS') {
                         return (
@@ -1050,6 +1057,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         openReopenDialog,
         challengeInfo,
         pendingReopen,
+        useAggregateReviewScore,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(

@@ -445,3 +445,9 @@ export function resolvePaymentAgreementSummary(
         paymentDetails?.workLog,
     )
 }
+
+export function stripHtml(html: string, maxLength: number = 500): string {
+    const div = document.createElement('div')
+    div.innerHTML = html
+    return (div.textContent ?? div.innerText ?? '').substring(0, maxLength)
+}

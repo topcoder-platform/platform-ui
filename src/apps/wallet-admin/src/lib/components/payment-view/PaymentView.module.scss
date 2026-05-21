@@ -234,6 +234,29 @@
     }
 }
 
+.externalTransactionGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.externalTransactionCollapsible {
+    border: 1px solid $black-20;
+    border-radius: 4px;
+}
+
+.externalTransactionContent {
+    padding: 12px 16px;
+}
+
+.externalTransactionPre {
+    font-size: 12px;
+    margin: 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
 .footer {
     display: flex;
     justify-content: center;

@@ -51,6 +51,7 @@ import {
     canReprocessTopgearSubmission,
     reprocessTopgearSubmission,
 } from '../../services'
+import { ConfirmModal } from '../ConfirmModal'
 
 import { canDownloadSubmissionFromSubmissionsTab } from './submissionDownloadPermissions'
 import styles from './TabContentSubmissions.module.scss'
@@ -87,6 +88,10 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const [isReprocessingSubmission, setIsReprocessingSubmission] = useState<IsRemovingType>({})
+    const [
+        pendingReprocessSubmissionId,
+        setPendingReprocessSubmissionId,
+    ] = useState<string | undefined>(undefined)
 
     const canShowTopgearReprocess = useMemo(
         () => canReprocessTopgearSubmission(challengeInfo, isAdmin),
@@ -233,11 +238,29 @@ export const TabContentSubmissions: FC<Props> = props => {
                 return
             }
 
+            setPendingReprocessSubmissionId(submissionId)
+        },
+        [],
+    )
+
+    const closeReprocessConfirmation = useCallback((): void => {
+        setPendingReprocessSubmissionId(undefined)
+    }, [])
+
+    const handleConfirmReprocessSubmission = useCallback(
+        async (): Promise<void> => {
+            const submissionId = pendingReprocessSubmissionId
+            if (!submissionId) {
+                closeReprocessConfirmation()
+                return
+            }
+
             const submission = submissionMetaById.get(submissionId)
             if (!submission) {
                 toast.error('Submission could not be found for reprocess', {
                     toastId: `topgear-submission-reprocess-${submissionId}`,
                 })
+                closeReprocessConfirmation()
                 return
             }
 
@@ -254,6 +277,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                 toast.success('Reprocess submission request sent', {
                     toastId: `topgear-submission-reprocess-${submissionId}`,
                 })
+                closeReprocessConfirmation()
             } catch (error) {
                 handleError(error as Error)
             } finally {
@@ -264,6 +288,8 @@ export const TabContentSubmissions: FC<Props> = props => {
             }
         },
         [
+            closeReprocessConfirmation,
+            pendingReprocessSubmissionId,
             submissionInfoById,
             submissionMetaById,
         ],
@@ -601,6 +627,22 @@ export const TabContentSubmissions: FC<Props> = props => {
                 getSubmissionMeta={resolveSubmissionMeta}
                 aiReviewers={props.aiReviewers}
             />
+            <ConfirmModal
+                title='Reprocess Topgear Submission'
+                open={Boolean(pendingReprocessSubmissionId)}
+                onClose={closeReprocessConfirmation}
+                onConfirm={handleConfirmReprocessSubmission}
+                cancelText='No'
+                action='Yes'
+                isLoading={Boolean(
+                    pendingReprocessSubmissionId
+                    && isReprocessingSubmission[pendingReprocessSubmissionId],
+                )}
+            >
+                <div>
+                    Are you sure you want to reprocess this Topgear submission?
+                </div>
+            </ConfirmModal>
         </TableWrapper>
     )
 }

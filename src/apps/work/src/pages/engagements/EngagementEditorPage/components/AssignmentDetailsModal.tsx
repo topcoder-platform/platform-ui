@@ -33,8 +33,10 @@ export interface AssignmentDetailsFormValue {
     durationMonths: string
     memberHandle: string
     otherRemarks?: string
+    paymentCycle: string
     ratePerHour: string
     startDate: string
+    standardHoursPerDay: string
     standardHoursPerWeek: string
 }
 
@@ -48,9 +50,10 @@ interface AssignmentDetailsModalProps {
 
 interface ValidationErrors {
     durationMonths?: string
+    paymentCycle?: string
     ratePerHour?: string
     startDate?: string
-    standardHoursPerWeek?: string
+    standardHoursPerDay?: string
 }
 
 export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
@@ -59,12 +62,13 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
     const [durationMonths, setDurationMonths] = useState<string>(props.initialValue?.durationMonths || '')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [otherRemarks, setOtherRemarks] = useState<string>(props.initialValue?.otherRemarks || '')
+    const [paymentCycle, setPaymentCycle] = useState<string>(props.initialValue?.paymentCycle || 'WEEKLY')
     const [ratePerHour, setRatePerHour] = useState<string>(props.initialValue?.ratePerHour || '')
     const [startDate, setStartDate] = useState<Date | undefined>(
         deserializeTentativeAssignmentDate(props.initialValue?.startDate),
     )
-    const [standardHoursPerWeek, setStandardHoursPerWeek] = useState<string>(
-        props.initialValue?.standardHoursPerWeek || '',
+    const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>(
+        props.initialValue?.standardHoursPerDay || '',
     )
 
     const timezone = useMemo(
@@ -74,8 +78,19 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         [],
     )
     const agreementRate = useMemo(
-        () => calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
-        [ratePerHour, standardHoursPerWeek],
+        () => {
+            const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
+                standardHoursPerDay,
+                2,
+            )
+
+            if (parsedStandardHoursPerDay === undefined) {
+                return ''
+            }
+
+            return calculateAssignmentRatePerWeek(ratePerHour, parsedStandardHoursPerDay * 5)
+        },
+        [ratePerHour, standardHoursPerDay],
     )
 
     useEffect(() => {
@@ -84,9 +99,10 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         }
 
         setDurationMonths(props.initialValue?.durationMonths || '')
+        setPaymentCycle(props.initialValue?.paymentCycle || 'WEEKLY')
         setRatePerHour(props.initialValue?.ratePerHour || '')
         setStartDate(deserializeTentativeAssignmentDate(props.initialValue?.startDate))
-        setStandardHoursPerWeek(props.initialValue?.standardHoursPerWeek || '')
+        setStandardHoursPerDay(props.initialValue?.standardHoursPerDay || '')
         setOtherRemarks(props.initialValue?.otherRemarks || '')
         setErrors({})
     }, [props.initialValue, props.open])
@@ -95,10 +111,13 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         const nextErrors: ValidationErrors = {}
         const parsedDurationMonths = toPositiveInteger(durationMonths)
         const parsedRatePerHour = toPositiveNumber(ratePerHour)
-        const parsedStandardHoursPerWeek = toPositiveNumberWithMaxDecimalPlaces(
-            standardHoursPerWeek,
+        const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
+            standardHoursPerDay,
             2,
         )
+        const normalizedPaymentCycle = String(paymentCycle || 'WEEKLY')
+            .trim()
+            .toUpperCase()
 
         if (!startDate) {
             nextErrors.startDate = 'Engagement start date is required.'
@@ -112,9 +131,13 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             nextErrors.ratePerHour = 'Rate per hour must be a positive number.'
         }
 
-        if (parsedStandardHoursPerWeek === undefined) {
-            nextErrors.standardHoursPerWeek = 'Standard hours per week must be a '
+        if (parsedStandardHoursPerDay === undefined) {
+            nextErrors.standardHoursPerDay = 'Standard hours per day must be a '
                 + 'positive number with up to 2 decimal places.'
+        }
+
+        if (!['WEEKLY', 'FORTNIGHTLY', 'MONTHLY'].includes(normalizedPaymentCycle)) {
+            nextErrors.paymentCycle = 'Payment cycle must be Weekly, Fortnightly, or Monthly.'
         }
 
         if (Object.keys(nextErrors).length > 0) {
@@ -126,7 +149,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             !startDate
             || parsedDurationMonths === undefined
             || parsedRatePerHour === undefined
-            || parsedStandardHoursPerWeek === undefined
+            || parsedStandardHoursPerDay === undefined
         ) {
             return
         }
@@ -136,17 +159,20 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             durationMonths: String(parsedDurationMonths),
             memberHandle: props.memberHandle || '',
             otherRemarks: otherRemarks.trim() || undefined,
+            paymentCycle: normalizedPaymentCycle,
             ratePerHour: parsedRatePerHour.toString(),
-            standardHoursPerWeek: String(parsedStandardHoursPerWeek),
+            standardHoursPerDay: String(parsedStandardHoursPerDay),
+            standardHoursPerWeek: String(Number((parsedStandardHoursPerDay * 5).toFixed(2))),
             startDate: serializeTentativeAssignmentDate(startDate),
         })
     }, [
         agreementRate,
         durationMonths,
         otherRemarks,
+        paymentCycle,
         props,
         ratePerHour,
-        standardHoursPerWeek,
+        standardHoursPerDay,
         startDate,
     ])
 
@@ -252,43 +278,52 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='assignment-standard-hours'>
-                        Standard hours per week *
+                        Standard hours per day *
                     </label>
                     <input
                         id='assignment-standard-hours'
                         className={styles.input}
                         inputMode='decimal'
                         onChange={event => {
-                            setStandardHoursPerWeek(
+                            setStandardHoursPerDay(
                                 sanitizePositiveNumericInput(event.target.value, 2),
                             )
                             setErrors(previous => ({
                                 ...previous,
-                                standardHoursPerWeek: undefined,
+                                standardHoursPerDay: undefined,
                             }))
                         }}
                         pattern='[0-9.]*'
                         type='text'
-                        value={standardHoursPerWeek}
+                        value={standardHoursPerDay}
                     />
-                    {errors.standardHoursPerWeek
-                        ? <p className={styles.error}>{errors.standardHoursPerWeek}</p>
+                    {errors.standardHoursPerDay
+                        ? <p className={styles.error}>{errors.standardHoursPerDay}</p>
                         : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <label className={styles.label} htmlFor='assignment-rate'>
-                        Assignment rate per week *
+                    <label className={styles.label} htmlFor='assignment-payment-cycle'>
+                        Payment cycle *
                     </label>
-                    <input
-                        id='assignment-rate'
+                    <select
+                        id='assignment-payment-cycle'
                         className={styles.input}
-                        readOnly
-                        type='text'
-                        value={agreementRate}
-                    />
-                    {!agreementRate
-                        ? <p className={styles.error}>Assignment rate is calculated after entering hourly details.</p>
+                        onChange={event => {
+                            setPaymentCycle(event.target.value)
+                            setErrors(previous => ({
+                                ...previous,
+                                paymentCycle: undefined,
+                            }))
+                        }}
+                        value={paymentCycle}
+                    >
+                        <option value='WEEKLY'>Weekly</option>
+                        <option value='FORTNIGHTLY'>Fortnightly</option>
+                        <option value='MONTHLY'>Monthly</option>
+                    </select>
+                    {errors.paymentCycle
+                        ? <p className={styles.error}>{errors.paymentCycle}</p>
                         : undefined}
                 </div>
 

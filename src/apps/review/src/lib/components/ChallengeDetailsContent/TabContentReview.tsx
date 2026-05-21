@@ -24,7 +24,7 @@ import {
     ReviewResult,
     SubmissionInfo,
 } from '../../models'
-import { hasIsLatestFlag } from '../../utils'
+import { hasIsLatestFlag, isMarathonMatchChallenge } from '../../utils'
 import { TableAppeals } from '../TableAppeals'
 import { TableAppealsForSubmitter } from '../TableAppealsForSubmitter'
 import { TableAppealsResponse } from '../TableAppealsResponse'
@@ -86,7 +86,15 @@ const parseScoreValue = (value: unknown): number | undefined => {
     return undefined
 }
 
-const resolveSubmissionReviewScore = (submission: SubmissionInfo): number | undefined => {
+const resolveSubmissionReviewScore = (
+    submission: SubmissionInfo,
+    preferAggregateScore: boolean,
+): number | undefined => {
+    const aggregateScore = parseScoreValue(submission.aggregateScore)
+    if (preferAggregateScore && aggregateScore !== undefined) {
+        return aggregateScore
+    }
+
     const reviewResultScores = Array.isArray(submission.reviews)
         ? submission.reviews
             .map(review => parseScoreValue(review?.score))
@@ -98,7 +106,6 @@ const resolveSubmissionReviewScore = (submission: SubmissionInfo): number | unde
         return total / reviewResultScores.length
     }
 
-    const aggregateScore = parseScoreValue(submission.aggregateScore)
     if (aggregateScore !== undefined) {
         return aggregateScore
     }
@@ -122,10 +129,13 @@ type SubmissionScoreEntry = {
     submission: SubmissionInfo
 }
 
-const sortSubmissionsByReviewScoreDesc = (rows: SubmissionInfo[]): SubmissionInfo[] => {
+const sortSubmissionsByReviewScoreDesc = (
+    rows: SubmissionInfo[],
+    preferAggregateScore: boolean,
+): SubmissionInfo[] => {
     const entries: SubmissionScoreEntry[] = rows.map((submission, index) => ({
         index,
-        score: resolveSubmissionReviewScore(submission),
+        score: resolveSubmissionReviewScore(submission, preferAggregateScore),
         submission,
     }))
 
@@ -226,6 +236,10 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
+    )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
+        [challengeInfo],
     )
     const myOwnedMemberIds = useMemo<Set<string>>(
         () => {
@@ -736,15 +750,15 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     )
     const reviewerRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredReviews)
+            ? sortSubmissionsByReviewScoreDesc(filteredReviews, useAggregateReviewScore)
             : filteredReviews),
-        [filteredReviews, shouldSortReviewTabByScore],
+        [filteredReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const submitterRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews)
+            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews, useAggregateReviewScore)
             : filteredSubmitterReviews),
-        [filteredSubmitterReviews, shouldSortReviewTabByScore],
+        [filteredSubmitterReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER

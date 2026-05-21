@@ -9,6 +9,7 @@ import {
     xhrPostAsync,
 } from '~/libs/core'
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { fetchChallenge } from '~/apps/work/src/lib/services/challenges.service'
 
 import { WalletDetails } from '../models/WalletDetails'
 import {
@@ -50,9 +51,11 @@ interface EngagementAssignmentContextResponse {
     engagementId: string
     engagementTitle: string
     otherRemarks?: string | null
+    paymentCycle?: string | null
     projectId: string
     projectName?: string
     ratePerHour?: string | null
+    standardHoursPerDay?: number | null
     standardHoursPerWeek?: number | null
     startDate?: string | null
 }
@@ -63,7 +66,9 @@ interface EngagementAssignmentResponse {
     memberHandle?: string | null
     memberId?: number | string | null
     otherRemarks?: string | null
+    paymentCycle?: string | null
     ratePerHour?: string | null
+    standardHoursPerDay?: number | string | null
     standardHoursPerWeek?: number | string | null
     startDate?: string | null
 }
@@ -160,6 +165,11 @@ function mergeEngagementDetails(
 function mapAssignmentContextToEngagementDetails(
     context: EngagementAssignmentContextResponse,
 ): PaymentEngagementDetails {
+    const standardHoursPerDay = normalizeOptionalNumber(context.standardHoursPerDay)
+        ?? (normalizeOptionalNumber(context.standardHoursPerWeek) !== undefined
+            ? Number((Number(context.standardHoursPerWeek) / 5).toFixed(2))
+            : undefined)
+
     return {
         assignmentId: normalizeOptionalString(context.assignmentId),
         billingStartDate: normalizeOptionalString(context.startDate),
@@ -167,9 +177,11 @@ function mapAssignmentContextToEngagementDetails(
         engagementId: normalizeOptionalString(context.engagementId),
         engagementTitle: normalizeOptionalString(context.engagementTitle),
         otherRemarks: normalizeOptionalString(context.otherRemarks),
+        paymentCycle: normalizeOptionalString(context.paymentCycle) || 'WEEKLY',
         projectId: normalizeOptionalString(context.projectId),
         projectName: normalizeOptionalString(context.projectName),
         ratePerHour: normalizeOptionalString(context.ratePerHour),
+        standardHoursPerDay,
         standardHoursPerWeek: normalizeOptionalNumber(context.standardHoursPerWeek),
     }
 }
@@ -252,6 +264,10 @@ function buildEngagementDetailsFromEngagement(
     }
 
     const assignment = findMatchingEngagementAssignment(engagement.assignments, winning)
+    const standardHoursPerDay = normalizeOptionalNumber(assignment?.standardHoursPerDay)
+        ?? (normalizeOptionalNumber(assignment?.standardHoursPerWeek) !== undefined
+            ? Number((Number(assignment?.standardHoursPerWeek) / 5).toFixed(2))
+            : undefined)
 
     return {
         assignmentId: normalizeOptionalString(assignment?.id) || normalizeOptionalString(winning.assignmentId),
@@ -260,6 +276,7 @@ function buildEngagementDetailsFromEngagement(
         engagementId,
         engagementTitle: normalizeOptionalString(engagement.title),
         otherRemarks: normalizeOptionalString(assignment?.otherRemarks),
+        paymentCycle: normalizeOptionalString(assignment?.paymentCycle) || 'WEEKLY',
         projectId:
             normalizeOptionalString(engagement.projectId)
             || normalizeOptionalString(engagement.project?.id),
@@ -267,6 +284,7 @@ function buildEngagementDetailsFromEngagement(
             normalizeOptionalString(engagement.projectName)
             || normalizeOptionalString(engagement.project?.name),
         ratePerHour: normalizeOptionalString(assignment?.ratePerHour),
+        standardHoursPerDay,
         standardHoursPerWeek: normalizeOptionalNumber(assignment?.standardHoursPerWeek),
     }
 }
@@ -320,6 +338,25 @@ export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAud
  * finance enrichment call fails. Wallet-admin retries those lookups with the
  * authenticated user so the modal still renders engagement details.
  */
+
+async function enrichTaskDescription(
+    winning: Winning,
+    paymentDetails: WinningPaymentDetails,
+): Promise<void> {
+    if (!winning.externalId || !paymentDetails.taskDetails) {
+        return
+    }
+
+    try {
+        const challenge = await fetchChallenge(winning.externalId)
+        if (challenge.description) {
+            paymentDetails.taskDetails.taskDescription = challenge.description
+        }
+    } catch {
+        // Fall through — keep whatever description the finance API returned
+    }
+}
+
 export async function fetchWinningPaymentDetails(
     winning: Winning,
 ): Promise<WinningPaymentDetails> {
@@ -334,10 +371,18 @@ export async function fetchWinningPaymentDetails(
     const paymentDetails = response.data || {}
 
     if (winning.type.toLowerCase() !== 'engagement payment') {
+        if (winning.type.toLowerCase() === 'task payment') {
+            await enrichTaskDescription(winning, paymentDetails)
+        }
+
         return paymentDetails
     }
 
-    let engagementDetails = paymentDetails.engagementDetails
+    let engagementDetails: PaymentEngagementDetails | undefined = paymentDetails.engagementDetails
+
+    if (engagementDetails?.ratePerHour) {
+        return paymentDetails
+    }
 
     const assignmentLookupId
         = normalizeOptionalString(winning.assignmentId)

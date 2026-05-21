@@ -18,6 +18,8 @@ export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_R
 
 export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
 
+export type PaymentCycle = 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY'
+
 export interface Assignment {
     agreementRate: string
     durationMonths?: number | string
@@ -27,8 +29,10 @@ export interface Assignment {
     memberHandle: string
     memberId: number | string
     otherRemarks: string
+    paymentCycle?: PaymentCycle | string
     ratePerHour?: string
     startDate: string
+    standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
     terminationReason?: string

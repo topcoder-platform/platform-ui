@@ -28,10 +28,10 @@ export interface PaymentEngagementDetails {
     engagementTitle?: string
     billingStartDate?: string
     durationMonths?: number
+    paymentCycle?: string
     ratePerHour?: string
     standardHoursPerDay?: number
     standardHoursPerWeek?: number
-    paymentCycle?: string
     otherRemarks?: string
     paymentApproverHandle?: string
 }
@@ -59,6 +59,7 @@ export interface PaymentAgreementSummary {
     ratePerHour: number
     workDays: number
     hoursPerDay: number
+    description?: string
 }
 
 export interface WinningPaymentDetails {

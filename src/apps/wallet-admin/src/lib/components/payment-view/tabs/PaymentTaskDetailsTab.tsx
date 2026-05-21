@@ -1,7 +1,11 @@
 import { FC } from 'react'
 
 import { Winning, WinningPaymentDetails } from '../../../models/WinningDetail'
-import { formatOptionalText, resolveTaskCreatorHandle } from '../payment-view.utils'
+import {
+    formatOptionalText,
+    resolveTaskCreatorHandle,
+    stripHtml,
+} from '../payment-view.utils'
 import styles from '../PaymentView.module.scss'
 
 interface PaymentTaskDetailsTabProps {
@@ -57,7 +61,15 @@ const PaymentTaskDetailsTab: FC<PaymentTaskDetailsTabProps> = (
             <div className={styles.infoItemFull}>
                 <span className={styles.label}>Task Description</span>
                 <p className={styles.remarksValue}>
-                    {formatOptionalText(taskDescription)}
+                    {taskDescription
+                        ? stripHtml(taskDescription)
+                        : '-'}
+                </p>
+            </div>
+            <div className={styles.infoItemFull}>
+                <span className={styles.label}>Payment Approver</span>
+                <p className={styles.value}>
+                    {formatOptionalText(props.paymentDetails?.taskDetails?.paymentApproverHandle)}
                 </p>
             </div>
         </div>

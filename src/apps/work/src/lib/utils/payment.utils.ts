@@ -5,6 +5,8 @@ import {
 
 import { Assignment, AssignmentPayment } from '../models'
 
+const DEFAULT_PAYMENT_CYCLE = 'WEEKLY'
+
 const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
     style: 'currency',
@@ -220,6 +222,34 @@ export function getAssignmentStatus(member: Partial<Assignment>): string {
     return String(member.status)
 }
 
+export function getAssignmentPaymentCycle(member: Partial<Assignment>): string {
+    const normalizedCycle = toOptionalDisplayString(member.paymentCycle)
+
+    return normalizedCycle
+        ? normalizedCycle.toUpperCase()
+        : DEFAULT_PAYMENT_CYCLE
+}
+
+export function getAssignmentStandardHoursPerDay(
+    member: Partial<Assignment>,
+): number | string | undefined {
+    if (
+        member.standardHoursPerDay !== undefined
+        && member.standardHoursPerDay !== null
+        && member.standardHoursPerDay !== ''
+    ) {
+        return member.standardHoursPerDay
+    }
+
+    const standardHoursPerWeek = toNumber(member.standardHoursPerWeek)
+
+    if (standardHoursPerWeek === undefined || standardHoursPerWeek <= 0) {
+        return undefined
+    }
+
+    return Number((standardHoursPerWeek / 5).toFixed(2))
+}
+
 /**
  * Reads the assignment standard hours value from a member object.
  *
@@ -229,7 +259,21 @@ export function getAssignmentStatus(member: Partial<Assignment>): string {
 export function getAssignmentStandardHoursPerWeek(
     member: Partial<Assignment>,
 ): number | string | undefined {
-    return member.standardHoursPerWeek
+    if (
+        member.standardHoursPerWeek !== undefined
+        && member.standardHoursPerWeek !== null
+        && member.standardHoursPerWeek !== ''
+    ) {
+        return member.standardHoursPerWeek
+    }
+
+    const standardHoursPerDay = toNumber(getAssignmentStandardHoursPerDay(member))
+
+    if (standardHoursPerDay === undefined || standardHoursPerDay <= 0) {
+        return undefined
+    }
+
+    return Number((standardHoursPerDay * 5).toFixed(2))
 }
 
 /**
@@ -260,6 +304,29 @@ export function getAssignmentRatePerHour(
     }
 
     return agreementRate / standardHoursPerWeek
+}
+
+export function getExpectedHoursLabel(member: Partial<Assignment>): string {
+    const standardHoursPerDay = toNumber(getAssignmentStandardHoursPerDay(member))
+
+    if (standardHoursPerDay === undefined || standardHoursPerDay <= 0) {
+        return ''
+    }
+
+    const paymentCycle = getAssignmentPaymentCycle(member)
+
+    if (paymentCycle === 'FORTNIGHTLY') {
+        return `${Number((standardHoursPerDay * 10).toFixed(2))} hours`
+    }
+
+    if (paymentCycle === 'MONTHLY') {
+        const minimum = Number((standardHoursPerDay * 20).toFixed(2))
+        const maximum = Number((standardHoursPerDay * 23).toFixed(2))
+
+        return `${minimum}-${maximum} hours`
+    }
+
+    return `${Number((standardHoursPerDay * 5).toFixed(2))} hours`
 }
 
 /**

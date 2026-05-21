@@ -4,11 +4,13 @@ import React from 'react'
 import { Button } from '~/libs/ui'
 import { TOPCODER_URL } from '~/config/environments/default.env'
 
+import { PayoutAudit } from '../../models/PayoutAudit'
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning, WinningPaymentDetails } from '../../models/WinningDetail'
 import {
     fetchAuditLogs,
     fetchChallengePaymentSummary,
+    fetchPayoutAuditLogs,
     fetchWinningPaymentDetails,
     getMemberHandle,
 } from '../../services/wallet'
@@ -28,6 +30,7 @@ import PaymentAuditHistoryTab from './tabs/PaymentAuditHistoryTab'
 import PaymentDetailsSummaryRow from './PaymentDetailsSummaryRow'
 import PaymentDetailsTabs, { PaymentDetailsTabOption } from './PaymentDetailsTabs'
 import PaymentEngagementDetailsTab from './tabs/PaymentEngagementDetailsTab'
+import PaymentExternalTransactionTab from './tabs/PaymentExternalTransactionTab'
 import PaymentGeneralInfoTab from './tabs/PaymentGeneralInfoTab'
 import PaymentTaskDetailsTab from './tabs/PaymentTaskDetailsTab'
 import PaymentWorkLogTab from './tabs/PaymentWorkLogTab'
@@ -45,11 +48,14 @@ type PaymentDetailsTabId
     | 'work-log'
     | 'task-details'
     | 'audit'
+    | 'external-transaction'
 
 const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [activeTab, setActiveTab] = React.useState<PaymentDetailsTabId>('general')
     const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
+    const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>()
     const [isAuditLoading, setIsAuditLoading] = React.useState<boolean>(false)
+    const [isExternalTransactionLoading, setIsExternalTransactionLoading] = React.useState<boolean>(false)
     const [paymentDetails, setPaymentDetails] = React.useState<WinningPaymentDetails>()
     const [isPaymentDetailsLoading, setIsPaymentDetailsLoading] = React.useState<boolean>(false)
     const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
@@ -67,13 +73,22 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         ? resolvePaymentAgreementSummary(props.payment, paymentDetails)
         : undefined
 
+    const isPaidPayment = props.payment.status.toUpperCase() === 'PAID'
+
     const tabs = React.useMemo((): PaymentDetailsTabOption[] => {
+        const auditTabs: PaymentDetailsTabOption[] = [
+            { id: 'audit', label: 'Audit History' },
+            ...(isPaidPayment
+                ? [{ id: 'external-transaction' as const, label: 'External Transaction' }]
+                : []),
+        ]
+
         if (isEngagementPayment) {
             return [
                 { id: 'general', label: 'General Info' },
                 { id: 'engagement', label: 'Engagement Details' },
                 { id: 'work-log', label: 'Work Log' },
-                { id: 'audit', label: 'Audit History' },
+                ...auditTabs,
             ]
         }
 
@@ -81,15 +96,15 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
             return [
                 { id: 'general', label: 'General Info' },
                 { id: 'task-details', label: 'Task Details' },
-                { id: 'audit', label: 'Audit History' },
+                ...auditTabs,
             ]
         }
 
         return [
             { id: 'general', label: 'General Info' },
-            { id: 'audit', label: 'Audit History' },
+            ...auditTabs,
         ]
-    }, [isEngagementPayment, isTaskPayment])
+    }, [isEngagementPayment, isPaidPayment, isTaskPayment])
 
     React.useEffect(() => {
         if (!shouldFetchPaymentDetails) {
@@ -167,6 +182,32 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     ])
 
     React.useEffect(() => {
+        if (activeTab === 'external-transaction') {
+            let ignore = false
+            setIsExternalTransactionLoading(true)
+
+            fetchPayoutAuditLogs(props.payment.id)
+                .then(payoutAudit => {
+                    if (!ignore) {
+                        setExternalTransactionAudit(payoutAudit)
+                    }
+                })
+                .catch(() => {
+                    if (!ignore) {
+                        setExternalTransactionAudit(undefined)
+                    }
+                })
+                .finally(() => {
+                    if (!ignore) {
+                        setIsExternalTransactionLoading(false)
+                    }
+                })
+
+            return () => {
+                ignore = true
+            }
+        }
+
         if (activeTab !== 'audit') {
             return undefined
         }
@@ -280,6 +321,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 <PaymentWorkLogTab
                     errorMessage={paymentDetailsError}
                     isLoading={isPaymentDetailsLoading}
+                    paymentCreatorHandle={paymentDetails?.paymentCreatorHandle}
                     workLog={paymentDetails?.workLog}
                 />
             )
@@ -293,6 +335,15 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                     payment={props.payment}
                     paymentDetails={paymentDetails}
                     projectLink={buildWorkManagerProjectUrl(paymentDetails?.taskDetails)}
+                />
+            )
+        }
+
+        if (activeTab === 'external-transaction') {
+            return (
+                <PaymentExternalTransactionTab
+                    isLoading={isExternalTransactionLoading}
+                    payoutAudits={externalTransactionAudit}
                 />
             )
         }

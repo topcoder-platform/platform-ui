@@ -7,6 +7,7 @@ import styles from '../PaymentView.module.scss'
 interface PaymentWorkLogTabProps {
     readonly errorMessage?: string
     readonly isLoading: boolean
+    readonly paymentCreatorHandle?: string
     readonly workLog?: PaymentWorkLog
 }
 
@@ -32,6 +33,12 @@ const PaymentWorkLogTab: FC<PaymentWorkLogTabProps> = (props: PaymentWorkLogTabP
                     <span className={styles.label}>Remarks</span>
                     <p className={styles.remarksValue}>
                         {renderOptionalLinkedText(props.workLog?.remarks)}
+                    </p>
+                </div>
+                <div className={styles.infoItem}>
+                    <span className={styles.label}>Payment Creator</span>
+                    <p className={styles.value}>
+                        {formatOptionalText(props.paymentCreatorHandle)}
                     </p>
                 </div>
             </div>

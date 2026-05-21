@@ -6,6 +6,7 @@ import {
     findPhaseByTabLabel,
     hasPendingApprovalReview,
     isFirst2FinishChallenge,
+    isMarathonMatchChallenge,
     type PhaseLike,
     resolveFirst2FinishIterativeSubmissionIds,
     shouldAllowWinnersTabForPastChallenge,
@@ -50,6 +51,29 @@ const createBackendPhase = (
 })
 
 describe('challenge phase tab helpers', () => {
+    it('recognizes Marathon Match challenges from type metadata', () => {
+        expect(isMarathonMatchChallenge({
+            type: {
+                abbreviation: 'MM',
+                id: 'type-1',
+                name: 'Marathon Match',
+            },
+            typeId: 'type-1',
+        }))
+            .toBe(true)
+    })
+
+    it('recognizes Marathon Match challenges from the canonical type id', () => {
+        expect(isMarathonMatchChallenge({
+            type: {
+                id: 'type-1',
+                name: 'Code',
+            },
+            typeId: '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+        }))
+            .toBe(true)
+    })
+
     it('preserves the incoming phase order', () => {
         const phases: PhaseLike[] = [
             createPhase('1', 'Registration', '2025-01-01T00:00:00Z'),
