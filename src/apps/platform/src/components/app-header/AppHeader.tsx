@@ -42,6 +42,15 @@ const AppHeader: FC<{}> = () => {
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
     const { logoutUrl }: ConfigContextValue = useConfigContext()
     const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    useEffect(() => {
+        const style = document.createElement('style')
+        style.id = 'hide-referral-nav'
+        style.innerHTML = 'a[href*="nasa-referral"] { display: none !important; }'
+        if (!document.getElementById('hide-referral-nav')) {
+            document.head.appendChild(style)
+        }
+    }, [])
     const headerInit: MutableRefObject<boolean> = useRef(false)
     const navElementId: string = PageSubheaderPortalId
     const navigate: NavigateFunction = useNavigate()
