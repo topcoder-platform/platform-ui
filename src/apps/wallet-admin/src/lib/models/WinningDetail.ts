@@ -28,7 +28,9 @@ export interface PaymentEngagementDetails {
     engagementTitle?: string
     billingStartDate?: string
     durationMonths?: number
+    paymentCycle?: string
     ratePerHour?: string
+    standardHoursPerDay?: number
     standardHoursPerWeek?: number
     otherRemarks?: string
 }

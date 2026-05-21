@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable complexity */
 
 import {
     FC,
@@ -115,7 +116,9 @@ type SerializedAssignmentDetailsPayload = {
     durationMonths?: number
     memberHandle: string
     otherRemarks?: string
+    paymentCycle?: string
     ratePerHour: string
+    standardHoursPerDay?: number
     standardHoursPerWeek?: number
     startDate: string
 }
@@ -224,8 +227,16 @@ function serializeAssignmentDetails(
                         ? String(detail.otherRemarks)
                             .trim()
                         : undefined,
+                    paymentCycle: detail.paymentCycle
+                        ? String(detail.paymentCycle)
+                            .trim()
+                            .toUpperCase()
+                        : 'WEEKLY',
                     ratePerHour: String(detail.ratePerHour || '')
                         .trim(),
+                    standardHoursPerDay: detail.standardHoursPerDay
+                        ? Number(detail.standardHoursPerDay)
+                        : undefined,
                     standardHoursPerWeek: detail.standardHoursPerWeek
                         ? Number(detail.standardHoursPerWeek)
                         : undefined,
@@ -248,9 +259,18 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
         otherRemarks: assignment.otherRemarks
             ? String(assignment.otherRemarks)
             : undefined,
+        paymentCycle: assignment.paymentCycle
+            ? String(assignment.paymentCycle)
+            : 'WEEKLY',
         ratePerHour: assignment.ratePerHour
             ? String(assignment.ratePerHour)
             : '',
+        standardHoursPerDay:
+            assignment.standardHoursPerDay !== undefined && assignment.standardHoursPerDay !== null
+                ? String(assignment.standardHoursPerDay)
+                : (assignment.standardHoursPerWeek !== undefined && assignment.standardHoursPerWeek !== null
+                    ? String(Number(assignment.standardHoursPerWeek) / 5)
+                    : ''),
         standardHoursPerWeek:
             assignment.standardHoursPerWeek !== undefined && assignment.standardHoursPerWeek !== null
                 ? String(assignment.standardHoursPerWeek)
