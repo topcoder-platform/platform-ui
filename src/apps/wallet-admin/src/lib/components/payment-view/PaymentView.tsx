@@ -294,8 +294,8 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
     const paymentApproverHandle = resolvePaymentApproverHandle(
         paymentDetails,
-        isTaskPayment,
         challengePaymentApproverHandle,
+        isTaskPayment,
     )
 
     const renderTabContent = (): React.ReactNode => {

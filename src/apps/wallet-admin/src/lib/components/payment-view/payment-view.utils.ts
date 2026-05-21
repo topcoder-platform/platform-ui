@@ -374,7 +374,6 @@ export function resolvePaymentApproverHandle(
     },
     challengePaymentApproverHandle?: string,
     isTaskPayment: boolean = false,
-
 ): string | undefined {
     if (isTaskPayment) {
         return paymentDetails?.taskDetails?.paymentApproverHandle

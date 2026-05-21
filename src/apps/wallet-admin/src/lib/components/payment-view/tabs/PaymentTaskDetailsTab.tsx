@@ -34,8 +34,8 @@ const PaymentTaskDetailsTab: FC<PaymentTaskDetailsTabProps> = (
     const taskCreatorHandle = resolveTaskCreatorHandle(props.paymentDetails)
     const paymentApproverHandle = resolvePaymentApproverHandle(
         props.paymentDetails,
-        true,
         props.challengePaymentApproverHandle,
+        true,
     )
 
     return (
