@@ -8,6 +8,8 @@ import {
     waitFor,
 } from '@testing-library/react'
 
+import { toPaymentTypeFilterValues } from '~/libs/shared/lib/utils/payment-type-filter.utils'
+
 import { editPayment, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import PaymentsListView from './PaymentsListView'
 
@@ -217,6 +219,9 @@ const TOPCODER_TAB_CATEGORIES = [
     'ENGAGEMENT_PAYMENT',
 ]
 
+const TOPCODER_TAB_TYPE_FILTER_VALUES = toPaymentTypeFilterValues(TOPCODER_TAB_CATEGORIES)
+const APPROVER_TYPE_FILTER_VALUES = ['Task', 'Engagement']
+
 function getApproverDefaultDateRangeForTest(): { dateFrom: string, dateTo: string } {
     const dateTo = new Date()
     const dateFrom = new Date()
@@ -283,7 +288,7 @@ describe('PaymentsListView', () => {
             .toHaveBeenCalled()
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                category: APPROVER_TYPE_FILTER_VALUES,
                 dateFrom: approverDates.dateFrom,
                 dateTo: approverDates.dateTo,
                 status: ['ON_HOLD_ADMIN'],
@@ -340,7 +345,7 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                category: APPROVER_TYPE_FILTER_VALUES,
                 dateFrom: approverDates.dateFrom,
                 dateTo: approverDates.dateTo,
                 status: ['ON_HOLD_ADMIN'],
@@ -362,7 +367,7 @@ describe('PaymentsListView', () => {
             })
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                category: TOPCODER_TAB_CATEGORIES,
+                category: TOPCODER_TAB_TYPE_FILTER_VALUES,
                 status: ALL_STATUS_FILTER_VALUES,
             }))
     })
@@ -396,7 +401,7 @@ describe('PaymentsListView', () => {
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                category: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
+                category: APPROVER_TYPE_FILTER_VALUES,
                 dateFrom: approverDates.dateFrom,
                 dateTo: approverDates.dateTo,
                 status: ['PAID'],
@@ -511,6 +516,10 @@ describe('PaymentsListView', () => {
 
         expect(typeFilter.options.some((option: any) => option.value === 'TOPGEAR_PAYMENT'))
             .toBe(false)
+        expect(typeFilter.options.some((option: any) => option.value === 'Task'))
+            .toBe(true)
+        expect(typeFilter.options.find((option: any) => option.value === 'Task')?.label)
+            .toBe('Task Payment')
 
         expect(screen.getByRole('tab', { name: 'Topgear' }))
             .toBeTruthy()

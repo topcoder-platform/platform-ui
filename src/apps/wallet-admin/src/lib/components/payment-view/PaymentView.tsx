@@ -1,57 +1,98 @@
-/* eslint-disable react/no-array-index-key */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-/* eslint-disable complexity */
-/* eslint-disable ordered-imports/ordered-imports */
 import React from 'react'
 
-import { Button, Collapsible } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning, WinningPaymentDetails } from '../../models/WinningDetail'
-import { PayoutAudit } from '../../models/PayoutAudit'
 import {
     fetchAuditLogs,
-    fetchPayoutAuditLogs,
+    fetchChallengePaymentSummary,
     fetchWinningPaymentDetails,
     getMemberHandle,
 } from '../../services/wallet'
+import PaymentAgreementBanner from './PaymentAgreementBanner'
+import PaymentDetailsSummaryRow from './PaymentDetailsSummaryRow'
+import PaymentDetailsTabs, { PaymentDetailsTabOption } from './PaymentDetailsTabs'
+import PaymentAuditHistoryTab from './tabs/PaymentAuditHistoryTab'
+import PaymentEngagementDetailsTab from './tabs/PaymentEngagementDetailsTab'
+import PaymentGeneralInfoTab from './tabs/PaymentGeneralInfoTab'
+import PaymentTaskDetailsTab from './tabs/PaymentTaskDetailsTab'
+import PaymentWorkLogTab from './tabs/PaymentWorkLogTab'
 import {
     buildWorkAppChallengeUrl,
     buildWorkManagerAssignmentUrl,
     buildWorkManagerProjectUrl,
-    formatOptionalDate,
-    formatOptionalText,
-    renderOptionalLinkedText,
+    getPaymentDetailsSummaryConfig,
+    isChallengePaymentType,
+    resolvePaymentAgreementSummary,
+    resolvePaymentApproverHandle,
+    resolveTaskCreatorHandle,
 } from './payment-view.utils'
 
 import styles from './PaymentView.module.scss'
 
 interface PaymentViewProps {
     isPoints?: boolean
+    onClose?: () => void
     payment: Winning
 }
 
+type PaymentDetailsTabId
+    = 'general'
+    | 'engagement'
+    | 'work-log'
+    | 'task-details'
+    | 'audit'
+
 const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
-    const [view, setView] = React.useState<'details' | 'audit' | 'external_transaction'>('details')
+    const [activeTab, setActiveTab] = React.useState<PaymentDetailsTabId>('general')
     const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
-    const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>([])
+    const [isAuditLoading, setIsAuditLoading] = React.useState<boolean>(false)
     const [paymentDetails, setPaymentDetails] = React.useState<WinningPaymentDetails>()
     const [isPaymentDetailsLoading, setIsPaymentDetailsLoading] = React.useState<boolean>(false)
     const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
+    const [challengeCreatorHandle, setChallengeCreatorHandle] = React.useState<string>()
+    const [challengeBudgetApproverHandle, setChallengeBudgetApproverHandle] = React.useState<string>()
 
     const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
     const isTaskPayment = props.payment.type.toLowerCase() === 'task payment'
-    const hasEngagementDetails = Boolean(paymentDetails?.engagementDetails)
+    const isChallengePayment = isChallengePaymentType(props.payment.type)
+    const shouldFetchChallengeSummary = isChallengePayment || isTaskPayment
+    const shouldFetchPaymentDetails = isEngagementPayment || isTaskPayment
+    const summaryConfig = getPaymentDetailsSummaryConfig(props.payment.type)
 
-    const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
-        setView(newView)
-    }
+    const agreementSummary = isEngagementPayment
+        ? resolvePaymentAgreementSummary(props.payment, paymentDetails)
+        : undefined
+
+    const tabs = React.useMemo((): PaymentDetailsTabOption[] => {
+        if (isEngagementPayment) {
+            return [
+                { id: 'general', label: 'General Info' },
+                { id: 'engagement', label: 'Engagement Details' },
+                { id: 'work-log', label: 'Work Log' },
+                { id: 'audit', label: 'Audit History' },
+            ]
+        }
+
+        if (isTaskPayment) {
+            return [
+                { id: 'general', label: 'General Info' },
+                { id: 'task-details', label: 'Task Details' },
+                { id: 'audit', label: 'Audit History' },
+            ]
+        }
+
+        return [
+            { id: 'general', label: 'General Info' },
+            { id: 'audit', label: 'Audit History' },
+        ]
+    }, [isEngagementPayment, isTaskPayment])
 
     React.useEffect(() => {
-        if (!isEngagementPayment && !isTaskPayment) {
+        if (!shouldFetchPaymentDetails) {
             setPaymentDetails(undefined)
             setIsPaymentDetailsLoading(false)
             setPaymentDetailsError(undefined)
@@ -72,7 +113,11 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
             .catch(() => {
                 if (!ignore) {
                     setPaymentDetails(undefined)
-                    setPaymentDetailsError(isTaskPayment ? 'Unable to load task details.' : 'Unable to load engagement details.')
+                    setPaymentDetailsError(
+                        isTaskPayment
+                            ? 'Unable to load task details.'
+                            : 'Unable to load engagement details.',
+                    )
                 }
             })
             .finally(() => {
@@ -84,34 +129,85 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return () => {
             ignore = true
         }
-    }, [isEngagementPayment, isTaskPayment, props.payment])
+    }, [isTaskPayment, props.payment, shouldFetchPaymentDetails])
 
     React.useEffect(() => {
-        if (view === 'audit') {
-            fetchAuditLogs(props.payment.id)
-                .then(auditLogs => {
-                    const userIds = auditLogs.map(log => log.userId)
-                    getMemberHandle(userIds)
-                        .then((handles: Map<number, string>) => {
-                            auditLogs.forEach((log: WinningsAudit) => {
-                                log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
-                            })
-                        })
-                        .catch(() => undefined)
-                        .finally(() => {
-                            setAuditLines(auditLogs)
-                        })
-                })
-                .catch(() => {
-                    setAuditLines([])
-                })
-        } else if (view === 'external_transaction') {
-            fetchPayoutAuditLogs(props.payment.id)
-                .then(payoutAudit => {
-                    setExternalTransactionAudit(payoutAudit)
-                })
+        if (!shouldFetchChallengeSummary || !props.payment.externalId) {
+            setChallengeCreatorHandle(undefined)
+            setChallengeBudgetApproverHandle(undefined)
+            return undefined
         }
-    }, [props.payment.id, view])
+
+        let ignore = false
+
+        fetchChallengePaymentSummary(props.payment.externalId)
+            .then(summary => {
+                if (!ignore) {
+                    if (isChallengePayment) {
+                        setChallengeCreatorHandle(summary.creatorHandle)
+                    }
+
+                    setChallengeBudgetApproverHandle(summary.budgetApproverHandle)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setChallengeCreatorHandle(undefined)
+                    setChallengeBudgetApproverHandle(undefined)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [
+        isChallengePayment,
+        props.payment.externalId,
+        shouldFetchChallengeSummary,
+    ])
+
+    React.useEffect(() => {
+        if (activeTab !== 'audit') {
+            return undefined
+        }
+
+        let ignore = false
+        setIsAuditLoading(true)
+
+        fetchAuditLogs(props.payment.id)
+            .then(auditLogs => {
+                const userIds = auditLogs.map(log => log.userId)
+
+                return getMemberHandle(userIds)
+                    .then((handles: Map<number, string>) => {
+                        auditLogs.forEach((log: WinningsAudit) => {
+                            log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
+                        })
+
+                        return auditLogs
+                    })
+                    .catch(() => auditLogs)
+            })
+            .then(auditLogs => {
+                if (!ignore) {
+                    setAuditLines(auditLogs)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setAuditLines([])
+                }
+            })
+            .finally(() => {
+                if (!ignore) {
+                    setIsAuditLoading(false)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [activeTab, props.payment.id])
 
     const formatAction = (action: string): React.ReactNode => {
         const fromIndex = action.indexOf('from')
@@ -121,6 +217,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
             const beforeFrom = action.substring(0, fromIndex)
             const fromValue = action.substring(fromIndex + 5, toIndex)
             const toValue = action.substring(toIndex + 3)
+
             return (
                 <>
                     {beforeFrom}
@@ -143,359 +240,113 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         : isTaskPayment
             ? buildWorkAppChallengeUrl(paymentDetails?.taskDetails?.projectId, props.payment.externalId)
             : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
-    const projectLink = buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)
+
+    const taskCreatorHandle = resolveTaskCreatorHandle(paymentDetails)
+
+    const budgetApproverHandle = shouldFetchChallengeSummary
+        ? challengeBudgetApproverHandle
+        : undefined
+
+    const paymentApproverHandle = resolvePaymentApproverHandle(
+        paymentDetails,
+        isTaskPayment,
+    )
+
+    const renderTabContent = (): React.ReactNode => {
+        if (activeTab === 'general') {
+            return (
+                <PaymentGeneralInfoTab
+                    createDate={props.payment.createDate}
+                    description={props.payment.description}
+                    descriptionLink={descriptionLink}
+                    payment={props.payment}
+                />
+            )
+        }
+
+        if (activeTab === 'engagement') {
+            return (
+                <PaymentEngagementDetailsTab
+                    engagementDetails={paymentDetails?.engagementDetails}
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    projectLink={buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)}
+                />
+            )
+        }
+
+        if (activeTab === 'work-log') {
+            return (
+                <PaymentWorkLogTab
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    workLog={paymentDetails?.workLog}
+                />
+            )
+        }
+
+        if (activeTab === 'task-details') {
+            return (
+                <PaymentTaskDetailsTab
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    payment={props.payment}
+                    paymentDetails={paymentDetails}
+                    projectLink={buildWorkManagerProjectUrl(paymentDetails?.taskDetails)}
+                />
+            )
+        }
+
+        return (
+            <PaymentAuditHistoryTab
+                auditLines={auditLines}
+                formatAction={formatAction}
+                isLoading={isAuditLoading}
+            />
+        )
+    }
 
     return (
         <div className={styles.formContainer}>
-            <div className={styles.inputGroup}>
-                {view === 'details' && (
-                    <>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Description</span>
-                            {descriptionLink
-                                ? (
-                                    <a href={descriptionLink} target='_blank' rel='noreferrer'>
-                                        {props.payment.description}
-                                    </a>
-                                )
-                                : <p className={styles.value}>{props.payment.description}</p>}
-                        </div>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment ID</span>
-                            <p className={styles.value}>{props.payment.id}</p>
-                        </div>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Handle</span>
-                            <p className={styles.value}>{props.payment.handle}</p>
-                        </div>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Type</span>
-                            <p className={styles.value}>{props.payment.type}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>{props.isPoints ? 'Points' : 'Payment'}</span>
-                            <p className={styles.value}>
-                                {props.isPoints ? `${props.payment.grossAmountNumber}` : props.payment.grossAmountNumber.toLocaleString(undefined, {
-                                    currency: 'USD',
-                                    style: 'currency',
-                                })}
-                            </p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment Status</span>
-                            <p className={styles.value}>{props.payment.status}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Release Date</span>
-                            <p className={styles.value}>{props.payment.releaseDateObj.toLocaleDateString()}</p>
-                        </div>
-
-                        {props.payment.datePaid !== '-' && (
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Date Paid</span>
-                                <p className={styles.value}>{props.payment.datePaid}</p>
-                            </div>
-                        )}
-
-                        {isEngagementPayment && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Engagement Details</h3>
-                                {isPaymentDetailsLoading
-                                    ? <p className={styles.helperText}>Loading engagement details...</p>
-                                    : undefined}
-                                {!isPaymentDetailsLoading && paymentDetailsError
-                                    ? <p className={styles.helperText}>{paymentDetailsError}</p>
-                                    : undefined}
-                                {!isPaymentDetailsLoading && !paymentDetailsError && !hasEngagementDetails
-                                    ? (
-                                        <p className={styles.helperText}>
-                                            Engagement details are unavailable for this payment.
-                                        </p>
-                                    )
-                                    : undefined}
-                                {!isPaymentDetailsLoading && !paymentDetailsError && hasEngagementDetails && (
-                                    <div className={styles.sectionGrid}>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Project Name</span>
-                                            {projectLink && paymentDetails?.engagementDetails?.projectName
-                                                ? (
-                                                    <a
-                                                        className={styles.value}
-                                                        href={projectLink}
-                                                        target='_blank'
-                                                        rel='noreferrer'
-                                                    >
-                                                        {paymentDetails.engagementDetails.projectName}
-                                                    </a>
-                                                )
-                                                : (
-                                                    <p className={styles.value}>
-                                                        {formatOptionalText(paymentDetails?.engagementDetails?.projectName)}
-                                                    </p>
-                                                )}
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Billing Start Date</span>
-                                            <p className={styles.value}>
-                                                {formatOptionalDate(paymentDetails?.engagementDetails?.billingStartDate)}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Duration</span>
-                                            <p className={styles.value}>
-                                                {paymentDetails?.engagementDetails?.durationMonths
-                                                    ? `${paymentDetails.engagementDetails.durationMonths} month${paymentDetails.engagementDetails.durationMonths === 1 ? '' : 's'}`
-                                                    : '-'}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Rate per Hour</span>
-                                            <p className={styles.value}>
-                                                {paymentDetails?.engagementDetails?.ratePerHour
-                                                    ? Number(paymentDetails.engagementDetails.ratePerHour)
-                                                        .toLocaleString(undefined, {
-                                                            currency: 'USD',
-                                                            style: 'currency',
-                                                        })
-                                                    : '-'}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Standard Hours per Week</span>
-                                            <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.engagementDetails?.standardHoursPerWeek)}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Other Remarks</span>
-                                            <p className={styles.remarksValue}>
-                                                {renderOptionalLinkedText(paymentDetails?.engagementDetails?.otherRemarks)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {isEngagementPayment && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Work Log / Manager Inputs</h3>
-                                {isPaymentDetailsLoading
-                                    ? <p className={styles.helperText}>Loading work log...</p>
-                                    : (
-                                        <div className={styles.sectionGrid}>
-                                            <div className={styles.infoItem}>
-                                                <span className={styles.label}>Hours Worked</span>
-                                                <p className={styles.value}>
-                                                    {formatOptionalText(paymentDetails?.workLog?.hoursWorked)}
-                                                </p>
-                                            </div>
-                                            <div className={styles.infoItem}>
-                                                <span className={styles.label}>Remarks</span>
-                                                <p className={styles.remarksValue}>
-                                                    {renderOptionalLinkedText(paymentDetails?.workLog?.remarks)}
-                                                </p>
-                                            </div>
-                                            <div className={styles.infoItem}>
-                                                <span className={styles.label}>Payment Creator</span>
-                                                <p className={styles.value}>
-                                                    {formatOptionalText(paymentDetails?.paymentCreatorHandle)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                            </div>
-                        )}
-
-                        {isTaskPayment && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Task Details</h3>
-                                {isPaymentDetailsLoading
-                                    ? <p className={styles.helperText}>Loading task details...</p>
-                                    : undefined}
-                                {!isPaymentDetailsLoading && paymentDetailsError
-                                    ? <p className={styles.helperText}>{paymentDetailsError}</p>
-                                    : undefined}
-                                {!isPaymentDetailsLoading && !paymentDetailsError && (
-                                    <div className={styles.sectionGrid}>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Task Creator</span>
-                                            <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.taskDetails?.paymentCreatorHandle)}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Task Description</span>
-                                            <p className={styles.remarksValue}>
-                                                {props.payment.description
-                                                    ? props.payment.description.substring(0, 500)
-                                                    : '-'}
-                                            </p>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Project Name</span>
-                                            {buildWorkManagerProjectUrl(paymentDetails?.taskDetails) && paymentDetails?.taskDetails?.projectName
-                                                ? (
-                                                    <a
-                                                        className={styles.value}
-                                                        href={buildWorkManagerProjectUrl(paymentDetails.taskDetails)}
-                                                        target='_blank'
-                                                        rel='noreferrer'
-                                                    >
-                                                        {paymentDetails.taskDetails.projectName}
-                                                    </a>
-                                                )
-                                                : (
-                                                    <p className={styles.value}>
-                                                        {formatOptionalText(paymentDetails?.taskDetails?.projectName)}
-                                                    </p>
-                                                )}
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <span className={styles.label}>Payment Approver</span>
-                                            <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.taskDetails?.paymentApproverHandle)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('audit')} label='View Audit' />
-                            {props.payment.status.toUpperCase() === 'PAID' && (
-                                <Button
-                                    onClick={() => handleToggleView('external_transaction')}
-                                    label='External Transaction Details'
-                                />
-                            )}
-                        </div>
-                    </>
-                )}
-
-                {view === 'audit' && (
-                    <>
-                        <div className={styles.auditSection}>
-                            {auditLines
-                                && auditLines.length > 0
-                                && auditLines.map(line => (
-                                    <Collapsible
-                                        key={line.id}
-                                        header={
-                                            (
-                                                <h3>
-                                                    {
-                                                        new Date(line.createdAt)
-                                                            .toLocaleString()
-                                                    }
-                                                </h3>
-                                            )
-                                        }
-                                        containerClass={styles.container}
-                                        contentClass={styles.content}
-                                    >
-                                        <div className={styles.auditItem}>
-                                            <div>
-                                                <p>
-                                                    <strong>User:</strong>
-                                                    {line.userId}
-                                                </p>
-                                                <p>
-                                                    <strong>Action:</strong>
-                                                    {formatAction(line.action)}
-                                                </p>
-                                                <p>
-                                                    <strong>Note:</strong>
-                                                    {line.note}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </Collapsible>
-                                ))}
-                            {(auditLines === undefined || auditLines.length === 0) && (
-                                <div className={styles.auditItem}>
-                                    <p>No audit data available</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
-                        </div>
-                    </>
-                )}
-
-                {view === 'external_transaction' && (
-                    <>
-                        <div className={styles.auditSection}>
-                            {externalTransactionAudit
-                                && externalTransactionAudit.length > 0
-                                && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
-                                    <>
-                                        <Collapsible
-                                            key={`internal-record${index}`}
-                                            header={<h3>Internal Record</h3>}
-                                            containerClass={styles.container}
-                                            contentClass={styles.content}
-                                        >
-                                            <div className={styles.auditItem}>
-                                                <div>
-                                                    <p>
-                                                        <strong>Provider Used:</strong>
-                                                        {' '}
-                                                        {externalTransaction.paymentMethodUsed}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Status:</strong>
-                                                        {externalTransaction.status}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Processed At:</strong>
-                                                        {externalTransaction.createdAt}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Total Amount Processed:</strong>
-                                                        {' '}
-                                                        {externalTransaction.totalNetAmount}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </Collapsible>
-                                        <Collapsible
-                                            key={`external-record${index}`}
-                                            header={<h3>External Record</h3>}
-                                            containerClass={styles.container}
-                                            contentClass={styles.content}
-                                        >
-                                            <div className={styles.auditItem}>
-                                                <div>
-                                                    <pre>
-                                                        {JSON.stringify(
-                                                            externalTransaction.externalTransactionDetails,
-                                                            undefined,
-                                                            2,
-                                                        )}
-                                                    </pre>
-                                                </div>
-                                            </div>
-                                        </Collapsible>
-                                    </>
-                                ))}
-                            {externalTransactionAudit === undefined && (
-                                <div className={styles.auditItem}>
-                                    <p>No external transaction data is available</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
-                        </div>
-                    </>
-                )}
+            <PaymentDetailsSummaryRow
+                approverLabel={summaryConfig.approverLabel}
+                budgetApproverHandle={budgetApproverHandle}
+                columns={summaryConfig.columns}
+                creatorLabel={summaryConfig.creatorLabel}
+                handle={props.payment.handle}
+                isPoints={props.isPoints}
+                paymentAmount={props.payment.grossAmountNumber}
+                paymentApproverHandle={paymentApproverHandle}
+                paymentCreatorHandle={
+                    isTaskPayment
+                        ? taskCreatorHandle
+                        : isChallengePayment
+                            ? challengeCreatorHandle
+                            : paymentDetails?.paymentCreatorHandle
+                }
+                secondaryApproverLabel={summaryConfig.secondaryApproverLabel}
+            />
+            {agreementSummary && (
+                <PaymentAgreementBanner summary={agreementSummary} />
+            )}
+            <PaymentDetailsTabs
+                activeTabId={activeTab}
+                onTabChange={tabId => setActiveTab(tabId as PaymentDetailsTabId)}
+                tabs={tabs}
+            />
+            <div className={styles.tabPanel} role='tabpanel'>
+                {renderTabContent()}
             </div>
+            {props.onClose && (
+                <div className={styles.footer}>
+                    <Button
+                        secondary
+                        label='Close'
+                        size='lg'
+                        onClick={props.onClose}
+                    />
+                </div>
+            )}
         </div>
     )
 }

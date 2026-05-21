@@ -7,6 +7,10 @@ import React, { FC, useCallback, useEffect } from 'react'
 import { Collapsible, ConfirmModal, InputText, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
+import {
+    toPaymentTypeCategories,
+    toPaymentTypeFilterValues,
+} from '~/libs/shared/lib/utils/payment-type-filter.utils'
 
 import { editPayment, exportSearchResults, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail, WinningsType } from '../../../lib/models/WinningDetail'
@@ -74,11 +78,16 @@ const STATUS_FILTER_OPTIONS: { label: string, value: string }[] = [
 const ALL_STATUS_FILTER_VALUES: ReadonlyArray<string> = STATUS_FILTER_OPTIONS.map(option => option.value)
 
 const TOPCODER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
-    { label: 'Task Payment', value: 'TASK_PAYMENT' },
-    { label: 'Contest Payment', value: 'CONTEST_PAYMENT' },
-    { label: 'Copilot Payment', value: 'COPILOT_PAYMENT' },
-    { label: 'Review Board Payment', value: 'REVIEW_BOARD_PAYMENT' },
-    { label: 'Engagement Payment', value: 'ENGAGEMENT_PAYMENT' },
+    { label: 'Task Payment', value: 'Task' },
+    { label: 'Contest Payment', value: 'Contest' },
+    { label: 'Copilot Payment', value: 'Copilot' },
+    { label: 'Review Board Payment', value: 'Review Board' },
+    { label: 'Engagement Payment', value: 'Engagement' },
+]
+
+const APPROVER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
+    { label: 'Task Payments', value: 'Task' },
+    { label: 'Engagement Payments', value: 'Engagement' },
 ]
 
 function normalizeFilterRecord(filters: Record<string, string[]>): Record<string, string[]> {
@@ -344,7 +353,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             const dateFrom = submittedFilters.dateFrom?.[0] ?? approverDefaultDates.dateFrom
             const dateTo = submittedFilters.dateTo?.[0] ?? approverDefaultDates.dateTo
 
-            const pickedApproverTypes = (submittedFilters.category ?? [])
+            const pickedApproverTypes = toPaymentTypeCategories(submittedFilters.category ?? [])
                 .filter(c => approverAllowedCategories.includes(c))
             const categories = pickedApproverTypes.length > 0
                 ? pickedApproverTypes
@@ -392,7 +401,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             }
         }
 
-        const pickedTopcoderTypes = (submittedFilters.category ?? [])
+        const pickedTopcoderTypes = toPaymentTypeCategories(submittedFilters.category ?? [])
             .filter(c => TOPCODER_PAYMENT_CATEGORIES.includes(c))
         const categories = pickedTopcoderTypes.length > 0
             ? pickedTopcoderTypes
@@ -453,8 +462,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     ? { status: draftFilters.status }
                     : { status: [restrictedDefaultStatus ?? 'ON_HOLD_ADMIN'] }),
                 ...(draftFilters.category !== undefined
-                    ? { category: draftFilters.category }
-                    : { category: [...approverAllowedCategories] }),
+                    ? { category: toPaymentTypeFilterValues(draftFilters.category) }
+                    : { category: toPaymentTypeFilterValues([...approverAllowedCategories]) }),
                 dateFrom: draftFilters.dateFrom !== undefined
                     ? draftFilters.dateFrom[0]
                     : approverDefaultDates.dateFrom,
@@ -471,7 +480,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         }
 
         if (draftFilters.category !== undefined) {
-            overrides.category = draftFilters.category
+            overrides.category = toPaymentTypeFilterValues(draftFilters.category)
         }
 
         if (draftFilters.dateFrom?.[0]) {
@@ -503,8 +512,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
             const approverDefaults: Record<string, string | string[]> = {
                 category: draftFilters.category !== undefined
-                    ? draftFilters.category
-                    : [...approverAllowedCategories],
+                    ? toPaymentTypeFilterValues(draftFilters.category)
+                    : toPaymentTypeFilterValues([...approverAllowedCategories]),
                 dateFrom: draftFilters.dateFrom !== undefined
                     ? draftFilters.dateFrom[0]
                     : approverDefaultDates.dateFrom,
@@ -520,8 +529,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         const topcoderDefaults: Record<string, string | string[]> = {
             category: draftFilters.category !== undefined
-                ? draftFilters.category
-                : [...TOPCODER_PAYMENT_CATEGORIES],
+                ? toPaymentTypeFilterValues(draftFilters.category)
+                : toPaymentTypeFilterValues([...TOPCODER_PAYMENT_CATEGORIES]),
             status: draftFilters.status !== undefined
                 ? draftFilters.status
                 : [...ALL_STATUS_FILTER_VALUES],
@@ -862,12 +871,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 handleFilter,
                 statusFilter,
                 {
+                    displayValueInTrigger: true,
                     key: 'category',
                     label: 'Payment Type',
-                    options: [
-                        { label: 'Task Payments', value: taskPaymentCategory },
-                        { label: 'Engagement Payments', value: engagementPaymentCategory },
-                    ],
+                    options: APPROVER_TYPE_FILTER_OPTIONS,
                     type: 'multi_dropdown',
                 },
                 {
@@ -891,6 +898,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         if (paymentListingTab === 'topcoder') {
             filtersOut.push({
+                displayValueInTrigger: true,
                 key: 'category',
                 label: 'Type',
                 options: TOPCODER_TYPE_FILTER_OPTIONS,
@@ -1090,10 +1098,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                 content: (
                                     <PaymentView
                                         payment={payment}
+                                        onClose={() => setConfirmFlow(undefined)}
                                     />
                                 ),
                                 showButtons: false,
-                                title: 'Payment Details',
+                                title: 'PAYMENT DETAILS',
                             })
                         }}
                     />
@@ -1150,7 +1159,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             )}
             {confirmFlow && (
                 <ConfirmModal
-                    maxWidth='800px'
+                    maxWidth='960px'
                     size='lg'
                     showButtons={confirmFlow.showButtons}
                     title={confirmFlow.title}

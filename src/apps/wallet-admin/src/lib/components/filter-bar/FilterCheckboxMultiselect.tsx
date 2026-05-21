@@ -27,6 +27,7 @@ export interface FilterCheckboxMultiselectOption {
 
 interface FilterCheckboxMultiselectProps {
     readonly className?: string
+    readonly displayValueInTrigger?: boolean
     readonly label: string
     readonly name: string
     readonly onChange: (values: string[]) => void
@@ -55,6 +56,7 @@ const modifiers = [sameWidthModifier]
 function getDisplayText(
     options: ReadonlyArray<FilterCheckboxMultiselectOption>,
     values: string[],
+    displayValueInTrigger: boolean = false,
 ): string {
     if (options.length === 0) {
         return ''
@@ -69,7 +71,17 @@ function getDisplayText(
     }
 
     if (values.length === 1) {
-        return options.find(option => option.value === values[0])?.label ?? ''
+        const option = options.find(item => item.value === values[0])
+
+        if (!option) {
+            return ''
+        }
+
+        if (displayValueInTrigger) {
+            return option.value ?? option.label ?? ''
+        }
+
+        return option.label ?? option.value ?? ''
     }
 
     return `${values.length} selected`
@@ -96,7 +108,11 @@ const FilterCheckboxMultiselect: FC<FilterCheckboxMultiselectProps> = (props: Fi
         [props.options],
     )
     const allSelected = props.options.length > 0 && props.values.length === props.options.length
-    const displayText = getDisplayText(props.options, props.values)
+    const displayText = getDisplayText(
+        props.options,
+        props.values,
+        props.displayValueInTrigger,
+    )
     const triggerLabel = displayText || (props.placeholder ?? props.label)
 
     const toggleMenu = (toggle?: boolean): void => {

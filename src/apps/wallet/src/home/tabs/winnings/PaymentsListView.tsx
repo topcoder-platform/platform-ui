@@ -4,6 +4,7 @@ import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
+import { toPaymentTypeCategories } from '~/libs/shared/lib/utils/payment-type-filter.utils'
 
 import { getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
@@ -163,12 +164,22 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const fetchWinnings = useCallback(async () => {
         setIsLoading(true)
         try {
-            const payments = await getPayments(props.profile.userId.toString(), pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
+            const apiFilters = { ...filters }
+            if (apiFilters.category?.length) {
+                apiFilters.category = toPaymentTypeCategories(apiFilters.category)
+            }
+
+            const payments = await getPayments(
+                props.profile.userId.toString(),
+                pagination.pageSize,
+                (pagination.currentPage - 1) * pagination.pageSize,
+                apiFilters,
+            )
             const winningsData = convertToWinnings(payments.winnings)
             setWinnings(winningsData)
             setPagination(payments.pagination)
-        } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError)
+        } catch {
+            setWinnings([])
         } finally {
             setIsLoading(false)
         }
@@ -221,28 +232,30 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             type: 'dropdown',
                         },
                         {
+                            displayValueInTrigger: true,
+
                             key: 'category',
                             label: 'Type',
                             options: [
                                 {
                                     label: 'Task Payment',
-                                    value: 'TASK_PAYMENT',
+                                    value: 'Task',
                                 },
                                 {
                                     label: 'Contest Payment',
-                                    value: 'CONTEST_PAYMENT',
+                                    value: 'Contest',
                                 },
                                 {
                                     label: 'Copilot Payment',
-                                    value: 'COPILOT_PAYMENT',
+                                    value: 'Copilot',
                                 },
                                 {
                                     label: 'Review Board Payment',
-                                    value: 'REVIEW_BOARD_PAYMENT',
+                                    value: 'Review Board',
                                 },
                                 {
                                     label: 'Engagement Payment',
-                                    value: 'ENGAGEMENT_PAYMENT',
+                                    value: 'Engagement',
                                 },
                                 {
                                     label: 'All',

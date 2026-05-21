@@ -24,6 +24,7 @@ export type Filter = {
     key: string;
     label: string;
     type: 'input' | 'dropdown' | 'member_autocomplete' | 'multi_dropdown' | 'date';
+    displayValueInTrigger?: boolean;
     options?: FilterOptions[];
 };
 
@@ -134,6 +135,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             name={filter.key}
             label={filter.label}
             dirty
+            displayValueInTrigger={filter.displayValueInTrigger}
             placeholder={filter.label}
         />
     )
@@ -152,6 +154,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                 name={filter.key}
                 label={filter.label}
                 placeholder={filter.label}
+                displayValueInTrigger={filter.displayValueInTrigger}
                 options={baseOptions}
                 values={valuesFromParent}
                 onChange={(values: string[]) => {
