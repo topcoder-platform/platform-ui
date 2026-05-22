@@ -148,7 +148,9 @@ export const AiReviewWorkflowsPage: FC = () => {
             type: 'element',
         },
         {
+            defaultSortDirection: 'asc',
             label: 'Scorecard',
+            propertyName: 'scorecard.name',
             renderer: (data: AiWorkflow) => {
                 if (!data.scorecard?.id) {
                     return <span>{data.scorecard?.name || 'N/A'}</span>
