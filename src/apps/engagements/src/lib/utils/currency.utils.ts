@@ -63,7 +63,7 @@ export const formatCurrencyAmount = (
  * @param fallback Label shown when the value is absent or invalid.
  * @returns Human-readable weekly hours label.
  */
-export const formatStandardHoursPerWeek = (
+export const formatStandardHoursPerDay = (
     value?: string | number | null,
     fallback = 'TBD',
 ): string => {

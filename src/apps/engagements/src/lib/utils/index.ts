@@ -7,7 +7,7 @@ export { formatLocation } from './api.utils'
 export { truncateText } from './application.utils'
 export {
     formatCurrencyAmount,
-    formatStandardHoursPerWeek,
+    formatStandardHoursPerDay,
     normalizePositiveNumericValue,
 } from './currency.utils'
 export { formatDate } from './date.utils'
