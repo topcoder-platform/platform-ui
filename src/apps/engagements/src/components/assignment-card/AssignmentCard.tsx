@@ -15,7 +15,7 @@ import {
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import {
     formatCurrencyAmount,
-    formatStandardHoursPerWeek,
+    formatStandardHoursPerDay,
 } from '../../lib/utils/currency.utils'
 import { formatDate } from '../../lib/utils/date.utils'
 import { formatLocation } from '../../lib/utils/api.utils'
@@ -168,9 +168,9 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => formatDurationMonths(assignment?.durationMonths),
         [assignment?.durationMonths],
     )
-    const standardHoursPerWeekLabel = useMemo(
-        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek, FALLBACK_VALUE_LABEL),
-        [assignment?.standardHoursPerWeek],
+    const standardHoursPerDayLabel = useMemo(
+        () => formatStandardHoursPerDay(assignment?.standardHoursPerDay, FALLBACK_VALUE_LABEL),
+        [assignment?.standardHoursPerDay],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()
     const showAssignedActions = assignmentStatus === 'assigned'
@@ -253,7 +253,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.ClockIcon className={styles.metaIcon} />
-                    <span>{`Std hrs / week: ${standardHoursPerWeekLabel}`}</span>
+                    <span>{`Std hrs / day: ${standardHoursPerDayLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
