@@ -55,8 +55,10 @@ interface AssignmentDetails {
     memberHandle?: string
     memberId?: number | string
     otherRemarks?: string
+    paymentCycle?: string
     ratePerHour?: string
     startDate?: string
+    standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
 }
 
@@ -309,6 +311,12 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.paymentCycle) {
+                    entry.paymentCycle = String(assignment.paymentCycle)
+                        .trim()
+                        .toUpperCase()
+                }
+
                 if (assignment.ratePerHour) {
                     entry.ratePerHour = String(assignment.ratePerHour)
                         .trim()
@@ -319,8 +327,21 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                 }
 
                 if (
+                    assignment.standardHoursPerDay !== undefined
+                    && assignment.standardHoursPerDay !== ''
+                ) {
+                    const standardHoursPerDay = Number(assignment.standardHoursPerDay)
+
+                    if (Number.isFinite(standardHoursPerDay)) {
+                        entry.standardHoursPerDay = String(standardHoursPerDay)
+                        entry.standardHoursPerWeek = String(Number((standardHoursPerDay * 5).toFixed(2)))
+                    }
+                }
+
+                if (
                     assignment.standardHoursPerWeek !== undefined
                     && assignment.standardHoursPerWeek !== ''
+                    && entry.standardHoursPerDay === undefined
                 ) {
                     const standardHoursPerWeek = Number(assignment.standardHoursPerWeek)
 

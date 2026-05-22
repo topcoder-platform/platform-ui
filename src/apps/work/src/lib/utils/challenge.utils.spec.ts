@@ -63,6 +63,35 @@ describe('challenge utils', () => {
                 .toBe(12)
         })
 
+        it('returns the latest provisional summation before stale raw scores', () => {
+            expect(getSubmissionProvisionalScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 93.82,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                        },
+                        updatedAt: '2026-05-20T03:41:00.000Z',
+                    },
+                    {
+                        aggregateScore: 73.2513061836071,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                        },
+                        updatedAt: '2026-05-20T04:04:00.000Z',
+                    },
+                ],
+                submissions: [
+                    {
+                        provisionalScore: 93.82,
+                    },
+                ],
+            }))
+                .toBe(73.2513061836071)
+        })
+
         it('returns undefined when provisional scoring is unavailable', () => {
             expect(getSubmissionProvisionalScore({
                 review: [
@@ -125,6 +154,35 @@ describe('challenge utils', () => {
                 ],
             }))
                 .toBe(20)
+        })
+
+        it('returns the latest system summation before stale raw scores', () => {
+            expect(getSubmissionSystemScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 60,
+                        isFinal: true,
+                        metadata: {
+                            testProcess: 'system',
+                        },
+                        updatedAt: '2026-05-20T03:41:00.000Z',
+                    },
+                    {
+                        aggregateScore: 88.5,
+                        isFinal: true,
+                        metadata: {
+                            testProcess: 'system',
+                        },
+                        updatedAt: '2026-05-20T04:04:00.000Z',
+                    },
+                ],
+                submissions: [
+                    {
+                        finalScore: 60,
+                    },
+                ],
+            }))
+                .toBe(88.5)
         })
 
         it('returns undefined when system scoring is unavailable', () => {

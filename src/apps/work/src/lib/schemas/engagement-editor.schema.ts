@@ -4,8 +4,10 @@ interface EngagementEditorSchemaAssignmentDetails {
     agreementRate?: string
     durationMonths?: number | string
     memberHandle?: string
+    paymentCycle?: string
     ratePerHour?: string
     startDate?: string
+    standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
 }
 
@@ -118,7 +120,12 @@ function hasCompleteAssignmentDetails(
         && !Number.isNaN(parsedStartDate.getTime())
         && toPositiveInteger(detail.durationMonths) !== undefined
         && isPositiveDecimal(detail.ratePerHour)
-        && isPositiveDecimal(detail.standardHoursPerWeek, 2)
+        && isPositiveDecimal(detail.standardHoursPerDay, 2)
+        && ['WEEKLY', 'FORTNIGHTLY', 'MONTHLY'].includes(
+            String(detail.paymentCycle || 'WEEKLY')
+                .trim()
+                .toUpperCase(),
+        )
 }
 
 export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData> = yup.object({

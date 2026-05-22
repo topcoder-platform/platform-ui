@@ -164,4 +164,26 @@ describe('resolveSubmissionReviewResult', () => {
         expect(result)
             .toBe('PASS')
     })
+
+    it('prefers the summation aggregate score when requested', () => {
+        const submission = {
+            ...buildSubmission([
+                {
+                    finalScore: 0,
+                    resourceId: 'res-1',
+                    status: 'COMPLETED',
+                },
+            ], 0),
+            aggregateScore: 88,
+            isPassingReview: true,
+        }
+
+        const result = resolveSubmissionReviewResult(submission, {
+            defaultMinimumPassingScore: DEFAULT_PASSING_SCORE,
+            preferAggregateScore: true,
+        })
+
+        expect(result)
+            .toBe('PASS')
+    })
 })
