@@ -33,6 +33,7 @@ export interface PaymentEngagementDetails {
     standardHoursPerDay?: number
     standardHoursPerWeek?: number
     otherRemarks?: string
+    paymentApproverHandle?: string
 }
 
 export interface PaymentWorkLog {
@@ -45,10 +46,24 @@ export interface PaymentTaskDetails {
     projectName?: string
     paymentApproverHandle?: string
     paymentCreatorHandle?: string
+    taskDescription?: string
+}
+
+export type PaymentAgreementStatus = 'match' | 'under' | 'over'
+
+export interface PaymentAgreementSummary {
+    status: PaymentAgreementStatus
+    expectedAmount: number
+    actualAmount: number
+    differenceAmount: number
+    ratePerHour: number
+    workDays: number
+    hoursPerDay: number
     description?: string
 }
 
 export interface WinningPaymentDetails {
+    agreementSummary?: PaymentAgreementSummary
     engagementDetails?: PaymentEngagementDetails
     paymentCreatorHandle?: string
     workLog?: PaymentWorkLog

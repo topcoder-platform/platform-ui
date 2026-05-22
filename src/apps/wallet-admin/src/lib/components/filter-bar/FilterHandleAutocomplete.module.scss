@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.memberSelect {
+    color: $black-60;
+    width: 100%;
+
+    [class*="-indicatorSeparator"] {
+        display: none;
+    }
+}
+
+.searchIndicator {
+    color: $turq-160;
+    padding: 0;
+
+    svg {
+        @include icon-size(14);
+    }
+}

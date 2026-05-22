@@ -2,8 +2,14 @@
 import { xhrGetAsync } from '~/libs/core'
 
 import { Winning } from '../models/WinningDetail'
-import { fetchWinningPaymentDetails } from './wallet'
+import { fetchChallengePaymentSummary, fetchWinningPaymentDetails } from './wallet'
 
+jest.mock('~/config/environments/default.env', () => ({
+    CHALLENGE_API_URL: 'https://example.com/v6/challenges',
+    CHALLENGE_API_VERSION: 'v5',
+}), {
+    virtual: true,
+})
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         API: {
@@ -15,6 +21,14 @@ jest.mock('~/config', () => ({
     virtual: true,
 })
 jest.mock('~/libs/core', () => ({
+    xhrCreateInstance: jest.fn(() => ({
+        defaults: {
+            headers: {
+                common: {},
+            },
+        },
+        get: jest.fn(),
+    })),
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
     xhrPatchAsync: jest.fn(),
@@ -183,5 +197,55 @@ describe('fetchWinningPaymentDetails', () => {
                 3,
                 'https://example.com/v6/engagements/engagements/engagement-456',
             )
+    })
+})
+
+describe('fetchChallengePaymentSummary', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('maps challenge createdBy and approvalApprovedBy to summary handles', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValueOnce({
+            approvalApprovedBy: 'kartik',
+            createdBy: 'wendell',
+        })
+
+        const result = await fetchChallengePaymentSummary('challenge-1')
+
+        expect(result)
+            .toEqual({
+                budgetApproverHandle: 'kartik',
+                creatorHandle: 'wendell',
+                paymentApproverHandle: 'kartik',
+            })
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/v6/challenges/challenge-1',
+                expect.any(Object),
+            )
+    })
+
+    it('resolves numeric user ids through the member API', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync
+            .mockResolvedValueOnce({
+                approvalApprovedBy: '2002',
+                createdBy: '1001',
+            })
+            .mockResolvedValueOnce([{ handle: 'wendell', userId: 1001 }])
+            .mockResolvedValueOnce([{ handle: 'kartik', userId: 2002 }])
+
+        const result = await fetchChallengePaymentSummary('challenge-1')
+
+        expect(result)
+            .toEqual({
+                budgetApproverHandle: 'kartik',
+                creatorHandle: 'wendell',
+                paymentApproverHandle: 'kartik',
+            })
     })
 })

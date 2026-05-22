@@ -1,20 +1,22 @@
 import { get } from 'lodash'
-import { FC, FocusEvent } from 'react'
-import { MultiValue, StylesConfig } from 'react-select'
+import { FC, FocusEvent, useMemo } from 'react'
+import { components, MultiValue, StylesConfig } from 'react-select'
 import AsyncSelect from 'react-select/async'
+import classNames from 'classnames'
 
-import { InputWrapper } from '~/libs/ui'
+import { IconOutline, InputWrapper } from '~/libs/ui'
+import {
+    membersAutocompete,
+    MembersAutocompeteResult,
+} from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
-import { membersAutocompete, MembersAutocompeteResult } from './input-handle-functions'
-import styles from './InputHandleAutocomplete.module.scss'
+import styles from './FilterHandleAutocomplete.module.scss'
 
-export interface InputHandleAutocompleteProps {
+interface FilterHandleAutocompleteProps {
     readonly className?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
-    readonly error?: string
     readonly hideInlineErrors?: boolean
-    readonly hint?: string
     readonly label?: string | JSX.Element
     readonly name: string
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
@@ -24,12 +26,22 @@ export interface InputHandleAutocompleteProps {
     readonly value?: Array<MembersAutocompeteResult>
 }
 
-const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputHandleAutocompleteProps) => {
-    const customStyles: StylesConfig<any> = {
+const SearchDropdownIndicator: FC = (indicatorProps: any) => (
+    <components.DropdownIndicator
+        {...indicatorProps}
+        className={styles.searchIndicator}
+    >
+        <IconOutline.SearchIcon />
+    </components.DropdownIndicator>
+)
+
+const FilterHandleAutocomplete: FC<FilterHandleAutocompleteProps> = (props: FilterHandleAutocompleteProps) => {
+    const customStyles: StylesConfig<any> = useMemo(() => ({
         control: provided => ({
             ...provided,
             border: 'none',
             boxShadow: 'none',
+            minHeight: 0,
         }),
         input: provided => ({
             ...provided,
@@ -62,7 +74,11 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
             ...provided,
             padding: 0,
         }),
-    }
+    }), [])
+
+    const selectComponents = useMemo(() => ({
+        DropdownIndicator: SearchDropdownIndicator,
+    }), [])
 
     function getUserProp(key: string): (d: unknown) => string {
         return d => get(d, key)
@@ -82,8 +98,9 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
             type='text'
         >
             <AsyncSelect<MembersAutocompeteResult, true>
-                className={styles.memberSelect}
+                className={classNames(styles.memberSelect, props.className)}
                 cacheOptions
+                components={selectComponents}
                 getOptionLabel={getUserProp('handle')}
                 getOptionValue={getUserProp('userId')}
                 isMulti
@@ -100,4 +117,4 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
     )
 }
 
-export default InputHandleAutocomplete
+export default FilterHandleAutocomplete

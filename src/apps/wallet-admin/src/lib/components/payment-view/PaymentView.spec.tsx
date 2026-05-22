@@ -6,15 +6,20 @@ import {
     waitFor,
     within,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { Winning } from '../../models/WinningDetail'
 import {
+    fetchAuditLogs,
+    fetchChallengePaymentSummary,
     fetchWinningPaymentDetails,
+    getMemberHandle,
 } from '../../services/wallet'
 import { PaymentView } from '.'
 
 jest.mock('../../services/wallet', () => ({
     fetchAuditLogs: jest.fn(),
+    fetchChallengePaymentSummary: jest.fn(),
     fetchPayoutAuditLogs: jest.fn(),
     fetchWinningPaymentDetails: jest.fn(),
     getMemberHandle: jest.fn(),
@@ -29,15 +34,13 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
-    Collapsible: (props: {
-        children: React.ReactNode
-        header: React.ReactNode
-    }) => (
-        <div>
-            {props.header}
-            {props.children}
-        </div>
-    ),
+    IconOutline: {
+        CheckIcon: () => <span>check-icon</span>,
+    },
+    IconSolid: {
+        ExclamationIcon: () => <span>exclamation-icon</span>,
+        XCircleIcon: () => <span>x-icon</span>,
+    },
 }), { virtual: true })
 
 jest.mock('~/config/environments/default.env', () => ({
@@ -55,6 +58,12 @@ jest.mock('~/config', () => ({
 const mockedFetchWinningPaymentDetails = (
     fetchWinningPaymentDetails as jest.MockedFunction<typeof fetchWinningPaymentDetails>
 )
+const mockedFetchChallengePaymentSummary = (
+    fetchChallengePaymentSummary as jest.MockedFunction<typeof fetchChallengePaymentSummary>
+)
+const mockedFetchAuditLogs = fetchAuditLogs as jest.MockedFunction<typeof fetchAuditLogs>
+const mockedGetMemberHandle = getMemberHandle as jest.MockedFunction<typeof getMemberHandle>
+
 const expectedWorkManagerLink
     = 'https://challenges.example.com/projects/project-789/engagements/engagement-456/assignments'
         + '?assignmentId=assignment-123'
@@ -63,27 +72,27 @@ const expectedProjectLink
 
 describe('PaymentView', () => {
     const payment: Winning = {
-        createDate: 'Mar 21, 2026',
+        createDate: '15/5/2026',
         currency: 'USD',
-        datePaid: '-',
+        datePaid: '30/5/2026',
         description: 'Wipro - US Foods - Week Ending: Mar 21, 2026',
         details: [{
             currency: 'USD',
             datePaid: '',
-            grossAmount: '463.75',
+            grossAmount: '2000',
             id: 'payment-1',
             installmentNumber: 1,
             status: 'OWED',
-            totalAmount: '463.75',
+            totalAmount: '2000',
         }],
         externalId: 'assignment-123',
-        grossAmount: '$463.75',
-        grossAmountNumber: 463.75,
-        handle: 'vikashchaudhary26',
+        grossAmount: '$2,000.00',
+        grossAmountNumber: 2000,
+        handle: 'disnadiji',
         id: 'winning-1',
-        releaseDate: 'Apr 11, 2026',
-        releaseDateObj: new Date('2026-04-11T00:00:00.000Z'),
-        status: 'Owed',
+        releaseDate: '15/5/2026',
+        releaseDateObj: new Date('2026-05-15T00:00:00.000Z'),
+        status: 'On Hold (Admin)',
         type: 'engagement payment',
     }
 
@@ -92,60 +101,49 @@ describe('PaymentView', () => {
             engagementDetails: {
                 assignmentId: 'assignment-123',
                 billingStartDate: '2026-02-16T00:00:00.000Z',
-                durationMonths: 3,
+                durationMonths: 12,
                 engagementId: 'engagement-456',
-                engagementTitle: 'Snowflake Developer - Vikash',
-                otherRemarks: 'Complete onboarding within the first week. Docs: https://google.com',
+                paymentApproverHandle: 'TonyJ',
+                paymentCycle: 'weekly',
                 projectId: 'project-789',
-                projectName: 'Wipro - US Foods',
-                ratePerHour: '10.60',
-                standardHoursPerWeek: 43.75,
+                projectName: 'Test Project Engagement BA',
+                ratePerHour: '50',
+                standardHoursPerDay: 8,
             },
-            paymentCreatorHandle: 'copilot-manager',
+            paymentCreatorHandle: 'wendell',
             workLog: {
-                hoursWorked: 43.75,
-                remarks: 'Completed sprint support and bug triage. Reference: https://example.com/worklog',
+                hoursWorked: 40,
+                remarks: 'Member worked 40 hours this week.',
             },
         })
+        mockedFetchAuditLogs.mockResolvedValue([])
+        mockedFetchChallengePaymentSummary.mockResolvedValue({})
+        mockedGetMemberHandle.mockResolvedValue(new Map())
     })
 
     afterEach(() => {
         jest.clearAllMocks()
     })
 
-    it('renders engagement details and a work-manager assignee link for engagement payments', async () => {
-        render(<PaymentView payment={payment} />)
+    it('renders engagement payment details with tabs and agreement match banner', async () => {
+        render(<PaymentView payment={payment} onClose={jest.fn()} />)
 
         await waitFor(() => {
             expect(mockedFetchWinningPaymentDetails)
                 .toHaveBeenCalledWith(payment)
         })
 
-        expect(await screen.findByRole('heading', { name: 'Engagement Details' }))
+        expect(await screen.findByText('PAYMENT MATCHES AGREEMENT'))
             .toBeTruthy()
-        await waitFor(() => {
-            expect(screen.getAllByText('43.75'))
-                .toHaveLength(2)
-        })
-        expect(await screen.findByText(/Completed sprint support and bug triage\./))
+        expect(screen.getByText('disnadiji'))
             .toBeTruthy()
-
-        const workLogHeading = await screen.findByRole('heading', {
-            name: 'Work Log / Manager Inputs',
-        })
-        const workLogSection = workLogHeading.parentElement
-
-        if (!workLogSection) {
-            throw new Error('Expected work log section to be rendered.')
-        }
-
-        expect(screen.getAllByText('Payment Creator'))
-            .toHaveLength(1)
-        expect(within(workLogSection)
-            .getByText('Payment Creator'))
+        expect(screen.getByText('wendell'))
             .toBeTruthy()
-        expect(within(workLogSection)
-            .getByText('copilot-manager'))
+        expect(screen.getByText('Payment Approver'))
+            .toBeTruthy()
+        expect(screen.getByText('TonyJ'))
+            .toBeTruthy()
+        expect(screen.getByRole('tab', { name: 'Engagement Details' }))
             .toBeTruthy()
 
         const descriptionLink = await screen.findByRole('link', {
@@ -155,48 +153,49 @@ describe('PaymentView', () => {
         expect(descriptionLink.getAttribute('href'))
             .toBe(expectedWorkManagerLink)
 
+        await userEvent.click(screen.getByRole('tab', { name: 'Engagement Details' }))
+
         const projectLink = await screen.findByRole('link', {
-            name: 'Wipro - US Foods',
+            name: 'Test Project Engagement BA',
         })
 
         expect(projectLink.getAttribute('href'))
             .toBe(expectedProjectLink)
-        expect(projectLink.getAttribute('target'))
-            .toBe('_blank')
+        expect(screen.getByText('Weekly'))
+            .toBeTruthy()
+        expect(screen.getByText('8'))
+            .toBeTruthy()
 
-        const remarksLink = await screen.findByRole('link', {
-            name: 'https://google.com',
-        })
+        await userEvent.click(screen.getByRole('tab', { name: 'Work Log' }))
 
-        expect(remarksLink.getAttribute('href'))
-            .toBe('https://google.com')
-        expect(remarksLink.getAttribute('target'))
-            .toBe('_blank')
-
-        const workLogRemarksLink = await screen.findByRole('link', {
-            name: 'https://example.com/worklog',
-        })
-
-        expect(workLogRemarksLink.getAttribute('href'))
-            .toBe('https://example.com/worklog')
-        expect(workLogRemarksLink.getAttribute('target'))
-            .toBe('_blank')
+        expect(await screen.findByText('Member worked 40 hours this week.'))
+            .toBeTruthy()
+        expect(screen.getAllByText('Payment Creator'))
+            .toHaveLength(1)
+        expect(screen.queryByText('Payment Approver'))
+            .not.toBeNull()
     })
 
-    it('renders task details section for task payments', async () => {
+    it('renders task payment details with five-column summary and task details tab', async () => {
         const taskPayment: Winning = {
             ...payment,
-            description: 'Build a cool widget for the dashboard',
+            description: 'Build a responsive front-end interface for General Electric.',
             externalId: 'challenge-uuid-1',
             type: 'task payment',
         }
 
+        mockedFetchChallengePaymentSummary.mockResolvedValue({
+            budgetApproverHandle: 'kartik',
+        })
+
         mockedFetchWinningPaymentDetails.mockResolvedValue({
+            paymentCreatorHandle: 'chAVGA5xBDH6Gxz1JMJ67Np7CBSAtoaL@clients',
             taskDetails: {
-                paymentApproverHandle: 'approver-handle',
-                paymentCreatorHandle: 'task-creator',
+                paymentApproverHandle: 'TonyJ',
+                paymentCreatorHandle: 'wendell',
                 projectId: '42',
-                projectName: 'My Awesome Project',
+                projectName: 'General Electric Front End Task',
+                taskDescription: 'Deliver clean, production-ready HTML, CSS, and JavaScript.',
             },
         })
 
@@ -207,20 +206,283 @@ describe('PaymentView', () => {
                 .toHaveBeenCalledWith(taskPayment)
         })
 
-        expect(await screen.findByRole('heading', { name: 'Task Details' }))
+        await waitFor(() => {
+            expect(mockedFetchChallengePaymentSummary)
+                .toHaveBeenCalledWith('challenge-uuid-1')
+        })
+
+        expect(screen.getByText('Task Creator'))
+            .toBeTruthy()
+        expect(screen.getByText('Budget Approver'))
+            .toBeTruthy()
+        expect(screen.getByText('Payment Approver'))
+            .toBeTruthy()
+        expect(screen.queryByText('Payment Creator'))
+            .toBeNull()
+        expect(await screen.findByText('wendell'))
+            .toBeTruthy()
+        expect(screen.queryByText('chAVGA5xBDH6Gxz1JMJ67Np7CBSAtoaL@clients'))
+            .toBeNull()
+        expect(await screen.findByText('kartik'))
+            .toBeTruthy()
+        expect(await screen.findByText('TonyJ'))
+            .toBeTruthy()
+        expect(screen.queryByText('PAYMENT MATCHES AGREEMENT'))
+            .toBeNull()
+        expect(await screen.findByRole('tab', { name: 'Task Details' }))
             .toBeTruthy()
 
-        expect(await screen.findByRole('heading', { name: 'Task Details' }))
-            .toBeTruthy()
-        expect(await screen.findByText('task-creator'))
-            .toBeTruthy()
-        expect(await screen.findByText('approver-handle'))
-            .toBeTruthy()
+        await waitFor(() => {
+            expect(screen.queryByText('Loading task details...'))
+                .toBeNull()
+        })
 
-        const projectLink = await screen.findByRole('link', { name: 'My Awesome Project' })
+        await userEvent.click(screen.getByRole('tab', { name: 'Task Details' }))
+
+        const taskDetailsPanel = screen.getByRole('tabpanel')
+
+        expect(within(taskDetailsPanel)
+            .getByText('Task Creator'))
+            .toBeTruthy()
+        expect(within(taskDetailsPanel)
+            .getByText('wendell'))
+            .toBeTruthy()
+        expect(within(taskDetailsPanel)
+            .getByText('Project Name'))
+            .toBeTruthy()
+        expect(within(taskDetailsPanel)
+            .getByText('Task Description'))
+            .toBeTruthy()
+        expect(within(taskDetailsPanel)
+            .getByText(
+                'Deliver clean, production-ready HTML, CSS, and JavaScript.',
+            ))
+            .toBeTruthy()
+        const projectLink = within(taskDetailsPanel)
+            .getByRole('link', {
+                name: 'General Electric Front End Task',
+            })
         expect(projectLink.getAttribute('href'))
-            .toBe('https://challenges.example.com/projects/42/challenges/challenge-uuid-1/view')
-        expect(projectLink.getAttribute('target'))
-            .toBe('_blank')
+            .toBe('https://challenges.example.com/projects/42')
+    })
+
+    it('falls back to challenge approvalApprovedBy for task payment approver when finance omits it', async () => {
+        const taskPayment: Winning = {
+            ...payment,
+            description: 'Pay period test task - 1st Place',
+            externalId: 'challenge-uuid-1',
+            type: 'task payment',
+        }
+
+        mockedFetchChallengePaymentSummary.mockResolvedValue({
+            budgetApproverHandle: 'mess',
+            paymentApproverHandle: 'mess',
+        })
+
+        mockedFetchWinningPaymentDetails.mockResolvedValue({
+            taskDetails: {
+                paymentCreatorHandle: 'TCConnCopilot',
+                projectId: '42',
+                projectName: 'General Electric Front End Task',
+            },
+        })
+
+        render(<PaymentView payment={taskPayment} />)
+
+        await waitFor(() => {
+            expect(mockedFetchChallengePaymentSummary)
+                .toHaveBeenCalledWith('challenge-uuid-1')
+        })
+
+        const paymentApproverLabel = await screen.findByText('Payment Approver')
+        const summaryPaymentApprover = paymentApproverLabel.closest('[class*="summaryItem"]')
+
+        await waitFor(() => {
+            expect(summaryPaymentApprover?.textContent)
+                .toContain('mess')
+        })
+    })
+
+    it('renders contest payment details with challenge creator and budget approver labels', async () => {
+        const contestPayment: Winning = {
+            ...payment,
+            description: 'Test Contest Task BA - Week Ending: May 02, 2026',
+            externalId: 'contest-challenge-1',
+            type: 'contest payment',
+        }
+
+        mockedFetchChallengePaymentSummary.mockResolvedValue({
+            budgetApproverHandle: 'kartik',
+            creatorHandle: 'wendell',
+        })
+
+        render(<PaymentView payment={contestPayment} onClose={jest.fn()} />)
+
+        await waitFor(() => {
+            expect(mockedFetchChallengePaymentSummary)
+                .toHaveBeenCalledWith('contest-challenge-1')
+        })
+
+        expect(mockedFetchWinningPaymentDetails)
+            .not.toHaveBeenCalled()
+
+        expect(screen.getByText('Challenge Creator'))
+            .toBeTruthy()
+        expect(screen.getByText('Budget Approver'))
+            .toBeTruthy()
+        expect(screen.queryByText('Payment Creator'))
+            .toBeNull()
+        expect(screen.queryByText('Payment Approver'))
+            .toBeNull()
+        expect(await screen.findByText('wendell'))
+            .toBeTruthy()
+        expect(await screen.findByText('kartik'))
+            .toBeTruthy()
+        expect(screen.queryByText('PAYMENT MATCHES AGREEMENT'))
+            .toBeNull()
+        expect(screen.queryByRole('tab', { name: 'Engagement Details' }))
+            .toBeNull()
+
+        const descriptionLink = await screen.findByRole('link', {
+            name: 'Test Contest Task BA - Week Ending: May 02, 2026',
+        })
+
+        expect(descriptionLink.getAttribute('href'))
+            .toBe('https://www.example.com/challenges/contest-challenge-1')
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Audit History' }))
+
+        await waitFor(() => {
+            expect(mockedFetchAuditLogs)
+                .toHaveBeenCalledWith(contestPayment.id)
+        })
+    })
+
+    it.each([
+        ['copilot payment', 'copilot-challenge-1', 'Copilot challenge payment'],
+        ['review board payment', 'review-board-1', 'Review board challenge payment'],
+    ])('renders %s with challenge payment summary and tabs', async (paymentType, externalId, description) => {
+        const styledPayment: Winning = {
+            ...payment,
+            description,
+            externalId,
+            type: paymentType,
+        }
+
+        mockedFetchChallengePaymentSummary.mockResolvedValue({
+            budgetApproverHandle: 'kartik',
+            creatorHandle: 'wendell',
+        })
+
+        render(<PaymentView payment={styledPayment} onClose={jest.fn()} />)
+
+        await waitFor(() => {
+            expect(mockedFetchChallengePaymentSummary)
+                .toHaveBeenCalledWith(externalId)
+        })
+
+        expect(mockedFetchWinningPaymentDetails)
+            .not.toHaveBeenCalled()
+
+        expect(screen.getByText('Challenge Creator'))
+            .toBeTruthy()
+        expect(screen.getByText('Budget Approver'))
+            .toBeTruthy()
+        expect(await screen.findByText('wendell'))
+            .toBeTruthy()
+        expect(await screen.findByText('kartik'))
+            .toBeTruthy()
+        expect(screen.queryByRole('tab', { name: 'Task Details' }))
+            .toBeNull()
+
+        const descriptionLink = await screen.findByRole('link', { name: description })
+        expect(descriptionLink.getAttribute('href'))
+            .toBe(`https://www.example.com/challenges/${externalId}`)
+    })
+
+    it('renders topgear payment details with handle and payment summary only', async () => {
+        const topgearPayment: Winning = {
+            ...payment,
+            description: 'Test Project Topgeader BA - Week Ending: May 02, 2026',
+            externalId: 'topgear-challenge-1',
+            type: 'topgear payment',
+        }
+
+        render(<PaymentView payment={topgearPayment} onClose={jest.fn()} />)
+
+        expect(screen.getByText('Handle'))
+            .toBeTruthy()
+        expect(screen.getByText('Payment'))
+            .toBeTruthy()
+        expect(screen.getByText('disnadiji'))
+            .toBeTruthy()
+        expect(screen.queryByText('Payment Creator'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Creator'))
+            .toBeNull()
+        expect(screen.queryByText('Task Creator'))
+            .toBeNull()
+        expect(screen.queryByRole('tab', { name: 'Task Details' }))
+            .toBeNull()
+        expect(screen.getByRole('tab', { name: 'General Info' }))
+            .toBeTruthy()
+        expect(screen.getByRole('tab', { name: 'Audit History' }))
+            .toBeTruthy()
+
+        const descriptionLink = screen.getByRole('link', {
+            name: 'Test Project Topgeader BA - Week Ending: May 02, 2026',
+        })
+
+        expect(descriptionLink.getAttribute('href'))
+            .toBe('https://www.example.com/challenges/topgear-challenge-1')
+
+        expect(mockedFetchWinningPaymentDetails)
+            .not.toHaveBeenCalled()
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Audit History' }))
+
+        await waitFor(() => {
+            expect(mockedFetchAuditLogs)
+                .toHaveBeenCalledWith(topgearPayment.id)
+        })
+    })
+
+    it('renders taas payment details with handle and payment summary only', async () => {
+        const taasPayment: Winning = {
+            ...payment,
+            description: 'Test Project TaaS BA - Week Ending: May 02, 2026',
+            externalId: 'taas-challenge-1',
+            type: 'taas payment',
+        }
+
+        render(<PaymentView payment={taasPayment} onClose={jest.fn()} />)
+
+        expect(screen.getByText('Handle'))
+            .toBeTruthy()
+        expect(screen.getByText('Payment'))
+            .toBeTruthy()
+        expect(screen.queryByText('Payment Creator'))
+            .toBeNull()
+        expect(screen.getByRole('tab', { name: 'General Info' }))
+            .toBeTruthy()
+        expect(screen.getByRole('tab', { name: 'Audit History' }))
+            .toBeTruthy()
+
+        const descriptionLink = screen.getByRole('link', {
+            name: 'Test Project TaaS BA - Week Ending: May 02, 2026',
+        })
+
+        expect(descriptionLink.getAttribute('href'))
+            .toBe('https://www.example.com/challenges/taas-challenge-1')
+
+        expect(mockedFetchWinningPaymentDetails)
+            .not.toHaveBeenCalled()
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Audit History' }))
+
+        await waitFor(() => {
+            expect(mockedFetchAuditLogs)
+                .toHaveBeenCalledWith(taasPayment.id)
+        })
     })
 })
