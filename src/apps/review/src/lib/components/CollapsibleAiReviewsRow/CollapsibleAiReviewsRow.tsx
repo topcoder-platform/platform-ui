@@ -53,25 +53,31 @@ export function normalizeDecisionStatus(
 }
 
 /**
- * Builds a multi-line tooltip string from escalation notes, approver notes,
- * and the unlock reason. Returns undefined if there are no notes at all.
- * Used to show Copilot/Manager/Admin why a submission was escalated,
- * approved/rejected, or unlocked.
+ * Builds a multi-line tooltip string from escalation notes and approver notes.
+ * Returns undefined if there are no notes at all.
+ * Used to show Copilot/Manager/Admin why a submission was escalated or
+ * approved/rejected.
  */
 function buildNotesTooltip(
     escalations?: AiReviewDecisionEscalation[],
-    reason?: string | null,
+    resourceMemberIdMapping?: Record<string, any>,
 ): string | undefined {
     const parts: string[] = []
 
+    const getMemberHandle = (memberId?: string | null): string => {
+        if (!memberId || !resourceMemberIdMapping) return ''
+        const resource = resourceMemberIdMapping[memberId]
+        return resource?.memberHandle || ''
+    }
+
     escalations?.forEach(esc => {
         if (esc.escalationNotes) {
-            const by = esc.createdBy ? ` (by ${esc.createdBy})` : ''
+            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
             parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
         }
 
         if (esc.approverNotes) {
-            const by = esc.updatedBy ? ` (by ${esc.updatedBy})` : ''
+            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
             const prefix = esc.status === 'APPROVED'
                 ? 'Approval Note'
                 : esc.status === 'REJECTED'
@@ -80,10 +86,6 @@ function buildNotesTooltip(
             parts.push(`${prefix}${by}: ${esc.approverNotes}`)
         }
     })
-
-    if (reason) {
-        parts.push(`Unlock Reason: ${reason}`)
-    }
 
     return parts.length ? parts.join('\n') : undefined
 }
@@ -111,16 +113,18 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [currentDecision?.status],
     )
 
+    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
+
     /**
      * Builds the tooltip text for the notes icon shown next to the status label.
      * Only shown to Copilot/Manager/Admin (not submitters).
-     * Covers: escalation notes, approval/rejection notes, and unlock reason.
+     * Covers: escalation notes and approval/rejection notes.
      */
     const notesTooltip = useMemo((): string | undefined => {
         if (hasSubmitterRole || !currentDecision) return undefined
 
-        return buildNotesTooltip(currentDecision.escalations, currentDecision.reason)
-    }, [currentDecision, hasSubmitterRole])
+        return buildNotesTooltip(currentDecision.escalations, resourceMemberIdMapping)
+    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
     const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)

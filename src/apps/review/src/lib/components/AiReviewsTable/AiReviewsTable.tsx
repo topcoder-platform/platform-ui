@@ -113,23 +113,29 @@ function getDecisionBySubmission(
 }
 
 /**
- * Builds a list of human-readable note strings from escalations and unlock reason.
+ * Builds a list of human-readable note strings from escalations.
  * Used to display notes for Escalating, Approving/Rejecting, and Unlocking actions.
  */
 function buildDecisionNotes(
     escalations?: AiReviewDecisionEscalation[],
-    reason?: string | null,
+    resourceMemberIdMapping?: Record<string, any>,
 ): string[] {
     const parts: string[] = []
 
+    const getMemberHandle = (memberId?: string | null): string => {
+        if (!memberId || !resourceMemberIdMapping) return ''
+        const resource = resourceMemberIdMapping[memberId]
+        return resource?.memberHandle || ''
+    }
+
     escalations?.forEach(esc => {
         if (esc.escalationNotes) {
-            const by = esc.createdBy ? ` (by ${esc.createdBy})` : ''
+            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
             parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
         }
 
         if (esc.approverNotes) {
-            const by = esc.updatedBy ? ` (by ${esc.updatedBy})` : ''
+            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
             const prefix = esc.status === 'APPROVED'
                 ? 'Approval Note'
                 : esc.status === 'REJECTED'
@@ -138,10 +144,6 @@ function buildDecisionNotes(
             parts.push(`${prefix}${by}: ${esc.approverNotes}`)
         }
     })
-
-    if (reason) {
-        parts.push(`Unlock Reason: ${reason}`)
-    }
 
     return parts
 }
@@ -334,17 +336,18 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         return 'Submission Locked - This submission won\'t be reviewed during the Review Phase.'
     }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
+    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
+
     /**
-     * Builds the list of notes from escalations (escalationNotes, approverNotes)
-     * and the unlock reason. These are shown to Copilot/Manager/Admin only
-     * (not to submitters) so they can see why a submission was escalated,
-     * approved/rejected, or unlocked.
+     * Builds the list of notes from escalations (escalationNotes, approverNotes).
+     * These are shown to Copilot/Manager/Admin only (not to submitters) so they
+     * can see why a submission was escalated or approved/rejected.
      */
     const decisionNotes = useMemo((): string[] => {
         if (!currentDecision || hasSubmitterRole) return []
 
-        return buildDecisionNotes(currentDecision.escalations, currentDecision.reason)
-    }, [currentDecision, hasSubmitterRole])
+        return buildDecisionNotes(currentDecision.escalations, resourceMemberIdMapping)
+    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const hasDecisionNotes = decisionNotes.length > 0
 
