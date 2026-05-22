@@ -184,18 +184,32 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
     const append = fieldArrayResult.append
     const remove = fieldArrayResult.remove
 
-    const trackOptions: InputSelectOption[] = useMemo(() => [
-        { label: 'Select track', value: '' },
-        ...tracks.map(t => {
+    const trackOptions: InputSelectOption[] = useMemo(() => {
+        const seen = new Set<string>()
+        const options: InputSelectOption[] = [{ label: 'Select track', value: '' }]
+        for (const t of tracks) {
             const trackValue: string = (t as ChallengeTrack & { track?: string }).track || t.name.toUpperCase()
-            return { label: t.name, value: trackValue }
-        }),
-    ], [tracks])
+            if (!seen.has(trackValue)) {
+                seen.add(trackValue)
+                options.push({ label: t.name, value: trackValue })
+            }
+        }
 
-    const typeOptions: InputSelectOption[] = useMemo(() => [
-        { label: 'Select type', value: '' },
-        ...types.map(t => ({ label: t.name, value: t.abbreviation })),
-    ], [types])
+        return options
+    }, [tracks])
+
+    const typeOptions: InputSelectOption[] = useMemo(() => {
+        const seen = new Set<string>()
+        const options: InputSelectOption[] = [{ label: 'Select type', value: '' }]
+        for (const t of types) {
+            if (!seen.has(t.name)) {
+                seen.add(t.name)
+                options.push({ label: t.name, value: t.name })
+            }
+        }
+
+        return options
+    }, [types])
 
     const workflowOptions: InputSelectOption[] = useMemo(() => workflows
         .filter(w => !w.disabled)
@@ -244,6 +258,16 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
     const handleAddWorkflow = useCallback(() => {
         append({ isGating: false, weightPercent: 100, workflowId: '' })
     }, [append])
+
+    const onError = useCallback((formErrors: typeof errors) => {
+        const workflowError = formErrors.workflows?.message
+            || formErrors.workflows?.root?.message
+        if (workflowError) {
+            toast.error(workflowError as string)
+        } else {
+            toast.error('Please fix the validation errors before submitting')
+        }
+    }, [])
 
     const onSubmit = useCallback((data: FormValues) => {
         setIsSubmitting(true)
@@ -312,7 +336,7 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
             ) : (
                 <form
                     className={styles.container}
-                    onSubmit={handleSubmit(onSubmit)}
+                    onSubmit={handleSubmit(onSubmit, onError)}
                 >
                     <div className={styles.formGrid}>
                         <InputText
@@ -475,8 +499,10 @@ export const CreateTemplateModal: FC<Props> = (props: Props) => {
                             </Button>
                         </div>
 
-                        {errors.workflows && typeof errors.workflows.message === 'string' && (
-                            <p className={styles.errorText}>{errors.workflows.message}</p>
+                        {(errors.workflows?.message || errors.workflows?.root?.message) && (
+                            <p className={styles.errorText}>
+                                {(errors.workflows?.message || errors.workflows?.root?.message) as string}
+                            </p>
                         )}
 
                         {fields.map((field, index) => (

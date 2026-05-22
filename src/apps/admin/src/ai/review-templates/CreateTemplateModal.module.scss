@@ -40,6 +40,7 @@
     border: 1px solid $black-20;
     border-radius: $sp-2;
     padding: $sp-4;
+    overflow: visible;
 }
 
 .workflowsHeader {
@@ -76,6 +77,11 @@
     // Align height with other inputs
     :global(.input-select-react__control) {
         min-height: 40px;
+    }
+
+    // Ensure dropdown menu appears above modal content
+    :global(.input-select-react__menu) {
+        z-index: 9999;
     }
 }
 
