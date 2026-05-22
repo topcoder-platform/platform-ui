@@ -38,12 +38,17 @@ function formatIOSDateString(iosDateString: string): string {
     return date.toLocaleDateString('en-GB', options)
 }
 
+const taskPaymentCategory = 'TASK_PAYMENT'
+const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
+
+function isTopcoderTaskOrEngagementPayment(category: string): boolean {
+    return category === taskPaymentCategory || category === engagementPaymentCategory
+}
+
 function formatStatus(status: string): string {
     switch (status) {
         case 'ON_HOLD':
             return 'On Hold'
-        case 'OWED':
-            return 'Available'
         case 'PROCESSING':
             return 'Processing'
         case 'PAID':
@@ -57,6 +62,22 @@ function formatStatus(status: string): string {
         default:
             return status.replaceAll('_', ' ')
     }
+}
+
+function formatMemberPaymentStatus(
+    status: string,
+    category: string,
+    releaseDate: string,
+): string {
+    if (status === 'ON_HOLD_ADMIN' && isTopcoderTaskOrEngagementPayment(category)) {
+        return 'Created'
+    }
+
+    if (status === 'OWED') {
+        return new Date(releaseDate) <= new Date() ? 'Available' : 'Owed'
+    }
+
+    return formatStatus(status)
 }
 
 function isIdVerificationComplete(paymentStatus?: WinningDetail['paymentStatus']): boolean {
@@ -151,7 +172,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                         ? 'On Hold (ID Verification)'
                                         : 'On Hold'
                         )
-                        : formatStatus(payment.details[0].status)
+                        : formatMemberPaymentStatus(
+                            payment.details[0].status,
+                            payment.category,
+                            payment.releaseDate,
+                        )
                 ),
                 type: payment.category.replaceAll('_', ' ')
                     .toLowerCase(),
@@ -256,7 +281,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             label: 'Status',
                             options: [
                                 {
-                                    label: 'Available',
+                                    label: 'Owed',
                                     value: 'OWED',
                                 },
                                 {
