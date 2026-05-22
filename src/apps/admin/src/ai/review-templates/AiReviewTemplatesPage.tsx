@@ -1,8 +1,10 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
+import _ from 'lodash'
 
-import { BaseModal, Button, IconOutline, InputSelect, InputSelectOption } from '~/libs/ui'
+import { BaseModal, Button, FormToggleSwitch, IconOutline, InputSelect, InputSelectOption } from '~/libs/ui'
 
-import { PageWrapper, TableLoading, TableNoRecord } from '../../lib'
+import { ConfirmModal, PageWrapper, TableLoading, TableNoRecord } from '../../lib'
 import { TableWrapper } from '../../lib/components/common/TableWrapper'
 import { ChallengeTrack, ChallengeType } from '../../lib/models'
 import { getChallengeTracks, getChallengeTypes } from '../../lib/services/challenge-management.service'
@@ -13,6 +15,7 @@ import {
     deleteAiReviewTemplate,
     getAiReviewTemplates,
     TemplateWorkflowItem,
+    updateAiReviewTemplate,
 } from '../../lib/services/ai-templates.service'
 import { WorkflowDetailsModal } from '../review-workflows/WorkflowDetailsModal'
 
@@ -67,6 +70,7 @@ interface TemplateItemProps {
     onWorkflowClick: (workflow: AiWorkflow) => void
     onEdit: (template: AiReviewTemplate) => void
     onDelete: (template: AiReviewTemplate) => void
+    onToggleDisabled: (template: AiReviewTemplate) => void
 }
 
 const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
@@ -87,6 +91,11 @@ const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
         props.onDelete(props.template)
     }, [props])
 
+    const handleToggleClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        props.onToggleDisabled(props.template)
+    }, [props])
+
     return (
         <div className={styles.templateItem}>
             <div
@@ -103,9 +112,16 @@ const TemplateItem: FC<TemplateItemProps> = (props: TemplateItemProps) => {
                         </span>
                     </div>
                     <div className={styles.templateHeaderRight}>
-                        {props.template.disabled && (
-                            <span className={styles.disabledBadge}>Disabled</span>
-                        )}
+                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
+                            jsx-a11y/no-static-element-interactions */}
+                        <div className={styles.toggleWrapper} onClick={handleToggleClick}>
+                            <span className={styles.toggleLabel}>Active</span>
+                            <FormToggleSwitch
+                                name={`active-${props.template.id}`}
+                                value={!props.template.disabled}
+                                onChange={_.noop}
+                            />
+                        </div>
                         <button
                             type='button'
                             className={styles.editButton}
@@ -174,6 +190,10 @@ export const AiReviewTemplatesPage: FC = () => {
         open: false,
     })
     const [isDeleting, setIsDeleting] = useState(false)
+    const [toggleModal, setToggleModal] = useState<{ open: boolean; template?: AiReviewTemplate }>({
+        open: false,
+    })
+    const [isToggling, setIsToggling] = useState(false)
 
     const trackOptions: InputSelectOption[] = useMemo(() => {
         const seen = new Set<string>()
@@ -193,9 +213,9 @@ export const AiReviewTemplatesPage: FC = () => {
         const seen = new Set<string>()
         const options: InputSelectOption[] = [{ label: 'All Types', value: '' }]
         for (const t of types) {
-            if (!seen.has(t.abbreviation)) {
-                seen.add(t.abbreviation)
-                options.push({ label: t.name, value: t.abbreviation })
+            if (!seen.has(t.name)) {
+                seen.add(t.name)
+                options.push({ label: t.name, value: t.name })
             }
         }
 
@@ -288,6 +308,36 @@ export const AiReviewTemplatesPage: FC = () => {
         }
     }, [deleteModal.template, filter, loadTemplates])
 
+    const handleToggleClick = useCallback((template: AiReviewTemplate) => {
+        setToggleModal({ open: true, template })
+    }, [])
+
+    const handleCloseToggleModal = useCallback(() => {
+        setToggleModal({ open: false })
+    }, [])
+
+    const handleConfirmToggle = useCallback(async () => {
+        if (!toggleModal.template) return
+        setIsToggling(true)
+        const newDisabledState = !toggleModal.template.disabled
+        try {
+            await updateAiReviewTemplate(toggleModal.template.id, {
+                disabled: newDisabledState,
+            })
+            setTemplates(prev => prev.map(t => (
+                t.id === toggleModal.template?.id
+                    ? { ...t, disabled: newDisabledState }
+                    : t
+            )))
+            toast.success(`Template ${newDisabledState ? 'deactivated' : 'activated'} successfully`)
+            setToggleModal({ open: false })
+        } catch (error) {
+            toast.error('Failed to update template')
+        } finally {
+            setIsToggling(false)
+        }
+    }, [toggleModal.template])
+
     const hasFilters: boolean = !!filter.challengeTrack || !!filter.challengeType
 
     return (
@@ -344,6 +394,7 @@ export const AiReviewTemplatesPage: FC = () => {
                                 onWorkflowClick={handleWorkflowClick}
                                 onEdit={handleEditClick}
                                 onDelete={handleDeleteClick}
+                                onToggleDisabled={handleToggleClick}
                             />
                         ))}
                     </div>
@@ -394,6 +445,26 @@ export const AiReviewTemplatesPage: FC = () => {
                 {deleteModal.template?.title || deleteModal.template?.id}
                 &quot;? This action cannot be undone.
             </BaseModal>
+
+            <ConfirmModal
+                title='Confirm Status Change'
+                action={toggleModal.template?.disabled ? 'Activate' : 'Deactivate'}
+                open={toggleModal.open}
+                onClose={handleCloseToggleModal}
+                onConfirm={handleConfirmToggle}
+                isLoading={isToggling}
+            >
+                <p>
+                    Are you sure you want to
+                    {' '}
+                    <strong>{toggleModal.template?.disabled ? 'activate' : 'deactivate'}</strong>
+                    {' '}
+                    the template
+                    {' '}
+                    <strong>{toggleModal.template?.title || toggleModal.template?.id}</strong>
+                    ?
+                </p>
+            </ConfirmModal>
         </PageWrapper>
     )
 }

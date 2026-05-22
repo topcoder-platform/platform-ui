@@ -15,17 +15,26 @@
 
     tbody tr {
         td {
-            padding: $sp-2 $sp-4 !important;
+            padding: $sp-2 $sp-3 !important;
             border-radius: 0 !important;
             background-color: $tc-white !important;
+            vertical-align: middle;
 
             &:first-child {
                 font-weight: 600;
-                font-size: 12px;
+                font-size: 11px;
                 text-transform: uppercase;
                 color: $black-60;
                 white-space: nowrap;
-                width: 120px;
+                width: 100px;
+                min-width: 100px;
+                max-width: 100px;
+            }
+
+            &:last-child {
+                word-break: break-all;
+                overflow-wrap: anywhere;
+                text-align: right;
             }
         }
 
@@ -38,10 +47,26 @@
             background-color: $black-5 !important;
         }
     }
+
+    @media (max-width: 400px) {
+        tbody tr td {
+            padding: $sp-1 $sp-2 !important;
+            font-size: 13px;
+
+            &:first-child {
+                font-size: 10px;
+                width: 85px;
+                min-width: 85px;
+                max-width: 85px;
+            }
+        }
+    }
 }
 
 .link {
     color: $link-blue-dark;
+    font-size: 14px;
+    font-weight: 400;
     text-decoration: none;
     cursor: pointer;
 
@@ -55,6 +80,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 250px;
+
+    @media (max-width: 1050px) {
+        white-space: normal;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+        max-width: none;
+    }
 }
 
 .nameCell {
@@ -67,6 +99,8 @@
     border: none;
     padding: 0;
     color: $link-blue-dark;
+    font-size: 14px;
+    font-weight: 400;
     text-decoration: none;
     cursor: pointer;
     text-align: left;
@@ -75,6 +109,12 @@
 
     &:hover {
         text-decoration: underline;
+    }
+
+    @media (max-width: 1050px) {
+        text-align: right;
+        display: block;
+        width: 100%;
     }
 }
 

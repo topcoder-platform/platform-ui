@@ -224,6 +224,26 @@
     border-radius: 16px;
 }
 
+.toggleWrapper {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    cursor: pointer;
+    padding: 4px $sp-2;
+    border-radius: $sp-1;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: rgba($black-100, 0.05);
+    }
+}
+
+.toggleLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: $black-60;
+}
+
 .workflowsTree {
     padding: $sp-3 $sp-4;
     background-color: $tc-white;
