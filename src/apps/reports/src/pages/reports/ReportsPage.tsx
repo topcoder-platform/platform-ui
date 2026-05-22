@@ -52,7 +52,8 @@ const BILLING_ACCOUNTS_REPORT_PATH = '/sfdc/billing-accounts'
 const SFDC_PAYMENTS_REPORT_PATH = '/sfdc/payments'
 const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
     description:
-        'View SFDC payments across all billing accounts by default. Optionally filter by billing account ID and dates.',
+        `View SFDC payments across all billing accounts by 
+        default. Optionally filter by billing account ID, dates, or category.`,
     method: 'GET',
     name: 'Billing Accounts',
     parameters: [
