@@ -321,7 +321,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                 <PaymentWorkLogTab
                     errorMessage={paymentDetailsError}
                     isLoading={isPaymentDetailsLoading}
-                    paymentCreatorHandle={paymentDetails?.paymentCreatorHandle}
                     workLog={paymentDetails?.workLog}
                 />
             )

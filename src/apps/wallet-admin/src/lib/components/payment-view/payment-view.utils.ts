@@ -277,24 +277,41 @@ export function formatCurrencyAmount(
     })
 }
 
-export function formatAuditTimestamp(value: string): string {
+export interface AuditTimestampParts {
+    dateLine: string
+    timeLine: string
+}
+
+export function formatAuditTimestampParts(
+    value: string,
+): AuditTimestampParts | undefined {
     const date = new Date(value)
 
     if (Number.isNaN(date.getTime())) {
-        return value
+        return undefined
     }
 
-    const datePart = date.toLocaleDateString('en-GB', {
+    const dateLine = `${date.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
-    })
-    const timePart = date.toLocaleTimeString('en-US', {
+    })},`
+    const timeLine = date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
     })
 
-    return `${datePart}, ${timePart}`
+    return { dateLine, timeLine }
+}
+
+export function formatAuditTimestamp(value: string): string {
+    const parts = formatAuditTimestampParts(value)
+
+    if (!parts) {
+        return value
+    }
+
+    return `${parts.dateLine} ${parts.timeLine}`
 }
 
 export function getEngagementHoursPerDay(
