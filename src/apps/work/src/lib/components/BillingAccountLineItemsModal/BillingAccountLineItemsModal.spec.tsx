@@ -177,6 +177,33 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
+    it('uses billing-account markup for locked challenge fees when challenge markup cannot be loaded', () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: [
+                {
+                    amount: '28.6',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '5fdf48d2-811f-4914-b713-9e5f423c907d',
+                    externalName: 'Copilot and Admin with reviews',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            lockedBudget: 28.6,
+            markup: 0.33,
+            totalBudgetRemaining: 971.4,
+        })
+
+        expect(screen.getAllByText('$28.60'))
+            .toHaveLength(2)
+        expect(screen.getByText('$9.44'))
+            .toBeTruthy()
+        expect(screen.queryByText('-'))
+            .toBeNull()
+    })
+
     it('removes challenge markup once from consumed challenge charges before showing member payments', async () => {
         renderModal({
             ...baseBillingAccountDetails,
