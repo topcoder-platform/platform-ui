@@ -256,8 +256,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     <span>{`Std hrs / day: ${standardHoursPerDayLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
-                    <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Rate / week: ${paymentLabel}`}</span>
+                    <span>{`Payment cycle: ${assignment?.paymentCycle ?? 'TBD'}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>
