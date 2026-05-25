@@ -444,6 +444,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 return value.length > 0
             })
     }, [appliedFilters, isApproverView])
+    // eslint-disable-next-line complexity
     const selectedValueOverrides = React.useMemo<Record<string, string | string[]>>(() => {
         if (restrictedCategory) {
             const overrides: Record<string, string | string[]> = {
