@@ -14,6 +14,7 @@ import classNames from 'classnames'
 
 import {
     AiReviewConfig,
+    AiReviewMode,
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
@@ -51,6 +52,7 @@ function hasReviewerChanges(
 export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
+    const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>(undefined)
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
 
@@ -150,6 +152,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
 
     const handleAiConfigPersisted = useCallback(
         (config: AiReviewConfig): void => {
+            setAiReviewMode(config.mode)
             const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
             const nextReviewers = syncAiConfigReviewers({
                 phases,
@@ -169,6 +172,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         [formContext, phases],
     )
     const handleAiConfigRemoved = useCallback(async (): Promise<void> => {
+        setAiReviewMode(undefined)
         const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
         const nextReviewers = (currentReviewers || []).filter(reviewer => !isAiReviewer(reviewer))
 
@@ -285,7 +289,14 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 id='reviewers-human-panel'
                                 role='tabpanel'
                             >
-                                <HumanReviewTab />
+                                {aiReviewMode === 'AI_ONLY' && (
+                                    <p className={styles.aiOnlyNotice}>
+                                        No manual reviewers are needed in AI Only mode.
+                                    </p>
+                                )}
+                                {aiReviewMode !== 'AI_ONLY' && (
+                                    <HumanReviewTab />
+                                )}
                             </div>
 
                             <div
