@@ -446,12 +446,22 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     }, [appliedFilters, isApproverView])
     const selectedValueOverrides = React.useMemo<Record<string, string | string[]>>(() => {
         if (restrictedCategory) {
-            return {
+            const overrides: Record<string, string | string[]> = {
                 category: restrictedCategory,
                 status: draftFilters.status !== undefined
                     ? draftFilters.status
                     : [...ALL_STATUS_FILTER_VALUES],
             }
+
+            if (draftFilters.dateFrom !== undefined) {
+                overrides.dateFrom = draftFilters.dateFrom[0] ?? ''
+            }
+
+            if (draftFilters.dateTo !== undefined) {
+                overrides.dateTo = draftFilters.dateTo[0] ?? ''
+            }
+
+            return overrides
         }
 
         if (isApproverView) {

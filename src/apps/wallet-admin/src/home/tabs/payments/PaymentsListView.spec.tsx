@@ -315,6 +315,32 @@ describe('PaymentsListView', () => {
             }))
     })
 
+    it('reflects taas admin draft date filters in FilterBar overrides', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Wipro TaaS Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('Member earnings will appear here.')
+
+        const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+
+        act(() => {
+            filterBarProps.onFilterChange('dateFrom', ['2026-04-30'])
+            filterBarProps.onFilterChange('dateTo', ['2026-05-25'])
+        })
+
+        await waitFor(() => {
+            expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+                .toEqual(expect.objectContaining({
+                    category: 'TAAS_PAYMENT',
+                    dateFrom: '2026-04-30',
+                    dateTo: '2026-05-25',
+                }))
+        })
+    })
+
     it('applies the default approver status after switching from admin view', async () => {
         const approverDates = getApproverDefaultDateRangeForTest()
 
