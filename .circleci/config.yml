@@ -203,6 +203,8 @@ workflows:
                           ignore:
                               - master
                               - qa
+                      tags:
+                          only: /^dev-.*/
 
             - build-qa:
                   context: org-global
