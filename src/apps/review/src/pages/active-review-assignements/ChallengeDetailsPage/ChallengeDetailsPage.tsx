@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Challenge Details Page.
  */
@@ -1238,7 +1239,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 return 'Closed'
             })()
 
-            const isReviewPhaseRow = displayName.trim().toLowerCase() === 'review'
+            const isReviewPhaseRow = displayName.trim()
+                .toLowerCase() === 'review'
             const isAiOnlyReviewRow = isReviewPhaseRow && aiReviewConfig?.mode === 'AI_ONLY'
 
             rows.push({
