@@ -154,11 +154,16 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         (config: AiReviewConfig): void => {
             setAiReviewMode(config.mode)
             const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
-            const nextReviewers = syncAiConfigReviewers({
+            let nextReviewers = syncAiConfigReviewers({
                 phases,
                 reviewers: currentReviewers,
                 workflows: config.workflows,
             })
+
+            // AI_ONLY mode means no manual reviewers — strip any that remain
+            if (config.mode === 'AI_ONLY') {
+                nextReviewers = nextReviewers.filter(isAiReviewer)
+            }
 
             if (!hasReviewerChanges(currentReviewers, nextReviewers)) {
                 return
