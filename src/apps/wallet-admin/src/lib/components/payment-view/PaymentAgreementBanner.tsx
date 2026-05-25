@@ -7,6 +7,8 @@ import { PaymentAgreementSummary } from '../../models/WinningDetail'
 
 import {
     formatAgreementBreakdown,
+    formatAgreementDifferenceLabel,
+    formatAgreementExpectedAmount,
     formatCurrencyAmount,
 } from './payment-view.utils'
 import styles from './PaymentView.module.scss'
@@ -19,9 +21,7 @@ const PaymentAgreementBanner: FC<PaymentAgreementBannerProps> = (
     props: PaymentAgreementBannerProps,
 ) => {
     const breakdown = formatAgreementBreakdown(props.summary)
-    const differenceLabel = props.summary.status === 'under'
-        ? `$${props.summary.differenceAmount.toLocaleString()} less`
-        : `$${props.summary.differenceAmount.toLocaleString()} more`
+    const differenceLabel = formatAgreementDifferenceLabel(props.summary)
 
     return (
         <div
@@ -51,7 +51,7 @@ const PaymentAgreementBanner: FC<PaymentAgreementBannerProps> = (
                 <p className={styles.agreementBannerLine}>
                     <strong>Expected:</strong>
                     {' '}
-                    {formatCurrencyAmount(props.summary.expectedAmount)}
+                    {formatAgreementExpectedAmount(props.summary)}
                     {' '}
                     (
                     {breakdown}

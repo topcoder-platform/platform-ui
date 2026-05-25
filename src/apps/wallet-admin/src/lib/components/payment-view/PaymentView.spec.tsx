@@ -266,7 +266,7 @@ describe('PaymentView', () => {
             .toBe('https://challenges.example.com/projects/42')
     })
 
-    it('falls back to challenge approvalApprovedBy for task payment approver when finance omits it', async () => {
+    it('does not show task payment approver from challenge when finance omits it', async () => {
         const taskPayment: Winning = {
             ...payment,
             description: 'Pay period test task - 1st Place',
@@ -299,7 +299,7 @@ describe('PaymentView', () => {
 
         await waitFor(() => {
             expect(summaryPaymentApprover?.textContent)
-                .toContain('mess')
+                .not.toContain('mess')
         })
     })
 

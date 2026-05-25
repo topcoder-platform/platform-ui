@@ -10,7 +10,6 @@ import {
 import styles from '../PaymentView.module.scss'
 
 interface PaymentTaskDetailsTabProps {
-    readonly challengePaymentApproverHandle?: string
     readonly errorMessage?: string
     readonly isLoading: boolean
     readonly payment: Winning
@@ -34,7 +33,6 @@ const PaymentTaskDetailsTab: FC<PaymentTaskDetailsTabProps> = (
     const taskCreatorHandle = resolveTaskCreatorHandle(props.paymentDetails)
     const paymentApproverHandle = resolvePaymentApproverHandle(
         props.paymentDetails,
-        props.challengePaymentApproverHandle,
         true,
     )
 
