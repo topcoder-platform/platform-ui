@@ -9,7 +9,96 @@ import {
     Winning,
 } from '../../models/WinningDetail'
 
-const WEEKLY_WORK_DAYS = 5
+const WEEKLY_PAYMENT_DAYS = 5
+const FORTNIGHTLY_PAYMENT_DAYS = 10
+const MONTHLY_PAYMENT_DAYS_MIN = 20
+const MONTHLY_PAYMENT_DAYS_MAX = 23
+const AGREEMENT_AMOUNT_TOLERANCE = 0.01
+
+type EngagementPaymentCycle = 'weekly' | 'fortnightly' | 'monthly'
+
+function normalizeEngagementPaymentCycle(
+    paymentCycle?: string,
+): EngagementPaymentCycle {
+    const normalizedCycle = paymentCycle?.trim()
+        .toLowerCase()
+
+    if (normalizedCycle === 'fortnightly' || normalizedCycle === 'biweekly') {
+        return 'fortnightly'
+    }
+
+    if (normalizedCycle === 'monthly') {
+        return 'monthly'
+    }
+
+    return 'weekly'
+}
+
+function getPaymentCycleWorkDays(paymentCycle: EngagementPaymentCycle): number {
+    if (paymentCycle === 'fortnightly') {
+        return FORTNIGHTLY_PAYMENT_DAYS
+    }
+
+    if (paymentCycle === 'monthly') {
+        return MONTHLY_PAYMENT_DAYS_MIN
+    }
+
+    return WEEKLY_PAYMENT_DAYS
+}
+
+function resolveAgreementStatus(
+    actualAmount: number,
+    expectedAmount: number,
+    expectedAmountMax?: number,
+): PaymentAgreementSummary['status'] {
+    if (expectedAmountMax !== undefined) {
+        if (
+            actualAmount >= expectedAmount - AGREEMENT_AMOUNT_TOLERANCE
+            && actualAmount <= expectedAmountMax + AGREEMENT_AMOUNT_TOLERANCE
+        ) {
+            return 'match'
+        }
+
+        if (actualAmount < expectedAmount - AGREEMENT_AMOUNT_TOLERANCE) {
+            return 'under'
+        }
+
+        return 'over'
+    }
+
+    const difference = actualAmount - expectedAmount
+
+    if (Math.abs(difference) <= AGREEMENT_AMOUNT_TOLERANCE) {
+        return 'match'
+    }
+
+    if (difference < -AGREEMENT_AMOUNT_TOLERANCE) {
+        return 'under'
+    }
+
+    return 'over'
+}
+
+function resolveAgreementDifferenceAmount(
+    actualAmount: number,
+    expectedAmount: number,
+    expectedAmountMax: number | undefined,
+    status: PaymentAgreementSummary['status'],
+): number {
+    if (status === 'match') {
+        return 0
+    }
+
+    if (expectedAmountMax !== undefined) {
+        if (status === 'under') {
+            return Number((expectedAmount - actualAmount).toFixed(2))
+        }
+
+        return Number((actualAmount - expectedAmountMax).toFixed(2))
+    }
+
+    return Math.abs(Number((actualAmount - expectedAmount).toFixed(2)))
+}
 
 function parseRatePerHour(value?: string): number | undefined {
     if (!value) {
@@ -216,7 +305,7 @@ export function getEngagementHoursPerDay(
     }
 
     if (engagementDetails?.standardHoursPerWeek !== undefined) {
-        return engagementDetails.standardHoursPerWeek / WEEKLY_WORK_DAYS
+        return engagementDetails.standardHoursPerWeek / WEEKLY_PAYMENT_DAYS
     }
 
     return undefined
@@ -225,77 +314,112 @@ export function getEngagementHoursPerDay(
 export function getEngagementWorkDays(
     engagementDetails?: PaymentEngagementDetails,
 ): number {
-    const cycle = engagementDetails?.paymentCycle?.trim()
-        .toLowerCase()
-
-    if (cycle === 'weekly') {
-        return WEEKLY_WORK_DAYS
-    }
-
-    return WEEKLY_WORK_DAYS
+    return getPaymentCycleWorkDays(
+        normalizeEngagementPaymentCycle(engagementDetails?.paymentCycle),
+    )
 }
 
 export function buildEngagementAgreementSummary(
     payment: Winning,
     engagementDetails?: PaymentEngagementDetails,
-    workLog?: PaymentWorkLog,
 ): PaymentAgreementSummary | undefined {
     const ratePerHour = parseRatePerHour(engagementDetails?.ratePerHour)
+    const hoursPerDay = getEngagementHoursPerDay(engagementDetails)
 
-    if (!ratePerHour) {
+    if (!ratePerHour || hoursPerDay === undefined || hoursPerDay <= 0) {
         return undefined
     }
 
-    const hoursWorked = workLog?.hoursWorked
-    let workDays = getEngagementWorkDays(engagementDetails)
-    let hoursPerDay = getEngagementHoursPerDay(engagementDetails)
-    let expectedAmount: number | undefined
-
-    if (hoursWorked !== undefined && hoursWorked > 0) {
-        expectedAmount = Number((ratePerHour * hoursWorked).toFixed(2))
-        workDays = 1
-        hoursPerDay = hoursWorked
-    } else if (hoursPerDay !== undefined && hoursPerDay > 0) {
-        expectedAmount = Number((ratePerHour * workDays * hoursPerDay).toFixed(2))
-    }
-
-    if (expectedAmount === undefined || hoursPerDay === undefined) {
-        return undefined
-    }
-
+    const paymentCycle = normalizeEngagementPaymentCycle(
+        engagementDetails?.paymentCycle,
+    )
+    const workDays = getPaymentCycleWorkDays(paymentCycle)
+    const expectedAmount = Number(
+        (ratePerHour * hoursPerDay * workDays).toFixed(2),
+    )
+    const expectedAmountMax = paymentCycle === 'monthly'
+        ? Number((ratePerHour * hoursPerDay * MONTHLY_PAYMENT_DAYS_MAX).toFixed(2))
+        : undefined
     const actualAmount = payment.grossAmountNumber
-    const difference = Number((actualAmount - expectedAmount).toFixed(2))
-    const differenceAmount = Math.abs(difference)
-
-    let status: PaymentAgreementSummary['status'] = 'match'
-
-    if (difference > 0.01) {
-        status = 'over'
-    } else if (difference < -0.01) {
-        status = 'under'
-    }
+    const status = resolveAgreementStatus(
+        actualAmount,
+        expectedAmount,
+        expectedAmountMax,
+    )
+    const differenceAmount = resolveAgreementDifferenceAmount(
+        actualAmount,
+        expectedAmount,
+        expectedAmountMax,
+        status,
+    )
 
     return {
         actualAmount,
         differenceAmount,
         expectedAmount,
+        expectedAmountMax,
         hoursPerDay,
+        paymentCycle: formatPaymentCycle(engagementDetails),
         ratePerHour,
         status,
         workDays,
     }
 }
 
+function formatAgreementRangePart(
+    ratePerHour: number,
+    hoursPerDay: number,
+    workDays: number,
+): string {
+    const rate = formatCurrencyAmount(ratePerHour)
+
+    return `${rate} x ${hoursPerDay} hours x ${workDays} days`
+}
+
+export function formatAgreementExpectedAmount(
+    summary: PaymentAgreementSummary,
+): string {
+    if (summary.expectedAmountMax !== undefined) {
+        return `${formatCurrencyAmount(summary.expectedAmount)} - ${
+            formatCurrencyAmount(summary.expectedAmountMax)
+        }`
+    }
+
+    return formatCurrencyAmount(summary.expectedAmount)
+}
+
 export function formatAgreementBreakdown(
     summary: PaymentAgreementSummary,
 ): string {
-    const rate = formatCurrencyAmount(summary.ratePerHour)
-
-    if (summary.workDays === 1) {
-        return `${rate} x ${summary.hoursPerDay} hours`
+    if (summary.expectedAmountMax !== undefined) {
+        return `${formatAgreementRangePart(
+            summary.ratePerHour,
+            summary.hoursPerDay,
+            MONTHLY_PAYMENT_DAYS_MIN,
+        )} - ${formatAgreementRangePart(
+            summary.ratePerHour,
+            summary.hoursPerDay,
+            MONTHLY_PAYMENT_DAYS_MAX,
+        )}`
     }
 
-    return `${rate} x ${summary.workDays} days x ${summary.hoursPerDay} hours`
+    return formatAgreementRangePart(
+        summary.ratePerHour,
+        summary.hoursPerDay,
+        summary.workDays,
+    )
+}
+
+export function formatAgreementDifferenceLabel(
+    summary: PaymentAgreementSummary,
+): string {
+    const formattedDifference = `$${summary.differenceAmount.toLocaleString()}`
+
+    if (summary.status === 'under') {
+        return `${formattedDifference} less`
+    }
+
+    return `${formattedDifference} more`
 }
 
 export function formatPaymentCycle(
@@ -444,7 +568,6 @@ export function resolvePaymentAgreementSummary(
     return buildEngagementAgreementSummary(
         payment,
         paymentDetails?.engagementDetails,
-        paymentDetails?.workLog,
     )
 }
 

@@ -53,13 +53,14 @@ export type PaymentAgreementStatus = 'match' | 'under' | 'over'
 
 export interface PaymentAgreementSummary {
     status: PaymentAgreementStatus
-    expectedAmount: number
     actualAmount: number
     differenceAmount: number
+    expectedAmount: number
+    expectedAmountMax?: number
+    hoursPerDay: number
+    paymentCycle: string
     ratePerHour: number
     workDays: number
-    hoursPerDay: number
-    description?: string
 }
 
 export interface WinningPaymentDetails {
