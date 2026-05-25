@@ -227,6 +227,8 @@ workflows:
                           only:
                               - dev
                               - hide_ba_details
+                      tags:
+                          only: /^dev-.*/
 
             - deployQa:
                   context: org-global
