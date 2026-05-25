@@ -488,7 +488,7 @@ export function resolveTaskCreatorHandle(
 }
 
 /**
- * Payment approver handle from finance payment-details.
+ * Payment approver handle from finance payment-details (audit trail after approval).
  * Engagement payments return it on `engagementDetails`; task payments on `taskDetails`.
  */
 export function resolvePaymentApproverHandle(
@@ -496,12 +496,10 @@ export function resolvePaymentApproverHandle(
         engagementDetails?: { paymentApproverHandle?: string }
         taskDetails?: { paymentApproverHandle?: string }
     },
-    challengePaymentApproverHandle?: string,
     isTaskPayment: boolean = false,
 ): string | undefined {
     if (isTaskPayment) {
         return paymentDetails?.taskDetails?.paymentApproverHandle
-            ?? challengePaymentApproverHandle
     }
 
     return paymentDetails?.engagementDetails?.paymentApproverHandle

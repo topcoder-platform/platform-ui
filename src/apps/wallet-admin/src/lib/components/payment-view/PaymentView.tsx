@@ -61,7 +61,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
     const [challengeCreatorHandle, setChallengeCreatorHandle] = React.useState<string>()
     const [challengeBudgetApproverHandle, setChallengeBudgetApproverHandle] = React.useState<string>()
-    const [challengePaymentApproverHandle, setChallengePaymentApproverHandle] = React.useState<string>()
 
     const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
     const isTaskPayment = props.payment.type.toLowerCase() === 'task payment'
@@ -151,7 +150,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         if (!shouldFetchChallengeSummary || !props.payment.externalId) {
             setChallengeCreatorHandle(undefined)
             setChallengeBudgetApproverHandle(undefined)
-            setChallengePaymentApproverHandle(undefined)
             return undefined
         }
 
@@ -165,14 +163,12 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                     }
 
                     setChallengeBudgetApproverHandle(summary.budgetApproverHandle)
-                    setChallengePaymentApproverHandle(summary.paymentApproverHandle)
                 }
             })
             .catch(() => {
                 if (!ignore) {
                     setChallengeCreatorHandle(undefined)
                     setChallengeBudgetApproverHandle(undefined)
-                    setChallengePaymentApproverHandle(undefined)
                 }
             })
 
@@ -294,7 +290,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
     const paymentApproverHandle = resolvePaymentApproverHandle(
         paymentDetails,
-        challengePaymentApproverHandle,
         isTaskPayment,
     )
 
@@ -335,7 +330,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         if (activeTab === 'task-details') {
             return (
                 <PaymentTaskDetailsTab
-                    challengePaymentApproverHandle={challengePaymentApproverHandle}
                     errorMessage={paymentDetailsError}
                     isLoading={isPaymentDetailsLoading}
                     payment={props.payment}
