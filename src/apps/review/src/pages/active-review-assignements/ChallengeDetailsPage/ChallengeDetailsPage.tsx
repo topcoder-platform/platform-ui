@@ -283,6 +283,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         isLoadingChallengeSubmissions,
         hasChallengeScopedFetchError,
         retryChallengeScopedFetches,
+        aiReviewConfig,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole }: useRoleProps = useRole()
@@ -1237,7 +1238,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 return 'Closed'
             })()
 
+            const isReviewPhaseRow = displayName.trim().toLowerCase() === 'review'
+            const isAiOnlyReviewRow = isReviewPhaseRow && aiReviewConfig?.mode === 'AI_ONLY'
+
             rows.push({
+                disabled: isAiOnlyReviewRow || undefined,
                 duration: typeof phase.duration === 'number' ? phase.duration : undefined,
                 end: formatDate(endSource),
                 id: phase.id || phase.phaseId,
@@ -1248,7 +1253,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [approvalReviews, challengeInfo, phaseOrderingOptions, visibleChallengePhases])
+    }, [aiReviewConfig, approvalReviews, challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({
