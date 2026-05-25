@@ -953,49 +953,56 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 isCollapsed={props.isCollapsed}
                 onToggle={props.onToggle}
             >
-                {canToggleRoleView && (
-                    <div className={styles.roleViewToggle}>
-                        <span className='body-small-bold'>Role:</span>
-                        <div className={styles.roleViewButtons}>
-                            <button
-                                type='button'
-                                aria-pressed={!isRestrictedApproverView}
-                                className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
-                                onClick={() => onRoleViewChange('admin')}
+                {(showPaymentListingTabs || canToggleRoleView) && (
+                    <div className={styles.paymentListingNavRow}>
+                        {showPaymentListingTabs && (
+                            <div
+                                className={styles.paymentListingTabs}
+                                role='tablist'
+                                aria-label='Payment source'
                             >
-                                Admin View
-                            </button>
-                            {isPaymentApprover && (
-                                <button
-                                    type='button'
-                                    aria-pressed={isApproverView}
-                                    className={`${styles.roleViewButton} ${isApproverView ? styles.roleViewButtonActive : ''}`}
-                                    onClick={() => onRoleViewChange('paymentApprover')}
-                                >
-                                    Approver View
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-                {showPaymentListingTabs && (
-                    <div className={styles.paymentListingTabs} role='tablist' aria-label='Payment source'>
-                        {([
-                            { id: 'topcoder' as const, label: 'Topcoder' },
-                            { id: 'topgear' as const, label: 'Topgear' },
-                            { id: 'taas' as const, label: 'TaaS' },
-                        ]).map(tab => (
-                            <button
-                                key={tab.id}
-                                type='button'
-                                role='tab'
-                                aria-selected={paymentListingTab === tab.id}
-                                className={`${styles.paymentListingTab} ${paymentListingTab === tab.id ? styles.paymentListingTabActive : ''}`}
-                                onClick={() => onPaymentListingTabChange(tab.id)}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+                                {([
+                                    { id: 'topcoder' as const, label: 'Topcoder' },
+                                    { id: 'topgear' as const, label: 'Topgear' },
+                                    { id: 'taas' as const, label: 'TaaS' },
+                                ]).map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        type='button'
+                                        role='tab'
+                                        aria-selected={paymentListingTab === tab.id}
+                                        className={`${styles.paymentListingTab} ${paymentListingTab === tab.id ? styles.paymentListingTabActive : ''}`}
+                                        onClick={() => onPaymentListingTabChange(tab.id)}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {canToggleRoleView && (
+                            <div className={styles.roleViewToggle}>
+                                <div className={styles.roleViewButtons}>
+                                    <button
+                                        type='button'
+                                        aria-pressed={!isRestrictedApproverView}
+                                        className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
+                                        onClick={() => onRoleViewChange('admin')}
+                                    >
+                                        Admin View
+                                    </button>
+                                    {isPaymentApprover && (
+                                        <button
+                                            type='button'
+                                            aria-pressed={isApproverView}
+                                            className={`${styles.roleViewButton} ${isApproverView ? styles.roleViewButtonActive : ''}`}
+                                            onClick={() => onRoleViewChange('paymentApprover')}
+                                        >
+                                            Approver View
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 <FilterBar
