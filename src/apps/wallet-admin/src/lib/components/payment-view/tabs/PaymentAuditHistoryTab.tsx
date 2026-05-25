@@ -1,4 +1,5 @@
 import { FC, ReactNode } from 'react'
+import classNames from 'classnames'
 
 import { WinningsAudit } from '../../../models/WinningsAudit'
 import { formatAuditTimestamp } from '../payment-view.utils'
@@ -22,27 +23,39 @@ const PaymentAuditHistoryTab: FC<PaymentAuditHistoryTabProps> = (
     }
 
     return (
-        <div className={styles.auditTableWrap}>
-            <table className={styles.auditTable}>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {props.auditLines.map(line => (
-                        <tr key={line.id}>
-                            <td>{formatAuditTimestamp(line.createdAt)}</td>
-                            <td>{line.userId}</td>
-                            <td>{props.formatAction(line.action)}</td>
-                            <td>{line.note || '-'}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className={styles.auditTableWrap} role='table'>
+            <div className={styles.auditGridHeader} role='row'>
+                <div className={styles.auditGridHeadCell} role='columnheader'>Date</div>
+                <div className={styles.auditGridHeadCell} role='columnheader'>User</div>
+                <div className={styles.auditGridHeadCell} role='columnheader'>Action</div>
+                <div className={styles.auditGridHeadCell} role='columnheader'>Note</div>
+            </div>
+            {props.auditLines.map((line, index) => (
+                <div
+                    key={line.id}
+                    role='row'
+                    className={classNames(
+                        styles.auditGridRow,
+                        index % 2 === 0 ? styles.auditGridRowOdd : styles.auditGridRowEven,
+                    )}
+                >
+                    <div className={styles.auditGridCell} role='cell'>
+                        {formatAuditTimestamp(line.createdAt)}
+                    </div>
+                    <div className={styles.auditGridCell} role='cell'>
+                        {line.userId}
+                    </div>
+                    <div
+                        className={classNames(styles.auditGridCell, styles.auditGridActionCell)}
+                        role='cell'
+                    >
+                        {props.formatAction(line.action)}
+                    </div>
+                    <div className={styles.auditGridCell} role='cell'>
+                        {line.note || '-'}
+                    </div>
+                </div>
+            ))}
         </div>
     )
 }

@@ -2,11 +2,19 @@
 
 .FilterBar {
     display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
+    flex-direction: column;
     gap: 10px;
     width: 100%;
     min-width: 0;
+
+    .filterBarMain {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+    }
 
     .primaryFilter {
         flex: 0 0 auto;
@@ -16,11 +24,14 @@
     .filtersRow {
         display: flex;
         flex-direction: row;
-        align-items: center;
+        align-items: flex-end;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         min-width: 0;
         flex: 1 1 auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
 
         [class*="InputSelect-module_textSelected"] {
             text-overflow: ellipsis;
@@ -40,6 +51,11 @@
     .filter {
         min-width: 140px;
         flex: 0 0 auto;
+    }
+
+    .filterPageSize {
+        min-width: 110px;
+        max-width: 150px;
     }
 
     .filterCheckboxMultiselect {
@@ -103,12 +119,12 @@
         flex-shrink: 0;
     }
 
-    .taskApproveBtns {
+    .selectionActionsRow {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         gap: 10px;
-        flex: 1 0 100%;
-        margin-top: 10px;
+        width: 100%;
         flex-wrap: wrap;
     }
 }
@@ -117,19 +133,26 @@
     .FilterBar {
         padding-bottom: $sp-1;
 
-        .filtersRow {
-            overflow-x: auto;
+        .filter {
+            min-width: 120px;
+        }
+
+        .filterPageSize {
+            min-width: 100px;
+            max-width: 140px;
         }
     }
 }
 
 @media (max-width: 768px) {
     .FilterBar {
-        align-items: stretch;
-        flex-wrap: wrap;
+        .filterBarMain {
+            align-items: stretch;
+        }
 
         .filtersRow {
             flex-wrap: wrap;
+            overflow-x: visible;
             width: 100%;
         }
 
@@ -138,6 +161,12 @@
         .filter {
             width: 100%;
             height: auto;
+            max-width: none;
+        }
+
+        .filterPageSize {
+            min-width: 0;
+            max-width: none;
         }
 
         .primaryFilter {

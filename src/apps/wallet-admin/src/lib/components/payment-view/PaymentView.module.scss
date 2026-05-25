@@ -1,9 +1,13 @@
 @import '@libs/ui/styles/includes';
 
+$payment-field-label-color: #2a2a2a;
+
 .formContainer {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .summaryRow {
@@ -21,7 +25,9 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
 
     .summaryLabel {
+        color: $payment-field-label-color;
         font-size: 11px;
+        font-weight: 700;
         letter-spacing: 0.01em;
         line-height: 1.2;
         white-space: nowrap;
@@ -43,16 +49,15 @@
 }
 
 .summaryLabel {
-    color: $black-60;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
+    color: $payment-field-label-color;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .summaryValue {
     color: $black-100;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .agreementBanner {
@@ -129,7 +134,7 @@
     border: none;
     color: $black-60;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     margin-bottom: -1px;
     padding: 8px 0;
@@ -141,7 +146,9 @@
 }
 
 .tabPanel {
+    max-width: 100%;
     min-height: 180px;
+    min-width: 0;
 }
 
 .tabPanelContent {
@@ -168,15 +175,15 @@
 }
 
 .label {
-    color: $black-60;
-    font-size: 12px;
-    font-weight: 600;
+    color: $payment-field-label-color;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .value,
 .linkValue {
     color: $black-100;
-    font-size: 14px;
+    font-size: 16px;
     margin: 0;
 }
 
@@ -192,7 +199,7 @@
 
 .remarksValue {
     color: $black-100;
-    font-size: 14px;
+    font-size: 16px;
     margin: 0;
     overflow-wrap: anywhere;
     white-space: pre-wrap;
@@ -204,33 +211,74 @@
 }
 
 .auditTableWrap {
-    overflow-x: auto;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
 }
 
-.auditTable {
-    border-collapse: collapse;
+.auditGridHeader,
+.auditGridRow {
+    column-gap: 0;
+    display: grid;
+    grid-template-columns: minmax(108px, 17%) minmax(96px, 15%) minmax(0, 1fr) minmax(96px, 22%);
     width: 100%;
+}
 
-    th {
-        border-bottom: 1px solid $black-20;
-        color: $black-60;
-        font-size: 12px;
+.auditGridHeader {
+    margin-bottom: 4px;
+}
+
+.auditGridHeadCell {
+    color: $payment-field-label-color;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    min-width: 0;
+    padding: 0 16px 12px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.auditGridCell {
+    color: $black-100;
+    font-size: 14px;
+    line-height: 1.4;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 16px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.auditGridRowOdd .auditGridCell {
+    background-color: #f4f4f4;
+}
+
+.auditGridRowEven .auditGridCell {
+    background-color: #fff;
+}
+
+.auditGridRowOdd .auditGridCell:first-child,
+.auditGridRowEven .auditGridCell:first-child {
+    border-bottom-left-radius: 8px;
+    border-top-left-radius: 8px;
+}
+
+.auditGridRowOdd .auditGridCell:last-child,
+.auditGridRowEven .auditGridCell:last-child {
+    border-bottom-right-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.auditGridActionCell {
+    hyphens: auto;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    word-break: break-word;
+
+    strong {
         font-weight: 700;
-        padding: 10px 12px;
-        text-align: left;
-        text-transform: uppercase;
-    }
-
-    td {
-        border-bottom: 1px solid $black-10;
-        color: $black-100;
-        font-size: 14px;
-        padding: 12px;
-        vertical-align: top;
-    }
-
-    tbody tr:nth-child(even) {
-        background: $black-5;
+        white-space: normal;
     }
 }
 

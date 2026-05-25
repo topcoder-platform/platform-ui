@@ -244,66 +244,71 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
 
     return (
         <div className={styles.FilterBar}>
-            {firstFilter && (
-                <div className={styles.primaryFilter}>
-                    <div className={styles.firstFilterElement}>
-                        {renderFilterControl(0, firstFilter)}
-                    </div>
-                </div>
-            )}
-            {restFilters.length > 0 && (
-                <div className={styles.filtersRow}>
-                    {restFilters.map((filter, index) => (
-                        <div
-                            key={filter.key}
-                            className={styles.filter}
-                        >
-                            {renderFilterControl(index + 1, filter)}
+            <div className={styles.filterBarMain}>
+                {firstFilter && (
+                    <div className={styles.primaryFilter}>
+                        <div className={styles.firstFilterElement}>
+                            {renderFilterControl(0, firstFilter)}
                         </div>
-                    ))}
-                </div>
-            )}
-            <div className={styles.toolbarActions}>
-                {props.showExportButton && (
-                    <Button
-                        className={styles.exportButton}
-                        icon={IconOutline.DownloadIcon}
-                        onClick={props.onExport}
-                        size='lg'
-                    />
+                    </div>
                 )}
-                <div className={styles.filterActions}>
-                    {props.onApplyFilters && (
+                {restFilters.length > 0 && (
+                    <div className={styles.filtersRow}>
+                        {restFilters.map((filter, index) => (
+                            <div
+                                key={filter.key}
+                                className={classNames(
+                                    styles.filter,
+                                    filter.key === 'pageSize' && styles.filterPageSize,
+                                )}
+                            >
+                                {renderFilterControl(index + 1, filter)}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className={styles.toolbarActions}>
+                    {props.showExportButton && (
                         <Button
-                            primary
-                            className={styles.applyButton}
-                            label='Filter'
+                            className={styles.exportButton}
+                            icon={IconOutline.DownloadIcon}
+                            onClick={props.onExport}
                             size='lg'
-                            disabled={!props.hasPendingChanges}
-                            onClick={props.onApplyFilters}
                         />
                     )}
-                    <Button
-                        primary={!props.onApplyFilters}
-                        secondary={!!props.onApplyFilters}
-                        className={styles.resetButton}
-                        label='Reset'
-                        size='lg'
-                        disabled={
-                            props.hasActiveFilters === undefined
-                                ? selectedValue.size === 0
-                                : !props.hasActiveFilters
-                        }
-                        onClick={() => {
-                            selectedMembers.current = []
-                            setSelectedValue(new Map())
-                            props.onResetFilters?.()
-                        }}
-                    />
+                    <div className={styles.filterActions}>
+                        {props.onApplyFilters && (
+                            <Button
+                                primary
+                                className={styles.applyButton}
+                                label='Filter'
+                                size='lg'
+                                disabled={!props.hasPendingChanges}
+                                onClick={props.onApplyFilters}
+                            />
+                        )}
+                        <Button
+                            primary={!props.onApplyFilters}
+                            secondary={!!props.onApplyFilters}
+                            className={styles.resetButton}
+                            label='Reset'
+                            size='lg'
+                            disabled={
+                                props.hasActiveFilters === undefined
+                                    ? selectedValue.size === 0
+                                    : !props.hasActiveFilters
+                            }
+                            onClick={() => {
+                                selectedMembers.current = []
+                                setSelectedValue(new Map())
+                                props.onResetFilters?.()
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
             {selectionActions.length > 0 && (
-                <div className={styles.taskApproveBtns}>
+                <div className={styles.selectionActionsRow}>
                     {selectionActions.map(action => (
                         <Button
                             key={action.key}
