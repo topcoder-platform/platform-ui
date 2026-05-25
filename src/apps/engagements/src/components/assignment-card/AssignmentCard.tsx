@@ -152,10 +152,6 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => normalizeStatusKey(assignment?.status),
         [assignment?.status],
     )
-    const paymentLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.agreementRate, FALLBACK_VALUE_LABEL),
-        [assignment?.agreementRate],
-    )
     const ratePerHourLabel = useMemo(
         () => formatCurrencyAmount(assignment?.ratePerHour, FALLBACK_VALUE_LABEL),
         [assignment?.ratePerHour],
