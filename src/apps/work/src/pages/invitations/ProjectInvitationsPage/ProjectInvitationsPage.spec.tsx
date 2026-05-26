@@ -213,6 +213,10 @@ function renderPage(options: RenderPageOptions = {}): jest.Mock {
                         path='/projects/:projectId/invitations/:action?'
                     />
                     <Route
+                        element={<ProjectInvitationsPage />}
+                        path='/projects/:projectId/invitation/:action?'
+                    />
+                    <Route
                         element={<div>Challenges Page</div>}
                         path='/projects/:projectId/challenges'
                     />
@@ -380,6 +384,29 @@ describe('ProjectInvitationsPage', () => {
         await waitFor(() => {
             expect(mockedShowErrorToast)
                 .toHaveBeenCalledWith('Update failed')
+        })
+    })
+
+    it('refuses the current user invite from the legacy email invitation route', async () => {
+        mockedCheckIsUserInvitedToProject.mockReturnValue(pendingInvitation)
+
+        renderPage({
+            route: '/projects/200/invitation/refused?source=email',
+        })
+
+        await waitFor(() => {
+            expect(mockedUpdateProjectMemberInvite)
+                .toHaveBeenCalledWith(
+                    '200',
+                    '77',
+                    'refused',
+                    'email',
+                )
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByText('Invitation Declined'))
+                .not.toBeNull()
         })
     })
 })
