@@ -7,9 +7,9 @@ import { PaymentAgreementSummary } from '../../models/WinningDetail'
 
 import {
     formatAgreementBreakdown,
+    formatAgreementCurrencyAmount,
     formatAgreementDifferenceLabel,
     formatAgreementExpectedAmount,
-    formatCurrencyAmount,
 } from './payment-view.utils'
 import styles from './PaymentView.module.scss'
 
@@ -60,7 +60,7 @@ const PaymentAgreementBanner: FC<PaymentAgreementBannerProps> = (
                 <p className={styles.agreementBannerLine}>
                     <strong>Actual:</strong>
                     {' '}
-                    {formatCurrencyAmount(props.summary.actualAmount)}
+                    {formatAgreementCurrencyAmount(props.summary.actualAmount)}
                     {props.summary.status !== 'match' && (
                         <>
                             {' '}
