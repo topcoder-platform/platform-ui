@@ -7,6 +7,10 @@ import React, { FC, useCallback, useEffect } from 'react'
 import { Collapsible, ConfirmModal, InputText, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
+import {
+    toPaymentTypeCategories,
+    toPaymentTypeFilterValues,
+} from '~/libs/shared/lib/utils/payment-type-filter.utils'
 
 import { editPayment, exportSearchResults, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail, WinningsType } from '../../../lib/models/WinningDetail'
@@ -29,7 +33,26 @@ const approverAllowedCategories = [taskPaymentCategory, engagementPaymentCategor
 const taasPaymentCategory = 'TAAS_PAYMENT'
 const topgearPaymentCategory = 'TOPGEAR_PAYMENT'
 const defaultPageSize = 10
-const approverDefaultDateFilter = 'last30days'
+function formatIsoDateOnly(date: Date): string {
+    const y = date.getFullYear()
+    const mo = String(date.getMonth() + 1)
+        .padStart(2, '0')
+    const day = String(date.getDate())
+        .padStart(2, '0')
+
+    return `${y}-${mo}-${day}`
+}
+
+function getApproverDefaultDateRange(): { dateFrom: string, dateTo: string } {
+    const dateTo = new Date()
+    const dateFrom = new Date()
+    dateFrom.setMonth(dateFrom.getMonth() - 3)
+
+    return {
+        dateFrom: formatIsoDateOnly(dateFrom),
+        dateTo: formatIsoDateOnly(dateTo),
+    }
+}
 
 type PaymentListingTab = 'topcoder' | 'topgear' | 'taas'
 
@@ -52,13 +75,57 @@ const STATUS_FILTER_OPTIONS: { label: string, value: string }[] = [
     { label: 'Returned', value: 'RETURNED' },
 ]
 
+const ALL_STATUS_FILTER_VALUES: ReadonlyArray<string> = STATUS_FILTER_OPTIONS.map(option => option.value)
+
 const TOPCODER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
-    { label: 'Task Payment', value: 'TASK_PAYMENT' },
-    { label: 'Contest Payment', value: 'CONTEST_PAYMENT' },
-    { label: 'Copilot Payment', value: 'COPILOT_PAYMENT' },
-    { label: 'Review Board Payment', value: 'REVIEW_BOARD_PAYMENT' },
-    { label: 'Engagement Payment', value: 'ENGAGEMENT_PAYMENT' },
+    { label: 'Task Payment', value: 'Task' },
+    { label: 'Contest Payment', value: 'Contest' },
+    { label: 'Copilot Payment', value: 'Copilot' },
+    { label: 'Review Board Payment', value: 'Review Board' },
+    { label: 'Engagement Payment', value: 'Engagement' },
 ]
+
+const APPROVER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
+    { label: 'Task Payments', value: 'Task' },
+    { label: 'Engagement Payments', value: 'Engagement' },
+]
+
+function normalizeFilterRecord(filters: Record<string, string[]>): Record<string, string[]> {
+    return Object.fromEntries(
+        Object.entries(filters)
+            .map(([key, values]) => [key, [...values].sort()])
+            .filter(([, values]) => values.length > 0),
+    )
+}
+
+function areFilterRecordsEqual(
+    left: Record<string, string[]>,
+    right: Record<string, string[]>,
+): boolean {
+    const normalizedLeft = normalizeFilterRecord(left)
+    const normalizedRight = normalizeFilterRecord(right)
+    const keys = Array.from(new Set([
+        ...Object.keys(normalizedLeft),
+        ...Object.keys(normalizedRight),
+    ]))
+
+    return keys.every(key => {
+        const leftValues = normalizedLeft[key] ?? []
+        const rightValues = normalizedRight[key] ?? []
+        if (leftValues.length !== rightValues.length) {
+            return false
+        }
+
+        return leftValues.every((value, index) => value === rightValues[index])
+    })
+}
+
+function withoutFilterKey(filters: Record<string, string[]>, key: string): Record<string, string[]> {
+    const nextFilters = { ...filters }
+    delete nextFilters[key]
+
+    return nextFilters
+}
 
 interface PaymentsListViewProps {
     profile: UserProfile
@@ -241,7 +308,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedCategory = isWiproTaasAdmin && !hasPaymentAdminRole ? taasPaymentCategory : undefined
     const restrictedDefaultStatus = isApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isApproverView
-    const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const [draftFilters, setDraftFilters] = React.useState<Record<string, string[]>>({})
+    const [submittedFilters, setSubmittedFilters] = React.useState<Record<string, string[]>>({})
     const [paymentListingTab, setPaymentListingTab] = React.useState<PaymentListingTab>('topcoder')
 
     const showPaymentListingTabs = !isApproverView
@@ -256,14 +324,14 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     // eslint-disable-next-line complexity
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         const activeFilters = Object.fromEntries(
-            Object.entries(filters)
+            Object.entries(submittedFilters)
                 .filter(([, v]) => v.length > 0 && !(v.length === 1 && v[0] === 'all')),
         )
 
         if (restrictedCategory) {
             let statusFilter: Record<string, string[]> = {}
-            if (filters.status?.length) {
-                statusFilter = { status: filters.status }
+            if (submittedFilters.status?.length) {
+                statusFilter = { status: submittedFilters.status }
             }
 
             return {
@@ -275,20 +343,17 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         if (isApproverView) {
             let statusFilter: Record<string, string[]> = {}
-            if (filters.status?.length) {
-                statusFilter = { status: filters.status }
+            if (submittedFilters.status?.length) {
+                statusFilter = { status: submittedFilters.status }
             } else if (restrictedDefaultStatus) {
                 statusFilter = { status: [restrictedDefaultStatus] }
             }
 
-            let dateFilter: Record<string, string[]> = {}
-            if (filters.date?.length && filters.date[0] !== 'all') {
-                dateFilter = { date: activeFilters.date }
-            } else if (!filters.date?.length) {
-                dateFilter = { date: [approverDefaultDateFilter] }
-            }
+            const approverDefaultDates = getApproverDefaultDateRange()
+            const dateFrom = submittedFilters.dateFrom?.[0] ?? approverDefaultDates.dateFrom
+            const dateTo = submittedFilters.dateTo?.[0] ?? approverDefaultDates.dateTo
 
-            const pickedApproverTypes = (filters.category ?? [])
+            const pickedApproverTypes = toPaymentTypeCategories(submittedFilters.category ?? [])
                 .filter(c => approverAllowedCategories.includes(c))
             const categories = pickedApproverTypes.length > 0
                 ? pickedApproverTypes
@@ -298,12 +363,15 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             delete rest.category
             delete rest.date
             delete rest.status
+            delete rest.dateFrom
+            delete rest.dateTo
 
             return {
                 ...rest,
                 categories,
                 ...statusFilter,
-                ...dateFilter,
+                dateFrom: [dateFrom],
+                dateTo: [dateTo],
             }
         }
 
@@ -311,7 +379,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         delete base.category
 
         const allStatusesCount = STATUS_FILTER_OPTIONS.length
-        const statusSelection = filters.status ?? []
+        const statusSelection = submittedFilters.status ?? []
         const statusIsFullSelection = statusSelection.length === 0
             || statusSelection.length === allStatusesCount
 
@@ -333,7 +401,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             }
         }
 
-        const pickedTopcoderTypes = (filters.category ?? [])
+        const pickedTopcoderTypes = toPaymentTypeCategories(submittedFilters.category ?? [])
             .filter(c => TOPCODER_PAYMENT_CATEGORIES.includes(c))
         const categories = pickedTopcoderTypes.length > 0
             ? pickedTopcoderTypes
@@ -344,59 +412,102 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             categories,
         }
     }, [
-        filters,
+        submittedFilters,
         restrictedCategory,
         restrictedDefaultStatus,
         isApproverView,
         paymentListingTab,
     ])
 
-    const hasActiveFilters = React.useMemo(
-        () => Object.entries(appliedFilters)
-            .some(([key, value]) => key !== 'category' && key !== 'categories' && value.length > 0),
-        [appliedFilters],
+    const hasPendingFilterChanges = React.useMemo(
+        () => !areFilterRecordsEqual(draftFilters, submittedFilters),
+        [draftFilters, submittedFilters],
     )
+
+    const hasActiveFilters = React.useMemo(() => {
+        const approverDefaultDates = isApproverView ? getApproverDefaultDateRange() : undefined
+
+        return Object.entries(appliedFilters)
+            .some(([key, value]) => {
+                if (key === 'category' || key === 'categories') {
+                    return false
+                }
+
+                if (approverDefaultDates && key === 'dateFrom' && value[0] === approverDefaultDates.dateFrom) {
+                    return false
+                }
+
+                if (approverDefaultDates && key === 'dateTo' && value[0] === approverDefaultDates.dateTo) {
+                    return false
+                }
+
+                return value.length > 0
+            })
+    }, [appliedFilters, isApproverView])
+    // eslint-disable-next-line complexity
     const selectedValueOverrides = React.useMemo<Record<string, string | string[]>>(() => {
         if (restrictedCategory) {
-            return {
+            const overrides: Record<string, string | string[]> = {
                 category: restrictedCategory,
-                ...(filters.status?.length ? { status: filters.status } : {}),
+                status: draftFilters.status !== undefined
+                    ? draftFilters.status
+                    : [...ALL_STATUS_FILTER_VALUES],
             }
+
+            if (draftFilters.dateFrom !== undefined) {
+                overrides.dateFrom = draftFilters.dateFrom[0] ?? ''
+            }
+
+            if (draftFilters.dateTo !== undefined) {
+                overrides.dateTo = draftFilters.dateTo[0] ?? ''
+            }
+
+            return overrides
         }
 
         if (isApproverView) {
+            const approverDefaultDates = getApproverDefaultDateRange()
+
             return {
-                ...(filters.status?.length ? { status: filters.status } : { status: [restrictedDefaultStatus ?? 'ON_HOLD_ADMIN'] }),
-                ...(filters.category?.length
-                    ? { category: filters.category }
-                    : { category: [...approverAllowedCategories] }),
+                ...(draftFilters.status !== undefined
+                    ? { status: draftFilters.status }
+                    : { status: [restrictedDefaultStatus ?? 'ON_HOLD_ADMIN'] }),
+                ...(draftFilters.category !== undefined
+                    ? { category: toPaymentTypeFilterValues(draftFilters.category) }
+                    : { category: toPaymentTypeFilterValues([...approverAllowedCategories]) }),
+                dateFrom: draftFilters.dateFrom !== undefined
+                    ? draftFilters.dateFrom[0]
+                    : approverDefaultDates.dateFrom,
+                dateTo: draftFilters.dateTo !== undefined
+                    ? draftFilters.dateTo[0]
+                    : approverDefaultDates.dateTo,
             }
         }
 
         const overrides: Record<string, string | string[]> = {}
 
-        if (filters.status?.length) {
-            overrides.status = filters.status
+        if (draftFilters.status !== undefined) {
+            overrides.status = draftFilters.status
         }
 
-        if (filters.category?.length) {
-            overrides.category = filters.category
+        if (draftFilters.category !== undefined) {
+            overrides.category = toPaymentTypeFilterValues(draftFilters.category)
         }
 
-        if (filters.dateFrom?.[0]) {
-            overrides.dateFrom = filters.dateFrom[0]
+        if (draftFilters.dateFrom?.[0]) {
+            overrides.dateFrom = draftFilters.dateFrom[0]
         }
 
-        if (filters.dateTo?.[0]) {
-            overrides.dateTo = filters.dateTo[0]
+        if (draftFilters.dateTo?.[0]) {
+            overrides.dateTo = draftFilters.dateTo[0]
         }
 
         return overrides
     }, [
-        filters.status,
-        filters.category,
-        filters.dateFrom,
-        filters.dateTo,
+        draftFilters.status,
+        draftFilters.category,
+        draftFilters.dateFrom,
+        draftFilters.dateTo,
         restrictedCategory,
         isApproverView,
         restrictedDefaultStatus,
@@ -408,28 +519,39 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         }
 
         if (isApproverView) {
+            const approverDefaultDates = getApproverDefaultDateRange()
+
             const approverDefaults: Record<string, string | string[]> = {
-                category: filters.category?.length
-                    ? filters.category
-                    : [...approverAllowedCategories],
-                date: filters.date?.[0] ?? approverDefaultDateFilter,
-                status: filters.status?.length
-                    ? filters.status
+                category: draftFilters.category !== undefined
+                    ? toPaymentTypeFilterValues(draftFilters.category)
+                    : toPaymentTypeFilterValues([...approverAllowedCategories]),
+                dateFrom: draftFilters.dateFrom !== undefined
+                    ? draftFilters.dateFrom[0]
+                    : approverDefaultDates.dateFrom,
+                dateTo: draftFilters.dateTo !== undefined
+                    ? draftFilters.dateTo[0]
+                    : approverDefaultDates.dateTo,
+                status: draftFilters.status !== undefined
+                    ? draftFilters.status
                     : [restrictedDefaultStatus ?? 'ON_HOLD_ADMIN'],
             }
             return approverDefaults
         }
 
         const topcoderDefaults: Record<string, string | string[]> = {
-            category: filters.category?.length
-                ? filters.category
-                : [...TOPCODER_PAYMENT_CATEGORIES],
+            category: draftFilters.category !== undefined
+                ? toPaymentTypeFilterValues(draftFilters.category)
+                : toPaymentTypeFilterValues([...TOPCODER_PAYMENT_CATEGORIES]),
+            status: draftFilters.status !== undefined
+                ? draftFilters.status
+                : [...ALL_STATUS_FILTER_VALUES],
         }
         return topcoderDefaults
     }, [
-        filters.category,
-        filters.date,
-        filters.status,
+        draftFilters.category,
+        draftFilters.dateFrom,
+        draftFilters.dateTo,
+        draftFilters.status,
         restrictedCategory,
         restrictedDefaultStatus,
         isApproverView,
@@ -628,12 +750,14 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             ...prev,
             currentPage: 1,
         }))
-        setFilters(prev => {
-            const nextFilters = { ...prev }
-            delete nextFilters.category
-
-            return nextFilters
-        })
+        setDraftFilters(prev => withoutFilterKey(
+            withoutFilterKey(withoutFilterKey(withoutFilterKey(prev, 'category'), 'date'), 'dateFrom'),
+            'dateTo',
+        ))
+        setSubmittedFilters(prev => withoutFilterKey(
+            withoutFilterKey(withoutFilterKey(withoutFilterKey(prev, 'category'), 'date'), 'dateFrom'),
+            'dateTo',
+        ))
     }, [paymentRoleView])
 
     const onPaymentListingTabChange = useCallback((tab: PaymentListingTab) => {
@@ -645,12 +769,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             ...prev,
             currentPage: 1,
         }))
-        setFilters(prev => {
-            const nextFilters = { ...prev }
-            delete nextFilters.category
-
-            return nextFilters
-        })
+        setDraftFilters(prev => withoutFilterKey(prev, 'category'))
+        setSubmittedFilters(prev => withoutFilterKey(prev, 'category'))
     }, [])
 
     /**
@@ -728,7 +848,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         const handleFilter: Filter = {
             key: 'winnerIds',
-            label: 'Username/Handle',
+            label: 'Handle/Username',
             type: 'member_autocomplete',
         }
 
@@ -762,23 +882,21 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 handleFilter,
                 statusFilter,
                 {
+                    displayValueInTrigger: true,
                     key: 'category',
                     label: 'Payment Type',
-                    options: [
-                        { label: 'Task Payments', value: taskPaymentCategory },
-                        { label: 'Engagement Payments', value: engagementPaymentCategory },
-                    ],
+                    options: APPROVER_TYPE_FILTER_OPTIONS,
                     type: 'multi_dropdown',
                 },
                 {
-                    key: 'date',
-                    label: 'Date',
-                    options: [
-                        { label: 'Last 7 days', value: 'last7days' },
-                        { label: 'Last 30 days', value: 'last30days' },
-                        { label: 'All', value: 'all' },
-                    ],
-                    type: 'dropdown',
+                    key: 'dateFrom',
+                    label: 'Date from',
+                    type: 'date',
+                },
+                {
+                    key: 'dateTo',
+                    label: 'Date to',
+                    type: 'date',
                 },
                 pageSizeFilter,
             ]
@@ -791,6 +909,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         if (paymentListingTab === 'topcoder') {
             filtersOut.push({
+                displayValueInTrigger: true,
                 key: 'category',
                 label: 'Type',
                 options: TOPCODER_TYPE_FILTER_OPTIONS,
@@ -845,49 +964,56 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 isCollapsed={props.isCollapsed}
                 onToggle={props.onToggle}
             >
-                {canToggleRoleView && (
-                    <div className={styles.roleViewToggle}>
-                        <span className='body-small-bold'>Role:</span>
-                        <div className={styles.roleViewButtons}>
-                            <button
-                                type='button'
-                                aria-pressed={!isRestrictedApproverView}
-                                className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
-                                onClick={() => onRoleViewChange('admin')}
+                {(showPaymentListingTabs || canToggleRoleView) && (
+                    <div className={styles.paymentListingNavRow}>
+                        {showPaymentListingTabs && (
+                            <div
+                                className={styles.paymentListingTabs}
+                                role='tablist'
+                                aria-label='Payment source'
                             >
-                                Admin View
-                            </button>
-                            {isPaymentApprover && (
-                                <button
-                                    type='button'
-                                    aria-pressed={isApproverView}
-                                    className={`${styles.roleViewButton} ${isApproverView ? styles.roleViewButtonActive : ''}`}
-                                    onClick={() => onRoleViewChange('paymentApprover')}
-                                >
-                                    Approver View
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-                {showPaymentListingTabs && (
-                    <div className={styles.paymentListingTabs} role='tablist' aria-label='Payment source'>
-                        {([
-                            { id: 'topcoder' as const, label: 'Topcoder' },
-                            { id: 'topgear' as const, label: 'Topgear' },
-                            { id: 'taas' as const, label: 'TaaS' },
-                        ]).map(tab => (
-                            <button
-                                key={tab.id}
-                                type='button'
-                                role='tab'
-                                aria-selected={paymentListingTab === tab.id}
-                                className={`${styles.paymentListingTab} ${paymentListingTab === tab.id ? styles.paymentListingTabActive : ''}`}
-                                onClick={() => onPaymentListingTabChange(tab.id)}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+                                {([
+                                    { id: 'topcoder' as const, label: 'Topcoder' },
+                                    { id: 'topgear' as const, label: 'Topgear' },
+                                    { id: 'taas' as const, label: 'TaaS' },
+                                ]).map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        type='button'
+                                        role='tab'
+                                        aria-selected={paymentListingTab === tab.id}
+                                        className={`${styles.paymentListingTab} ${paymentListingTab === tab.id ? styles.paymentListingTabActive : ''}`}
+                                        onClick={() => onPaymentListingTabChange(tab.id)}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {canToggleRoleView && (
+                            <div className={styles.roleViewToggle}>
+                                <div className={styles.roleViewButtons}>
+                                    <button
+                                        type='button'
+                                        aria-pressed={!isRestrictedApproverView}
+                                        className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
+                                        onClick={() => onRoleViewChange('admin')}
+                                    >
+                                        Admin View
+                                    </button>
+                                    {isPaymentApprover && (
+                                        <button
+                                            type='button'
+                                            aria-pressed={isApproverView}
+                                            className={`${styles.roleViewButton} ${isApproverView ? styles.roleViewButtonActive : ''}`}
+                                            onClick={() => onRoleViewChange('paymentApprover')}
+                                        >
+                                            Approver View
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 <FilterBar
@@ -906,22 +1032,29 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     }}
                     selectedValueOverrides={{ ...defaultDropdownValues, ...selectedValueOverrides }}
                     filters={listingFilters}
+                    hasPendingChanges={hasPendingFilterChanges}
                     onFilterChange={(key: string, value: string[]) => {
-                        const newPagination = {
-                            ...pagination,
-                            currentPage: 1,
-                        }
-                        if (key === 'pageSize') {
-                            newPagination.pageSize = parseInt(value[0], 10)
-                        }
-
-                        setPagination(newPagination)
-
-                        setFilters(prev => ({
+                        setDraftFilters(prev => ({
                             ...prev,
-                            [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
+                            [key]: value,
                         }))
-                        setSelectedPayments({})
+                    }}
+                    onApplyFilters={() => {
+                        setDraftFilters(currentDraft => {
+                            const nextPageSize = currentDraft.pageSize?.[0]
+                                ? parseInt(currentDraft.pageSize[0], 10)
+                                : pagination.pageSize
+
+                            setSubmittedFilters(currentDraft)
+                            setPagination(prev => ({
+                                ...prev,
+                                currentPage: 1,
+                                pageSize: nextPageSize,
+                            }))
+                            setSelectedPayments({})
+
+                            return currentDraft
+                        })
                     }}
                     onResetFilters={() => {
                         setPagination({
@@ -929,7 +1062,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             currentPage: 1,
                             pageSize: defaultPageSize,
                         })
-                        setFilters({})
+                        setDraftFilters({})
+                        setSubmittedFilters({})
                         setSelectedPayments({})
                     }}
                 />
@@ -982,10 +1116,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                 content: (
                                     <PaymentView
                                         payment={payment}
+                                        onClose={() => setConfirmFlow(undefined)}
                                     />
                                 ),
                                 showButtons: false,
-                                title: 'Payment Details',
+                                title: 'PAYMENT DETAILS',
                             })
                         }}
                     />
@@ -1042,7 +1177,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             )}
             {confirmFlow && (
                 <ConfirmModal
-                    maxWidth='800px'
+                    maxWidth='960px'
                     size='lg'
                     showButtons={confirmFlow.showButtons}
                     title={confirmFlow.title}

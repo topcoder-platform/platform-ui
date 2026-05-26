@@ -34,21 +34,6 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
         ]
     }, [props.profile.handle, statsRoute, trackData?.name, trackData?.subTracks])
 
-    const summaryTrackData = useMemo(() => {
-        const supportsHistoryBackedSummary = ['DATA_SCIENCE', 'DEVELOP'].includes(String(subTrackData?.parentTrack))
-
-        if (!supportsHistoryBackedSummary || trackHistory.length === 0) {
-            return subTrackData
-        }
-
-        return {
-            ...subTrackData,
-            challenges: trackHistory.length,
-            submissions: trackHistory.length,
-            wins: trackHistory.filter(challenge => challenge.placement === 1).length,
-        }
-    }, [subTrackData, trackHistory])
-
     return (!trackData || isEmpty(subTrackData)) ? props.renderDefault() : (
         <div className={styles.wrap}>
             <StatsDetailsLayout
@@ -56,7 +41,7 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
                 title={subTrackLabelToHumanName(subTrackData.name)}
                 backAction={backRoute}
                 closeAction={statsRoute(props.profile.handle)}
-                trackData={summaryTrackData}
+                trackData={subTrackData}
             >
                 {subTrackData.name === 'SRM' ? (
                     <SRMView trackData={subTrackData} profile={props.profile} />

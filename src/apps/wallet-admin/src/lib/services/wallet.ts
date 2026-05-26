@@ -1,7 +1,15 @@
 /* eslint-disable camelcase */
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+import { CHALLENGE_API_URL, CHALLENGE_API_VERSION } from '~/config/environments/default.env'
+import {
+    xhrCreateInstance,
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { fetchChallenge } from '~/apps/work/src/lib/services/challenges.service'
 
 import { WalletDetails } from '../models/WalletDetails'
 import {
@@ -20,6 +28,23 @@ import ApiResponse from '../models/ApiResponse'
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
 const memberApiBaseUrl = `${EnvironmentConfig.API.V6}/members`
 const engagementsApiBaseUrl = `${EnvironmentConfig.API.V6}/engagements/engagements`
+const challengeApiBaseUrl = CHALLENGE_API_URL.replace(/\/$/, '')
+const challengeApiXhr = xhrCreateInstance()
+
+if (CHALLENGE_API_VERSION) {
+    challengeApiXhr.defaults.headers.common['app-version'] = CHALLENGE_API_VERSION
+}
+
+interface ChallengePaymentSummaryResponse {
+    approvalApprovedBy?: string
+    createdBy?: string
+}
+
+export interface ChallengePaymentSummary {
+    budgetApproverHandle?: string
+    creatorHandle?: string
+    paymentApproverHandle?: string
+}
 
 interface EngagementAssignmentContextResponse {
     assignmentId: string
@@ -107,6 +132,37 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
  * @remarks This keeps the finance payment-details response contract stable even
  * when wallet-admin has to recover missing engagement metadata on the client.
  */
+// eslint-disable-next-line complexity
+function mergeEngagementDetails(
+    primary?: PaymentEngagementDetails,
+    fallback?: PaymentEngagementDetails,
+): PaymentEngagementDetails | undefined {
+    if (!primary && !fallback) {
+        return undefined
+    }
+
+    return {
+        ...fallback,
+        ...primary,
+        assignmentId: primary?.assignmentId ?? fallback?.assignmentId,
+        billingStartDate: primary?.billingStartDate ?? fallback?.billingStartDate,
+        durationMonths: primary?.durationMonths ?? fallback?.durationMonths,
+        engagementId: primary?.engagementId ?? fallback?.engagementId,
+        engagementTitle: primary?.engagementTitle ?? fallback?.engagementTitle,
+        otherRemarks: primary?.otherRemarks ?? fallback?.otherRemarks,
+        paymentApproverHandle:
+            primary?.paymentApproverHandle ?? fallback?.paymentApproverHandle,
+        paymentCycle: primary?.paymentCycle ?? fallback?.paymentCycle,
+        projectId: primary?.projectId ?? fallback?.projectId,
+        projectName: primary?.projectName ?? fallback?.projectName,
+        ratePerHour: primary?.ratePerHour ?? fallback?.ratePerHour,
+        standardHoursPerDay:
+            primary?.standardHoursPerDay ?? fallback?.standardHoursPerDay,
+        standardHoursPerWeek:
+            primary?.standardHoursPerWeek ?? fallback?.standardHoursPerWeek,
+    }
+}
+
 function mapAssignmentContextToEngagementDetails(
     context: EngagementAssignmentContextResponse,
 ): PaymentEngagementDetails {
@@ -283,6 +339,25 @@ export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAud
  * finance enrichment call fails. Wallet-admin retries those lookups with the
  * authenticated user so the modal still renders engagement details.
  */
+
+async function enrichTaskDescription(
+    winning: Winning,
+    paymentDetails: WinningPaymentDetails,
+): Promise<void> {
+    if (!winning.externalId || !paymentDetails.taskDetails) {
+        return
+    }
+
+    try {
+        const challenge = await fetchChallenge(winning.externalId)
+        if (challenge.description) {
+            paymentDetails.taskDetails.taskDescription = challenge.description
+        }
+    } catch {
+        // Fall through — keep whatever description the finance API returned
+    }
+}
+
 export async function fetchWinningPaymentDetails(
     winning: Winning,
 ): Promise<WinningPaymentDetails> {
@@ -296,10 +371,17 @@ export async function fetchWinningPaymentDetails(
 
     const paymentDetails = response.data || {}
 
-    if (
-        winning.type.toLowerCase() !== 'engagement payment'
-        || paymentDetails.engagementDetails
-    ) {
+    if (winning.type.toLowerCase() !== 'engagement payment') {
+        if (winning.type.toLowerCase() === 'task payment') {
+            await enrichTaskDescription(winning, paymentDetails)
+        }
+
+        return paymentDetails
+    }
+
+    let engagementDetails: PaymentEngagementDetails | undefined = paymentDetails.engagementDetails
+
+    if (engagementDetails?.ratePerHour) {
         return paymentDetails
     }
 
@@ -313,37 +395,40 @@ export async function fetchWinningPaymentDetails(
                 `${engagementsApiBaseUrl}/assignments/${assignmentLookupId}/context`,
             )
 
-            return {
-                ...paymentDetails,
-                engagementDetails: mapAssignmentContextToEngagementDetails(assignmentContext),
-            }
+            engagementDetails = mergeEngagementDetails(
+                engagementDetails,
+                mapAssignmentContextToEngagementDetails(assignmentContext),
+            )
         } catch {}
     }
 
-    const engagementId = normalizeOptionalString(winning.externalId)
+    if (!engagementDetails?.ratePerHour) {
+        const engagementId = normalizeOptionalString(winning.externalId)
 
-    if (!engagementId) {
-        return paymentDetails
+        if (engagementId) {
+            try {
+                const engagement = await xhrGetAsync<EngagementResponse>(
+                    `${engagementsApiBaseUrl}/${engagementId}`,
+                )
+                const fallbackEngagementDetails = buildEngagementDetailsFromEngagement(
+                    engagement,
+                    winning,
+                )
+
+                engagementDetails = mergeEngagementDetails(
+                    engagementDetails,
+                    fallbackEngagementDetails,
+                )
+            } catch {}
+        }
     }
 
-    try {
-        const engagement = await xhrGetAsync<EngagementResponse>(
-            `${engagementsApiBaseUrl}/${engagementId}`,
-        )
-        const engagementDetails = buildEngagementDetailsFromEngagement(
-            engagement,
-            winning,
-        )
-
-        return engagementDetails
-            ? {
-                ...paymentDetails,
-                engagementDetails,
-            }
-            : paymentDetails
-    } catch {
-        return paymentDetails
-    }
+    return engagementDetails
+        ? {
+            ...paymentDetails,
+            engagementDetails,
+        }
+        : paymentDetails
 }
 
 export async function editPayment(updates: {
@@ -548,6 +633,61 @@ export async function removePaymentProvider(type: string): Promise<TransactionRe
     }
 
     return response.data
+}
+
+async function resolveUserRefAsMemberHandle(userRef: string): Promise<string> {
+    if (/^\d+$/.test(userRef)) {
+        const handleMap = await getMemberHandle([userRef])
+
+        return handleMap.get(parseInt(userRef, 10)) ?? userRef
+    }
+
+    return userRef
+}
+
+/**
+ * Loads challenge creator and budget approver handles for wallet-admin challenge
+ * payments from challenge-api.
+ *
+ * @param challengeId challenge id stored on the winning `externalId`.
+ * @returns `creatorHandle` from `createdBy`, `budgetApproverHandle` and
+ * `paymentApproverHandle` from `approvalApprovedBy`, each resolved to a member
+ * handle when needed.
+ * @remarks Challenge payments should not use finance `paymentCreatorHandle`
+ * because finance can return a client id instead of the creator handle.
+ */
+export async function fetchChallengePaymentSummary(
+    challengeId: string,
+): Promise<ChallengePaymentSummary> {
+    const normalizedChallengeId = normalizeOptionalString(challengeId)
+
+    if (!normalizedChallengeId) {
+        return {}
+    }
+
+    try {
+        const challenge = await xhrGetAsync<ChallengePaymentSummaryResponse>(
+            `${challengeApiBaseUrl}/${normalizedChallengeId}`,
+            challengeApiXhr,
+        )
+        const createdBy = normalizeOptionalString(challenge.createdBy)
+        const approvalApprovedBy = normalizeOptionalString(challenge.approvalApprovedBy)
+
+        const [creatorHandle, approvalApproverHandle] = await Promise.all([
+            createdBy ? resolveUserRefAsMemberHandle(createdBy) : Promise.resolve(undefined),
+            approvalApprovedBy
+                ? resolveUserRefAsMemberHandle(approvalApprovedBy)
+                : Promise.resolve(undefined),
+        ])
+
+        return {
+            budgetApproverHandle: approvalApproverHandle,
+            creatorHandle,
+            paymentApproverHandle: approvalApproverHandle,
+        }
+    } catch {
+        return {}
+    }
 }
 
 export async function getMemberHandle(userIds: string[]): Promise<Map<number, string>> {

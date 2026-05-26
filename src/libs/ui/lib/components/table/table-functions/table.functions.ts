@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { TableColumn } from '../table-column.model'
@@ -47,24 +49,32 @@ export function getSorted<T extends { [propertyName: string]: any }>(
         return direction === 'asc' ? a - b : b - a
     }
 
+    function getValue(obj: T, path: string): unknown {
+        return path.includes('.') ? _.get(obj, path) : obj[path]
+    }
+
     if (sortColumn.type === 'money' || sortColumn.type === 'number' || sortColumn.type === 'numberElement') {
         return sortedData
-            .sort((a: T, b: T) => sortNumbers(+a[sort.fieldName], +b[sort.fieldName], sort.direction))
+            .sort((a: T, b: T) => sortNumbers(
+                Number(getValue(a, sort.fieldName)),
+                Number(getValue(b, sort.fieldName)),
+                sort.direction,
+            ))
     }
 
     if (sortColumn.type === 'date') {
         return sortedData
             .sort((a: T, b: T) => {
-                const aDate = new Date(a[sort.fieldName])
-                const bDate = new Date(b[sort.fieldName])
+                const aDate = new Date(getValue(a, sort.fieldName) as string)
+                const bDate = new Date(getValue(b, sort.fieldName) as string)
                 return sortNumbers(aDate.getTime(), bDate.getTime(), sort.direction)
             })
     }
 
     return sortedData
         .sort((a: T, b: T) => {
-            const aField: unknown = a[sort.fieldName]
-            const bField: unknown = b[sort.fieldName]
+            const aField: unknown = getValue(a, sort.fieldName)
+            const bField: unknown = getValue(b, sort.fieldName)
 
             // Keep nullish values at the bottom for both sort directions.
             const aValue = String(aField ?? '')

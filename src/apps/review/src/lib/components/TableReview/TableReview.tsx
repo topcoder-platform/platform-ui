@@ -42,6 +42,7 @@ import {
 import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
+    isMarathonMatchChallenge,
     isReviewPhase,
     isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
@@ -76,7 +77,12 @@ import type {
     SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
-import { buildSubmissionReviewerRows, resolveSubmissionReviewResult } from '../common/reviewResult'
+import {
+    buildSubmissionReviewerRows,
+    getSubmissionReviewerRowReview,
+    isSubmissionReviewerActionRow,
+    resolveSubmissionReviewResult,
+} from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
@@ -191,6 +197,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
+        [challengeInfo],
+    )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
         [challengeInfo],
     )
 
@@ -470,8 +480,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             canDisplayScores: () => true,
             canViewScorecard: true,
             isAppealsTab: false,
+            useAggregateScore: useAggregateReviewScore,
         }),
-        [],
+        [useAggregateReviewScore],
     )
 
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
@@ -532,11 +543,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const renderActionsCell = useCallback<(submission: SubmissionReviewerRow) => JSX.Element>((
         submission: SubmissionReviewerRow,
     ) => {
-        const reviews = submission.aggregated?.reviews ?? []
-        const myReviewDetail = reviews.find(review => {
-            const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
-            return resourceId ? myReviewerResourceIds.has(resourceId) : false
-        })
+        const rowReviewDetail = getSubmissionReviewerRowReview(submission)
+        const myReviewDetail = isSubmissionReviewerActionRow(submission, myReviewerResourceIds)
+            ? rowReviewDetail
+            : undefined
         const actionEntries: Array<{ element: JSX.Element; wrapperKey: string }> = []
 
         const appendAction = (element: JSX.Element | undefined, fallbackKey: string): void => {
@@ -820,10 +830,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         appendAction(buildPrimaryAction(), 'primary')
-        appendAction(buildEscalateAction(), 'escalate')
-        appendAction(buildVerifyAction(), 'verify')
-        appendAction(buildUnlockAction(), 'unlock')
-        appendAction(buildHistoryAction(), 'history')
+        if (submission.isFirstReviewerRow) {
+            appendAction(buildEscalateAction(), 'escalate')
+            appendAction(buildVerifyAction(), 'verify')
+            appendAction(buildUnlockAction(), 'unlock')
+            appendAction(buildHistoryAction(), 'history')
+        }
+
         appendAction(buildReopenAction(), 'reopen')
 
         if (!actionEntries.length) {
@@ -967,6 +980,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
                     const result = resolveSubmissionReviewResult(row, {
                         minimumPassingScoreByScorecardId,
+                        preferAggregateScore: useAggregateReviewScore,
                     })
                     if (result === 'PASS') {
                         return (
@@ -995,13 +1009,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 className: styles.textBlue,
                 columnId: 'actions',
                 label: 'Actions',
-                renderer: (row: SubmissionReviewerRow) => (
-                    row.isFirstReviewerRow ? renderActionsCell(row) : (
-                        <span className={styles.notReviewed}>
-                            --
-                        </span>
-                    )
-                ),
+                renderer: (row: SubmissionReviewerRow) => renderActionsCell(row),
                 type: 'element',
             })
         }
@@ -1050,6 +1058,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         openReopenDialog,
         challengeInfo,
         pendingReopen,
+        useAggregateReviewScore,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(

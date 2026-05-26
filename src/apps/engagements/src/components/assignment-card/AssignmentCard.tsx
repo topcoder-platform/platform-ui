@@ -152,10 +152,6 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => normalizeStatusKey(assignment?.status),
         [assignment?.status],
     )
-    const paymentLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.agreementRate, FALLBACK_VALUE_LABEL),
-        [assignment?.agreementRate],
-    )
     const ratePerHourLabel = useMemo(
         () => formatCurrencyAmount(assignment?.ratePerHour, FALLBACK_VALUE_LABEL),
         [assignment?.ratePerHour],
@@ -256,8 +252,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     <span>{`Std hrs / day: ${standardHoursPerDayLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
-                    <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Rate / week: ${paymentLabel}`}</span>
+                    <span>{`Payment cycle: ${assignment?.paymentCycle ?? 'TBD'}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>

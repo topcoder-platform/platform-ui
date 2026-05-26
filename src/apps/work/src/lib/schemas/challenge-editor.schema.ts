@@ -2,6 +2,7 @@ import * as yup from 'yup'
 
 import {
     MAX_CHALLENGE_NAME_LENGTH,
+    MAX_MANUAL_REVIEWER_COUNT,
     MAX_PRIZE_VALUE,
     MIN_DESCRIPTION_LENGTH,
     PHASE_DURATION_MIN_MINUTES,
@@ -176,7 +177,7 @@ function getRequiredReviewerSlots(value: unknown): number {
         return 1
     }
 
-    return Math.max(1, Math.trunc(parsedValue))
+    return Math.min(MAX_MANUAL_REVIEWER_COUNT, Math.max(1, Math.trunc(parsedValue)))
 }
 
 function getCopilotFee(prizeSets: unknown): number {
@@ -228,6 +229,13 @@ const reviewerSchema = yup.object({
             then: schema => schema.required('Member is required when public review opportunity is closed'),
         }),
     memberReviewerCount: yup.number()
+        .transform(emptyStringToUndefined)
+        .integer('Number of reviewers must be a positive integer')
+        .min(1, 'Number of reviewers must be a positive integer')
+        .max(
+            MAX_MANUAL_REVIEWER_COUNT,
+            `Number of reviewers cannot exceed ${MAX_MANUAL_REVIEWER_COUNT}`,
+        )
         .optional(),
     phaseId: yup.string()
         .optional(),

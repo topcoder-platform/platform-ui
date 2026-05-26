@@ -78,6 +78,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
             <tr
                 className={classNames(
                     styles.tr,
+                    props.className,
                     props.onRowClick ? styles.clickable : undefined,
                     {
                         [styles.isEvenRow]: props.index % 2 === 1,
@@ -97,9 +98,13 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
             </tr>
             {props.showExpand && isExpanded && (
                 <tr
-                    className={classNames(styles.tr, {
-                        [styles.isEvenRow]: props.index % 2 === 1,
-                    })}
+                    className={classNames(
+                        styles.tr,
+                        props.className,
+                        {
+                            [styles.isEvenRow]: props.index % 2 === 1,
+                        },
+                    )}
                 >
                     <td colSpan={displayColumns.length}>
                         {expandColumns.map((col, colIndex) => {

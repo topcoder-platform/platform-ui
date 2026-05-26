@@ -86,7 +86,7 @@
 
 .sel {
     &:global(__menu-portal).sel:global(__menu-portal) {
-        z-index: 1001;
+        z-index: 10001;
     }
     &:global(__menu) {
         width: 100%;

@@ -29,6 +29,7 @@ import {
     AiReviewConfigWorkflow,
     AiReviewDecision,
     AiReviewDecisionBreakdownWorkflow,
+    AiReviewDecisionEscalation,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
@@ -109,6 +110,42 @@ function getDecisionBySubmission(
     submissionId: string,
 ): AiReviewDecision | undefined {
     return decisions[submissionId]
+}
+
+/**
+ * Builds a list of human-readable note strings from escalations.
+ * Used to display notes for Escalating, Approving/Rejecting, and Unlocking actions.
+ */
+function buildDecisionNotes(
+    escalations?: AiReviewDecisionEscalation[],
+    resourceMemberIdMapping?: Record<string, any>,
+): string[] {
+    const parts: string[] = []
+
+    const getMemberHandle = (memberId?: string | null): string => {
+        if (!memberId || !resourceMemberIdMapping) return ''
+        const resource = resourceMemberIdMapping[memberId]
+        return resource?.memberHandle || ''
+    }
+
+    escalations?.forEach(esc => {
+        if (esc.escalationNotes) {
+            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
+            parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
+        }
+
+        if (esc.approverNotes) {
+            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
+            const prefix = esc.status === 'APPROVED'
+                ? 'Approval Note'
+                : esc.status === 'REJECTED'
+                    ? 'Rejection Note'
+                    : 'Approver Note'
+            parts.push(`${prefix}${by}: ${esc.approverNotes}`)
+        }
+    })
+
+    return parts
 }
 
 // eslint-disable-next-line complexity
@@ -280,7 +317,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             : `This submission is failed because ${hasSubmitterRole ? 'your' : 'the'}
                 Overall Score is below minimum threshold.`
 
-        // Message text varies by role
         const roleBasedText = hasSubmitterRole
             ? 'Improve your submission and resubmit.'
             : ''
@@ -300,9 +336,64 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         return 'Submission Locked - This submission won\'t be reviewed during the Review Phase.'
     }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
+    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
+
+    /**
+     * Builds the list of notes from escalations (escalationNotes, approverNotes).
+     * These are shown to Copilot/Manager/Admin only (not to submitters) so they
+     * can see why a submission was escalated or approved/rejected.
+     */
+    const decisionNotes = useMemo((): string[] => {
+        if (!currentDecision || hasSubmitterRole) return []
+
+        return buildDecisionNotes(currentDecision.escalations, resourceMemberIdMapping)
+    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
+
+    const hasDecisionNotes = decisionNotes.length > 0
+
+    /**
+     * Notes panel shown when:
+     * - submission is UNLOCKED (HUMAN_OVERRIDE, not locked) — shows unlock/escalation notes
+     * - submission is still LOCKED — appended inside the locked banner
+     */
+    const notesPanel = (
+        <>
+            {/* Unlocked submission: show notes banner */}
+            {currentDecision?.status === 'HUMAN_OVERRIDE'
+                && !currentDecision?.submissionLocked
+                && hasDecisionNotes && (
+                <div className={styles.notesBanner}>
+                    <IconOutline.InformationCircleIcon className='icon-xl' />
+                    <div>
+                        <div className={styles.notesTitle}>Submission Unlocked</div>
+                        {decisionNotes.map((note, i) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <div key={i} className={styles.notesMessage}>{note}</div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Locked submission with escalation notes: append inside locked banner area */}
+            {currentDecision?.submissionLocked && hasDecisionNotes && (
+                <div className={styles.escalationNotesBanner}>
+                    <IconOutline.InformationCircleIcon className='icon-xl' />
+                    <div>
+                        <div className={styles.notesTitle}>Review Activity Notes</div>
+                        {decisionNotes.map((note, i) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <div key={i} className={styles.notesMessage}>{note}</div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
+    )
+
     if (isTablet) {
         return (
             <div className={styles.wrap}>
+                {/* Locked banner */}
                 {currentDecision?.submissionLocked && lockMessage && (
                     <div className={styles.lockedBanner}>
                         <div className={styles.lockedTitle}>
@@ -312,6 +403,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <div className={styles.lockedMessage}>{lockMessage}</div>
                     </div>
                 )}
+
+                {/* Notes panel: escalation / approval / unlock notes for Copilot/Manager/Admin */}
+                {notesPanel}
 
                 {!reviewerRows.length && loading && (
                     <div className={styles.mobileLoading}>Loading...</div>
@@ -414,6 +508,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
     return (
         <div className={styles.wrap} onClick={stopPropagation}>
+            {/* Locked banner */}
             {currentDecision?.submissionLocked && lockMessage && (
                 <div className={styles.lockedBanner}>
                     <IconOutline.LockClosedIcon className='icon-xl' />
@@ -425,6 +520,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     </div>
                 </div>
             )}
+
+            {/* Notes panel: escalation / approval / unlock notes for Copilot/Manager/Admin */}
+            {notesPanel}
 
             <table className={styles.reviewsTable}>
                 <thead>

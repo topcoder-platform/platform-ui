@@ -1,32 +1,46 @@
+@import '@libs/ui/styles/includes';
+
 .FilterBar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
+    width: 100%;
+    min-width: 0;
 
-    .firstFilter {
+    .filterBarMain {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
         min-width: 0;
     }
 
-    .flexStretch {
-        flex-grow: 1;
+    .primaryFilter {
+        flex: 0 0 auto;
+        align-self: flex-start;
     }
 
-    .remainingFilters {
+    .filtersRow {
         display: flex;
         flex-direction: row;
-        align-items: center;
+        align-items: flex-end;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         min-width: 0;
+        flex: 1 1 auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
 
         [class*="InputSelect-module_textSelected"] {
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
+        }
+
+        :global(.input-wrapper .input) {
+            margin-bottom: 0 !important;
         }
     }
 
@@ -35,107 +49,143 @@
     }
 
     .filter {
-        width: 165px;
-        max-width: 100%;
-        min-height: 47px;
+        min-width: 140px;
+        flex: 0 0 auto;
     }
 
-    .multiSelectWrap {
-        width: 200px;
-        max-width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-height: 47px;
+    .filterPageSize {
+        min-width: 110px;
+        max-width: 150px;
     }
 
-    .multiSelectLabel {
-        line-height: 1.2;
+    .filterCheckboxMultiselect {
+        width: 100%;
+        height: 100%;
     }
 
     .dateFilterWrap {
-        width: 175px;
-        max-width: 100%;
-        min-height: 47px;
+        flex: 0 0 auto;
 
         :global(.container) {
             margin-bottom: 0;
         }
     }
 
-    :global(.wallet-admin-ms__control) {
-        min-height: 47px;
-        border-radius: 4px;
-        border: 1px solid #aaa7a7;
-        box-shadow: none;
-    }
-
-    :global(.wallet-admin-ms__value-container) {
-        padding: 2px 8px;
-    }
-
-    :global(.wallet-admin-ms__placeholder) {
-        color: #6b6b6b;
-    }
-
-    :global(.wallet-admin-ms__menu-portal) {
-        z-index: 20;
-    }
-
     .firstFilterElement {
-        width: 200px;
-        max-width: 100%;
-        height: 47px;
+        width: 190px;
+        flex: 0 0 auto;
+
+        :global([class*="memberSelect"]) {
+            width: 100%;
+
+            [class*="-control"] {
+                min-height: 0 !important;
+                height: auto !important;
+            }
+        }
     }
 
     .filterInput {
         margin-bottom: 0;
+        height: 100%;
+    }
+
+    .toolbarActions {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+        margin-left: auto;
+        margin-bottom: 18px;
+    }
+
+    .filterActions {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+    }
+
+    .exportButton {
+        flex: 0 0 auto;
+    }
+
+    .applyButton,
+    .resetButton {
+        flex-shrink: 0;
     }
 
     .selectionActionButton {
         flex-shrink: 0;
     }
 
-    .resetButton {
-        flex-shrink: 0;
-        margin-left: 30px;
-    }
-
-    .taskApproveBtns {
+    .selectionActionsRow {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         gap: 10px;
         width: 100%;
-        margin-top: 10px;
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 1200px) {
+    .FilterBar {
+        padding-bottom: $sp-1;
+
+        .filter {
+            min-width: 120px;
+        }
+
+        .filterPageSize {
+            min-width: 100px;
+            max-width: 140px;
+        }
     }
 }
 
 @media (max-width: 768px) {
     .FilterBar {
-        align-items: stretch;
+        .filterBarMain {
+            align-items: stretch;
+        }
 
-        .firstFilter,
-        .remainingFilters {
+        .filtersRow {
+            flex-wrap: wrap;
+            overflow-x: visible;
             width: 100%;
         }
 
-        .flexStretch {
-            display: none;
-        }
-
+        .primaryFilter,
         .firstFilterElement,
         .filter {
             width: 100%;
             height: auto;
+            max-width: none;
         }
 
+        .filterPageSize {
+            min-width: 0;
+            max-width: none;
+        }
+
+        .primaryFilter {
+            align-self: stretch;
+        }
+
+        .toolbarActions {
+            width: 100%;
+            margin-left: 0;
+            flex-wrap: wrap;
+        }
+
+        .filterActions,
         .selectionActionButton,
         .resetButton,
+        .applyButton,
         .exportButton,
         .bulkButton {
             width: 100%;
-            margin-left: 0;
         }
     }
 }

@@ -1,14 +1,18 @@
 /* eslint-disable react/jsx-no-bind */
 import React, { ChangeEvent, useEffect, useRef } from 'react'
-import Select, { MultiValue } from 'react-select'
 import classNames from 'classnames'
 
-import { Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 import {
-    InputHandleAutocomplete,
-    MembersAutocompeteResult,
-} from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+    Button,
+    IconOutline,
+    InputDatePicker,
+    InputSelect,
+    InputText,
+} from '~/libs/ui'
+import { MembersAutocompeteResult } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
+import FilterCheckboxMultiselect from './FilterCheckboxMultiselect'
+import FilterHandleAutocomplete from './FilterHandleAutocomplete'
 import styles from './FilterBar.module.scss'
 
 type FilterOptions = {
@@ -16,12 +20,11 @@ type FilterOptions = {
     value: string;
 };
 
-const SELECT_ALL_SENTINEL = '__select_all__'
-
 export type Filter = {
     key: string;
     label: string;
     type: 'input' | 'dropdown' | 'member_autocomplete' | 'multi_dropdown' | 'date';
+    displayValueInTrigger?: boolean;
     options?: FilterOptions[];
 };
 
@@ -43,6 +46,7 @@ interface FilterBarProps {
     filters: Filter[];
     showExportButton?: boolean;
     onFilterChange: (key: string, value: string[]) => void;
+    onApplyFilters?: () => void;
     onResetFilters?: () => void;
     onExport?: () => void;
     selectedCount?: number;
@@ -50,6 +54,7 @@ interface FilterBarProps {
     selectionActions?: FilterBarSelectionAction[];
     selectedValueOverrides?: Record<string, string | string[]>;
     hasActiveFilters?: boolean;
+    hasPendingChanges?: boolean;
 }
 
 function parseIsoDateOnly(value: string | undefined): Date | undefined {
@@ -130,52 +135,33 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             name={filter.key}
             label={filter.label}
             dirty
+            displayValueInTrigger={filter.displayValueInTrigger}
             placeholder={filter.label}
         />
     )
 
     const renderMultiDropdown = (index: number, filter: Filter): JSX.Element => {
         const baseOptions = filter.options ?? []
-        const menuOptions = [
-            { label: 'Select All', value: SELECT_ALL_SENTINEL },
-            ...baseOptions,
-        ]
         const override = props.selectedValueOverrides?.[filter.key]
         const valuesFromParent: string[] = Array.isArray(override)
             ? override as string[]
             : (override ? [override as string] : (selectedValue.get(filter.key) as string[] | undefined) ?? [])
-        const selectedOptions = baseOptions.filter(o => valuesFromParent.includes(o.value))
 
         return (
-            <div className={classNames(styles.filter, styles.multiSelectWrap)}>
-                <span className={classNames('body-small-bold', styles.multiSelectLabel)}>
-                    {filter.label}
-                </span>
-                <Select
-                    classNamePrefix='wallet-admin-ms'
-                    inputId={`${filter.key}-multiselect`}
-                    isMulti
-                    closeMenuOnSelect={false}
-                    hideSelectedOptions={false}
-                    tabIndex={index}
-                    placeholder={filter.label}
-                    options={menuOptions}
-                    value={selectedOptions}
-                    onChange={(raw: MultiValue<FilterOptions>) => {
-                        const picked = raw.map(o => o.value)
-                        if (picked.includes(SELECT_ALL_SENTINEL)) {
-                            const allValues = baseOptions.map(o => o.value)
-                            setSelectedValue(new Map(selectedValue.set(filter.key, allValues)))
-                            props.onFilterChange(filter.key, allValues)
-
-                            return
-                        }
-
-                        setSelectedValue(new Map(selectedValue.set(filter.key, picked)))
-                        props.onFilterChange(filter.key, picked)
-                    }}
-                />
-            </div>
+            <FilterCheckboxMultiselect
+                className={styles.filterCheckboxMultiselect}
+                tabIndex={index}
+                name={filter.key}
+                label={filter.label}
+                placeholder={filter.label}
+                displayValueInTrigger={filter.displayValueInTrigger}
+                options={baseOptions}
+                values={valuesFromParent}
+                onChange={(values: string[]) => {
+                    setSelectedValue(new Map(selectedValue.set(filter.key, values)))
+                    props.onFilterChange(filter.key, values)
+                }}
+            />
         )
     }
 
@@ -186,7 +172,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             : undefined
 
         return (
-            <div className={classNames(styles.filter, styles.dateFilterWrap)} key={filter.key}>
+            <div className={classNames(styles.filter, styles.dateFilterWrap)}>
                 <InputDatePicker
                     tabIndex={index}
                     label={filter.label}
@@ -203,11 +189,13 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     }
 
     const renderMemberAutoComplete = (index: number, filter: Filter): JSX.Element => (
-        <InputHandleAutocomplete
+        <FilterHandleAutocomplete
+            dirty
+            hideInlineErrors
             label={filter.label}
             name={filter.key}
             className={styles.filterInput}
-            placeholder={filter.label}
+            placeholder='Search by handle'
             onChange={(event: Array<MembersAutocompeteResult>) => {
                 selectedMembers.current = event
                 setSelectedValue(new Map(selectedValue.set(filter.key, event)))
@@ -251,47 +239,76 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
         )
     }
 
+    const firstFilter = props.filters[0]
+    const restFilters = props.filters.slice(1)
+
     return (
         <div className={styles.FilterBar}>
-            <div className={styles.firstFilter}>
-                {props.filters.slice(0, 1)
-                    .map((filter, index) => (
-                        <div key={filter.key} className={styles.firstFilterElement}>
-                            {renderFilterControl(index, filter)}
+            <div className={styles.filterBarMain}>
+                {firstFilter && (
+                    <div className={styles.primaryFilter}>
+                        <div className={styles.firstFilterElement}>
+                            {renderFilterControl(0, firstFilter)}
                         </div>
-                    ))}
+                    </div>
+                )}
+                {restFilters.length > 0 && (
+                    <div className={styles.filtersRow}>
+                        {restFilters.map((filter, index) => (
+                            <div
+                                key={filter.key}
+                                className={classNames(
+                                    styles.filter,
+                                    filter.key === 'pageSize' && styles.filterPageSize,
+                                )}
+                            >
+                                {renderFilterControl(index + 1, filter)}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className={styles.toolbarActions}>
+                    {props.showExportButton && (
+                        <Button
+                            className={styles.exportButton}
+                            icon={IconOutline.DownloadIcon}
+                            onClick={props.onExport}
+                            size='lg'
+                        />
+                    )}
+                    <div className={styles.filterActions}>
+                        {props.onApplyFilters && (
+                            <Button
+                                primary
+                                className={styles.applyButton}
+                                label='Filter'
+                                size='lg'
+                                disabled={!props.hasPendingChanges}
+                                onClick={props.onApplyFilters}
+                            />
+                        )}
+                        <Button
+                            primary={!props.onApplyFilters}
+                            secondary={!!props.onApplyFilters}
+                            className={styles.resetButton}
+                            label='Reset'
+                            size='lg'
+                            disabled={
+                                props.hasActiveFilters === undefined
+                                    ? selectedValue.size === 0
+                                    : !props.hasActiveFilters
+                            }
+                            onClick={() => {
+                                selectedMembers.current = []
+                                setSelectedValue(new Map())
+                                props.onResetFilters?.()
+                            }}
+                        />
+                    </div>
+                </div>
             </div>
-            <div className={styles.flexStretch} />
-            <div className={styles.remainingFilters}>
-                {props.filters.slice(1)
-                    .map((filter, index) => (
-                        <div key={filter.key} className={styles.filter}>
-                            {renderFilterControl(index + 1, filter)}
-                        </div>
-                    ))}
-            </div>
-            {props.showExportButton && (
-                <Button
-                    className={styles.exportButton}
-                    icon={IconOutline.DownloadIcon}
-                    onClick={props.onExport}
-                    size='lg'
-                />
-            )}
-            <Button
-                primary
-                className={styles.resetButton}
-                label='Reset'
-                size='lg'
-                disabled={props.hasActiveFilters === undefined ? selectedValue.size === 0 : !props.hasActiveFilters}
-                onClick={() => {
-                    selectedMembers.current = []
-                    setSelectedValue(new Map())
-                    props.onResetFilters?.()
-                }}
-            />
             {selectionActions.length > 0 && (
-                <div className={styles.taskApproveBtns}>
+                <div className={styles.selectionActionsRow}>
                     {selectionActions.map(action => (
                         <Button
                             key={action.key}

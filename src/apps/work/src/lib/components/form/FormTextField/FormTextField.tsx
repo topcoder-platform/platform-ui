@@ -19,7 +19,9 @@ export interface FormTextFieldProps {
     counterPosition?: 'below' | 'inline'
     disabled?: boolean
     hint?: string
+    max?: number
     label: string
+    min?: number
     maxLength?: number
     name: string
     placeholder?: string
@@ -33,7 +35,9 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
     const counterPosition = props.counterPosition || 'below'
     const disabled = props.disabled
     const hint = props.hint
+    const max = props.max
     const label = props.label
+    const min = props.min
     const maxLength = props.maxLength
     const name = props.name
     const placeholder = props.placeholder
@@ -96,7 +100,9 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
                     )}
                     disabled={disabled}
                     id={name}
+                    max={max}
                     maxLength={maxLength}
+                    min={min}
                     name={field.name}
                     onBlur={field.onBlur}
                     onChange={handleInputChange}

@@ -198,16 +198,13 @@ function createDebouncedLoader(
 /**
  * Async billing-account selector backed by server-side name search.
  *
- * When `projectId` is provided, the selector preloads the project's billing
- * accounts so edit flows match legacy behavior. Edit-mode search stays within
- * that preloaded project-scoped list so the typed results remain consistent
- * with the available options. When only `userId` is provided, the selector
- * preloads billing accounts granted to that user so create flows start with
- * their accessible options. Server-side search remains scoped to `userId` when
- * provided. When `selectedBillingAccount` is provided, the field seeds the
- * selected option label from project-scoped data before attempting a direct
- * billing-account lookup. The field stores only the selected billing-account
- * id in form state.
+ * When `userId` is provided, the selector preloads and searches billing
+ * accounts granted to that user so create and edit flows use the same
+ * Billing Accounts API source. When only `projectId` is provided, the selector
+ * falls back to the legacy project-scoped list and filters it locally. When
+ * `selectedBillingAccount` is provided, the field seeds the selected option
+ * label from project-scoped data before attempting a direct billing-account
+ * lookup. The field stores only the selected billing-account id in form state.
  */
 export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompleteProps> = (
     props: FormBillingAccountAutocompleteProps,
@@ -245,6 +242,11 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
         [],
     )
 
+    const normalizedUserId = useMemo(
+        () => normalizeOptionalStringValue(props.userId),
+        [props.userId],
+    )
+
     const loadBillingAccountOptions = useCallback(
         async (inputValue: string): Promise<BillingAccountOption[]> => {
             const normalizedInputValue = inputValue.trim()
@@ -255,7 +257,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
 
-            if (props.projectId) {
+            if (props.projectId && !normalizedUserId) {
                 return filterOptionsByInputValue(optionCacheRef.current, normalizedInputValue)
             }
 
@@ -264,7 +266,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                     name: normalizedInputValue,
                     page: 1,
                     perPage: 20,
-                    userId: normalizeOptionalStringValue(props.userId),
+                    userId: normalizedUserId,
                 })
                 const options = billingAccounts.map(account => toOption(account))
 
@@ -281,17 +283,12 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
         },
-        [mergeCachedOptions, props.projectId, props.userId],
+        [mergeCachedOptions, normalizedUserId, props.projectId],
     )
 
     const debouncedLoadBillingAccountOptions = useMemo(
         () => createDebouncedLoader(loadBillingAccountOptions),
         [loadBillingAccountOptions],
-    )
-
-    const normalizedUserId = useMemo(
-        () => normalizeOptionalStringValue(props.userId),
-        [props.userId],
     )
 
     const shouldPreloadInitialOptions = useMemo(
@@ -358,13 +355,13 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
         setInitialBillingAccountOptions([])
         setSearchErrorMessage(undefined)
 
-        const initialBillingAccountsPromise = props.projectId
-            ? fetchProjectBillingAccounts(props.projectId)
-            : searchBillingAccounts({
+        const initialBillingAccountsPromise = normalizedUserId
+            ? searchBillingAccounts({
                 page: 1,
                 perPage: 20,
                 userId: normalizedUserId,
             })
+            : fetchProjectBillingAccounts(props.projectId as string)
 
         initialBillingAccountsPromise
             .then(billingAccounts => {

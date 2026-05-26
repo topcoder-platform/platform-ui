@@ -64,7 +64,7 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         : 'Review the details below before accepting this offer.'
 
     const paymentCycleLabel = useMemo(
-        () => formatCurrencyAmount(assignment.paymentCycle, FALLBACK_LABEL),
+        () => assignment.paymentCycle ?? FALLBACK_LABEL,
         [assignment.paymentCycle],
     )
     const startDateLabel = useMemo(

@@ -30,6 +30,9 @@ import {
     useFetchResources,
 } from '../../../../../lib/hooks'
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
+} from '../../../../../lib/constants/challenge-editor.constants'
+import {
     ChallengeEditorFormData,
     DefaultReviewer,
     Resource,
@@ -286,7 +289,10 @@ function countMatchingValues(values: string[], value: string): number {
 }
 
 function getReviewerCount(reviewer?: Reviewer): number {
-    return Math.max(1, Math.trunc(toNumber(reviewer?.memberReviewerCount) || 1))
+    return Math.min(
+        MAX_MANUAL_REVIEWER_COUNT,
+        Math.max(1, Math.trunc(toNumber(reviewer?.memberReviewerCount) || 1)),
+    )
 }
 
 function getAdditionalMemberIds(reviewer?: Reviewer): string[] {
@@ -591,7 +597,7 @@ function mapDefaultReviewerToReviewer(
             : (memberReview ? 0.05 : 0),
         isMemberReview: memberReview,
         memberReviewerCount: memberReview
-            ? defaultReviewerCount
+            ? Math.min(defaultReviewerCount, MAX_MANUAL_REVIEWER_COUNT)
             : undefined,
         phaseId: getReviewerPhaseId(defaultReviewer, phases),
         roleId: defaultReviewer?.roleId,
@@ -1274,7 +1280,19 @@ export const HumanReviewTab: FC = () => {
     ])
 
     const sanitizeIntegerValue = useCallback(
-        (value: string): string => value.replace(/[^\d]/g, ''),
+        (value: string): string => {
+            const digitsOnly = value.replace(/[^\d]/g, '')
+            if (!digitsOnly) {
+                return ''
+            }
+
+            const parsedValue = Number.parseInt(digitsOnly, 10)
+            if (!Number.isFinite(parsedValue)) {
+                return String(MAX_MANUAL_REVIEWER_COUNT)
+            }
+
+            return String(Math.min(Math.max(parsedValue, 1), MAX_MANUAL_REVIEWER_COUNT))
+        },
         [],
     )
 
@@ -1317,15 +1335,26 @@ export const HumanReviewTab: FC = () => {
             }
 
             const nextAdditionalMemberIds = additionalMemberIds.slice(0, maxAdditionalMembers)
+            const removedAdditionalMemberIds = additionalMemberIds.slice(maxAdditionalMembers)
             const keptMemberIds = toUniqueValues([
                 normalizeText(reviewer.memberId),
                 ...nextAdditionalMemberIds,
             ])
             const removedMemberIds = toUniqueValues(
-                additionalMemberIds
-                    .slice(maxAdditionalMembers)
+                removedAdditionalMemberIds
                     .filter(memberId => !keptMemberIds.includes(memberId)),
             )
+            const hasRemovedAdditionalMemberValue = removedAdditionalMemberIds.some(Boolean)
+
+            removedAdditionalMemberIds.forEach((_, removedIndex) => {
+                formContext.unregister(
+                    `reviewers.${fieldIndex}.additionalMemberIds.${maxAdditionalMembers + removedIndex}` as any,
+                )
+            })
+
+            if (!hasRemovedAdditionalMemberValue && !nextAdditionalMemberIds.some(Boolean)) {
+                return
+            }
 
             formContext.setValue(
                 `reviewers.${fieldIndex}.additionalMemberIds` as any,
@@ -1788,6 +1817,8 @@ export const HumanReviewTab: FC = () => {
                                 <div className={styles.memberReviewSettings}>
                                     <FormTextField
                                         label='Reviewer Count'
+                                        max={MAX_MANUAL_REVIEWER_COUNT}
+                                        min={1}
                                         name={`${reviewerPrefix}.memberReviewerCount`}
                                         sanitize={sanitizeIntegerValue}
                                         type='number'

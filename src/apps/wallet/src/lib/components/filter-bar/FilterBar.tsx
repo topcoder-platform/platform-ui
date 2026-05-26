@@ -15,6 +15,7 @@ type Filter = {
     key: string
     label: string
     type: 'input' | 'dropdown' | 'member_autocomplete'
+    displayValueInTrigger?: boolean
     options?: FilterOptions[]
 }
 
@@ -31,7 +32,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
         <InputSelect
             tabIndex={index}
             value={selectedValue.get(filter.key) as string ?? (filter.key === 'pageSize' ? '10' : '')}
-            options={filter.options!}
+            options={filter.options ?? []}
             onChange={function onChange(event: ChangeEvent<HTMLInputElement>) {
                 setSelectedValue(new Map(selectedValue.set(filter.key, event.target.value)))
                 props.onFilterChange(filter.key, [event.target.value])
@@ -39,6 +40,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             name={filter.key}
             label={filter.label}
             dirty
+            displayValueInTrigger={filter.displayValueInTrigger}
             placeholder={filter.label}
         />
     )

@@ -52,7 +52,8 @@ const BILLING_ACCOUNTS_REPORT_PATH = '/sfdc/billing-accounts'
 const SFDC_PAYMENTS_REPORT_PATH = '/sfdc/payments'
 const BILLING_ACCOUNTS_REPORT_DEFINITION: ReportDefinition = {
     description:
-        'View SFDC payments across all billing accounts by default. Optionally filter by billing account ID and dates.',
+        `View SFDC payments across all billing accounts by 
+        default. Optionally filter by billing account ID, dates, or category.`,
     method: 'GET',
     name: 'Billing Accounts',
     parameters: [
@@ -621,6 +622,7 @@ const ReportActions = (props: ReportActionsProps): JSX.Element => {
 }
 
 type SelectedReportSectionProps = {
+    descriptionNote?: JSX.Element
     renderParameterInput: (parameter: ReportParameter) => JSX.Element
     reportActions: JSX.Element
     selectedReport?: ReportDefinition
@@ -640,6 +642,7 @@ const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element =
                         {props.selectedReport.description}
                     </div>
                 )}
+                {props.descriptionNote}
                 <div className={styles.reportMeta}>
                     {formatMethod(props.selectedReport.method)}
                     {' '}
@@ -1104,22 +1107,12 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
             )}
             <div className={styles.page}>
                 <PageTitle>{pageTitle}</PageTitle>
-                <p className={styles.instructions}>
-                    {activeTab === 'reports'
-                        ? 'Select a base path to view available reports. Choose a report, '
-                            + 'fill required parameters, and download JSON or CSV from the reports API.'
-                        : (
-                            <>
-                                {'Payments load for all billing accounts by default. Optionally narrow by billing '
-                                    + 'account ID, dates, or category, then click View. Open a billing account profile '
-                                    + 'from the Billing account ID column in the table. '}
-                                <span className={styles.billingDefaultWindowNote}>
-                                    If no dates are specified, records from the past 45 days are displayed
-                                    by default.
-                                </span>
-                            </>
-                        )}
-                </p>
+                {activeTab === 'reports' && (
+                    <p className={styles.instructions}>
+                        Select a base path to view available reports. Choose a report, fill required
+                        parameters, and download JSON or CSV from the reports API.
+                    </p>
+                )}
 
                 {isLoading ? (
                     <div className={styles.spinnerWrapper}>
@@ -1168,6 +1161,12 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
                             </>
                         ) : (
                             <SelectedReportSection
+                                descriptionNote={(
+                                    <p className={styles.billingDefaultWindowNote}>
+                                        If no dates are specified, records from the past 45 days are
+                                        displayed by default.
+                                    </p>
+                                )}
                                 renderParameterInput={renderParameterInput}
                                 reportActions={billingAccountReportActions}
                                 selectedReport={BILLING_ACCOUNTS_REPORT_DEFINITION}

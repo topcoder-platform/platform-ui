@@ -1,4 +1,5 @@
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
     PRIZE_SET_TYPES,
     PRIZE_TYPES,
     REVIEW_TYPES,
@@ -299,5 +300,23 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
         )
             .resolves
             .toBeTruthy()
+    })
+
+    it('rejects reviewer counts above the manual reviewer limit', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: MAX_MANUAL_REVIEWER_COUNT + 1,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: true,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow(`Number of reviewers cannot exceed ${MAX_MANUAL_REVIEWER_COUNT}`)
     })
 })

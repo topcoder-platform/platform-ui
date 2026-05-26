@@ -177,6 +177,33 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
+    it('uses billing-account markup for locked challenge fees when challenge markup cannot be loaded', () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: [
+                {
+                    amount: '28.6',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '5fdf48d2-811f-4914-b713-9e5f423c907d',
+                    externalName: 'Copilot and Admin with reviews',
+                    externalType: 'CHALLENGE',
+                },
+            ],
+            lockedBudget: 28.6,
+            markup: 0.33,
+            totalBudgetRemaining: 971.4,
+        })
+
+        expect(screen.getAllByText('$28.60'))
+            .toHaveLength(2)
+        expect(screen.getByText('$9.44'))
+            .toBeTruthy()
+        expect(screen.queryByText('-'))
+            .toBeNull()
+    })
+
     it('removes challenge markup once from consumed challenge charges before showing member payments', async () => {
         renderModal({
             ...baseBillingAccountDetails,
@@ -200,6 +227,37 @@ describe('BillingAccountLineItemsModal', () => {
             expect(screen.getByText('$8.25'))
                 .toBeTruthy()
         })
+        expect(screen.queryByText('$10.97'))
+            .toBeNull()
+    })
+
+    it('uses consumed challenge member-payment subtotals when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
+            totalBudgetRemaining: 966.75,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$8.25'))
+                .toBeTruthy()
+        })
+        expect(screen.getAllByText('$33.25'))
+            .toHaveLength(1)
         expect(screen.queryByText('$10.97'))
             .toBeNull()
     })
@@ -518,6 +576,36 @@ describe('BillingAccountLineItemsModal', () => {
             ],
             consumedBudget: 33.25,
             markup: 0.33,
+            memberPaymentsRemaining: 200,
+            totalBudgetRemaining: 966.75,
+        }, true)
+
+        await waitFor(() => {
+            expect(screen.getByText('$25.00'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$33.25'))
+            .toBeNull()
+        expect(screen.queryByText('Challenge Fee'))
+            .toBeNull()
+    })
+
+    it('uses consumed challenge member-payment subtotals for copilots when markup is hidden', async () => {
+        mockedFetchChallenge.mockRejectedValueOnce(new Error('Forbidden'))
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '33.25',
+                    date: '2026-05-12T00:00:00.000Z',
+                    externalId: '2864601d-320a-45e2-85b4-a14f9f19785e',
+                    externalName: 'May 12 challenge',
+                    externalType: 'CHALLENGE',
+                    memberPaymentAmount: '25',
+                },
+            ],
+            consumedBudget: 33.25,
             memberPaymentsRemaining: 200,
             totalBudgetRemaining: 966.75,
         }, true)

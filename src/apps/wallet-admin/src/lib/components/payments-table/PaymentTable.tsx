@@ -2,6 +2,7 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useEffect, useState } from 'react'
+import classNames from 'classnames'
 
 import { Button, IconOutline } from '~/libs/ui'
 
@@ -54,6 +55,12 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
     const allVisibleSelected = visibleSelectablePayments.length > 0 && visibleSelectablePayments.every(p => selectedPayments[p.id])
     const someVisibleSelected = visibleSelectablePayments.some(p => selectedPayments[p.id]) && !allVisibleSelected
 
+    const hasDatePaidValues = props.payments.some(payment => {
+        const datePaid = payment.datePaid?.trim()
+
+        return !!datePaid && datePaid !== '-'
+    })
+
     const onToggleSelectAll = (checked: boolean) => {
         if (checked) {
             const next: { [paymentId: string]: Winning } = {}
@@ -88,14 +95,15 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                     />
                                 </th>
                             )}
-                            <th className='body-ultra-small-bold'>HANDLE</th>
-                            <th className={`body-ultra-small-bold ${styles.description}`}>DESCRIPTION</th>
-                            <th className='body-ultra-small-bold'>CREATE DATE</th>
-                            <th className='body-ultra-small-bold'>PAYMENT</th>
-                            <th className='body-ultra-small-bold'>STATUS</th>
-                            <th className='body-ultra-small-bold'>RELEASE DATE</th>
-                            <th className='body-ultra-small-bold'>DATE PAID</th>
-                            <th className='body-ultra-small-bold' aria-label='actions'> </th>
+                            <th className={`body-ultra-small-bold ${styles.handleColumn}`}>HANDLE</th>
+                            <th className={`body-ultra-small-bold ${styles.description} ${hasDatePaidValues ? styles.descriptionCompact : ''}`}>DESCRIPTION</th>
+                            <th className={`body-ultra-small-bold ${styles.paymentColumn}`}>PAYMENT</th>
+                            <th className={`body-ultra-small-bold ${styles.type}`}>TYPE</th>
+                            <th className={`body-ultra-small-bold ${styles.statusColumn}`}>STATUS</th>
+                            <th className={`body-ultra-small-bold ${styles.dateColumn}`}>CREATE DATE</th>
+                            <th className={`body-ultra-small-bold ${styles.dateColumn}`}>RELEASE DATE</th>
+                            <th className={`body-ultra-small-bold ${styles.dateColumn}`}>DATE PAID</th>
+                            <th className={`body-ultra-small-bold ${styles.actionsColumn}`} aria-label='actions'> </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,14 +123,22 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                         />
                                     </td>
                                 )}
-                                <td className='body-small-bold'>{payment.handle}</td>
-                                <td className='body-small'>{payment.description}</td>
-                                <td className='body-small-bold'>{payment.createDate}</td>
-                                <td className='body-small-bold'>{payment.grossAmount}</td>
-                                <td className={`body-small-bold ${styles.capitalize}`}>{payment.status}</td>
-                                <td>{payment.releaseDate}</td>
-                                <td>{payment.datePaid}</td>
-                                <td className={styles.actionButtons}>
+                                <td className={classNames('body-small-bold', styles.handleColumn)}>{payment.handle}</td>
+                                <td className={classNames('body-small', styles.description, hasDatePaidValues && styles.descriptionCompact)}>
+                                    {payment.description}
+                                </td>
+                                <td className={classNames('body-small-bold', styles.paymentColumn)}>{payment.grossAmount}</td>
+                                <td className={classNames('body-small', styles.capitalize, styles.type)}>{payment.type}</td>
+                                <td className={classNames('body-small-bold', styles.capitalize, styles.statusColumn)}>{payment.status}</td>
+                                <td className={classNames('body-small-bold', styles.dateColumn)}>{payment.createDate}</td>
+                                <td className={styles.dateColumn}>{payment.releaseDate}</td>
+                                <td className={styles.dateColumn}>{payment.datePaid}</td>
+                                <td className={classNames(styles.actionButtons, styles.actionsColumn)}>
+                                    <Button
+                                        icon={IconOutline.EyeIcon}
+                                        size='sm'
+                                        onClick={() => props.onPaymentViewClick(payment)}
+                                    />
                                     {props.canEdit && payment.status.toUpperCase() !== 'CANCELLED' && (
                                         <Button
                                             icon={IconOutline.PencilIcon}
@@ -130,11 +146,6 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                             onClick={() => props.onPaymentEditClick(payment)}
                                         />
                                     )}
-                                    <Button
-                                        icon={IconOutline.BookOpenIcon}
-                                        size='sm'
-                                        onClick={() => props.onPaymentViewClick(payment)}
-                                    />
                                 </td>
                             </tr>
                         ))}

@@ -29,6 +29,7 @@ import {
 import {
     AUTOSAVE_DELAY_MS,
     DESIGN_WORK_TYPES,
+    MAX_MANUAL_REVIEWER_COUNT,
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
@@ -157,6 +158,9 @@ import {
 import {
     NDAField,
 } from './NDAField'
+import {
+    RateChallengeField,
+} from './RateChallengeField'
 import {
     ReviewCostField,
 } from './ReviewCostField'
@@ -289,6 +293,7 @@ const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
 const CHALLENGE_TYPE_MARATHON_MATCH_SHORT_ABBREVIATION = 'MM'
 const CHALLENGE_TYPE_TASK_NAME = 'TASK'
 const CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION = 'TSK'
+const CHALLENGE_TRACK_DEVELOPMENT_NAME = 'DEVELOPMENT'
 const CHECKPOINT_REQUIRED_PHASES = [
     'Checkpoint Submission',
     'Checkpoint Screening',
@@ -827,7 +832,7 @@ function getRequiredMemberReviewerCount(reviewer: Reviewer | undefined): number 
         ? Math.trunc(reviewerCountValue)
         : 1
 
-    return reviewerCount
+    return Math.min(MAX_MANUAL_REVIEWER_COUNT, reviewerCount)
 }
 
 function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[] {
@@ -1642,20 +1647,36 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.trackId,
         ],
     )
+    const fallbackChallengeTrackName = useMemo(
+        (): string | undefined => {
+            const challengeTrack = props.challenge?.track
+
+            if (!challengeTrack) {
+                return props.challenge?.legacy?.track
+            }
+
+            if (typeof challengeTrack === 'string') {
+                return challengeTrack
+            }
+
+            return challengeTrack.track || challengeTrack.name || challengeTrack.abbreviation
+        },
+        [
+            props.challenge?.legacy?.track,
+            props.challenge?.track,
+        ],
+    )
+    const resolvedChallengeTrackName = selectedChallengeTrack?.track
+        || selectedChallengeTrack?.name
+        || selectedChallengeTrack?.abbreviation
+        || fallbackChallengeTrackName
     const isDesignTrackSelected = useMemo(
         (): boolean => {
-            const normalizedTrack = (
-                selectedChallengeTrack?.track
-                || selectedChallengeTrack?.name
-                || selectedChallengeTrack?.abbreviation
-                || ''
-            )
-                .trim()
-                .toUpperCase()
+            const normalizedTrack = normalizeChallengeTypeToken(resolvedChallengeTrackName)
 
-            return normalizedTrack === CHALLENGE_TRACKS.DESIGN
+            return normalizedTrack === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DESIGN)
         },
-        [selectedChallengeTrack],
+        [resolvedChallengeTrackName],
     )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
@@ -1716,6 +1737,28 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             name: resolvedChallengeTypeName,
         }),
         [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
+    const isDevelopmentChallengeSelected = useMemo(
+        (): boolean => {
+            const normalizedTrackName = normalizeChallengeTypeToken(resolvedChallengeTrackName)
+            const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
+            const normalizedChallengeTypeAbbreviation
+                = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
+
+            return (
+                normalizedTrackName === CHALLENGE_TRACK_DEVELOPMENT_NAME
+                || normalizedTrackName === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
+            )
+                && (
+                    normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
+                    || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
+                )
+        },
+        [
+            resolvedChallengeTrackName,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
         ],
@@ -1812,6 +1855,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
+    const showRateChallengeField = isMarathonMatchChallengeSelected || isDevelopmentChallengeSelected
     const showPrizesAndBillingSection = !isFunChallengeSelected
     const showEditableTimelineSection = !isTaskChallenge
     const usesManualReviewers = useMemo(
@@ -3685,6 +3729,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />
+                                        {showRateChallengeField
+                                            ? <RateChallengeField />
+                                            : undefined}
                                     </div>
                                 </section>
 

@@ -25,12 +25,22 @@
         border-radius: 4px;
         margin-top: $sp-4;
 
+        .paymentListingNavRow {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: $sp-4;
+            flex-wrap: wrap;
+            margin-bottom: $sp-4;
+            border-bottom: 1px solid $black-20;
+        }
+
         .roleViewToggle {
             display: flex;
             align-items: center;
-            gap: $sp-4;
-            flex-wrap: wrap;
-            margin-bottom: $sp-6;
+            flex-shrink: 0;
+            margin-left: auto;
+            margin-bottom: $sp-1;
         }
 
         .roleViewButtons {
@@ -66,8 +76,6 @@
             display: flex;
             align-items: flex-end;
             gap: $sp-6;
-            margin-bottom: $sp-4;
-            border-bottom: 1px solid $black-20;
         }
 
         .paymentListingTab {
