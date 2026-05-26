@@ -26,6 +26,9 @@ import {
     useFetchResources,
 } from '../../../../../lib/hooks'
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
+} from '../../../../../lib/constants/challenge-editor.constants'
+import {
     fetchDefaultReviewers,
     fetchProfile,
     fetchScorecards,
@@ -106,12 +109,48 @@ jest.mock('../../../../../lib/components/form', () => ({
     },
     FormTextField: (props: {
         label: string
+        max?: number
+        min?: number
         name: string
-    }) => (
-        <div data-testid={props.name}>
-            <span>{props.label}</span>
-        </div>
-    ),
+        sanitize?: (value: string) => string
+        type?: 'number' | 'text'
+    }) => {
+        const {
+            useController,
+            useFormContext,
+        }: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = useFormContext()
+        const controller: UseControllerReturn = useController({
+            control: formContext.control,
+            name: props.name,
+        })
+        const value = typeof controller.field.value === 'number'
+            ? String(controller.field.value)
+            : (controller.field.value || '')
+
+        function handleChange(event: ChangeEvent<HTMLInputElement>): void {
+            const nextValue = props.sanitize
+                ? props.sanitize(event.target.value)
+                : event.target.value
+
+            controller.field.onChange(nextValue)
+        }
+
+        return (
+            <div data-testid={props.name}>
+                <label htmlFor={props.name}>{props.label}</label>
+                <input
+                    aria-label={props.label}
+                    id={props.name}
+                    max={props.max}
+                    min={props.min}
+                    onChange={handleChange}
+                    type={props.type || 'text'}
+                    value={value}
+                />
+            </div>
+        )
+    },
     FormUserAutocomplete: (props: {
         label: string
         name: string
@@ -666,6 +705,32 @@ describe('HumanReviewTab', () => {
                 .getAttribute('data-value'))
                 .toBe('REGULAR_REVIEW')
         })
+    })
+
+    it('caps assignment fields when closed-opportunity reviewer count is too large', async () => {
+        render(<TestHarness />)
+
+        fireEvent.change(
+            within(screen.getByTestId('reviewers.0.memberReviewerCount'))
+                .getByRole('spinbutton', { name: 'Reviewer Count' }),
+            {
+                target: {
+                    value: String(MAX_MANUAL_REVIEWER_COUNT + 5),
+                },
+            },
+        )
+
+        await waitFor(() => {
+            expect((
+                within(screen.getByTestId('reviewers.0.memberReviewerCount'))
+                    .getByRole('spinbutton', { name: 'Reviewer Count' }) as HTMLInputElement
+            ).value)
+                .toBe(String(MAX_MANUAL_REVIEWER_COUNT))
+        })
+        expect(screen.getByTestId(`reviewers.0.additionalMemberIds.${MAX_MANUAL_REVIEWER_COUNT - 2}`))
+            .not.toBeNull()
+        expect(screen.queryByTestId(`reviewers.0.additionalMemberIds.${MAX_MANUAL_REVIEWER_COUNT - 1}`))
+            .toBeNull()
     })
 
     it('hides appeal phases for manual reviewer cards across challenge types', () => {
