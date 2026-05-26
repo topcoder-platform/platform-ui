@@ -1335,15 +1335,26 @@ export const HumanReviewTab: FC = () => {
             }
 
             const nextAdditionalMemberIds = additionalMemberIds.slice(0, maxAdditionalMembers)
+            const removedAdditionalMemberIds = additionalMemberIds.slice(maxAdditionalMembers)
             const keptMemberIds = toUniqueValues([
                 normalizeText(reviewer.memberId),
                 ...nextAdditionalMemberIds,
             ])
             const removedMemberIds = toUniqueValues(
-                additionalMemberIds
-                    .slice(maxAdditionalMembers)
+                removedAdditionalMemberIds
                     .filter(memberId => !keptMemberIds.includes(memberId)),
             )
+            const hasRemovedAdditionalMemberValue = removedAdditionalMemberIds.some(Boolean)
+
+            removedAdditionalMemberIds.forEach((_, removedIndex) => {
+                formContext.unregister(
+                    `reviewers.${fieldIndex}.additionalMemberIds.${maxAdditionalMembers + removedIndex}` as any,
+                )
+            })
+
+            if (!hasRemovedAdditionalMemberValue && !nextAdditionalMemberIds.some(Boolean)) {
+                return
+            }
 
             formContext.setValue(
                 `reviewers.${fieldIndex}.additionalMemberIds` as any,

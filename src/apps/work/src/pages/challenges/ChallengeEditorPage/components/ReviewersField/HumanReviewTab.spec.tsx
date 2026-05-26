@@ -29,6 +29,7 @@ import {
     MAX_MANUAL_REVIEWER_COUNT,
 } from '../../../../../lib/constants/challenge-editor.constants'
 import {
+    deleteResource,
     fetchDefaultReviewers,
     fetchProfile,
     fetchScorecards,
@@ -212,6 +213,7 @@ const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedDeleteResource = deleteResource as jest.Mock
 const mockedFetchDefaultReviewers = fetchDefaultReviewers as jest.Mock
 const mockedFetchProfile = fetchProfile as jest.Mock
 const mockedFetchScorecards = fetchScorecards as jest.Mock
@@ -369,6 +371,7 @@ describe('HumanReviewTab', () => {
                 .mockResolvedValue(undefined),
             resources: [],
         })
+        mockedDeleteResource.mockResolvedValue(undefined)
         mockedFetchDefaultReviewers.mockImplementation(() => createPendingPromise())
         mockedFetchProfile.mockResolvedValue(undefined)
         mockedFetchScorecards.mockImplementation(() => createPendingPromise())
@@ -731,6 +734,47 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
         expect(screen.queryByTestId(`reviewers.0.additionalMemberIds.${MAX_MANUAL_REVIEWER_COUNT - 1}`))
             .toBeNull()
+    })
+
+    it('removes blank assignment slots without deleting resources when reviewer count is decreased', async () => {
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [''],
+                            isMemberReview: true,
+                            memberId: '',
+                            memberReviewerCount: 2,
+                            phaseId: 'phase-1',
+                            roleId: 'role-1',
+                            scorecardId: 'scorecard-1',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(screen.getByTestId('reviewers.0.additionalMemberIds.0'))
+            .not.toBeNull()
+
+        fireEvent.change(
+            within(screen.getByTestId('reviewers.0.memberReviewerCount'))
+                .getByRole('spinbutton', { name: 'Reviewer Count' }),
+            {
+                target: {
+                    value: '1',
+                },
+            },
+        )
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('reviewers.0.additionalMemberIds.0'))
+                .toBeNull()
+        })
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
     })
 
     it('hides appeal phases for manual reviewer cards across challenge types', () => {
