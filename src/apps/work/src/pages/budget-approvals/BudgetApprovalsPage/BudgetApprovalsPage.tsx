@@ -103,8 +103,7 @@ export const BudgetApprovalsPage: FC = () => {
 
     /**
      * For non-admins, restrict project options to projects where the user has
-     * "full write" access (manager or copilot project membership role).
-     * Admins see all projects.
+     * Full Access project membership. Admins see all projects.
      */
     const accessibleProjects = useMemo(
         () => {
@@ -125,7 +124,7 @@ export const BudgetApprovalsPage: FC = () => {
                     ?.toLowerCase()
                     ?.trim()
 
-                return memberRole === PROJECT_ROLES.MANAGER || memberRole === PROJECT_ROLES.COPILOT
+                return memberRole === PROJECT_ROLES.MANAGER
             })
         },
         [isAdmin, projectsResult.projects, userId],
