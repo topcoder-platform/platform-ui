@@ -90,6 +90,11 @@ table {
         width: 96px;
     }
 
+    .bulkSelectColumn {
+        padding-right: 4px;
+        width: 34px;
+    }
+
     tbody tr td:first-child {
         border-top-left-radius: 8px;
         border-bottom-left-radius: 8px;
@@ -100,6 +105,20 @@ table {
         border-bottom-right-radius: 8px;
     }
 
+}
+
+.approverTable {
+    .handleColumn {
+        width: 10%;
+    }
+
+    .description {
+        width: 26%;
+    }
+
+    .descriptionCompact {
+        width: 20%;
+    }
 }
 
 .selected {
