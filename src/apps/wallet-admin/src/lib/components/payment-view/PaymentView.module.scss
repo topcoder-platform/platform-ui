@@ -24,17 +24,7 @@ $payment-field-label-color: #2a2a2a;
     gap: 12px;
     grid-template-columns: repeat(5, minmax(0, 1fr));
 
-    .summaryLabel {
-        color: $payment-field-label-color;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-
     .summaryValue {
-        font-size: 15px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -277,6 +277,14 @@ export function formatCurrencyAmount(
     })
 }
 
+/** Agreement banner amounts use `$` only (no `US$` locale prefix). */
+export function formatAgreementCurrencyAmount(amount: number): string {
+    return `$${amount.toLocaleString('en-US', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+    })}`
+}
+
 export interface AuditTimestampParts {
     dateLine: string
     timeLine: string
@@ -388,7 +396,7 @@ function formatAgreementRangePart(
     hoursPerDay: number,
     workDays: number,
 ): string {
-    const rate = formatCurrencyAmount(ratePerHour)
+    const rate = formatAgreementCurrencyAmount(ratePerHour)
 
     return `${rate} x ${hoursPerDay} hours x ${workDays} days`
 }
@@ -397,12 +405,12 @@ export function formatAgreementExpectedAmount(
     summary: PaymentAgreementSummary,
 ): string {
     if (summary.expectedAmountMax !== undefined) {
-        return `${formatCurrencyAmount(summary.expectedAmount)} - ${
-            formatCurrencyAmount(summary.expectedAmountMax)
+        return `${formatAgreementCurrencyAmount(summary.expectedAmount)} - ${
+            formatAgreementCurrencyAmount(summary.expectedAmountMax)
         }`
     }
 
-    return formatCurrencyAmount(summary.expectedAmount)
+    return formatAgreementCurrencyAmount(summary.expectedAmount)
 }
 
 export function formatAgreementBreakdown(

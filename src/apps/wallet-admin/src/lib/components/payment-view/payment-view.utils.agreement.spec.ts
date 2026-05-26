@@ -41,7 +41,7 @@ describe('buildEngagementAgreementSummary', () => {
         expect(summary?.expectedAmountMax)
             .toBeUndefined()
         expect(formatAgreementBreakdown(summary!))
-            .toBe('US$50.00 x 8 hours x 5 days')
+            .toBe('$50.00 x 8 hours x 5 days')
     })
 
     it('flags fortnightly payments below expected amount', () => {
@@ -91,10 +91,10 @@ describe('buildEngagementAgreementSummary', () => {
         expect(summary?.expectedAmountMax)
             .toBe(9200)
         expect(formatAgreementExpectedAmount(summary!))
-            .toBe('US$8,000.00 - US$9,200.00')
+            .toBe('$8,000.00 - $9,200.00')
         expect(formatAgreementBreakdown(summary!))
             .toBe(
-                'US$50.00 x 8 hours x 20 days - US$50.00 x 8 hours x 23 days',
+                '$50.00 x 8 hours x 20 days - $50.00 x 8 hours x 23 days',
             )
     })
 
