@@ -1,7 +1,16 @@
 import type { ReviewInfo } from '../../models/ReviewInfo.model'
 
-import type { AggregatedReviewDetail, SubmissionRow } from './types'
-import { resolveSubmissionReviewResult } from './reviewResult'
+import type {
+    AggregatedReviewDetail,
+    AggregatedSubmissionReviews,
+    SubmissionRow,
+} from './types'
+import {
+    buildSubmissionReviewerRows,
+    getSubmissionReviewerRowReview,
+    isSubmissionReviewerActionRow,
+    resolveSubmissionReviewResult,
+} from './reviewResult'
 
 const DEFAULT_PASSING_SCORE = 80
 
@@ -38,6 +47,34 @@ const buildReviewInfo = (
         .toISOString(),
     ...overrides,
 })
+
+const createSubmissionRow = (): SubmissionRow => {
+    const aggregated: AggregatedSubmissionReviews = {
+        id: 'submission-1',
+        reviews: [
+            {
+                resourceId: 'other-reviewer-resource',
+                reviewerHandle: 'taasintake300',
+                reviewId: 'other-review',
+            },
+            {
+                resourceId: 'copilot-reviewer-resource',
+                reviewerHandle: 'TCConnCopilot',
+                reviewId: 'copilot-review',
+            },
+        ],
+        submission: {
+            id: 'submission-1',
+            memberId: 'submitter-1',
+        },
+    }
+
+    return {
+        aggregated,
+        id: 'submission-1',
+        memberId: 'submitter-1',
+    }
+}
 
 describe('resolveSubmissionReviewResult', () => {
     it('returns undefined when any reviewer is still pending in a multi-review setup', () => {
@@ -185,5 +222,23 @@ describe('resolveSubmissionReviewResult', () => {
 
         expect(result)
             .toBe('PASS')
+    })
+})
+
+describe('reviewResult row helpers', () => {
+    it('marks only the matching reviewer row as action-eligible when the current reviewer is not first', () => {
+        const rows = buildSubmissionReviewerRows([createSubmissionRow()])
+        const currentReviewerResourceIds = new Set(['copilot-reviewer-resource'])
+
+        expect(rows)
+            .toHaveLength(2)
+        expect(getSubmissionReviewerRowReview(rows[0])?.reviewId)
+            .toBe('other-review')
+        expect(getSubmissionReviewerRowReview(rows[1])?.reviewId)
+            .toBe('copilot-review')
+        expect(isSubmissionReviewerActionRow(rows[0], currentReviewerResourceIds))
+            .toBe(false)
+        expect(isSubmissionReviewerActionRow(rows[1], currentReviewerResourceIds))
+            .toBe(true)
     })
 })
