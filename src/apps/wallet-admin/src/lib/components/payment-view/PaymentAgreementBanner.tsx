@@ -7,9 +7,9 @@ import { PaymentAgreementSummary } from '../../models/WinningDetail'
 
 import {
     formatAgreementBreakdown,
+    formatAgreementCurrencyAmount,
     formatAgreementDifferenceLabel,
     formatAgreementExpectedAmount,
-    formatAgreementCurrencyAmount,
 } from './payment-view.utils'
 import styles from './PaymentView.module.scss'
 
