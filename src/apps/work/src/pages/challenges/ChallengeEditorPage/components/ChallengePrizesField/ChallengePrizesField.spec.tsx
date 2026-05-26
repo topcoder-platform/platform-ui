@@ -5,6 +5,7 @@ import {
     render,
     screen,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {
     FormProvider,
     useForm,
@@ -20,26 +21,10 @@ jest.mock('../../../../../lib/components', () => ({
 }))
 
 jest.mock('../../../../../lib/components/form', () => {
-    const React = jest.requireActual('react')
+    const actualPrizeInput = jest.requireActual('../../../../../lib/components/form/PrizeInput')
 
     return {
-        PrizeInput: function PrizeInput(props: {
-            onChange: (value: number) => void
-            value: number
-        }) {
-            const handleChange = React.useCallback((event: { target: { value: string } }): void => {
-                props.onChange(Number.parseInt(event.target.value || '0', 10) || 0)
-            }, [props])
-
-            return (
-                <input
-                    aria-label='Prize amount'
-                    onChange={handleChange}
-                    type='text'
-                    value={props.value > 0 ? String(props.value) : ''}
-                />
-            )
-        },
+        PrizeInput: actualPrizeInput.PrizeInput,
     }
 })
 
@@ -57,6 +42,21 @@ jest.mock('../../../../../lib/utils', () => ({
     getPrizeType: (
         prizeSets: Array<{ prizes?: Array<{ type: string }> }>,
     ) => prizeSets[0]?.prizes?.[0]?.type || 'USD',
+    validatePrizeValue: (value: string): string => {
+        const digitsOnly = value.replace(/[^\d]/g, '')
+
+        if (!digitsOnly) {
+            return ''
+        }
+
+        const parsedValue = Number.parseInt(digitsOnly, 10)
+
+        if (Number.isNaN(parsedValue)) {
+            return ''
+        }
+
+        return String(Math.min(parsedValue, 1000000))
+    },
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -134,8 +134,8 @@ describe('ChallengePrizesField', () => {
     it('keeps a labeled first prize row before a second prize is added', () => {
         render(<TestHarness challengeTypeName='Challenge' />)
 
-        const onlyPrizeRow = screen.getByLabelText('Prize amount')
-            .parentElement?.parentElement as HTMLDivElement
+        const onlyPrizeRow = screen.getByRole('textbox')
+            .parentElement?.parentElement?.parentElement as HTMLDivElement
         const header = screen.getByRole('radiogroup', { name: /Challenge Prizes/i })
             .parentElement as HTMLDivElement
 
@@ -202,6 +202,35 @@ describe('ChallengePrizesField', () => {
             .toBe(3)
         expect(secondPrizeRow.className)
             .toContain(styles.prizeRowWithRemove)
+    })
+
+    it('allows typing multiple digits into an empty prize input continuously', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                defaultPrizeSets={[
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 0,
+                            },
+                        ],
+                        type: 'PLACEMENT',
+                    },
+                ]}
+            />,
+        )
+
+        const prizeInput = screen.getByRole('textbox') as HTMLInputElement
+
+        await user.type(prizeInput, '55')
+
+        expect(prizeInput.value)
+            .toBe('55')
+        expect(document.activeElement)
+            .toBe(prizeInput)
     })
 
     it('allows equal lower placement prizes without showing an ordering error', () => {

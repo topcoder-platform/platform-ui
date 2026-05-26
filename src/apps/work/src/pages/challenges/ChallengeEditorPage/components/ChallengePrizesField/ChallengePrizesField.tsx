@@ -150,6 +150,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
 
     const [pendingPrizeType, setPendingPrizeType] = useState<PrizeType | undefined>()
     const [showPointsConfirmation, setShowPointsConfirmation] = useState<boolean>(false)
+    const [activePrizeIndex, setActivePrizeIndex] = useState<number | undefined>()
 
     const supportsMultiplePrizes = useMemo(
         () => hasMultiplePrizesSupport(
@@ -283,6 +284,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
 
     const handlePrizeValueChange = useCallback(
         (index: number, value: number): void => {
+            setActivePrizeIndex(index)
             setValue(`${placementPrizesName}.${index}.value` as never, value as never, {
                 shouldDirty: true,
                 shouldValidate: true,
@@ -312,6 +314,13 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
             fields,
             handlePrizeValueChange,
         ],
+    )
+
+    const prizeFocusHandlers = useMemo<VoidHandler[]>(
+        () => fields.map((_, index) => (): void => {
+            setActivePrizeIndex(index)
+        }),
+        [fields],
     )
 
     const removeHandlers = useMemo<VoidHandler[]>(
@@ -421,9 +430,11 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
 
                                 <div className={styles.prizeInputField}>
                                     <PrizeInput
+                                        autoFocus={activePrizeIndex === index}
                                         disabled={props.disabled}
                                         error={hasValueError || !!nonIncreasingOrderError}
                                         onChange={prizeValueChangeHandlers[index]}
+                                        onFocus={prizeFocusHandlers[index]}
                                         prizeType={currentPrizeType}
                                         value={prizeValue}
                                     />
