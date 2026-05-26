@@ -29,6 +29,9 @@ import {
 } from '../../../../../lib/services'
 import { REVIEW_APP_URL } from '../../../../../lib/constants'
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
+} from '../../../../../lib/constants/challenge-editor.constants'
+import {
     calculateEstimatedReviewerCost,
     getFirstPlacePrizeValue,
 } from '../../../../../lib/utils/prize.utils'
@@ -65,7 +68,10 @@ interface ReviewConfigurationSummaryProps {
  * @returns a positive integer reviewer count.
  */
 function getReviewerCount(reviewer?: Reviewer): number {
-    return Math.max(1, Math.trunc(Number(reviewer?.memberReviewerCount || 1) || 1))
+    return Math.min(
+        MAX_MANUAL_REVIEWER_COUNT,
+        Math.max(1, Math.trunc(Number(reviewer?.memberReviewerCount || 1) || 1)),
+    )
 }
 
 /**

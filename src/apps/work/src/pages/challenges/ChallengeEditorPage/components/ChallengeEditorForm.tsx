@@ -29,6 +29,7 @@ import {
 import {
     AUTOSAVE_DELAY_MS,
     DESIGN_WORK_TYPES,
+    MAX_MANUAL_REVIEWER_COUNT,
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
@@ -831,7 +832,7 @@ function getRequiredMemberReviewerCount(reviewer: Reviewer | undefined): number 
         ? Math.trunc(reviewerCountValue)
         : 1
 
-    return reviewerCount
+    return Math.min(MAX_MANUAL_REVIEWER_COUNT, reviewerCount)
 }
 
 function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[] {
