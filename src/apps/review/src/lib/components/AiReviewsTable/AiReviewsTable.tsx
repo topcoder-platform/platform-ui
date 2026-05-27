@@ -50,7 +50,7 @@ interface AiReviewerRow {
     reviewDate?: string
     run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'>
     score?: number
-    status?: 'failed' | 'failed-score' | 'passed' | 'pending'
+    status?: 'failed' | 'failed-score' | 'passed' | 'pending' | 'cancelled'
     title: string
     weight?: number
     workflowId?: string
@@ -64,9 +64,13 @@ function normalizeStatus(
     runStatus?: string | null,
     score?: number | null,
     minScore?: number,
-): 'failed' | 'failed-score' | 'passed' | 'pending' {
+): 'failed' | 'failed-score' | 'passed' | 'pending' | 'cancelled' {
     if (!runStatus) {
         return 'pending'
+    }
+
+    if (runStatus === AiWorkflowRunStatusEnum.CANCELLED) {
+        return 'cancelled'
     }
 
     if (aiRunInProgress({ status: runStatus as AiWorkflowRunStatusEnum })) {

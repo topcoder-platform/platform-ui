@@ -8,21 +8,24 @@ import StatusLabel from './StatusLabel'
 
 interface AiWorkflowRunStatusProps {
     run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
-    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'human-override'
+    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'cancelled' | 'human-override'
     score?: number
     hideLabel?: boolean
     showScore?: boolean
     action?: ReactNode
 }
 
-const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): string => {
+const aiRunStatus = (
+    run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>,
+): 'pending' | 'failed' | 'cancelled' | 'passed' | 'failed-score' => {
     const isInProgress = aiRunInProgress(run)
     const isFailed = aiRunFailed(run)
+    const isCancelled = run.status === 'CANCELLED'
     const isPassing = (
         run.status === 'SUCCESS'
         && run.score >= (run.workflow.scorecard?.minimumPassingScore ?? 0)
     )
-    return isInProgress ? 'pending' : isFailed ? 'failed' : (
+    return isInProgress ? 'pending' : isCancelled ? 'cancelled' : isFailed ? 'failed' : (
         isPassing ? 'passed' : 'failed-score'
     )
 }
@@ -81,6 +84,16 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
                     hideLabel={props.hideLabel}
                     status={displayStatus}
                     label='Failure'
+                    score={score}
+                    action={props.action}
+                />
+            )}
+            {displayStatus === 'cancelled' && (
+                <StatusLabel
+                    icon={<IconOutline.XCircleIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
+                    status='failed'
+                    label='Cancelled'
                     score={score}
                     action={props.action}
                 />
