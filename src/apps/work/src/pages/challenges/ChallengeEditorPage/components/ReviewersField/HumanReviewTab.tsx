@@ -1352,10 +1352,6 @@ export const HumanReviewTab: FC = () => {
                 )
             })
 
-            if (!hasRemovedAdditionalMemberValue && !nextAdditionalMemberIds.some(Boolean)) {
-                return
-            }
-
             formContext.setValue(
                 `reviewers.${fieldIndex}.additionalMemberIds` as any,
                 nextAdditionalMemberIds.length
@@ -1368,7 +1364,12 @@ export const HumanReviewTab: FC = () => {
             )
 
             const roleId = resolveRoleIdForReviewer(reviewer)
-            if (!normalizedChallengeId || !roleId || !removedMemberIds.length) {
+            if (
+                !hasRemovedAdditionalMemberValue
+                || !normalizedChallengeId
+                || !roleId
+                || !removedMemberIds.length
+            ) {
                 return
             }
 
