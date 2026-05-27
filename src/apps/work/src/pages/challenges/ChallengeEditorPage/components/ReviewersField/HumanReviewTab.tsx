@@ -724,6 +724,7 @@ export const HumanReviewTab: FC = () => {
     const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>()
     const autoBackfilledReviewerTypesRef = useRef<Record<string, string>>({})
+    const trimmedAdditionalMemberIdsRef = useRef<Record<string, string>>({})
     const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
@@ -1329,10 +1330,27 @@ export const HumanReviewTab: FC = () => {
             const reviewerCount = getReviewerCount(reviewer)
             const maxAdditionalMembers = Math.max(0, reviewerCount - 1)
             const additionalMemberIds = getAdditionalMemberIds(reviewer)
+            const additionalMemberIdsFieldName = `reviewers.${fieldIndex}.additionalMemberIds`
 
             if (additionalMemberIds.length <= maxAdditionalMembers) {
+                if (additionalMemberIds.length > 0 || maxAdditionalMembers > 0) {
+                    delete trimmedAdditionalMemberIdsRef.current[additionalMemberIdsFieldName]
+                }
+
                 return
             }
+
+            // React Hook Form can continue reporting a just-unregistered blank slot briefly.
+            // Avoid re-running the same trim when the watched value has not actually moved.
+            const trimSignature = JSON.stringify({
+                additionalMemberIds,
+                maxAdditionalMembers,
+            })
+            if (trimmedAdditionalMemberIdsRef.current[additionalMemberIdsFieldName] === trimSignature) {
+                return
+            }
+
+            trimmedAdditionalMemberIdsRef.current[additionalMemberIdsFieldName] = trimSignature
 
             const nextAdditionalMemberIds = additionalMemberIds.slice(0, maxAdditionalMembers)
             const removedAdditionalMemberIds = additionalMemberIds.slice(maxAdditionalMembers)
@@ -1353,7 +1371,7 @@ export const HumanReviewTab: FC = () => {
             })
 
             formContext.setValue(
-                `reviewers.${fieldIndex}.additionalMemberIds` as any,
+                additionalMemberIdsFieldName as any,
                 nextAdditionalMemberIds.length
                     ? nextAdditionalMemberIds
                     : undefined,
