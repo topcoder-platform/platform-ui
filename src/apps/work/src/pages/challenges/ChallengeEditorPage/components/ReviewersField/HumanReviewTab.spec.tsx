@@ -245,6 +245,7 @@ function createDeferredPromise<T>(): DeferredPromise<T> {
 interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
     initialScorecardErrorMessage?: string
+    showAdditionalMemberIdsValue?: boolean
     showMemberValue?: boolean
     showScorecardValue?: boolean
 }
@@ -318,6 +319,15 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     return (
         <FormProvider {...formMethods}>
             <HumanReviewTab />
+            {props.showAdditionalMemberIdsValue
+                ? (
+                    <div data-testid='additional-member-ids-value'>
+                        {formMethods.watch('reviewers.0.additionalMemberIds') === undefined
+                            ? 'undefined'
+                            : JSON.stringify(formMethods.watch('reviewers.0.additionalMemberIds'))}
+                    </div>
+                )
+                : undefined}
             {props.showMemberValue
                 ? (
                     <div data-testid='member-id-value'>
@@ -736,7 +746,7 @@ describe('HumanReviewTab', () => {
             .toBeNull()
     })
 
-    it('removes blank assignment slots without deleting resources when reviewer count is decreased', async () => {
+    it('removes blank assignment slots without deleting resources after closing public opportunity', async () => {
         render(
             <TestHarness
                 defaultValues={{
@@ -749,12 +759,15 @@ describe('HumanReviewTab', () => {
                             phaseId: 'phase-1',
                             roleId: 'role-1',
                             scorecardId: 'scorecard-1',
-                            shouldOpenOpportunity: false,
+                            shouldOpenOpportunity: true,
                         },
                     ],
                 }}
+                showAdditionalMemberIdsValue
             />,
         )
+
+        fireEvent.click(screen.getByLabelText('Open public review opportunity'))
 
         expect(screen.getByTestId('reviewers.0.additionalMemberIds.0'))
             .not.toBeNull()
@@ -773,6 +786,8 @@ describe('HumanReviewTab', () => {
             expect(screen.queryByTestId('reviewers.0.additionalMemberIds.0'))
                 .toBeNull()
         })
+        expect(screen.getByTestId('additional-member-ids-value').textContent)
+            .toBe('undefined')
         expect(mockedDeleteResource)
             .not.toHaveBeenCalled()
     })
