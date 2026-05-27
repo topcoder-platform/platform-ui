@@ -104,6 +104,7 @@ export const RateChallengeField: FC = () => {
 
     return (
         <FormCheckboxField
+            checkboxOnlyHitArea
             label='Rate this challenge'
             name={IS_RATED_TOGGLE_FIELD}
             onChange={handleRatedChange}
