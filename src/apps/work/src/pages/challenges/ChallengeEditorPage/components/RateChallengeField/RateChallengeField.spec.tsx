@@ -17,12 +17,17 @@ import { ChallengeEditorFormData } from '../../../../../lib/models'
 
 import { RateChallengeField } from './RateChallengeField'
 
+interface MockFormCheckboxFieldProps {
+    checkboxOnlyHitArea?: boolean
+    label: string
+    name: string
+    onChange?: (checked: boolean) => void
+}
+
+const mockFormCheckboxFieldProps: MockFormCheckboxFieldProps[] = []
+
 jest.mock('../../../../../lib/components/form', () => ({
-    FormCheckboxField: function MockFormCheckboxField(props: {
-        label: string
-        name: string
-        onChange?: (checked: boolean) => void
-    }) {
+    FormCheckboxField: function MockFormCheckboxField(props: MockFormCheckboxFieldProps) {
         const React: typeof import('react') = jest.requireActual('react')
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const formContext = reactHookForm.useFormContext()
@@ -31,9 +36,15 @@ jest.mock('../../../../../lib/components/form', () => ({
             name: props.name,
         })
 
+        mockFormCheckboxFieldProps.push(props)
+
         return React.createElement(
             'label',
-            {},
+            {
+                'data-checkbox-only-hit-area': props.checkboxOnlyHitArea === true
+                    ? 'true'
+                    : 'false',
+            },
             React.createElement('input', {
                 checked: controller.field.value === true,
                 onChange: (event: { target: { checked: boolean } }) => {
@@ -84,6 +95,10 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
 }
 
 describe('RateChallengeField', () => {
+    beforeEach(() => {
+        mockFormCheckboxFieldProps.length = 0
+    })
+
     it('defaults to rated when metadata is missing and stores false when unchecked', async () => {
         const user = userEvent.setup()
 
@@ -104,6 +119,13 @@ describe('RateChallengeField', () => {
                 name: 'isRated',
                 value: 'false',
             }]))
+    })
+
+    it('renders the checkbox without a duplicate field header', () => {
+        render(<TestHarness />)
+
+        expect(mockFormCheckboxFieldProps[0].checkboxOnlyHitArea)
+            .toBe(true)
     })
 
     it('restores the default rated metadata when checked again', async () => {

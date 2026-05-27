@@ -60,6 +60,8 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
 
         return !!datePaid && datePaid !== '-'
     })
+    const isApproverTable = !!props.enableBulkEdit
+    const useCompactDescription = hasDatePaidValues || isApproverTable
 
     const onToggleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -81,11 +83,11 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
     return (
         <>
             <div className={styles.tableContainer}>
-                <table>
+                <table className={isApproverTable ? styles.approverTable : undefined}>
                     <thead>
                         <tr>
                             {props.enableBulkEdit && (
-                                <th>
+                                <th className={styles.bulkSelectColumn}>
                                     <input
                                         type='checkbox'
                                         aria-label='Select All'
@@ -96,7 +98,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 </th>
                             )}
                             <th className={`body-ultra-small-bold ${styles.handleColumn}`}>HANDLE</th>
-                            <th className={`body-ultra-small-bold ${styles.description} ${hasDatePaidValues ? styles.descriptionCompact : ''}`}>DESCRIPTION</th>
+                            <th className={`body-ultra-small-bold ${styles.description} ${useCompactDescription ? styles.descriptionCompact : ''}`}>DESCRIPTION</th>
                             <th className={`body-ultra-small-bold ${styles.paymentColumn}`}>PAYMENT</th>
                             <th className={`body-ultra-small-bold ${styles.type}`}>TYPE</th>
                             <th className={`body-ultra-small-bold ${styles.statusColumn}`}>STATUS</th>
@@ -113,7 +115,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 className={selectedPayments[payment.id] ? 'selected' : ''}
                             >
                                 {props.enableBulkEdit && (
-                                    <td>
+                                    <td className={styles.bulkSelectColumn}>
                                         <input
                                             type='checkbox'
                                             aria-label={`Select ${payment.handle}`}
@@ -124,7 +126,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                     </td>
                                 )}
                                 <td className={classNames('body-small-bold', styles.handleColumn)}>{payment.handle}</td>
-                                <td className={classNames('body-small', styles.description, hasDatePaidValues && styles.descriptionCompact)}>
+                                <td className={classNames('body-small', styles.description, useCompactDescription && styles.descriptionCompact)}>
                                     {payment.description}
                                 </td>
                                 <td className={classNames('body-small-bold', styles.paymentColumn)}>{payment.grossAmount}</td>

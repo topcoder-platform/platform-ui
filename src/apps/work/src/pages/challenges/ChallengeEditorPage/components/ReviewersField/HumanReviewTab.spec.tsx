@@ -12,11 +12,14 @@ import type {
 } from 'react'
 import {
     useEffect,
+    useRef,
 } from 'react'
 import {
     FormProvider,
     UseControllerReturn,
     useForm,
+    useFormContext as useReactHookFormContext,
+    useWatch,
 } from 'react-hook-form'
 
 import {
@@ -245,6 +248,8 @@ function createDeferredPromise<T>(): DeferredPromise<T> {
 interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
     initialScorecardErrorMessage?: string
+    restoreStaleAdditionalMemberIds?: boolean
+    showAdditionalMemberIdsValue?: boolean
     showMemberValue?: boolean
     showScorecardValue?: boolean
 }
@@ -293,6 +298,51 @@ function getPhaseOptionLabels(fieldName: string): string[] {
         .map(option => option.label)
 }
 
+/**
+ * Simulates React Hook Form continuing to report a hidden blank member slot
+ * after the reviewer count cleanup tries to unregister it.
+ *
+ * @returns render-count marker used to detect runaway cleanup loops.
+ * @throws when the regression produces repeated trim/re-register renders.
+ */
+const StaleAdditionalMemberIdsReporter = (): JSX.Element => {
+    const formContext = useReactHookFormContext<ChallengeEditorFormData>()
+    const renderCountRef = useRef<number>(0)
+    const reviewerCount = useWatch({
+        control: formContext.control,
+        name: 'reviewers.0.memberReviewerCount',
+    }) as number | string | undefined
+    const additionalMemberIds = useWatch({
+        control: formContext.control,
+        name: 'reviewers.0.additionalMemberIds',
+    }) as string[] | undefined
+
+    renderCountRef.current += 1
+    if (renderCountRef.current > 20) {
+        throw new Error('Reviewer count cleanup looped')
+    }
+
+    useEffect(() => {
+        if (
+            String(reviewerCount) !== '1'
+            || additionalMemberIds !== undefined
+        ) {
+            return
+        }
+
+        formContext.setValue('reviewers.0.additionalMemberIds', [''], {
+            shouldDirty: false,
+            shouldValidate: false,
+        })
+    }, [
+        additionalMemberIds,
+        formContext,
+        reviewerCount,
+    ])
+
+    return <div data-testid='stale-additional-member-renders'>{renderCountRef.current}</div>
+}
+
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
@@ -318,6 +368,18 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     return (
         <FormProvider {...formMethods}>
             <HumanReviewTab />
+            {props.restoreStaleAdditionalMemberIds
+                ? <StaleAdditionalMemberIdsReporter />
+                : undefined}
+            {props.showAdditionalMemberIdsValue
+                ? (
+                    <div data-testid='additional-member-ids-value'>
+                        {formMethods.watch('reviewers.0.additionalMemberIds') === undefined
+                            ? 'undefined'
+                            : JSON.stringify(formMethods.watch('reviewers.0.additionalMemberIds'))}
+                    </div>
+                )
+                : undefined}
             {props.showMemberValue
                 ? (
                     <div data-testid='member-id-value'>
@@ -736,7 +798,7 @@ describe('HumanReviewTab', () => {
             .toBeNull()
     })
 
-    it('removes blank assignment slots without deleting resources when reviewer count is decreased', async () => {
+    it('removes blank assignment slots without deleting resources after closing public opportunity', async () => {
         render(
             <TestHarness
                 defaultValues={{
@@ -749,12 +811,15 @@ describe('HumanReviewTab', () => {
                             phaseId: 'phase-1',
                             roleId: 'role-1',
                             scorecardId: 'scorecard-1',
-                            shouldOpenOpportunity: false,
+                            shouldOpenOpportunity: true,
                         },
                     ],
                 }}
+                showAdditionalMemberIdsValue
             />,
         )
+
+        fireEvent.click(screen.getByLabelText('Open public review opportunity'))
 
         expect(screen.getByTestId('reviewers.0.additionalMemberIds.0'))
             .not.toBeNull()
@@ -773,6 +838,49 @@ describe('HumanReviewTab', () => {
             expect(screen.queryByTestId('reviewers.0.additionalMemberIds.0'))
                 .toBeNull()
         })
+        expect(screen.getByTestId('additional-member-ids-value').textContent)
+            .toBe('undefined')
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('does not repeat reviewer count cleanup when a hidden blank slot is still reported', async () => {
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [''],
+                            isMemberReview: true,
+                            memberId: '',
+                            memberReviewerCount: 2,
+                            phaseId: 'phase-1',
+                            roleId: 'role-1',
+                            scorecardId: 'scorecard-1',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+                restoreStaleAdditionalMemberIds
+            />,
+        )
+
+        fireEvent.change(
+            within(screen.getByTestId('reviewers.0.memberReviewerCount'))
+                .getByRole('spinbutton', { name: 'Reviewer Count' }),
+            {
+                target: {
+                    value: '1',
+                },
+            },
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('stale-additional-member-renders'))
+                .not.toBeNull()
+        })
+        expect(screen.queryByTestId('reviewers.0.additionalMemberIds.0'))
+            .toBeNull()
         expect(mockedDeleteResource)
             .not.toHaveBeenCalled()
     })
