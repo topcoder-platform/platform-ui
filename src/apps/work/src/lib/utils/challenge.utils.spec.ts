@@ -1,6 +1,7 @@
 import {
     getSubmissionProvisionalScore,
     getSubmissionSystemScore,
+    isMarathonMatchChallenge,
 } from './challenge.utils'
 
 jest.mock('../constants', () => ({
@@ -13,6 +14,26 @@ jest.mock('../constants', () => ({
 }))
 
 describe('challenge utils', () => {
+    describe('isMarathonMatchChallenge', () => {
+        it('recognizes Marathon Match from the canonical challenge type id', () => {
+            expect(isMarathonMatchChallenge({
+                typeId: '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+            }))
+                .toBe(true)
+        })
+
+        it('returns false when no Marathon Match identifiers are present', () => {
+            expect(isMarathonMatchChallenge({
+                tags: ['development'],
+                type: {
+                    name: 'Code',
+                },
+                typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+            }))
+                .toBe(false)
+        })
+    })
+
     describe('getSubmissionProvisionalScore', () => {
         it('returns only provisional marathon scores', () => {
             expect(getSubmissionProvisionalScore({
@@ -40,6 +61,35 @@ describe('challenge utils', () => {
                 ],
             }))
                 .toBe(12)
+        })
+
+        it('returns the latest provisional summation before stale raw scores', () => {
+            expect(getSubmissionProvisionalScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 93.82,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                        },
+                        updatedAt: '2026-05-20T03:41:00.000Z',
+                    },
+                    {
+                        aggregateScore: 73.2513061836071,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                        },
+                        updatedAt: '2026-05-20T04:04:00.000Z',
+                    },
+                ],
+                submissions: [
+                    {
+                        provisionalScore: 93.82,
+                    },
+                ],
+            }))
+                .toBe(73.2513061836071)
         })
 
         it('returns undefined when provisional scoring is unavailable', () => {
@@ -104,6 +154,35 @@ describe('challenge utils', () => {
                 ],
             }))
                 .toBe(20)
+        })
+
+        it('returns the latest system summation before stale raw scores', () => {
+            expect(getSubmissionSystemScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 60,
+                        isFinal: true,
+                        metadata: {
+                            testProcess: 'system',
+                        },
+                        updatedAt: '2026-05-20T03:41:00.000Z',
+                    },
+                    {
+                        aggregateScore: 88.5,
+                        isFinal: true,
+                        metadata: {
+                            testProcess: 'system',
+                        },
+                        updatedAt: '2026-05-20T04:04:00.000Z',
+                    },
+                ],
+                submissions: [
+                    {
+                        finalScore: 60,
+                    },
+                ],
+            }))
+                .toBe(88.5)
         })
 
         it('returns undefined when system scoring is unavailable', () => {

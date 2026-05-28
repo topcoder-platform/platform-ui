@@ -18,9 +18,9 @@ import {
 } from '../../../../lib/components/form'
 import {
     formatAssignmentCurrency,
-    getAssignmentStandardHoursPerWeek,
+    getAssignmentPaymentCycle,
+    getAssignmentStandardHoursPerDay,
 } from '../../../../lib/utils'
-import { formatCurrency } from '../../../../lib/utils/payment.utils'
 
 import {
     AssignmentDetailsFormValue,
@@ -116,7 +116,9 @@ function createEmptyAssignmentDetails(): AssignmentDetailsFormValue {
         durationMonths: '',
         memberHandle: '',
         otherRemarks: undefined,
+        paymentCycle: 'WEEKLY',
         ratePerHour: '',
+        standardHoursPerDay: '',
         standardHoursPerWeek: '',
         startDate: '',
     }
@@ -287,15 +289,15 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                                                         ,
                                                                     </span>
                                                                     <span>
-                                                                        <span className={styles.detailLabel}>Hours/Wk:</span>
+                                                                        <span className={styles.detailLabel}>Hours/Day:</span>
                                                                         {' '}
-                                                                        {getAssignmentStandardHoursPerWeek(assignmentDetail) || '-'}
+                                                                        {getAssignmentStandardHoursPerDay(assignmentDetail) || '-'}
                                                                         ,
                                                                     </span>
                                                                     <span>
-                                                                        <span className={styles.detailLabel}>Rate/Wk:</span>
+                                                                        <span className={styles.detailLabel}>Payment Cycle:</span>
                                                                         {' '}
-                                                                        {formatCurrency(assignmentDetail.agreementRate)}
+                                                                        {getAssignmentPaymentCycle(assignmentDetail)}
                                                                     </span>
                                                                     {!isLockedAssignment
                                                                         ? (

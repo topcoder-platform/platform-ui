@@ -8,6 +8,8 @@ import {
     waitFor,
 } from '@testing-library/react'
 
+import { toPaymentTypeFilterValues } from '~/libs/shared/lib/utils/payment-type-filter.utils'
+
 import { editPayment, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import PaymentsListView from './PaymentsListView'
 
@@ -209,6 +211,49 @@ const paymentsResponse = {
     ],
 }
 
+const TOPCODER_TAB_CATEGORIES = [
+    'TASK_PAYMENT',
+    'CONTEST_PAYMENT',
+    'COPILOT_PAYMENT',
+    'REVIEW_BOARD_PAYMENT',
+    'ENGAGEMENT_PAYMENT',
+]
+
+const TOPCODER_TAB_TYPE_FILTER_VALUES = toPaymentTypeFilterValues(TOPCODER_TAB_CATEGORIES)
+const APPROVER_TYPE_FILTER_VALUES = ['Task', 'Engagement']
+
+function getApproverDefaultDateRangeForTest(): { dateFrom: string, dateTo: string } {
+    const dateTo = new Date()
+    const dateFrom = new Date()
+    dateFrom.setMonth(dateFrom.getMonth() - 3)
+
+    const format = (date: Date): string => {
+        const y = date.getFullYear()
+        const mo = String(date.getMonth() + 1)
+            .padStart(2, '0')
+        const day = String(date.getDate())
+            .padStart(2, '0')
+
+        return `${y}-${mo}-${day}`
+    }
+
+    return {
+        dateFrom: format(dateFrom),
+        dateTo: format(dateTo),
+    }
+}
+
+const ALL_STATUS_FILTER_VALUES = [
+    'OWED',
+    'ON_HOLD_ADMIN',
+    'ON_HOLD',
+    'PAID',
+    'CANCELLED',
+    'PROCESSING',
+    'FAILED',
+    'RETURNED',
+]
+
 describe('PaymentsListView', () => {
     beforeEach(() => {
         mockFilterBar.mockClear()
@@ -222,6 +267,8 @@ describe('PaymentsListView', () => {
     })
 
     it('defaults the approver view to the On Hold (Admin) status filter and both allowed categories', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Approver'] } as any}
@@ -233,14 +280,18 @@ describe('PaymentsListView', () => {
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
                 categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: ['last30days'],
+                dateFrom: [approverDates.dateFrom],
+                dateTo: [approverDates.dateTo],
                 status: ['ON_HOLD_ADMIN'],
             })
         expect(mockFilterBar)
             .toHaveBeenCalled()
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'ON_HOLD_ADMIN',
+                category: APPROVER_TYPE_FILTER_VALUES,
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -260,10 +311,39 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: 'TAAS_PAYMENT',
+                status: ALL_STATUS_FILTER_VALUES,
             }))
     })
 
+    it('reflects taas admin draft date filters in FilterBar overrides', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Wipro TaaS Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('Member earnings will appear here.')
+
+        const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+
+        act(() => {
+            filterBarProps.onFilterChange('dateFrom', ['2026-04-30'])
+            filterBarProps.onFilterChange('dateTo', ['2026-05-25'])
+        })
+
+        await waitFor(() => {
+            expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+                .toEqual(expect.objectContaining({
+                    category: 'TAAS_PAYMENT',
+                    dateFrom: '2026-04-30',
+                    dateTo: '2026-05-25',
+                }))
+        })
+    })
+
     it('applies the default approver status after switching from admin view', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Admin', 'Payment Approver'] } as any}
@@ -273,7 +353,9 @@ describe('PaymentsListView', () => {
         await screen.findByText('Member earnings will appear here.')
 
         expect(mockedGetPayments)
-            .toHaveBeenLastCalledWith(10, 0, {})
+            .toHaveBeenLastCalledWith(10, 0, {
+                categories: TOPCODER_TAB_CATEGORIES,
+            })
 
         fireEvent.click(screen.getByRole('button', { name: 'Approver View' }))
 
@@ -282,13 +364,17 @@ describe('PaymentsListView', () => {
         expect(mockedGetPayments)
             .toHaveBeenLastCalledWith(10, 0, {
                 categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                date: ['last30days'],
+                dateFrom: [approverDates.dateFrom],
+                dateTo: [approverDates.dateTo],
                 status: ['ON_HOLD_ADMIN'],
             })
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'ON_HOLD_ADMIN',
+                category: APPROVER_TYPE_FILTER_VALUES,
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
+                status: ['ON_HOLD_ADMIN'],
             }))
     })
 
@@ -302,16 +388,19 @@ describe('PaymentsListView', () => {
         await screen.findByText('Member earnings will appear here.')
 
         expect(mockedGetPayments)
-            .toHaveBeenLastCalledWith(10, 0, {})
-        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
-            .toEqual({
-                category: 'all',
-                date: 'all',
-                status: 'all',
+            .toHaveBeenLastCalledWith(10, 0, {
+                categories: TOPCODER_TAB_CATEGORIES,
             })
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+            .toEqual(expect.objectContaining({
+                category: TOPCODER_TAB_TYPE_FILTER_VALUES,
+                status: ALL_STATUS_FILTER_VALUES,
+            }))
     })
 
     it('lets an explicit status filter override the default approver status', async () => {
+        const approverDates = getApproverDefaultDateRangeForTest()
+
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Approver'] } as any}
@@ -321,21 +410,27 @@ describe('PaymentsListView', () => {
         await screen.findByText('No payments match your filters.')
 
         await act(async () => {
-            mockFilterBar.mock.calls.at(-1)?.[0].onFilterChange('status', ['PAID'])
+            const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+            filterBarProps.onFilterChange('status', ['PAID'])
+            filterBarProps.onApplyFilters()
         })
 
         await waitFor(() => {
             expect(mockedGetPayments)
                 .toHaveBeenLastCalledWith(10, 0, {
                     categories: ['TASK_PAYMENT', 'ENGAGEMENT_PAYMENT'],
-                    date: ['last30days'],
+                    dateFrom: [approverDates.dateFrom],
+                    dateTo: [approverDates.dateTo],
                     status: ['PAID'],
                 })
         })
 
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
-                status: 'PAID',
+                category: APPROVER_TYPE_FILTER_VALUES,
+                dateFrom: approverDates.dateFrom,
+                dateTo: approverDates.dateTo,
+                status: ['PAID'],
             }))
     })
 
@@ -349,7 +444,9 @@ describe('PaymentsListView', () => {
         await screen.findByText('Member earnings will appear here.')
 
         await act(async () => {
-            mockFilterBar.mock.calls.at(-1)?.[0].onFilterChange('status', ['PAID'])
+            const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+            filterBarProps.onFilterChange('status', ['PAID'])
+            filterBarProps.onApplyFilters()
         })
 
         await waitFor(() => {
@@ -363,7 +460,7 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual(expect.objectContaining({
                 category: 'TAAS_PAYMENT',
-                status: 'PAID',
+                status: ['PAID'],
             }))
     })
 
@@ -431,7 +528,7 @@ describe('PaymentsListView', () => {
             })
     })
 
-    it('includes the topgear payment type in the category filter options', async () => {
+    it('scopes the type filter to topcoder categories and lists Topgear winnings on its own tab', async () => {
         render(
             <PaymentsListView
                 profile={{ roles: ['Payment Admin'] } as any}
@@ -443,9 +540,23 @@ describe('PaymentsListView', () => {
         const filterProps = mockFilterBar.mock.calls.at(-1)?.[0]
         const typeFilter = filterProps.filters.find((filter: any) => filter.key === 'category')
 
-        expect(typeFilter.options.some((option: any) => (
-            option.value === 'TOPGEAR_PAYMENT' && option.label === 'Topgear Payment'
-        )))
+        expect(typeFilter.options.some((option: any) => option.value === 'TOPGEAR_PAYMENT'))
+            .toBe(false)
+        expect(typeFilter.options.some((option: any) => option.value === 'Task'))
             .toBe(true)
+        expect(typeFilter.options.find((option: any) => option.value === 'Task')?.label)
+            .toBe('Task Payment')
+
+        expect(screen.getByRole('tab', { name: 'Topgear' }))
+            .toBeTruthy()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Topgear' }))
+
+        await waitFor(() => {
+            expect(mockedGetPayments)
+                .toHaveBeenLastCalledWith(10, 0, {
+                    category: ['TOPGEAR_PAYMENT'],
+                })
+        })
     })
 })

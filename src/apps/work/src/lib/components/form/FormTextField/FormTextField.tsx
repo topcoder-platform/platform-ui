@@ -19,7 +19,9 @@ export interface FormTextFieldProps {
     counterPosition?: 'below' | 'inline'
     disabled?: boolean
     hint?: string
+    max?: number
     label: string
+    min?: number
     maxLength?: number
     name: string
     placeholder?: string
@@ -28,12 +30,33 @@ export interface FormTextFieldProps {
     type?: 'number' | 'text'
 }
 
+/**
+ * Formats the stored form value the same way the text input renders it.
+ *
+ * @param value current React Hook Form field value.
+ * @returns the string value rendered in the input.
+ * @throws Does not throw.
+ */
+function getInputValue(value: unknown): string {
+    if (typeof value === 'string') {
+        return value
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    return ''
+}
+
 export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps) => {
     const className = props.className
     const counterPosition = props.counterPosition || 'below'
     const disabled = props.disabled
     const hint = props.hint
+    const max = props.max
     const label = props.label
+    const min = props.min
     const maxLength = props.maxLength
     const name = props.name
     const placeholder = props.placeholder
@@ -59,18 +82,16 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
                 ? sanitize(nextRawValue)
                 : nextRawValue
 
+            if (nextValue === getInputValue(field.value)) {
+                return
+            }
+
             field.onChange(nextValue)
         },
         [field, sanitize],
     )
 
-    const value = typeof field.value === 'string'
-        ? field.value
-        : (
-            typeof field.value === 'number' && Number.isFinite(field.value)
-                ? String(field.value)
-                : ''
-        )
+    const value = getInputValue(field.value)
     const isCounterInline = !!maxLength && counterPosition === 'inline'
 
     return (
@@ -96,7 +117,9 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
                     )}
                     disabled={disabled}
                     id={name}
+                    max={max}
                     maxLength={maxLength}
+                    min={min}
                     name={field.name}
                     onBlur={field.onBlur}
                     onChange={handleInputChange}

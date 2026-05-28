@@ -1,4 +1,5 @@
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
     MAX_PRIZE_VALUE,
     PRIZE_SET_TYPES,
     PRIZE_TYPES,
@@ -102,7 +103,10 @@ export function getFirstPlacePrizeValue(prizeSets?: PrizeSet[]): number {
 }
 
 function getReviewerCount(reviewer?: ReviewerInput): number {
-    return Math.max(1, Math.trunc(toNumber(reviewer?.memberReviewerCount) || 1))
+    return Math.min(
+        MAX_MANUAL_REVIEWER_COUNT,
+        Math.max(1, Math.trunc(toNumber(reviewer?.memberReviewerCount) || 1)),
+    )
 }
 
 export function calculateEstimatedReviewerCost(

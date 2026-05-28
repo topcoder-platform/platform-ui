@@ -277,8 +277,8 @@ describe('FormBillingAccountAutocomplete', () => {
         })
     })
 
-    it('filters preloaded project billing accounts locally when searching in edit mode', async () => {
-        fetchProjectBillingAccountsMock.mockResolvedValue([
+    it('uses user-scoped billing account search when editing with user context', async () => {
+        searchBillingAccountsMock.mockResolvedValueOnce([
             {
                 active: true,
                 endDate: '2023-11-20T00:00:00.000Z',
@@ -294,6 +294,15 @@ describe('FormBillingAccountAutocomplete', () => {
                 startDate: '2023-10-04T00:00:00.000Z',
             },
         ])
+        searchBillingAccountsMock.mockResolvedValueOnce([
+            {
+                active: true,
+                endDate: '2026-10-16T23:59:00.000Z',
+                id: '80001063',
+                name: 'BA For Marios',
+                startDate: '2023-10-31T00:00:00.000Z',
+            },
+        ])
 
         render(
             <TestHarness
@@ -303,9 +312,16 @@ describe('FormBillingAccountAutocomplete', () => {
         )
 
         await waitFor(() => {
-            expect(fetchProjectBillingAccountsMock)
-                .toHaveBeenCalledWith('100578')
+            expect(searchBillingAccountsMock)
+                .toHaveBeenCalledWith({
+                    page: 1,
+                    perPage: 20,
+                    userId: '12345',
+                })
         })
+        expect(fetchProjectBillingAccountsMock)
+            .not
+            .toHaveBeenCalled()
         await waitFor(() => {
             expect(latestAsyncSelectProps?.defaultOptions)
                 .toEqual(expect.arrayContaining([
@@ -320,17 +336,21 @@ describe('FormBillingAccountAutocomplete', () => {
         let options: unknown
 
         await act(async () => {
-            options = await loadOptions('Budget')
+            options = await loadOptions('BA F')
         })
 
         expect(searchBillingAccountsMock)
-            .not
-            .toHaveBeenCalled()
+            .toHaveBeenLastCalledWith({
+                name: 'BA F',
+                page: 1,
+                perPage: 20,
+                userId: '12345',
+            })
         expect(options)
             .toEqual([
                 expect.objectContaining({
-                    label: expect.stringContaining('Budget Validation - 3'),
-                    value: '80001042',
+                    label: expect.stringContaining('BA For Marios'),
+                    value: '80001063',
                 }),
             ])
     })

@@ -29,7 +29,9 @@ interface BackendEngagementAssignment {
     termsAccepted?: boolean | null
     agreementRate?: string | number | null
     ratePerHour?: string | number | null
+    standardHoursPerDay?: number | string | null
     standardHoursPerWeek?: number | string | null
+    paymentCycle?: string
     durationMonths?: number | string | null
     otherRemarks?: string | null
     startDate?: string | null
@@ -212,6 +214,7 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
     return assignments.map(assignment => {
         const ratePerHour = normalizeEnumValue(assignment.ratePerHour)
         const parsedRatePerHour = normalizePositiveNumericValue(assignment.ratePerHour)
+        const standardHoursPerDay = normalizePositiveNumericValue(assignment.standardHoursPerDay)
         const standardHoursPerWeek = normalizePositiveNumericValue(assignment.standardHoursPerWeek)
         const agreementRate = normalizeEnumValue(assignment.agreementRate)
             ?? (
@@ -230,7 +233,9 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
             memberHandle: withDefault('', assignment.memberHandle),
             memberId: withDefault('', assignment.memberId),
             otherRemarks: normalizeEnumValue(assignment.otherRemarks),
+            paymentCycle: assignment.paymentCycle,
             ratePerHour,
+            standardHoursPerDay,
             standardHoursPerWeek,
             startDate: normalizeEnumValue(assignment.startDate),
             status: normalizeAssignmentStatus(assignment.status),

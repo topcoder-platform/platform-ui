@@ -7,6 +7,7 @@ import { IconOutline, Tooltip } from '~/libs/ui'
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
 import {
     AiReviewDecision,
+    AiReviewDecisionEscalation,
     AiReviewDecisionStatus,
     BackendSubmission,
     ChallengeDetailContextModel,
@@ -14,6 +15,7 @@ import {
 import { ChallengeDetailContext } from '../../contexts'
 import { AiScoreFormulaTooltip } from '../AiScoreFormulaTooltip'
 import { formatScore } from '../AiScoreFormulaTooltip/AiScoreFormulaTooltip'
+import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
@@ -50,11 +52,51 @@ export function normalizeDecisionStatus(
     return 'pending'
 }
 
+/**
+ * Builds a multi-line tooltip string from escalation notes and approver notes.
+ * Returns undefined if there are no notes at all.
+ * Used to show Copilot/Manager/Admin why a submission was escalated or
+ * approved/rejected.
+ */
+function buildNotesTooltip(
+    escalations?: AiReviewDecisionEscalation[],
+    resourceMemberIdMapping?: Record<string, any>,
+): string | undefined {
+    const parts: string[] = []
+
+    const getMemberHandle = (memberId?: string | null): string => {
+        if (!memberId || !resourceMemberIdMapping) return ''
+        const resource = resourceMemberIdMapping[memberId]
+        return resource?.memberHandle || ''
+    }
+
+    escalations?.forEach(esc => {
+        if (esc.escalationNotes) {
+            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
+            parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
+        }
+
+        if (esc.approverNotes) {
+            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
+            const prefix = esc.status === 'APPROVED'
+                ? 'Approval Note'
+                : esc.status === 'REJECTED'
+                    ? 'Rejection Note'
+                    : 'Approver Note'
+            parts.push(`${prefix}${by}: ${esc.approverNotes}`)
+        }
+    })
+
+    return parts.length ? parts.join('\n') : undefined
+}
+
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     const challengeDetailContext: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig'] = challengeDetailContext.aiReviewConfig
     const aiReviewDecisionsBySubmissionId: ChallengeDetailContextModel['aiReviewDecisionsBySubmissionId']
         = challengeDetailContext.aiReviewDecisionsBySubmissionId
+
+    const { hasSubmitterRole }: UseRolePermissionsResult = useRolePermissions()
 
     const aiReviewersCount = useMemo(() => {
         const reviewersCount = props.aiReviewers.length || aiReviewConfig?.workflows?.length || 0
@@ -70,6 +112,19 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         () => normalizeDecisionStatus(currentDecision?.status),
         [currentDecision?.status],
     )
+
+    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
+
+    /**
+     * Builds the tooltip text for the notes icon shown next to the status label.
+     * Only shown to Copilot/Manager/Admin (not submitters).
+     * Covers: escalation notes and approval/rejection notes.
+     */
+    const notesTooltip = useMemo((): string | undefined => {
+        if (hasSubmitterRole || !currentDecision) return undefined
+
+        return buildNotesTooltip(currentDecision.escalations, resourceMemberIdMapping)
+    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
     const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
@@ -146,6 +201,29 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                     {currentDecision && (
                         <div className={styles.runStatus}>
                             <AiWorkflowRunStatus status={normalizedStatus} showScore={false} />
+                            {/*
+                             * Notes icon: shown only to Copilot/Manager/Admin (not submitters)
+                             * when there are escalation notes, approval/rejection notes,
+                             * or an unlock reason to display.
+                             */}
+                            {notesTooltip && (
+                                <Tooltip
+                                    content={(
+                                        <div className={styles.notesTooltipContent}>
+                                            {notesTooltip.split('\n')
+                                                .map((line, i) => (
+                                                // eslint-disable-next-line react/no-array-index-key
+                                                    <div key={i} className={styles.notesTooltipLine}>{line}</div>
+                                                ))}
+                                        </div>
+                                    )}
+                                    triggerOn='hover'
+                                >
+                                    <span className={styles.notesIcon}>
+                                        <IconOutline.ClipboardListIcon className='icon-lg' />
+                                    </span>
+                                </Tooltip>
+                            )}
                         </div>
                     )}
                 </div>

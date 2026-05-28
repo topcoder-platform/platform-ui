@@ -5,7 +5,7 @@ import { BaseModal, Button } from '~/libs/ui'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import {
     formatCurrencyAmount,
-    formatStandardHoursPerWeek,
+    formatStandardHoursPerDay,
 } from '../../lib/utils/currency.utils'
 import { formatDate } from '../../lib/utils/date.utils'
 
@@ -63,9 +63,9 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         ? 'Review the details below before rejecting this offer.'
         : 'Review the details below before accepting this offer.'
 
-    const agreementRateLabel = useMemo(
-        () => formatCurrencyAmount(assignment.agreementRate, FALLBACK_LABEL),
-        [assignment.agreementRate],
+    const paymentCycleLabel = useMemo(
+        () => assignment.paymentCycle ?? FALLBACK_LABEL,
+        [assignment.paymentCycle],
     )
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment.startDate),
@@ -79,9 +79,9 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         () => formatCurrencyAmount(assignment.ratePerHour, FALLBACK_LABEL),
         [assignment.ratePerHour],
     )
-    const standardHoursPerWeekLabel = useMemo(
-        () => formatStandardHoursPerWeek(assignment.standardHoursPerWeek, FALLBACK_LABEL),
-        [assignment.standardHoursPerWeek],
+    const standardHoursPerDayLabel = useMemo(
+        () => formatStandardHoursPerDay(assignment.standardHoursPerDay, FALLBACK_LABEL),
+        [assignment.standardHoursPerDay],
     )
     const otherRemarksLabel = useMemo(
         () => formatRemarks(assignment.otherRemarks),
@@ -135,12 +135,12 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
                             <span className={styles.metaValue}>{ratePerHourLabel}</span>
                         </div>
                         <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Standard hours per week</span>
-                            <span className={styles.metaValue}>{standardHoursPerWeekLabel}</span>
+                            <span className={styles.metaLabel}>Standard hours per day</span>
+                            <span className={styles.metaValue}>{standardHoursPerDayLabel}</span>
                         </div>
                         <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Assignment rate per week</span>
-                            <span className={styles.metaValue}>{agreementRateLabel}</span>
+                            <span className={styles.metaLabel}>Payment Cycle</span>
+                            <span className={styles.metaValue}>{paymentCycleLabel}</span>
                         </div>
                         <div className={`${styles.metaItem} ${styles.metaItemWide}`}>
                             <span className={styles.metaLabel}>Other remarks</span>

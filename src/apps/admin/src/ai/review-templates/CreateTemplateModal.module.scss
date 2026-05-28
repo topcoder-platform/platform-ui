@@ -1,0 +1,150 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    position: relative;
+}
+
+.loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $sp-4;
+}
+
+.toggles {
+    display: flex;
+    gap: $sp-6;
+}
+
+.toggleItem {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.toggleLabel {
+    font-size: 14px;
+    color: $black-80;
+}
+
+.workflowsSection {
+    border: 1px solid $black-20;
+    border-radius: $sp-2;
+    padding: $sp-4;
+    overflow: visible;
+}
+
+.workflowsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $sp-3;
+
+    h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+}
+
+.workflowRow {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-3;
+    background-color: $black-5;
+    border-radius: $sp-2;
+    margin-bottom: $sp-2;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.workflowSelect {
+    flex: 1;
+    min-width: 250px;
+
+    // Align height with other inputs
+    :global(.input-select-react__control) {
+        min-height: 40px;
+    }
+
+    // Ensure dropdown menu appears above modal content
+    :global(.input-select-react__menu) {
+        z-index: 9999;
+    }
+}
+
+.weightInput {
+    width: 120px;
+    flex-shrink: 0;
+
+    input {
+        height: 40px;
+    }
+}
+
+.removeBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: $sp-2;
+    color: $red-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &:hover {
+        color: $red-140;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.noWorkflows {
+    font-size: 13px;
+    color: $black-60;
+    text-align: center;
+    padding: $sp-4;
+    margin: 0;
+}
+
+.errorText {
+    font-size: 12px;
+    color: $red-100;
+    margin: 0 0 $sp-2;
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-2;
+}
+
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(255 255 255 / 80%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

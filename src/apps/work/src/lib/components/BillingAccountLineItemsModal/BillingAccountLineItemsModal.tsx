@@ -272,10 +272,11 @@ async function fetchChallengeDetailsById(
  * @param item Billing-account line item being displayed.
  * @param billingAccountDetails Billing account detail payload.
  * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
- * @returns Challenge-specific markup, billing-account fallback for legacy
- * rows, or `undefined` when the challenge row is still being hydrated.
+ * @returns Challenge-specific markup when available, otherwise the billing-account markup fallback.
  * @remarks Canonical challenge rows use challenge billing markup so `0` markup
- * challenges do not inherit the billing account default fee.
+ * challenges do not inherit the billing account default fee once hydrated. The
+ * billing-account fallback keeps locked rows from showing a blank fee when
+ * challenge hydration is unavailable.
  */
 function getLineItemChallengeMarkup(
     item: BillingAccountLineItem,
@@ -291,6 +292,7 @@ function getLineItemChallengeMarkup(
     }
 
     return challengeDetailsById?.get(challengeId)?.billing?.markup
+        ?? billingAccountDetails.markup
 }
 
 /**

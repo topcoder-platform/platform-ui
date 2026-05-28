@@ -43,6 +43,7 @@ interface InputSelectProps {
     readonly tabIndex?: number
     readonly value?: string
     readonly classNameWrapper?: string
+    readonly displayValueInTrigger?: boolean
     readonly preventAutoFocus?: boolean
 }
 
@@ -76,9 +77,26 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
 
     const selectedOption: InputSelectOption | undefined = props.options.find(option => option.value === props.value)
 
-    const label: (option: InputSelectOption) => ReactNode = (option?: InputSelectOption) => (
+    const menuLabel: (option: InputSelectOption) => ReactNode = (option?: InputSelectOption) => (
         option ? option.label ?? option.value : ''
     )
+
+    const triggerLabel: (option?: InputSelectOption) => ReactNode = (option?: InputSelectOption) => {
+        if (!option) {
+            return ''
+        }
+
+        if (
+            props.displayValueInTrigger
+            && option.label !== undefined
+            && option.value
+            && option.value !== option.label
+        ) {
+            return option.value
+        }
+
+        return menuLabel(option)
+    }
 
     const toggleMenu = (toggle?: boolean): void => {
         setTimeout(setMenuIsVisible, 150, (wasVisible: boolean) => {
@@ -170,7 +188,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 ref={buttonRef}
             >
                 <span className={classNames('body-small', styles.textSelected)}>
-                    {selectedOption ? label(selectedOption) : ''}
+                    {selectedOption ? triggerLabel(selectedOption) : ''}
                 </span>
                 <span className={classNames('body-small', styles.textSelected)}>
                     {!selectedOption && !!props.placeholder
@@ -204,7 +222,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                                     onClick={select(option)}
                                     key={option.value}
                                 >
-                                    {label(option)}
+                                    {menuLabel(option)}
                                 </div>
                             ))}
                         </div>

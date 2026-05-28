@@ -2,7 +2,116 @@ import React from 'react'
 
 import { EnvironmentConfig } from '~/config'
 
-import { PaymentEngagementDetails } from '../../models/WinningDetail'
+import {
+    PaymentAgreementSummary,
+    PaymentEngagementDetails,
+    PaymentWorkLog,
+    Winning,
+} from '../../models/WinningDetail'
+
+const WEEKLY_PAYMENT_DAYS = 5
+const FORTNIGHTLY_PAYMENT_DAYS = 10
+const MONTHLY_PAYMENT_DAYS_MIN = 20
+const MONTHLY_PAYMENT_DAYS_MAX = 23
+const AGREEMENT_AMOUNT_TOLERANCE = 0.01
+
+type EngagementPaymentCycle = 'weekly' | 'fortnightly' | 'monthly'
+
+function normalizeEngagementPaymentCycle(
+    paymentCycle?: string,
+): EngagementPaymentCycle {
+    const normalizedCycle = paymentCycle?.trim()
+        .toLowerCase()
+
+    if (normalizedCycle === 'fortnightly' || normalizedCycle === 'biweekly') {
+        return 'fortnightly'
+    }
+
+    if (normalizedCycle === 'monthly') {
+        return 'monthly'
+    }
+
+    return 'weekly'
+}
+
+function getPaymentCycleWorkDays(paymentCycle: EngagementPaymentCycle): number {
+    if (paymentCycle === 'fortnightly') {
+        return FORTNIGHTLY_PAYMENT_DAYS
+    }
+
+    if (paymentCycle === 'monthly') {
+        return MONTHLY_PAYMENT_DAYS_MIN
+    }
+
+    return WEEKLY_PAYMENT_DAYS
+}
+
+function resolveAgreementStatus(
+    actualAmount: number,
+    expectedAmount: number,
+    expectedAmountMax?: number,
+): PaymentAgreementSummary['status'] {
+    if (expectedAmountMax !== undefined) {
+        if (
+            actualAmount >= expectedAmount - AGREEMENT_AMOUNT_TOLERANCE
+            && actualAmount <= expectedAmountMax + AGREEMENT_AMOUNT_TOLERANCE
+        ) {
+            return 'match'
+        }
+
+        if (actualAmount < expectedAmount - AGREEMENT_AMOUNT_TOLERANCE) {
+            return 'under'
+        }
+
+        return 'over'
+    }
+
+    const difference = actualAmount - expectedAmount
+
+    if (Math.abs(difference) <= AGREEMENT_AMOUNT_TOLERANCE) {
+        return 'match'
+    }
+
+    if (difference < -AGREEMENT_AMOUNT_TOLERANCE) {
+        return 'under'
+    }
+
+    return 'over'
+}
+
+function resolveAgreementDifferenceAmount(
+    actualAmount: number,
+    expectedAmount: number,
+    expectedAmountMax: number | undefined,
+    status: PaymentAgreementSummary['status'],
+): number {
+    if (status === 'match') {
+        return 0
+    }
+
+    if (expectedAmountMax !== undefined) {
+        if (status === 'under') {
+            return Number((expectedAmount - actualAmount).toFixed(2))
+        }
+
+        return Number((actualAmount - expectedAmountMax).toFixed(2))
+    }
+
+    return Math.abs(Number((actualAmount - expectedAmount).toFixed(2)))
+}
+
+function parseRatePerHour(value?: string): number | undefined {
+    if (!value) {
+        return undefined
+    }
+
+    const parsedValue = Number(String(value)
+        .replace(/[^0-9.-]/g, ''))
+
+    return Number.isFinite(parsedValue) && parsedValue > 0
+        ? parsedValue
+        : undefined
+}
 
 export function buildWorkManagerAssignmentUrl(
     engagementDetails?: PaymentEngagementDetails,
@@ -151,9 +260,342 @@ export function formatOptionalDate(
         return value
     }
 
-    return date.toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'short',
+    return date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'numeric',
         year: 'numeric',
     })
+}
+
+export function formatCurrencyAmount(
+    amount: number,
+    currency: string = 'USD',
+): string {
+    return amount.toLocaleString(undefined, {
+        currency,
+        style: 'currency',
+    })
+}
+
+/** Agreement banner amounts use `$` only (no `US$` locale prefix). */
+export function formatAgreementCurrencyAmount(amount: number): string {
+    return `$${amount.toLocaleString('en-US', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+    })}`
+}
+
+export interface AuditTimestampParts {
+    dateLine: string
+    timeLine: string
+}
+
+export function formatAuditTimestampParts(
+    value: string,
+): AuditTimestampParts | undefined {
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+        return undefined
+    }
+
+    const dateLine = `${date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    })},`
+    const timeLine = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+    })
+
+    return { dateLine, timeLine }
+}
+
+export function formatAuditTimestamp(value: string): string {
+    const parts = formatAuditTimestampParts(value)
+
+    if (!parts) {
+        return value
+    }
+
+    return `${parts.dateLine} ${parts.timeLine}`
+}
+
+export function getEngagementHoursPerDay(
+    engagementDetails?: PaymentEngagementDetails,
+): number | undefined {
+    if (engagementDetails?.standardHoursPerDay !== undefined) {
+        return engagementDetails.standardHoursPerDay
+    }
+
+    if (engagementDetails?.standardHoursPerWeek !== undefined) {
+        return engagementDetails.standardHoursPerWeek / WEEKLY_PAYMENT_DAYS
+    }
+
+    return undefined
+}
+
+export function getEngagementWorkDays(
+    engagementDetails?: PaymentEngagementDetails,
+): number {
+    return getPaymentCycleWorkDays(
+        normalizeEngagementPaymentCycle(engagementDetails?.paymentCycle),
+    )
+}
+
+export function buildEngagementAgreementSummary(
+    payment: Winning,
+    engagementDetails?: PaymentEngagementDetails,
+): PaymentAgreementSummary | undefined {
+    const ratePerHour = parseRatePerHour(engagementDetails?.ratePerHour)
+    const hoursPerDay = getEngagementHoursPerDay(engagementDetails)
+
+    if (!ratePerHour || hoursPerDay === undefined || hoursPerDay <= 0) {
+        return undefined
+    }
+
+    const paymentCycle = normalizeEngagementPaymentCycle(
+        engagementDetails?.paymentCycle,
+    )
+    const workDays = getPaymentCycleWorkDays(paymentCycle)
+    const expectedAmount = Number(
+        (ratePerHour * hoursPerDay * workDays).toFixed(2),
+    )
+    const expectedAmountMax = paymentCycle === 'monthly'
+        ? Number((ratePerHour * hoursPerDay * MONTHLY_PAYMENT_DAYS_MAX).toFixed(2))
+        : undefined
+    const actualAmount = payment.grossAmountNumber
+    const status = resolveAgreementStatus(
+        actualAmount,
+        expectedAmount,
+        expectedAmountMax,
+    )
+    const differenceAmount = resolveAgreementDifferenceAmount(
+        actualAmount,
+        expectedAmount,
+        expectedAmountMax,
+        status,
+    )
+
+    return {
+        actualAmount,
+        differenceAmount,
+        expectedAmount,
+        expectedAmountMax,
+        hoursPerDay,
+        paymentCycle: formatPaymentCycle(engagementDetails),
+        ratePerHour,
+        status,
+        workDays,
+    }
+}
+
+function formatAgreementRangePart(
+    ratePerHour: number,
+    hoursPerDay: number,
+    workDays: number,
+): string {
+    const rate = formatAgreementCurrencyAmount(ratePerHour)
+
+    return `${rate} x ${hoursPerDay} hours x ${workDays} days`
+}
+
+export function formatAgreementExpectedAmount(
+    summary: PaymentAgreementSummary,
+): string {
+    if (summary.expectedAmountMax !== undefined) {
+        return `${formatAgreementCurrencyAmount(summary.expectedAmount)} - ${
+            formatAgreementCurrencyAmount(summary.expectedAmountMax)
+        }`
+    }
+
+    return formatAgreementCurrencyAmount(summary.expectedAmount)
+}
+
+export function formatAgreementBreakdown(
+    summary: PaymentAgreementSummary,
+): string {
+    if (summary.expectedAmountMax !== undefined) {
+        return `${formatAgreementRangePart(
+            summary.ratePerHour,
+            summary.hoursPerDay,
+            MONTHLY_PAYMENT_DAYS_MIN,
+        )} - ${formatAgreementRangePart(
+            summary.ratePerHour,
+            summary.hoursPerDay,
+            MONTHLY_PAYMENT_DAYS_MAX,
+        )}`
+    }
+
+    return formatAgreementRangePart(
+        summary.ratePerHour,
+        summary.hoursPerDay,
+        summary.workDays,
+    )
+}
+
+export function formatAgreementDifferenceLabel(
+    summary: PaymentAgreementSummary,
+): string {
+    const formattedDifference = `$${summary.differenceAmount.toLocaleString()}`
+
+    if (summary.status === 'under') {
+        return `${formattedDifference} less`
+    }
+
+    return `${formattedDifference} more`
+}
+
+export function formatPaymentCycle(
+    engagementDetails?: PaymentEngagementDetails,
+): string {
+    const cycle = engagementDetails?.paymentCycle?.trim()
+
+    if (!cycle) {
+        return 'Weekly'
+    }
+
+    return cycle.charAt(0)
+        .toUpperCase() + cycle.slice(1)
+        .toLowerCase()
+}
+
+export function isContestPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'contest payment'
+}
+
+export function isCopilotPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'copilot payment'
+}
+
+export function isReviewBoardPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'review board payment'
+}
+
+/** Challenge payments: 4-column summary (Challenge Creator / Budget Approver) + General Info / Audit */
+export function isChallengePaymentType(type: string): boolean {
+    return isContestPaymentType(type)
+        || isCopilotPaymentType(type)
+        || isReviewBoardPaymentType(type)
+}
+
+export function isEngagementPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'engagement payment'
+}
+
+export function isTaskPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'task payment'
+}
+
+export function isTopgearPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'topgear payment'
+}
+
+export function isTaasPaymentType(type: string): boolean {
+    return type.toLowerCase() === 'taas payment'
+}
+
+export function usesCompactPaymentSummary(type: string): boolean {
+    return isTopgearPaymentType(type) || isTaasPaymentType(type)
+}
+
+/**
+ * Task creator handle for task payments — always from `taskDetails.paymentCreatorHandle`.
+ * Root-level `paymentCreatorHandle` is a client id and must not be shown.
+ */
+export function resolveTaskCreatorHandle(
+    paymentDetails?: {
+        taskDetails?: { paymentCreatorHandle?: string }
+    },
+): string | undefined {
+    return paymentDetails?.taskDetails?.paymentCreatorHandle
+}
+
+/**
+ * Payment approver handle from finance payment-details (audit trail after approval).
+ * Engagement payments return it on `engagementDetails`; task payments on `taskDetails`.
+ */
+export function resolvePaymentApproverHandle(
+    paymentDetails?: {
+        engagementDetails?: { paymentApproverHandle?: string }
+        taskDetails?: { paymentApproverHandle?: string }
+    },
+    isTaskPayment: boolean = false,
+): string | undefined {
+    if (isTaskPayment) {
+        return paymentDetails?.taskDetails?.paymentApproverHandle
+    }
+
+    return paymentDetails?.engagementDetails?.paymentApproverHandle
+}
+
+export interface PaymentDetailsSummaryConfig {
+    approverLabel?: string
+    columns: 2 | 4 | 5
+    creatorLabel?: string
+    secondaryApproverLabel?: string
+}
+
+export function getPaymentDetailsSummaryConfig(type: string): PaymentDetailsSummaryConfig {
+    if (usesCompactPaymentSummary(type)) {
+        return {
+            columns: 2,
+        }
+    }
+
+    if (isChallengePaymentType(type)) {
+        return {
+            approverLabel: 'Budget Approver',
+            columns: 4,
+            creatorLabel: 'Challenge Creator',
+        }
+    }
+
+    if (isTaskPaymentType(type)) {
+        return {
+            approverLabel: 'Budget Approver',
+            columns: 5,
+            creatorLabel: 'Task Creator',
+            secondaryApproverLabel: 'Payment Approver',
+        }
+    }
+
+    if (isEngagementPaymentType(type)) {
+        return {
+            approverLabel: 'Payment Approver',
+            columns: 4,
+            creatorLabel: 'Payment Creator',
+        }
+    }
+
+    return {
+        approverLabel: 'Payment Approver',
+        columns: 4,
+        creatorLabel: 'Payment Creator',
+    }
+}
+
+export function resolvePaymentAgreementSummary(
+    payment: Winning,
+    paymentDetails?: {
+        agreementSummary?: PaymentAgreementSummary
+        engagementDetails?: PaymentEngagementDetails
+        workLog?: PaymentWorkLog
+    },
+): PaymentAgreementSummary | undefined {
+    if (paymentDetails?.agreementSummary) {
+        return paymentDetails.agreementSummary
+    }
+
+    return buildEngagementAgreementSummary(
+        payment,
+        paymentDetails?.engagementDetails,
+    )
+}
+
+export function stripHtml(html: string, maxLength: number = 500): string {
+    const div = document.createElement('div')
+    div.innerHTML = html
+    return (div.textContent ?? div.innerText ?? '').substring(0, maxLength)
 }

@@ -12,8 +12,11 @@ export * from './metadata.utils'
 export * from './navigation.utils'
 export {
     calculatePaymentAmount,
+    getAssignmentPaymentCycle,
     getAssignmentRatePerHour,
+    getAssignmentStandardHoursPerDay,
     getAssignmentStandardHoursPerWeek,
+    getExpectedHoursLabel,
     getAssignmentStatus,
     getPaymentAmount,
     getPaymentCreatorLabel,
