@@ -194,6 +194,10 @@ export const AiReviewTemplatesPage: FC = () => {
         open: false,
     })
     const [isToggling, setIsToggling] = useState(false)
+    const [disabledWorkflowsModal, setDisabledWorkflowsModal] = useState<{
+        open: boolean;
+        workflowNames: string[];
+    }>({ open: false, workflowNames: [] })
 
     const trackOptions: InputSelectOption[] = useMemo(() => {
         const seen = new Set<string>()
@@ -309,11 +313,28 @@ export const AiReviewTemplatesPage: FC = () => {
     }, [deleteModal.template, filter, loadTemplates])
 
     const handleToggleClick = useCallback((template: AiReviewTemplate) => {
+        // When trying to activate a disabled template, check for disabled workflows
+        if (template.disabled) {
+            const disabledWorkflows = (template.workflows || [])
+                .filter(item => item.workflow.disabled)
+                .map(item => item.workflow.name)
+
+            if (disabledWorkflows.length > 0) {
+                setDisabledWorkflowsModal({ open: true, workflowNames: disabledWorkflows })
+
+                return
+            }
+        }
+
         setToggleModal({ open: true, template })
     }, [])
 
     const handleCloseToggleModal = useCallback(() => {
         setToggleModal({ open: false })
+    }, [])
+
+    const handleCloseDisabledWorkflowsModal = useCallback(() => {
+        setDisabledWorkflowsModal({ open: false, workflowNames: [] })
     }, [])
 
     const handleConfirmToggle = useCallback(async () => {
@@ -465,6 +486,32 @@ export const AiReviewTemplatesPage: FC = () => {
                     ?
                 </p>
             </ConfirmModal>
+
+            <BaseModal
+                title='Cannot Activate Template'
+                open={disabledWorkflowsModal.open}
+                onClose={handleCloseDisabledWorkflowsModal}
+                buttons={(
+                    <Button
+                        primary
+                        size='lg'
+                        label='OK'
+                        onClick={handleCloseDisabledWorkflowsModal}
+                    />
+                )}
+            >
+                <p>
+                    This template cannot be activated because the following workflow(s) are disabled:
+                </p>
+                <ul>
+                    {disabledWorkflowsModal.workflowNames.map(name => (
+                        <li key={name}><strong>{name}</strong></li>
+                    ))}
+                </ul>
+                <p>
+                    Please enable these workflows first before activating this template.
+                </p>
+            </BaseModal>
         </PageWrapper>
     )
 }
