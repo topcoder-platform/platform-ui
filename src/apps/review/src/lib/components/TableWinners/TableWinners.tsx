@@ -45,7 +45,12 @@ export const TableWinners: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const location = useLocation()
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const {
+        challengeInfo,
+        aiReviewConfig,
+        aiReviewDecisionsBySubmissionId,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const isAiOnly = aiReviewConfig?.mode === 'AI_ONLY'
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
@@ -229,10 +234,18 @@ export const TableWinners: FC<Props> = (props: Props) => {
             {
                 label: 'Final Review Score',
                 renderer: (data: ProjectResult) => {
-                    const formatted = (typeof data.finalScore === 'number'
-                        && Number.isFinite(data.finalScore))
-                        ? data.finalScore.toFixed(2)
-                        : `${data.finalScore}`
+                    let formatted: string
+                    if (isAiOnly && data.submissionId) {
+                        const aiDecision = aiReviewDecisionsBySubmissionId[data.submissionId]
+                        formatted = typeof aiDecision?.totalScore === 'number'
+                            ? aiDecision.totalScore.toFixed(2)
+                            : '-'
+                    } else {
+                        formatted = (typeof data.finalScore === 'number'
+                            && Number.isFinite(data.finalScore))
+                            ? data.finalScore.toFixed(2)
+                            : `${data.finalScore}`
+                    }
 
                     return (
                         <Link to={reviewTabUrl} className={styles.textBlue}>
@@ -268,6 +281,8 @@ export const TableWinners: FC<Props> = (props: Props) => {
         [
             downloadSubmission,
             isDownloading,
+            isAiOnly,
+            aiReviewDecisionsBySubmissionId,
             reviewTabUrl,
             getRestrictionMessageForMember,
             isSubmissionDownloadRestrictedForMember,
