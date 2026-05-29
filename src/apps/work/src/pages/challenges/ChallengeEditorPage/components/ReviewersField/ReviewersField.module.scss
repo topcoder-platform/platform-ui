@@ -56,6 +56,16 @@
     padding: 0;
 }
 
+.aiOnlyNotice {
+    background-color: #e8f0fe;
+    border: 1px solid #c5d8fb;
+    border-radius: 4px;
+    color: #1a4a9e;
+    font-size: 13px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+}
+
 .container {
     display: flex;
     flex-direction: column;

@@ -25,6 +25,7 @@ export interface ChallengeTimelineRow {
     end: string
     actions?: ChallengeTimelineAction[]
     duration?: number
+    disabled?: boolean
 }
 
 interface Props {
@@ -48,7 +49,9 @@ export const ChallengeTimeline: FC<Props> = (props: Props) => {
                 isSortable: false,
                 label: 'Phase',
                 propertyName: 'name',
-                renderer: (row: ChallengeTimelineRow) => <span>{row.name}</span>,
+                renderer: (row: ChallengeTimelineRow) => (
+                    <span className={row.disabled ? styles.disabledCell : undefined}>{row.name}</span>
+                ),
                 type: 'element',
             },
             {
@@ -58,6 +61,14 @@ export const ChallengeTimeline: FC<Props> = (props: Props) => {
                 label: 'Status',
                 propertyName: 'status',
                 renderer: (row: ChallengeTimelineRow) => {
+                    if (row.disabled) {
+                        return (
+                            <span className={classNames(styles.status, styles.statusDisabled)}>
+                                N/A
+                            </span>
+                        )
+                    }
+
                     const normalizedStatus = row.status.trim()
                         .toLowerCase()
                     const statusClassKey = STATUS_CLASS_MAP[normalizedStatus]
@@ -77,7 +88,9 @@ export const ChallengeTimeline: FC<Props> = (props: Props) => {
                 isSortable: false,
                 label: 'Start',
                 propertyName: 'start',
-                renderer: (row: ChallengeTimelineRow) => <span>{row.start}</span>,
+                renderer: (row: ChallengeTimelineRow) => (
+                    <span className={row.disabled ? styles.disabledCell : undefined}>{row.start}</span>
+                ),
                 type: 'element',
             },
             {
@@ -86,7 +99,9 @@ export const ChallengeTimeline: FC<Props> = (props: Props) => {
                 isSortable: false,
                 label: 'End',
                 propertyName: 'end',
-                renderer: (row: ChallengeTimelineRow) => <span>{row.end}</span>,
+                renderer: (row: ChallengeTimelineRow) => (
+                    <span className={row.disabled ? styles.disabledCell : undefined}>{row.end}</span>
+                ),
                 type: 'element',
             },
         ]

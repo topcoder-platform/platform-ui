@@ -196,6 +196,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
         myResources,
+        aiReviewConfig,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { actionChallengeRole }: useRoleProps = useRole()
     const hasIterativeReviewerRole = useMemo(
@@ -536,6 +537,12 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     phaseIdFilter={props.selectedPhaseId}
                     aiReviewers={aiReviewers}
                 />
+            )
+        }
+
+        if (selectedTabNormalized === 'review' && aiReviewConfig?.mode === 'AI_ONLY') {
+            return (
+                <TabContentPlaceholder message='Review is handled automatically in AI Only mode.' />
             )
         }
 
