@@ -24,8 +24,12 @@
 }
 
 .label {
+    align-items: center;
     color: #5b5b5b;
+    display: flex;
     font-size: 12px;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .infoLabel {
@@ -59,8 +63,11 @@
 
 .helperText {
     color: #5b5b5b;
+    flex-shrink: 0;
     font-size: 12px;
     margin: 0;
+    margin-left: auto;
+    text-align: right;
 }
 
 .helperLabel {

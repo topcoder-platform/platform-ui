@@ -225,7 +225,7 @@ const APPROVER_TYPE_FILTER_VALUES = ['Task', 'Engagement']
 function getApproverDefaultDateRangeForTest(): { dateFrom: string, dateTo: string } {
     const dateTo = new Date()
     const dateFrom = new Date()
-    dateFrom.setMonth(dateFrom.getMonth() - 3)
+    dateFrom.setDate(dateFrom.getDate() - 30)
 
     const format = (date: Date): string => {
         const y = date.getFullYear()
