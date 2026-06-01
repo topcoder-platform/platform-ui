@@ -229,6 +229,7 @@ workflows:
                           only:
                               - dev
                               - hide_ba_details
+                              - hotfix-5211-5212
                       tags:
                           only: /^dev-.*/
 
