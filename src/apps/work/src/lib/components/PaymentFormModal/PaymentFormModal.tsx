@@ -385,14 +385,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='payment-hours-worked'>
-                        Hours worked *
+                        <span>Hours worked *</span>
                         {expectedHoursLabel
                             ? (
                                 <span className={styles.helperText}>
-                                    {' '}
-                                    Expected:
-                                    {' '}
-                                    {expectedHoursLabel}
+                                    {`* Expected: ${expectedHoursLabel}`}
                                 </span>
                             )
                             : undefined}

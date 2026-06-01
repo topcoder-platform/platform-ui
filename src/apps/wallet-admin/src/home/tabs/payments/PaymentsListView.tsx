@@ -46,7 +46,7 @@ function formatIsoDateOnly(date: Date): string {
 function getApproverDefaultDateRange(): { dateFrom: string, dateTo: string } {
     const dateTo = new Date()
     const dateFrom = new Date()
-    dateFrom.setMonth(dateFrom.getMonth() - 3)
+    dateFrom.setDate(dateFrom.getDate() - 30)
 
     return {
         dateFrom: formatIsoDateOnly(dateFrom),
