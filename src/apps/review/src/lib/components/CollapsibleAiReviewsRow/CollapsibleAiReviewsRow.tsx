@@ -28,6 +28,8 @@ interface CollapsibleAiReviewsRowProps {
 
 export function normalizeDecisionStatus(
     status?: AiReviewDecisionStatus,
+    totalScore?: number | null,
+    minPassingThreshold?: number | null,
 ): 'passed' | 'failed-score' | 'pending' | 'failed' | 'human-override' {
     if (!status || status === 'PENDING') {
         return 'pending'
@@ -46,6 +48,13 @@ export function normalizeDecisionStatus(
     }
 
     if (status === 'HUMAN_OVERRIDE') {
+        if (
+            typeof totalScore === 'number'
+            && typeof minPassingThreshold === 'number'
+        ) {
+            return totalScore >= minPassingThreshold ? 'passed' : 'failed-score'
+        }
+
         return 'human-override'
     }
 
@@ -108,9 +117,16 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [aiReviewDecisionsBySubmissionId, props.submission.id],
     )
 
+    const minPassingThreshold = currentDecision?.breakdown?.minPassingThreshold
+        ?? aiReviewConfig?.minPassingThreshold
+
     const normalizedStatus = useMemo(
-        () => normalizeDecisionStatus(currentDecision?.status),
-        [currentDecision?.status],
+        () => normalizeDecisionStatus(
+            currentDecision?.status,
+            currentDecision?.totalScore,
+            minPassingThreshold,
+        ),
+        [currentDecision?.status, currentDecision?.totalScore, minPassingThreshold],
     )
 
     const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping

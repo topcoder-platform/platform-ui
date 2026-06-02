@@ -53,6 +53,75 @@
     gap: 8px;
 }
 
+.workflowOverridesSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.workflowOverridesTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.workflowOverrideRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background: #fcfcfc;
+}
+
+.workflowMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.workflowId {
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+}
+
+.workflowRunScore {
+    font-size: 12px;
+    color: #666;
+}
+
+.workflowInputLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+}
+
+.workflowScoreInput,
+.workflowCommentInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+
+    &:focus {
+        outline: none;
+        border-color: #0d69d4;
+        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.2);
+    }
+}
+
+.workflowCommentInput {
+    resize: vertical;
+}
+
 .managerCommentLabel {
     font-size: 13px;
     font-weight: 600;
@@ -107,5 +176,15 @@
         padding: 8px;
         border-radius: 4px;
         border-left: 3px solid #e87722;
+    }
+}
+
+.workflowOverridesReadOnly {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #333;
+
+    p {
+        margin: 4px 0 0;
     }
 }
