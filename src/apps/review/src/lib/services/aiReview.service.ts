@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPatchAsync } from '~/libs/core'
 
 import { AiReviewConfig, AiReviewDecision } from '../models'
 
@@ -19,4 +19,25 @@ export const getAiReviewDecisionsCacheKey = (configId?: string): string => (
 
 export const fetchAiReviewDecisions = async (configId: string): Promise<AiReviewDecision[]> => (
     xhrGetAsync<AiReviewDecision[]>(getAiReviewDecisionsCacheKey(configId))
+)
+
+export interface WorkflowManagerOverride {
+    workflowId: string
+    managerScore?: number | null
+    workflowComment?: string | null
+}
+
+export interface PatchAiReviewDecisionPayload {
+    managerComment?: string | null
+    workflowOverrides?: WorkflowManagerOverride[]
+}
+
+export const patchAiReviewDecision = async (
+    decisionId: string,
+    payload: PatchAiReviewDecisionPayload,
+): Promise<AiReviewDecision> => (
+    xhrPatchAsync<PatchAiReviewDecisionPayload, AiReviewDecision>(
+        `${v6BaseUrl}/ai-review/decisions/${decisionId}`,
+        payload,
+    )
 )

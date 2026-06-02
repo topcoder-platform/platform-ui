@@ -35,6 +35,7 @@ import {
 } from '../../utils/reviewPhaseGuards'
 
 import TabContentApproval from './TabContentApproval'
+import TabContentAiApproval from './TabContentAiApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
 import TabContentRegistration from './TabContentRegistration'
@@ -497,6 +498,16 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         }
 
         if (selectedTabNormalized === 'approval') {
+            if (aiReviewConfig?.mode === 'AI_ONLY') {
+                return (
+                    <TabContentAiApproval
+                        submissions={props.submissions}
+                        isLoading={props.isLoadingSubmission}
+                        isActiveChallenge={props.isActiveChallenge}
+                    />
+                )
+            }
+
             return (
                 <TabContentApproval
                     reviews={props.approvalReviews}
