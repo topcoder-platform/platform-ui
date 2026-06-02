@@ -3,7 +3,7 @@
  * Allows copilots/admins to review AI scorecards and add manager comments
  * or score overrides before the challenge is finalized.
  */
-import { FC, useCallback, useContext, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useContext, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import moment from 'moment'
 
@@ -26,7 +26,6 @@ import styles from './TabContentAiApproval.module.scss'
 interface Props {
     submissions: BackendSubmission[]
     isLoading: boolean
-    isActiveChallenge: boolean
 }
 
 interface SubmissionApprovalRowProps {
@@ -38,52 +37,47 @@ interface SubmissionApprovalRowProps {
     onSaved: (updated: AiReviewDecision) => void
 }
 
-const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = ({
-    submission,
-    decision,
-    aiReviewers,
-    isPrivilegedRole,
-    isApprovalPhaseOpen,
-    onSaved,
-}) => {
-    const [managerComment, setManagerComment] = useState<string>(decision?.managerComment ?? '')
+const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: SubmissionApprovalRowProps) => {
+    const [managerComment, setManagerComment] = useState<string>(props.decision?.managerComment ?? '')
     const [isSaving, setIsSaving] = useState<boolean>(false)
-    const canEdit = isPrivilegedRole && isApprovalPhaseOpen
+    const canEdit = props.isPrivilegedRole && props.isApprovalPhaseOpen
 
     const handleSave = useCallback(async () => {
-        if (!decision?.id) return
+        if (!props.decision?.id) return
         setIsSaving(true)
         try {
-            const updated = await patchAiReviewDecision(decision.id, {
-                managerComment: managerComment.trim() || null,
+            const updated = await patchAiReviewDecision(props.decision.id, {
+                managerComment: managerComment.trim() || undefined,
             })
-            onSaved(updated)
+            props.onSaved(updated)
             toast.success('Manager comment saved.')
         } catch (err) {
             toast.error('Failed to save manager comment.')
         } finally {
             setIsSaving(false)
         }
-    }, [decision?.id, managerComment, onSaved])
+    }, [props.decision?.id, managerComment, props.onSaved])
 
-    const submittedDate = submission.created
-        ? moment(submission.created).format(TABLE_DATE_FORMAT)
+    const submittedDate = props.submission.createdAt
+        ? moment(props.submission.createdAt)
+            .format(TABLE_DATE_FORMAT)
         : '-'
 
     return (
         <div className={styles.submissionRow}>
             <div className={styles.submissionHeader}>
                 <span className={styles.submissionId}>
-                    {submission.id}
+                    {props.submission.id}
                 </span>
                 <span className={styles.submissionDate}>{submittedDate}</span>
-                {decision && (
+                {props.decision && (
                     <span className={styles.submissionScore}>
-                        <strong>AI Score:</strong>{' '}
-                        {decision.totalScore != null
-                            ? decision.totalScore.toFixed(2)
+                        <strong>AI Score:</strong>
+                        {' '}
+                        {props.decision.totalScore !== undefined && props.decision.totalScore !== null
+                            ? props.decision.totalScore.toFixed(2)
                             : '-'}
-                        {decision.status === 'HUMAN_OVERRIDE' && (
+                        {props.decision.status === 'HUMAN_OVERRIDE' && (
                             <span className={styles.overrideBadge}> (Override)</span>
                         )}
                     </span>
@@ -92,21 +86,23 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = ({
 
             <CollapsibleAiReviewsRow
                 defaultOpen
-                aiReviewers={aiReviewers}
-                submission={submission}
+                aiReviewers={props.aiReviewers}
+                submission={props.submission}
             />
 
-            {decision && canEdit && (
+            {props.decision && canEdit && (
                 <div className={styles.managerCommentSection}>
-                    <label className={styles.managerCommentLabel} htmlFor={`mc-${submission.id}`}>
+                    <label className={styles.managerCommentLabel} htmlFor={`mc-${props.submission.id}`}>
                         Manager Comment
                     </label>
                     <textarea
-                        id={`mc-${submission.id}`}
+                        id={`mc-${props.submission.id}`}
                         className={styles.managerCommentInput}
                         rows={3}
                         value={managerComment}
-                        onChange={e => setManagerComment(e.target.value)}
+                        onChange={function onChange(e: ChangeEvent<HTMLTextAreaElement>): void {
+                            setManagerComment(e.target.value)
+                        }}
                         placeholder='Enter a manager comment (optional)...'
                     />
                     <button
@@ -120,24 +116,19 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = ({
                 </div>
             )}
 
-            {decision?.managerComment && !canEdit && (
+            {props.decision?.managerComment && !canEdit && (
                 <div className={styles.managerCommentReadOnly}>
                     <strong>Manager Comment:</strong>
-                    <p>{decision.managerComment}</p>
+                    <p>{props.decision.managerComment}</p>
                 </div>
             )}
         </div>
     )
 }
 
-export const TabContentAiApproval: FC<Props> = ({
-    submissions,
-    isLoading,
-    isActiveChallenge,
-}) => {
+export const TabContentAiApproval: FC<Props> = props => {
     const {
         challengeInfo,
-        aiReviewConfig,
         aiReviewDecisionsBySubmissionId,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { isPrivilegedRole }: useRoleProps = useRole()
@@ -159,11 +150,9 @@ export const TabContentAiApproval: FC<Props> = ({
         Record<string, AiReviewDecision>
     >({})
 
-    const getDecision = useCallback(
-        (submissionId: string): AiReviewDecision | undefined =>
-            localDecisionOverrides[submissionId] ?? aiReviewDecisionsBySubmissionId[submissionId],
-        [aiReviewDecisionsBySubmissionId, localDecisionOverrides],
-    )
+    const getDecision = useCallback((submissionId: string): AiReviewDecision | undefined => (
+        localDecisionOverrides[submissionId] ?? aiReviewDecisionsBySubmissionId[submissionId]
+    ), [aiReviewDecisionsBySubmissionId, localDecisionOverrides])
 
     const handleDecisionSaved = useCallback((updated: AiReviewDecision) => {
         setLocalDecisionOverrides(prev => ({
@@ -173,11 +162,11 @@ export const TabContentAiApproval: FC<Props> = ({
     }, [])
 
     const contestSubmissions = useMemo<BackendSubmission[]>(
-        () => submissions.filter(s => (s.type || '').toLowerCase() === 'contestsubmission'),
-        [submissions],
+        () => props.submissions.filter(s => (s.type || '').toLowerCase() === 'contestsubmission'),
+        [props.submissions],
     )
 
-    if (isLoading) {
+    if (props.isLoading) {
         return <TableLoading />
     }
 

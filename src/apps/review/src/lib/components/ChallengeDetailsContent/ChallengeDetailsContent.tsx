@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Challenge Details Content.
  */
@@ -34,8 +35,8 @@ import {
     shouldIncludeInReviewPhase,
 } from '../../utils/reviewPhaseGuards'
 
-import TabContentApproval from './TabContentApproval'
 import TabContentAiApproval from './TabContentAiApproval'
+import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
 import TabContentRegistration from './TabContentRegistration'
