@@ -6,6 +6,7 @@ import { ChallengePhase } from '../../../../../lib/models'
 import { getPhaseEndDateInDate } from '../../../../../lib/utils/date.utils'
 
 export const AI_SCREENING_PHASE_NAME = 'AI Screening'
+export const AI_REVIEW_PHASE_NAME = 'AI Review'
 
 export interface RecalculatePhasesResult {
     phases: ChallengePhase[]
@@ -133,7 +134,12 @@ export function buildSchedulePhaseRows(
     const hasRealAiScreeningPhase = phases.some(
         phase => normalizePhaseName(phase.name) === normalizePhaseName(AI_SCREENING_PHASE_NAME),
     )
-    const shouldInsertVirtualAiScreening = hasAiReviewers && !hasRealAiScreeningPhase
+    // AI_ONLY challenges use an "AI Review" phase from the timeline template — no virtual
+    // AI Screening row should be injected for them.
+    const hasRealAiReviewPhase = phases.some(
+        phase => normalizePhaseName(phase.name) === normalizePhaseName(AI_REVIEW_PHASE_NAME),
+    )
+    const shouldInsertVirtualAiScreening = hasAiReviewers && !hasRealAiScreeningPhase && !hasRealAiReviewPhase
     const rows: SchedulePhaseRow[] = []
     let insertedVirtualRow = false
 

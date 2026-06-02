@@ -83,6 +83,7 @@ const TabContentPlaceholder = (props: { message: string }): JSX.Element => (
     </TabContentWrapper>
 )
 
+const AI_REVIEW_KEY = normalizeType('ai review')
 const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('submission'),
     normalizeType('specification submission'),
@@ -90,6 +91,7 @@ const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('ai screening'),
     normalizeType('submission / screening'),
     normalizeType('topgear submission'),
+    AI_REVIEW_KEY,
 ])
 
 const CHECKPOINT_REVIEW_KEY = normalizeType('checkpoint review')
@@ -156,6 +158,7 @@ const renderSubmissionTab = ({
         .startsWith('submission')
         || isSpecificationSubmissionTab
         || selectedTabNormalized === AI_SCREENING_KEY
+        || selectedTabNormalized === AI_REVIEW_KEY
         || isTopgearSubmissionTab
     const visibleSubmissions = shouldRestrictToContestSubmissions
         ? submissions.filter(
