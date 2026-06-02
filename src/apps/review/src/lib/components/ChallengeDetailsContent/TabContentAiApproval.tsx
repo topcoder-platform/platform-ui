@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Approval tab content for AI Only challenges.
  * Allows copilots/admins to review AI scorecards and add manager comments
@@ -86,17 +87,17 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
 
         const payloadOverrides = [] as {
             workflowId: string
-            managerScore?: number | null
-            workflowComment?: string | null
+            managerScore?: number | undefined
+            workflowComment?: string | undefined
         }[]
 
         for (const workflow of workflows) {
             const override = workflowOverrides[workflow.workflowId]
             const scoreInput = override?.managerScoreInput?.trim() ?? ''
-            let parsedScore: number | null
+            let parsedScore: number | undefined
 
             if (!scoreInput) {
-                parsedScore = null
+                parsedScore = undefined
             } else {
                 parsedScore = Number(scoreInput)
                 if (!Number.isFinite(parsedScore)) {
@@ -106,9 +107,9 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
             }
 
             payloadOverrides.push({
-                workflowId: workflow.workflowId,
                 managerScore: parsedScore,
-                workflowComment: override?.workflowComment?.trim() || null,
+                workflowComment: override?.workflowComment?.trim() || undefined,
+                workflowId: workflow.workflowId,
             })
         }
 
@@ -177,7 +178,10 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                                                 {workflow.runScore ?? '-'}
                                             </span>
                                         </div>
-                                        <label className={styles.workflowInputLabel} htmlFor={`ms-${props.submission.id}-${workflow.workflowId}`}>
+                                        <label
+                                            className={styles.workflowInputLabel}
+                                            htmlFor={`ms-${props.submission.id}-${workflow.workflowId}`}
+                                        >
                                             Manager Score
                                         </label>
                                         <input
@@ -192,13 +196,18 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                                                     ...prev,
                                                     [workflow.workflowId]: {
                                                         managerScoreInput: value,
-                                                        workflowComment: prev[workflow.workflowId]?.workflowComment ?? '',
+                                                        workflowComment: (
+                                                            prev[workflow.workflowId]?.workflowComment ?? ''
+                                                        ),
                                                     },
                                                 }))
                                             }}
                                             placeholder='Leave empty to clear override'
                                         />
-                                        <label className={styles.workflowInputLabel} htmlFor={`wc-${props.submission.id}-${workflow.workflowId}`}>
+                                        <label
+                                            className={styles.workflowInputLabel}
+                                            htmlFor={`wc-${props.submission.id}-${workflow.workflowId}`}
+                                        >
                                             Workflow Comment
                                         </label>
                                         <textarea
@@ -206,12 +215,15 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                                             className={styles.workflowCommentInput}
                                             rows={2}
                                             value={override?.workflowComment ?? ''}
-                                            onChange={function onWorkflowCommentChange(e: ChangeEvent<HTMLTextAreaElement>): void {
+                                            onChange={function onWorkflowCommentChange(
+                                                e: ChangeEvent<HTMLTextAreaElement>,
+                                            ): void {
                                                 const value = e.target.value
                                                 setWorkflowOverrides(prev => ({
                                                     ...prev,
                                                     [workflow.workflowId]: {
-                                                        managerScoreInput: prev[workflow.workflowId]?.managerScoreInput ?? '',
+                                                        managerScoreInput:
+                                                            prev[workflow.workflowId]?.managerScoreInput ?? '',
                                                         workflowComment: value,
                                                     },
                                                 }))
@@ -248,21 +260,23 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                 </div>
             )}
 
-            {!canEdit && workflows.some(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null) && (
-                <div className={styles.workflowOverridesReadOnly}>
-                    <strong>Manager Score Overrides:</strong>
-                    {workflows
-                        .filter(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
-                        .map(workflow => (
-                            <p key={workflow.workflowId}>
-                                {workflow.workflowId}
-                                :
-                                {' '}
-                                {workflow.managerScore}
-                            </p>
-                        ))}
-                </div>
-            )}
+            {!canEdit
+                && workflows.some(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
+                && (
+                    <div className={styles.workflowOverridesReadOnly}>
+                        <strong>Manager Score Overrides:</strong>
+                        {workflows
+                            .filter(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
+                            .map(workflow => (
+                                <p key={workflow.workflowId}>
+                                    {workflow.workflowId}
+                                    :
+                                    {' '}
+                                    {workflow.managerScore}
+                                </p>
+                            ))}
+                    </div>
+                )}
 
             {props.decision?.managerComment && !canEdit && (
                 <div className={styles.managerCommentReadOnly}>
