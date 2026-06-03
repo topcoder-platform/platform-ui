@@ -15,6 +15,7 @@ export interface UserInfo {
     firstName: string
     lastName: string
     email: string
+    ssoUserId?: string
     status: 'A' | 'U' | '4' | '5' | '6'
     statusDesc: string
     activationLink: string

@@ -1,0 +1,478 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 20px;
+    padding: 24px;
+}
+
+.title {
+    border-bottom: 2px solid #ddd;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.errorList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.errorMessage {
+    color: #bf2b2b;
+    font-size: 13px;
+}
+
+.overviewGrid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+    .overviewGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card,
+.flowSection,
+.costSection {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+    overflow: hidden;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+}
+
+.cardHeader,
+.cardBody {
+    padding: 16px;
+}
+
+.cardHeader {
+    align-items: center;
+    background: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+}
+
+.headerIcon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.cardTitle,
+.flowTitle {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+
+.detailRow {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #f0f0f0;
+    }
+}
+
+.detailLabel {
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 110px;
+}
+
+.detailValue {
+    color: #333;
+    font-size: 14px;
+}
+
+.sectionLabel {
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    min-width: 100%;
+    width: 100%;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    font-size: 13px;
+    padding: 10px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.table th {
+    background: #f9f9f9;
+    color: #555;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+}
+
+.badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 6px 10px;
+}
+
+.badgeYes {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badgeNo {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.typeCell {
+    text-align: center;
+}
+
+.typeBadge {
+    background: #fff3cd;
+    border-radius: 4px;
+    color: #856404;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+.reviewIcon {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.scorecardLink {
+    color: #2a62d5;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.emptyState {
+    color: #999;
+    font-size: 14px;
+    font-style: italic;
+    padding: 16px 0;
+    text-align: center;
+}
+
+.flowSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+}
+
+.flowCanvas {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.flowDiagram {
+    align-items: center;
+    display: grid;
+    gap: 24px;
+    padding: 8px 0;
+    width: 100%;
+
+    &.withAIGating,
+    &.withAI {
+        grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    }
+
+    &.withAIOnly,
+    &.humanOnly {
+        grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    }
+}
+
+.flowStep {
+    align-items: center;
+    align-self: stretch;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    min-height: 112px;
+    padding: 16px;
+    text-align: center;
+}
+
+.flowArrow {
+    color: #666;
+    display: flex;
+    font-size: 24px;
+    font-weight: 600;
+    justify-content: center;
+    line-height: 1;
+}
+
+.failureRow {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    margin-top: -8px;
+}
+
+.failureBranch {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 3;
+}
+
+.failureArrow {
+    align-items: center;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    font-size: 24px;
+    font-weight: 600;
+    gap: 4px;
+    justify-content: center;
+    line-height: 1;
+}
+
+.failLabel {
+    color: #d32f2f;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.flowBoxIcon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.flowBoxTitle {
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.flowDescription {
+    color: #666;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.costSection {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px;
+}
+
+.costBar {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+.costBar span {
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.costBar strong {
+    color: #2e7d32;
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 88px;
+    text-align: right;
+}
+
+@media (max-width: 1023px) {
+    .flowDiagram.withAIGating,
+    .flowDiagram.withAI,
+    .flowDiagram.withAIOnly,
+    .flowDiagram.humanOnly,
+    .failureRow {
+        grid-template-columns: 1fr;
+    }
+
+    .flowDiagram {
+        gap: 16px;
+        justify-items: center;
+    }
+
+    .flowStep {
+        width: min(100%, 260px);
+    }
+
+    .flowArrow {
+        transform: rotate(90deg);
+    }
+
+    .failureRow {
+        justify-items: center;
+        margin-top: 0;
+    }
+
+    .failureBranch {
+        grid-column: auto;
+        justify-self: center;
+        width: min(100%, 260px);
+    }
+
+    .failureArrow {
+        grid-column: auto;
+        justify-self: center;
+    }
+
+    .flowCanvasGated {
+        align-items: start;
+        column-gap: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 148px) auto minmax(0, 148px);
+        justify-content: center;
+        row-gap: 16px;
+    }
+
+    .flowCanvasGated > .flowDiagram,
+    .flowCanvasGated > .failureRow {
+        display: contents;
+    }
+
+    .flowCanvasGated .submissionStep {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        justify-self: center;
+        width: min(100%, 320px);
+    }
+
+    .flowCanvasGated .entryArrow {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-self: center;
+    }
+
+    .flowCanvasGated .aiGateStep {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: center;
+        min-height: 96px;
+        width: min(100%, 148px);
+    }
+
+    .flowCanvasGated .lockedBranch {
+        align-items: center;
+        align-self: center;
+        column-gap: 12px;
+        display: grid;
+        grid-column: 2 / 4;
+        grid-row: 3;
+        grid-template-columns: auto minmax(0, 148px);
+        justify-self: center;
+        width: auto;
+    }
+
+    .flowCanvasGated .lockedStep {
+        min-height: 96px;
+        width: 100%;
+    }
+
+    .flowCanvasGated .failureArrow {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .flowCanvasGated .failureArrow span:first-child,
+    .flowCanvasGated .failureArrow span:last-child {
+        display: inline-block;
+        transform: rotate(-90deg);
+    }
+
+    .flowCanvasGated .humanArrow {
+        grid-column: 1;
+        grid-row: 4;
+        justify-self: center;
+    }
+
+    .flowCanvasGated .humanReviewStep {
+        grid-column: 1;
+        grid-row: 5;
+        justify-self: center;
+        width: min(100%, 220px);
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        padding: 16px;
+    }
+
+    .flowSection {
+        padding: 16px;
+    }
+
+    .costSection {
+        justify-content: flex-start;
+        padding: 16px;
+    }
+
+    .costBar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .detailRow {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+}

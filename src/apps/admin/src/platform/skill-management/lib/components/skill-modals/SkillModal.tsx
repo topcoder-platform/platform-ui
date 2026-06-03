@@ -91,7 +91,7 @@ const SkillModal: FC<SkillModalProps> = props => {
         setIsLoading(true)
 
         // eslint-disable-next-line unicorn/no-null
-        return restoreArchivedStandardizedSkill({ ...props.skill, deleted_at: null })
+        return restoreArchivedStandardizedSkill({ ...props.skill, deletedAt: null })
             .then(() => {
                 refetchSkills()
                 setEditSkill()

@@ -7,10 +7,7 @@ import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
 import {
-    ADMIN,
-    COPILOT,
     DESIGN,
-    MANAGER,
     REVIEWER,
     SUBMITTER,
 } from '../../config/index.config'
@@ -36,12 +33,13 @@ import { fetchAllChallengeReviews } from '../services'
 import {
     isCheckpointSubmissionType,
     isContestSubmissionType,
-    isFinalFixSubmissionType,
 } from '../constants'
 import { debugLog, DEBUG_CHECKPOINT_PHASES, isPhaseAllowedForReview, truncateForLog, warnLog } from '../utils'
 import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 import { normalizeReviewMetadata } from '../utils/metadataMatching'
+import { buildApprovalReviewRows } from '../utils/approvalReviewRows'
 import { resolvePhaseMeta } from '../utils/phaseResolution'
+import { shouldForceChallengeReviewFetch } from '../utils/reviewFetchPolicy'
 import { buildReviewForResource } from '../utils/reviewBuilding'
 import { collectMatchingReviews, selectBestReview } from '../utils/reviewSelection'
 import { resolveReviewPhaseId, reviewMatchesPhase } from '../utils/reviewMatching'
@@ -53,16 +51,9 @@ import {
     parseSubmissionScore,
     scoreToDisplay,
 } from '../utils/reviewScoring'
-import type {
-    SubmissionIdResolutionArgs,
-    SubmissionLookupArgs,
-    SubmitterMemberIdResolutionArgs,
-} from '../utils/submissionResolution'
-import {
-    resolveFallbackSubmissionId,
-    resolveSubmissionForReview,
-    resolveSubmitterMemberId,
-} from '../utils/submissionResolution'
+import type { SubmissionLookupArgs } from '../utils/submissionResolution'
+import { buildSubmitterReviewSubmission } from '../utils/submitterReviewResolution'
+import { resolveSubmissionForReview } from '../utils/submissionResolution'
 
 import type { useFetchAppealQueueProps } from './useFetchAppealQueue'
 import { useFetchAppealQueue } from './useFetchAppealQueue'
@@ -533,34 +524,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     const shouldForceReviewFetch = useMemo(
-        () => {
-            const normalizedActionRole = actionChallengeRole ?? ''
-
-            if (
-                normalizedActionRole === SUBMITTER
-                || normalizedActionRole === REVIEWER
-                || normalizedActionRole === COPILOT
-                || normalizedActionRole === ADMIN
-                || normalizedActionRole === MANAGER
-            ) {
-                return true
-            }
-
-            return (myResources ?? []).some(resource => {
-                const normalizedRoleName = (resource.roleName ?? '').toLowerCase()
-
-                if (!normalizedRoleName) {
-                    return false
-                }
-
-                return normalizedRoleName.includes('screener')
-                    || normalizedRoleName.includes('reviewer')
-                    || normalizedRoleName.includes('copilot')
-                    || normalizedRoleName.includes('admin')
-                    || normalizedRoleName.includes('manager')
-            })
-        },
-        [actionChallengeRole, myResources],
+        () => shouldForceChallengeReviewFetch(
+            actionChallengeRole,
+            challengeInfo?.status,
+            myResources,
+        ),
+        [actionChallengeRole, challengeInfo?.status, myResources],
     )
 
     const {
@@ -701,6 +670,24 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
     const reviewScorecardId = reviewPhaseMeta.scorecardId
     const reviewPhaseIds = reviewPhaseMeta.phaseIds
+
+    const specificationReviewPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Specification Review',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ),
+        [
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ],
+    )
+    const specificationReviewScorecardId = specificationReviewPhaseMeta.scorecardId
+    const specificationReviewPhaseIds = specificationReviewPhaseMeta.phaseIds
 
     const iterativeReviewPhaseMeta = useMemo(
         () => resolvePhaseMeta(
@@ -880,7 +867,14 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 }
 
                 const resourceId = reviewItem.resourceId
-                const submissionId = reviewItem.submissionId
+                const resolvedSubmission = resolveSubmissionForReview({
+                    review: reviewItem,
+                    submissionsById: visibleSubmissionsById,
+                    submissionsByLegacyId: visibleSubmissionsByLegacyId,
+                } satisfies SubmissionLookupArgs)
+                const submissionId = resolvedSubmission?.id
+                    ?? reviewItem.submissionId
+                    ?? reviewItem.legacySubmissionId
                 if (!resourceId || !submissionId) {
                     return
                 }
@@ -894,7 +888,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
             return mapping
         },
-        [challengeReviews, reviewerIds],
+        [challengeReviews, visibleSubmissionsById, visibleSubmissionsByLegacyId],
     )
 
     // get screening data from challenge submissions
@@ -1757,60 +1751,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     submissionsByLegacyId: visibleSubmissionsByLegacyId,
                 } satisfies SubmissionLookupArgs)
 
-                const isSupportedSubmissionType = isContestSubmissionType(matchingSubmission?.type)
-                    || isFinalFixSubmissionType(matchingSubmission?.type)
-
-                if (!isSupportedSubmissionType) {
-                    return undefined
-                }
-
-                const submissionWithReview: BackendSubmission | undefined = matchingSubmission
-                    ? {
-                        ...matchingSubmission,
-                        review: [reviewItem],
-                    }
-                    : undefined
-
-                const baseSubmissionInfo = submissionWithReview
-                    ? convertBackendSubmissionToSubmissionInfo(submissionWithReview)
-                    : undefined
-
-                const fallbackId = resolveFallbackSubmissionId({
-                    baseSubmissionInfo,
+                return buildSubmitterReviewSubmission({
                     defaultId: `${memberId || 'submission'}-${index}`,
                     matchingSubmission,
+                    resourceMemberIdMapping,
                     review: reviewItem,
-                } satisfies SubmissionIdResolutionArgs)
-
-                if (!fallbackId) {
-                    return undefined
-                }
-
-                const resolvedMemberId = resolveSubmitterMemberId({
-                    baseSubmissionInfo,
-                    matchingSubmission,
-                } satisfies SubmitterMemberIdResolutionArgs)
-
-                const reviewInfo = convertBackendReviewToReviewInfo(reviewItem)
-                const reviewResult = convertBackendReviewToReviewResult(reviewItem)
-
-                return {
-                    ...baseSubmissionInfo,
-                    id: fallbackId,
-                    isLatest: baseSubmissionInfo?.isLatest
-                        ?? matchingSubmission?.isLatest
-                        ?? true,
-                    memberId: resolvedMemberId,
-                    review: reviewInfo,
-                    reviews: [reviewResult],
-                    reviewTypeId: reviewItem.typeId ?? baseSubmissionInfo?.reviewTypeId,
-                    submittedDate: baseSubmissionInfo?.submittedDate,
-                    submittedDateString: baseSubmissionInfo?.submittedDateString,
-                    userInfo: resolvedMemberId
-                        ? resourceMemberIdMapping[resolvedMemberId]
-                        : undefined,
-                    virusScan: baseSubmissionInfo?.virusScan,
-                } as SubmissionInfo
+                })
             })
             .filter((entry): entry is SubmissionInfo => Boolean(entry))
 
@@ -1853,6 +1799,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 )
                 || reviewMatchesPhase(
                     candidate,
+                    specificationReviewScorecardId,
+                    specificationReviewPhaseIds,
+                    'Specification Review',
+                )
+                || reviewMatchesPhase(
+                    candidate,
                     iterativeReviewScorecardId,
                     iterativeReviewPhaseIds,
                     'Iterative Review',
@@ -1860,6 +1812,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             )
 
             reviewerIds.forEach(appendReviewerId)
+            Object.keys(reviewAssignmentsBySubmission[challengeSubmission.id] ?? {})
+                .forEach(appendReviewerId)
             forEach(challengeSubmission.review, reviewEntry => {
                 if (matchesReviewPhase(reviewEntry)) {
                     appendReviewerId(reviewEntry?.resourceId)
@@ -1912,55 +1866,24 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         reviewAssignmentsBySubmission,
         reviewPhaseIds,
         reviewScorecardId,
+        specificationReviewPhaseIds,
+        specificationReviewScorecardId,
     ])
 
     // Build approval reviews list (one entry per approval review instance)
-    const approvalReviews = useMemo<SubmissionInfo[]>(() => {
-        if (!challengeReviews?.length || approvalPhaseIds.size === 0) {
-            return []
-        }
-
-        const result: SubmissionInfo[] = []
-
-        forEach(challengeReviews, reviewEntry => {
-            if (!reviewEntry) {
-                return
-            }
-
-            if (!reviewMatchesPhase(reviewEntry, approvalScorecardId, approvalPhaseIds, 'Approval')) {
-                return
-            }
-
-            const matchingSubmission = resolveSubmissionForReview({
-                review: reviewEntry,
-                submissionsById: visibleSubmissionsById,
-                submissionsByLegacyId: visibleSubmissionsByLegacyId,
-            } satisfies SubmissionLookupArgs)
-
-            if (!matchingSubmission) {
-                return
-            }
-
-            const submissionWithReview: BackendSubmission = {
-                ...matchingSubmission,
-                review: [reviewEntry],
-            }
-
-            const submissionInfo = convertBackendSubmissionToSubmissionInfo(submissionWithReview)
-
-            result.push({
-                ...submissionInfo,
-                review: submissionInfo.review ?? convertBackendReviewToReviewInfo(reviewEntry),
-                reviews: [convertBackendReviewToReviewResult(reviewEntry)],
-                userInfo: resourceMemberIdMapping[submissionInfo.memberId],
-            })
-        })
-
-        return result
-    }, [
+    const approvalReviews = useMemo<SubmissionInfo[]>(() => buildApprovalReviewRows({
         approvalPhaseIds,
         approvalScorecardId,
         challengeReviews,
+        contestSubmissions,
+        resourceMemberIdMapping,
+        submissionsById: visibleSubmissionsById,
+        submissionsByLegacyId: visibleSubmissionsByLegacyId,
+    }), [
+        approvalPhaseIds,
+        approvalScorecardId,
+        challengeReviews,
+        contestSubmissions,
         resourceMemberIdMapping,
         visibleSubmissionsById,
         visibleSubmissionsByLegacyId,

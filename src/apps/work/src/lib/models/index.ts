@@ -1,8 +1,10 @@
 export * from './Attachment.model'
+export * from './AiReview.model'
 export * from './Engagement.model'
 export * from './ChallengeEditor.model'
 export * from './Challenge.model'
 export * from './ChallengeFilters.model'
+export * from './MarathonMatch.model'
 export * from './ChallengeType.model'
 export * from './Group.model'
 export * from './Pagination.model'
@@ -12,6 +14,7 @@ export type {
     ProjectPhase,
     ProjectPhaseProduct,
     Project,
+    ProjectDetails,
     ProjectFilters,
     ProjectStatus as ProjectStatusValue,
     ProjectType,

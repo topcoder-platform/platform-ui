@@ -14,7 +14,13 @@ import styles from './ChallengePrivateDescriptionField.module.scss'
 
 const specificationTemplateLink = 'https://github.com/topcoder-platform-templates/specification-templates'
 
-export const ChallengePrivateDescriptionField: FC = () => {
+export interface ChallengePrivateDescriptionFieldProps {
+    readOnly?: boolean
+}
+
+export const ChallengePrivateDescriptionField: FC<ChallengePrivateDescriptionFieldProps> = (
+    props: ChallengePrivateDescriptionFieldProps,
+) => {
     const formContext = useFormContext()
     const privateDescription = formContext.watch('privateDescription') as string | undefined
     const [isVisible, setIsVisible] = useState<boolean>(!!privateDescription)
@@ -44,13 +50,18 @@ export const ChallengePrivateDescriptionField: FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.infoRow}>
-                <a
-                    href={specificationTemplateLink}
-                    rel='noreferrer'
-                    target='_blank'
-                >
+                <p className={styles.templateLink}>
                     Access specification templates
-                </a>
+                    {' '}
+                    <a
+                        href={specificationTemplateLink}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
+                        here
+                    </a>
+                    .
+                </p>
                 <p>
                     This text will only be visible to Topcoder members that have
                     registered for this challenge.
@@ -60,6 +71,7 @@ export const ChallengePrivateDescriptionField: FC = () => {
             <FormMarkdownEditor
                 label='Private Specification'
                 name='privateDescription'
+                readOnly={props.readOnly}
             />
         </div>
     )

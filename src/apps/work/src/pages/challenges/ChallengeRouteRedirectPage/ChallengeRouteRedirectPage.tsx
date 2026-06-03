@@ -1,7 +1,13 @@
-import { FC } from 'react'
+import {
+    FC,
+    useCallback,
+} from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 
-import { LoadingSpinner } from '../../../lib/components'
+import {
+    ErrorMessage,
+    LoadingSpinner,
+} from '../../../lib/components'
 import {
     useFetchChallenge,
     UseFetchChallengeResult,
@@ -27,12 +33,35 @@ function normalizeProjectId(projectId: number | string | undefined): string | un
     return normalizedProjectId || undefined
 }
 
-function buildChallengeEditPath(challengeId: string): string {
-    return `/challenges/${encodeURIComponent(challengeId)}/edit`
+/**
+ * Builds the canonical read-only challenge route for challenge pages without a project segment.
+ *
+ * @param challengeId Challenge identifier from the route.
+ * @returns View-mode route for the resolved challenge id.
+ */
+function buildChallengeViewPath(challengeId: string): string {
+    return `/challenges/${encodeURIComponent(challengeId)}/view`
 }
 
-function buildProjectChallengeEditPath(projectId: string, challengeId: string): string {
-    return `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/edit`
+/**
+ * Builds the canonical project-scoped read-only challenge route.
+ *
+ * @param projectId Project identifier resolved from the challenge payload.
+ * @param challengeId Challenge identifier from the route.
+ * @returns View-mode route for the resolved project and challenge ids.
+ */
+function buildProjectChallengeViewPath(projectId: string, challengeId: string): string {
+    return `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/view`
+}
+
+/**
+ * Resolves the generic challenge-load error text for the redirect helper.
+ *
+ * @param error challenge fetch error returned by the challenge hook.
+ * @returns an error message suitable for the existing work app error panel.
+ */
+function getChallengeErrorMessage(error: Error | undefined): string {
+    return error?.message || 'Something went wrong while loading the challenge.'
 }
 
 export const ChallengeRouteRedirectPage: FC = () => {
@@ -41,6 +70,10 @@ export const ChallengeRouteRedirectPage: FC = () => {
     }> = useParams<'challengeId'>()
     const challengeId = normalizeRouteParam(routeParams.challengeId)
     const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
+    const handleRetry = useCallback((): void => {
+        challengeResult.mutate()
+            .catch(() => undefined)
+    }, [challengeResult])
 
     if (!challengeId) {
         return <Navigate replace to='/challenges' />
@@ -50,10 +83,19 @@ export const ChallengeRouteRedirectPage: FC = () => {
         return <LoadingSpinner />
     }
 
+    if (challengeResult.isError) {
+        return (
+            <ErrorMessage
+                message={getChallengeErrorMessage(challengeResult.error)}
+                onRetry={handleRetry}
+            />
+        )
+    }
+
     const projectId = normalizeProjectId(challengeResult.challenge?.projectId)
     const redirectPath = projectId
-        ? buildProjectChallengeEditPath(projectId, challengeId)
-        : buildChallengeEditPath(challengeId)
+        ? buildProjectChallengeViewPath(projectId, challengeId)
+        : buildChallengeViewPath(challengeId)
 
     return <Navigate replace to={redirectPath} />
 }

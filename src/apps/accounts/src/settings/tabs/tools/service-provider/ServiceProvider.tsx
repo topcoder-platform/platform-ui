@@ -383,6 +383,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         type='text'
                         error={formErrors.serviceProviderName}
                         dirty
+                        forceUpdateValue
                     />
                     <div className={styles.formCTAs}>
                         {!isEditMode && <IconOutline.PlusCircleIcon />}

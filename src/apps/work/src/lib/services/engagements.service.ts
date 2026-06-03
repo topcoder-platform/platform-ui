@@ -50,11 +50,16 @@ interface BackendPaginatedResponse<T> {
 
 interface AssignmentDetails {
     agreementRate?: string
+    durationMonths?: number | string
     endDate?: string
     memberHandle?: string
     memberId?: number | string
     otherRemarks?: string
+    paymentCycle?: string
+    ratePerHour?: string
     startDate?: string
+    standardHoursPerDay?: number | string
+    standardHoursPerWeek?: number | string
 }
 
 interface EngagementUpsertData extends Partial<Engagement> {
@@ -218,6 +223,16 @@ function createQuery(
         query.set('includePrivate', 'true')
     }
 
+    if (Array.isArray(filters.projectIds)) {
+        filters.projectIds
+            .map(projectId => String(projectId)
+                .trim())
+            .filter(Boolean)
+            .forEach(projectId => {
+                query.append('projectIds', projectId)
+            })
+    }
+
     if (Array.isArray(filters.countries)) {
         filters.countries
             .map(country => country.trim())
@@ -275,6 +290,14 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.durationMonths !== undefined && assignment.durationMonths !== '') {
+                    const durationMonths = Number(assignment.durationMonths)
+
+                    if (Number.isFinite(durationMonths)) {
+                        entry.durationMonths = String(durationMonths)
+                    }
+                }
+
                 if (assignment.endDate) {
                     entry.endDate = assignment.endDate
                 }
@@ -288,8 +311,43 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.paymentCycle) {
+                    entry.paymentCycle = String(assignment.paymentCycle)
+                        .trim()
+                        .toUpperCase()
+                }
+
+                if (assignment.ratePerHour) {
+                    entry.ratePerHour = String(assignment.ratePerHour)
+                        .trim()
+                }
+
                 if (assignment.startDate) {
                     entry.startDate = assignment.startDate
+                }
+
+                if (
+                    assignment.standardHoursPerDay !== undefined
+                    && assignment.standardHoursPerDay !== ''
+                ) {
+                    const standardHoursPerDay = Number(assignment.standardHoursPerDay)
+
+                    if (Number.isFinite(standardHoursPerDay)) {
+                        entry.standardHoursPerDay = String(standardHoursPerDay)
+                        entry.standardHoursPerWeek = String(Number((standardHoursPerDay * 5).toFixed(2)))
+                    }
+                }
+
+                if (
+                    assignment.standardHoursPerWeek !== undefined
+                    && assignment.standardHoursPerWeek !== ''
+                    && entry.standardHoursPerDay === undefined
+                ) {
+                    const standardHoursPerWeek = Number(assignment.standardHoursPerWeek)
+
+                    if (Number.isFinite(standardHoursPerWeek)) {
+                        entry.standardHoursPerWeek = String(standardHoursPerWeek)
+                    }
                 }
 
                 return entry
@@ -529,7 +587,29 @@ export async function fetchEngagements(
     filters: EngagementFilters = {},
     params: FetchEngagementsParams = {},
 ): Promise<FetchEngagementsResponse> {
-    const query = createQuery(filters, params)
+    const normalizedProjectIds = Array.isArray(filters.projectIds)
+        ? filters.projectIds
+            .map(projectId => String(projectId)
+                .trim())
+            .filter(Boolean)
+        : undefined
+
+    if (Array.isArray(filters.projectIds) && !normalizedProjectIds?.length) {
+        return {
+            data: [],
+            metadata: {
+                page: params.page || 1,
+                perPage: params.perPage || 0,
+                total: 0,
+                totalPages: 0,
+            },
+        }
+    }
+
+    const query = createQuery({
+        ...filters,
+        projectIds: normalizedProjectIds,
+    }, params)
     const url = query
         ? `${ENGAGEMENTS_API_URL}?${query}`
         : ENGAGEMENTS_API_URL
@@ -619,6 +699,23 @@ export async function updateEngagement(
     } catch (error) {
         throw normalizeError(error, 'Failed to update engagement')
     }
+}
+
+/**
+ * Partially updates engagement details.
+ *
+ * The engagements API currently accepts partial engagement payloads through the
+ * `PUT :id` update route rather than a dedicated `PATCH :id` handler.
+ *
+ * @param engagementId engagement identifier.
+ * @param data partial engagement payload.
+ * @returns normalized engagement response after the partial update.
+ */
+export async function partiallyUpdateEngagement(
+    engagementId: number | string,
+    data: EngagementUpsertData,
+): Promise<Engagement> {
+    return updateEngagement(engagementId, data)
 }
 
 export async function deleteEngagement(engagementId: number | string): Promise<void> {

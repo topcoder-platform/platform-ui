@@ -95,7 +95,9 @@ function hasSubmittedReviews(resourceId: string, reviews: Review[]): boolean {
         const normalizedStatus = normalizeValue(review.status)
             .toUpperCase()
 
-        return review.committed === true || normalizedStatus === 'COMPLETED'
+        return review.committed === true
+            || normalizedStatus === 'COMPLETED'
+            || normalizedStatus === 'IN_PROGRESS'
     })
 }
 

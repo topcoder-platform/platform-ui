@@ -1,0 +1,279 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    align-items: flex-start;
+    display: grid;
+    gap: 32px;
+    grid-template-columns: 326px 1fr;
+}
+
+.sidebar,
+.topicList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sidebarCard,
+.topicCard {
+    background: $tc-white;
+    border-radius: 8px;
+}
+
+.sidebarCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+
+    h2,
+    h3,
+    p {
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 26px;
+        font-weight: $font-weight-bold;
+        line-height: 30px;
+    }
+
+    h3 {
+        font-size: 16px;
+        font-weight: $font-weight-bold;
+        line-height: 22px;
+    }
+
+    p {
+        color: $black-80;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    a {
+        color: $link-blue-dark;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        text-decoration: none;
+    }
+}
+
+.newTopicButton {
+    align-items: center;
+    background: $turq-160;
+    border: 0;
+    border-radius: 24px;
+    color: $tc-white;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    gap: 4px;
+    justify-content: center;
+    line-height: 24px;
+    padding: 8px 24px 8px 20px;
+    text-transform: uppercase;
+    width: fit-content;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.searchField,
+.selectField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    input,
+    select {
+        background: $tc-white;
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        color: $black-100;
+        font-size: 14px;
+        line-height: 22px;
+        min-height: 40px;
+        padding: 8px 10px;
+        width: 100%;
+    }
+}
+
+.searchField {
+    position: relative;
+
+    svg {
+        color: $black-80;
+        height: 16px;
+        left: 10px;
+        position: absolute;
+        top: 12px;
+        width: 16px;
+    }
+
+    input {
+        padding-left: 32px;
+    }
+}
+
+.selectField {
+    span {
+        font-size: 12px;
+        font-weight: $font-weight-bold;
+        line-height: 16px;
+        text-transform: uppercase;
+    }
+}
+
+.radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+        align-items: center;
+        display: inline-flex;
+        font-size: 16px;
+        gap: 8px;
+        line-height: 24px;
+    }
+
+    input {
+        accent-color: $turq-160;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.topicCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px 24px;
+
+    p {
+        color: $black-100;
+        font-size: 16px;
+        line-height: 22px;
+        margin: 0;
+        max-width: 800px;
+    }
+}
+
+.topicMain {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    h2 {
+        color: $black-100;
+        font-size: 24px;
+        font-weight: $font-weight-bold;
+        line-height: 30px;
+        margin: 0;
+    }
+}
+
+.topicMeta,
+.topicFooter,
+.topicAuthorGroup {
+    align-items: center;
+    color: $black-80;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    gap: 16px;
+    line-height: 20px;
+}
+
+.topicFooter {
+    justify-content: space-between;
+}
+
+.kindChip,
+.roleChip {
+    align-items: center;
+    border-radius: 2px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: $font-weight-medium;
+    line-height: 10px;
+    padding: 3px 4px;
+}
+
+.announcement {
+    background: $green-140;
+    color: $tc-white;
+}
+
+.discussion {
+    background: $blue-15;
+    color: $blue-140;
+}
+
+.roleChip {
+    background: $tc-white;
+    border: 1px solid $black-60;
+    color: $black-80;
+}
+
+.cardRule {
+    background: $black-10;
+    border-radius: 1px;
+    height: 2px;
+    width: 100%;
+}
+
+.authorLine {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.avatar {
+    align-items: center;
+    border-radius: 50%;
+    color: $tc-white;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.blue {
+    background: $blue-100;
+}
+
+.gold {
+    background: $gold-1;
+    color: $black-100;
+}
+
+.green {
+    background: $green-100;
+}
+
+.orange {
+    background: $orange-100;
+}
+
+.red {
+    background: $red-100;
+}
+
+.handle {
+    color: $black-100;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}

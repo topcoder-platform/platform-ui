@@ -1,6 +1,8 @@
 import {
+    ChangeEvent,
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -9,27 +11,39 @@ import {
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     Link,
+    useLocation,
     useNavigate,
 } from 'react-router-dom'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
+import { ConfirmationModal } from '../../../../lib/components'
 import { FormCheckboxField } from '../../../../lib/components/form'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
+    CREATE_FORUM_TYPE_IDS,
 } from '../../../../lib/constants'
 import {
     AUTOSAVE_DELAY_MS,
     DESIGN_WORK_TYPES,
+    MAX_MANUAL_REVIEWER_COUNT,
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
 import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
+import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProject,
+    useFetchProjectBillingAccount,
+    useFetchResourceRoles,
+    useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import {
@@ -37,6 +51,8 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    Resource,
+    ResourceRole,
     Reviewer,
 } from '../../../../lib/models'
 import {
@@ -44,23 +60,38 @@ import {
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
+    createResource,
+    deleteResource,
+    fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
     fetchChallenge,
+    fetchProfile,
+    fetchProjectBillingAccount,
+    fetchResourceRoles,
+    fetchResources,
+    fetchWorkflows,
     patchChallenge,
+    searchProfilesByUserIds,
 } from '../../../../lib/services'
 import {
+    checkCanEditProjectDetails,
     formatLastSaved,
     showErrorToast,
     showSuccessToast,
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
+import {
+    getProjectBillingAccountChallengeErrorMessage,
+    getProjectBillingAccountChallengeIssue,
+} from '../../../../lib/utils/project-billing-account.utils'
+import {
+    resolveMatchingChallengeViewPath,
+} from '../ChallengeEditorPage.utils'
 
 import {
     AssignedMemberField,
 } from './AssignedMemberField'
-import {
-    AttachmentsField,
-} from './AttachmentsField'
 import {
     ChallengeDescriptionField,
 } from './ChallengeDescriptionField'
@@ -95,6 +126,9 @@ import {
     ChallengeTypeField,
 } from './ChallengeTypeField'
 import {
+    buildChallengeTypeOptions,
+} from './ChallengeTypeField.utils'
+import {
     CheckpointPrizesField,
 } from './CheckpointPrizesField'
 import {
@@ -107,6 +141,9 @@ import {
     DesignWorkTypeField,
 } from './DesignWorkTypeField'
 import {
+    FinalDeliverablesField,
+} from './FinalDeliverablesField'
+import {
     FunChallengeField,
 } from './FunChallengeField'
 import {
@@ -116,8 +153,14 @@ import {
     MaximumSubmissionsField,
 } from './MaximumSubmissionsField'
 import {
+    MarathonMatchScorerSection,
+} from './MarathonMatchScorerSection'
+import {
     NDAField,
 } from './NDAField'
+import {
+    RateChallengeField,
+} from './RateChallengeField'
 import {
     ReviewCostField,
 } from './ReviewCostField'
@@ -140,20 +183,46 @@ import {
     TermsField,
 } from './TermsField'
 import {
+    applyProjectBillingToChallengeFormData,
+    COPILOT_RESOURCE_ROLE_NAMES,
+    findMatchingResourceRole,
+    hasSameChallengeBillingInfo,
+    mergeChallengeBillingWithProjectBilling,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    resolveResourceAssignmentValue,
+    ResourceAssignmentValueField,
+    shouldTreatChallengeAsTask,
+    shouldUseManualReviewers,
+    SUBMITTER_RESOURCE_ROLE_NAMES,
+    TASK_REVIEWER_RESOURCE_ROLE_NAMES,
 } from './ChallengeEditorForm.utils'
+import {
+    buildAssignedResourcesByReviewer,
+} from './ReviewersField/reviewerAssignments.utils'
 import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
+    canLaunchChallenge?: boolean
     challenge?: Challenge
+    isLaunchDisabled?: boolean
     isEditMode?: boolean
+    isReadOnly?: boolean
+    launchButtonLabel?: string
+    onChallengeCreated?: (
+        challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
+    ) => void
+    onChallengeApprovalStatusChange?: (status?: string) => void
+    onChallengeStatusChange?: (status?: string) => void
+    onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
+    onSavingChange?: (isSaving: boolean) => void
     projectId?: string
 }
 
 interface SaveChallengeOptions {
     isAutosave?: boolean
+    redirectToViewOnSuccess?: boolean
     statusOverride?: string
     successMessage?: string
 }
@@ -163,12 +232,68 @@ interface SaveStatusMetadata {
     payloadStatus?: string
 }
 
+interface ResolvedPaymentCreator {
+    handle: string
+    source: string
+}
+
+interface ResolvePostSaveNavigationPathParams {
+    isEditMode?: boolean
+    isSaveAsDraft: boolean
+    projectId?: string
+    redirectToViewOnSuccess?: boolean
+    savedChallengeId: string
+    viewModePath?: string
+}
+
+type SingleAssignmentFieldName = 'assignedMemberId' | 'copilot' | 'reviewer'
+
+interface SingleAssignmentConfig {
+    fieldName: SingleAssignmentFieldName
+    roleNames: readonly string[]
+    resourceValueFields?: readonly ResourceAssignmentValueField[]
+    valueField: ResourceAssignmentValueField
+}
+
+interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig, 'fieldName'> {
+    challengeId: string
+    nextValue?: string
+    resourceRolesOverride?: ResourceRole[]
+    resourcesOverride?: Resource[]
+}
+
+interface PersistCreatedChallengeCopilotParams {
+    challengeId: string
+    formData: ChallengeEditorFormData
+    syncSingleAssignmentResource: (params: SyncSingleAssignmentResourceParams) => Promise<void>
+}
+
+interface PersistCreatedChallengeCopilotResult {
+    resetSourceFormData: ChallengeEditorFormData
+    warningMessage?: string
+}
+
+const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
+const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Assign a member before launching a task challenge.'
+const APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Challenge launch is blocked until budget approval is Approved.'
+const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
+    = 'One or more saved AI workflows were disabled. '
+    + 'Update the AI workflow configuration before saving or launching this challenge.'
+const DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+    = 'The saved AI review template was disabled. '
+    + 'Update the AI template selection before saving or launching this challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
+const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
+const CHALLENGE_TYPE_FIRST_2_FINISH_NAME = 'FIRST2FINISH'
 const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
 const CHALLENGE_TYPE_MARATHON_MATCH_SHORT_ABBREVIATION = 'MM'
 const CHALLENGE_TYPE_TASK_NAME = 'TASK'
 const CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION = 'TSK'
+const CHALLENGE_TRACK_DEVELOPMENT_NAME = 'DEVELOPMENT'
 const CHECKPOINT_REQUIRED_PHASES = [
     'Checkpoint Submission',
     'Checkpoint Screening',
@@ -193,6 +318,25 @@ const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
             workType,
         ]),
 )
+const COPILOT_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'copilot',
+    resourceValueFields: [
+        'memberHandle',
+        'memberId',
+    ],
+    roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+    valueField: 'memberHandle',
+}
+const TASK_ASSIGNED_MEMBER_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'assignedMemberId',
+    roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
+    valueField: 'memberId',
+}
+const TASK_REVIEWER_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'reviewer',
+    roleNames: TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+    valueField: 'memberHandle',
+}
 
 function normalizePhaseName(value: unknown): string {
     if (typeof value !== 'string') {
@@ -254,12 +398,302 @@ function isTaskChallengeTypeByNameAndAbbreviation({
         || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION
 }
 
+/**
+ * Builds the initial forum discussion payload for newly created challenges.
+ *
+ * This keeps the new work app aligned with the legacy work-manager flow by sending the
+ * `discussions` payload on the first create request whenever the selected challenge type is
+ * forum-enabled. The helper is used only by the draft challenge creation path.
+ *
+ * @param params.challengeName challenge name used to generate the discussion title.
+ * @param params.challengeTypeId challenge type id selected in the create form.
+ * @param params.discussionForum optional form-level forum toggle state.
+ * @param params.selectedChallengeType resolved challenge type metadata for task detection.
+ * @returns the challenge discussion payload for forum-enabled challenge types, or `undefined`
+ * when no discussion should be created.
+ * @throws Does not throw.
+ */
+function buildCreateChallengeDiscussions(params: {
+    challengeName: string
+    challengeTypeId: string
+    discussionForum?: boolean
+    selectedChallengeType?: ChallengeType
+}): Challenge['discussions'] | undefined {
+    const shouldCreateForumDiscussion = CREATE_FORUM_TYPE_IDS.includes(params.challengeTypeId)
+        && (
+            typeof params.discussionForum === 'boolean'
+                ? params.discussionForum
+                : !isTaskChallengeType(params.selectedChallengeType)
+        )
+
+    if (!shouldCreateForumDiscussion) {
+        return undefined
+    }
+
+    return [{
+        name: `${params.challengeName} Discussion`,
+        provider: 'vanilla',
+        type: 'CHALLENGE',
+    }]
+}
+
 function normalizeTextValue(value: unknown): string {
     if (typeof value !== 'string') {
         return ''
     }
 
     return value.trim()
+}
+
+/**
+ * Normalizes optional display tokens from API payloads and auth context.
+ *
+ * @param value Raw value that may be a string or numeric user id.
+ * @returns Trimmed string value, or an empty string when no value is available.
+ * @throws Does not throw.
+ */
+function normalizeDisplayToken(value: unknown): string {
+    if (value === undefined || value === null) {
+        return ''
+    }
+
+    return String(value)
+        .trim()
+}
+
+/**
+ * Detects creator values that need member-profile resolution before display.
+ *
+ * @param value Normalized challenge `createdBy` value.
+ * @returns `true` when the value looks like a Topcoder numeric user id.
+ * @throws Does not throw.
+ */
+function isUserIdToken(value: string): boolean {
+    return /^\d+$/.test(value)
+}
+
+function hasSameNormalizedValue(valueA: unknown, valueB: unknown): boolean {
+    return normalizeTextValue(valueA)
+        .toLowerCase() === normalizeTextValue(valueB)
+        .toLowerCase()
+}
+
+function getSingleAssignmentConfigs(isTaskChallenge: boolean): SingleAssignmentConfig[] {
+    return isTaskChallenge
+        ? [
+            COPILOT_ASSIGNMENT_CONFIG,
+            TASK_ASSIGNED_MEMBER_ASSIGNMENT_CONFIG,
+            TASK_REVIEWER_ASSIGNMENT_CONFIG,
+        ]
+        : [COPILOT_ASSIGNMENT_CONFIG]
+}
+
+function getSingleAssignmentFieldValue(
+    formData: ChallengeEditorFormData,
+    fieldName: SingleAssignmentFieldName,
+): string | undefined {
+    return normalizeTextValue(formData[fieldName]) || undefined
+}
+
+function applySingleAssignmentFieldValues(
+    formData: ChallengeEditorFormData,
+    sourceFormData: ChallengeEditorFormData,
+    isTaskChallenge: boolean,
+): ChallengeEditorFormData {
+    const nextFormData: ChallengeEditorFormData = {
+        ...formData,
+        copilot: getSingleAssignmentFieldValue(sourceFormData, 'copilot'),
+    }
+
+    if (!isTaskChallenge) {
+        nextFormData.assignedMemberId = undefined
+        nextFormData.reviewer = undefined
+
+        return nextFormData
+    }
+
+    nextFormData.assignedMemberId = getSingleAssignmentFieldValue(sourceFormData, 'assignedMemberId')
+    nextFormData.reviewer = getSingleAssignmentFieldValue(sourceFormData, 'reviewer')
+
+    return nextFormData
+}
+
+/**
+ * Persists the basic-information copilot selection right after the initial draft is created.
+ *
+ * The first create request only sends the minimal challenge payload, so the selected copilot must
+ * be synchronized separately through the `Copilot` resource assignment before the form resets from
+ * fetched challenge data.
+ *
+ * @param params.challengeId newly created challenge id.
+ * @param params.formData create-form values that may already contain a selected copilot.
+ * @param params.syncSingleAssignmentResource helper that writes the resource assignment.
+ * @returns A promise that resolves when the copilot resource has been synchronized, or immediately
+ * when no copilot is selected.
+ */
+async function persistCreatedChallengeCopilot(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<void> {
+    const selectedCopilot = getSingleAssignmentFieldValue(
+        params.formData,
+        COPILOT_ASSIGNMENT_CONFIG.fieldName,
+    )
+
+    if (!selectedCopilot) {
+        return
+    }
+
+    await params.syncSingleAssignmentResource({
+        challengeId: params.challengeId,
+        nextValue: selectedCopilot,
+        resourceValueFields: COPILOT_ASSIGNMENT_CONFIG.resourceValueFields,
+        roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
+        valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
+    })
+}
+
+/**
+ * Computes which create-form values should be restored after the draft challenge is created.
+ *
+ * The copilot assignment is persisted as a follow-up resource write after the draft exists. When
+ * that write fails, the draft should still open in edit mode but the optimistic copilot value
+ * should be cleared so the form does not imply that the assignment was saved.
+ *
+ * @param params challenge id and create-form values for the newly created draft.
+ * @returns the reset source form data plus an optional warning for a failed copilot sync.
+ */
+async function resolveCreatedChallengeResetSourceFormData(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<PersistCreatedChallengeCopilotResult> {
+    try {
+        await persistCreatedChallengeCopilot(params)
+
+        return {
+            resetSourceFormData: params.formData,
+        }
+    } catch {
+        return {
+            resetSourceFormData: {
+                ...params.formData,
+                copilot: undefined,
+            },
+            warningMessage:
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+        }
+    }
+}
+
+function buildSingleAssignmentPayload(
+    challengeId: string,
+    roleId: string,
+    valueField: ResourceAssignmentValueField,
+    memberValue: string,
+): {
+    challengeId: string
+    memberHandle?: string
+    memberId?: string
+    roleId: string
+} {
+    return valueField === 'memberId'
+        ? {
+            challengeId,
+            memberId: memberValue,
+            roleId,
+        }
+        : {
+            challengeId,
+            memberHandle: memberValue,
+            roleId,
+        }
+}
+
+/**
+ * Resolves the persisted resource fields that a single-assignment sync should inspect.
+ *
+ * Most selectors map to one resource field, but copilot assignments may still exist as either a
+ * `memberHandle` or a legacy `memberId`. The save flow shares this helper anywhere it needs to
+ * compare or delete an existing single-assignment resource.
+ *
+ * @param config single-assignment config or sync params with the primary field and any fallbacks.
+ * @returns the ordered resource fields that should be searched for an existing assignment.
+ */
+function getSingleAssignmentResourceValueFields(
+    config: Pick<SingleAssignmentConfig, 'resourceValueFields' | 'valueField'>,
+): readonly ResourceAssignmentValueField[] {
+    return config.resourceValueFields || [config.valueField]
+}
+
+/**
+ * Resolves the first persisted single-member resource assignment across one or more value fields.
+ *
+ * Challenge resources can temporarily store the same logical assignment under different payload
+ * shapes while the editor migrates legacy data. The sync flow needs the original field name so it
+ * can delete or restore the matching resource without creating duplicates.
+ *
+ * @param params resource data, accepted role names, and the resource fields to inspect.
+ * @returns the matched resource value together with the field it came from, or `undefined` when no
+ * persisted assignment exists.
+ */
+function resolvePersistedResourceAssignment(params: {
+    resourceRoles: ResourceRole[]
+    resources: Resource[]
+    roleNames: readonly string[]
+    valueFields: readonly ResourceAssignmentValueField[]
+}): {
+    value: string
+    valueField: ResourceAssignmentValueField
+} | undefined {
+    for (const valueField of params.valueFields) {
+        const value = resolveResourceAssignmentValue({
+            fallbackValue: undefined,
+            resourceRoles: params.resourceRoles,
+            resources: params.resources,
+            roleNames: params.roleNames,
+            valueField,
+        })
+
+        if (value) {
+            return {
+                value,
+                valueField,
+            }
+        }
+    }
+
+    return undefined
+}
+
+/**
+ * Resolves the payload value that should be used when deleting or restoring a single assignment.
+ *
+ * The sync flow prefers the exact persisted field/value that was loaded from challenge resources.
+ * When no resource-backed assignment exists, it falls back to the normalized in-memory value so
+ * callers can still construct a valid rollback payload.
+ *
+ * @param currentAssignment persisted assignment matched from resources, if any.
+ * @param fallbackValue normalized assignment value to use when no resource match exists.
+ * @param fallbackValueField primary resource field for the assignment type.
+ * @returns the field/value pair that should be sent to the resource API.
+ */
+function resolveSingleAssignmentResourcePayloadValue(
+    currentAssignment: {
+        value: string
+        valueField: ResourceAssignmentValueField
+    } | undefined,
+    fallbackValue: string,
+    fallbackValueField: ResourceAssignmentValueField,
+): {
+    value: string
+    valueField: ResourceAssignmentValueField
+} {
+    if (currentAssignment) {
+        return currentAssignment
+    }
+
+    return {
+        value: fallbackValue,
+        valueField: fallbackValueField,
+    }
 }
 
 function normalizeChallengeTypeToken(value: unknown): string {
@@ -295,6 +729,30 @@ function mergeTagsWithDesignWorkType(
         ...tagsWithoutWorkType,
         normalizedWorkType,
     ]
+}
+
+/**
+ * Returns the validation error for the design challenge work type on create.
+ *
+ * @param isRequired Whether the current track/type selection requires a work type.
+ * @param workType The current form value for the design work type field.
+ * @returns The validation message when the field is required but unset, otherwise `undefined`.
+ * @remarks Used only by the new challenge flow because work type is locked after creation.
+ */
+function getCreateChallengeWorkTypeValidationError({
+    isRequired,
+    workType,
+}: {
+    isRequired: boolean
+    workType: unknown
+}): string | undefined {
+    if (!isRequired) {
+        return undefined
+    }
+
+    return normalizeDesignWorkType(workType)
+        ? undefined
+        : DESIGN_WORK_TYPE_REQUIRED_MESSAGE
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -374,7 +832,7 @@ function getRequiredMemberReviewerCount(reviewer: Reviewer | undefined): number 
         ? Math.trunc(reviewerCountValue)
         : 1
 
-    return reviewerCount
+    return Math.min(MAX_MANUAL_REVIEWER_COUNT, reviewerCount)
 }
 
 function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[] {
@@ -390,6 +848,229 @@ function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[
         normalizeTextValue(reviewer.memberId),
         ...additionalMemberIds.map(memberId => normalizeTextValue(memberId)),
     ]
+}
+
+function getAssignedMemberReviewerValidationSlots(reviewer: Reviewer | undefined): string[] {
+    if (!reviewer) {
+        return []
+    }
+
+    const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
+        ? reviewer.additionalMemberIds
+        : []
+
+    return [
+        normalizeTextValue(reviewer.memberId) || normalizeTextValue(reviewer.handle),
+        ...additionalMemberIds.map(memberId => normalizeTextValue(memberId)),
+    ]
+}
+
+function getPersistedReviewerMemberIds(
+    assignedReviewerResources: Resource[],
+    userIdsByHandle?: Map<string, string>,
+): string[] {
+    return Array.from(new Set(
+        assignedReviewerResources
+            .map(resource => {
+                const memberId = normalizeTextValue(resource.memberId)
+
+                if (memberId) {
+                    return memberId
+                }
+
+                const memberHandle = normalizeTextValue(resource.memberHandle)
+
+                if (!memberHandle || !userIdsByHandle) {
+                    return ''
+                }
+
+                return userIdsByHandle.get(memberHandle.toLowerCase()) || ''
+            })
+            .filter(Boolean),
+    ))
+}
+
+/**
+ * Backfills manual reviewer member ids from persisted challenge resources.
+ *
+ * Reviewer assignments for closed public opportunities are stored as resources and older
+ * challenge payloads may omit the matching `memberId` fields on `reviewers`. The editable
+ * human-review tab patches those ids into the form, but read-only `/view` launches do not mount
+ * that tab. This helper mirrors the persisted-resource lookup at the form layer so validation and
+ * launch flows see the same reviewer assignments shown in the summary UI.
+ *
+ * @param formData current challenge form snapshot.
+ * @param resources loaded challenge resources for the current challenge.
+ * @param resourceRoles loaded resource role definitions used to map review phases to resources.
+ * @returns a form-data copy with missing reviewer member ids hydrated from persisted resources.
+ * @remarks Only reviewers with closed public opportunities and no existing assigned member ids are
+ * backfilled. Existing form assignments are preserved.
+ * @throws Does not throw.
+ */
+function applyPersistedManualReviewerAssignments(
+    formData: ChallengeEditorFormData,
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+    userIdsByHandle?: Map<string, string>,
+): ChallengeEditorFormData {
+    if (!Array.isArray(formData.reviewers) || formData.reviewers.length === 0 || resourceRoles.length === 0) {
+        return formData
+    }
+
+    const phaseNameById = new Map(
+        (Array.isArray(formData.phases)
+            ? formData.phases
+            : [])
+            .map(phase => {
+                const phaseId = normalizeReviewerPhaseId(phase)
+                const phaseName = normalizeTextValue(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const humanReviewers = formData.reviewers.filter((reviewer): reviewer is Reviewer => (
+        !!reviewer && !isAiReviewer(reviewer)
+    ))
+    const assignedResourcesByReviewer = buildAssignedResourcesByReviewer({
+        getReviewerCount: getRequiredMemberReviewerCount,
+        phaseNameById,
+        resourceRoles,
+        resources,
+        reviewers: humanReviewers,
+    })
+    const assignedResourcesByHumanReviewer = new Map(
+        humanReviewers.map((reviewer, index) => [
+            reviewer,
+            assignedResourcesByReviewer[index] || [],
+        ] as const),
+    )
+    let hasChanges = false
+    const reviewers = formData.reviewers.map(reviewer => {
+        const assignedReviewerResources = assignedResourcesByHumanReviewer.get(reviewer) || []
+
+        if (
+            !reviewer
+            || isAiReviewer(reviewer)
+            || reviewer.shouldOpenOpportunity === true
+            || getAssignedMemberReviewerSlots(reviewer)
+                .some(Boolean)
+        ) {
+            return reviewer
+        }
+
+        const memberIds = getPersistedReviewerMemberIds(
+            assignedReviewerResources,
+            userIdsByHandle,
+        )
+            .slice(0, getRequiredMemberReviewerCount(reviewer))
+        const assignedHandle = normalizeTextValue(reviewer.handle)
+            || normalizeTextValue(assignedReviewerResources[0]?.memberHandle)
+            || undefined
+        const assignedRoleId = normalizeTextValue(reviewer.roleId)
+            || normalizeTextValue(assignedReviewerResources[0]?.roleId)
+            || undefined
+
+        if (memberIds.length === 0 && !assignedHandle) {
+            return reviewer
+        }
+
+        const [
+            memberId,
+            ...additionalMemberIds
+        ] = memberIds
+
+        hasChanges = true
+
+        return {
+            ...reviewer,
+            additionalMemberIds: additionalMemberIds.length
+                ? additionalMemberIds
+                : undefined,
+            handle: assignedHandle,
+            memberId: memberId || undefined,
+            roleId: assignedRoleId,
+        }
+    })
+
+    return hasChanges
+        ? {
+            ...formData,
+            reviewers,
+        }
+        : formData
+}
+
+async function hydratePersistedManualReviewerAssignments(
+    formData: ChallengeEditorFormData,
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+): Promise<ChallengeEditorFormData> {
+    if (!Array.isArray(formData.reviewers) || formData.reviewers.length === 0 || resourceRoles.length === 0) {
+        return formData
+    }
+
+    const phaseNameById = new Map(
+        (Array.isArray(formData.phases)
+            ? formData.phases
+            : [])
+            .map(phase => {
+                const phaseId = normalizeReviewerPhaseId(phase)
+                const phaseName = normalizeTextValue(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const humanReviewers = formData.reviewers.filter((reviewer): reviewer is Reviewer => (
+        !!reviewer && !isAiReviewer(reviewer)
+    ))
+    const handlesMissingUserIds = Array.from(new Set(
+        buildAssignedResourcesByReviewer({
+            getReviewerCount: getRequiredMemberReviewerCount,
+            phaseNameById,
+            resourceRoles,
+            resources,
+            reviewers: humanReviewers,
+        })
+            .flat()
+            .map(resource => {
+                const memberHandle = normalizeTextValue(resource.memberHandle)
+                const memberId = normalizeTextValue(resource.memberId)
+
+                return memberHandle && !memberId
+                    ? memberHandle
+                    : ''
+            })
+            .filter(Boolean),
+    ))
+
+    if (!handlesMissingUserIds.length) {
+        return applyPersistedManualReviewerAssignments(formData, resources, resourceRoles)
+    }
+
+    const userIdsByHandle = new Map<string, string>()
+
+    await Promise.all(handlesMissingUserIds.map(async handle => {
+        const profile = await fetchProfile(handle)
+            .catch(() => undefined)
+        const userId = normalizeTextValue(profile?.userId)
+
+        if (userId) {
+            userIdsByHandle.set(handle.toLowerCase(), userId)
+        }
+    }))
+
+    return applyPersistedManualReviewerAssignments(
+        formData,
+        resources,
+        resourceRoles,
+        userIdsByHandle,
+    )
 }
 
 function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
@@ -413,7 +1094,7 @@ function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string
         }
 
         if (reviewer.shouldOpenOpportunity !== true) {
-            const requiredAssignedMembers = getAssignedMemberReviewerSlots(reviewer)
+            const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
             const hasAllRequiredMembers = requiredAssignedMembers.length === reviewerCount
                 && requiredAssignedMembers.every(Boolean)
@@ -494,6 +1175,75 @@ function getReviewerValidationError(
     return getMissingRequiredPhaseCoverageError(reviewers, requiredPhases)
 }
 
+async function getDisabledAiWorkflowForActionError(
+    formData: ChallengeEditorFormData,
+    challengeId: string | undefined,
+    challengeTrack?: string,
+    challengeType?: string,
+): Promise<string | undefined> {
+    const selectedAiWorkflowIds = (Array.isArray(formData.reviewers)
+        ? formData.reviewers
+        : [])
+        .map(reviewer => normalizeTextValue(reviewer?.aiWorkflowId))
+        .filter(Boolean)
+    const normalizedChallengeId = normalizeTextValue(challengeId)
+    const persistedAiConfig = normalizedChallengeId
+        ? await fetchAiReviewConfigByChallenge(normalizedChallengeId)
+            .catch(() => undefined)
+        : undefined
+    const persistedWorkflowIds = (persistedAiConfig?.workflows || [])
+        .map(workflow => normalizeTextValue(workflow.workflowId))
+        .filter(Boolean)
+    const configuredAiWorkflowIds = Array.from(new Set([
+        ...selectedAiWorkflowIds,
+        ...persistedWorkflowIds,
+    ]))
+    const selectedTemplateId = normalizeTextValue(persistedAiConfig?.templateId)
+
+    if (selectedTemplateId) {
+        const templates = await fetchAiReviewTemplates({
+            challengeTrack,
+            challengeType,
+        })
+        let selectedTemplate = templates.find(template => (
+            normalizeTextValue(template.id) === selectedTemplateId
+        ))
+
+        if (!selectedTemplate && (challengeTrack || challengeType)) {
+            const allTemplates = await fetchAiReviewTemplates()
+
+            selectedTemplate = allTemplates.find(template => (
+                normalizeTextValue(template.id) === selectedTemplateId
+            ))
+        }
+
+        if (selectedTemplate?.disabled === true) {
+            return DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
+        }
+    }
+
+    if (!configuredAiWorkflowIds.length) {
+        return undefined
+    }
+
+    const workflows = await fetchWorkflows()
+    const workflowMapById = new Map(
+        workflows.map(workflow => [
+            normalizeTextValue(workflow.id),
+            workflow,
+        ] as const),
+    )
+    const hasDisabledWorkflow = configuredAiWorkflowIds.some(workflowId => {
+        const matchedWorkflow = workflowMapById.get(workflowId)
+
+        return matchedWorkflow?.disabled === true
+    })
+
+    return hasDisabledWorkflow
+        ? DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
+        : undefined
+}
+
 function getStatusText(
     saveStatus: 'error' | 'idle' | 'saved' | 'saving',
 ): string {
@@ -525,6 +1275,31 @@ function normalizeProjectId(value: unknown): string | undefined {
     return undefined
 }
 
+/**
+ * Resolves the project id used for the initial create request.
+ *
+ * The create form may carry the project id either in the form state or in the page-level fallback
+ * prop. A project id is mandatory for draft creation, so this helper normalizes the available
+ * value and throws when neither source is present.
+ *
+ * @param value project id captured in the form state.
+ * @param fallbackProjectId project id provided by the page route.
+ * @returns the normalized project id for the create request.
+ * @throws Error when no project id is available.
+ */
+function resolveRequiredCreateProjectId(
+    value: unknown,
+    fallbackProjectId?: string,
+): string {
+    const createProjectId = normalizeProjectId(value) || fallbackProjectId
+
+    if (!createProjectId) {
+        throw new Error('Project id is required to create challenge')
+    }
+
+    return createProjectId
+}
+
 function getCreateRoundType(
     fallbackRoundType: ChallengeEditorFormData['roundType'],
     formElement: HTMLFormElement | null,
@@ -544,6 +1319,19 @@ function getChallengesListPath(projectId?: string): string {
     return projectId
         ? `/projects/${projectId}/challenges`
         : '/challenges'
+}
+
+/**
+ * Builds the canonical read-only challenge route for the saved challenge.
+ *
+ * @param challengeId Saved challenge identifier.
+ * @param projectId Optional project identifier for project-scoped challenge routes.
+ * @returns The view-mode route for the resolved challenge.
+ */
+function getChallengeViewPath(challengeId: string, projectId?: string): string {
+    return projectId
+        ? `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/view`
+        : `/challenges/${encodeURIComponent(challengeId)}/view`
 }
 
 function normalizeStatus(value: unknown): string | undefined {
@@ -602,14 +1390,127 @@ function getSaveSuccessMessage(
         : 'Challenge saved successfully'
 }
 
+function getApprovalStatusText(approvalStatus: string | undefined): string {
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
+        return 'Approved'
+    }
+
+    if (approvalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+        return 'Rejected'
+    }
+
+    return 'Pending Approval'
+}
+
+interface TaskLaunchValidationParams {
+    assignedMemberId?: unknown
+    currentStatus?: unknown
+    isTaskChallenge: boolean
+    nextStatus?: unknown
+}
+
+interface HandledLaunchBlockError extends Error {
+    isHandledLaunchBlockError: true
+}
+
+export function getTaskLaunchValidationError(
+    params: TaskLaunchValidationParams,
+): string | undefined {
+    if (!params.isTaskChallenge) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.currentStatus) === CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.nextStatus) !== CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeTextValue(params.assignedMemberId)) {
+        return undefined
+    }
+
+    return TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+}
+
+/**
+ * Resolves the next route after a manual challenge save succeeds.
+ *
+ * Draft saves from the create route should open the canonical read-only challenge view. Existing
+ * edit-route saves still return to the matching read-only challenge route when requested by the
+ * caller.
+ *
+ * @param params Save-context values needed to choose the next route.
+ * @returns The post-save route, or `undefined` when the user should stay on the current page.
+ */
+function resolvePostSaveNavigationPath(
+    params: ResolvePostSaveNavigationPathParams,
+): string | undefined {
+    if (params.isSaveAsDraft && !params.isEditMode) {
+        return getChallengeViewPath(params.savedChallengeId, params.projectId)
+    }
+
+    if (params.redirectToViewOnSuccess && params.viewModePath) {
+        return params.viewModePath
+    }
+
+    return undefined
+}
+
+/**
+ * Creates an error for launch-blocking validation paths that already surfaced a
+ * specific message to the user.
+ *
+ * @param message The validation message that was already shown in the UI.
+ * @returns An error instance that preserves launch rejection without triggering
+ * generic save-failure handling.
+ * @remarks Used by launch-only blockers so callers can keep the launch modal
+ * open while the form avoids duplicate generic toasts.
+ */
+function createHandledLaunchBlockError(
+    message: string,
+): HandledLaunchBlockError {
+    return Object.assign(new Error(message), {
+        isHandledLaunchBlockError: true as const,
+    })
+}
+
+/**
+ * Detects launch-blocking errors that should skip generic save-failure UI.
+ *
+ * @param error Unknown error caught while saving or launching a challenge.
+ * @returns `true` when the error already surfaced a specific validation message.
+ * @remarks Used in the save flow catch block to preserve the handled launch
+ * rejection without overwriting the existing form state or toast.
+ */
+function isHandledLaunchBlockError(
+    error: unknown,
+): error is HandledLaunchBlockError {
+    return error instanceof Error
+        && 'isHandledLaunchBlockError' in error
+        && error.isHandledLaunchBlockError === true
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
+    const location = useLocation()
     const navigate = useNavigate()
+    const workAppContext = useContext(WorkAppContext)
     const isEditMode = props.isEditMode
+    const isReadOnly = props.isReadOnly === true
+    const onChallengeCreated = props.onChallengeCreated
+    const onChallengeStatusChange = props.onChallengeStatusChange
+    const onChallengeApprovalStatusChange = props.onChallengeApprovalStatusChange
+    const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
+    const onSavingChange = props.onSavingChange
     const formElementRef = useRef<HTMLFormElement>(null)
+    const challengeRef = useRef<Challenge | undefined>(props.challenge)
+    const pendingChallengeRefreshRef = useRef<Challenge | undefined>()
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -618,24 +1519,67 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             props.projectId,
         ],
     )
+    const viewModePath = useMemo(
+        (): string | undefined => resolveMatchingChallengeViewPath(location.pathname),
+        [location.pathname],
+    )
+    const projectResult = useFetchProject(fallbackProjectId)
+    const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
+    const projectBillingAccount = projectBillingAccountResult.billingAccount
+    const projectBillingAccountRef = useRef(projectBillingAccount)
     const challengesListPath = useMemo(
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
     )
+    const handleCancelClick = useCallback((): void => {
+        navigate(challengesListPath)
+    }, [challengesListPath, navigate])
 
     const [currentChallengeId, setCurrentChallengeId] = useState<string | undefined>(props.challenge?.id)
+    const currentChallengeIdRef = useRef<string | undefined>(props.challenge?.id)
     const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isInitialResourceHydrationPending, setIsInitialResourceHydrationPending] = useState<boolean>(
+        !!props.challenge?.id,
+    )
+    const isInitialResourceHydrationPendingRef = useRef<boolean>(!!props.challenge?.id)
+    /**
+     * Keeps React state and the async hydration guard in sync.
+     *
+     * Challenge details can arrive after the first empty render during a full browser refresh. The
+     * resource-hydration promise may resolve before React flushes the state update, so the ref must
+     * be updated synchronously anywhere the pending flag changes.
+     *
+     * @param isPending whether the initial resource-backed assignment hydration is still running.
+     * @returns nothing.
+     * @throws Does not throw.
+     */
+    const setInitialResourceHydrationPending = useCallback((isPending: boolean): void => {
+        isInitialResourceHydrationPendingRef.current = isPending
+        setIsInitialResourceHydrationPending(isPending)
+    }, [])
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
+    const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
+    const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
+    const [scorerHasError, setScorerHasError] = useState<boolean>(false)
+    const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
+    const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    const [showApproveBudgetModal, setShowApproveBudgetModal] = useState<boolean>(false)
+    const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
+    const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
     const formMethods = useForm<ChallengeEditorFormData>({
-        defaultValues: transformChallengeToFormData(props.challenge),
+        defaultValues: applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(props.challenge),
+            projectBillingAccount,
+        ),
         mode: 'onChange',
         resolver: yupResolver(challengeEditorSchema) as any,
     })
 
     const formState = formMethods.formState
+    const isFormDirtyRef = useRef<boolean>(formState.isDirty)
     const getValues = formMethods.getValues
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
@@ -648,6 +1592,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const challengeTracks = useFetchChallengeTracks().tracks
     const challengeTypes = useFetchChallengeTypes().challengeTypes
     const timelineTemplates = useFetchTimelineTemplates().timelineTemplates
+    const challengeResourcesResult = useFetchResources(currentChallengeId)
+    const resourceRolesResult = useFetchResourceRoles()
+    const resourceRoles = resourceRolesResult.resourceRoles
+    const resourceRolesRef = useRef(resourceRoles)
+    const challengeResources = challengeResourcesResult.resources
+    const mutateChallengeResources = challengeResourcesResult.mutate
 
     const selectedChallengeType = useMemo<ChallengeType | undefined>(
         () => challengeTypes.find(challengeType => challengeType.id === values.typeId),
@@ -697,20 +1647,36 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.trackId,
         ],
     )
+    const fallbackChallengeTrackName = useMemo(
+        (): string | undefined => {
+            const challengeTrack = props.challenge?.track
+
+            if (!challengeTrack) {
+                return props.challenge?.legacy?.track
+            }
+
+            if (typeof challengeTrack === 'string') {
+                return challengeTrack
+            }
+
+            return challengeTrack.track || challengeTrack.name || challengeTrack.abbreviation
+        },
+        [
+            props.challenge?.legacy?.track,
+            props.challenge?.track,
+        ],
+    )
+    const resolvedChallengeTrackName = selectedChallengeTrack?.track
+        || selectedChallengeTrack?.name
+        || selectedChallengeTrack?.abbreviation
+        || fallbackChallengeTrackName
     const isDesignTrackSelected = useMemo(
         (): boolean => {
-            const normalizedTrack = (
-                selectedChallengeTrack?.track
-                || selectedChallengeTrack?.name
-                || selectedChallengeTrack?.abbreviation
-                || ''
-            )
-                .trim()
-                .toUpperCase()
+            const normalizedTrack = normalizeChallengeTypeToken(resolvedChallengeTrackName)
 
-            return normalizedTrack === CHALLENGE_TRACKS.DESIGN
+            return normalizedTrack === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DESIGN)
         },
-        [selectedChallengeTrack],
+        [resolvedChallengeTrackName],
     )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
@@ -738,6 +1704,33 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const persistedTaskFlag = useMemo(
+        (): boolean => props.challenge?.task?.isTask === true || values.legacy?.isTask === true,
+        [
+            props.challenge?.task?.isTask,
+            values.legacy?.isTask,
+        ],
+    )
+    const hasResolvedChallengeType = useMemo(
+        (): boolean => !!normalizeTextValue(resolvedChallengeTypeName)
+            || !!normalizeTextValue(resolvedChallengeTypeAbbreviation),
+        [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
+    const isTaskChallenge = useMemo(
+        (): boolean => shouldTreatChallengeAsTask({
+            hasResolvedChallengeType,
+            isTaskTypeSelected: isTaskChallengeSelected,
+            persistedTaskFlag,
+        }),
+        [
+            hasResolvedChallengeType,
+            isTaskChallengeSelected,
+            persistedTaskFlag,
+        ],
+    )
     const isMarathonMatchChallengeSelected = useMemo(
         (): boolean => isMarathonMatchChallengeTypeByNameAndAbbreviation({
             abbreviation: resolvedChallengeTypeAbbreviation,
@@ -748,9 +1741,58 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resolvedChallengeTypeName,
         ],
     )
+    const isDevelopmentChallengeSelected = useMemo(
+        (): boolean => {
+            const normalizedTrackName = normalizeChallengeTypeToken(resolvedChallengeTrackName)
+            const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
+            const normalizedChallengeTypeAbbreviation
+                = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
+
+            return (
+                normalizedTrackName === CHALLENGE_TRACK_DEVELOPMENT_NAME
+                || normalizedTrackName === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
+            )
+                && (
+                    normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
+                    || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
+                )
+        },
+        [
+            resolvedChallengeTrackName,
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
-    const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
+    const challengeTypeOptions = useMemo(
+        () => buildChallengeTypeOptions(challengeTypes, selectedChallengeTrack),
+        [
+            challengeTypes,
+            selectedChallengeTrack,
+        ],
+    )
+    const showSubmissionSettingsSection = useMemo(
+        (): boolean => {
+            if (!isDesignTrackSelected) {
+                return false
+            }
+
+            const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
+            const normalizedChallengeTypeAbbreviation
+                = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
+
+            return normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
+                || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
+                || normalizedChallengeTypeName === CHALLENGE_TYPE_FIRST_2_FINISH_NAME
+                || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION
+        },
+        [
+            isDesignTrackSelected,
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const showCheckpointPrizes = useMemo(
         () => hasCheckpointPhases(values.phases),
         [values.phases],
@@ -762,16 +1804,683 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.status,
         ],
     )
+    const normalizedApprovalStatus = useMemo(
+        () => normalizeStatus(values.approvalStatus)
+            || normalizeStatus(props.challenge?.approvalStatus)
+            || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
+        [
+            props.challenge?.approvalStatus,
+            values.approvalStatus,
+        ],
+    )
+    const canApproveChallengeBudget = checkCanEditProjectDetails(
+        workAppContext.userRoles,
+        workAppContext.loginUserInfo?.userId,
+        projectResult.project,
+    )
+    const hasPersistedPrizeSets = useMemo(
+        () => Array.isArray(props.challenge?.prizeSets)
+            && props.challenge?.prizeSets
+                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
+        [props.challenge?.prizeSets],
+    )
+    const hasUnsavedPrizeSetChanges = useMemo(
+        () => {
+            const dirtyPrizeSets = formState.dirtyFields?.prizeSets
+            if (Array.isArray(dirtyPrizeSets)) {
+                return dirtyPrizeSets.length > 0
+            }
+
+            return !!dirtyPrizeSets
+        },
+        [formState.dirtyFields?.prizeSets],
+    )
+    const arePrizeFieldsLockedForRole = normalizedChallengeStatus === CHALLENGE_STATUS.ACTIVE
+        && !canApproveChallengeBudget
+    const arePrizeFieldsDisabled = isReadOnly || arePrizeFieldsLockedForRole
+    const canRenderApprovalActions = isReadOnly
+        && canApproveChallengeBudget
+        && !!currentChallengeId
+        && hasPersistedPrizeSets
+        && !hasUnsavedPrizeSetChanges
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.APPROVED
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
+        && normalizedChallengeStatus !== CHALLENGE_STATUS.COMPLETED
+        && !(normalizedChallengeStatus ?? '').startsWith(CHALLENGE_STATUS.CANCELLED)
+    const isBudgetPending = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL
+    const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+    const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+    const isRejectReasonMissing = !normalizeTextValue(rejectionReasonInput)
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
+    const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
+    const showRateChallengeField = isMarathonMatchChallengeSelected || isDevelopmentChallengeSelected
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const showEditableTimelineSection = !isTaskChallenge
+    const usesManualReviewers = useMemo(
+        (): boolean => shouldUseManualReviewers({
+            isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
+            isTaskChallenge,
+        }),
+        [
+            isMarathonMatchChallengeSelected,
+            isTaskChallenge,
+        ],
+    )
+    const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
+        && (scorerHasUnsavedChanges || scorerHasError)
 
     useEffect(() => {
-        setCurrentChallengeId(props.challenge?.id)
+        const nextReason = typeof values.approvalRejectionReason === 'string'
+            ? values.approvalRejectionReason
+            : ''
+
+        setRejectionReasonInput(nextReason)
+    }, [values.approvalRejectionReason])
+
+    const shouldDeferInitialResourceDirtyNormalization = isInitialResourceHydrationPending
+        || (!!props.challenge?.id && props.challenge.id !== currentChallengeId)
+    const shouldUseCopilotBillingSummary = workAppContext.isCopilot
+        && !workAppContext.isAdmin
+        && !workAppContext.isManager
+    const getPersistedAssignmentValueByFields = useCallback((
+        fallbackValue: string | undefined,
+        roleNames: readonly string[],
+        valueFields: readonly ResourceAssignmentValueField[],
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => {
+        const resourceAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames,
+            valueFields,
+        })
+
+        if (resourceAssignment) {
+            return resourceAssignment.value
+        }
+
+        const normalizedFallbackValue = normalizeTextValue(fallbackValue)
+
+        return normalizedFallbackValue || undefined
+    }, [
+        challengeResources,
+        resourceRoles,
+    ])
+    const getPersistedAssignmentValue = useCallback((
+        fallbackValue: string | undefined,
+        roleNames: readonly string[],
+        valueField: ResourceAssignmentValueField,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => getPersistedAssignmentValueByFields(
+        fallbackValue,
+        roleNames,
+        [valueField],
+        resourcesOverride,
+        resourceRolesOverride,
+    ), [
+        getPersistedAssignmentValueByFields,
+    ])
+    const getPersistedCopilotValue = useCallback((
+        fallbackValue: string | undefined,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => {
+        const resourceAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+            valueFields: getSingleAssignmentResourceValueFields(COPILOT_ASSIGNMENT_CONFIG),
+        })
+        const normalizedFallbackValue = normalizeTextValue(fallbackValue)
+
+        if (!resourceAssignment) {
+            return normalizedFallbackValue || undefined
+        }
+
+        if (
+            resourceAssignment.valueField === 'memberId'
+            && normalizedFallbackValue
+            && !hasSameNormalizedValue(resourceAssignment.value, normalizedFallbackValue)
+        ) {
+            return normalizedFallbackValue
+        }
+
+        return resourceAssignment.value
+    }, [
+        challengeResources,
+        resourceRoles,
+    ])
+    const isTaskSingleAssignmentChallenge = useCallback((
+        formData: ChallengeEditorFormData,
+    ): boolean => shouldTreatChallengeAsTask({
+        hasResolvedChallengeType,
+        isTaskTypeSelected: isTaskChallengeSelected,
+        persistedTaskFlag: props.challenge?.task?.isTask === true || formData.legacy?.isTask === true,
+    }), [
+        hasResolvedChallengeType,
+        isTaskChallengeSelected,
+        props.challenge?.task?.isTask,
+    ])
+    const applyPersistedSingleAssignments = useCallback((
+        formData: ChallengeEditorFormData,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): ChallengeEditorFormData => {
+        const nextFormData: ChallengeEditorFormData = {
+            ...formData,
+            copilot: getPersistedCopilotValue(
+                getSingleAssignmentFieldValue(formData, 'copilot'),
+                resourcesOverride,
+                resourceRolesOverride,
+            ),
+        }
+
+        if (!isTaskSingleAssignmentChallenge(formData)) {
+            nextFormData.assignedMemberId = undefined
+            nextFormData.reviewer = undefined
+
+            return nextFormData
+        }
+
+        nextFormData.assignedMemberId = getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
+            SUBMITTER_RESOURCE_ROLE_NAMES,
+            'memberId',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+        nextFormData.reviewer = getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'reviewer'),
+            TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+            'memberHandle',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+
+        return nextFormData
+    }, [
+        getPersistedCopilotValue,
+        getPersistedAssignmentValue,
+        isTaskSingleAssignmentChallenge,
+    ])
+    const applyPersistedSingleAssignmentsRef = useRef(applyPersistedSingleAssignments)
+    const loadSingleAssignmentResourceRoles = useCallback(
+        async (): Promise<typeof resourceRoles> => (
+            resourceRoles.length
+                ? resourceRoles
+                : fetchResourceRoles()
+        ),
+        [resourceRoles],
+    )
+    const loadSingleAssignmentResources = useCallback(
+        async (challengeId: string): Promise<typeof challengeResources> => (
+            challengeResourcesResult.isLoading
+            || currentChallengeId !== challengeId
+                ? fetchResources(challengeId)
+                : challengeResources
+        ),
+        [
+            challengeResources,
+            challengeResourcesResult.isLoading,
+            currentChallengeId,
+        ],
+    )
+    const resolveProjectBillingAccount = useCallback(
+        async (): Promise<typeof projectBillingAccount> => {
+            if (projectBillingAccount) {
+                return projectBillingAccount
+            }
+
+            if (!fallbackProjectId) {
+                return undefined
+            }
+
+            return fetchProjectBillingAccount(fallbackProjectId)
+                .then(response => response.billingAccount)
+                .catch(() => undefined)
+        },
+        [
+            fallbackProjectId,
+            projectBillingAccount,
+        ],
+    )
+    const syncSingleAssignmentResource = useCallback(async (
+        params: SyncSingleAssignmentResourceParams,
+    ): Promise<void> => {
+        const resolvedResourceRoles = params.resourceRolesOverride
+            || await loadSingleAssignmentResourceRoles()
+        const resolvedResources = params.resourcesOverride
+            || await loadSingleAssignmentResources(params.challengeId)
+        const currentAssignment = resolvePersistedResourceAssignment({
+            resourceRoles: resolvedResourceRoles,
+            resources: resolvedResources,
+            roleNames: params.roleNames,
+            valueFields: getSingleAssignmentResourceValueFields(params),
+        })
+        const normalizedCurrentValue = normalizeTextValue(currentAssignment?.value)
+        const normalizedNextValue = normalizeTextValue(params.nextValue)
+        const currentPayloadAssignment = resolveSingleAssignmentResourcePayloadValue(
+            currentAssignment,
+            normalizedCurrentValue,
+            params.valueField,
+        )
+        const role = findMatchingResourceRole(resolvedResourceRoles, params.roleNames)
+
+        if (hasSameNormalizedValue(normalizedCurrentValue, normalizedNextValue)) {
+            return
+        }
+
+        if (!role) {
+            if (!normalizedCurrentValue && !normalizedNextValue) {
+                return
+            }
+
+            throw new Error(`Unable to find resource role for ${params.roleNames.join(' / ')}`)
+        }
+
+        if (normalizedCurrentValue) {
+            await deleteResource(buildSingleAssignmentPayload(
+                params.challengeId,
+                role.id,
+                currentPayloadAssignment.valueField,
+                currentPayloadAssignment.value,
+            ))
+        }
+
+        if (!normalizedNextValue) {
+            return
+        }
+
+        try {
+            await createResource(buildSingleAssignmentPayload(
+                params.challengeId,
+                role.id,
+                params.valueField,
+                normalizedNextValue,
+            ))
+        } catch (error) {
+            if (normalizedCurrentValue) {
+                try {
+                    await createResource(buildSingleAssignmentPayload(
+                        params.challengeId,
+                        role.id,
+                        currentPayloadAssignment.valueField,
+                        currentPayloadAssignment.value,
+                    ))
+                } catch {
+                    // Preserve the original error when rollback also fails.
+                }
+            }
+
+            throw error
+        }
+    }, [
+        loadSingleAssignmentResourceRoles,
+        loadSingleAssignmentResources,
+    ])
+    /**
+     * Synchronizes single-member assignments against the latest persisted challenge resources.
+     *
+     * The edit flow keeps a SWR cache of resources for the Resources tab, but challenge saves
+     * should compare against the freshest backend state so a newly selected copilot still creates
+     * the required `Copilot` resource even when the local cache is stale.
+     *
+     * @param challengeId saved challenge identifier whose assignments should be synchronized.
+     * @param formData current form snapshot containing the selected assignment values.
+     * @returns Resolves after all changed single-member assignments are saved and the local
+     * resource cache is revalidated.
+     */
+    const syncDraftSingleAssignments = useCallback(async (
+        challengeId: string,
+        formData: ChallengeEditorFormData,
+    ): Promise<void> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
+        const resourceSyncOperations = getSingleAssignmentConfigs(
+            isTaskSingleAssignmentChallenge(formData),
+        )
+            .map(config => {
+                const nextValue = getSingleAssignmentFieldValue(formData, config.fieldName)
+                const persistedValue = getPersistedAssignmentValueByFields(
+                    undefined,
+                    config.roleNames,
+                    getSingleAssignmentResourceValueFields(config),
+                    persistedResources,
+                    persistedResourceRoles,
+                )
+
+                return hasSameNormalizedValue(nextValue, persistedValue)
+                    ? undefined
+                    : syncSingleAssignmentResource({
+                        challengeId,
+                        nextValue,
+                        resourceRolesOverride: persistedResourceRoles,
+                        resourcesOverride: persistedResources,
+                        resourceValueFields: config.resourceValueFields,
+                        roleNames: config.roleNames,
+                        valueField: config.valueField,
+                    })
+            })
+            .filter((operation): operation is Promise<void> => !!operation)
+
+        if (resourceSyncOperations.length === 0) {
+            return
+        }
+
+        await Promise.all(resourceSyncOperations)
+        await mutateChallengeResources()
+    }, [
+        getPersistedAssignmentValueByFields,
+        isTaskSingleAssignmentChallenge,
+        loadSingleAssignmentResourceRoles,
+        mutateChallengeResources,
+        syncSingleAssignmentResource,
+    ])
+    /**
+     * Reapplies resource-backed assignments after a save response resets the form.
+     *
+     * Challenge patch responses may omit persisted copilot and manual-reviewer member selections
+     * even though those resources were saved successfully. Reloading resources before the post-save
+     * reset keeps the editor aligned with the persisted draft state.
+     *
+     * @param challengeId saved challenge identifier whose persisted resources should be reloaded.
+     * @param formData form-state snapshot derived from the saved challenge payload.
+     * @returns the same form data with persisted resource assignments restored.
+     */
+    const hydratePersistedSavedFormData = useCallback(async (
+        challengeId: string,
+        formData: ChallengeEditorFormData,
+    ): Promise<ChallengeEditorFormData> => {
+        const [
+            persistedResources,
+            persistedResourceRoles,
+        ] = await Promise.all([
+            fetchResources(challengeId),
+            loadSingleAssignmentResourceRoles(),
+        ])
+
+        return hydratePersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(
+                formData,
+                persistedResources,
+                persistedResourceRoles,
+            ),
+            persistedResources,
+            persistedResourceRoles,
+        )
+    }, [
+        applyPersistedSingleAssignments,
+        loadSingleAssignmentResourceRoles,
+    ])
+
+    const handleScorerConfigChange = useCallback(
+        (hasUnsavedChanges: boolean, hasError: boolean): void => {
+            setScorerHasUnsavedChanges(hasUnsavedChanges)
+            setScorerHasError(hasError)
+        },
+        [],
+    )
+    const hydrateChallengeSnapshot = useCallback((
+        challenge?: Challenge,
+    ): (() => void) => {
+        let isActive = true
+        const challengeId = challenge?.id
+        const baseFormData = applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(challenge),
+            projectBillingAccountRef.current,
+        )
+
+        setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
-        reset(transformChallengeToFormData(props.challenge))
-    }, [props.challenge, reset])
+        setInitialResourceHydrationPending(!!challengeId)
+
+        reset(baseFormData)
+
+        if (!challengeId) {
+            setInitialResourceHydrationPending(false)
+
+            return () => {
+                isActive = false
+            }
+        }
+
+        const currentResourceRoles = resourceRolesRef.current
+
+        Promise.all([
+            fetchResources(challengeId),
+            currentResourceRoles.length
+                ? Promise.resolve(currentResourceRoles)
+                : fetchResourceRoles(),
+        ])
+            .then(async ([
+                fetchedResources,
+                fetchedResourceRoles,
+            ]) => {
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
+                    return
+                }
+
+                const hydratedFormData = await hydratePersistedManualReviewerAssignments(
+                    applyPersistedSingleAssignmentsRef.current(
+                        baseFormData,
+                        fetchedResources,
+                        fetchedResourceRoles,
+                    ),
+                    fetchedResources,
+                    fetchedResourceRoles,
+                )
+
+                if (
+                    !isActive
+                    || (isFormDirtyRef.current && !isInitialResourceHydrationPendingRef.current)
+                ) {
+                    return
+                }
+
+                reset(hydratedFormData)
+            })
+            .catch(() => {
+                // The base form data has already been applied above.
+            })
+            .finally(() => {
+                if (isActive) {
+                    setInitialResourceHydrationPending(false)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        reset,
+        setInitialResourceHydrationPending,
+    ])
+
+    useEffect(() => {
+        if (!onSavingChange) {
+            return undefined
+        }
+
+        onSavingChange(isSaving)
+
+        return () => {
+            onSavingChange(false)
+        }
+    }, [
+        isSaving,
+        onSavingChange,
+    ])
+
+    useEffect(() => {
+        challengeRef.current = props.challenge
+    }, [props.challenge])
+
+    useEffect(() => {
+        currentChallengeIdRef.current = currentChallengeId
+    }, [currentChallengeId])
+
+    useEffect(() => {
+        projectBillingAccountRef.current = projectBillingAccount
+    }, [projectBillingAccount])
+
+    useEffect(() => {
+        resourceRolesRef.current = resourceRoles
+    }, [resourceRoles])
+
+    useEffect(() => {
+        isFormDirtyRef.current = formState.isDirty
+    }, [formState.isDirty])
+
+    useEffect(() => {
+        applyPersistedSingleAssignmentsRef.current = applyPersistedSingleAssignments
+    }, [applyPersistedSingleAssignments])
+
+    useEffect(() => {
+        const challenge = challengeRef.current
+        const challengeId = challenge?.id
+        const isRefreshingCurrentChallenge = !!challengeId
+            && challengeId === currentChallengeIdRef.current
+            && isFormDirtyRef.current
+            && !isInitialResourceHydrationPendingRef.current
+
+        if (isRefreshingCurrentChallenge) {
+            pendingChallengeRefreshRef.current = challenge
+
+            return undefined
+        }
+
+        pendingChallengeRefreshRef.current = undefined
+
+        return hydrateChallengeSnapshot(challenge)
+    }, [
+        hydrateChallengeSnapshot,
+        props.challenge,
+        props.challenge?.id,
+        props.challenge?.updated,
+    ])
+
+    useEffect(() => {
+        if (formState.isDirty) {
+            return undefined
+        }
+
+        const pendingChallengeRefresh = pendingChallengeRefreshRef.current
+
+        if (!pendingChallengeRefresh) {
+            return undefined
+        }
+
+        pendingChallengeRefreshRef.current = undefined
+
+        return hydrateChallengeSnapshot(pendingChallengeRefresh)
+    }, [
+        formState.isDirty,
+        hydrateChallengeSnapshot,
+    ])
+
+    useEffect(() => {
+        if (
+            !currentChallengeId
+            || (formState.isDirty && !isInitialResourceHydrationPending)
+            || challengeResourcesResult.isLoading
+            || resourceRolesResult.isLoading
+        ) {
+            return undefined
+        }
+
+        let isActive = true
+
+        hydratePersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(getValues()),
+            challengeResources,
+            resourceRoles,
+        )
+            .then(persistedValues => {
+                if (!isActive) {
+                    return
+                }
+
+                const currentFormValues = getValues()
+
+                getSingleAssignmentConfigs(isTaskSingleAssignmentChallenge(currentFormValues))
+                    .forEach(config => {
+                        const currentValue = getSingleAssignmentFieldValue(currentFormValues, config.fieldName)
+                        const persistedValue = getSingleAssignmentFieldValue(
+                            persistedValues,
+                            config.fieldName,
+                        )
+
+                        if (hasSameNormalizedValue(currentValue, persistedValue)) {
+                            return
+                        }
+
+                        setValue(config.fieldName, persistedValue, {
+                            shouldDirty: false,
+                            shouldValidate: true,
+                        })
+                    })
+
+                if (
+                    JSON.stringify(currentFormValues.reviewers || [])
+                    !== JSON.stringify(persistedValues.reviewers || [])
+                ) {
+                    setValue('reviewers', persistedValues.reviewers, {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    })
+                }
+            })
+            .catch(() => undefined)
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        applyPersistedSingleAssignments,
+        challengeResources,
+        currentChallengeId,
+        formState.isDirty,
+        getValues,
+        isInitialResourceHydrationPending,
+        isTaskSingleAssignmentChallenge,
+        resourceRoles,
+        resourceRolesResult.isLoading,
+        setValue,
+        challengeResourcesResult.isLoading,
+    ])
+
+    useEffect(() => {
+        const currentBilling = getValues('billing')
+        const nextBilling = mergeChallengeBillingWithProjectBilling(
+            currentBilling,
+            projectBillingAccount,
+        )
+
+        if (hasSameChallengeBillingInfo(currentBilling, nextBilling)) {
+            return
+        }
+
+        setValue('billing', nextBilling, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        getValues,
+        projectBillingAccount,
+        setValue,
+    ])
 
     useEffect(() => {
         const normalizedTypeId = values.typeId?.trim()
@@ -807,12 +2516,44 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        setValue('legacy.isTask', isTaskChallengeSelected, {
+        const normalizedTrackId = values.trackId?.trim()
+        const normalizedTypeId = values.typeId?.trim()
+
+        if (currentChallengeId || !normalizedTrackId || !normalizedTypeId) {
+            return
+        }
+
+        if (!selectedChallengeType || selectedChallengeType.id !== normalizedTypeId) {
+            return
+        }
+
+        const isAllowedForTrack = challengeTypeOptions
+            .some(option => option.value === normalizedTypeId)
+
+        if (isAllowedForTrack) {
+            return
+        }
+
+        setValue('typeId', '', {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        challengeTypeOptions,
+        currentChallengeId,
+        selectedChallengeType,
+        setValue,
+        values.trackId,
+        values.typeId,
+    ])
+
+    useEffect(() => {
+        setValue('legacy.isTask', isTaskChallenge, {
             shouldDirty: false,
             shouldValidate: true,
         })
     }, [
-        isTaskChallengeSelected,
+        isTaskChallenge,
         setValue,
     ])
 
@@ -874,7 +2615,48 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         values.prizeSets,
     ])
 
+    useEffect(() => {
+        if (showMarathonMatchScorerSection) {
+            return
+        }
+
+        setScorerHasUnsavedChanges(false)
+        setScorerHasError(false)
+    }, [showMarathonMatchScorerSection])
+
+    useEffect(() => {
+        if (!saveValidationError || !formState.isValid) {
+            return
+        }
+
+        setSaveValidationError(undefined)
+    }, [formState.isValid, saveValidationError])
+
+    useEffect(() => {
+        if (usesManualReviewers) {
+            return
+        }
+
+        clearErrors('reviewers')
+
+        if (!Array.isArray(values.reviewers) || values.reviewers.length === 0) {
+            return
+        }
+
+        // Task and marathon match challenges use dedicated reviewer flows instead.
+        setValue('reviewers', [], {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        clearErrors,
+        setValue,
+        usesManualReviewers,
+        values.reviewers,
+    ])
+
     const createNewChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (): Promise<void> => {
             const isBasicInfoValid = await trigger([
                 'name',
@@ -887,17 +2669,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            clearErrors('workType')
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+
+            const workTypeValidationError = getCreateChallengeWorkTypeValidationError({
+                isRequired: showDesignWorkTypeField,
+                workType: getValues('workType'),
+            })
+
+            if (workTypeValidationError) {
+                setSaveStatus('idle')
+                setError('workType', {
+                    message: workTypeValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(workTypeValidationError)
+                return
+            }
+
             setIsSaving(true)
             setSaveStatus('saving')
             setSaveError(undefined)
+            setSaveValidationError(undefined)
 
             try {
                 const formData = getValues()
+                const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
-                const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
-                if (!createProjectId) {
-                    throw new Error('Project id is required to create challenge')
-                }
+                const createProjectId = resolveRequiredCreateProjectId(formData.projectId, fallbackProjectId)
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
                     roundType: selectedRoundType,
@@ -912,7 +2712,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }
 
                 const tags = mergeTagsWithDesignWorkType(formData.tags, formData.workType)
+                const discussions = buildCreateChallengeDiscussions({
+                    challengeName: formData.name,
+                    challengeTypeId: formData.typeId,
+                    discussionForum: formData.discussionForum,
+                    selectedChallengeType,
+                })
                 const createdChallenge = await createChallenge({
+                    discussions,
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
@@ -926,7 +2733,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                const nextValues = transformChallengeToFormData(savedChallenge)
+                const createdCopilotResetResult: PersistCreatedChallengeCopilotResult
+                    = await resolveCreatedChallengeResetSourceFormData({
+                        challengeId: savedChallenge.id,
+                        formData,
+                        syncSingleAssignmentResource,
+                    })
+                const resetSourceFormData = createdCopilotResetResult.resetSourceFormData
+                const createdCopilotWarningMessage = createdCopilotResetResult.warningMessage
+
+                const nextValues = applySingleAssignmentFieldValues(
+                    applyProjectBillingToChallengeFormData(
+                        transformChallengeToFormData(savedChallenge),
+                        resolvedProjectBillingAccount,
+                    ),
+                    resetSourceFormData,
+                    isTaskSingleAssignmentChallenge(formData),
+                )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
                 if (selectedRoundType === ROUND_TYPES.TWO_ROUNDS && nextValues.roundType !== ROUND_TYPES.TWO_ROUNDS) {
@@ -942,6 +2765,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     nextValues.tags = mergeTagsWithDesignWorkType(nextValues.tags, normalizedWorkType)
                 }
 
+                const createdChallengeStatus = normalizeStatus(nextValues.status)
+                    || normalizeStatus(savedChallenge.status)
+                    || CHALLENGE_STATUS.NEW
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -949,7 +2775,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setSaveStatus('saved')
 
                 reset(nextValues)
+                onChallengeCreated?.({
+                    id: savedChallenge.id,
+                    name: savedChallenge.name,
+                    projectId: savedChallenge.projectId ?? createProjectId,
+                    status: createdChallengeStatus,
+                })
+                onChallengeStatusChange?.(createdChallengeStatus)
                 showSuccessToast('Challenge created successfully')
+
+                if (createdCopilotWarningMessage) {
+                    showErrorToast(createdCopilotWarningMessage)
+                }
             } catch (error) {
                 const errorMessage = error instanceof Error
                     ? error.message
@@ -963,15 +2800,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            clearErrors,
             fallbackProjectId,
             getValues,
+            isTaskSingleAssignmentChallenge,
             reset,
+            onChallengeCreated,
+            onChallengeStatusChange,
+            resolveProjectBillingAccount,
+            selectedChallengeType,
+            setError,
+            showDesignWorkTypeField,
+            syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
         ],
     )
 
     const saveChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (
             formData: ChallengeEditorFormData,
             options: SaveChallengeOptions = {},
@@ -980,41 +2827,173 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw new Error('Challenge id is required to save challenge')
             }
 
+            const {
+                isSaveAsDraft,
+                payloadStatus,
+            }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const shouldTreatSaveAsTaskChallenge = isTaskSingleAssignmentChallenge(formData)
+            const currentStatus = normalizeStatus(formData.status)
+            const isChallengeBeingActivated = payloadStatus === CHALLENGE_STATUS.ACTIVE
+                && currentStatus !== CHALLENGE_STATUS.ACTIVE
+            const taskLaunchValidationError = getTaskLaunchValidationError({
+                assignedMemberId: formData.assignedMemberId,
+                currentStatus: formData.status,
+                isTaskChallenge: shouldTreatSaveAsTaskChallenge,
+                nextStatus: payloadStatus,
+            })
+
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+            clearErrors('assignedMemberId')
+
+            if (taskLaunchValidationError) {
+                setSaveStatus('idle')
+                setError('assignedMemberId', {
+                    message: taskLaunchValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(taskLaunchValidationError)
+
+                if (!options.isAutosave) {
+                    showErrorToast(taskLaunchValidationError)
+                }
+
+                throw createHandledLaunchBlockError(taskLaunchValidationError)
+            }
+
+            if (
+                isChallengeBeingActivated
+                && normalizeStatus(formData.approvalStatus) !== CHALLENGE_APPROVAL_STATUS.APPROVED
+            ) {
+                setSaveStatus('idle')
+                setSaveValidationError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+
+                if (!options.isAutosave) {
+                    showErrorToast(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+                }
+
+                throw createHandledLaunchBlockError(APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE)
+            }
+
+            const disabledAiWorkflowError = await getDisabledAiWorkflowForActionError(
+                formData,
+                currentChallengeId,
+                selectedChallengeTrack?.track || selectedChallengeTrack?.name,
+                selectedChallengeType?.name,
+            )
+
+            if (disabledAiWorkflowError) {
+                setSaveStatus('idle')
+                setError('reviewers', {
+                    message: disabledAiWorkflowError,
+                    type: 'manual',
+                })
+                setSaveValidationError(disabledAiWorkflowError)
+
+                if (!options.isAutosave) {
+                    showErrorToast(disabledAiWorkflowError)
+                }
+
+                throw createHandledLaunchBlockError(disabledAiWorkflowError)
+            }
+
             if (!options.isAutosave) {
                 setIsSaving(true)
                 setSaveStatus('saving')
             }
 
-            setSaveError(undefined)
-
             try {
-                const {
-                    isSaveAsDraft,
-                    payloadStatus,
-                }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+                const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
+                const projectBillingAccountIssue = isChallengeBeingActivated
+                    ? getProjectBillingAccountChallengeIssue(
+                        resolvedProjectBillingAccount,
+                        !!fallbackProjectId,
+                    )
+                    : undefined
+                const projectBillingAccountErrorMessage = projectBillingAccountIssue
+                    ? getProjectBillingAccountChallengeErrorMessage(projectBillingAccountIssue)
+                    : undefined
+
+                if (projectBillingAccountErrorMessage) {
+                    setSaveStatus('idle')
+                    setSaveError(projectBillingAccountErrorMessage)
+
+                    if (!options.isAutosave) {
+                        showErrorToast(projectBillingAccountErrorMessage)
+                    }
+
+                    throw createHandledLaunchBlockError(projectBillingAccountErrorMessage)
+                }
+
+                const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
+                    formData,
+                    resolvedProjectBillingAccount,
+                )
                 const payload = transformFormDataToChallenge({
-                    ...formData,
+                    ...formDataWithProjectBilling,
+                    reviewers: usesManualReviewers
+                        ? formDataWithProjectBilling.reviewers
+                        : [],
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
+                await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
+                const persistedFormData = applyProjectBillingToChallengeFormData(
+                    transformChallengeToFormData(savedChallenge),
+                    resolvedProjectBillingAccount,
+                )
 
-                const nextValues = transformChallengeToFormData(savedChallenge)
+                const nextValues = applySingleAssignmentFieldValues(
+                    await hydratePersistedSavedFormData(
+                        currentChallengeId,
+                        {
+                            ...persistedFormData,
+                            attachments: Array.isArray(persistedFormData.attachments)
+                                ? persistedFormData.attachments
+                                : formDataWithProjectBilling.attachments,
+                        },
+                    ),
+                    formDataWithProjectBilling,
+                    shouldTreatSaveAsTaskChallenge,
+                )
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
                 setLastSaved(savedAt)
                 setSaveStatus('saved')
 
-                reset(nextValues)
+                // Autosave should advance the saved baseline without replacing inputs users may still be editing.
+                reset(
+                    options.isAutosave
+                        ? formDataWithProjectBilling
+                        : nextValues,
+                    options.isAutosave
+                        ? { keepValues: true }
+                        : undefined,
+                )
+                onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
                     showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
                 }
 
-                if (isSaveAsDraft && !isEditMode) {
-                    navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
+                const postSaveNavigationPath = resolvePostSaveNavigationPath({
+                    isEditMode,
+                    isSaveAsDraft,
+                    projectId: fallbackProjectId,
+                    redirectToViewOnSuccess: options.redirectToViewOnSuccess,
+                    savedChallengeId: savedChallenge.id,
+                    viewModePath,
+                })
+
+                if (postSaveNavigationPath) {
+                    navigate(postSaveNavigationPath)
                 }
             } catch (error) {
+                if (isHandledLaunchBlockError(error)) {
+                    throw error
+                }
+
                 const errorMessage = error instanceof Error
                     ? error.message
                     : 'Failed to save challenge'
@@ -1034,17 +3013,134 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            clearErrors,
             currentChallengeId,
+            fallbackProjectId,
+            hydratePersistedSavedFormData,
             isEditMode,
+            isTaskSingleAssignmentChallenge,
             navigate,
+            onChallengeStatusChange,
             reset,
+            resolveProjectBillingAccount,
+            selectedChallengeTrack,
+            selectedChallengeType,
+            setError,
+            syncDraftSingleAssignments,
+            usesManualReviewers,
+            viewModePath,
         ],
     )
 
+    const updateApprovalStatus = useCallback(async (
+        nextApprovalStatus: string,
+        rejectionReason?: string,
+    ): Promise<void> => {
+        if (!currentChallengeId || isUpdatingApproval) {
+            return
+        }
+
+        if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED && !normalizeTextValue(rejectionReason)) {
+            showErrorToast('Rejection reason is required.')
+            return
+        }
+
+        setIsUpdatingApproval(true)
+
+        try {
+            const payload = {
+                approvalRejectionReason: nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                    ? normalizeTextValue(rejectionReason)
+                    : undefined,
+                approvalStatus: nextApprovalStatus,
+            }
+            const savedChallenge = await patchChallenge(currentChallengeId, payload)
+            const savedChallengeFormData = transformChallengeToFormData(savedChallenge)
+            const currentFormData = getValues()
+            const mergedFormData = {
+                ...savedChallengeFormData,
+                ...currentFormData,
+                approvalApprovedBy: savedChallengeFormData.approvalApprovedBy,
+                approvalRejectionReason: savedChallengeFormData.approvalRejectionReason,
+                approvalStatus: savedChallengeFormData.approvalStatus,
+            }
+
+            reset(mergedFormData)
+            setSaveValidationError(undefined)
+            if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED) {
+                setShowApproveBudgetModal(false)
+            }
+
+            if (nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED) {
+                setShowRejectBudgetModal(false)
+            }
+
+            showSuccessToast(nextApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                ? 'Challenge budget approved.'
+                : 'Challenge budget rejected.')
+            onChallengeApprovalStatusChange?.(normalizeStatus(nextApprovalStatus))
+        } catch (error) {
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'Failed to update approval status'
+            showErrorToast(errorMessage)
+        } finally {
+            setIsUpdatingApproval(false)
+        }
+    }, [
+        currentChallengeId,
+        getValues,
+        isUpdatingApproval,
+        reset,
+        onChallengeApprovalStatusChange,
+    ])
+
+    const handleApproveChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.APPROVED)
+            .catch(() => undefined)
+    }, [updateApprovalStatus])
+
+    const handleOpenApproveBudgetModal = useCallback((): void => {
+        setShowApproveBudgetModal(true)
+    }, [])
+
+    const handleCloseApproveBudgetModal = useCallback((): void => {
+        setShowApproveBudgetModal(false)
+    }, [])
+
+    const handleConfirmApproveChallengeBudget = useCallback((): void => {
+        handleApproveChallengeBudget()
+    }, [handleApproveChallengeBudget])
+
+    const handleRejectChallengeBudget = useCallback((): void => {
+        updateApprovalStatus(CHALLENGE_APPROVAL_STATUS.REJECTED, rejectionReasonInput)
+            .catch(() => undefined)
+    }, [
+        rejectionReasonInput,
+        updateApprovalStatus,
+    ])
+    const handleOpenRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(true)
+    }, [])
+
+    const handleCloseRejectBudgetModal = useCallback((): void => {
+        setShowRejectBudgetModal(false)
+    }, [])
+
+    const handleConfirmRejectChallengeBudget = useCallback((): void => {
+        handleRejectChallengeBudget()
+    }, [handleRejectChallengeBudget])
+
     const launchChallenge = useCallback(async (): Promise<void> => {
+        if (isScorerBlockingChallengeActions) {
+            showErrorToast('Save a valid scorer configuration before launching the challenge')
+            throw new Error('Scorer configuration is blocking challenge launch')
+        }
+
         await handleSubmit(
             async formData => {
                 await saveChallenge(formData, {
+                    redirectToViewOnSuccess: true,
                     statusOverride: CHALLENGE_STATUS.ACTIVE,
                     successMessage: 'Challenge launched successfully',
                 })
@@ -1056,6 +3152,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         )()
     }, [
         handleSubmit,
+        isScorerBlockingChallengeActions,
         saveChallenge,
     ])
 
@@ -1064,7 +3161,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return undefined
         }
 
-        onRegisterLaunchAction(currentChallengeId
+        onRegisterLaunchAction(currentChallengeId && !isScorerBlockingChallengeActions
             ? launchChallenge
             : undefined)
 
@@ -1073,15 +3170,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [
         currentChallengeId,
+        isScorerBlockingChallengeActions,
         launchChallenge,
         onRegisterLaunchAction,
     ])
 
     const autosaveResult = useAutosave<ChallengeEditorFormData>({
         delay: AUTOSAVE_DELAY_MS,
-        enabled: !!currentChallengeId
+        enabled: !isReadOnly
+            && !!currentChallengeId
             && formState.isDirty
             && formState.isValid
+            && !isScorerBlockingChallengeActions
             && normalizedChallengeStatus !== CHALLENGE_STATUS.NEW,
         formValues: values,
         onSave: async formData => {
@@ -1109,11 +3209,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, {})
 
+            if (isScorerBlockingChallengeActions) {
+                showErrorToast('Save a valid scorer configuration before saving the challenge')
+                return
+            }
+
             if (isSaveAsDraft) {
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
-                    isTaskChallenge: isTaskChallengeSelected,
+                    isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',
                 })
@@ -1123,23 +3228,41 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         message: reviewerValidationError,
                         type: 'manual',
                     })
+                    setSaveStatus('idle')
+                    setSaveValidationError(reviewerValidationError)
                     showErrorToast(reviewerValidationError)
                     return
                 }
             }
 
             clearErrors('reviewers')
-            await saveChallenge(formData)
+            try {
+                await saveChallenge(formData, {
+                    redirectToViewOnSuccess: true,
+                })
+            } catch (error) {
+                if (isHandledLaunchBlockError(error)) {
+                    return
+                }
+
+                throw error
+            }
         },
         [
             clearErrors,
-            isTaskChallengeSelected,
+            isScorerBlockingChallengeActions,
+            isTaskChallenge,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
             saveChallenge,
             setError,
         ],
     )
+
+    const onInvalidSubmit = useCallback((): void => {
+        setSaveStatus('idle')
+        setSaveValidationError(SAVE_VALIDATION_ERROR_MESSAGE)
+    }, [])
 
     const statusText = useMemo(
         () => getStatusText(isSaving ? 'saving' : saveStatus),
@@ -1149,175 +3272,236 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const displayedBillingAccountId = useMemo(
+        (): string => {
+            const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
+
+            if (billingAccountId === undefined || billingAccountId === null) {
+                return '-'
+            }
+
+            const normalizedBillingAccountId = String(billingAccountId)
+                .trim()
+
+            return normalizedBillingAccountId || '-'
+        },
+        [
+            projectBillingAccount?.id,
+            values.billing?.billingAccountId,
+        ],
+    )
+    const rawPaymentCreator = useMemo(
+        (): string => normalizeDisplayToken(values.createdBy)
+            || normalizeDisplayToken(props.challenge?.createdBy),
+        [
+            props.challenge?.createdBy,
+            values.createdBy,
+        ],
+    )
+    const isPaymentCreatorUserId = useMemo(
+        (): boolean => isUserIdToken(rawPaymentCreator),
+        [rawPaymentCreator],
+    )
+    const loginUserHandle = normalizeDisplayToken(workAppContext.loginUserInfo?.handle)
+    const loginUserId = normalizeDisplayToken(workAppContext.loginUserInfo?.userId)
+    const displayedPaymentCreator = useMemo(
+        (): string => {
+            if (resolvedPaymentCreator?.source === rawPaymentCreator) {
+                return resolvedPaymentCreator.handle
+            }
+
+            if (!rawPaymentCreator) {
+                return '-'
+            }
+
+            if (isPaymentCreatorUserId) {
+                return loginUserId === rawPaymentCreator && loginUserHandle
+                    ? loginUserHandle
+                    : '-'
+            }
+
+            return rawPaymentCreator
+        },
+        [
+            isPaymentCreatorUserId,
+            loginUserHandle,
+            loginUserId,
+            rawPaymentCreator,
+            resolvedPaymentCreator?.handle,
+            resolvedPaymentCreator?.source,
+        ],
+    )
+
+    useEffect(() => {
+        setResolvedPaymentCreator(undefined)
+
+        if (!rawPaymentCreator) {
+            return undefined
+        }
+
+        if (!isPaymentCreatorUserId) {
+            setResolvedPaymentCreator({
+                handle: rawPaymentCreator,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        if (loginUserId === rawPaymentCreator && loginUserHandle) {
+            setResolvedPaymentCreator({
+                handle: loginUserHandle,
+                source: rawPaymentCreator,
+            })
+            return undefined
+        }
+
+        let isActive = true
+
+        searchProfilesByUserIds([rawPaymentCreator])
+            .then(profiles => {
+                if (!isActive) {
+                    return
+                }
+
+                const creatorProfile = profiles.find(profile => (
+                    normalizeDisplayToken(profile.userId) === rawPaymentCreator
+                ))
+                const creatorHandle = normalizeDisplayToken(creatorProfile?.handle)
+
+                setResolvedPaymentCreator(creatorHandle
+                    ? {
+                        handle: creatorHandle,
+                        source: rawPaymentCreator,
+                    }
+                    : undefined)
+            })
+            .catch(() => {
+                if (isActive) {
+                    setResolvedPaymentCreator(undefined)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        isPaymentCreatorUserId,
+        loginUserHandle,
+        loginUserId,
+        rawPaymentCreator,
+    ])
+    const reviewSection = usesManualReviewers
+        ? (
+            <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Review</h3>
+                <div className={styles.block}>
+                    <ReviewersField isReadOnly={isReadOnly} />
+                </div>
+            </section>
+        )
+        : undefined
+    const footerSection = !isReadOnly
+        ? (
+            <div className={styles.footer}>
+                <div className={styles.statusArea}>
+                    {statusText
+                        ? <span className={styles.statusText}>{statusText}</span>
+                        : undefined}
+                    <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                    {saveValidationError
+                        ? <span className={styles.errorText}>{saveValidationError}</span>
+                        : undefined}
+                    {saveError
+                        ? <span className={styles.errorText}>{saveError}</span>
+                        : undefined}
+                    {isScorerBlockingChallengeActions
+                        ? (
+                            <span className={styles.warningText}>
+                                The scorer configuration must be saved and valid before the
+                                {' '}
+                                challenge can be saved or launched.
+                            </span>
+                        )
+                        : undefined}
+                </div>
+
+                <div className={styles.actions}>
+                    <Button
+                        label='Cancel'
+                        onClick={handleCancelClick}
+                        secondary
+                        size='lg'
+                        type='button'
+                    />
+                    <Button
+                        disabled={
+                            (!formState.isDirty || isSaving)
+                            || isScorerBlockingChallengeActions
+                        }
+                        label={submitButtonLabel}
+                        secondary
+                        size='lg'
+                        type='submit'
+                    />
+                    {props.canLaunchChallenge && onLaunchOpen
+                        ? (
+                            <Button
+                                disabled={props.isLaunchDisabled}
+                                label={props.launchButtonLabel || 'Launch'}
+                                onClick={onLaunchOpen}
+                                primary
+                                size='lg'
+                                type='button'
+                            />
+                        )
+                        : undefined}
+                </div>
+            </div>
+        )
+        : undefined
 
     return (
         <FormProvider {...formMethods}>
-            <form className={styles.form} onSubmit={handleSubmit(onSubmit)} ref={formElementRef}>
+            <form className={styles.form} onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} ref={formElementRef}>
                 <input type='hidden' {...formMethods.register('id')} />
                 <input type='hidden' {...formMethods.register('status')} />
 
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Basic Information</h3>
-                    <div className={styles.grid}>
-                        <ChallengeNameField />
-                        <ChallengeTrackField disabled={isChallengeCreated} />
-                        <ChallengeTypeField disabled={isChallengeCreated} />
-                        {showFunChallengeField
-                            ? <FunChallengeField disabled={isChallengeCreated} />
-                            : undefined}
-                        {showRoundTypeField
-                            ? <RoundTypeField disabled={isChallengeCreated} />
-                            : undefined}
-                        {showDesignWorkTypeField
-                            ? <DesignWorkTypeField disabled={isChallengeCreated} />
-                            : undefined}
-                    </div>
+                    <fieldset className={styles.formContent} disabled={isReadOnly}>
+                        <h3 className={styles.sectionTitle}>Basic Information</h3>
+                        <div className={styles.grid}>
+                            <ChallengeNameField />
+                            <ChallengeTrackField disabled={isReadOnly || isChallengeCreated} />
+                            <ChallengeTypeField
+                                disabled={isReadOnly || isChallengeCreated}
+                                track={selectedChallengeTrack}
+                            />
+                            <CopilotField projectId={fallbackProjectId} />
+                            {showFunChallengeField
+                                ? <FunChallengeField disabled={isReadOnly} />
+                                : undefined}
+                            {showRoundTypeField
+                                ? <RoundTypeField disabled={isReadOnly || isChallengeCreated} />
+                                : undefined}
+                            {showDesignWorkTypeField
+                                ? <DesignWorkTypeField disabled={isReadOnly || isChallengeCreated} />
+                                : undefined}
+                        </div>
+                    </fieldset>
                 </section>
 
                 {!isChallengeCreated
                     ? (
-                        <div className={styles.footer}>
-                            <div className={styles.statusArea}>
-                                {statusText
-                                    ? <span className={styles.statusText}>{statusText}</span>
-                                    : undefined}
-                                <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                                {saveError
-                                    ? <span className={styles.errorText}>{saveError}</span>
-                                    : undefined}
-                            </div>
-
-                            <div className={styles.actions}>
-                                <Link className={styles.cancelLink} to={challengesListPath}>
-                                    Cancel
-                                </Link>
-                                <Button
-                                    disabled={isSaving}
-                                    label='New'
-                                    onClick={createNewChallenge}
-                                    primary
-                                    size='lg'
-                                    type='button'
-                                />
-                            </div>
-                        </div>
-                    )
-                    : undefined}
-
-                {isChallengeCreated
-                    ? (
-                        <>
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Specification</h3>
-                                <div className={styles.block}>
-                                    <ChallengeDescriptionField />
-                                    <ChallengePrivateDescriptionField />
-                                </div>
-                            </section>
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Metadata</h3>
-                                <div className={styles.grid}>
-                                    <ChallengeTagsField />
-                                    <ChallengeSkillsField />
-                                </div>
-                            </section>
-
-                            {showPrizesAndBillingSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
-                                        <div className={styles.prizesBillingGrid}>
-                                            <div className={styles.prizeInputs}>
-                                                <div className={styles.challengePrizesColumn}>
-                                                    <ChallengePrizesField
-                                                        challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
-                                                        challengeTypeName={resolvedChallengeTypeName}
-                                                        name='prizeSets'
-                                                    />
-                                                    {showCheckpointPrizes
-                                                        ? <CheckpointPrizesField name='prizeSets' />
-                                                        : undefined}
-                                                </div>
-                                                <div className={styles.copilotFeeColumn}>
-                                                    <CopilotFeeField name='prizeSets' />
-                                                </div>
-                                            </div>
-                                            <div className={styles.billingSummary}>
-                                                <ReviewCostField name='prizeSets' />
-                                                <ChallengeFeeField challengeFee={values.challengeFee} />
-                                                <ChallengeTotalField />
-                                            </div>
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                                <div className={styles.block}>
-                                    <ChallengeScheduleSection />
-                                </div>
-                            </section>
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                                <div className={styles.grid}>
-                                    {isTaskChallengeSelected
-                                        ? <AssignedMemberField />
-                                        : undefined}
-                                    <CopilotField projectId={fallbackProjectId} />
-                                    {isTaskChallengeSelected
-                                        ? (
-                                            <ReviewTypeField
-                                                isTaskChallenge={isTaskChallengeSelected}
-                                                projectId={fallbackProjectId}
-                                            />
-                                        )
-                                        : undefined}
-                                    <GroupsField />
-                                    <TermsField />
-                                    <NDAField />
-                                    <FormCheckboxField
-                                        label='Wipro Allowed'
-                                        name='wiproAllowed'
-                                    />
-                                </div>
-                            </section>
-
-                            {showSubmissionSettingsSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                        <div className={styles.grid}>
-                                            <SubmissionVisibilityField />
-                                            <StockArtsField />
-                                            <MaximumSubmissionsField />
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Reviewers</h3>
-                                <div className={styles.block}>
-                                    <ReviewersField />
-                                </div>
-                            </section>
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Attachments</h3>
-                                <div className={styles.block}>
-                                    <AttachmentsField />
-                                </div>
-                            </section>
-
+                        <fieldset className={styles.formContent} disabled={isReadOnly}>
                             <div className={styles.footer}>
                                 <div className={styles.statusArea}>
                                     {statusText
                                         ? <span className={styles.statusText}>{statusText}</span>
                                         : undefined}
                                     <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                    {saveValidationError
+                                        ? <span className={styles.errorText}>{saveValidationError}</span>
+                                        : undefined}
                                     {saveError
                                         ? <span className={styles.errorText}>{saveError}</span>
                                         : undefined}
@@ -1328,18 +3512,300 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         Cancel
                                     </Link>
                                     <Button
-                                        disabled={!formState.isDirty || isSaving}
-                                        label={submitButtonLabel}
+                                        disabled={isSaving}
+                                        label='New'
+                                        onClick={createNewChallenge}
                                         primary
                                         size='lg'
-                                        type='submit'
+                                        type='button'
                                     />
                                 </div>
                             </div>
+                        </fieldset>
+                    )
+                    : undefined}
+
+                {isChallengeCreated
+                    ? (
+                        <>
+                            <section className={styles.section}>
+                                <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                    <h3 className={styles.sectionTitle}>Specification</h3>
+                                    <div className={styles.block}>
+                                        <ChallengeDescriptionField readOnly={isReadOnly} />
+                                        <ChallengePrivateDescriptionField readOnly={isReadOnly} />
+                                    </div>
+                                </fieldset>
+                            </section>
+
+                            <section className={styles.section}>
+                                <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                    <h3 className={styles.sectionTitle}>Metadata</h3>
+                                    <div className={styles.grid}>
+                                        <ChallengeTagsField />
+                                        <ChallengeSkillsField />
+                                    </div>
+                                </fieldset>
+                            </section>
+
+                            {showPrizesAndBillingSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
+                                        <div className={styles.prizesBillingGrid}>
+                                            <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                                <div className={styles.prizeInputs}>
+                                                    <div className={styles.challengePrizesColumn}>
+                                                        <ChallengePrizesField
+                                                            challengeTypeAbbreviation={
+                                                                resolvedChallengeTypeAbbreviation
+                                                            }
+                                                            challengeTypeName={resolvedChallengeTypeName}
+                                                            disabled={arePrizeFieldsDisabled}
+                                                            name='prizeSets'
+                                                        />
+                                                        {showCheckpointPrizes
+                                                            ? (
+                                                                <CheckpointPrizesField
+                                                                    disabled={arePrizeFieldsDisabled}
+                                                                    name='prizeSets'
+                                                                />
+                                                            )
+                                                            : undefined}
+                                                    </div>
+                                                    <div className={styles.copilotFeeColumn}>
+                                                        <CopilotFeeField
+                                                            disabled={arePrizeFieldsDisabled}
+                                                            name='prizeSets'
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className={styles.billingSummary}>
+                                                    <ReviewCostField name='prizeSets' />
+                                                    {shouldUseCopilotBillingSummary
+                                                        ? undefined
+                                                        : <ChallengeFeeField />}
+                                                    <ChallengeTotalField
+                                                        includeChallengeFee={!shouldUseCopilotBillingSummary}
+                                                        label={shouldUseCopilotBillingSummary
+                                                            ? 'Estimated challenge cost:'
+                                                            : undefined}
+                                                    />
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Billing Account Id:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedBillingAccountId}
+                                                        </span>
+                                                    </div>
+                                                    <div className={styles.billingSummaryItem}>
+                                                        <span className={styles.billingSummaryLabel}>
+                                                            Payment Creator:
+                                                        </span>
+                                                        <span className={styles.billingSummaryValue}>
+                                                            {displayedPaymentCreator}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                            <div className={styles.approvalSection}>
+                                                <div className={styles.approvalStatusRow}>
+                                                    <span className={styles.approvalStatusLabel}>
+                                                        Budget Approval Status:
+                                                    </span>
+                                                    <span className={styles.approvalStatusValue}>
+                                                        {getApprovalStatusText(normalizedApprovalStatus)}
+                                                    </span>
+                                                </div>
+                                                {isBudgetPending && !canApproveChallengeBudget && (
+                                                    <div className={styles.approvalStatusRow}>
+                                                        Kindly obtain Project Manager approval
+                                                        on the budget before launching the challenge
+                                                    </div>
+                                                )}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
+                                                    && normalizeTextValue(values.approvalRejectionReason)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Reason: ${values.approvalRejectionReason}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                                {normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
+                                                    && normalizeTextValue(values.approvalApprovedBy)
+                                                    ? (
+                                                        <div className={styles.approvalReason}>
+                                                            {`Approved by ${values.approvalApprovedBy}`}
+                                                        </div>
+                                                    )
+                                                    : undefined}
+                                                {canRenderApprovalActions
+                                                    ? (
+                                                        <>
+                                                            <div className={styles.approvalActions}>
+                                                                {!isBudgetApproved && (
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Approve Budget'
+                                                                        onClick={handleOpenApproveBudgetModal}
+                                                                        primary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                )}
+                                                                {!isBudgetRejected && (
+                                                                    <Button
+                                                                        disabled={isUpdatingApproval}
+                                                                        label='Reject Budget'
+                                                                        onClick={handleOpenRejectBudgetModal}
+                                                                        secondary
+                                                                        size='md'
+                                                                        type='button'
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )
+                                                    : undefined}
+                                            </div>
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                        </>
+                    )
+                    : undefined}
+
+                {isChallengeCreated && showEditableTimelineSection
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                            <div className={styles.block}>
+                                <ChallengeScheduleSection disabled={isReadOnly} />
+                            </div>
+                        </section>
+                    )
+                    : undefined}
+
+                {isChallengeCreated
+                    ? (
+                        <>
+                            <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                {showMarathonMatchScorerSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Scorer</h3>
+                                            <div className={styles.block}>
+                                                <MarathonMatchScorerSection
+                                                    challengeId={currentChallengeId || ''}
+                                                    onScorerConfigChange={handleScorerConfigChange}
+                                                    phases={values.phases ?? []}
+                                                />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
+
+                                <section className={styles.section}>
+                                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                    <div className={styles.grid}>
+                                        {isTaskChallenge
+                                            ? <AssignedMemberField />
+                                            : undefined}
+                                        {isTaskChallenge
+                                            ? (
+                                                <ReviewTypeField
+                                                    isTaskChallenge={isTaskChallenge}
+                                                />
+                                            )
+                                            : undefined}
+                                        <GroupsField />
+                                        <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
+                                        <NDAField />
+                                        <FormCheckboxField
+                                            checkboxOnlyHitArea
+                                            label='Wipro Allowed'
+                                            name='wiproAllowed'
+                                        />
+                                        {showRateChallengeField
+                                            ? <RateChallengeField />
+                                            : undefined}
+                                    </div>
+                                </section>
+
+                                {showSubmissionSettingsSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                            <div className={styles.submissionSettingsGrid}>
+                                                <FinalDeliverablesField />
+                                                <StockArtsField />
+                                                <SubmissionVisibilityField />
+                                                <MaximumSubmissionsField
+                                                    deferDirty={shouldDeferInitialResourceDirtyNormalization}
+                                                />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
+
+                                {!isReadOnly
+                                    ? reviewSection
+                                    : undefined}
+                                {footerSection}
+                            </fieldset>
+
+                            {isReadOnly
+                                ? reviewSection
+                                : undefined}
                         </>
                     )
                     : undefined}
             </form>
+            {showApproveBudgetModal
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmDisabled={isUpdatingApproval}
+                        confirmText={isUpdatingApproval
+                            ? 'Approving...'
+                            : 'Approve Budget'}
+                        message='Are you sure you want to approve this challenge budget?'
+                        onCancel={handleCloseApproveBudgetModal}
+                        onConfirm={handleConfirmApproveChallengeBudget}
+                        title='Approve Budget'
+                    />
+                )
+                : undefined}
+            {showRejectBudgetModal
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmButtonDanger
+                        confirmDisabled={isUpdatingApproval || isRejectReasonMissing}
+                        confirmText={isUpdatingApproval
+                            ? 'Rejecting...'
+                            : 'Reject Budget'}
+                        message='Provide a rejection reason before rejecting this budget.'
+                        onCancel={handleCloseRejectBudgetModal}
+                        onConfirm={handleConfirmRejectChallengeBudget}
+                        title='Reject Budget'
+                    >
+                        <textarea
+                            className={styles.rejectionReasonInput}
+                            disabled={isUpdatingApproval}
+                            onChange={function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
+                                setRejectionReasonInput(event.target.value)
+                            }}
+                            placeholder='Reason is required to reject'
+                            rows={4}
+                            value={rejectionReasonInput}
+                        />
+                    </ConfirmationModal>
+                )
+                : undefined}
         </FormProvider>
     )
 }

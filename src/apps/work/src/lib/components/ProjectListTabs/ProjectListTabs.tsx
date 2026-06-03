@@ -1,6 +1,13 @@
-import { FC } from 'react'
+import {
+    FC,
+    useContext,
+} from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import classNames from 'classnames'
+
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import { WorkAppContextModel } from '../../models/WorkAppContextModel.model'
+import { canViewAllEngagements } from '../../utils/permissions.utils'
 
 import styles from './ProjectListTabs.module.scss'
 
@@ -20,12 +27,33 @@ function isTabActive(pathname: string, tabPath: string): boolean {
 }
 
 export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabsProps) => {
-    const { pathname }: { pathname: string } = useLocation()
+    const {
+        userRoles,
+    }: WorkAppContextModel = useContext(WorkAppContext)
+    const {
+        hash,
+        pathname,
+        search,
+    }: {
+        hash: string
+        pathname: string
+        search: string
+    } = useLocation()
     const challengesPath = `/projects/${props.projectId}/challenges`
     const engagementsPath = `/projects/${props.projectId}/engagements`
+    const usersPath = `/projects/${props.projectId}/users`
+    const assetsPath = `/projects/${props.projectId}/assets`
 
     const isChallengesActive = isTabActive(pathname, challengesPath)
     const isEngagementsActive = isTabActive(pathname, engagementsPath)
+    const isUsersActive = isTabActive(pathname, usersPath)
+    const isAssetsActive = isTabActive(pathname, assetsPath)
+    const canViewEngagements = canViewAllEngagements(userRoles)
+    const usersLinkState = isUsersActive
+        ? undefined
+        : {
+            backTo: `${pathname}${search}${hash}`,
+        }
 
     return (
         <div className={styles.container}>
@@ -35,11 +63,26 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
             >
                 Challenges
             </Link>
+            {canViewEngagements ? (
+                <Link
+                    className={classNames(styles.tabLink, isEngagementsActive ? styles.active : undefined)}
+                    to={engagementsPath}
+                >
+                    Engagements
+                </Link>
+            ) : undefined}
             <Link
-                className={classNames(styles.tabLink, isEngagementsActive ? styles.active : undefined)}
-                to={engagementsPath}
+                className={classNames(styles.tabLink, isUsersActive ? styles.active : undefined)}
+                state={usersLinkState}
+                to={usersPath}
             >
-                Engagements
+                Users
+            </Link>
+            <Link
+                className={classNames(styles.tabLink, isAssetsActive ? styles.active : undefined)}
+                to={assetsPath}
+            >
+                Assets Library
             </Link>
         </div>
     )

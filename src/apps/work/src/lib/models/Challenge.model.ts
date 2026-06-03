@@ -33,6 +33,9 @@ export interface ChallengePhase {
 
 export interface ChallengeDiscussion {
     id?: string
+    name?: string
+    options?: Array<Record<string, string>>
+    provider?: string
     type?: string
     url?: string
 }
@@ -62,10 +65,14 @@ export interface ChallengeTerm {
 
 export interface Challenge {
     id: string
+    approvalApprovedBy?: string
+    approvalRejectionReason?: string
+    approvalStatus?: string
     assignedMemberId?: string
     attachments?: Attachment[]
     billing?: {
         billingAccountId?: string | number
+        markup?: number
     }
     challengeFee?: number
     checkpoints?: Submission[]

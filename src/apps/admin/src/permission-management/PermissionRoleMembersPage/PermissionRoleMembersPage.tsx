@@ -1,17 +1,20 @@
 /**
  * Permission role members page.
  */
-import { FC } from 'react'
+import { FC, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
+import { Button, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
+import { downloadBlob } from '~/libs/shared/lib/utils/files'
 import { PlusIcon } from '@heroicons/react/solid'
 
 import { useManagePermissionRoleMembers, useManagePermissionRoleMembersProps } from '../../lib/hooks'
 import { PageContent, PageHeader } from '../../lib'
 import { RoleMembersFilters } from '../../lib/components/RoleMembersFilters'
 import { RoleMembersTable } from '../../lib/components/RoleMembersTable'
+import { exportRoleUsersCsv } from '../../lib/services'
+import { handleError } from '../../lib/utils'
 
 import styles from './PermissionRoleMembersPage.module.scss'
 
@@ -20,10 +23,24 @@ interface Props {
 }
 const pageTitle = 'Role Members'
 
+const normalizeFileNameSegment = (value: string): string => (
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '')
+)
+
+const buildRoleExportFileName = (roleName: string | undefined, roleId: string): string => {
+    const normalizedName = normalizeFileNameSegment(roleName || roleId)
+    return `role-users-${normalizedName || roleId}.csv`
+}
+
 export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
     const { roleId = '' }: { roleId?: string } = useParams<{
         roleId: string
     }>()
+    const [isExporting, setIsExporting] = useState<boolean>(false)
     const {
         isLoading,
         roleInfo,
@@ -40,6 +57,26 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
     }: useManagePermissionRoleMembersProps = useManagePermissionRoleMembers(roleId)
 
     const pageTitleWithRole = roleInfo?.roleName ? `${pageTitle}: ${roleInfo.roleName}` : pageTitle
+    const handleExport = useCallback(() => {
+        if (!roleId || isExporting) {
+            return
+        }
+
+        setIsExporting(true)
+        exportRoleUsersCsv(roleId)
+            .then(blob => {
+                downloadBlob(
+                    blob,
+                    buildRoleExportFileName(roleInfo?.roleName, roleId),
+                )
+            })
+            .catch(error => {
+                handleError(error)
+            })
+            .finally(() => {
+                setIsExporting(false)
+            })
+    }, [isExporting, roleId, roleInfo?.roleName])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -47,6 +84,14 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
             <PageHeader>
                 <h3>{pageTitleWithRole}</h3>
                 <div className={styles.headerActions}>
+                    <Button
+                        primary
+                        size='lg'
+                        disabled={!roleId || isExporting}
+                        onClick={handleExport}
+                    >
+                        {isExporting ? 'exporting...' : 'export'}
+                    </Button>
                     <LinkButton
                         primary
                         size='lg'

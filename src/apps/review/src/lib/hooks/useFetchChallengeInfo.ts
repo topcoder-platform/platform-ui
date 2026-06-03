@@ -16,7 +16,10 @@ import { fetchChallengeInfoById } from '../services'
 
 export interface useFetchChallengeInfoProps {
     challengeInfo: ChallengeInfo | undefined
+    error: Error | undefined
+    isError: boolean
     isLoading: boolean
+    retry: () => Promise<ChallengeInfo | undefined>
 }
 
 /**
@@ -32,6 +35,7 @@ export function useFetchChallengeInfo(
         data: challengeInfo,
         error: fetchChallengeInfoError,
         isValidating: isLoading,
+        mutate,
     }: SWRResponse<ChallengeInfo, Error> = useSWR<ChallengeInfo, Error>(
         `challengeBaseUrl/challenges/${challengeId}`,
         {
@@ -48,7 +52,12 @@ export function useFetchChallengeInfo(
     }, [fetchChallengeInfoError])
 
     return {
-        challengeInfo,
+        challengeInfo: fetchChallengeInfoError
+            ? undefined
+            : challengeInfo,
+        error: fetchChallengeInfoError,
+        isError: !!fetchChallengeInfoError,
         isLoading,
+        retry: () => mutate(),
     }
 }

@@ -1,6 +1,7 @@
 import {
     FC,
     MouseEvent,
+    ReactNode,
     useCallback,
 } from 'react'
 
@@ -10,12 +11,14 @@ import styles from './ConfirmationModal.module.scss'
 
 export interface ConfirmationModalProps {
     cancelText?: string
+    children?: ReactNode
     confirmButtonDanger?: boolean
     confirmDisabled?: boolean
     confirmText?: string
     message: string
     onCancel: () => void
     onConfirm: () => void
+    showCancelButton?: boolean
     title: string
 }
 
@@ -47,15 +50,20 @@ export const ConfirmationModal: FC<ConfirmationModalProps> = (
 
                 <div className={styles.body}>
                     <p className={styles.message}>{props.message}</p>
+                    {props.children}
                 </div>
 
                 <footer className={styles.footer}>
-                    <Button
-                        label={props.cancelText || 'Cancel'}
-                        onClick={props.onCancel}
-                        secondary
-                        size='lg'
-                    />
+                    {props.showCancelButton === false
+                        ? undefined
+                        : (
+                            <Button
+                                label={props.cancelText || 'Cancel'}
+                                onClick={props.onCancel}
+                                secondary
+                                size='lg'
+                            />
+                        )}
                     <Button
                         disabled={props.confirmDisabled}
                         label={props.confirmText || 'Confirm'}

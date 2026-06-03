@@ -116,7 +116,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         try {
             const [, updatedTraits] = await Promise.all([
                 // profile flag
-                props.updateMemberOpenForWork(formValue.availableForGigs),
+                props.updateMemberOpenForWork(!!formValue.availableForGigs),
 
                 // personalization trait
                 updateOrCreateMemberTraitsAsync(props.profileHandle, [{

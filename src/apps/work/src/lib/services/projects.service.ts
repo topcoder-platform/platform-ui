@@ -23,6 +23,7 @@ import {
     Project,
     ProjectAttachment,
     ProjectAttachmentPayload,
+    ProjectDetails,
     ProjectInvite,
     ProjectMember,
     ProjectPhase,
@@ -35,15 +36,21 @@ import {
 import {
     createProjectMemberInvite,
 } from './project-member-invites.service'
+import {
+    BillingAccount,
+    fetchBillingAccountById,
+} from './billing-accounts.service'
 
 export type ProjectSummary = Pick<Project,
     | 'billingAccountId'
     | 'billingAccountName'
     | 'createdAt'
+    | 'details'
     | 'id'
     | 'invites'
     | 'isInvited'
     | 'lastActivityAt'
+    | 'members'
     | 'name'
     | 'status'
     | 'type'
@@ -72,14 +79,26 @@ export interface FetchProjectsListResponse {
 
 export interface ProjectBillingAccount {
     active?: boolean
+    endDate?: string
     id?: string
+    markup?: number
+    memberPaymentsRemaining?: number
     name?: string
     startDate?: string
-    endDate?: string
+    status?: string
+    totalBudgetRemaining?: number
 }
 
 export interface FetchProjectBillingAccountResponse {
     billingAccount?: ProjectBillingAccount
+}
+
+interface ProjectBillingAccountsResponseItem {
+    active?: unknown
+    endDate?: unknown
+    name?: unknown
+    startDate?: unknown
+    tcBillingAccountId?: unknown
 }
 
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
@@ -129,6 +148,27 @@ function normalizeOptionalBoolean(value: unknown): boolean | undefined {
     return undefined
 }
 
+function normalizeOptionalNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+        if (!normalizedValue) {
+            return undefined
+        }
+
+        const parsedValue = Number(normalizedValue)
+
+        return Number.isFinite(parsedValue)
+            ? parsedValue
+            : undefined
+    }
+
+    return undefined
+}
+
 function normalizeId(value: unknown): string {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return String(value)
@@ -149,6 +189,21 @@ function normalizeOptionalId(value: unknown): string | undefined {
     const normalizedValue = normalizeId(value)
 
     return normalizedValue || undefined
+}
+
+/**
+ * Normalizes project details metadata into the plain object shape consumed by
+ * the work app.
+ *
+ * @param value Raw `details` payload from the Projects API.
+ * @returns Project details metadata, or `undefined` when the payload is not an object.
+ */
+function normalizeProjectDetails(value: unknown): ProjectDetails | undefined {
+    if (typeof value !== 'object' || !value || Array.isArray(value)) {
+        return undefined
+    }
+
+    return value as ProjectDetails
 }
 
 function normalizeProjectMember(member: unknown): ProjectMember | undefined {
@@ -272,10 +327,11 @@ function normalizeProject(project: Partial<Project>): Project {
         description: typeof project.description === 'string'
             ? project.description
             : undefined,
+        details: normalizeProjectDetails(project.details),
         groups: normalizeProjectTermsOrGroups(project.groups),
         id,
         invites,
-        isInvited: project.isInvited ?? invites.length > 0,
+        isInvited: normalizeOptionalBoolean(project.isInvited),
         lastActivityAt: normalizeOptionalString(project.lastActivityAt),
         members,
         name,
@@ -483,19 +539,27 @@ function extractProjectTypes(response: unknown): ProjectType[] {
 }
 
 function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
+    const members = Array.isArray(project.members)
+        ? project.members
+            .map(member => normalizeProjectMember(member))
+            .filter((member): member is ProjectMember => !!member)
+        : []
     const invites = Array.isArray(project.invites)
         ? project.invites
         : []
 
     return {
         ...project,
+        details: normalizeProjectDetails(project.details),
         invites,
-        isInvited: invites.length > 0,
+        isInvited: normalizeOptionalBoolean(project.isInvited),
+        members,
     }
 }
 
 function buildProjectsUrl(page: number, memberOnly: boolean): string {
     const query = new URLSearchParams({
+        fields: 'members',
         page: String(page),
         perPage: String(PROJECTS_PER_PAGE),
         sort: 'lastActivityAt desc',
@@ -669,8 +733,55 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
 }
 
 /**
- * Fetch billing account details for a project.
+ * Fetch billing accounts available to the caller for a project.
+ *
+ * Returns only accounts with both `tcBillingAccountId` and `name`, normalized
+ * into the shared work-app billing-account shape and sorted by name.
  */
+export async function fetchProjectBillingAccounts(
+    projectId: string,
+): Promise<BillingAccount[]> {
+    try {
+        const response = await xhrGetAsync<ProjectBillingAccountsResponseItem[]>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccounts`,
+        )
+
+        return response
+            .map((billingAccount): BillingAccount | undefined => {
+                const id = normalizeOptionalId(billingAccount?.tcBillingAccountId)
+                const name = normalizeOptionalString(billingAccount?.name)
+
+                if (!id || !name) {
+                    return undefined
+                }
+
+                return {
+                    active: typeof billingAccount?.active === 'boolean'
+                        ? billingAccount.active
+                        : true,
+                    endDate: normalizeOptionalString(billingAccount?.endDate),
+                    id,
+                    name,
+                    startDate: normalizeOptionalString(billingAccount?.startDate),
+                }
+            })
+            .filter((billingAccount): billingAccount is BillingAccount => !!billingAccount)
+            .sort((billingAccountA, billingAccountB) => billingAccountA.name.localeCompare(
+                billingAccountB.name,
+            ))
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch project billing accounts')
+    }
+}
+
+/**
+ * Fetch billing account details for a project.
+ *
+ * Enriches the project-scoped billing account payload with billing-accounts API
+ * detail fields so the work app can gate challenge launch on lifecycle status
+ * and remaining funds without losing the project billing markup.
+ */
+// eslint-disable-next-line complexity
 export async function fetchProjectBillingAccount(
     projectId: string,
 ): Promise<FetchProjectBillingAccountResponse> {
@@ -679,28 +790,53 @@ export async function fetchProjectBillingAccount(
             active?: unknown
             endDate?: unknown
             id?: unknown
+            markup?: unknown
+            memberPaymentsRemaining?: unknown
             name?: unknown
             startDate?: unknown
+            status?: unknown
             tcBillingAccountId?: unknown
+            totalBudgetRemaining?: unknown
         }>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
         )
+        const billingAccountId = normalizeOptionalId(billingAccount?.tcBillingAccountId)
+            || normalizeOptionalId(billingAccount?.id)
+        const billingAccountDetails = billingAccountId
+            ? await fetchBillingAccountById(billingAccountId)
+                .catch(() => undefined)
+            : undefined
 
         const normalizedBillingAccount: ProjectBillingAccount = {
-            active: normalizeOptionalBoolean(billingAccount?.active),
-            endDate: normalizeOptionalString(billingAccount?.endDate),
-            id: normalizeOptionalId(billingAccount?.tcBillingAccountId)
-                || normalizeOptionalId(billingAccount?.id),
-            name: normalizeOptionalString(billingAccount?.name),
-            startDate: normalizeOptionalString(billingAccount?.startDate),
+            active: normalizeOptionalBoolean(billingAccount?.active)
+                ?? normalizeOptionalBoolean(billingAccountDetails?.active),
+            endDate: normalizeOptionalString(billingAccount?.endDate)
+                || normalizeOptionalString(billingAccountDetails?.endDate),
+            id: billingAccountId,
+            markup: normalizeOptionalNumber(billingAccount?.markup)
+                ?? normalizeOptionalNumber(billingAccountDetails?.markup),
+            memberPaymentsRemaining: normalizeOptionalNumber(billingAccount?.memberPaymentsRemaining)
+                ?? normalizeOptionalNumber(billingAccountDetails?.memberPaymentsRemaining),
+            name: normalizeOptionalString(billingAccount?.name)
+                || normalizeOptionalString(billingAccountDetails?.name),
+            startDate: normalizeOptionalString(billingAccount?.startDate)
+                || normalizeOptionalString(billingAccountDetails?.startDate),
+            status: normalizeOptionalString(billingAccount?.status)
+                || normalizeOptionalString(billingAccountDetails?.status),
+            totalBudgetRemaining: normalizeOptionalNumber(billingAccount?.totalBudgetRemaining)
+                ?? normalizeOptionalNumber(billingAccountDetails?.totalBudgetRemaining),
         }
 
         if (
             normalizedBillingAccount.active === undefined
             && !normalizedBillingAccount.id
+            && normalizedBillingAccount.markup === undefined
+            && normalizedBillingAccount.memberPaymentsRemaining === undefined
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate
+            && !normalizedBillingAccount.status
+            && normalizedBillingAccount.totalBudgetRemaining === undefined
         ) {
             return {
                 billingAccount: undefined,
@@ -719,24 +855,28 @@ export async function fetchProjectBillingAccount(
 
 /**
  * Fetch project type metadata.
+ *
+ * Uses the consolidated metadata endpoint first to avoid known 403 responses
+ * from `/metadata/projectTypes` in environments that enforce explicit route
+ * authorization metadata.
  */
 export async function fetchProjectTypes(): Promise<ProjectType[]> {
     try {
-        const response = await xhrGetAsync<unknown>(PROJECT_TYPES_API_URL)
+        const response = await xhrGetAsync<unknown>(PROJECT_METADATA_API_URL)
 
         return extractProjectTypes(response)
-    } catch (error) {
-        if (hasAuthorizationMetadataError(error)) {
-            try {
-                const response = await xhrGetAsync<unknown>(PROJECT_METADATA_API_URL)
+    } catch (metadataError) {
+        try {
+            const response = await xhrGetAsync<unknown>(PROJECT_TYPES_API_URL)
 
-                return extractProjectTypes(response)
-            } catch (fallbackError) {
-                throw normalizeError(fallbackError, 'Failed to fetch project types')
+            return extractProjectTypes(response)
+        } catch (projectTypesError) {
+            if (hasAuthorizationMetadataError(projectTypesError)) {
+                throw normalizeError(metadataError, 'Failed to fetch project types')
             }
-        }
 
-        throw normalizeError(error, 'Failed to fetch project types')
+            throw normalizeError(projectTypesError, 'Failed to fetch project types')
+        }
     }
 }
 

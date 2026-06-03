@@ -4,6 +4,7 @@
 export interface FormUsersFilters {
     handle?: string
     email?: string
+    ssoUserId?: string
     userId?: string
     status?: string
 }

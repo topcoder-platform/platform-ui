@@ -13,6 +13,7 @@ import {
 } from '~/libs/core'
 
 import {
+    budgetApprovalsRouteId,
     challengeCreateRouteId,
     challengeEditRouteId,
     challengesRouteId,
@@ -39,9 +40,13 @@ import {
     usersRouteId,
 } from './config/routes.config'
 import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
-import { ErrorMessage } from './lib/components'
+import {
+    ErrorMessage,
+    ProjectRouteAccessGuard,
+} from './lib/components'
 import { WorkAppContext } from './lib/contexts'
 import { WorkAppContextModel } from './lib/models'
+import { canViewAllEngagements } from './lib/utils'
 
 const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
 
@@ -59,6 +64,10 @@ const ChallengeRouteRedirectPage: LazyLoadedComponent = lazyLoad(
 
 const ProjectsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/projects/ProjectsListPage'),
+)
+
+const BudgetApprovalsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/budget-approvals/BudgetApprovalsPage'),
 )
 
 const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
@@ -125,10 +134,6 @@ function canManageGroups(contextValue: WorkAppContextModel): boolean {
     return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
 }
 
-function canViewAllEngagements(contextValue: WorkAppContextModel): boolean {
-    return contextValue.isAdmin
-}
-
 const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
     const contextValue: WorkAppContextModel = useContext(WorkAppContext)
 
@@ -142,8 +147,18 @@ const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
 const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
     const contextValue: WorkAppContextModel = useContext(WorkAppContext)
 
-    if (!canViewAllEngagements(contextValue)) {
-        return <ErrorMessage message='You need Admin role to view all engagements.' />
+    if (!canViewAllEngagements(contextValue.userRoles)) {
+        return <ErrorMessage message='You need Admin or Talent Manager role to view all engagements.' />
+    }
+
+    return <>{props.children}</>
+}
+
+const BudgetApprovalsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
+    const contextValue: WorkAppContextModel = useContext(WorkAppContext)
+
+    if (!contextValue.isAdmin && !contextValue.isManager) {
+        return <ErrorMessage message='You need Admin or Manager role to view Budget Approvals.' />
     }
 
     return <>{props.children}</>
@@ -181,6 +196,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
+                element: <Rewrite to='/projects/:projectId/challenges' />,
+                route: '/projects/:projectId',
+                title: 'Project Overview',
+            },
+            {
+                authRequired: true,
                 element: <ChallengeEditorPage />,
                 id: challengeCreateRouteId,
                 route: '/projects/:projectId/challenges/new',
@@ -192,6 +213,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: challengeEditRouteId,
                 route: `${challengesRouteId}/:challengeId/edit`,
                 title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                route: `${challengesRouteId}/:challengeId/view`,
+                title: 'View Challenge',
             },
             {
                 authRequired: true,
@@ -209,11 +236,15 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <ChallengeRouteRedirectPage />,
                 route: '/challenges/:challengeId',
-                title: 'Edit Challenge',
+                title: 'View Challenge',
             },
             {
                 authRequired: true,
-                element: <ProjectAssetsPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Project Assets'>
+                        <ProjectAssetsPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: projectAssetsRouteId,
                 route: '/projects/:projectId/assets',
                 title: 'Project Assets',
@@ -224,6 +255,17 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: projectsRouteId,
                 route: projectsRouteId,
                 title: 'Projects',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <BudgetApprovalsRouteGuard>
+                        <BudgetApprovalsPage />
+                    </BudgetApprovalsRouteGuard>
+                ),
+                id: budgetApprovalsRouteId,
+                route: budgetApprovalsRouteId,
+                title: 'Budget Approvals',
             },
             {
                 authRequired: true,
@@ -252,48 +294,76 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <EngagementsListPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Engagements'>
+                        <EngagementsListPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 route: '/projects/:projectId/engagements',
                 title: 'Engagements',
             },
             {
                 authRequired: true,
-                element: <EngagementEditorPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Create Engagement'>
+                        <EngagementEditorPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementCreateRouteId,
                 route: '/projects/:projectId/engagements/new',
                 title: 'Create Engagement',
             },
             {
                 authRequired: true,
-                element: <EngagementEditorPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Edit Engagement'>
+                        <EngagementEditorPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementEditRouteId,
                 route: '/projects/:projectId/engagements/:engagementId',
                 title: 'Edit Engagement',
             },
             {
                 authRequired: true,
-                element: <ApplicationsListPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Applications'>
+                        <ApplicationsListPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementApplicationsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/applications',
                 title: 'Applications',
             },
             {
                 authRequired: true,
-                element: <EngagementPaymentPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Assignments'>
+                        <EngagementPaymentPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementAssignmentsRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments',
                 title: 'Assignments',
             },
             {
                 authRequired: true,
-                element: <EngagementFeedbackPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Feedback'>
+                        <EngagementFeedbackPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementFeedbackRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/feedback',
                 title: 'Feedback',
             },
             {
                 authRequired: true,
-                element: <EngagementExperiencePage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Experience'>
+                        <EngagementExperiencePage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: engagementExperienceRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/experience',
                 title: 'Experience',
@@ -334,13 +404,23 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 authRequired: true,
                 element: <ProjectInvitationsPage />,
+                route: '/projects/:projectId/invitation/:action?',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
                 id: projectInvitationsRouteId,
                 route: '/projects/:projectId/invitations/:action?',
                 title: 'Project Invitations',
             },
             {
                 authRequired: true,
-                element: <UsersManagementPage />,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Users'>
+                        <UsersManagementPage />
+                    </ProjectRouteAccessGuard>
+                ),
                 id: usersRouteId,
                 route: '/projects/:projectId/users',
                 title: 'Users',

@@ -20,10 +20,14 @@
 }
 
 .tabLink:hover {
-    color: #2a2a2a;
+    color: $black-60;
 }
 
 .active {
     color: #2a62d5;
     border-bottom-color: #2a62d5;
+
+    &:hover {
+        color: #2a62d5;
+    }
 }

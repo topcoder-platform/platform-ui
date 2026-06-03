@@ -48,7 +48,7 @@ export const SkillsManagerContext: FC<SkillsManagerContextProps> = props => {
     }: SWRResponse<StandardizedSkillCategory[]> = useFetchCategories()
 
     const filteredSkills = useMemo(() => (
-        showArchivedSkills ? allSkills : allSkills.filter(s => !s.deleted_at)
+        showArchivedSkills ? allSkills : allSkills.filter(s => !s.deletedAt)
     ), [allSkills, showArchivedSkills])
 
     const skills = useMemo(() => findSkillsMatches(filteredSkills, skillsFilter), [filteredSkills, skillsFilter])

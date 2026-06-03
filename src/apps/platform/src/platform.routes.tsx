@@ -10,6 +10,7 @@ import { walletRoutes } from '~/apps/wallet'
 import { walletAdminRoutes } from '~/apps/wallet-admin'
 import { copilotsRoutes } from '~/apps/copilots'
 import { adminRoutes } from '~/apps/admin'
+import { reportsRoutes } from '~/apps/reports'
 import { reviewRoutes } from '~/apps/review'
 import { communityRoutes } from '~/apps/community'
 import { workRoutes } from '~/apps/work'
@@ -50,5 +51,6 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...engagementsRoutes,
     ...homeRoutes,
     ...adminRoutes,
+    ...reportsRoutes,
     ...customerPortalRoutes,
 ]

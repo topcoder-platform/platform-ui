@@ -29,6 +29,20 @@
         color: #e9ecef;
         border-color: #e9ecef;
     }
+
+    &.human-override {
+        color: #7B61FF;
+        border-color: #7B61FF;
+    }
+}
+
+.aiIcon {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
 }
 
 .score {

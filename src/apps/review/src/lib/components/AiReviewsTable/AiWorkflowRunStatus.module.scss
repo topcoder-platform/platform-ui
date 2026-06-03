@@ -37,3 +37,12 @@
         color: #C1294F;
     }
 }
+
+.reRunButton {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    padding: $sp-1 $sp-2;
+    font-size: 14px;
+    cursor: pointer;
+}

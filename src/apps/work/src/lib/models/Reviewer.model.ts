@@ -12,6 +12,7 @@ export interface Reviewer {
     roleId?: string
     scorecardId?: string
     shouldOpenOpportunity?: boolean
+    type?: string
 }
 
 export interface Scorecard {
@@ -29,6 +30,7 @@ export interface Scorecard {
 }
 
 export interface Workflow {
+    disabled?: boolean
     id: string
     name: string
     scorecardId?: string
@@ -40,9 +42,11 @@ export interface DefaultReviewer {
     incrementalCoefficient?: number
     isMemberReview?: boolean
     memberReviewerCount?: number
+    opportunityType?: string
     phaseId?: string
     roleId?: string
     scorecardId?: string
+    shouldOpenOpportunity?: boolean
 }
 
 export interface ScorecardFilters {

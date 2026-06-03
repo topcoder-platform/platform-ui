@@ -360,8 +360,9 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
 
             <div className={`${styles.actions} ${styles.actionsField}`}>
                 <Button
+                    className={styles.resetButton}
                     secondary
-                    size='lg'
+                    size='md'
                     icon={IconOutline.XIcon}
                     iconToLeft
                     label='Reset Filters'

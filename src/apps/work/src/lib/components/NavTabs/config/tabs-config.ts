@@ -9,12 +9,14 @@ import {
     TASK_MANAGER_ROLES,
 } from '../../../../config/index.config'
 import {
+    budgetApprovalsRouteId,
     challengesRouteId,
     engagementsRouteId,
     groupsRouteId,
     projectsRouteId,
     taasRouteId,
 } from '../../../../config/routes.config'
+import { canViewAllEngagements } from '../../../utils/permissions.utils'
 
 function hasAnyRole(userRoles: string[], roles: string[]): boolean {
     return userRoles.some(role => roles.includes(role.toLowerCase()))
@@ -26,6 +28,8 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     }
 
     const isAdmin = hasAnyRole(userRoles, ADMIN_ROLES)
+    const isManager = hasAnyRole(userRoles, [...MANAGER_ROLES, ...TASK_MANAGER_ROLES])
+    const canViewEngagements = canViewAllEngagements(userRoles)
 
     const tabs: TabsNavItem[] = [
         {
@@ -34,7 +38,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
         },
     ]
 
-    if (isAdmin) {
+    if (canViewEngagements) {
         tabs.push({
             id: engagementsRouteId,
             title: 'Engagements',
@@ -46,6 +50,12 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
             id: projectsRouteId,
             title: 'Projects',
         },
+        ...(isAdmin || isManager
+            ? [{
+                id: budgetApprovalsRouteId,
+                title: 'Budget Approvals',
+            }]
+            : []),
         {
             id: taasRouteId,
             title: 'TaaS Projects',
@@ -53,7 +63,6 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     )
 
     const isCopilot = hasAnyRole(userRoles, COPILOT_ROLES)
-    const isManager = hasAnyRole(userRoles, [...MANAGER_ROLES, ...TASK_MANAGER_ROLES])
 
     if (isAdmin || isCopilot || isManager) {
         tabs.push({

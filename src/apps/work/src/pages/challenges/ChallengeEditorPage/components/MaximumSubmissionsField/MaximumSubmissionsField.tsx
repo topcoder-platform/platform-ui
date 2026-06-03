@@ -1,18 +1,14 @@
 import {
     FC,
-    useCallback,
     useEffect,
     useMemo,
+    useRef,
 } from 'react'
 import {
     useFormContext,
     useWatch,
 } from 'react-hook-form'
 
-import {
-    FormCheckboxField,
-    FormTextField,
-} from '../../../../../lib/components/form'
 import {
     ChallengeEditorFormData,
     ChallengeMetadata,
@@ -22,148 +18,92 @@ import {
     setMetadataValue,
 } from '../../../../../lib/utils'
 
-import styles from './MaximumSubmissionsField.module.scss'
-
 const SUBMISSION_LIMIT_FIELD = 'submissionLimit'
-const SUBMISSION_LIMIT_COUNT_FIELD = 'submissionLimitCount'
-const SUBMISSION_LIMIT_FLAG_FIELD = 'submissionLimitEnabled'
-const SUBMISSION_UNLIMITED_FLAG_FIELD = 'submissionLimitUnlimited'
-
-interface SubmissionLimitMetadata {
-    count: string
-    limit: boolean
-    unlimited: boolean
-}
-
-const emptySubmissionLimitMetadata: SubmissionLimitMetadata = {
+const UNLIMITED_SUBMISSION_LIMIT_PAYLOAD = JSON.stringify({
     count: '',
-    limit: false,
-    unlimited: false,
+    limit: 'false',
+    unlimited: 'true',
+})
+
+interface MaximumSubmissionsFieldProps {
+    /**
+     * Defers dirtying the form while the editor is still restoring persisted assignments.
+     * Once hydration finishes, the normalized metadata is marked dirty so save/autosave
+     * still persists the unlimited-only payload.
+     */
+    deferDirty?: boolean
 }
 
-function toBoolean(value: unknown): boolean {
-    return value === true || value === 'true'
-}
-
-function parseSubmissionLimitMetadata(value: string | undefined): SubmissionLimitMetadata {
-    if (!value) {
-        return emptySubmissionLimitMetadata
-    }
-
-    try {
-        const parsedValue = JSON.parse(value) as {
-            count?: unknown
-            limit?: unknown
-            unlimited?: unknown
-        }
-
-        return {
-            count: typeof parsedValue.count === 'string'
-                ? parsedValue.count.replace(/[^\d]/g, '')
-                : '',
-            limit: toBoolean(parsedValue.limit),
-            unlimited: toBoolean(parsedValue.unlimited),
-        }
-    } catch {
-        return emptySubmissionLimitMetadata
-    }
-}
-
-export const MaximumSubmissionsField: FC = () => {
+/**
+ * Normalizes design-challenge submission metadata to unlimited submissions.
+ *
+ * The work app no longer exposes the legacy submission-cap UI, but challenge drafts still
+ * persist the `submissionLimit` metadata entry. This component keeps that legacy metadata in
+ * sync with the unlimited-only payload while rendering no visible controls, and it can defer
+ * dirtying until the form finishes its initial resource hydration so copilot restoration is
+ * not blocked by the automatic normalization.
+ *
+ * @param props component options.
+ * @returns an empty fragment; submission limits are no longer editable in the design challenge editor.
+ */
+export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
+    props: MaximumSubmissionsFieldProps,
+) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const dynamicFormControl = formContext.control as any
+    const deferredDirtyNormalizationRef = useRef(false)
     const metadata = useWatch({
         control: dynamicFormControl,
         name: 'metadata',
     }) as ChallengeMetadata[] | undefined
-    const isUnlimited = useWatch({
-        control: dynamicFormControl,
-        name: SUBMISSION_UNLIMITED_FLAG_FIELD,
-    }) as boolean | undefined
-    const isLimitEnabled = useWatch({
-        control: dynamicFormControl,
-        name: SUBMISSION_LIMIT_FLAG_FIELD,
-    }) as boolean | undefined
-    const limitCount = useWatch({
-        control: dynamicFormControl,
-        name: SUBMISSION_LIMIT_COUNT_FIELD,
-    }) as string | undefined
-
-    const parsedSubmissionLimitMetadata = useMemo(
-        () => parseSubmissionLimitMetadata(getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD)),
+    const submissionLimitValue = useMemo(
+        () => getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD),
         [metadata],
     )
 
     useEffect(() => {
-        if (isUnlimited === undefined) {
-            formContext.setValue(
-                SUBMISSION_UNLIMITED_FLAG_FIELD as never,
-                parsedSubmissionLimitMetadata.unlimited as never,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-
-        if (isLimitEnabled === undefined) {
-            formContext.setValue(
-                SUBMISSION_LIMIT_FLAG_FIELD as never,
-                parsedSubmissionLimitMetadata.limit as never,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-
-        if (limitCount === undefined) {
-            formContext.setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD as never,
-                parsedSubmissionLimitMetadata.count as never,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-    }, [
-        formContext,
-        isLimitEnabled,
-        isUnlimited,
-        limitCount,
-        parsedSubmissionLimitMetadata.count,
-        parsedSubmissionLimitMetadata.limit,
-        parsedSubmissionLimitMetadata.unlimited,
-    ])
-
-    useEffect(() => {
-        if (typeof isUnlimited !== 'boolean' || typeof isLimitEnabled !== 'boolean') {
+        if (submissionLimitValue === UNLIMITED_SUBMISSION_LIMIT_PAYLOAD) {
             return
         }
 
-        const submissionLimitPayload = JSON.stringify({
-            count: isLimitEnabled
-                ? (limitCount || '')
-                : '',
-            limit: isLimitEnabled
-                ? 'true'
-                : 'false',
-            unlimited: isUnlimited
-                ? 'true'
-                : 'false',
-        })
-
-        if (getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD) === submissionLimitPayload) {
-            return
-        }
+        deferredDirtyNormalizationRef.current = props.deferDirty === true
 
         formContext.setValue(
             'metadata',
             setMetadataValue(
                 metadata,
                 SUBMISSION_LIMIT_FIELD,
-                submissionLimitPayload,
+                UNLIMITED_SUBMISSION_LIMIT_PAYLOAD,
+            ),
+            {
+                shouldDirty: props.deferDirty !== true,
+                shouldValidate: true,
+            },
+        )
+    }, [
+        formContext,
+        metadata,
+        props.deferDirty,
+        submissionLimitValue,
+    ])
+
+    useEffect(() => {
+        if (
+            props.deferDirty
+            || !deferredDirtyNormalizationRef.current
+            || submissionLimitValue !== UNLIMITED_SUBMISSION_LIMIT_PAYLOAD
+        ) {
+            return
+        }
+
+        deferredDirtyNormalizationRef.current = false
+
+        formContext.setValue(
+            'metadata',
+            setMetadataValue(
+                metadata,
+                SUBMISSION_LIMIT_FIELD,
+                UNLIMITED_SUBMISSION_LIMIT_PAYLOAD,
             ),
             {
                 shouldDirty: true,
@@ -172,89 +112,12 @@ export const MaximumSubmissionsField: FC = () => {
         )
     }, [
         formContext,
-        isLimitEnabled,
-        isUnlimited,
-        limitCount,
         metadata,
+        props.deferDirty,
+        submissionLimitValue,
     ])
 
-    const handleUnlimitedChange = useCallback(
-        (checked: boolean): void => {
-            if (!checked) {
-                return
-            }
-
-            formContext.setValue(
-                SUBMISSION_LIMIT_FLAG_FIELD as never,
-                false as never,
-                {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                },
-            )
-            formContext.setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD as never,
-                '' as never,
-                {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                },
-            )
-        },
-        [formContext],
-    )
-
-    const handleLimitChange = useCallback(
-        (checked: boolean): void => {
-            if (!checked) {
-                return
-            }
-
-            formContext.setValue(
-                SUBMISSION_UNLIMITED_FLAG_FIELD as never,
-                false as never,
-                {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                },
-            )
-        },
-        [formContext],
-    )
-
-    const sanitizeLimitCount = useCallback(
-        (value: string): string => value.replace(/[^\d]/g, ''),
-        [],
-    )
-
-    return (
-        <div className={styles.container}>
-            <FormCheckboxField
-                label='Unlimited'
-                name={SUBMISSION_UNLIMITED_FLAG_FIELD}
-                onChange={handleUnlimitedChange}
-            />
-            <FormCheckboxField
-                label='Limit'
-                name={SUBMISSION_LIMIT_FLAG_FIELD}
-                onChange={handleLimitChange}
-            />
-
-            {isLimitEnabled
-                ? (
-                    <div className={styles.countField}>
-                        <FormTextField
-                            label='Limit Count'
-                            name={SUBMISSION_LIMIT_COUNT_FIELD}
-                            placeholder='Enter submission limit'
-                            sanitize={sanitizeLimitCount}
-                            type='number'
-                        />
-                    </div>
-                )
-                : undefined}
-        </div>
-    )
+    return <></>
 }
 
 export default MaximumSubmissionsField

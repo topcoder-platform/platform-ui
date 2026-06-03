@@ -30,6 +30,31 @@ export interface SubmitChallengePayload {
     url: string
 }
 
+interface BackendSubmissionsResponse {
+    data?: BackendSubmission[]
+    meta?: Record<string, unknown>
+}
+
+type BackendSubmissionsPayload = BackendSubmission[] | BackendSubmissionsResponse
+
+/**
+ * Extracts submission rows from either the current `{ data, meta }` submissions API
+ * response or older bare-array payloads.
+ *
+ * @param payload Response payload returned by the submissions API wrapper.
+ * @returns Backend submission rows used by community submission converters.
+ * @throws Does not throw; unexpected response shapes return an empty list.
+ */
+function extractBackendSubmissions(payload: BackendSubmissionsPayload): BackendSubmission[] {
+    if (Array.isArray(payload)) {
+        return payload
+    }
+
+    return Array.isArray(payload.data)
+        ? payload.data
+        : []
+}
+
 /**
  * Fetches challenge submissions for the current member context.
  *
@@ -43,11 +68,12 @@ export const fetchSubmissions = async (
         challengeId,
         perPage: 500,
     })
-    const response = await xhrGetPaginatedAsync<BackendSubmission[]>(
+    const response = await xhrGetPaginatedAsync<BackendSubmissionsPayload>(
         `${submissionsBaseUrl}/submissions?${query}`,
     )
 
-    return response.data.map(convertBackendSubmission)
+    return extractBackendSubmissions(response.data)
+        .map(convertBackendSubmission)
 }
 
 /**
@@ -66,11 +92,12 @@ export const fetchMySubmissions = async (
         memberId,
         perPage: 500,
     })
-    const response = await xhrGetPaginatedAsync<BackendSubmission[]>(
+    const response = await xhrGetPaginatedAsync<BackendSubmissionsPayload>(
         `${submissionsBaseUrl}/submissions?${query}`,
     )
 
-    return response.data.map(convertBackendSubmission)
+    return extractBackendSubmissions(response.data)
+        .map(convertBackendSubmission)
 }
 
 /**
@@ -88,11 +115,12 @@ export const fetchMemberSubmissions = async (
         memberId,
         perPage,
     })
-    const response = await xhrGetPaginatedAsync<BackendSubmission[]>(
+    const response = await xhrGetPaginatedAsync<BackendSubmissionsPayload>(
         `${submissionsBaseUrl}/submissions?${query}`,
     )
 
-    return response.data.map(convertBackendSubmission)
+    return extractBackendSubmissions(response.data)
+        .map(convertBackendSubmission)
 }
 
 /**

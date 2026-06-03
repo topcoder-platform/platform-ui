@@ -1,9 +1,25 @@
 import { ROUND_TYPES } from '../../../../lib/constants/challenge-editor.constants'
-import { TimelineTemplate } from '../../../../lib/models'
+import {
+    Resource,
+    ResourceRole,
+    TimelineTemplate,
+} from '../../../../lib/models'
 
 import {
+    applyProjectBillingToChallengeFormData,
+    COPILOT_RESOURCE_ROLE_NAMES,
+    findMatchingResourceRole,
+    hasSameChallengeBillingInfo,
+    mergeChallengeBillingWithProjectBilling,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    resolveResourceAssignmentHandle,
+    resolveResourceAssignmentValue,
+    REVIEWER_RESOURCE_ROLE_NAMES,
+    shouldTreatChallengeAsTask,
+    shouldUseManualReviewers,
+    SUBMITTER_RESOURCE_ROLE_NAMES,
+    TASK_REVIEWER_RESOURCE_ROLE_NAMES,
 } from './ChallengeEditorForm.utils'
 
 const CHECKPOINT_SUBMISSION_PHASE_ID = 'd8a2cdbe-84d1-4687-ab75-78a6a7efdcc8'
@@ -211,5 +227,327 @@ describe('resolveCreateRoundType', () => {
 
         expect(result)
             .toBe(ROUND_TYPES.SINGLE_ROUND)
+    })
+})
+
+describe('shouldUseManualReviewers', () => {
+    it('returns false for task challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: false,
+            isTaskChallenge: true,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('returns false for marathon match challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: true,
+            isTaskChallenge: false,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('returns true for standard challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: false,
+            isTaskChallenge: false,
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+})
+
+function buildResourceRole(overrides: Partial<ResourceRole>): ResourceRole {
+    return {
+        id: 'role-id',
+        name: 'Copilot',
+        ...overrides,
+    }
+}
+
+function buildResource(overrides: Partial<Resource>): Resource {
+    return {
+        challengeId: 'challenge-id',
+        roleId: 'role-id',
+        ...overrides,
+    }
+}
+
+describe('resource assignment helpers', () => {
+    it('finds a matching resource role by supported role name aliases', () => {
+        const resourceRoles: ResourceRole[] = [
+            buildResourceRole({
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }),
+            buildResourceRole({
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }),
+        ]
+
+        const result = findMatchingResourceRole(resourceRoles, TASK_REVIEWER_RESOURCE_ROLE_NAMES)
+
+        expect(result?.id)
+            .toBe('iterative-reviewer-role-id')
+    })
+
+    it('prefers the saved resource member handle over the legacy fallback value', () => {
+        const result = resolveResourceAssignmentHandle({
+            fallbackHandle: 'legacyCopilot',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberHandle: 'resourceCopilot',
+                    roleId: 'copilot-role-id',
+                }),
+            ],
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('resourceCopilot')
+    })
+
+    it('matches resource rows by role name when role metadata is unavailable', () => {
+        const result = resolveResourceAssignmentHandle({
+            resourceRoles: [],
+            resources: [
+                buildResource({
+                    memberHandle: 'iterativeReviewer',
+                    role: 'Iterative Review',
+                    roleId: '',
+                }),
+            ],
+            roleNames: TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('iterativeReviewer')
+    })
+
+    it('falls back to the legacy value when no matching resource exists', () => {
+        const result = resolveResourceAssignmentHandle({
+            fallbackHandle: 'legacyReviewer',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberHandle: 'copilotUser',
+                    roleId: 'copilot-role-id',
+                }),
+            ],
+            roleNames: REVIEWER_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('legacyReviewer')
+    })
+
+    it('resolves task assigned member ids from submitter resources', () => {
+        const result = resolveResourceAssignmentValue({
+            fallbackValue: '12345',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'submitter-role-id',
+                    name: 'Submitter',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberId: '67890',
+                    roleId: 'submitter-role-id',
+                }),
+            ],
+            roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
+            valueField: 'memberId',
+        })
+
+        expect(result)
+            .toBe('67890')
+    })
+})
+
+describe('shouldTreatChallengeAsTask', () => {
+    it('returns true when the resolved type is Task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: true,
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+
+    it('returns false when the resolved type is explicitly non-task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('falls back to the persisted task flag when type metadata is missing', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+
+    it('returns false when neither type metadata nor a persisted task flag exists', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+})
+
+describe('project billing helpers', () => {
+    it('fills missing challenge billing from the project billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            undefined,
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('preserves saved challenge billing while filling missing markup from the project', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001063,
+            },
+            {
+                id: 90000000,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('replaces stale zero markup when the challenge uses the project billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001063,
+                markup: 0,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('preserves zero markup when the challenge uses a different billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001064,
+                markup: 0,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001064',
+                markup: 0,
+            })
+    })
+
+    it('treats blank billing markup as missing and fills it from project billing', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001064,
+                markup: '   ' as unknown as number,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001064',
+                markup: 0.33,
+            })
+    })
+
+    it('applies merged project billing to challenge form data only when billing changes', () => {
+        const formData = {
+            description: '',
+            name: 'Billing challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = applyProjectBillingToChallengeFormData(
+            formData,
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                ...formData,
+                billing: {
+                    billingAccountId: '80001063',
+                    markup: 0.33,
+                },
+            })
+        expect(hasSameChallengeBillingInfo(result.billing, {
+            billingAccountId: '80001063',
+            markup: 0.33,
+        }))
+            .toBe(true)
     })
 })

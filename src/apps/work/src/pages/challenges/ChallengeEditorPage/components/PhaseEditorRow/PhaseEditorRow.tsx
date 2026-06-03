@@ -17,6 +17,9 @@ export interface PhaseEditorRowProps {
     onStartDateChange: (index: number, date: Date | null) => void
     onEndDateChange: (index: number, date: Date | null) => void
     isStartDateEditable?: boolean
+    isEndDateEditable?: boolean
+    isDurationEditable?: boolean
+    isVirtual?: boolean
     disabled?: boolean
     startDate?: Date | string
     endDate?: Date | string
@@ -31,12 +34,28 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
     const endDate = props.endDate
     const index = props.index
     const isStartDateEditable = props.isStartDateEditable !== false
+    const isEndDateEditable = props.isEndDateEditable !== false
+    const isDurationEditable = props.isDurationEditable !== false
     const phase = props.phase
     const startDate = props.startDate
     const minStartDate = props.minStartDate
     const minEndDate = props.minEndDate
     const formContext = useFormContext()
     const durationError = get(formContext.formState.errors, `phases.${index}.duration.message`) as string | undefined
+
+    if (props.isVirtual) {
+        return (
+            <div className={styles.row}>
+                <div className={styles.phaseName}>
+                    {phase.name || 'Virtual Phase'}
+                </div>
+
+                <div className={styles.virtualPhaseValue}>
+                    Automated (AI)
+                </div>
+            </div>
+        )
+    }
 
     function handleDurationChange(durationMinutes: number): void {
         props.onDurationChange(index, durationMinutes)
@@ -70,7 +89,7 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
 
             <div className={styles.dateCell}>
                 <StartDateTimeInput
-                    disabled={disabled}
+                    disabled={disabled || !isEndDateEditable}
                     error={endDateError}
                     label='End Date'
                     labelOutside
@@ -83,7 +102,7 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
 
             <div className={styles.durationCell}>
                 <PhaseDurationInput
-                    disabled={disabled}
+                    disabled={disabled || !isDurationEditable}
                     error={durationError}
                     onChange={handleDurationChange}
                     value={Number(phase.duration) || 0}

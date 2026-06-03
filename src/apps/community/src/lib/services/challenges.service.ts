@@ -158,7 +158,7 @@ export const fetchChallengeResources = async (
 }
 
 /**
- * Fetches submitter registrants for a challenge.
+ * Fetches submitter registrants for a challenge from the v6 resources API.
  *
  * @param challengeId Challenge identifier.
  * @returns Registrant records required by challenge detail view.
@@ -166,9 +166,37 @@ export const fetchChallengeResources = async (
 export const fetchChallengeRegistrants = async (
     challengeId: string,
 ): Promise<BackendRegistrant[]> => {
-    const query = qs.stringify({ roleId: SUBMITTER_ROLE_ID })
-    const endpoint = `${challengeBaseUrl}/challenges/${challengeId}/resources?${query}`
-    const resources = await xhrGetAsync<BackendRegistrantResource[]>(endpoint)
+    const perPage = 500
+    const firstPageQuery = qs.stringify({
+        challengeId,
+        page: 1,
+        perPage,
+        roleId: SUBMITTER_ROLE_ID,
+    })
+    const firstPage = await xhrGetPaginatedAsync<BackendRegistrantResource[]>(
+        `${challengeBaseUrl}/resources?${firstPageQuery}`,
+    )
+    const remainingPages = await Promise.all(
+        Array.from(
+            { length: Math.max(firstPage.totalPages - 1, 0) },
+            (_ignoredValue, index) => {
+                const query = qs.stringify({
+                    challengeId,
+                    page: index + 2,
+                    perPage,
+                    roleId: SUBMITTER_ROLE_ID,
+                })
+
+                return xhrGetPaginatedAsync<BackendRegistrantResource[]>(
+                    `${challengeBaseUrl}/resources?${query}`,
+                )
+            },
+        ),
+    )
+    const resources = [
+        ...firstPage.data,
+        ...remainingPages.flatMap(page => page.data),
+    ]
 
     return resources.map(resource => ({
         countryCode: resource.countryCode ?? resource.countryInfo?.countryCode,

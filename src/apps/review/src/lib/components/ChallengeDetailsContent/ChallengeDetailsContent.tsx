@@ -29,7 +29,10 @@ import {
 import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
 import { hasIsLatestFlag } from '../../utils'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import {
+    isContestReviewPhaseSubmission,
+    shouldIncludeInReviewPhase,
+} from '../../utils/reviewPhaseGuards'
 import {
     isContestSubmissionType,
     isFinalFixSubmissionType,
@@ -86,7 +89,9 @@ const TabContentPlaceholder = (props: { message: string }): JSX.Element => (
 
 const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('submission'),
+    normalizeType('specification submission'),
     normalizeType('screening'),
+    normalizeType('ai screening'),
     normalizeType('submission / screening'),
     normalizeType('topgear submission'),
     normalizeType('final fix'),
@@ -94,6 +99,7 @@ const SUBMISSION_TAB_KEYS = new Set([
 
 const CHECKPOINT_REVIEW_KEY = normalizeType('checkpoint review')
 const CHECKPOINT_SCREENING_KEY = normalizeType('checkpoint screening')
+const AI_SCREENING_KEY = normalizeType('ai screening')
 const CHECKPOINT_TAB_KEYS = new Set([
     normalizeType('checkpoint'),
     normalizeType('checkpoint submission'),
@@ -149,9 +155,13 @@ const renderSubmissionTab = ({
     aiReviewers,
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
+    const isSpecificationSubmissionTab = selectedTabNormalized === 'specificationsubmission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
     const isFinalFixTab = selectedTabNormalized.startsWith('finalfix')
-    const shouldRestrictToContestSubmissions = selectedTabNormalized.startsWith('submission')
+    const shouldRestrictToContestSubmissions = selectedTabNormalized
+        .startsWith('submission')
+        || isSpecificationSubmissionTab
+        || selectedTabNormalized === AI_SCREENING_KEY
         || isTopgearSubmissionTab
     const visibleSubmissions = isFinalFixTab
         ? submissions.filter(submission => isFinalFixSubmissionType(submission.type))
@@ -192,6 +202,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
         myResources,
+        aiReviewConfig,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { actionChallengeRole }: useRoleProps = useRole()
     const hasIterativeReviewerRole = useMemo(
@@ -244,6 +255,24 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         isLoading: isLoadingProjectResult,
         projectResults,
     }: useFetchChallengeResultsProps = useFetchChallengeResults(props.review)
+    const selectedTabNormalized = useMemo(
+        () => normalizeType(props.selectedTab),
+        [props.selectedTab],
+    )
+    const selectedReviewPhaseName = useMemo<string | undefined>(
+        () => {
+            if (selectedTabNormalized === 'specificationreview') {
+                return 'Specification Review'
+            }
+
+            if (selectedTabNormalized === 'review') {
+                return 'Review'
+            }
+
+            return undefined
+        },
+        [selectedTabNormalized],
+    )
 
     // Determine if the selected tab corresponds to a phase that hasn't opened yet
     const selectedPhase = useMemo(
@@ -318,11 +347,21 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         [props.screening],
     )
     const passesReviewTabGuards: (submission: SubmissionInfo) => boolean = useMemo(
-        () => (submission: SubmissionInfo): boolean => shouldIncludeInReviewPhase(
-            submission,
-            challengeInfo?.phases,
-        ),
-        [challengeInfo?.phases],
+        () => (submission: SubmissionInfo): boolean => {
+            if (selectedReviewPhaseName) {
+                return isContestReviewPhaseSubmission(
+                    submission,
+                    challengeInfo?.phases,
+                    selectedReviewPhaseName,
+                )
+            }
+
+            return shouldIncludeInReviewPhase(
+                submission,
+                challengeInfo?.phases,
+            )
+        },
+        [challengeInfo?.phases, selectedReviewPhaseName],
     )
     const {
         reviews: reviewTabReviews,
@@ -397,7 +436,6 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
-        const selectedTabNormalized = normalizeType(props.selectedTab)
         const aiReviewers = (
             challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]
         ) ?? []
@@ -505,6 +543,12 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     phaseIdFilter={props.selectedPhaseId}
                     aiReviewers={aiReviewers}
                 />
+            )
+        }
+
+        if (selectedTabNormalized === 'review' && aiReviewConfig?.mode === 'AI_ONLY') {
+            return (
+                <TabContentPlaceholder message='Review is handled automatically in AI Only mode.' />
             )
         }
 

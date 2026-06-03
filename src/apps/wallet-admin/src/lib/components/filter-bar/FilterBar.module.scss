@@ -1,27 +1,47 @@
+@import '@libs/ui/styles/includes';
+
 .FilterBar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
+    width: 100%;
+    min-width: 0;
 
-    .firstFilter {
+    .filterBarMain {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
         min-width: 0;
     }
 
-    .flexStretch {
-        flex-grow: 1;
+    .primaryFilter {
+        flex: 0 0 auto;
+        align-self: flex-start;
     }
 
-    .remainingFilters {
+    .filtersRow {
         display: flex;
         flex-direction: row;
-        align-items: center;
+        align-items: flex-end;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         min-width: 0;
+        flex: 1 1 auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+
+        [class*="InputSelect-module_textSelected"] {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        :global(.input-wrapper .input) {
+            margin-bottom: 0 !important;
+        }
     }
 
     .filterContainer {
@@ -29,46 +49,143 @@
     }
 
     .filter {
-        width: 165px;
-        max-width: 100%;
-        height: 47px;
+        min-width: 140px;
+        flex: 0 0 auto;
+    }
+
+    .filterPageSize {
+        min-width: 110px;
+        max-width: 150px;
+    }
+
+    .filterCheckboxMultiselect {
+        width: 100%;
+        height: 100%;
+    }
+
+    .dateFilterWrap {
+        flex: 0 0 auto;
+
+        :global(.container) {
+            margin-bottom: 0;
+        }
     }
 
     .firstFilterElement {
-        width: 200px;
-        max-width: 100%;
+        width: 190px;
+        flex: 0 0 auto;
+
+        :global([class*="memberSelect"]) {
+            width: 100%;
+
+            [class*="-control"] {
+                min-height: 0 !important;
+                height: auto !important;
+            }
+        }
     }
 
+    .filterInput {
+        margin-bottom: 0;
+        height: 100%;
+    }
+
+    .toolbarActions {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+        margin-left: auto;
+        margin-bottom: 18px;
+    }
+
+    .filterActions {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+    }
+
+    .exportButton {
+        flex: 0 0 auto;
+    }
+
+    .applyButton,
     .resetButton {
         flex-shrink: 0;
-        margin-left: 30px;
+    }
+
+    .selectionActionButton {
+        flex-shrink: 0;
+    }
+
+    .selectionActionsRow {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 1200px) {
+    .FilterBar {
+        padding-bottom: $sp-1;
+
+        .filter {
+            min-width: 120px;
+        }
+
+        .filterPageSize {
+            min-width: 100px;
+            max-width: 140px;
+        }
     }
 }
 
 @media (max-width: 768px) {
     .FilterBar {
-        align-items: stretch;
+        .filterBarMain {
+            align-items: stretch;
+        }
 
-        .firstFilter,
-        .remainingFilters {
+        .filtersRow {
+            flex-wrap: wrap;
+            overflow-x: visible;
             width: 100%;
         }
 
-        .flexStretch {
-            display: none;
-        }
-
+        .primaryFilter,
         .firstFilterElement,
         .filter {
             width: 100%;
             height: auto;
+            max-width: none;
         }
 
+        .filterPageSize {
+            min-width: 0;
+            max-width: none;
+        }
+
+        .primaryFilter {
+            align-self: stretch;
+        }
+
+        .toolbarActions {
+            width: 100%;
+            margin-left: 0;
+            flex-wrap: wrap;
+        }
+
+        .filterActions,
+        .selectionActionButton,
         .resetButton,
+        .applyButton,
         .exportButton,
         .bulkButton {
             width: 100%;
-            margin-left: 0;
         }
     }
 }

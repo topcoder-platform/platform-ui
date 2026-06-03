@@ -8,9 +8,13 @@ import {
     useFetchChallengeTypes,
     UseFetchChallengeTypesResult,
 } from '../../../../lib/hooks'
+import { Track as ChallengeTrack } from '../../../../lib/models'
+
+import { buildChallengeTypeOptions } from './ChallengeTypeField.utils'
 
 interface ChallengeTypeFieldProps {
     disabled?: boolean
+    track?: ChallengeTrack
 }
 
 export const ChallengeTypeField: FC<ChallengeTypeFieldProps> = (
@@ -22,14 +26,11 @@ export const ChallengeTypeField: FC<ChallengeTypeFieldProps> = (
     }: UseFetchChallengeTypesResult = useFetchChallengeTypes()
 
     const options = useMemo<FormSelectOption[]>(
-        () => challengeTypes
-            .filter(type => type.isActive)
-            .sort((typeA, typeB) => typeA.name.localeCompare(typeB.name))
-            .map(type => ({
-                label: type.name,
-                value: type.id,
-            })),
-        [challengeTypes],
+        () => buildChallengeTypeOptions(challengeTypes, props.track),
+        [
+            challengeTypes,
+            props.track,
+        ],
     )
 
     return (

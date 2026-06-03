@@ -251,6 +251,13 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 baseColumns.push(
                     {
                         className: styles.tableCell,
+                        isSortable: false,
+                        label: 'Submissions',
+                        propertyName: 'numOfSubmissions',
+                        type: 'text',
+                    },
+                    {
+                        className: styles.tableCell,
                         isSortable: true,
                         label: 'Phase',
                         propertyName: 'currentPhase',
@@ -385,6 +392,23 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         [onToggleSort, sortMapping],
     )
 
+    /**
+     * Returns the highlight class for active Topgear Task rows with submissions
+     * where Iterative Review is still closed.
+     *
+     * @param data active challenge row data
+     * @returns row CSS class when the issue condition is met; otherwise undefined
+     * @throws This callback does not throw.
+     */
+    const getRowClassName = useCallback(
+        (data: ActiveReviewAssignment) => (
+            data.hasIterativeReviewIssue
+                ? styles.iterativeReviewIssueRow
+                : undefined
+        ),
+        [],
+    )
+
     return (
         <TableWrapper
             className={classNames(
@@ -394,11 +418,16 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={datas} />
+                <TableMobile
+                    columns={columnsMobile}
+                    data={datas}
+                    rowClassName={getRowClassName}
+                />
             ) : (
                 <Table
                     columns={columns}
                     data={datas}
+                    rowClassName={getRowClassName}
                     onToggleSort={handleToggleSort}
                     removeDefaultSort
                     forceSort={displaySort}

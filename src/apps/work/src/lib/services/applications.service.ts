@@ -75,6 +75,7 @@ function toOptionalString(value: unknown): string | undefined {
 
 function normalizeApplication(application: Partial<Application>): Application {
     return {
+        address: toOptionalString(application.address),
         availability: typeof application.availability === 'string'
             ? application.availability
             : '',
@@ -199,9 +200,11 @@ export async function updateApplicationStatus(
 
 export interface AssignmentApprovalDetails {
     agreementRate: string
-    endDate: string
+    durationMonths: number
     otherRemarks?: string
+    ratePerHour: string
     startDate: string
+    standardHoursPerWeek: number
 }
 
 export async function approveApplication(

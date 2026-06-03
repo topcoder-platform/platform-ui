@@ -8,7 +8,7 @@ import { UserSkill, xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPutAsync } fro
 const baseUrl = `${EnvironmentConfig.STANDARDIZED_SKILLS_API}/skills`
 
 export interface StandardizedSkill extends UserSkill {
-    deleted_at: string | null
+    deletedAt: string | null
     categoryId?: string
 }
 

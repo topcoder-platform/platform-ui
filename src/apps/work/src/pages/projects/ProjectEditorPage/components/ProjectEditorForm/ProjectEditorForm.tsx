@@ -18,6 +18,7 @@ import {
 } from '../../../../../lib/constants'
 import {
     FormBillingAccountAutocomplete,
+    FormCheckboxField,
     FormGroupsSelect,
     FormRadioGroup,
     FormSelectField,
@@ -40,6 +41,7 @@ import {
     createProjectEditorSchema,
 } from '../../../../../lib/schemas/project-editor.schema'
 import {
+    BillingAccount,
     createProject,
     ProjectBillingAccount,
     updateProject,
@@ -53,6 +55,7 @@ import {
 import styles from './ProjectEditorForm.module.scss'
 
 interface ProjectEditorFormProps {
+    billingAccountSearchUserId?: number | string
     canManage: boolean
     isEdit: boolean
     onSuccess?: (project: Project) => void
@@ -64,6 +67,7 @@ interface ProjectEditorFormValues {
     billingAccountId: string
     cancelReason: string
     description: string
+    displayMemberPaymentDetailsToCopilots: boolean
     groups: string[]
     name: string
     status: ProjectStatusValue | ''
@@ -93,6 +97,9 @@ function getDefaultFormValues(
         billingAccountId,
         cancelReason: projectDetail?.cancelReason || '',
         description: projectDetail?.description || '',
+        displayMemberPaymentDetailsToCopilots: isEdit
+            ? projectDetail?.details?.displayMemberPaymentDetailsToCopilots === true
+            : true,
         groups,
         name: projectDetail?.name || '',
         status: isEdit
@@ -313,6 +320,34 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         ],
     )
 
+    const selectedBillingAccount = useMemo<BillingAccount | undefined>(
+        () => {
+            const selectedBillingAccountId = normalizeOptionalStringValue(
+                props.projectDetail?.billingAccountId,
+            ) || normalizeOptionalStringValue(projectBillingAccount?.id)
+            const selectedBillingAccountName = currentProjectBillingAccountName
+                || normalizeOptionalStringValue(projectBillingAccount?.name)
+
+            if (!selectedBillingAccountId || !selectedBillingAccountName) {
+                return undefined
+            }
+
+            return {
+                active: projectBillingAccount?.active,
+                endDate: projectBillingAccount?.endDate,
+                id: selectedBillingAccountId,
+                name: selectedBillingAccountName,
+                startDate: projectBillingAccount?.startDate,
+                status: projectBillingAccount?.status,
+            }
+        },
+        [
+            currentProjectBillingAccountName,
+            projectBillingAccount,
+            props.projectDetail?.billingAccountId,
+        ],
+    )
+
     useEffect(() => {
         reset(getDefaultFormValues(props.isEdit, props.projectDetail))
     }, [props.isEdit, props.projectDetail, reset])
@@ -322,7 +357,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
             setIsSaving(true)
 
             try {
-                const billingAccountId = normalizeOptionalStringValue(formData.billingAccountId)
+                const normalizedBillingAccountId = normalizeOptionalStringValue(formData.billingAccountId)
                 const termsValue = normalizeOptionalStringValue(formData.terms)
                 const terms = termsValue
                     ? [termsValue]
@@ -331,8 +366,12 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
 
                 if (!props.isEdit) {
                     const payload: CreateProjectPayload = {
-                        billingAccountId,
+                        billingAccountId: normalizedBillingAccountId,
                         description: formData.description,
+                        details: {
+                            displayMemberPaymentDetailsToCopilots:
+                                formData.displayMemberPaymentDetailsToCopilots,
+                        },
                         groups,
                         name: formData.name,
                         terms,
@@ -354,8 +393,14 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 }
 
                 const payload: UpdateProjectPayload = {
-                    billingAccountId,
+                    // eslint-disable-next-line unicorn/no-null
+                    billingAccountId: normalizedBillingAccountId || null,
                     description: formData.description,
+                    details: {
+                        ...(props.projectDetail.details || {}),
+                        displayMemberPaymentDetailsToCopilots:
+                            formData.displayMemberPaymentDetailsToCopilots,
+                    },
                     groups,
                     name: formData.name,
                     terms,
@@ -482,7 +527,9 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                                 : 'Billing Account'}
                             name='billingAccountId'
                             placeholder='Search billing account by name'
-                            required={!props.isEdit}
+                            projectId={projectId}
+                            selectedBillingAccount={selectedBillingAccount}
+                            userId={props.billingAccountSearchUserId}
                         />
                     </div>
 
@@ -515,6 +562,11 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                         <FormGroupsSelect
                             label='Intended Work Groups'
                             name='groups'
+                        />
+
+                        <FormCheckboxField
+                            label='Display member payment details to copilots'
+                            name='displayMemberPaymentDetailsToCopilots'
                         />
                     </div>
                 </section>

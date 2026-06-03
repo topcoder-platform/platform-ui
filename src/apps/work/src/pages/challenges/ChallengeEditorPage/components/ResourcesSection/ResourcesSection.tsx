@@ -25,6 +25,7 @@ import {
 import {
     Challenge,
     Resource,
+    ResourceRole,
     User,
     WorkAppContextModel,
 } from '../../../../../lib/models'
@@ -34,7 +35,6 @@ import {
 } from '../../../../../lib/services'
 import {
     canDeleteResource,
-    canEditChallengeResources,
     LoggedInUserResource,
     showErrorToast,
     showSuccessToast,
@@ -117,6 +117,57 @@ function normalizeLoginUser(context: WorkAppContextModel): User | undefined {
     }
 }
 
+/**
+ * Returns whether a challenge resource belongs to the logged-in user.
+ * Matches by handle or member id because the work app may receive either identity shape.
+ *
+ * @param resource challenge resource row being rendered
+ * @param loginUser normalized logged-in user identity
+ * @returns true when the resource belongs to the logged-in user
+ */
+function isCurrentUserResource(resource: Resource, loginUser: User): boolean {
+    const resourceHandle = normalizeValue(resource.memberHandle)
+        .toLowerCase()
+    const resourceMemberId = normalizeValue(resource.memberId)
+    const loginHandle = normalizeValue(loginUser.handle)
+        .toLowerCase()
+    const loginUserId = normalizeValue(loginUser.userId)
+
+    return (!!loginHandle && resourceHandle === loginHandle)
+        || (!!loginUserId && resourceMemberId === loginUserId)
+}
+
+/**
+ * Returns whether the logged-in user's assigned resource roles allow resource management.
+ * This mirrors the resource API behavior: admins are handled separately, copilot is always allowed,
+ * and other roles need active full-read/full-write access.
+ *
+ * @param currentUserRoleIds role ids currently assigned to the logged-in user for this challenge
+ * @param resourceRoles all resource role definitions available for the challenge
+ * @returns true when the user can add, update, or delete challenge resources
+ */
+function canManageChallengeResources(
+    currentUserRoleIds: Set<string>,
+    resourceRoles: ResourceRole[],
+): boolean {
+    if (!currentUserRoleIds.size) {
+        return false
+    }
+
+    return resourceRoles.some(role => {
+        if (!currentUserRoleIds.has(role.id) || role.isActive === false) {
+            return false
+        }
+
+        const normalizedRoleName = normalizeValue(role.name)
+            .toLowerCase()
+
+        return normalizedRoleName.includes('copilot')
+            || (role.fullReadAccess === true && role.fullWriteAccess === true)
+    })
+}
+
+// eslint-disable-next-line complexity
 export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSectionProps) => {
     const [resourceToDelete, setResourceToDelete] = useState<Resource | undefined>(undefined)
     const [selectedTab, setSelectedTab] = useState<number>(0)
@@ -129,18 +180,8 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
 
     const workAppContext = useContext(WorkAppContext)
     const resourcesResult = useFetchResources(props.challengeId)
-    const reviewsResult = useFetchReviews(props.challengeId)
-    const submissionsResult = useFetchSubmissions(props.challengeId, 1, 5000)
     const resourceRolesResult = useFetchResourceRoles()
-
-    const canEditResources = useMemo(
-        () => canEditChallengeResources(
-            props.challenge,
-            workAppContext.userRoles,
-            normalizeLoginUser(workAppContext),
-        ),
-        [props.challenge, workAppContext],
-    )
+    const loginUser = normalizeLoginUser(workAppContext)
 
     const roleNameById = useMemo(
         () => new Map(resourceRolesResult.resourceRoles.map(role => [
@@ -169,6 +210,36 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
             roleName,
         }
     }), [resourcesResult.resources, roleNameById])
+
+    const canEditResources = useMemo(() => {
+        if (workAppContext.isAdmin) {
+            return true
+        }
+
+        if (!loginUser) {
+            return false
+        }
+
+        const currentUserRoleIds = new Set(allResources
+            .filter(resource => isCurrentUserResource(resource, loginUser))
+            .map(resource => resource.roleId)
+            .filter(roleId => roleId.trim().length > 0))
+
+        return canManageChallengeResources(
+            currentUserRoleIds,
+            resourceRolesResult.resourceRoles,
+        )
+    }, [
+        allResources,
+        loginUser,
+        resourceRolesResult.resourceRoles,
+        workAppContext.isAdmin,
+    ])
+    const deletionRulesChallengeId = canEditResources
+        ? props.challengeId
+        : undefined
+    const reviewsResult = useFetchReviews(deletionRulesChallengeId)
+    const submissionsResult = useFetchSubmissions(deletionRulesChallengeId, 1, 5000)
 
     const filteredResources = useMemo(() => {
         const tab = resourceTabs[selectedTab]
@@ -209,11 +280,13 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
         }
     }, [allResources, workAppContext.loginUserInfo?.handle])
 
-    const isLoadingDeletionRules = submissionsResult.isLoading || reviewsResult.isLoading
-    const hasReviewDeletionRuleError = reviewsResult.isError
+    const isLoadingDeletionRules = canEditResources
+        && (submissionsResult.isLoading || reviewsResult.isLoading)
+    const hasSubmissionDeletionRuleError = canEditResources && submissionsResult.isError
+    const hasReviewDeletionRuleError = canEditResources && reviewsResult.isError
 
     const deletableResourceIds = useMemo(() => {
-        if (isLoadingDeletionRules) {
+        if (!canEditResources || isLoadingDeletionRules || hasSubmissionDeletionRuleError) {
             return []
         }
 
@@ -236,6 +309,8 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
             .filter((resourceId): resourceId is string => !!resourceId)
     }, [
         allResources,
+        canEditResources,
+        hasSubmissionDeletionRuleError,
         hasReviewDeletionRuleError,
         isLoadingDeletionRules,
         loggedInUserResource,
@@ -419,6 +494,15 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
                             sortBy={sortBy}
                             sortOrder={sortOrder}
                         />
+                        {hasSubmissionDeletionRuleError
+                            ? (
+                                <p className={styles.warningText}>
+                                    Submissions could not be loaded.
+                                    {' '}
+                                    Resource deletion is disabled until submissions data is available.
+                                </p>
+                            )
+                            : undefined}
                         {hasReviewDeletionRuleError
                             ? (
                                 <p className={styles.warningText}>

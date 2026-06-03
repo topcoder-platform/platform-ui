@@ -84,6 +84,28 @@ function normalizeStatusValue(status: string | string[] | undefined): string | u
     return status.toUpperCase()
 }
 
+function normalizeApprovalStatusValue(
+    approvalStatus: string | string[] | undefined,
+): string | undefined {
+    if (!approvalStatus) {
+        return undefined
+    }
+
+    if (Array.isArray(approvalStatus)) {
+        const normalized = approvalStatus
+            .map(item => item.toUpperCase())
+            .filter(Boolean)
+
+        if (!normalized.length) {
+            return undefined
+        }
+
+        return normalized.join(',')
+    }
+
+    return approvalStatus.toUpperCase()
+}
+
 function asIsoDateString(value: unknown): string | undefined {
     if (!value) {
         return undefined
@@ -199,6 +221,7 @@ function serializeChallengePhases(phases: unknown): ChallengePhase[] | undefined
                 duration: serializePhaseDurationToSeconds(typedPhase.duration),
                 phaseId: typedPhase.phaseId,
                 predecessor: typedPhase.predecessor,
+                scheduledEndDate: asIsoDateString(typedPhase.scheduledEndDate),
                 scheduledStartDate: asIsoDateString(typedPhase.scheduledStartDate),
             }
         })
@@ -238,6 +261,12 @@ function serializeReviewers(reviewers: unknown): Reviewer[] | undefined {
                 phaseId: toOptionalTrimmedString(typedReviewer.phaseId),
                 scorecardId: toOptionalTrimmedString(typedReviewer.scorecardId),
                 shouldOpenOpportunity: toOptionalBooleanValue(typedReviewer.shouldOpenOpportunity),
+                type: isMemberReview
+                    ? (
+                        toOptionalTrimmedString(typedReviewer.type)
+                        || toOptionalTrimmedString(typedReviewer.opportunityType)
+                    )
+                    : undefined,
             }
         })
         .filter((reviewer): reviewer is Reviewer => !!reviewer)
@@ -270,9 +299,14 @@ function buildChallengeQuery(
     const query = new URLSearchParams()
 
     const normalizedStatus = normalizeStatusValue(filters.status)
+    const normalizedApprovalStatus = normalizeApprovalStatusValue(filters.approvalStatus)
     const values: Record<string, string | undefined> = {
+        approvalStatus: normalizedApprovalStatus,
         endDateEnd: asIsoDateString(filters.endDateEnd),
         endDateStart: asIsoDateString(filters.endDateStart),
+        memberId: filters.memberId !== undefined
+            ? String(filters.memberId)
+            : undefined,
         name: filters.name?.trim() || undefined,
         page: params.page ? String(params.page) : undefined,
         perPage: params.perPage ? String(params.perPage) : undefined,
@@ -293,6 +327,10 @@ function buildChallengeQuery(
                 query.set(key, value)
             }
         })
+
+    if (Array.isArray(filters.projectIds) && filters.projectIds.length > 0) {
+        filters.projectIds.forEach(id => query.append('projectIds[]', String(id)))
+    }
 
     return query.toString()
 }
@@ -372,9 +410,12 @@ function normalizeDefaultReviewer(
         incrementalCoefficient: toOptionalNumber((reviewer as Record<string, unknown>).incrementalCoefficient),
         isMemberReview: toOptionalBoolean((reviewer as Record<string, unknown>).isMemberReview),
         memberReviewerCount: toOptionalNumber((reviewer as Record<string, unknown>).memberReviewerCount),
+        opportunityType: toOptionalString((reviewer as Record<string, unknown>).opportunityType)
+            || toOptionalString((reviewer as Record<string, unknown>).type),
         phaseId: toOptionalString(reviewer.phaseId),
         roleId: toOptionalString(reviewer.roleId),
         scorecardId: toOptionalString((reviewer as Record<string, unknown>).scorecardId),
+        shouldOpenOpportunity: toOptionalBoolean((reviewer as Record<string, unknown>).shouldOpenOpportunity),
     }
 }
 
@@ -391,6 +432,7 @@ function normalizeWorkflow(workflow: Partial<Workflow>): Workflow | undefined {
     }
 
     return {
+        disabled: (workflow as Record<string, unknown>).disabled === true,
         id,
         name,
         scorecardId: workflow.scorecardId !== undefined && workflow.scorecardId !== null

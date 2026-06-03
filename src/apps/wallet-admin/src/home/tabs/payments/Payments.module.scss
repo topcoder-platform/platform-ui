@@ -22,14 +22,92 @@
     }
 
     .content {
-        background-color: $tc-white;
         border-radius: 4px;
         margin-top: $sp-4;
+
+        .paymentListingNavRow {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: $sp-4;
+            flex-wrap: wrap;
+            margin-bottom: $sp-4;
+            border-bottom: 1px solid $black-20;
+        }
+
+        .roleViewToggle {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: auto;
+            margin-bottom: $sp-1;
+        }
+
+        .roleViewButtons {
+            display: inline-flex;
+            align-items: center;
+            gap: $sp-1;
+            padding: $sp-1;
+            border: 1px solid $black-20;
+            border-radius: 999px;
+            background-color: white;
+        }
+
+        .roleViewButton {
+            border: none;
+            border-radius: 999px;
+            background: transparent;
+            color: $black-60;
+            cursor: pointer;
+            padding: $sp-2 $sp-4;
+
+            &:focus-visible {
+                outline: 2px solid $turq-160;
+                outline-offset: 2px;
+            }
+        }
+
+        .roleViewButtonActive {
+            background-color: $turq-160;
+            color: white;
+        }
+
+        .paymentListingTabs {
+            display: flex;
+            align-items: flex-end;
+            gap: $sp-6;
+        }
+
+        .paymentListingTab {
+            border: none;
+            background: transparent;
+            padding: $sp-2 0;
+            margin-bottom: -1px;
+            cursor: pointer;
+            color: $black-60;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+
+            &:focus-visible {
+                outline: 2px solid $turq-160;
+                outline-offset: 2px;
+            }
+        }
+
+        .paymentListingTabActive {
+            color: $turq-160;
+            border-bottom-color: $turq-160;
+        }
+
         .centered {
             height: 200px;
             display: flex;
             justify-content: space-around;
             align-items: center;
+        }
+
+        > * + * {
+            margin-top: $sp-6;
         }
     }
 }

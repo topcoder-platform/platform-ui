@@ -83,6 +83,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
                     .trim()
 
                 return normalizedPhaseName === 'screening'
+                    || normalizedPhaseName === 'ai screening'
             })
             const canSeeAll = isPrivilegedRole || hasReviewerRole
 

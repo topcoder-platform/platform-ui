@@ -6,7 +6,7 @@ import moment from 'moment'
 
 import {
     Button,
-    TabsNavbar,
+    IconOutline,
     type TabsNavItem,
 } from '~/libs/ui'
 
@@ -24,7 +24,7 @@ import {
 
 import styles from './ChallengeHeader.module.scss'
 
-type ChallengeDetailTabId = 'checkpoints' | 'details' | 'registrants' | 'submissions' | 'winners'
+type ChallengeDetailTabId = 'checkpoints' | 'details' | 'discussion' | 'registrants' | 'submissions' | 'winners'
 
 interface ChallengeHeaderProps {
     activeTab: ChallengeDetailTabId
@@ -32,7 +32,6 @@ interface ChallengeHeaderProps {
     challengePrizes: PlacementPrize[]
     challengesUrl: string
     displayWinners: BackendChallengeWinner[]
-    forumLink?: string
     hasRegistered: boolean
     isLegacyMM: boolean
     isLoggedIn: boolean
@@ -43,7 +42,6 @@ interface ChallengeHeaderProps {
     onUnregisterClick: () => void
     registering: boolean
     showDeadlineDetail: boolean
-    showForumLink: boolean
     submissionEnded: boolean
     tabs: ReadonlyArray<TabsNavItem<ChallengeDetailTabId>>
     unregistering: boolean
@@ -69,6 +67,69 @@ function toTypeName(challenge: ChallengeInfo): string {
     }
 
     return challenge.type.name
+}
+
+/**
+ * Formats a placement prize value for the header prize strip.
+ *
+ * @param prize Challenge placement prize.
+ * @returns Human-readable prize value.
+ */
+function formatPrizeValue(prize: PlacementPrize): string {
+    if (prize.type === 'POINT') {
+        return `${prize.value.toLocaleString('en-US')} pts`
+    }
+
+    return new Intl.NumberFormat('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 0,
+        style: 'currency',
+    })
+        .format(prize.value)
+}
+
+/**
+ * Formats a zero-based prize index into a placement label.
+ *
+ * @param index Zero-based prize index.
+ * @returns Ordinal prize label.
+ */
+function formatPlacementLabel(index: number): string {
+    if (index === 0) {
+        return '1st'
+    }
+
+    if (index === 1) {
+        return '2nd'
+    }
+
+    if (index === 2) {
+        return '3rd'
+    }
+
+    return `${index + 1}th`
+}
+
+/**
+ * Returns the visual tone used for a placement badge.
+ *
+ * @param index Zero-based prize index.
+ * @returns CSS module tone key.
+ */
+function getPrizeTone(index: number): string {
+    if (index === 0) {
+        return 'gold'
+    }
+
+    if (index === 1) {
+        return 'silver'
+    }
+
+    if (index === 2) {
+        return 'bronze'
+    }
+
+    return 'turquoise'
 }
 
 const DeadlinesPanel: FC<{ phases: BackendChallengePhase[] }> = (
@@ -103,6 +164,22 @@ const DeadlinesPanel: FC<{ phases: BackendChallengePhase[] }> = (
 const ChallengeHeader: FC<ChallengeHeaderProps> = (props: ChallengeHeaderProps) => {
     const isDesign = isDesignChallenge(props.challenge)
     const typeName = toTypeName(props.challenge)
+    const tagLabels = useMemo(() => Array.from(new Set([
+        props.challenge.track.name,
+        typeName,
+        ...props.challenge.tags,
+    ]))
+        .filter(Boolean)
+        .slice(0, 6), [
+        props.challenge.tags,
+        props.challenge.track.name,
+        typeName,
+    ])
+    const prizeRows = useMemo(() => props.challengePrizes.map((prize, index) => ({
+        label: formatPlacementLabel(index),
+        prize,
+        tone: getPrizeTone(index),
+    })), [props.challengePrizes])
 
     const sortedPhases = useMemo(() => [...props.challenge.phases]
         .sort((a, b) => {
@@ -152,6 +229,8 @@ const ChallengeHeader: FC<ChallengeHeaderProps> = (props: ChallengeHeaderProps) 
         : undefined
 
     const nextOpenPhase = sortedPhases.find(phase => phase.isOpen && phase.name !== 'Registration')
+    const currentDeadlineValue = props.challenge.timeLeft
+        ?? (nextOpenPhase ? formatDate(getPhaseEndDate(nextOpenPhase)) : 'No open phase')
     const registerLabel = props.isLoggedIn
         ? 'Register'
         : 'Login to Register'
@@ -169,131 +248,160 @@ const ChallengeHeader: FC<ChallengeHeaderProps> = (props: ChallengeHeaderProps) 
             event.preventDefault()
         }
     }, [submitButtonDisabled])
-    const handleTabsChange = useCallback((tab: ChallengeDetailTabId): void => {
-        props.onTabChange(tab)
-    }, [props.onTabChange])
+    const handleTabClick = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        const tab = event.currentTarget.dataset.tab as ChallengeDetailTabId | undefined
+
+        if (tab) {
+            props.onTabChange(tab)
+        }
+    }, [props])
 
     return (
         <header className={styles.container}>
-            <div className={styles.topRow}>
-                <Link className={styles.backLink} to={props.challengesUrl}>
-                    <span aria-hidden='true'>&lt;</span>
-                    <span>Back to Challenges</span>
+            <div className={styles.challengeTitleRow}>
+                <Link className={styles.backCircle} to={props.challengesUrl} aria-label='Back to Challenges'>
+                    <IconOutline.ChevronDownIcon />
                 </Link>
-                <h1 className={styles.title}>{props.challenge.name}</h1>
-            </div>
-
-            <div className={styles.badges}>
-                <span className={styles.badge}>{props.challenge.track.name}</span>
-                <span className={styles.badge}>{typeName}</span>
-            </div>
-
-            <div className={styles.infoRow}>
-                {!!props.challengePrizes.length && (
-                    <div className={styles.prizes}>
-                        <span className={styles.label}>Prizes:</span>
-                        <span>
-                            {props.challengePrizes.map(prize => (
-                                prize.type === 'POINT'
-                                    ? `${prize.value.toLocaleString('en-US')} pts`
-                                    : new Intl.NumberFormat('en-US', {
-                                        currency: 'USD',
-                                        maximumFractionDigits: 0,
-                                        style: 'currency',
-                                    })
-                                        .format(prize.value)
-                            ))
-                                .join(' / ')}
-                        </span>
-                    </div>
-                )}
-
-                {checkpointBonusText && (
-                    <div className={styles.bonus}>{checkpointBonusText}</div>
-                )}
-
-                {props.challenge.reliabilityBonus && (
-                    <div className={styles.bonus}>
-                        Reliability Bonus: $
-                        {props.challenge.reliabilityBonus.toFixed(0)}
-                    </div>
-                )}
-
-                {!!props.displayWinners.length && (
-                    <div className={styles.meta}>
-                        Winners announced:
-                        {props.displayWinners.length}
-                    </div>
-                )}
-            </div>
-
-            <div className={styles.actions}>
-                {props.hasRegistered ? (
-                    <Button
-                        disabled={unregisterButtonDisabled}
-                        onClick={props.onUnregisterClick}
-                        secondary
-                    >
-                        Unregister
-                    </Button>
-                ) : (
-                    <Button
-                        disabled={registerButtonDisabled}
-                        onClick={props.onRegisterClick}
-                        primary
-                    >
-                        {registerLabel}
-                    </Button>
-                )}
-
-                <Link
-                    className={classNames(styles.actionLink, submitButtonDisabled && styles.disabled)}
-                    onClick={handleSubmitLinkClick}
-                    to={submitPath}
-                >
-                    Submit a solution
-                </Link>
-
-                {isDesign && props.hasRegistered && hasSubmissions && (
-                    <Link className={styles.actionLink} to={viewSubmissionsPath}>
-                        View Submissions
-                    </Link>
-                )}
-            </div>
-
-            <div className={styles.deadlineBar}>
                 <div>
-                    <p className={styles.deadlineTitle}>Current Phase</p>
-                    <p className={styles.deadlineValue}>
-                        {nextOpenPhase
-                            ? `${nextOpenPhase.name} ends ${formatDate(getPhaseEndDate(nextOpenPhase))}`
-                            : 'No open phase'}
-                    </p>
+                    <h1 className={styles.title}>{props.challenge.name}</h1>
+                    <div className={styles.tagRow}>
+                        {tagLabels.map(tag => (
+                            <span className={styles.smallTag} key={tag}>{tag}</span>
+                        ))}
+                    </div>
                 </div>
-                <button className={styles.toggleDeadlines} onClick={props.onToggleDeadlines} type='button'>
-                    {props.showDeadlineDetail ? 'Hide deadlines' : 'Show deadlines'}
-                </button>
             </div>
 
-            {props.showDeadlineDetail && <DeadlinesPanel phases={sortedPhases} />}
+            <div className={styles.keyInformation}>
+                <div className={styles.keyTitle}>Key information</div>
+                <div className={styles.prizeRow}>
+                    <div className={styles.prizes}>
+                        {prizeRows.length
+                            ? prizeRows.map(row => (
+                                <div
+                                    className={styles.prize}
+                                    key={`${row.label}-${row.prize.type ?? 'USD'}-${row.prize.value}`}
+                                >
+                                    <span className={classNames(styles.prizeBadge, styles[row.tone])}>
+                                        {row.label}
+                                    </span>
+                                    <strong>{formatPrizeValue(row.prize)}</strong>
+                                </div>
+                            ))
+                            : <span className={styles.noPrizes}>No prizes listed</span>}
+                    </div>
+                    <div className={styles.challengeActions}>
+                        {props.hasRegistered ? (
+                            <Button
+                                className={styles.outlinePill}
+                                disabled={unregisterButtonDisabled}
+                                onClick={props.onUnregisterClick}
+                                secondary
+                                size='lg'
+                            >
+                                Unregister
+                            </Button>
+                        ) : (
+                            <Button
+                                className={styles.primaryPill}
+                                disabled={registerButtonDisabled}
+                                onClick={props.onRegisterClick}
+                                primary
+                                size='lg'
+                            >
+                                {registerLabel}
+                            </Button>
+                        )}
 
-            <div className={styles.tabsRow}>
-                <TabsNavbar
-                    defaultActive={props.activeTab}
-                    onChange={handleTabsChange}
-                    tabs={props.tabs}
-                />
+                        <Link
+                            className={classNames(styles.primaryPillLink, submitButtonDisabled && styles.disabled)}
+                            onClick={handleSubmitLinkClick}
+                            to={submitPath}
+                        >
+                            <IconOutline.UploadIcon />
+                            Submit a solution
+                        </Link>
 
-                {props.showForumLink && props.forumLink && (
-                    <a
-                        className={styles.forumLink}
-                        href={props.forumLink}
-                        rel='noreferrer'
-                        target='_blank'
-                    >
-                        Challenge Forum
-                    </a>
+                        {isDesign && props.hasRegistered && hasSubmissions && (
+                            <Link className={styles.outlinePillLink} to={viewSubmissionsPath}>
+                                View Submissions
+                            </Link>
+                        )}
+                    </div>
+                </div>
+
+                {(checkpointBonusText || props.challenge.reliabilityBonus || props.displayWinners.length > 0) && (
+                    <p className={styles.bonus}>
+                        {checkpointBonusText && (
+                            <>
+                                <span>Bonus:</span>
+                                {' '}
+                                {checkpointBonusText}
+                            </>
+                        )}
+                        {props.challenge.reliabilityBonus && (
+                            <>
+                                {checkpointBonusText ? ' | ' : ''}
+                                <span>Reliability Bonus:</span>
+                                {' $'}
+                                {props.challenge.reliabilityBonus.toFixed(0)}
+                            </>
+                        )}
+                        {props.displayWinners.length > 0 && (
+                            <>
+                                {(checkpointBonusText || props.challenge.reliabilityBonus) ? ' | ' : ''}
+                                <span>Winners announced:</span>
+                                {' '}
+                                {props.displayWinners.length}
+                            </>
+                        )}
+                    </p>
                 )}
+
+                <button className={styles.deadlineBar} onClick={props.onToggleDeadlines} type='button'>
+                    <span>
+                        Next Deadline:
+                        {' '}
+                        <strong>{nextOpenPhase?.name ?? 'No open phase'}</strong>
+                    </span>
+                    <span className={styles.deadlineDivider} />
+                    <span>
+                        Current Deadline Ends:
+                        {' '}
+                        <strong>{currentDeadlineValue}</strong>
+                    </span>
+                    <IconOutline.ChevronDownIcon
+                        className={classNames(
+                            styles.deadlineIcon,
+                            props.showDeadlineDetail && styles.deadlineIconOpen,
+                        )}
+                    />
+                </button>
+
+                {props.showDeadlineDetail && <DeadlinesPanel phases={sortedPhases} />}
+
+                <nav className={styles.challengeTabs} aria-label='Challenge sections'>
+                    {props.tabs.map(tab => (
+                        <button
+                            aria-current={props.activeTab === tab.id ? 'page' : undefined}
+                            className={classNames(
+                                styles.tabButton,
+                                props.activeTab === tab.id && styles.activeTab,
+                            )}
+                            data-tab={tab.id}
+                            key={tab.id}
+                            onClick={handleTabClick}
+                            type='button'
+                        >
+                            {tab.title}
+                            {tab.badges?.map(badge => (
+                                <span className={styles.tabBadge} key={badge.type}>
+                                    {badge.count}
+                                </span>
+                            ))}
+                        </button>
+                    ))}
+                </nav>
             </div>
         </header>
     )

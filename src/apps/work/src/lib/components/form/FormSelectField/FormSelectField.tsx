@@ -65,10 +65,23 @@ function findOptionByValue(
     options: FormSelectOption[],
     value: string,
 ): FormSelectOption | undefined {
-    return options.find(option => option.value === value)
+    const exactMatch = options.find(option => option.value === value)
+
+    if (exactMatch) {
+        return exactMatch
+    }
+
+    const normalizedValue = value.trim()
+        .toLowerCase()
+
+    return options.find(option => (
+        typeof option.value === 'string'
+        && option.value.trim()
+            .toLowerCase() === normalizedValue
+    ))
 }
 
-function defaultFromFieldValue(
+export function defaultFromFieldValue(
     value: unknown,
     options: FormSelectOption[],
     isMulti: boolean,

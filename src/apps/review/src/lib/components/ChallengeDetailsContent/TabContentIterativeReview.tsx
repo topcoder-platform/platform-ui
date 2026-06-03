@@ -1,12 +1,21 @@
 /**
  * Content of iterative review tab.
  */
-import { FC, useContext, useMemo } from 'react'
+import {
+    FC,
+    useContext,
+    useMemo,
+} from 'react'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
+import { isContestSubmissionType } from '../../constants'
+import {
+    isFirst2FinishChallenge as detectFirst2FinishChallenge,
+    resolveFirst2FinishIterativeSubmissionIds,
+} from '../../utils/challenge'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
@@ -16,7 +25,11 @@ import {
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+
+import {
+    filterIterativeReviewRows,
+    limitFirst2FinishIterativeRows,
+} from './iterativeReviewFiltering'
 
 interface Props {
     reviews: SubmissionInfo[]
@@ -55,19 +68,13 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
     return 1
 }
 
-const normalizePhaseId = (value: unknown): string | undefined => {
-    if (value === undefined || value === null) {
-        return undefined
-    }
-
-    const normalized = `${value}`.trim()
-    return normalized.length ? normalized : undefined
-}
-
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const {
+        aiReviewDecisionsBySubmissionId,
         challengeInfo,
+        challengeSubmissions,
         myResources = [],
+        resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const {
         actionChallengeRole,
@@ -102,6 +109,31 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         () => normalizedColumnLabel === 'postmortem',
         [normalizedColumnLabel],
     )
+    const isFirst2FinishChallenge = useMemo(
+        () => detectFirst2FinishChallenge(challengeInfo),
+        [challengeInfo?.track?.name, challengeInfo?.type?.name],
+    )
+    const first2FinishSubmissionIds = useMemo<string[]>(() => {
+        if (isPostMortemPhase || !isFirst2FinishChallenge) {
+            return []
+        }
+
+        const contestSubmissions = (challengeSubmissions ?? []).filter(submission => isContestSubmissionType(
+            submission.type,
+            { defaultToContest: true },
+        ))
+        if (!contestSubmissions.length) {
+            return []
+        }
+
+        return resolveFirst2FinishIterativeSubmissionIds(
+            contestSubmissions,
+        )
+    }, [
+        challengeSubmissions,
+        isFirst2FinishChallenge,
+        isPostMortemPhase,
+    ])
 
     const isSubmitterOnly = actionChallengeRole === SUBMITTER
         && postMortemReviewerResourceIds.size === 0
@@ -118,55 +150,27 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         [sourceRows, myMemberIds, props.postMortemMinimumPassingScore],
     )
 
-    const phaseIdFilterSet = useMemo(() => {
-        const normalizedFilter = normalizePhaseId(props.phaseIdFilter)
-        if (!normalizedFilter) {
-            return undefined
-        }
-
-        const ids = new Set<string>([normalizedFilter])
-        const phases = challengeInfo?.phases ?? []
-        const matchingPhase = phases.find(phase => {
-            const phaseId = normalizePhaseId(phase.id)
-            const phaseTypeId = normalizePhaseId(phase.phaseId)
-            return phaseId === normalizedFilter || phaseTypeId === normalizedFilter
+    const filteredRows = useMemo(() => {
+        const rows = filterIterativeReviewRows({
+            aiReviewDecisionsBySubmissionId,
+            challengePhases: challengeInfo?.phases,
+            isPostMortemPhase,
+            limitToSubmissionIds: first2FinishSubmissionIds,
+            phaseIdFilter: props.phaseIdFilter,
+            reviewerResources: resources,
+            sourceRows,
         })
 
-        if (matchingPhase) {
-            const phaseId = normalizePhaseId(matchingPhase.id)
-            if (phaseId) {
-                ids.add(phaseId)
-            }
-
-            const phaseTypeId = normalizePhaseId(matchingPhase.phaseId)
-            if (phaseTypeId) {
-                ids.add(phaseTypeId)
-            }
-        }
-
-        return ids
-    }, [challengeInfo?.phases, props.phaseIdFilter])
-
-    const filteredRows = useMemo(() => {
-        if (phaseIdFilterSet?.size) {
-            return sourceRows.filter(submission => {
-                const reviewPhaseId = normalizePhaseId(submission.review?.phaseId)
-                return reviewPhaseId ? phaseIdFilterSet.has(reviewPhaseId) : false
-            })
-        }
-
-        if (!isPostMortemPhase) {
-            const iterativeOnly = sourceRows.filter(submission => !shouldIncludeInReviewPhase(
-                submission,
-                challengeInfo?.phases,
-            ))
-            if (iterativeOnly.length) {
-                return iterativeOnly
-            }
-        }
-
-        return sourceRows
-    }, [sourceRows, phaseIdFilterSet, isPostMortemPhase, challengeInfo?.phases])
+        return rows
+    }, [
+        aiReviewDecisionsBySubmissionId,
+        sourceRows,
+        isPostMortemPhase,
+        challengeInfo?.phases,
+        props.phaseIdFilter,
+        resources,
+        first2FinishSubmissionIds,
+    ])
 
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
@@ -186,18 +190,38 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
 
         return Array.from(map.values())
     }, [filteredRows])
+    const first2FinishReviewRows = useMemo<SubmissionInfo[]>(
+        () => {
+            if (isPostMortemPhase || !isFirst2FinishChallenge) {
+                return reviewRows
+            }
+
+            return limitFirst2FinishIterativeRows(reviewRows, first2FinishSubmissionIds, {
+                forceSingleRow: true,
+            })
+        },
+        [
+            first2FinishSubmissionIds,
+            isFirst2FinishChallenge,
+            isPostMortemPhase,
+            reviewRows,
+        ],
+    )
 
     const filteredReviewRows = useMemo<SubmissionInfo[]>(
         () => {
             if (!isPostMortemPhase) {
-                return reviewRows
+                return first2FinishReviewRows
             }
 
-            if (isPrivilegedRole || (isChallengeCompleted && (!isPostMortemPhase || hasPassedPostMortemThreshold))) {
-                return reviewRows
+            if (
+                isPrivilegedRole
+                || (isChallengeCompleted && (!isPostMortemPhase || hasPassedPostMortemThreshold))
+            ) {
+                return first2FinishReviewRows
             }
 
-            return reviewRows.filter(row => {
+            return first2FinishReviewRows.filter(row => {
                 if (row.review?.resourceId
                     && postMortemReviewerResourceIds.has(row.review.resourceId)) {
                     return true
@@ -211,7 +235,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
             })
         },
         [
-            reviewRows,
+            first2FinishReviewRows,
             isPostMortemPhase,
             isPrivilegedRole,
             isChallengeCompleted,

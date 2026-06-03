@@ -203,6 +203,8 @@ workflows:
                           ignore:
                               - master
                               - qa
+                      tags:
+                          only: /^dev-.*/
 
             - build-qa:
                   context: org-global
@@ -226,9 +228,10 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - mm-final-2025-reveal
-                              - HOTFIX-PM-3269
-                              - work-manager
+                              - hide_ba_details
+                      tags:
+                          only: /^dev-.*/
+
             - deployQa:
                   context: org-global
                   requires:

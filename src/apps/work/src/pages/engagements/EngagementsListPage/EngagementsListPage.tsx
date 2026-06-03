@@ -9,7 +9,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
@@ -21,6 +21,7 @@ import {
 import {
     ENGAGEMENTS_APP_URL,
     PAGE_SIZE,
+    PROJECT_STATUS,
 } from '../../../lib/constants'
 import {
     WorkAppContext,
@@ -28,6 +29,7 @@ import {
 import {
     useFetchEngagements,
     useFetchProject,
+    useFetchProjects,
 } from '../../../lib/hooks'
 import {
     Engagement,
@@ -35,6 +37,10 @@ import {
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    deleteEngagement,
+} from '../../../lib/services'
+import {
+    ConfirmationModal,
     EngagementsFilter,
     EngagementsListFilters,
     ErrorMessage,
@@ -42,11 +48,20 @@ import {
     Pagination,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
+    ProjectStatus,
 } from '../../../lib/components'
 import {
+    canCreateEngagement,
+    canViewAllEngagements,
+    checkCanManageProject,
+    checkTalentManager,
+    extractErrorMessage,
     formatEngagementStatus,
     getApplicationsCount,
     getAssignedMembersCount,
+    getEngagementStatusPillVariant,
+    showErrorToast,
+    showSuccessToast,
 } from '../../../lib/utils'
 
 import styles from './EngagementsListPage.module.scss'
@@ -54,6 +69,7 @@ import styles from './EngagementsListPage.module.scss'
 type SortOrder = 'asc' | 'desc'
 
 type EngagementSortField =
+    | 'createdAt'
     | 'anticipatedStart'
     | 'applications'
     | 'membersAssigned'
@@ -102,6 +118,10 @@ const columns: ColumnDefinition[] = [
 ]
 
 function getSortValue(engagement: Engagement, fieldName: EngagementSortField): number | string {
+    if (fieldName === 'createdAt') {
+        return engagement.createdAt || ''
+    }
+
     if (fieldName === 'anticipatedStart') {
         const orderMap: Record<string, number> = {
             FEW_DAYS: 2,
@@ -178,26 +198,25 @@ function getAssignedMemberHandles(engagement: Engagement): string[] {
 }
 
 function getExternalEngagementViewUrl(engagement: Engagement): string {
-    return `${ENGAGEMENTS_APP_URL}/opportunities/${engagement.id}`
+    return `${ENGAGEMENTS_APP_URL}/${engagement.id}`
 }
 
 function getStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
-        .toLowerCase()
+    const pillVariant = getEngagementStatusPillVariant(status)
 
-    if (normalizedStatus === 'active') {
+    if (pillVariant === 'green') {
         return styles.statusGreen
     }
 
-    if (normalizedStatus === 'open' || normalizedStatus === 'pending assignment') {
+    if (pillVariant === 'yellow') {
         return styles.statusYellow
     }
 
-    if (normalizedStatus === 'closed') {
+    if (pillVariant === 'blue') {
         return styles.statusBlue
     }
 
-    if (normalizedStatus === 'cancelled') {
+    if (pillVariant === 'red') {
         return styles.statusRed
     }
 
@@ -222,7 +241,7 @@ function renderMembersAssignedCell(
     const count = getAssignedMembersCount(engagement)
     const handles = getAssignedMemberHandles(engagement)
 
-    const hasAssignmentsRoute = !!engagementProjectId && !!engagement.id && count > 0
+    const hasAssignmentsRoute = !!engagementProjectId && !!engagement.id
     const countElement = hasAssignmentsRoute
         ? (
             <Link
@@ -279,7 +298,9 @@ function getEngagementProjectName(
 
 function renderEngagementRows(
     engagements: Engagement[],
-    canManage: boolean,
+    canEditEngagement: boolean,
+    canDelete: boolean,
+    onDeleteOpen: (engagement: Engagement) => void,
     assignmentsBackUrl: string,
     projectNameLookup: Record<string, string>,
     fallbackProjectId?: string,
@@ -288,6 +309,9 @@ function renderEngagementRows(
     return engagements.map(engagement => {
         const applicationsCount = getApplicationsCount(engagement)
         const engagementProjectId = getEngagementProjectId(engagement, fallbackProjectId)
+        const engagementAssignmentsRoute = engagementProjectId && engagement.id
+            ? `/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`
+            : undefined
         const projectName = getEngagementProjectName(
             engagement,
             projectNameLookup,
@@ -311,7 +335,23 @@ function renderEngagementRows(
                         )
                         : projectName}
                 </td>
-                <td className={styles.engagementTitle}>{engagement.title || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    {engagementAssignmentsRoute
+                        ? (
+                            <Link
+                                className={styles.link}
+                                to={engagementAssignmentsRoute}
+                                state={assignmentsBackUrl
+                                    ? {
+                                        backUrl: assignmentsBackUrl,
+                                    }
+                                    : undefined}
+                            >
+                                {engagement.title || '-'}
+                            </Link>
+                        )
+                        : engagement.title || '-'}
+                </td>
                 <td>{engagement.isPrivate ? 'Private' : 'Public'}</td>
                 <td>{renderEngagementStatus(engagement.status)}</td>
                 <td>
@@ -337,7 +377,7 @@ function renderEngagementRows(
                         >
                             View
                         </a>
-                        {canManage && engagementProjectId
+                        {canEditEngagement && engagementProjectId
                             ? (
                                 <Link
                                     className={styles.actionLink}
@@ -345,6 +385,21 @@ function renderEngagementRows(
                                 >
                                     Edit
                                 </Link>
+                            )
+                            : undefined}
+                        {canDelete && engagement.id
+                            ? (
+                                <button
+                                    className={classNames(
+                                        styles.actionLink,
+                                        styles.actionButton,
+                                        styles.actionDelete,
+                                    )}
+                                    onClick={() => onDeleteOpen(engagement)}
+                                    type='button'
+                                >
+                                    Delete
+                                </button>
                             )
                             : undefined}
                     </div>
@@ -356,22 +411,31 @@ function renderEngagementRows(
 
 export const EngagementsListPage: FC = () => {
     const params: Readonly<{ projectId?: string }> = useParams<'projectId'>()
-    const location = useLocation()
     const projectId = params.projectId
     const isAllEngagementsPage = !projectId
 
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
 
-    const canManage = contextValue.isAdmin || contextValue.isManager
+    const isTalentManagerOnly = !contextValue.isAdmin
+        && checkTalentManager(contextValue.userRoles)
+    const canViewEngagements = canViewAllEngagements(contextValue.userRoles)
+    const canDelete = contextValue.isAdmin
+    const canManage = canDelete || contextValue.isManager
+    const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
+    const canEditEngagement = canCreateProjectEngagement
+    const memberProjectsResult = useFetchProjects({
+        enabled: isAllEngagementsPage && isTalentManagerOnly,
+        memberOnly: true,
+    })
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: undefined,
         title: undefined,
@@ -379,25 +443,53 @@ export const EngagementsListPage: FC = () => {
     }))
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [engagementToDelete, setEngagementToDelete] = useState<Engagement | undefined>(undefined)
+    const [isDeletingEngagement, setIsDeletingEngagement] = useState<boolean>(false)
+    const scopedProjectIds = useMemo(
+        () => (
+            isAllEngagementsPage && isTalentManagerOnly
+                ? memberProjectsResult.projects
+                    .map(project => String(project.id || '')
+                        .trim())
+                    .filter(Boolean)
+                : undefined
+        ),
+        [isAllEngagementsPage, isTalentManagerOnly, memberProjectsResult.projects],
+    )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
-        includePrivate: canManage,
+        includePrivate: canManage && canViewEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
+        projectIds: isAllEngagementsPage && isTalentManagerOnly
+            ? scopedProjectIds
+            : undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: filters.status,
-        title: filters.title,
-    }), [canManage, filters.status, filters.title, isAllEngagementsPage, projectId])
+    }), [
+        canViewEngagements,
+        canManage,
+        filters.status,
+        isAllEngagementsPage,
+        isTalentManagerOnly,
+        projectId,
+        scopedProjectIds,
+    ])
+    const isScopedProjectsLoading = isAllEngagementsPage
+        && isTalentManagerOnly
+        && memberProjectsResult.isLoading
 
     const engagementsResult = useFetchEngagements(
         projectId,
         requestFilters,
         {
-            enabled: isAllEngagementsPage || !!projectId,
+            enabled: canViewEngagements
+                && (isAllEngagementsPage || !!projectId)
+                && !isScopedProjectsLoading,
         },
     )
     const projectResult = useFetchProject(projectId)
@@ -540,6 +632,45 @@ export const EngagementsListPage: FC = () => {
         }
     }, [isAllEngagementsPage])
 
+    const handleDeleteCancel = useCallback((): void => {
+        if (isDeletingEngagement) {
+            return
+        }
+
+        setEngagementToDelete(undefined)
+    }, [isDeletingEngagement])
+
+    const handleDeleteConfirm = useCallback(async (): Promise<void> => {
+        if (!engagementToDelete?.id || isDeletingEngagement) {
+            return
+        }
+
+        setIsDeletingEngagement(true)
+
+        try {
+            await deleteEngagement(engagementToDelete.id)
+            setEngagementToDelete(undefined)
+            showSuccessToast('Engagement deleted successfully.')
+
+            await engagementsResult.mutate()
+                .catch(() => undefined)
+        } catch (error) {
+            const errorMessage = extractErrorMessage(
+                error,
+                'Unable to delete engagement. Please try again.',
+            )
+            const normalizedErrorMessage = errorMessage.toLowerCase()
+
+            showErrorToast(
+                normalizedErrorMessage.includes('member') && normalizedErrorMessage.includes('assign')
+                    ? 'This engagement has members assigned. Please cancel the engagement instead of deleting it.'
+                    : errorMessage,
+            )
+        } finally {
+            setIsDeletingEngagement(false)
+        }
+    }, [engagementToDelete, engagementsResult, isDeletingEngagement])
+
     const paginatedEngagements = useMemo(() => {
         if (!isAllEngagementsPage) {
             return filteredEngagements
@@ -565,68 +696,66 @@ export const EngagementsListPage: FC = () => {
         ? 'All Engagements'
         : (
             projectResult.project?.name
-                ? `${projectResult.project.name} Engagements`
+                ? projectResult.project.name
                 : 'Engagements'
+        )
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(
+            contextValue.userRoles,
+            contextValue.loginUserInfo?.userId,
+            projectResult.project,
         )
     const assignmentsBackUrl = isAllEngagementsPage
         ? '/engagements'
         : `/projects/${projectId}/engagements`
+    const isProjectActive = String(projectResult.project?.status || '')
+        .trim()
+        .toLowerCase() === PROJECT_STATUS.ACTIVE
+    const isCreateActionDisabled = !!projectId && !isProjectActive
 
-    const rightHeader = projectId
+    const createEngagementAction = projectId && canCreateProjectEngagement
         ? (
-            <div className={styles.headerActions}>
-                <Link
-                    className={styles.headerActionLink}
-                    to={`/projects/${projectId}/challenges/new`}
-                >
-                    <Button
-                        label='Create Challenge'
-                        primary
-                        size='md'
-                    />
-                </Link>
-
-                <Link
-                    className={styles.headerActionLink}
-                    to={`/projects/${projectId}/engagements/new`}
-                >
+            isCreateActionDisabled
+                ? (
                     <Button
                         label='Create Engagement'
-                        secondary
+                        primary
                         size='md'
+                        disabled
                     />
-                </Link>
-            </div>
+                )
+                : (
+                    <Link
+                        className={styles.headerActionLink}
+                        to={`/projects/${projectId}/engagements/new`}
+                    >
+                        <Button
+                            label='Create Engagement'
+                            primary
+                            size='md'
+                        />
+                    </Link>
+                )
         )
         : undefined
 
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
-                <Link
-                    aria-label='Edit project'
-                    className={styles.projectEditLink}
-                    to={`/projects/${projectId}/edit`}
-                >
-                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
-                </Link>
-                <Link
-                    aria-label='Manage project users'
-                    className={styles.projectUsersLink}
-                    state={{
-                        backTo: `${location.pathname}${location.search}${location.hash}`,
-                    }}
-                    to={`/projects/${projectId}/users`}
-                >
-                    <IconOutline.UserIcon className={styles.projectUsersIcon} />
-                </Link>
-                <Link
-                    aria-label='Open project assets'
-                    className={styles.projectAssetsLink}
-                    to={`/projects/${projectId}/assets`}
-                >
-                    <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
-                </Link>
+                {projectResult.project?.status
+                    ? <ProjectStatus status={projectResult.project.status} />
+                    : undefined}
+                {canManageProject
+                    ? (
+                        <Link
+                            aria-label='Edit project'
+                            className={styles.projectEditLink}
+                            to={`/projects/${projectId}/edit`}
+                        >
+                            <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                        </Link>
+                    )
+                    : undefined}
             </div>
         )
         : undefined
@@ -639,21 +768,45 @@ export const EngagementsListPage: FC = () => {
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
+                canManageProject={canManageProject}
+                displayMemberPaymentDetailsToCopilots={
+                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots
+                }
                 projectId={projectId}
-                projectStatus={projectResult.project?.status}
             />
         )
         : undefined
+    const accessDeniedMessage = isAllEngagementsPage
+        ? 'You need Admin or Talent Manager role to view all engagements.'
+        : 'You need Admin or Talent Manager role to view engagements.'
+
+    if (!canViewEngagements) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+                rightHeader={createEngagementAction}
+                titleAction={titleAction}
+            >
+                {billingAccountExpiredNotice}
+                {projectTabs}
+                <ErrorMessage message={accessDeniedMessage} />
+            </PageWrapper>
+        )
+    }
 
     if (
-        engagementsResult.isLoading
-        || (!isAllEngagementsPage && projectResult.isLoading)
+        isScopedProjectsLoading
+        || (
+            engagementsResult.isLoading
+            || (!isAllEngagementsPage && projectResult.isLoading)
+        )
     ) {
         return (
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
-                rightHeader={rightHeader}
+                rightHeader={createEngagementAction}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
@@ -668,7 +821,7 @@ export const EngagementsListPage: FC = () => {
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
-                rightHeader={rightHeader}
+                rightHeader={createEngagementAction}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
@@ -688,7 +841,7 @@ export const EngagementsListPage: FC = () => {
         <PageWrapper
             pageTitle={pageTitle}
             breadCrumb={[]}
-            rightHeader={rightHeader}
+            rightHeader={createEngagementAction}
             titleAction={titleAction}
         >
             {billingAccountExpiredNotice}
@@ -732,7 +885,9 @@ export const EngagementsListPage: FC = () => {
                             {paginatedEngagements.length
                                 ? renderEngagementRows(
                                     paginatedEngagements,
-                                    canManage,
+                                    canEditEngagement,
+                                    canDelete,
+                                    setEngagementToDelete,
                                     assignmentsBackUrl,
                                     projectNameLookup,
                                     projectId,
@@ -762,6 +917,30 @@ export const EngagementsListPage: FC = () => {
                         }}
                     />
                 )}
+
+                {engagementToDelete
+                    ? (
+                        <ConfirmationModal
+                            confirmButtonDanger
+                            confirmDisabled={isDeletingEngagement}
+                            confirmText={
+                                isDeletingEngagement
+                                    ? 'Deleting...'
+                                    : 'Delete'
+                            }
+                            message={
+                                `Are you sure you want to delete "${engagementToDelete.title || 'this engagement'}"? `
+                                + 'This action cannot be undone.'
+                            }
+                            onCancel={handleDeleteCancel}
+                            onConfirm={() => {
+                                handleDeleteConfirm()
+                                    .catch(() => undefined)
+                            }}
+                            title='Confirm Delete'
+                        />
+                    )
+                    : undefined}
             </div>
         </PageWrapper>
     )

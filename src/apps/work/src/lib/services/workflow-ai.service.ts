@@ -7,6 +7,7 @@ import {
     AI_WORKFLOW_POLL_INTERVAL_MS,
     AI_WORKFLOW_POLL_TIMEOUT_MS,
     TC_AI_API_BASE_URL,
+    TC_AI_AUTOWRITE_WORKFLOW_ID,
     TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID,
 } from '../constants'
 import {
@@ -28,9 +29,7 @@ interface WorkflowRunStatusResponse {
 }
 
 interface WorkflowStartPayload {
-    inputData: {
-        jobDescription: string
-    }
+    inputData: Record<string, string>
 }
 
 interface SkillsExtractionResult {
@@ -138,10 +137,11 @@ async function startWorkflowRun(
     workflowId: string,
     runId: string,
     description: string,
+    payloadKey: string = 'jobDescription',
 ): Promise<void> {
     const payload: WorkflowStartPayload = {
         inputData: {
-            jobDescription: description,
+            [payloadKey]: description,
         },
     }
 
@@ -160,13 +160,22 @@ async function fetchWorkflowRunStatus(
     )
 }
 
-async function pollWorkflowRunSkillsResult(
+/**
+ * Polls an AI workflow run until it completes or times out.
+ *
+ * @param workflowId - Workflow identifier for the run being checked.
+ * @param runId - Run identifier returned from workflow creation.
+ * @param startedAtMs - Epoch time used to enforce the polling timeout.
+ * @returns The raw workflow result payload when the run succeeds.
+ * @throws Error when the workflow fails or the polling window expires.
+ */
+async function pollWorkflowRunResult(
     workflowId: string,
     runId: string,
     startedAtMs: number,
-): Promise<Skill[]> {
+): Promise<unknown> {
     if ((Date.now() - startedAtMs) > AI_WORKFLOW_POLL_TIMEOUT_MS) {
-        throw new Error('Skills extraction request timed out')
+        throw new Error('Workflow request timed out')
     }
 
     const runStatus = await fetchWorkflowRunStatus(workflowId, runId)
@@ -175,7 +184,7 @@ async function pollWorkflowRunSkillsResult(
         .toLowerCase()
 
     if (status === 'success') {
-        return extractSkillsFromResult(runStatus.result)
+        return runStatus.result
     }
 
     if (status === 'failed') {
@@ -189,7 +198,7 @@ async function pollWorkflowRunSkillsResult(
 
     await sleep(AI_WORKFLOW_POLL_INTERVAL_MS)
 
-    return pollWorkflowRunSkillsResult(
+    return pollWorkflowRunResult(
         workflowId,
         runId,
         startedAtMs,
@@ -224,8 +233,64 @@ export async function extractSkillsFromText(
             normalizedDescription,
         )
 
-        return pollWorkflowRunSkillsResult(normalizedWorkflowId, runId, Date.now())
+        const result = await pollWorkflowRunResult(normalizedWorkflowId, runId, Date.now())
+
+        return extractSkillsFromResult(result)
     } catch (error) {
         throw normalizeError(error, 'Failed to extract skills from description')
+    }
+}
+
+/**
+ * Rewrites an engagement description with the AI autowrite workflow.
+ *
+ * @param description - Existing engagement description to improve.
+ * @param workflowId - Optional workflow ID override for non-default environments.
+ * @returns The formatted description returned by the workflow.
+ * @throws Error when the description is empty, the workflow is not configured, or no formatted
+ * description is returned by the workflow result.
+ */
+export async function autowriteDescription(
+    description: string,
+    workflowId?: string,
+): Promise<string> {
+    const normalizedDescription = description.trim()
+
+    if (!normalizedDescription) {
+        throw new Error('Description must be a non-empty string')
+    }
+
+    const normalizedWorkflowId = String(
+        workflowId || TC_AI_AUTOWRITE_WORKFLOW_ID,
+    )
+        .trim()
+
+    if (!normalizedWorkflowId) {
+        throw new Error('Workflow ID is required to autowrite description')
+    }
+
+    try {
+        const runId = await createWorkflowRun(normalizedWorkflowId)
+
+        await startWorkflowRun(
+            normalizedWorkflowId,
+            runId,
+            normalizedDescription,
+            'rawDescription',
+        )
+
+        const result = await pollWorkflowRunResult(normalizedWorkflowId, runId, Date.now())
+        const formattedDescription = typeof result === 'object' && result
+            ? String((result as { formattedDescription?: unknown }).formattedDescription || '')
+                .trim()
+            : ''
+
+        if (!formattedDescription) {
+            throw new Error('No formatted description returned')
+        }
+
+        return formattedDescription
+    } catch (error) {
+        throw normalizeError(error, 'Failed to generate description')
     }
 }

@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<EngagementStatus, string> = {
     [EngagementStatus.OPEN]: 'Open',
     [EngagementStatus.PENDING_ASSIGNMENT]: 'Pending Assignment',
     [EngagementStatus.ACTIVE]: 'Active',
+    [EngagementStatus.ON_HOLD]: 'On Hold',
     [EngagementStatus.CANCELLED]: 'Cancelled',
     [EngagementStatus.CLOSED]: 'Closed',
 }

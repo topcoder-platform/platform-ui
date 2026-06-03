@@ -62,3 +62,22 @@ export const downloadReportAsJson = (path: string): Promise<Blob> => (
 export const downloadReportAsCsv = (path: string): Promise<Blob> => (
     downloadReportBlob(path, 'text/csv')
 )
+
+/**
+ * Triggers a browser download for a report blob.
+ * @param blob the report data returned from the reports API.
+ * @param fileName the file name to present in the browser download prompt.
+ * @returns nothing. The helper is used by the admin reports pages after a blob response is received.
+ * @throws Does not throw intentionally. Browser download failures surface from the underlying DOM APIs.
+ */
+export const downloadBlobFile = (blob: Blob, fileName: string): void => {
+    const link = document.createElement('a')
+    const url = window.URL.createObjectURL(blob)
+
+    link.href = url
+    link.setAttribute('download', fileName)
+    document.body.appendChild(link)
+    link.click()
+    link.parentNode?.removeChild(link)
+    window.URL.revokeObjectURL(url)
+}

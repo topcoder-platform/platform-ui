@@ -18,14 +18,41 @@
     }
 
     :global(.input-el) {
+        align-items: center;
+        border-color: $black-20;
         box-sizing: border-box;
         height: 40px;
+        justify-content: center;
         margin-bottom: 0;
-        padding-top: 8px;
+        min-height: 40px;
+        padding: 0 12px;
     }
 
     :global(.input-el > label) {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+        justify-content: center;
         margin-bottom: 0;
+        width: 100%;
+    }
+
+    :global(.input-el > label > .react-datepicker-wrapper),
+    :global(.input-el > label > .react-datepicker-wrapper > .react-datepicker__input-container) {
+        align-items: center;
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    :global(.input-el > label > .react-datepicker-wrapper > .react-datepicker__input-container > input) {
+        color: $black-80;
+        font-size: 14px;
+        height: 100%;
+        line-height: 20px;
+        padding: 0;
+        width: 100%;
     }
 }
 

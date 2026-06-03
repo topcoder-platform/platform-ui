@@ -2,6 +2,20 @@ import { EnvironmentConfig } from '~/config'
 
 export const WORK_APP_BODY_CLASS = 'work-app'
 
+export const BILLING_ACCOUNT_BUDGET_DISPLAY_ENABLED = true
+
+export const BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
+
+export const BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED = true
+
+const DEFAULT_CREATE_FORUM_TYPE_IDS = [
+    '927abff4-7af9-4145-8ba1-577c16e64e2e',
+    'dc876fa4-ef2d-4eee-b701-b555fcc6544c',
+    'ecd58c69-238f-43a4-a4bb-d172719b9f31',
+    '78b37a69-92d5-4ad7-bf85-c79b65420c79',
+    '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+]
+
 export const CHALLENGE_STATUS = {
     ACTIVE: 'ACTIVE',
     APPROVED: 'APPROVED',
@@ -18,9 +32,15 @@ export const CHALLENGE_STATUS = {
     NEW: 'NEW',
 } as const
 
+export const CHALLENGE_APPROVAL_STATUS = {
+    APPROVED: 'APPROVED',
+    PENDING_APPROVAL: 'PENDING_APPROVAL',
+    REJECTED: 'REJECTED',
+} as const
+
 export const PAGE_SIZE = 10
 
-export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 25, 50]
+export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]
 
 export const CHALLENGE_TRACKS = {
     COMPETITIVE_PROGRAMMING: 'COMPETITIVE_PROGRAMMING',
@@ -40,6 +60,27 @@ export const CHALLENGE_API_URL = process.env.REACT_APP_CHALLENGE_API_URL
     || process.env.CHALLENGE_API_URL
     || EnvironmentConfig.CHALLENGE_API_URL
     || `${EnvironmentConfig.API.V6}/challenges`
+
+const configuredCreateForumTypeIds = (
+    EnvironmentConfig as unknown as Record<string, unknown>
+).CREATE_FORUM_TYPE_IDS
+
+export const CREATE_FORUM_TYPE_IDS = Array.isArray(configuredCreateForumTypeIds)
+    ? configuredCreateForumTypeIds
+        .filter((typeId): typeId is string => typeof typeId === 'string' && typeId.trim().length > 0)
+    : (
+        process.env.REACT_APP_CREATE_FORUM_TYPE_IDS
+        || process.env.CREATE_FORUM_TYPE_IDS
+        || (
+            typeof configuredCreateForumTypeIds === 'string'
+                ? configuredCreateForumTypeIds
+                : undefined
+        )
+    )
+        ?.split(',')
+        .map(typeId => typeId.trim())
+        .filter(Boolean)
+        || DEFAULT_CREATE_FORUM_TYPE_IDS
 
 export const ENGAGEMENTS_API_URL = process.env.REACT_APP_ENGAGEMENTS_API_URL
     || process.env.ENGAGEMENTS_API_URL
@@ -103,6 +144,10 @@ export const TC_AI_API_BASE_URL = process.env.REACT_APP_TC_AI_API_BASE_URL
 export const TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID = process.env.REACT_APP_TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID
     || process.env.TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID
     || 'skillExtractionWorkflow'
+
+export const TC_AI_AUTOWRITE_WORKFLOW_ID = process.env.REACT_APP_TC_AI_AUTOWRITE_WORKFLOW_ID
+    || process.env.TC_AI_AUTOWRITE_WORKFLOW_ID
+    || 'jdAutowriteWorkflow'
 
 export const AI_WORKFLOW_POLL_INTERVAL_MS = 1000
 
@@ -188,6 +233,11 @@ export const RESOURCE_ROLES_API_URL = normalizeApiUrlForEnvironment(rawResourceR
 export const SUBMISSIONS_API_URL = process.env.REACT_APP_SUBMISSIONS_API_URL
     || process.env.SUBMISSIONS_API_URL
     || `${EnvironmentConfig.API.V6}/submissions`
+
+export const MARATHON_MATCH_API_URL = process.env.REACT_APP_MARATHON_MATCH_API_URL
+    || process.env.MARATHON_MATCH_API_URL
+    || EnvironmentConfig.MARATHON_MATCH_API
+    || `${EnvironmentConfig.API.V6}/marathon-match`
 
 export const COMMUNITY_APP_URL = process.env.REACT_APP_COMMUNITY_APP_URL
     || process.env.COMMUNITY_APP_URL
@@ -292,8 +342,8 @@ export const ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES = [
 
 export const ENGAGEMENT_STATUSES = [
     'Open',
-    'Pending Assignment',
     'Active',
+    'On Hold',
     'Cancelled',
     'Closed',
 ] as const

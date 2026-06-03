@@ -11,11 +11,13 @@
     border-radius: 0 0 $sp-1 $sp-1;
     padding: $sp-2 0;
     max-height: 320px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: max-content;
     :global {
         ul > li {
             text-align: left;
-
+            white-space: nowrap;
             font-weight: normal;
             color: $black-100;
             padding: $sp-2 $sp-4;

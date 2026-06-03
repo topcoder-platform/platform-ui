@@ -14,4 +14,9 @@ export * from './default-reviewers.service'
 export * from './timeline-templates.service'
 export * from './phases.service'
 export * from './scorecards.service'
-export * from './reports.service'
+export {
+    downloadBlobFile,
+    downloadReportAsCsv,
+    downloadReportAsJson,
+    fetchReportsIndex,
+} from './reports.service'

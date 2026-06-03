@@ -37,7 +37,6 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
         id: toolTitle,
         rolesRequired: [
             UserRole.administrator,
-            UserRole.projectManager,
             UserRole.talentManager,
         ],
         route: rootRoute,

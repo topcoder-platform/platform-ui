@@ -24,7 +24,7 @@ import {
     ReviewResult,
     SubmissionInfo,
 } from '../../models'
-import { hasIsLatestFlag } from '../../utils'
+import { hasIsLatestFlag, isMarathonMatchChallenge } from '../../utils'
 import { TableAppeals } from '../TableAppeals'
 import { TableAppealsForSubmitter } from '../TableAppealsForSubmitter'
 import { TableAppealsResponse } from '../TableAppealsResponse'
@@ -86,7 +86,15 @@ const parseScoreValue = (value: unknown): number | undefined => {
     return undefined
 }
 
-const resolveSubmissionReviewScore = (submission: SubmissionInfo): number | undefined => {
+const resolveSubmissionReviewScore = (
+    submission: SubmissionInfo,
+    preferAggregateScore: boolean,
+): number | undefined => {
+    const aggregateScore = parseScoreValue(submission.aggregateScore)
+    if (preferAggregateScore && aggregateScore !== undefined) {
+        return aggregateScore
+    }
+
     const reviewResultScores = Array.isArray(submission.reviews)
         ? submission.reviews
             .map(review => parseScoreValue(review?.score))
@@ -98,7 +106,6 @@ const resolveSubmissionReviewScore = (submission: SubmissionInfo): number | unde
         return total / reviewResultScores.length
     }
 
-    const aggregateScore = parseScoreValue(submission.aggregateScore)
     if (aggregateScore !== undefined) {
         return aggregateScore
     }
@@ -122,10 +129,13 @@ type SubmissionScoreEntry = {
     submission: SubmissionInfo
 }
 
-const sortSubmissionsByReviewScoreDesc = (rows: SubmissionInfo[]): SubmissionInfo[] => {
+const sortSubmissionsByReviewScoreDesc = (
+    rows: SubmissionInfo[],
+    preferAggregateScore: boolean,
+): SubmissionInfo[] => {
     const entries: SubmissionScoreEntry[] = rows.map((submission, index) => ({
         index,
-        score: resolveSubmissionReviewScore(submission),
+        score: resolveSubmissionReviewScore(submission, preferAggregateScore),
         submission,
     }))
 
@@ -157,6 +167,38 @@ const sortSubmissionsByReviewScoreDesc = (rows: SubmissionInfo[]): SubmissionInf
     return entries.map(entry => entry.submission)
 }
 
+const isAiFailedReviewSubmission = (submission?: SubmissionInfo): boolean => (
+    (submission?.status || '').toUpperCase() === 'AI_FAILED_REVIEW'
+)
+
+const mergeSubmissionsById = (
+    primary: SubmissionInfo[],
+    additional: SubmissionInfo[],
+): SubmissionInfo[] => {
+    if (!additional.length) {
+        return primary
+    }
+
+    const ids = new Set(primary
+        .map(submission => submission.id)
+        .filter((id): id is string => Boolean(id)))
+
+    const merged = [...primary]
+    additional.forEach(submission => {
+        const submissionId = submission.id
+        if (submissionId && ids.has(submissionId)) {
+            return
+        }
+
+        merged.push(submission)
+        if (submissionId) {
+            ids.add(submissionId)
+        }
+    })
+
+    return merged
+}
+
 export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
     const providedReviews = props.reviews
@@ -164,6 +206,20 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const normalizedSelectedTab = useMemo(
         () => normalizeTabLabel(selectedTab),
         [selectedTab],
+    )
+    const selectedReviewPhaseName = useMemo<string | undefined>(
+        () => {
+            if (normalizedSelectedTab === 'specificationreview') {
+                return 'Specification Review'
+            }
+
+            if (normalizedSelectedTab === 'review') {
+                return 'Review'
+            }
+
+            return undefined
+        },
+        [normalizedSelectedTab],
     )
     const shouldSortReviewTabByScore = useMemo(
         () => !props.isActiveChallenge && normalizedSelectedTab === 'review',
@@ -180,6 +236,10 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
+    )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
+        [challengeInfo],
     )
     const myOwnedMemberIds = useMemo<Set<string>>(
         () => {
@@ -467,18 +527,41 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             isContestReviewPhaseSubmission(
                 submission,
                 challengeInfo?.phases,
+                selectedReviewPhaseName ?? 'Review',
             )
         ),
-        [challengeInfo?.phases],
+        [challengeInfo?.phases, selectedReviewPhaseName],
+    )
+    const shouldIncludeReviewRow = useCallback(
+        (submission: SubmissionInfo): boolean => {
+            if (selectedReviewPhaseName) {
+                return isContestReviewPhaseSubmission(
+                    submission,
+                    challengeInfo?.phases,
+                    selectedReviewPhaseName,
+                ) || (
+                    selectedReviewPhaseName === 'Review'
+                    && isAiFailedReviewSubmission(submission)
+                )
+            }
+
+            return shouldIncludeInReviewPhase(submission, challengeInfo?.phases)
+                || isAiFailedReviewSubmission(submission)
+        },
+        [challengeInfo?.phases, selectedReviewPhaseName],
     )
     const resolvedReviews = useMemo(
         () => {
             const baseReviews = (() => {
                 if (providedReviews.length) {
-                    return providedReviews.filter(submission => shouldIncludeInReviewPhase(
-                        submission,
-                        challengeInfo?.phases,
-                    ))
+                    const filteredProvidedReviews = providedReviews.filter(shouldIncludeReviewRow)
+                    const aiFailedFromChallengeSubmissions = challengeSubmissions
+                        .filter(isAiFailedReviewSubmission)
+
+                    return mergeSubmissionsById(
+                        filteredProvidedReviews,
+                        aiFailedFromChallengeSubmissions,
+                    )
                 }
 
                 const fallbackFromBackend: SubmissionInfo[] = []
@@ -498,7 +581,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                                 },
                             }
                             const converted = convertBackendSubmissionToSubmissionInfo(submissionForReviewer)
-                            if (shouldIncludeInReviewPhase(converted, challengeInfo?.phases)) {
+                            if (shouldIncludeReviewRow(converted)) {
                                 fallbackFromBackend.push(converted)
                             }
                         })
@@ -513,26 +596,29 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                     return providedReviews
                 }
 
-                const fallback = challengeSubmissions.filter(hasReviewerAssignment)
-                const filteredFallback = fallback.filter(submission => shouldIncludeInReviewPhase(
-                    submission,
-                    challengeInfo?.phases,
+                const fallback = challengeSubmissions.filter(submission => (
+                    hasReviewerAssignment(submission)
+                    || isAiFailedReviewSubmission(submission)
                 ))
+                const filteredFallback = fallback.filter(shouldIncludeReviewRow)
                 return filteredFallback.length
                     ? filteredFallback
-                    : providedReviews.filter(submission => shouldIncludeInReviewPhase(
-                        submission,
-                        challengeInfo?.phases,
-                    ))
+                    : providedReviews.filter(shouldIncludeReviewRow)
             })()
 
-            const validReviewPhaseSubmissions = baseReviews.filter(hasReviewPhaseReview)
+            const validReviewPhaseSubmissions = baseReviews.filter(submission => (
+                hasReviewPhaseReview(submission)
+                || isAiFailedReviewSubmission(submission)
+            ))
 
             if (isPrivilegedRole || hasApproverRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
                 return validReviewPhaseSubmissions
             }
 
-            return validReviewPhaseSubmissions.filter(hasReviewerAssignment)
+            return validReviewPhaseSubmissions.filter(submission => (
+                hasReviewerAssignment(submission)
+                || isAiFailedReviewSubmission(submission)
+            ))
         },
         [
             backendChallengeSubmissions,
@@ -540,6 +626,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             challengeInfo?.phases,
             hasReviewPhaseReview,
             hasReviewerAssignment,
+            shouldIncludeReviewRow,
             isChallengeCompleted,
             isPrivilegedRole,
             hasPassedReviewThreshold,
@@ -663,15 +750,15 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     )
     const reviewerRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredReviews)
+            ? sortSubmissionsByReviewScoreDesc(filteredReviews, useAggregateReviewScore)
             : filteredReviews),
-        [filteredReviews, shouldSortReviewTabByScore],
+        [filteredReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const submitterRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews)
+            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews, useAggregateReviewScore)
             : filteredSubmitterReviews),
-        [filteredSubmitterReviews, shouldSortReviewTabByScore],
+        [filteredSubmitterReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
@@ -686,9 +773,12 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     }
 
     if (selectedTab === 'Appeals Response') {
+        const appealsResponseDatas = isSubmitterView
+            ? filteredSubmitterReviews
+            : resolvedReviewsWithSubmitter
         return (
             <TableAppealsResponse
-                datas={resolvedReviewsWithSubmitter}
+                datas={appealsResponseDatas}
                 aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}

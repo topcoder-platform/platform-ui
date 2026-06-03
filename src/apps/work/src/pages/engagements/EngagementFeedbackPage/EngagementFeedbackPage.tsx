@@ -399,7 +399,8 @@ export const EngagementFeedbackPage: FC = () => {
     const pageTitle = engagementResult.engagement?.title
         ? `${engagementResult.engagement.title} Feedback`
         : 'Feedback'
-    const pendingAssignment = engagementResult.engagement?.status === 'Pending Assignment'
+    const isUnassignedStatus = ['On Hold', 'Pending Assignment']
+        .includes(String(engagementResult.engagement?.status || ''))
 
     const feedbackContent = useMemo(
         () => {
@@ -561,7 +562,7 @@ export const EngagementFeedbackPage: FC = () => {
                         )}
                     </div>
 
-                    {pendingAssignment && (
+                    {isUnassignedStatus && (
                         <div className={styles.notice}>
                             This engagement has not been assigned yet. Feedback will be available once a member is
                             assigned.

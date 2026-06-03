@@ -53,8 +53,8 @@ const FieldHtmlEditor: FC<FieldHtmlEditorProps> = (
                 onInit={function onInit(_evt: any, editor: any) {
                     (editorRef.current = editor)
                 }}
-                onChange={function onChange() {
-                    props.onChange(editorRef.current.getContent())
+                onEditorChange={function onEditorChange(content: string) {
+                    props.onChange(content)
                 }}
                 onBlur={props.onBlur}
                 initialValue={initValue}

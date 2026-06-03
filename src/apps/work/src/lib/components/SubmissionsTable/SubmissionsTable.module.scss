@@ -62,29 +62,11 @@
     gap: 8px;
 }
 
-.historyButton {
-    background: transparent;
-    border: 0;
-    color: #0d61bf;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 0;
-    text-decoration: none;
-    white-space: nowrap;
-
-    &:hover,
-    &:focus-visible {
-        color: #074f9c;
-        text-decoration: underline;
-    }
-}
-
 .iconButton {
     align-items: center;
     background: transparent;
     border: 0;
-    color: #0d61bf;
+    color: #137d60;
     cursor: pointer;
     display: inline-flex;
     height: 28px;
@@ -107,7 +89,7 @@
 
     &:hover,
     &:focus-visible {
-        color: #074f9c;
+        color: #0d664f;
     }
 }
 
@@ -136,6 +118,38 @@
     }
 }
 
+.testStatusCell {
+    text-align: center !important;
+}
+
+.testStatusIcon {
+    align-items: center;
+    display: inline-flex;
+    height: 20px;
+    justify-content: center;
+    vertical-align: middle;
+    width: 20px;
+
+    svg {
+        display: block;
+        fill: currentcolor;
+        height: 18px;
+        width: 18px;
+    }
+}
+
+.testStatusInProgress {
+    color: #d97706;
+}
+
+.testStatusSuccess {
+    color: #137d60;
+}
+
+.testStatusFailed {
+    color: #ea1900;
+}
+
 .level-1 {
     color: #555 !important;
 }
@@ -162,6 +176,6 @@
     }
 
     .table {
-        min-width: 1080px;
+        min-width: 1180px;
     }
 }

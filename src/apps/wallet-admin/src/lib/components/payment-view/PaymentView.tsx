@@ -1,60 +1,254 @@
-/* eslint-disable react/no-array-index-key */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
 import React from 'react'
 
-import { Button, Collapsible } from '~/libs/ui'
-import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
+import { Button } from '~/libs/ui'
+import { TOPCODER_URL } from '~/config/environments/default.env'
 
-import { WinningsAudit } from '../../models/WinningsAudit'
-import { Winning } from '../../models/WinningDetail'
 import { PayoutAudit } from '../../models/PayoutAudit'
-import { fetchAuditLogs, fetchPayoutAuditLogs, getMemberHandle } from '../../services/wallet'
+import { WinningsAudit } from '../../models/WinningsAudit'
+import { Winning, WinningPaymentDetails } from '../../models/WinningDetail'
+import {
+    fetchAuditLogs,
+    fetchChallengePaymentSummary,
+    fetchPayoutAuditLogs,
+    fetchWinningPaymentDetails,
+    getMemberHandle,
+} from '../../services/wallet'
 
+import {
+    buildWorkAppChallengeUrl,
+    buildWorkManagerAssignmentUrl,
+    buildWorkManagerProjectUrl,
+    getPaymentDetailsSummaryConfig,
+    isChallengePaymentType,
+    resolvePaymentAgreementSummary,
+    resolvePaymentApproverHandle,
+    resolveTaskCreatorHandle,
+} from './payment-view.utils'
+import PaymentAgreementBanner from './PaymentAgreementBanner'
+import PaymentAuditHistoryTab from './tabs/PaymentAuditHistoryTab'
+import PaymentDetailsSummaryRow from './PaymentDetailsSummaryRow'
+import PaymentDetailsTabs, { PaymentDetailsTabOption } from './PaymentDetailsTabs'
+import PaymentEngagementDetailsTab from './tabs/PaymentEngagementDetailsTab'
+import PaymentExternalTransactionTab from './tabs/PaymentExternalTransactionTab'
+import PaymentGeneralInfoTab from './tabs/PaymentGeneralInfoTab'
+import PaymentTaskDetailsTab from './tabs/PaymentTaskDetailsTab'
+import PaymentWorkLogTab from './tabs/PaymentWorkLogTab'
 import styles from './PaymentView.module.scss'
 
 interface PaymentViewProps {
+    isPoints?: boolean
+    onClose?: () => void
     payment: Winning
 }
 
-const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
-    const [view, setView] = React.useState<'details' | 'audit' | 'external_transaction'>('details')
-    const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
-    const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>([])
+type PaymentDetailsTabId
+    = 'general'
+    | 'engagement'
+    | 'work-log'
+    | 'task-details'
+    | 'audit'
+    | 'external-transaction'
 
-    const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
-        setView(newView)
-    }
+const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
+    const [activeTab, setActiveTab] = React.useState<PaymentDetailsTabId>('general')
+    const [auditLines, setAuditLines] = React.useState<WinningsAudit[]>([])
+    const [externalTransactionAudit, setExternalTransactionAudit] = React.useState<PayoutAudit[]>()
+    const [isAuditLoading, setIsAuditLoading] = React.useState<boolean>(false)
+    const [isExternalTransactionLoading, setIsExternalTransactionLoading] = React.useState<boolean>(false)
+    const [paymentDetails, setPaymentDetails] = React.useState<WinningPaymentDetails>()
+    const [isPaymentDetailsLoading, setIsPaymentDetailsLoading] = React.useState<boolean>(false)
+    const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
+    const [challengeCreatorHandle, setChallengeCreatorHandle] = React.useState<string>()
+    const [challengeBudgetApproverHandle, setChallengeBudgetApproverHandle] = React.useState<string>()
+
+    const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
+    const isTaskPayment = props.payment.type.toLowerCase() === 'task payment'
+    const isChallengePayment = isChallengePaymentType(props.payment.type)
+    const shouldFetchChallengeSummary = isChallengePayment || isTaskPayment
+    const shouldFetchPaymentDetails = isEngagementPayment || isTaskPayment
+    const summaryConfig = getPaymentDetailsSummaryConfig(props.payment.type)
+
+    const agreementSummary = isEngagementPayment
+        ? resolvePaymentAgreementSummary(props.payment, paymentDetails)
+        : undefined
+
+    const isPaidPayment = props.payment.status.toUpperCase() === 'PAID'
+
+    const tabs = React.useMemo((): PaymentDetailsTabOption[] => {
+        const auditTabs: PaymentDetailsTabOption[] = [
+            { id: 'audit', label: 'Audit History' },
+            ...(isPaidPayment
+                ? [{ id: 'external-transaction' as const, label: 'External Transaction' }]
+                : []),
+        ]
+
+        if (isEngagementPayment) {
+            return [
+                { id: 'general', label: 'General Info' },
+                { id: 'engagement', label: 'Engagement Details' },
+                { id: 'work-log', label: 'Work Log' },
+                ...auditTabs,
+            ]
+        }
+
+        if (isTaskPayment) {
+            return [
+                { id: 'general', label: 'General Info' },
+                { id: 'task-details', label: 'Task Details' },
+                ...auditTabs,
+            ]
+        }
+
+        return [
+            { id: 'general', label: 'General Info' },
+            ...auditTabs,
+        ]
+    }, [isEngagementPayment, isPaidPayment, isTaskPayment])
 
     React.useEffect(() => {
-        if (view === 'audit') {
-            fetchAuditLogs(props.payment.id)
-                .then(auditLogs => {
-                    const userIds = auditLogs.map(log => log.userId)
-                    getMemberHandle(userIds)
-                        .then((handles: Map<number, string>) => {
-                            auditLogs.forEach((log: WinningsAudit) => {
-                                log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
-                            })
-                        })
-                        .catch(() => {
-                            console.error('Error fetching member handles')
-                        })
-                        .finally(() => {
-                            setAuditLines(auditLogs)
-                        })
-                })
-                .catch(() => {
-                    setAuditLines([])
-                })
-        } else if (view === 'external_transaction') {
+        if (!shouldFetchPaymentDetails) {
+            setPaymentDetails(undefined)
+            setIsPaymentDetailsLoading(false)
+            setPaymentDetailsError(undefined)
+            return undefined
+        }
+
+        let ignore = false
+
+        setIsPaymentDetailsLoading(true)
+        setPaymentDetailsError(undefined)
+
+        fetchWinningPaymentDetails(props.payment)
+            .then(details => {
+                if (!ignore) {
+                    setPaymentDetails(details)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setPaymentDetails(undefined)
+                    setPaymentDetailsError(
+                        isTaskPayment
+                            ? 'Unable to load task details.'
+                            : 'Unable to load engagement details.',
+                    )
+                }
+            })
+            .finally(() => {
+                if (!ignore) {
+                    setIsPaymentDetailsLoading(false)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [isTaskPayment, props.payment, shouldFetchPaymentDetails])
+
+    React.useEffect(() => {
+        if (!shouldFetchChallengeSummary || !props.payment.externalId) {
+            setChallengeCreatorHandle(undefined)
+            setChallengeBudgetApproverHandle(undefined)
+            return undefined
+        }
+
+        let ignore = false
+
+        fetchChallengePaymentSummary(props.payment.externalId)
+            .then(summary => {
+                if (!ignore) {
+                    if (isChallengePayment) {
+                        setChallengeCreatorHandle(summary.creatorHandle)
+                    }
+
+                    setChallengeBudgetApproverHandle(summary.budgetApproverHandle)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setChallengeCreatorHandle(undefined)
+                    setChallengeBudgetApproverHandle(undefined)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [
+        isChallengePayment,
+        props.payment.externalId,
+        shouldFetchChallengeSummary,
+    ])
+
+    React.useEffect(() => {
+        if (activeTab === 'external-transaction') {
+            let ignore = false
+            setIsExternalTransactionLoading(true)
+
             fetchPayoutAuditLogs(props.payment.id)
                 .then(payoutAudit => {
-                    setExternalTransactionAudit(payoutAudit)
+                    if (!ignore) {
+                        setExternalTransactionAudit(payoutAudit)
+                    }
                 })
+                .catch(() => {
+                    if (!ignore) {
+                        setExternalTransactionAudit(undefined)
+                    }
+                })
+                .finally(() => {
+                    if (!ignore) {
+                        setIsExternalTransactionLoading(false)
+                    }
+                })
+
+            return () => {
+                ignore = true
+            }
         }
-    }, [props.payment.id, view])
+
+        if (activeTab !== 'audit') {
+            return undefined
+        }
+
+        let ignore = false
+        setIsAuditLoading(true)
+
+        fetchAuditLogs(props.payment.id)
+            .then(auditLogs => {
+                const userIds = auditLogs.map(log => log.userId)
+
+                return getMemberHandle(userIds)
+                    .then((handles: Map<number, string>) => {
+                        auditLogs.forEach((log: WinningsAudit) => {
+                            log.userId = handles.get(parseInt(log.userId, 10)) ?? log.userId
+                        })
+
+                        return auditLogs
+                    })
+                    .catch(() => auditLogs)
+            })
+            .then(auditLogs => {
+                if (!ignore) {
+                    setAuditLines(auditLogs)
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setAuditLines([])
+                }
+            })
+            .finally(() => {
+                if (!ignore) {
+                    setIsAuditLoading(false)
+                }
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [activeTab, props.payment.id])
 
     const formatAction = (action: string): React.ReactNode => {
         const fromIndex = action.indexOf('from')
@@ -64,6 +258,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
             const beforeFrom = action.substring(0, fromIndex)
             const fromValue = action.substring(fromIndex + 5, toIndex)
             const toValue = action.substring(toIndex + 3)
+
             return (
                 <>
                     {beforeFrom}
@@ -81,197 +276,127 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return action
     }
 
-    const getLink = (payment: Winning): string => {
-        if (payment.type.toLowerCase() === 'engagement payment') {
-            return `${ENGAGEMENTS_URL}/${payment.externalId}`
+    const descriptionLink = isEngagementPayment
+        ? buildWorkManagerAssignmentUrl(paymentDetails?.engagementDetails)
+        : isTaskPayment
+            ? buildWorkAppChallengeUrl(paymentDetails?.taskDetails?.projectId, props.payment.externalId)
+            : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
+
+    const taskCreatorHandle = resolveTaskCreatorHandle(paymentDetails)
+
+    const budgetApproverHandle = shouldFetchChallengeSummary
+        ? challengeBudgetApproverHandle
+        : undefined
+
+    const paymentApproverHandle = resolvePaymentApproverHandle(
+        paymentDetails,
+        isTaskPayment,
+    )
+
+    const renderTabContent = (): React.ReactNode => {
+        if (activeTab === 'general') {
+            return (
+                <PaymentGeneralInfoTab
+                    createDate={props.payment.createDate}
+                    description={props.payment.description}
+                    descriptionLink={descriptionLink}
+                    payment={props.payment}
+                />
+            )
         }
 
-        return `${TOPCODER_URL}/challenges/${payment.externalId}`
+        if (activeTab === 'engagement') {
+            return (
+                <PaymentEngagementDetailsTab
+                    engagementDetails={paymentDetails?.engagementDetails}
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    projectLink={buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)}
+                />
+            )
+        }
+
+        if (activeTab === 'work-log') {
+            return (
+                <PaymentWorkLogTab
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    workLog={paymentDetails?.workLog}
+                />
+            )
+        }
+
+        if (activeTab === 'task-details') {
+            return (
+                <PaymentTaskDetailsTab
+                    errorMessage={paymentDetailsError}
+                    isLoading={isPaymentDetailsLoading}
+                    payment={props.payment}
+                    paymentDetails={paymentDetails}
+                    projectLink={buildWorkManagerProjectUrl(paymentDetails?.taskDetails)}
+                />
+            )
+        }
+
+        if (activeTab === 'external-transaction') {
+            return (
+                <PaymentExternalTransactionTab
+                    isLoading={isExternalTransactionLoading}
+                    payoutAudits={externalTransactionAudit}
+                />
+            )
+        }
+
+        return (
+            <PaymentAuditHistoryTab
+                auditLines={auditLines}
+                formatAction={formatAction}
+                isLoading={isAuditLoading}
+            />
+        )
     }
 
     return (
         <div className={styles.formContainer}>
-            <div className={styles.inputGroup}>
-                {view === 'details' && (
-                    <>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Description</span>
-                            <a href={getLink(props.payment)} target='_blank' rel='noreferrer'>
-                                {props.payment.description}
-                            </a>
-                        </div>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment ID</span>
-                            <p className={styles.value}>{props.payment.id}</p>
-                        </div>
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Handle</span>
-                            <p className={styles.value}>{props.payment.handle}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Type</span>
-                            <p className={styles.value}>{props.payment.type}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment</span>
-                            <p className={styles.value}>
-                                {props.payment.grossAmountNumber.toLocaleString(undefined, {
-                                    currency: 'USD',
-                                    style: 'currency',
-                                })}
-                            </p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment Status</span>
-                            <p className={styles.value}>{props.payment.status}</p>
-                        </div>
-
-                        <div className={styles.infoItem}>
-                            <span className={styles.label}>Release Date</span>
-                            <p className={styles.value}>{props.payment.releaseDateObj.toLocaleDateString()}</p>
-                        </div>
-
-                        {props.payment.datePaid !== '-' && (
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Date Paid</span>
-                                <p className={styles.value}>{props.payment.datePaid}</p>
-                            </div>
-                        )}
-
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('audit')} label='View Audit' />
-                            {props.payment.status.toUpperCase() === 'PAID' && (
-                                <Button
-                                    onClick={() => handleToggleView('external_transaction')}
-                                    label='External Transaction Details'
-                                />
-                            )}
-                        </div>
-                    </>
-                )}
-
-                {view === 'audit' && (
-                    <>
-                        <div className={styles.auditSection}>
-                            {auditLines
-                                && auditLines.length > 0
-                                && auditLines.map(line => (
-                                    <Collapsible
-                                        key={line.id}
-                                        header={
-                                            (
-                                                <h3>
-                                                    {
-                                                        new Date(line.createdAt)
-                                                            .toLocaleString()
-                                                    }
-                                                </h3>
-                                            )
-                                        }
-                                        containerClass={styles.container}
-                                        contentClass={styles.content}
-                                    >
-                                        <div className={styles.auditItem}>
-                                            <div>
-                                                <p>
-                                                    <strong>User:</strong>
-                                                    {line.userId}
-                                                </p>
-                                                <p>
-                                                    <strong>Action:</strong>
-                                                    {formatAction(line.action)}
-                                                </p>
-                                                <p>
-                                                    <strong>Note:</strong>
-                                                    {line.note}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </Collapsible>
-                                ))}
-                            {(auditLines === undefined || auditLines.length === 0) && (
-                                <div className={styles.auditItem}>
-                                    <p>No audit data available</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
-                        </div>
-                    </>
-                )}
-
-                {view === 'external_transaction' && (
-                    <>
-                        <div className={styles.auditSection}>
-                            {externalTransactionAudit
-                                && externalTransactionAudit.length > 0
-                                && externalTransactionAudit.map((externalTransaction: PayoutAudit, index: number) => (
-                                    <>
-                                        <Collapsible
-                                            key={`internal-record${index}`}
-                                            header={<h3>Internal Record</h3>}
-                                            containerClass={styles.container}
-                                            contentClass={styles.content}
-                                        >
-                                            <div className={styles.auditItem}>
-                                                <div>
-                                                    <p>
-                                                        <strong>Provider Used:</strong>
-                                                        {' '}
-                                                        {externalTransaction.paymentMethodUsed}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Status:</strong>
-                                                        {externalTransaction.status}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Processed At:</strong>
-                                                        {externalTransaction.createdAt}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Total Amount Processed:</strong>
-                                                        {' '}
-                                                        {externalTransaction.totalNetAmount}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </Collapsible>
-                                        <Collapsible
-                                            key={`external-record${index}`}
-                                            header={<h3>External Record</h3>}
-                                            containerClass={styles.container}
-                                            contentClass={styles.content}
-                                        >
-                                            <div className={styles.auditItem}>
-                                                <div>
-                                                    <pre>
-                                                        {JSON.stringify(
-                                                            externalTransaction.externalTransactionDetails,
-                                                            undefined,
-                                                            2,
-                                                        )}
-                                                    </pre>
-                                                </div>
-                                            </div>
-                                        </Collapsible>
-                                    </>
-                                ))}
-                            {externalTransactionAudit === undefined && (
-                                <div className={styles.auditItem}>
-                                    <p>No external transaction data is available</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className={styles.infoItem}>
-                            <Button onClick={() => handleToggleView('details')} label='Back to Details' />
-                        </div>
-                    </>
-                )}
+            <PaymentDetailsSummaryRow
+                approverLabel={summaryConfig.approverLabel}
+                budgetApproverHandle={budgetApproverHandle}
+                columns={summaryConfig.columns}
+                creatorLabel={summaryConfig.creatorLabel}
+                handle={props.payment.handle}
+                isPoints={props.isPoints}
+                paymentAmount={props.payment.grossAmountNumber}
+                paymentApproverHandle={paymentApproverHandle}
+                paymentCreatorHandle={
+                    isTaskPayment
+                        ? taskCreatorHandle
+                        : isChallengePayment
+                            ? challengeCreatorHandle
+                            : paymentDetails?.paymentCreatorHandle
+                }
+                secondaryApproverLabel={summaryConfig.secondaryApproverLabel}
+            />
+            {agreementSummary && (
+                <PaymentAgreementBanner summary={agreementSummary} />
+            )}
+            <PaymentDetailsTabs
+                activeTabId={activeTab}
+                onTabChange={tabId => setActiveTab(tabId as PaymentDetailsTabId)}
+                tabs={tabs}
+            />
+            <div className={styles.tabPanel} role='tabpanel'>
+                {renderTabContent()}
             </div>
+            {props.onClose && (
+                <div className={styles.footer}>
+                    <Button
+                        secondary
+                        label='Close'
+                        size='lg'
+                        onClick={props.onClose}
+                    />
+                </div>
+            )}
         </div>
     )
 }

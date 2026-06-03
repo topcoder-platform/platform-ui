@@ -223,11 +223,24 @@ export function renderReviewScoreCell(
     const {
         canDisplayScores,
         canViewScorecard,
+        useAggregateScore,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
     }: ScoreVisibilityConfig = configWithDefaults
 
     if (!canDisplayScores(submission)) {
         return (
+            <span className={styles.notReviewed}>
+                --
+            </span>
+        )
+    }
+
+    if (useAggregateScore) {
+        const aggregateScoreDisplay = formatScoreDisplay(submission.aggregateScore)
+
+        return aggregateScoreDisplay ? (
+            <span>{aggregateScoreDisplay}</span>
+        ) : (
             <span className={styles.notReviewed}>
                 --
             </span>
@@ -529,10 +542,35 @@ export function renderScoreCell(
     const {
         canDisplayScores,
         canViewScorecard,
+        useAggregateScore,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
         canRespondToAppeals,
     }: ScoreVisibilityConfig = configWithDefaults
+
+    if (!canDisplayScores(submission)) {
+        return (
+            <span className={styles.notReviewed}>
+                --
+            </span>
+        )
+    }
+
+    if (useAggregateScore) {
+        const isFirstSubmissionRow = !('isFirstReviewerRow' in submission)
+            || submission.isFirstReviewerRow !== false
+        const aggregateScoreDisplay = isFirstSubmissionRow
+            ? formatScoreDisplay(submission.aggregateScore)
+            : undefined
+
+        return aggregateScoreDisplay ? (
+            <span>{aggregateScoreDisplay}</span>
+        ) : (
+            <span className={styles.notReviewed}>
+                --
+            </span>
+        )
+    }
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
 
@@ -548,14 +586,6 @@ export function renderScoreCell(
     const reviewId = reviewInfo?.id ?? reviewDetail.reviewId
 
     if (!reviewId) {
-        return (
-            <span className={styles.notReviewed}>
-                --
-            </span>
-        )
-    }
-
-    if (!canDisplayScores(submission)) {
         return (
             <span className={styles.notReviewed}>
                 --

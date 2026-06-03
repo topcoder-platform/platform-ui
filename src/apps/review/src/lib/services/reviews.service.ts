@@ -455,20 +455,33 @@ export const fetchAllChallengeReviews = async (
  * @param resourceId resource id
  * @returns resolves to the array of appeals
  */
+const fetchAppealsPage = async (
+    page: number,
+    perPage: number,
+    filters: {
+        resourceId?: string
+        reviewId?: string
+        reviewIds?: string[]
+        challengeId?: string
+    },
+): Promise<BackendResponseWithMeta<BackendAppeal[]>> => (
+    xhrGetAsync<BackendResponseWithMeta<BackendAppeal[]>>(
+        `${EnvironmentConfig.API.V6}/appeals?${qs.stringify({
+            page,
+            perPage,
+            ...filters,
+        }, {
+            arrayFormat: 'comma',
+        })}`,
+    )
+)
+
 export const fetchAppeals = async (
     page: number,
     perPage: number,
     resourceId: string,
 ): Promise<AppealInfo[]> => {
-    const results = await xhrGetAsync<
-        BackendResponseWithMeta<BackendAppeal[]>
-    >(
-        `${EnvironmentConfig.API.V6}/appeals?${qs.stringify({
-            page,
-            perPage,
-            resourceId,
-        })}`,
-    )
+    const results = await fetchAppealsPage(page, perPage, { resourceId })
     return results.data.map(convertBackendAppeal)
 }
 
@@ -484,17 +497,66 @@ export const fetchAppealsWithReviewId = async (
     page: number,
     perPage: number,
     reviewId: string,
+): Promise<AppealInfo[]> => fetchAppealsPage(page, perPage, { reviewId })
+    .then(results => results.data.map(convertBackendAppeal))
+
+/**
+ * Fetch appeals with review ids
+ *
+ * @param page current page
+ * @param perPage number of item per page
+ * @param reviewIds review ids
+ * @returns resolves to the array of appeals
+ */
+export const fetchAppealsWithReviewIds = async (
+    page: number,
+    perPage: number,
+    reviewIds: string[],
 ): Promise<AppealInfo[]> => {
-    const results = await xhrGetAsync<
-        BackendResponseWithMeta<BackendAppeal[]>
-    >(
-        `${EnvironmentConfig.API.V6}/appeals?${qs.stringify({
-            page,
-            perPage,
-            reviewId,
-        })}`,
-    )
+    const results = await fetchAppealsPage(page, perPage, { reviewIds })
     return results.data.map(convertBackendAppeal)
+}
+
+/**
+ * Fetch all appeals with review ids using API pagination metadata.
+ *
+ * @param reviewIds review ids
+ * @param perPage number of items per page
+ * @returns resolves to the array of appeals
+ */
+export const fetchAllAppealsWithReviewIds = async (
+    reviewIds: string[],
+    perPage = 500,
+): Promise<AppealInfo[]> => {
+    if (!reviewIds.length) {
+        return []
+    }
+
+    const safePerPage = Number.isFinite(perPage) && perPage > 0 ? perPage : 500
+    const firstPage = await fetchAppealsPage(1, safePerPage, { reviewIds })
+    const combined = [...firstPage.data]
+    const totalPages = Math.max(firstPage.meta?.totalPages ?? 1, 1)
+
+    const fetchRemainingPages = async (
+        page: number,
+        currentTotal: number,
+    ): Promise<void> => {
+        if (page > currentTotal) {
+            return
+        }
+
+        const nextPage = await fetchAppealsPage(page, safePerPage, { reviewIds })
+        combined.push(...nextPage.data)
+        const nextTotal = typeof nextPage.meta?.totalPages === 'number'
+            ? Math.max(nextPage.meta.totalPages, currentTotal)
+            : currentTotal
+
+        await fetchRemainingPages(page + 1, nextTotal)
+    }
+
+    await fetchRemainingPages(2, totalPages)
+
+    return combined.map(convertBackendAppeal)
 }
 
 /**

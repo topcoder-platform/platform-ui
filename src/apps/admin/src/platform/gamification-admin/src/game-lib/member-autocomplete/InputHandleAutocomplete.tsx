@@ -81,7 +81,7 @@ const InputHandleAutocomplete: FC<InputHandleAutocompleteProps> = (props: InputH
             hideInlineErrors={props.hideInlineErrors}
             type='text'
         >
-            <AsyncSelect
+            <AsyncSelect<MembersAutocompeteResult, true>
                 className={styles.memberSelect}
                 cacheOptions
                 getOptionLabel={getUserProp('handle')}

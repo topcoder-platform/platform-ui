@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Challenge Details Page.
  */
@@ -13,7 +14,6 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, InputCheckbox, InputDatePicker, InputText } from '~/libs/ui'
-import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import {
     useFetchScreeningReview,
@@ -24,6 +24,7 @@ import {
     ChallengeDetailsContent,
     ChallengeLinks,
     ChallengePhaseInfo,
+    ChallengeScopedErrorState,
     ChallengeTimeline,
     ChallengeTimelineAction,
     ChallengeTimelineRow,
@@ -54,6 +55,8 @@ import {
     findPhaseByTabLabel,
     isAppealsPhase,
     isAppealsResponsePhase,
+    shouldAllowWinnersTabForPastChallenge,
+    shouldForceWinnersTabForPastChallenge,
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
@@ -264,7 +267,6 @@ const isIterativeReviewPhaseName = (name?: string): boolean => (name || '')
 
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
-    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
     const navigate = useNavigate()
@@ -282,6 +284,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         myResources,
         challengeSubmissions,
         isLoadingChallengeSubmissions,
+        hasChallengeScopedFetchError,
+        retryChallengeScopedFetches,
+        aiReviewConfig,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole }: useRoleProps = useRole()
@@ -771,16 +776,35 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo.status,
             phaseOrderingOptions,
         )
+        const itemsWithoutBlockedWinners = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            ? items
+            : items.filter(item => item.value !== 'Winners')
+        const itemsWithWinnerFallback = shouldForceWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            && !itemsWithoutBlockedWinners.some(item => item.value === 'Winners')
+            ? [
+                ...itemsWithoutBlockedWinners,
+                {
+                    label: 'Winners',
+                    value: 'Winners',
+                },
+            ]
+            : itemsWithoutBlockedWinners
 
         // Only add indicators on active-challenges view
         if (isPastReviewDetail) {
-            setTabItems(items)
+            setTabItems(itemsWithWinnerFallback)
             return
         }
 
         // Map tab labels to the corresponding phase so we can check whether it is currently open
         const tabPhaseMap = new Map<string, PhaseLike | undefined>()
-        items.forEach(tab => {
+        itemsWithWinnerFallback.forEach(tab => {
             tabPhaseMap.set(
                 tab.value,
                 findPhaseByTabLabel(challengePhases, tab.value, phaseOrderingOptions),
@@ -853,7 +877,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })()
 
         // Start with base items; add warnings per label if the viewer has obligations pending
-        const flagged = items.map(it => {
+        const flagged = itemsWithWinnerFallback.map(it => {
             const label = it.value.trim()
                 .toLowerCase()
             const phaseForTab = tabPhaseMap.get(it.value)
@@ -950,6 +974,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         setTabItems(finalItems)
     }, [
         challengeInfo,
+        approvalReviews,
         actionChallengeRole,
         review,
         submitterReviews,
@@ -1163,6 +1188,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo?.status,
             phaseOrderingOptions,
         )
+        const timelineItems = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            ? baseItems
+            : baseItems.filter(item => item.value !== 'Winners')
         const seen = new Set<string>()
         const nowMs = Date.now()
 
@@ -1176,7 +1207,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         const rows: ChallengeTimelineRow[] = []
-        baseItems.forEach(item => {
+        timelineItems.forEach(item => {
             const phase = findPhaseByTabLabel(
                 visibleChallengePhases,
                 item.value,
@@ -1210,7 +1241,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 return 'Closed'
             })()
 
+            const isReviewPhaseRow = displayName.trim()
+                .toLowerCase() === 'review'
+            const isAiOnlyReviewRow = isReviewPhaseRow && aiReviewConfig?.mode === 'AI_ONLY'
+
             rows.push({
+                disabled: isAiOnlyReviewRow || undefined,
                 duration: typeof phase.duration === 'number' ? phase.duration : undefined,
                 end: formatDate(endSource),
                 id: phase.id || phase.phaseId,
@@ -1221,7 +1257,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [challengeInfo, phaseOrderingOptions, visibleChallengePhases])
+    }, [aiReviewConfig, approvalReviews, challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({
@@ -1762,24 +1798,18 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         : undefined
     const shouldShowChallengeMetaRow = Boolean(statusLabel) || trackTypePills.length > 0
 
-    useEffect(() => {
-        const notification = showBannerNotification({
-            id: 'ai-review-scores-warning',
-            message: `AI Review Scores are advisory only to provide immediate,
-                educational, and actionable feedback to members.
-                AI Review Scores do not influence winner selection.`,
-        })
-        return () => notification && removeNotification(notification.id)
-    }, [showBannerNotification])
-
     return (
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
             className={classNames(styles.container, props.className)}
-            titleUrl={`${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`}
+            titleUrl={challengeInfo && !hasChallengeScopedFetchError
+                ? `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`
+                : undefined}
             breadCrumb={breadCrumb}
         >
-            {isLoadingChallengeInfo ? (
+            {hasChallengeScopedFetchError ? (
+                <ChallengeScopedErrorState onRetry={retryChallengeScopedFetches} />
+            ) : isLoadingChallengeInfo ? (
                 <TableLoading />
             ) : (!isLoadingAnything && hasChallengeInfo && !canViewChallenge) ? (
                 <div className={styles.permissionDeniedMessage}>

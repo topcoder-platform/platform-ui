@@ -6,20 +6,24 @@ import {
     EngagementWorkload,
 } from '../models'
 
+import { calculateAssignmentRatePerWeek } from './assignment-rates.utils'
+
 const STATUS_TO_API: Record<string, string> = {
     Active: 'ACTIVE',
     Cancelled: 'CANCELLED',
     Closed: 'CLOSED',
+    'On Hold': 'ON_HOLD',
     Open: 'OPEN',
-    'Pending Assignment': 'PENDING_ASSIGNMENT',
+    'Pending Assignment': 'ON_HOLD',
 }
 
 const STATUS_FROM_API: Record<string, EngagementStatus> = {
     ACTIVE: 'Active',
     CANCELLED: 'Cancelled',
     CLOSED: 'Closed',
+    ON_HOLD: 'On Hold',
     OPEN: 'Open',
-    PENDING_ASSIGNMENT: 'Pending Assignment',
+    PENDING_ASSIGNMENT: 'On Hold',
 }
 
 const ROLE_TO_API: Record<string, string> = {
@@ -98,6 +102,70 @@ function toNumber(value: unknown, fallback: number = 0): number {
     return parsed
 }
 
+function toOptionalString(value: unknown): string | undefined {
+    if (typeof value === 'string') {
+        const normalized = value.trim()
+
+        return normalized || undefined
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    return undefined
+}
+
+function toOptionalNumberishValue(value: unknown): number | string | undefined {
+    if (typeof value === 'number') {
+        return Number.isFinite(value)
+            ? value
+            : undefined
+    }
+
+    if (typeof value === 'string') {
+        const normalized = value.trim()
+
+        return normalized || undefined
+    }
+
+    return undefined
+}
+
+function toStandardHoursPerDay(value: unknown): number | string | undefined {
+    const normalized = toOptionalNumberishValue(value)
+
+    if (normalized === undefined) {
+        return undefined
+    }
+
+    const parsedValue = Number(normalized)
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+        return undefined
+    }
+
+    return Number((parsedValue / 5).toFixed(2))
+}
+
+function toIdentifierValue(...values: unknown[]): number | string {
+    for (const value of values) {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return value
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim()
+
+            if (normalized) {
+                return normalized
+            }
+        }
+    }
+
+    return ''
+}
+
 function normalizeSkillValue(value: unknown): string {
     if (typeof value === 'string') {
         return value.trim()
@@ -150,6 +218,8 @@ function normalizeSkill(skill: unknown): Engagement['skills'][number] | undefine
         name: normalizedName,
     }
 }
+
+type AssignmentInput = Record<string, unknown>
 
 function normalizeEngagementSkills(data: Partial<Engagement>): Engagement['skills'] {
     const normalizedData = data as Partial<Engagement> & {
@@ -249,18 +319,122 @@ export function getCountableEngagementAssignments(
 }
 
 // eslint-disable-next-line complexity
+function normalizeAssignment(
+    assignment: AssignmentInput,
+    engagementId: Engagement['id'] | undefined,
+): Engagement['assignments'][number] {
+    const ratePerHour = toOptionalString(
+        assignment.ratePerHour ?? assignment.rate_per_hour,
+    )
+    const standardHoursPerDay = toOptionalNumberishValue(
+        assignment.standardHoursPerDay ?? assignment.standard_hours_per_day,
+    ) ?? toStandardHoursPerDay(
+        assignment.standardHoursPerWeek ?? assignment.standard_hours_per_week,
+    )
+    const standardHoursPerWeek = toOptionalNumberishValue(
+        assignment.standardHoursPerWeek ?? assignment.standard_hours_per_week,
+    )
+    const agreementRate = toOptionalString(
+        assignment.agreementRate
+        ?? assignment.agreement_rate
+        ?? assignment.rate
+        ?? calculateAssignmentRatePerWeek(
+            ratePerHour,
+            standardHoursPerWeek
+                ?? (standardHoursPerDay !== undefined
+                    ? Number(standardHoursPerDay) * 5
+                    : undefined),
+        ),
+    )
+
+    return {
+        agreementRate: agreementRate || '',
+        durationMonths: toOptionalNumberishValue(
+            assignment.durationMonths ?? assignment.duration_months,
+        ),
+        endDate: toIsoString(
+            assignment.endDate
+            ?? assignment.end_date
+            ?? assignment.end,
+        ),
+        engagementId: toIdentifierValue(
+            assignment.engagementId,
+            assignment.engagement_id,
+            engagementId,
+        ),
+        id: toIdentifierValue(
+            assignment.id,
+            assignment.assignmentId,
+            assignment.assignment_id,
+        ),
+        memberHandle: normalizeString(
+            assignment.memberHandle
+            ?? assignment.member_handle
+            ?? assignment.handle,
+        ),
+        memberId: toIdentifierValue(
+            assignment.memberId,
+            assignment.member_id,
+            assignment.userId,
+            assignment.user_id,
+        ),
+        otherRemarks: normalizeString(
+            assignment.otherRemarks
+            ?? assignment.other_remarks
+            ?? assignment.remarks,
+        ),
+        paymentCycle: normalizeString(
+            assignment.paymentCycle
+            ?? assignment.payment_cycle,
+        ) || 'WEEKLY',
+        ratePerHour,
+        standardHoursPerDay,
+        standardHoursPerWeek,
+        startDate: toIsoString(
+            assignment.startDate
+            ?? assignment.start_date
+            ?? assignment.start,
+        ),
+        status: normalizeString(
+            assignment.assignmentStatus
+            ?? assignment.assignment_status
+            ?? assignment.assignmentState
+            ?? assignment.status,
+        ),
+        terminationReason: normalizeString(
+            assignment.terminationReason
+            ?? assignment.termination_reason,
+        ) || undefined,
+        termsAccepted: assignment.termsAccepted === true
+            || assignment.terms_accepted === true,
+    }
+}
+
+function normalizeAssignments(data: Partial<Engagement>): Engagement['assignments'] {
+    if (!Array.isArray(data.assignments)) {
+        return []
+    }
+
+    return data.assignments
+        .filter((assignment): assignment is NonNullable<typeof assignment> => !!assignment)
+        .map(assignment => normalizeAssignment(assignment as unknown as AssignmentInput, data.id))
+}
+
+// eslint-disable-next-line complexity
 export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement {
-    const assignments = Array.isArray(data.assignments)
-        ? data.assignments
-        : []
+    const assignments = normalizeAssignments(data)
 
     const skills = normalizeEngagementSkills(data)
 
-    const assignedMemberHandles = Array.isArray(data.assignedMemberHandles)
-        ? data.assignedMemberHandles
-            .map(value => normalizeString(value))
+    const assignedMemberHandles = assignments.length > 0
+        ? getCountableEngagementAssignments(assignments)
+            .map(assignment => normalizeString(assignment.memberHandle))
             .filter(Boolean)
-        : []
+        : (Array.isArray(data.assignedMemberHandles)
+            ? data.assignedMemberHandles
+                .map(value => normalizeString(value))
+                .filter(Boolean)
+            : [])
 
     const countries = Array.isArray(data.countries)
         ? data.countries
@@ -357,6 +531,40 @@ export function formatEngagementStatus(value: string | EngagementStatus): string
     }
 
     return STATUS_FROM_API[normalized] || value
+}
+
+/**
+ * Maps an engagement status to the semantic status pill variant used by work app views.
+ *
+ * This keeps status coloring consistent anywhere the UI renders formatted or raw
+ * engagement statuses, including legacy `PENDING_ASSIGNMENT` values that now
+ * display as `On Hold`.
+ *
+ * @param value The raw API value or formatted engagement status label.
+ * @returns The semantic pill variant name for the status.
+ */
+export function getEngagementStatusPillVariant(
+    value: string | EngagementStatus,
+): 'blue' | 'gray' | 'green' | 'red' | 'yellow' {
+    const normalized = toUpperSnake(String(value || ''))
+
+    if (normalized === 'ACTIVE') {
+        return 'green'
+    }
+
+    if (normalized === 'OPEN' || normalized === 'ON_HOLD' || normalized === 'PENDING_ASSIGNMENT') {
+        return 'yellow'
+    }
+
+    if (normalized === 'CLOSED') {
+        return 'blue'
+    }
+
+    if (normalized === 'CANCELLED') {
+        return 'red'
+    }
+
+    return 'gray'
 }
 
 export function formatDuration(engagement: Partial<Engagement>): string {

@@ -18,6 +18,19 @@ export interface SubmissionRow extends SubmissionInfo {
 }
 
 /**
+ * Flattened row shape representing a single reviewer entry for a submission.
+ * Each logical submission can expand to multiple SubmissionReviewerRow entries
+ * (one per reviewer), while preserving the original submission fields.
+ */
+export interface SubmissionReviewerRow extends SubmissionRow {
+    /** Zero-based index of the reviewer within aggregated.reviews for this submission. */
+    reviewerIndex: number
+    /** True when this is the first reviewer row for the submission. */
+    isFirstReviewerRow: boolean
+    /** True when this is the last reviewer row for the submission. */
+    isLastReviewerRow: boolean
+}
+/**
  * Shared configuration available to column renderers that need challenge-level context.
  */
 export interface ColumnRendererConfig {
@@ -71,6 +84,8 @@ export interface ScoreVisibilityConfig {
     canDisplayScores: (submission: SubmissionRow) => boolean
     /** Whether the viewer can navigate to the detailed scorecard for the submission. */
     canViewScorecard: boolean
+    /** True when the table should render the submission aggregate score instead of scorecard links. */
+    useAggregateScore?: boolean
     /** Tooltip message shown when scorecard access is restricted. */
     viewOwnScorecardTooltip?: string
     /** True when the parent table is rendered within the appeals tab. */

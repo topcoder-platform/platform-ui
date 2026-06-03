@@ -2,6 +2,7 @@ import * as yup from 'yup'
 
 import {
     MAX_CHALLENGE_NAME_LENGTH,
+    MAX_MANUAL_REVIEWER_COUNT,
     MAX_PRIZE_VALUE,
     MIN_DESCRIPTION_LENGTH,
     PHASE_DURATION_MIN_MINUTES,
@@ -24,6 +25,8 @@ function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown
 
     return value
 }
+
+const COPILOT_REQUIRED_MESSAGE = 'Copilot is required when copilot fee is greater than 0'
 
 const skillSchema = yup.object({
     id: yup.string()
@@ -57,7 +60,7 @@ const prizeSetSchema = yup.object({
         .default([])
         .test(
             'descending-prizes',
-            'Placement prizes must be in descending order',
+            'Placement prizes must stay the same or decrease for lower placements',
             function validateDescendingPrizes(prizes: unknown): boolean {
                 const prizeSetType = this.parent?.type
 
@@ -76,7 +79,7 @@ const prizeSetSchema = yup.object({
                     if (
                         previousValue > 0
                         && currentValue > 0
-                        && currentValue >= previousValue
+                        && currentValue > previousValue
                     ) {
                         return false
                     }
@@ -174,7 +177,25 @@ function getRequiredReviewerSlots(value: unknown): number {
         return 1
     }
 
-    return Math.max(1, Math.trunc(parsedValue))
+    return Math.min(MAX_MANUAL_REVIEWER_COUNT, Math.max(1, Math.trunc(parsedValue)))
+}
+
+function getCopilotFee(prizeSets: unknown): number {
+    if (!Array.isArray(prizeSets)) {
+        return 0
+    }
+
+    const copilotPrizeSet = prizeSets.find(prizeSet => (
+        typeof prizeSet === 'object'
+        && prizeSet
+        && (prizeSet as { type?: string }).type === PRIZE_SET_TYPES.COPILOT
+    )) as {
+        prizes?: Array<{
+            value?: number | string
+        }>
+    } | undefined
+
+    return Number(copilotPrizeSet?.prizes?.[0]?.value) || 0
 }
 
 const reviewerSchema = yup.object({
@@ -208,6 +229,13 @@ const reviewerSchema = yup.object({
             then: schema => schema.required('Member is required when public review opportunity is closed'),
         }),
     memberReviewerCount: yup.number()
+        .transform(emptyStringToUndefined)
+        .integer('Number of reviewers must be a positive integer')
+        .min(1, 'Number of reviewers must be a positive integer')
+        .max(
+            MAX_MANUAL_REVIEWER_COUNT,
+            `Number of reviewers cannot exceed ${MAX_MANUAL_REVIEWER_COUNT}`,
+        )
         .optional(),
     phaseId: yup.string()
         .optional(),
@@ -222,6 +250,8 @@ const reviewerSchema = yup.object({
             then: schema => schema.required('Scorecard is required for member reviewer type'),
         }),
     shouldOpenOpportunity: yup.boolean()
+        .optional(),
+    type: yup.string()
         .optional(),
 })
     .test(
@@ -423,7 +453,11 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     copilot: yup.string()
         .transform(emptyStringToUndefined)
-        .optional(),
+        .when('prizeSets', {
+            is: (prizeSets: unknown): boolean => getCopilotFee(prizeSets) > 0,
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required(COPILOT_REQUIRED_MESSAGE),
+        }),
     discussionForum: yup.boolean()
         .optional(),
     groups: yup.array()
@@ -435,22 +469,7 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     reviewer: yup.string()
         .transform(emptyStringToUndefined)
-        .when([
-            'legacy.isTask',
-            'legacy.reviewType',
-        ], {
-            is: (
-                isTask: boolean | undefined,
-                reviewType: string | undefined,
-            ): boolean => (
-                isTask === true
-                && String(reviewType || '')
-                    .trim()
-                    .toUpperCase() === REVIEW_TYPES.INTERNAL
-            ),
-            otherwise: schema => schema.optional(),
-            then: schema => schema.required('Select a reviewer'),
-        }),
+        .optional(),
     reviewers: yup.array()
         .of(reviewerSchema)
         .optional(),

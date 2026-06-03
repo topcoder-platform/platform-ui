@@ -2,7 +2,12 @@
  * Submissions service
  */
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
+import {
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrGetBlobAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
 import {
     adjustSubmissionsResponse,
@@ -30,6 +35,16 @@ interface SubmissionsListResponse {
 }
 
 const SUBMISSIONS_PER_PAGE = 100
+
+interface ManualSubmissionUploadPayload {
+    challengeId: string
+    memberId: number | string
+    memberHandle?: string
+    file: File
+    fileName?: string
+    submittedDate?: string
+    type?: string
+}
 
 export const fetchSubmissionsOfChallenge = async (
     challengeId: string,
@@ -198,4 +213,42 @@ export const createSubmissionReprocessPayload = async (
         submissionUrl,
         submittedDate: submittedDateIso,
     }
+}
+
+/**
+ * Upload a submission file manually for a challenge/member via admin endpoint.
+ * @param payload upload payload
+ * @returns created submission
+ */
+export const uploadManualSubmission = async (
+    payload: ManualSubmissionUploadPayload,
+): Promise<Submission> => {
+    const formData = new FormData()
+    formData.append('challengeId', payload.challengeId)
+    formData.append('memberId', String(payload.memberId))
+    formData.append('type', payload.type ?? 'CONTEST_SUBMISSION')
+
+    if (payload.memberHandle) {
+        formData.append('memberHandle', payload.memberHandle)
+    }
+
+    if (payload.fileName) {
+        formData.append('fileName', payload.fileName)
+    }
+
+    if (payload.submittedDate) {
+        formData.append('submittedDate', payload.submittedDate)
+    }
+
+    formData.append('file', payload.file, payload.file.name)
+
+    return xhrPostAsync<FormData, Submission>(
+        `${EnvironmentConfig.API.V6}/submissions/manual-upload`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        },
+    )
 }

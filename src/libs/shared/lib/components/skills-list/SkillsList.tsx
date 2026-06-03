@@ -9,6 +9,7 @@ interface SkillsListProps {
     containerClass?: string
     headerClass?: string
     contentClass?: string
+    count?: number
 }
 
 const SkillsList: FC<SkillsListProps> = (props: SkillsListProps) => (
@@ -16,7 +17,7 @@ const SkillsList: FC<SkillsListProps> = (props: SkillsListProps) => (
         <div className={classNames(styles.header, props.headerClass)}>
             <div className={styles.title}>{props.header}</div>
             <div className={styles.badgeCount}>
-                {props.children && props.children.length}
+                {props.children && props.count}
             </div>
         </div>
 

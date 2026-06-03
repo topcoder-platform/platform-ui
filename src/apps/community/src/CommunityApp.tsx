@@ -12,6 +12,7 @@ import { routerContext, RouterContextData } from '~/libs/core'
 import { resolveCommunityIdFromHost } from './config/community-id.config'
 import {
     communityLoaderRouteId,
+    forumListingRouteId,
     rootRoute,
 } from './config/routes.config'
 import { Layout, type LayoutVariant } from './lib'
@@ -56,10 +57,12 @@ const CommunityApp: FC = () => {
         [location.pathname],
     )
     const isCommunityPage = normalizedPath.includes(`/${communityLoaderRouteId}`)
+    const isForumPage = normalizedPath.includes(`/${forumListingRouteId}`)
 
     const variant: LayoutVariant
         = EnvironmentConfig.SUBDOMAIN !== AppSubdomain.community
             && !isCommunityPage
+            && !isForumPage
             ? 'standard'
             : 'community'
 

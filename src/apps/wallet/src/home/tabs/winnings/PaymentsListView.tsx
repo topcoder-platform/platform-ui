@@ -4,6 +4,7 @@ import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
+import { toPaymentTypeCategories } from '~/libs/shared/lib/utils/payment-type-filter.utils'
 
 import { getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
@@ -38,12 +39,17 @@ function formatIOSDateString(iosDateString: string): string {
     return date.toLocaleDateString('en-GB', options)
 }
 
+const taskPaymentCategory = 'TASK_PAYMENT'
+const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
+
+function isTopcoderTaskOrEngagementPayment(category: string): boolean {
+    return category === taskPaymentCategory || category === engagementPaymentCategory
+}
+
 function formatStatus(status: string): string {
     switch (status) {
         case 'ON_HOLD':
             return 'On Hold'
-        case 'OWED':
-            return 'Available'
         case 'PROCESSING':
             return 'Processing'
         case 'PAID':
@@ -57,6 +63,39 @@ function formatStatus(status: string): string {
         default:
             return status.replaceAll('_', ' ')
     }
+}
+
+function formatMemberPaymentStatus(
+    status: string,
+    category: string,
+    releaseDate: string,
+): string {
+    if (status === 'ON_HOLD_ADMIN' && isTopcoderTaskOrEngagementPayment(category)) {
+        return 'Created'
+    }
+
+    if (status === 'OWED') {
+        return new Date(releaseDate) <= new Date() ? 'Available' : 'Owed'
+    }
+
+    return formatStatus(status)
+}
+
+function isIdVerificationComplete(paymentStatus?: WinningDetail['paymentStatus']): boolean {
+    if (!paymentStatus) {
+        return false
+    }
+
+    const statusWithAliases = paymentStatus as WinningDetail['paymentStatus'] & {
+        idVerificationPassed?: boolean
+        identityVerificationComplete?: boolean
+    }
+
+    return Boolean(
+        statusWithAliases.idVerificationComplete
+        || statusWithAliases.idVerificationPassed
+        || statusWithAliases.identityVerificationComplete,
+    )
 }
 
 export const formatCurrency = (amountStr: string, currency: string): string => {
@@ -123,7 +162,23 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 grossPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
                 id: payment.id,
                 releaseDate: formattedReleaseDate,
-                status: formatStatus(payment.details[0].status),
+                status: (
+                    payment.details[0].status === 'ON_HOLD'
+                        ? (
+                            !payment.paymentStatus?.payoutSetupComplete
+                                ? 'On Hold (Payment provider)'
+                                : !payment.paymentStatus?.taxFormSetupComplete
+                                    ? 'On Hold (Tax Form)'
+                                    : !isIdVerificationComplete(payment.paymentStatus)
+                                        ? 'On Hold (ID Verification)'
+                                        : 'On Hold'
+                        )
+                        : formatMemberPaymentStatus(
+                            payment.details[0].status,
+                            payment.category,
+                            payment.releaseDate,
+                        )
+                ),
                 type: payment.category.replaceAll('_', ' ')
                     .toLowerCase(),
             }
@@ -134,12 +189,22 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const fetchWinnings = useCallback(async () => {
         setIsLoading(true)
         try {
-            const payments = await getPayments(props.profile.userId.toString(), pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
+            const apiFilters = { ...filters }
+            if (apiFilters.category?.length) {
+                apiFilters.category = toPaymentTypeCategories(apiFilters.category)
+            }
+
+            const payments = await getPayments(
+                props.profile.userId.toString(),
+                pagination.pageSize,
+                (pagination.currentPage - 1) * pagination.pageSize,
+                apiFilters,
+            )
             const winningsData = convertToWinnings(payments.winnings)
             setWinnings(winningsData)
             setPagination(payments.pagination)
-        } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError)
+        } catch {
+            setWinnings([])
         } finally {
             setIsLoading(false)
         }
@@ -192,28 +257,30 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             type: 'dropdown',
                         },
                         {
+                            displayValueInTrigger: true,
+
                             key: 'category',
                             label: 'Type',
                             options: [
                                 {
                                     label: 'Task Payment',
-                                    value: 'TASK_PAYMENT',
+                                    value: 'Task',
                                 },
                                 {
                                     label: 'Contest Payment',
-                                    value: 'CONTEST_PAYMENT',
+                                    value: 'Contest',
                                 },
                                 {
                                     label: 'Copilot Payment',
-                                    value: 'COPILOT_PAYMENT',
+                                    value: 'Copilot',
                                 },
                                 {
                                     label: 'Review Board Payment',
-                                    value: 'REVIEW_BOARD_PAYMENT',
+                                    value: 'Review Board',
                                 },
                                 {
                                     label: 'Engagement Payment',
-                                    value: 'ENGAGEMENT_PAYMENT',
+                                    value: 'Engagement',
                                 },
                                 {
                                     label: 'All',
@@ -227,7 +294,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             label: 'Status',
                             options: [
                                 {
-                                    label: 'Available',
+                                    label: 'Owed',
                                     value: 'OWED',
                                 },
                                 {

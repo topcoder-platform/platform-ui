@@ -1,0 +1,112 @@
+@import '@libs/ui/styles/includes';
+
+.overlay {
+    align-items: center;
+    background: rgb(44 44 44 / 45%);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.container {
+    background: $tc-white;
+    border-radius: 8px;
+    max-width: 980px;
+    width: 100%;
+}
+
+.header {
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 52px 12px 20px;
+    position: relative;
+}
+
+.title {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.submissionId {
+    color: $black-60;
+    font-family: monospace;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    position: absolute;
+    right: 16px;
+    top: 14px;
+}
+
+.closeIcon {
+    color: $black-60;
+    height: 20px;
+    width: 20px;
+}
+
+.closeButton:hover .closeIcon {
+    color: $black-80;
+}
+
+.body {
+    max-height: 76vh;
+    overflow: hidden;
+    padding: 16px 20px 20px;
+}
+
+.loadingWrap {
+    display: flex;
+    justify-content: center;
+    min-height: 160px;
+}
+
+.message {
+    color: $black-60;
+    margin: 0;
+    text-align: center;
+}
+
+.logsTextarea {
+    background: #101820;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: #f7f8fa;
+    display: block;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    min-height: 420px;
+    outline: none;
+    padding: 12px;
+    resize: vertical;
+    white-space: pre;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .body {
+        max-height: 72vh;
+        padding: 12px 14px 16px;
+    }
+
+    .logsTextarea {
+        min-height: 320px;
+    }
+}

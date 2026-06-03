@@ -30,6 +30,7 @@
 
 .readOnlyGrid {
     @include gridColumns(2, 1, 1, 16px);
+    align-items: start;
 }
 
 .readOnlyField {

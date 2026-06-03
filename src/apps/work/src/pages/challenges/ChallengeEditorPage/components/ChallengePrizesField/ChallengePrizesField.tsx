@@ -21,10 +21,7 @@ import { TrashIcon } from '@heroicons/react/outline'
 import { Button } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
-import {
-    FormFieldWrapper,
-    PrizeInput,
-} from '../../../../../lib/components/form'
+import { PrizeInput } from '../../../../../lib/components/form'
 import {
     CHALLENGE_TYPES_WITH_MULTIPLE_PRIZES,
     PRIZE_SET_TYPES,
@@ -153,6 +150,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
 
     const [pendingPrizeType, setPendingPrizeType] = useState<PrizeType | undefined>()
     const [showPointsConfirmation, setShowPointsConfirmation] = useState<boolean>(false)
+    const [activePrizeIndex, setActivePrizeIndex] = useState<number | undefined>()
 
     const supportsMultiplePrizes = useMemo(
         () => hasMultiplePrizesSupport(
@@ -208,7 +206,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
         placementSetIndex,
     ])
 
-    const descendingError = useMemo(() => {
+    const nonIncreasingOrderError = useMemo(() => {
         if (!Array.isArray(placementPrizes) || placementPrizes.length < 2) {
             return undefined
         }
@@ -220,9 +218,9 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
             if (
                 previousPrize > 0
                 && currentPrize > 0
-                && currentPrize >= previousPrize
+                && currentPrize > previousPrize
             ) {
-                return 'Each subsequent prize must be less than the one above it.'
+                return 'Each subsequent prize must be less than or equal to the one above it.'
             }
         }
 
@@ -286,6 +284,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
 
     const handlePrizeValueChange = useCallback(
         (index: number, value: number): void => {
+            setActivePrizeIndex(index)
             setValue(`${placementPrizesName}.${index}.value` as never, value as never, {
                 shouldDirty: true,
                 shouldValidate: true,
@@ -317,6 +316,13 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
         ],
     )
 
+    const prizeFocusHandlers = useMemo<VoidHandler[]>(
+        () => fields.map((_, index) => (): void => {
+            setActivePrizeIndex(index)
+        }),
+        [fields],
+    )
+
     const removeHandlers = useMemo<VoidHandler[]>(
         () => fields.map((_, index) => (): void => {
             remove(index)
@@ -330,115 +336,151 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     const fieldError = typeof fieldState.error?.message === 'string'
         ? fieldState.error.message
         : undefined
+    const showPrizeRowLabels = fields.length > 0
+    const errorMessage = fieldError || nonIncreasingOrderError
+    const prizeTypeFieldName = `${props.name}-type`
+    const fieldLabelId = `${props.name}-label`
+    const usdOptionId = `${prizeTypeFieldName}-usd`
+    const pointsOptionId = `${prizeTypeFieldName}-points`
 
     return (
         <>
-            <FormFieldWrapper
-                error={fieldError || descendingError}
-                label='Challenge Prizes'
-                name={props.name}
-                required
-            >
-                <div className={styles.container}>
-                    <div className={styles.typeToggle}>
-                        <button
-                            className={classNames(
-                                styles.toggleButton,
-                                currentPrizeType === PRIZE_TYPES.USD ? styles.active : undefined,
-                            )}
-                            disabled={props.disabled}
-                            onClick={handleSelectUsd}
-                            type='button'
-                        >
-                            USD
-                        </button>
-                        <button
-                            className={classNames(
-                                styles.toggleButton,
-                                currentPrizeType === PRIZE_TYPES.POINT ? styles.active : undefined,
-                            )}
-                            disabled={props.disabled}
-                            onClick={handleSelectPoints}
-                            type='button'
-                        >
-                            Points
-                        </button>
+            <div className={styles.field}>
+                <div
+                    className={classNames(
+                        styles.fieldHeader,
+                        showPrizeRowLabels ? styles.fieldHeaderWithPrizeLabels : undefined,
+                    )}
+                >
+                    <div className={styles.fieldLabel} id={fieldLabelId}>
+                        Challenge Prizes
+                        <span className={styles.required}>*</span>
                     </div>
 
-                    <div className={styles.prizeRows}>
-                        {fields.map((prizeField, index) => {
-                            const prizeValue = Number(placementPrizes?.[index]?.value) || 0
-                            const prizeValueError = get(
-                                formState.errors,
-                                `${placementPrizesName}.${index}.value`,
-                            ) as { message?: string } | undefined
-                            const prizeValueErrorMessage = typeof prizeValueError?.message === 'string'
-                                ? prizeValueError.message
-                                : undefined
-                            const hasValueError = !!prizeValueError
-
-                            return (
-                                <div
-                                    className={classNames(
-                                        styles.prizeRow,
-                                        prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
-                                    )}
-                                    key={prizeField.id}
-                                >
-                                    <span className={styles.prizeLabel}>
-                                        {supportsMultiplePrizes
-                                            ? `Prize ${index + 1}`
-                                            : 'Prize'}
-                                    </span>
-
-                                    <div className={styles.prizeInputField}>
-                                        <PrizeInput
-                                            disabled={props.disabled}
-                                            error={hasValueError || !!descendingError}
-                                            onChange={prizeValueChangeHandlers[index]}
-                                            prizeType={currentPrizeType}
-                                            value={prizeValue}
-                                        />
-                                        {prizeValueErrorMessage
-                                            ? (
-                                                <div className={styles.prizeValueError}>
-                                                    {prizeValueErrorMessage}
-                                                </div>
-                                            )
-                                            : undefined}
-                                    </div>
-
-                                    {index > 0
-                                        ? (
-                                            <button
-                                                className={styles.trashButton}
-                                                disabled={props.disabled}
-                                                onClick={removeHandlers[index]}
-                                                type='button'
-                                            >
-                                                <TrashIcon className={styles.trashIcon} />
-                                            </button>
-                                        )
-                                        : <div className={styles.trashPlaceholder} />}
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {supportsMultiplePrizes
-                        ? (
-                            <Button
-                                className={styles.addButton}
+                    <div
+                        aria-labelledby={fieldLabelId}
+                        className={styles.typeToggle}
+                        role='radiogroup'
+                    >
+                        <label
+                            className={classNames(
+                                styles.typeOption,
+                                props.disabled ? styles.typeOptionDisabled : undefined,
+                            )}
+                            htmlFor={usdOptionId}
+                        >
+                            <input
+                                checked={currentPrizeType === PRIZE_TYPES.USD}
+                                className={styles.typeToggleInput}
                                 disabled={props.disabled}
-                                label='+ Add New Prize'
-                                onClick={handleAddPrize}
-                                secondary
-                                size='lg'
+                                id={usdOptionId}
+                                name={prizeTypeFieldName}
+                                onChange={handleSelectUsd}
+                                type='radio'
                             />
-                        )
-                        : undefined}
+                            <span>USD</span>
+                        </label>
+                        <label
+                            className={classNames(
+                                styles.typeOption,
+                                props.disabled ? styles.typeOptionDisabled : undefined,
+                            )}
+                            htmlFor={pointsOptionId}
+                        >
+                            <input
+                                checked={currentPrizeType === PRIZE_TYPES.POINT}
+                                className={styles.typeToggleInput}
+                                disabled={props.disabled}
+                                id={pointsOptionId}
+                                name={prizeTypeFieldName}
+                                onChange={handleSelectPoints}
+                                type='radio'
+                            />
+                            <span>Points</span>
+                        </label>
+                    </div>
                 </div>
-            </FormFieldWrapper>
+
+                <div className={styles.prizeRows}>
+                    {fields.map((prizeField, index) => {
+                        const prizeValue = Number(placementPrizes?.[index]?.value) || 0
+                        const prizeValueError = get(
+                            formState.errors,
+                            `${placementPrizesName}.${index}.value`,
+                        ) as { message?: string } | undefined
+                        const prizeValueErrorMessage = typeof prizeValueError?.message === 'string'
+                            ? prizeValueError.message
+                            : undefined
+                        const hasValueError = !!prizeValueError
+                        const isRemovablePrize = showPrizeRowLabels && index > 0
+
+                        return (
+                            <div
+                                className={classNames(
+                                    styles.prizeRow,
+                                    styles.multiPrizeRow,
+                                    isRemovablePrize ? styles.prizeRowWithRemove : undefined,
+                                    prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
+                                )}
+                                key={prizeField.id}
+                            >
+                                <span className={styles.prizeLabel}>
+                                    {`Prize ${index + 1}`}
+                                </span>
+
+                                <div className={styles.prizeInputField}>
+                                    <PrizeInput
+                                        autoFocus={activePrizeIndex === index}
+                                        disabled={props.disabled}
+                                        error={hasValueError || !!nonIncreasingOrderError}
+                                        onChange={prizeValueChangeHandlers[index]}
+                                        onFocus={prizeFocusHandlers[index]}
+                                        prizeType={currentPrizeType}
+                                        value={prizeValue}
+                                    />
+                                    {prizeValueErrorMessage
+                                        ? (
+                                            <div className={styles.prizeValueError}>
+                                                {prizeValueErrorMessage}
+                                            </div>
+                                        )
+                                        : undefined}
+                                </div>
+
+                                {isRemovablePrize
+                                    ? (
+                                        <button
+                                            className={styles.trashButton}
+                                            disabled={props.disabled}
+                                            onClick={removeHandlers[index]}
+                                            type='button'
+                                        >
+                                            <TrashIcon className={styles.trashIcon} />
+                                        </button>
+                                    )
+                                    : undefined}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {supportsMultiplePrizes
+                    ? (
+                        <Button
+                            className={styles.addButton}
+                            disabled={props.disabled}
+                            label='+ Add New Prize'
+                            onClick={handleAddPrize}
+                            secondary
+                            size='lg'
+                        />
+                    )
+                    : undefined}
+
+                {errorMessage
+                    ? <div className={styles.fieldError}>{errorMessage}</div>
+                    : undefined}
+            </div>
 
             {showPointsConfirmation
                 ? (

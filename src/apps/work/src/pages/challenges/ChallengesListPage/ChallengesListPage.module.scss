@@ -1,7 +1,15 @@
 @import '@libs/ui/styles/includes';
 
+.summaryRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+}
+
 .totalChallenges {
-    margin-top: 10px;
     font-size: 14px;
     color: $black-60;
 }
@@ -29,14 +37,35 @@
     text-decoration: none;
 }
 
+.contextualActionRow {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.requestCopilotLink {
+    color: $link-blue-dark;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.requestCopilotLink:hover,
+.requestCopilotLink:focus {
+    color: $link-blue-dark;
+    text-decoration: none;
+}
+
 .projectTitleActions {
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.projectAssetsLink,
-.projectUsersLink,
 .projectEditLink {
     display: inline-flex;
     align-items: center;
@@ -56,8 +85,6 @@
     }
 }
 
-.projectAssetsIcon,
-.projectUsersIcon,
 .projectEditIcon {
     width: 16px;
     height: 16px;

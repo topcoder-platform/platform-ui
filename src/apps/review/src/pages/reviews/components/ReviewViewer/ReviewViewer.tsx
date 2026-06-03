@@ -43,7 +43,39 @@ const ReviewViewer: FC = () => {
     const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false)
     const [isChanged, setIsChanged] = useState(false)
     const respondToAppeals = searchParams.get('respondToAppeals') === 'true'
-    const [isManagerEdit, setIsManagerEdit] = useState(respondToAppeals)
+    const hasChallengeAdminRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === ADMIN.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
+    const hasTopcoderAdminRole = useMemo(
+        () => myChallengeRoles.some(
+            role => role?.toLowerCase()
+                .includes('admin'),
+        ),
+        [myChallengeRoles],
+    )
+
+    const hasChallengeManagerRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === MANAGER.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
+    const canManagerEdit = useMemo(
+        () => hasChallengeAdminRole
+        || hasTopcoderAdminRole
+        || hasChallengeManagerRole,
+        [
+            hasChallengeAdminRole,
+            hasTopcoderAdminRole,
+            hasChallengeManagerRole,
+        ],
+    )
+    const [isManagerEdit, setIsManagerEdit] = useState(respondToAppeals && canManagerEdit)
 
     const {
         challengeInfo,
@@ -148,35 +180,6 @@ const ReviewViewer: FC = () => {
         })
     }, [challengeInfo?.id, mutate, navigate])
 
-    const hasChallengeAdminRole = useMemo(
-        () => myChallengeResources.some(
-            resource => resource.roleName?.toLowerCase() === ADMIN.toLowerCase(),
-        ),
-        [myChallengeResources],
-    )
-
-    const hasTopcoderAdminRole = useMemo(
-        () => myChallengeRoles.some(
-            role => role?.toLowerCase()
-                .includes('admin'),
-        ),
-        [myChallengeRoles],
-    )
-
-    const hasChallengeManagerRole = useMemo(
-        () => myChallengeResources.some(
-            resource => resource.roleName?.toLowerCase() === MANAGER.toLowerCase(),
-        ),
-        [myChallengeResources],
-    )
-
-    const hasChallengeCopilotRole = useMemo(
-        () => myChallengeResources.some(
-            resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
-        ),
-        [myChallengeResources],
-    )
-
     const canEditScorecard = useMemo(() => {
         const challengeStatus = (challengeInfo?.status ?? '')
             .toString()
@@ -193,13 +196,11 @@ const ReviewViewer: FC = () => {
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
-                || hasChallengeManagerRole
-                || hasChallengeCopilotRole),
+                || hasChallengeManagerRole),
         )
     }, [
         challengeInfo?.status,
         hasChallengeAdminRole,
-        hasChallengeCopilotRole,
         hasChallengeManagerRole,
         hasTopcoderAdminRole,
         reviewInfo?.committed,
@@ -276,7 +277,6 @@ const ReviewViewer: FC = () => {
                                 hasChallengeAdminRole
                                 || hasTopcoderAdminRole
                                 || hasChallengeManagerRole
-                                || hasChallengeCopilotRole
                             }
                             saveReviewInfo={saveReviewInfo}
                             addAppeal={addAppeal}

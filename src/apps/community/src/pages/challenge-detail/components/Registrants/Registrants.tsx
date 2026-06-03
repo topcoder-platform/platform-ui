@@ -238,6 +238,10 @@ const Registrants: FC<RegistrantsProps> = (props: RegistrantsProps) => {
     const isDesign = isDesignChallenge(props.challenge)
     const places = getPlacementPrizes(props.challenge).length
     const twoRounds = Boolean(props.challenge.round1Introduction && props.challenge.round2Introduction)
+    const columnCount = (isDesign ? 3 : 4) + (twoRounds ? 1 : 0)
+    const gridStyle = {
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+    }
 
     const sortedRegistrants = useMemo(() => sortRegistrants(
         props.registrants,
@@ -279,7 +283,7 @@ const Registrants: FC<RegistrantsProps> = (props: RegistrantsProps) => {
 
     return (
         <div className={styles.container} role='table'>
-            <div className={styles.header} role='row'>
+            <div className={styles.header} role='row' style={gridStyle}>
                 {!isDesign && (
                     <button
                         className={styles.headCell}
@@ -342,7 +346,12 @@ const Registrants: FC<RegistrantsProps> = (props: RegistrantsProps) => {
                     )
 
                     return (
-                        <div className={styles.row} key={registrant.memberHandle} role='row'>
+                        <div
+                            className={styles.row}
+                            key={registrant.memberHandle}
+                            role='row'
+                            style={gridStyle}
+                        >
                             {!isDesign && <div className={styles.cell}>{registrant.rating ?? '-'}</div>}
                             <div className={styles.cell}>
                                 <a

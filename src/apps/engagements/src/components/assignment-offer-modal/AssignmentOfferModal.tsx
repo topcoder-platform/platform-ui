@@ -3,7 +3,11 @@ import { FC, useMemo } from 'react'
 import { BaseModal, Button } from '~/libs/ui'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { formatDate } from '../../lib/utils'
+import {
+    formatCurrencyAmount,
+    formatStandardHoursPerDay,
+} from '../../lib/utils/currency.utils'
+import { formatDate } from '../../lib/utils/date.utils'
 
 import styles from './AssignmentOfferModal.module.scss'
 
@@ -29,14 +33,12 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_LABEL : formatted
 }
 
-const formatAgreementRate = (value?: string): string => {
-    if (value === null || value === undefined) {
+const formatDurationMonths = (value?: number): string => {
+    if (!value) {
         return FALLBACK_LABEL
     }
 
-    const normalized = value.toString()
-        .trim()
-    return `$ ${normalized}` || FALLBACK_LABEL
+    return `${value} month${value === 1 ? '' : 's'}`
 }
 
 const formatRemarks = (value?: string): string => {
@@ -61,17 +63,25 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         ? 'Review the details below before rejecting this offer.'
         : 'Review the details below before accepting this offer.'
 
-    const agreementRateLabel = useMemo(
-        () => formatAgreementRate(assignment.agreementRate),
-        [assignment.agreementRate],
+    const paymentCycleLabel = useMemo(
+        () => assignment.paymentCycle ?? FALLBACK_LABEL,
+        [assignment.paymentCycle],
     )
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment.startDate),
         [assignment.startDate],
     )
-    const endDateLabel = useMemo(
-        () => formatAssignmentDate(assignment.endDate),
-        [assignment.endDate],
+    const durationMonthsLabel = useMemo(
+        () => formatDurationMonths(assignment.durationMonths),
+        [assignment.durationMonths],
+    )
+    const ratePerHourLabel = useMemo(
+        () => formatCurrencyAmount(assignment.ratePerHour, FALLBACK_LABEL),
+        [assignment.ratePerHour],
+    )
+    const standardHoursPerDayLabel = useMemo(
+        () => formatStandardHoursPerDay(assignment.standardHoursPerDay, FALLBACK_LABEL),
+        [assignment.standardHoursPerDay],
     )
     const otherRemarksLabel = useMemo(
         () => formatRemarks(assignment.otherRemarks),
@@ -113,16 +123,24 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
                     <h4>Assignment details</h4>
                     <div className={styles.metaGrid}>
                         <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Agreement rate (per week)</span>
-                            <span className={styles.metaValue}>{agreementRateLabel}</span>
-                        </div>
-                        <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Tentative start date</span>
+                            <span className={styles.metaLabel}>Billing start date</span>
                             <span className={styles.metaValue}>{startDateLabel}</span>
                         </div>
                         <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Tentative end date</span>
-                            <span className={styles.metaValue}>{endDateLabel}</span>
+                            <span className={styles.metaLabel}>Duration (in months)</span>
+                            <span className={styles.metaValue}>{durationMonthsLabel}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Rate per hour</span>
+                            <span className={styles.metaValue}>{ratePerHourLabel}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Standard hours per day</span>
+                            <span className={styles.metaValue}>{standardHoursPerDayLabel}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Payment Cycle</span>
+                            <span className={styles.metaValue}>{paymentCycleLabel}</span>
                         </div>
                         <div className={`${styles.metaItem} ${styles.metaItemWide}`}>
                             <span className={styles.metaLabel}>Other remarks</span>

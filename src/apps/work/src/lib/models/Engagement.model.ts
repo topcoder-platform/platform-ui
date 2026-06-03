@@ -6,26 +6,41 @@ export type EngagementWorkload = 'FULL_TIME' | 'FRACTIONAL'
 
 export type EngagementAnticipatedStart = 'FEW_DAYS' | 'FEW_WEEKS' | 'IMMEDIATE'
 
-export type EngagementStatus = 'Active' | 'Cancelled' | 'Closed' | 'Open' | 'Pending Assignment'
+export type EngagementStatus =
+    'Active'
+    | 'Cancelled'
+    | 'Closed'
+    | 'On Hold'
+    | 'Open'
+    | 'Pending Assignment'
 
 export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
-export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'TERMINATED'
+export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
+
+export type PaymentCycle = 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY'
 
 export interface Assignment {
+    agreementRate: string
+    durationMonths?: number | string
     endDate: string
     engagementId: number | string
     id: number | string
     memberHandle: string
     memberId: number | string
     otherRemarks: string
+    paymentCycle?: PaymentCycle | string
+    ratePerHour?: string
     startDate: string
+    standardHoursPerDay?: number | string
+    standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
+    terminationReason?: string
     termsAccepted: boolean
-    agreementRate: string
 }
 
 export interface Application {
+    address?: string
     availability: string
     coverLetter?: string
     createdAt: string
@@ -78,6 +93,7 @@ export interface EngagementFilters {
     page?: number
     perPage?: number
     projectId?: number | string
+    projectIds?: Array<number | string>
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
     status?: string
@@ -88,15 +104,24 @@ export interface EngagementFilters {
 export interface AssignmentPayment {
     amount?: number
     attributes?: {
+        agreementRate?: number | string
+        hoursWorked?: number | string
         remarks?: string
     }
+    createdBy?: string
+    createdByHandle?: string
     createdAt?: string
     description?: string
     details?: Array<{
         amount?: number
+        billingAccount?: number | string
+        billingAccountName?: string
+        challengeFee?: number | string
         grossAmount?: number
+        hoursWorked?: number | string
         totalAmount?: number
     }>
+    hoursWorked?: number | string
     id?: number | string
     paymentId?: number | string
     status?: string

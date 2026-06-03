@@ -13,6 +13,11 @@ export interface UpdateUserSkillDTO {
     displatModeId?: string
 }
 
+export interface SkillAutocompleteOption {
+    label: string
+    value: string
+}
+
 export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]> {
     if (!queryTerm) {
         return Promise.resolve([])
@@ -20,6 +25,43 @@ export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]
 
     const encodedQuery = encodeURIComponent(queryTerm)
     return xhrGetAsync(`${baseUrl}/skills/autocomplete?term=${encodedQuery}`)
+}
+
+export async function fetchSkillAutocompleteOptions(queryTerm: string): Promise<SkillAutocompleteOption[]> {
+    const params = new URLSearchParams({
+        size: '25',
+    })
+    const normalizedQuery = queryTerm.trim()
+
+    if (normalizedQuery.length > 0) {
+        params.append('term', normalizedQuery)
+    }
+
+    const response = await xhrGetAsync<unknown>(`${baseUrl}/skills/autocomplete?${params.toString()}`)
+    const skills = Array.isArray(response) ? response : []
+
+    return skills
+        .map(skill => {
+            const typedSkill = skill as {
+                id?: unknown
+                name?: unknown
+            }
+
+            const label = String(typedSkill.name || '')
+                .trim()
+            const value = String(typedSkill.id || '')
+                .trim()
+
+            if (!label || !value) {
+                return undefined
+            }
+
+            return {
+                label,
+                value,
+            }
+        })
+        .filter((option): option is SkillAutocompleteOption => Boolean(option))
 }
 
 export async function fetchSkillsByIds(skillIds: string[]): Promise<SearchUserSkill[]> {

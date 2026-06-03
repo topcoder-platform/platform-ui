@@ -15,6 +15,7 @@ import { FormFieldWrapper } from '../FormFieldWrapper'
 import styles from './FormCheckboxField.module.scss'
 
 interface FormCheckboxFieldProps {
+    checkboxOnlyHitArea?: boolean
     disabled?: boolean
     hint?: string
     label: string
@@ -32,6 +33,7 @@ export const FormCheckboxField: FC<FormCheckboxFieldProps> = (props: FormCheckbo
     const fieldState = controller.fieldState
 
     const checked = field.value === true
+    const checkboxOnlyHitArea = props.checkboxOnlyHitArea === true
 
     const handleChange = useCallback(
         (event: ChangeEvent<HTMLInputElement>): void => {
@@ -45,19 +47,15 @@ export const FormCheckboxField: FC<FormCheckboxFieldProps> = (props: FormCheckbo
         <FormFieldWrapper
             error={fieldState.error?.message}
             hint={props.hint}
+            hideLabel={checkboxOnlyHitArea}
             label={props.label}
             name={props.name}
         >
-            <label
-                className={classNames(
-                    styles.checkboxLabel,
-                    props.disabled
-                        ? styles.disabled
-                        : undefined,
-                )}
-                htmlFor={props.name}
-            >
+            <div className={styles.checkboxLabel}>
                 <input
+                    aria-label={checkboxOnlyHitArea
+                        ? props.label
+                        : undefined}
                     checked={checked}
                     className={styles.checkbox}
                     disabled={props.disabled}
@@ -67,8 +65,34 @@ export const FormCheckboxField: FC<FormCheckboxFieldProps> = (props: FormCheckbo
                     onChange={handleChange}
                     type='checkbox'
                 />
-                <span>{props.label}</span>
-            </label>
+                {checkboxOnlyHitArea
+                    ? (
+                        <span
+                            className={classNames(
+                                styles.checkboxText,
+                                styles.staticCheckboxText,
+                                props.disabled
+                                    ? styles.disabled
+                                    : undefined,
+                            )}
+                        >
+                            {props.label}
+                        </span>
+                    )
+                    : (
+                        <label
+                            className={classNames(
+                                styles.checkboxText,
+                                props.disabled
+                                    ? styles.disabled
+                                    : undefined,
+                            )}
+                            htmlFor={props.name}
+                        >
+                            {props.label}
+                        </label>
+                    )}
+            </div>
         </FormFieldWrapper>
     )
 }

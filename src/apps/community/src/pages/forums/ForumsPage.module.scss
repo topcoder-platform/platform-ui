@@ -1,0 +1,1287 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    @include font-roboto;
+
+    background: #f9f9f9;
+    color: $black-100;
+    min-height: 100vh;
+
+    a,
+    button,
+    h1,
+    h2,
+    h3,
+    input,
+    label,
+    p,
+    select,
+    span,
+    textarea {
+        font-family: $font-roboto;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+}
+
+.topBar {
+    align-items: center;
+    background: $tc-white;
+    box-shadow: 0 4px 6px rgba($tc-black, 0.1);
+    display: flex;
+    height: 72px;
+    justify-content: space-between;
+    padding: 6px 32px;
+}
+
+.logoWrap {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.logoMark {
+    color: #2a2a2a;
+    fill: currentcolor;
+    height: 24px;
+    width: 67px;
+}
+
+.logoType {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 2px;
+}
+
+.logoText {
+    color: $black-80;
+    font-size: 21px;
+    font-weight: $font-weight-normal;
+    line-height: 21px;
+}
+
+.wipro {
+    color: $black-80;
+    font-size: 8px;
+    line-height: 10px;
+}
+
+.desktopNav {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    gap: 32px;
+    margin-left: 32px;
+
+    a {
+        color: $link-blue-dark;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        text-decoration: none;
+    }
+}
+
+.navDivider {
+    background: $black-20;
+    display: block;
+    height: 40px;
+    width: 1px;
+}
+
+.topActions {
+    align-items: center;
+    display: flex;
+    gap: 24px;
+}
+
+.headerIcon,
+.mobileMenuIcon {
+    color: $black-80;
+    height: 24px;
+    width: 24px;
+}
+
+.mobileMenuIcon {
+    display: none;
+}
+
+.headerAvatar {
+    align-items: center;
+    background: $blue-25;
+    border-radius: 50%;
+    color: $blue-160;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin: 0 auto;
+    max-width: 1440px;
+    padding: 40px 32px 112px;
+}
+
+.challengeHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.challengeTitleRow {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+
+    h1 {
+        font-size: 34px;
+        font-weight: $font-weight-medium;
+        line-height: 40px;
+        margin: 0;
+    }
+}
+
+.backCircle {
+    align-items: center;
+    border: 1.5px solid $turq-160;
+    border-radius: 50%;
+    color: $turq-160;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    margin-top: 8px;
+    transform: rotate(90deg);
+    width: 24px;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.tagRow {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.smallTag {
+    background: $black-10;
+    border-radius: 2px;
+    color: $black-100;
+    font-size: 11px;
+    font-weight: $font-weight-medium;
+    line-height: 10px;
+    padding: 3px 4px;
+}
+
+.keyInformation {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.keyTitle {
+    font-size: 18px;
+    font-weight: $font-weight-medium;
+    line-height: 22px;
+    padding: 24px 24px 0;
+    text-transform: uppercase;
+}
+
+.prizeRow {
+    align-items: center;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    padding: 48px 24px 16px;
+}
+
+.prizes {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+}
+
+.prize {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+
+    strong {
+        font-size: 24px;
+        font-weight: $font-weight-medium;
+        line-height: 32px;
+    }
+}
+
+.prizeBadge {
+    align-items: center;
+    border-radius: 20px;
+    display: inline-flex;
+    font-size: 16px;
+    font-weight: $font-weight-medium;
+    height: 40px;
+    justify-content: center;
+    min-width: 40px;
+    padding: 8px;
+}
+
+.gold {
+    background: $gold-1;
+    color: $black-100;
+}
+
+.silver {
+    background: $silver-1;
+    color: $black-100;
+}
+
+.bronze {
+    background: $bronze-1;
+    color: $black-100;
+}
+
+.turquoise {
+    background: $turq-15;
+    color: $black-100;
+}
+
+.challengeActions {
+    display: flex;
+    gap: 8px;
+}
+
+.primaryPill,
+.outlinePill,
+.deleteButton {
+    border-radius: 50px !important;
+    text-transform: uppercase !important;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.primaryPill {
+    background: $turq-160 !important;
+}
+
+.outlinePill {
+    color: $turq-160 !important;
+}
+
+.deleteButton {
+    background: #ef476f !important;
+}
+
+.bonus {
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+    padding: 0 24px 48px;
+
+    span {
+        color: $blue-140;
+    }
+}
+
+.deadlineBar {
+    align-items: center;
+    border-top: 1px solid $black-20;
+    display: flex;
+    font-size: 16px;
+    gap: 16px;
+    line-height: 26px;
+    padding: 16px 24px;
+}
+
+.deadlineDivider {
+    background: $black-60;
+    height: 26px;
+    width: 2px;
+}
+
+.deadlineIcon {
+    height: 32px;
+    margin-left: auto;
+    width: 32px;
+}
+
+.challengeTabs {
+    align-items: stretch;
+    background: $tc-white;
+    display: flex;
+    min-height: 42px;
+
+    a {
+        align-items: center;
+        color: $black-80;
+        display: inline-flex;
+        font-size: 14px;
+        font-weight: $font-weight-medium;
+        gap: 4px;
+        line-height: 20px;
+        padding: 12px 16px 10px;
+        text-decoration: none;
+    }
+
+    span {
+        align-items: center;
+        background: $link-blue-dark;
+        border-radius: 50px;
+        color: $tc-white;
+        display: inline-flex;
+        font-size: 14px;
+        justify-content: center;
+        line-height: 16px;
+        min-width: 24px;
+        padding: 0 8px;
+    }
+}
+
+.activeTab {
+    border-bottom: 2px solid $link-blue-dark;
+    color: $link-blue-dark !important;
+}
+
+.forumGrid,
+.createGrid {
+    align-items: flex-start;
+    display: grid;
+    gap: 32px;
+    grid-template-columns: 326px 1fr;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sidebarCard {
+    background: $tc-white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+
+    h2,
+    h3,
+    p {
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 26px;
+        font-weight: $font-weight-bold;
+        line-height: 30px;
+    }
+
+    h3 {
+        font-size: 16px;
+        font-weight: $font-weight-bold;
+        line-height: 22px;
+    }
+
+    p {
+        color: $black-80;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    a {
+        color: $link-blue-dark;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        text-decoration: none;
+    }
+}
+
+.newTopicButton,
+.centerNewTopicButton {
+    align-items: center;
+    background: $turq-160;
+    border-radius: 24px;
+    color: $tc-white !important;
+    display: inline-flex;
+    font-size: 14px !important;
+    font-weight: $font-weight-bold;
+    gap: 4px;
+    justify-content: center;
+    line-height: 24px;
+    padding: 8px 24px 8px 20px;
+    text-decoration: none;
+    text-transform: uppercase !important;
+    width: fit-content;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.centerNewTopicButton {
+    align-self: center;
+}
+
+.searchField,
+.selectField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    input,
+    select {
+        background: $tc-white;
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        color: $black-100;
+        font-size: 14px;
+        line-height: 22px;
+        min-height: 40px;
+        padding: 8px 10px;
+        width: 100%;
+    }
+}
+
+.searchField {
+    position: relative;
+
+    svg {
+        color: $black-80;
+        height: 16px;
+        left: 10px;
+        position: absolute;
+        top: 12px;
+        width: 16px;
+    }
+
+    input {
+        padding-left: 32px;
+    }
+}
+
+.selectField {
+    span {
+        font-size: 12px;
+        font-weight: $font-weight-bold;
+        letter-spacing: 1px;
+        line-height: 16px;
+        text-transform: uppercase;
+    }
+}
+
+.radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+        align-items: center;
+        display: inline-flex;
+        font-size: 16px;
+        gap: 8px;
+        line-height: 24px;
+    }
+
+    input {
+        accent-color: $turq-160;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.topicList,
+.postsColumn,
+.createForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.topicCard,
+.postCard,
+.commentComposer,
+.createForm {
+    background: $tc-white;
+    border-radius: 8px;
+    padding: 28px 24px;
+}
+
+.topicCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    p {
+        color: $black-100;
+        font-size: 16px;
+        line-height: 22px;
+        margin: 0;
+        max-width: 800px;
+    }
+}
+
+.topicMain {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    a {
+        color: $black-100;
+        text-decoration: none;
+    }
+
+    h2 {
+        font-size: 24px;
+        font-weight: $font-weight-bold;
+        line-height: 30px;
+        margin: 0;
+    }
+}
+
+.topicMeta,
+.topicFooter,
+.topicAuthorGroup {
+    align-items: center;
+    color: $black-80;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    gap: 16px;
+    line-height: 20px;
+}
+
+.topicFooter {
+    justify-content: space-between;
+}
+
+.kindChip,
+.roleChip {
+    align-items: center;
+    border-radius: 2px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: $font-weight-medium;
+    line-height: 10px;
+    padding: 3px 4px;
+}
+
+.announcement {
+    background: $green-140;
+    color: $tc-white;
+}
+
+.discussion {
+    background: $blue-15;
+    color: $blue-140;
+}
+
+.roleChip {
+    background: $tc-white;
+    border: 1px solid $black-60;
+    color: $black-80;
+}
+
+.cardRule,
+.listDivider {
+    background: $black-10;
+    border-radius: 1px;
+    height: 2px;
+    width: 100%;
+}
+
+.listDivider {
+    margin-top: 8px;
+}
+
+.authorLine {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.compactAuthor {
+    gap: 6px;
+}
+
+.avatar {
+    align-items: center;
+    border-radius: 50%;
+    color: $tc-white;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.blue {
+    background: $handle-blue;
+}
+
+.green {
+    background: $handle-green;
+}
+
+.orange {
+    background: $legacy-100;
+}
+
+.red {
+    background: $red-100;
+}
+
+.handle {
+    color: $handle-yellow;
+    font-size: 14px;
+    font-weight: $font-weight-medium;
+    line-height: 22px;
+}
+
+.detailStack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.breadcrumbBar {
+    align-items: center;
+    background: $tc-white;
+    display: flex;
+    gap: 8px;
+    min-height: 56px;
+    padding: 0 24px;
+    text-transform: uppercase;
+
+    a,
+    span {
+        color: $black-100;
+        font-size: 12px;
+        font-weight: $font-weight-bold;
+        letter-spacing: 1px;
+        line-height: 16px;
+        text-decoration: none;
+    }
+
+    svg {
+        color: $black-80;
+        height: 16px;
+        transform: rotate(-90deg);
+        width: 16px;
+    }
+}
+
+.postCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.postDate {
+    color: $black-80;
+    font-size: 14px;
+    line-height: 20px;
+    margin: -12px 0 0 44px;
+}
+
+.postBody {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 22px;
+    max-width: 800px;
+
+    p,
+    pre {
+        margin: 0 0 16px;
+    }
+
+    pre {
+        background: $black-5;
+        border-radius: 4px;
+        overflow-x: auto;
+        padding: 12px;
+    }
+
+    a {
+        color: $link-blue-dark;
+    }
+}
+
+.postActions {
+    align-items: center;
+    color: $turq-160;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    gap: 16px;
+    line-height: 20px;
+    text-transform: uppercase;
+
+    button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: $turq-160;
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        gap: 6px;
+        padding: 0;
+        text-transform: uppercase;
+    }
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.vote {
+    align-items: center;
+    display: inline-flex;
+    gap: 6px;
+}
+
+.dangerAction {
+    color: #ef476f !important;
+}
+
+.commentComposer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    h2 {
+        font-size: 16px;
+        line-height: 22px;
+        margin: 0;
+    }
+}
+
+.createForm {
+    gap: 16px;
+}
+
+.fieldLabel {
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    gap: 8px;
+    line-height: 22px;
+
+    input {
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        font-size: 14px;
+        line-height: 20px;
+        min-height: 40px;
+        padding: 10px;
+    }
+}
+
+.hiddenComposer {
+    display: none;
+}
+
+.markdownWrap {
+    background: $tc-white;
+    border: 1px solid rgba($black-40, 0.5);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.toolbar {
+    align-items: center;
+    border-bottom: 1px solid rgba($black-40, 0.5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    min-height: 38px;
+}
+
+.toolbarButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-right: 1px solid rgba($black-40, 0.5);
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 4px;
+    height: 38px;
+    justify-content: center;
+    min-width: 38px;
+    padding: 8px;
+
+    svg {
+        height: 18px;
+        width: 18px;
+    }
+}
+
+.editorBody {
+    display: flex;
+    padding: 16px;
+
+    textarea {
+        border: 0;
+        color: $black-100;
+        flex: 1;
+        font: inherit;
+        min-height: inherit;
+        outline: none;
+        resize: vertical;
+        width: 100%;
+    }
+}
+
+.editorHelp {
+    align-items: center;
+    border-top: 1px solid rgba($black-40, 0.5);
+    color: $black-80;
+    display: flex;
+    font-size: 14px;
+    justify-content: space-between;
+    line-height: 20px;
+    padding: 12px 0 0;
+}
+
+.previewToggle {
+    align-self: flex-start;
+    background: transparent;
+    border: 0;
+    color: $turq-160;
+    cursor: pointer;
+    font-weight: $font-weight-bold;
+    margin: 0 16px 12px;
+    padding: 0;
+}
+
+.formActions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+.visibilityNote {
+    flex: 1;
+    font-size: 14px;
+    line-height: 20px;
+    margin: 0;
+    text-align: right;
+}
+
+.guidelines {
+    color: $black-100;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    gap: 10px;
+    line-height: 20px;
+    margin: 0;
+    padding-left: 18px;
+
+    li::marker {
+        color: $turq-160;
+    }
+}
+
+.modalOverlay {
+    align-items: flex-start;
+    background: rgba($tc-black, 0.55);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding-top: 377px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 50;
+}
+
+.deleteModal {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px 24px;
+    width: 343px;
+
+    h2,
+    p {
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 26px;
+        font-weight: $font-weight-bold;
+        line-height: 30px;
+    }
+
+    p {
+        font-size: 16px;
+        line-height: 22px;
+    }
+}
+
+.footer {
+    background: #0f172a;
+    color: $tc-white;
+    padding: 80px 0;
+}
+
+.footerInner {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin: 0 auto;
+    max-width: 1346px;
+    padding: 0 40px;
+}
+
+.footerLogo {
+    height: 52px;
+    width: 104px;
+}
+
+.footerRule {
+    background: $tc-white;
+    height: 1px;
+    width: 100%;
+}
+
+.footerColumns {
+    align-items: flex-start;
+    display: grid;
+    gap: 40px;
+    grid-template-columns: 1fr 120px 140px 180px;
+}
+
+.footerAbout,
+.footerLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    h2,
+    p {
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 16px;
+        font-weight: $font-weight-bold;
+        line-height: 22px;
+    }
+
+    p,
+    a {
+        color: $tc-white;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+    }
+}
+
+.expertButton {
+    background: $tc-white;
+    border: 1px solid #0b3d56;
+    border-radius: 4px;
+    color: #0b3d56;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
+    padding: 8px 24px;
+}
+
+.socials {
+    display: flex;
+    gap: 8px;
+
+    svg,
+    span {
+        align-items: center;
+        border: 1px solid $tc-white;
+        border-radius: 2px;
+        display: inline-flex;
+        font-size: 10px;
+        height: 22px;
+        justify-content: center;
+        text-transform: uppercase;
+        width: 22px;
+    }
+
+    svg {
+        color: $tc-white;
+        padding: 3px;
+    }
+}
+
+.copyright {
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .topBar {
+        height: 100px;
+        padding: 40px 24px 8px;
+    }
+
+    .logo {
+        height: 32px;
+        width: 135px;
+    }
+
+    .logoMark {
+        height: 20px;
+        width: 56px;
+    }
+
+    .logoText {
+        font-size: 17px;
+        line-height: 17px;
+    }
+
+    .wipro {
+        font-size: 8px;
+    }
+
+    .desktopNav,
+    .headerIcon {
+        display: none;
+    }
+
+    .mobileMenuIcon {
+        display: block;
+        order: -1;
+    }
+
+    .topActions {
+        gap: 16px;
+    }
+
+    .main {
+        gap: 16px;
+        padding: 24px 16px 48px;
+    }
+
+    .challengeTitleRow {
+        gap: 8px;
+
+        h1 {
+            font-size: 24px;
+            line-height: 30px;
+        }
+    }
+
+    .backCircle {
+        height: 16px;
+        margin-top: 4px;
+        width: 16px;
+
+        svg {
+            height: 12px;
+            width: 12px;
+        }
+    }
+
+    .keyTitle {
+        font-size: 14px;
+        line-height: 20px;
+        padding: 16px 16px 0;
+        text-align: center;
+    }
+
+    .prizeRow {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+        padding: 24px 16px 12px;
+    }
+
+    .prizes {
+        gap: 16px;
+        justify-content: center;
+    }
+
+    .prize {
+        flex-direction: column;
+        gap: 4px;
+
+        strong {
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
+
+    .prizeBadge {
+        font-size: 11px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .challengeActions {
+        flex-direction: column;
+    }
+
+    .bonus {
+        font-size: 12px;
+        line-height: 18px;
+        padding: 0 16px 16px;
+        text-align: center;
+    }
+
+    .deadlineBar {
+        align-items: flex-start;
+        flex-direction: column;
+        font-size: 12px;
+        gap: 4px;
+        line-height: 18px;
+        padding: 12px 16px;
+        position: relative;
+    }
+
+    .deadlineDivider {
+        display: none;
+    }
+
+    .deadlineIcon {
+        height: 24px;
+        position: absolute;
+        right: 12px;
+        top: 16px;
+        width: 24px;
+    }
+
+    .challengeTabs {
+        flex-direction: column;
+
+        a:not(.activeTab) {
+            display: none;
+        }
+
+        .activeTab {
+            justify-content: space-between;
+
+            &::after {
+                content: '⌄';
+                font-size: 16px;
+            }
+        }
+    }
+
+    .forumGrid,
+    .createGrid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .sidebar,
+    .topicList,
+    .postsColumn,
+    .createForm {
+        width: 100%;
+    }
+
+    .sidebarCard,
+    .topicCard,
+    .postCard,
+    .commentComposer,
+    .createForm {
+        padding: 20px 16px;
+    }
+
+    .sidebarCard h2,
+    .topicMain h2 {
+        font-size: 24px;
+        line-height: 30px;
+    }
+
+    .topicFooter,
+    .topicAuthorGroup,
+    .postActions,
+    .formActions,
+    .editorHelp {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .breadcrumbBar {
+        min-height: 48px;
+        overflow-x: auto;
+        padding: 0 16px;
+    }
+
+    .toolbar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .editorBody {
+        min-height: 220px !important;
+    }
+
+    .visibilityNote {
+        text-align: left;
+    }
+
+    .modalOverlay {
+        align-items: center;
+        padding: 16px;
+    }
+
+    .deleteModal {
+        width: 100%;
+    }
+
+    .footer {
+        padding: 80px 0;
+    }
+
+    .footerInner {
+        gap: 24px;
+        padding: 0 40px;
+    }
+
+    .footerColumns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 40px;
+    }
+
+    .footerAbout {
+        width: 100%;
+    }
+}

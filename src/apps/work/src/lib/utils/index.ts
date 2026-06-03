@@ -1,5 +1,6 @@
 export * from './async.utils'
 export * from './assignment-dates.utils'
+export * from './assignment-rates.utils'
 export * from './auth.utils'
 export * from './challenge-editor.utils'
 export * from './challenge.utils'
@@ -10,10 +11,20 @@ export * from './file.utils'
 export * from './metadata.utils'
 export * from './navigation.utils'
 export {
+    calculatePaymentAmount,
+    getAssignmentPaymentCycle,
+    getAssignmentRatePerHour,
+    getAssignmentStandardHoursPerDay,
+    getAssignmentStandardHoursPerWeek,
+    getExpectedHoursLabel,
     getAssignmentStatus,
     getPaymentAmount,
+    getPaymentCreatorLabel,
+    getPaymentHoursWorked,
+    getPaymentRemarks,
     getPaymentStatus,
     normalizeAssignmentStatus,
+    renderPaymentLinkedText,
 } from './payment.utils'
 export * from './pagination.utils'
 export * from './phase.utils'

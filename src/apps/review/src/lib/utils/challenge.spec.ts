@@ -4,7 +4,13 @@ import {
     buildPhaseTabs,
     collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
+    hasPendingApprovalReview,
+    isFirst2FinishChallenge,
+    isMarathonMatchChallenge,
     type PhaseLike,
+    resolveFirst2FinishIterativeSubmissionIds,
+    shouldAllowWinnersTabForPastChallenge,
+    shouldForceWinnersTabForPastChallenge,
 } from './challenge'
 
 const createPhase = (
@@ -45,6 +51,29 @@ const createBackendPhase = (
 })
 
 describe('challenge phase tab helpers', () => {
+    it('recognizes Marathon Match challenges from type metadata', () => {
+        expect(isMarathonMatchChallenge({
+            type: {
+                abbreviation: 'MM',
+                id: 'type-1',
+                name: 'Marathon Match',
+            },
+            typeId: 'type-1',
+        }))
+            .toBe(true)
+    })
+
+    it('recognizes Marathon Match challenges from the canonical type id', () => {
+        expect(isMarathonMatchChallenge({
+            type: {
+                id: 'type-1',
+                name: 'Code',
+            },
+            typeId: '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+        }))
+            .toBe(true)
+    })
+
     it('preserves the incoming phase order', () => {
         const phases: PhaseLike[] = [
             createPhase('1', 'Registration', '2025-01-01T00:00:00Z'),
@@ -210,6 +239,111 @@ describe('challenge phase tab helpers', () => {
                 'Approval',
                 'Approval 2',
             ])
+    })
+
+    it('allows past challenges with winner data to force-show the winners tab', () => {
+        expect(shouldForceWinnersTabForPastChallenge({
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }))
+            .toBe(true)
+        expect(shouldForceWinnersTabForPastChallenge({
+            status: 'COMPLETED',
+            winners: [],
+        }))
+            .toBe(false)
+    })
+
+    it('force-shows winners for past challenges with winners even when a phase remains open', () => {
+        expect(shouldAllowWinnersTabForPastChallenge({
+            phases: [
+                createBackendPhase('iterative-1', 'Iterative Review', '2026-04-20T00:00:00Z', {
+                    isOpen: true,
+                }),
+            ],
+            status: 'COMPLETED',
+        }))
+            .toBe(false)
+
+        expect(shouldForceWinnersTabForPastChallenge({
+            phases: [
+                createBackendPhase('iterative-1', 'Iterative Review', '2026-04-20T00:00:00Z', {
+                    isOpen: true,
+                }),
+            ],
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }))
+            .toBe(true)
+    })
+
+    it('keeps winners hidden when a follow-up approval review is still pending', () => {
+        const challengeInfo = {
+            phases: [
+                createBackendPhase('approval-1', 'Approval', '2025-01-02T00:00:00Z'),
+                createBackendPhase('approval-2', 'Approval', '2025-01-03T00:00:00Z'),
+            ],
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }
+        const approvalReviews = [
+            {
+                review: {
+                    status: 'PENDING',
+                },
+            },
+        ]
+
+        expect(hasPendingApprovalReview(approvalReviews))
+            .toBe(true)
+        expect(shouldAllowWinnersTabForPastChallenge(challengeInfo, approvalReviews))
+            .toBe(false)
+        expect(shouldForceWinnersTabForPastChallenge(challengeInfo, approvalReviews))
+            .toBe(false)
+    })
+
+    it('recognizes First2Finish challenges when the type name contains digits', () => {
+        expect(isFirst2FinishChallenge({
+            track: {
+                name: 'Development',
+            } as never,
+            type: {
+                name: 'First2Finish',
+            } as never,
+        }))
+            .toBe(true)
+    })
+
+    it('keeps only the first dated contest submission for F2F iterative review', () => {
+        expect(resolveFirst2FinishIterativeSubmissionIds([
+            {
+                id: 'submission-2',
+                placement: undefined as unknown as number,
+                submittedDate: '2026-04-01T04:57:36.849Z',
+            },
+            {
+                id: 'submission-1',
+                placement: undefined as unknown as number,
+                submittedDate: '2026-04-01T04:56:13.405Z',
+            },
+        ]))
+            .toEqual(['submission-1'])
+    })
+
+    it('falls back to placement when F2F submission dates are unavailable', () => {
+        expect(resolveFirst2FinishIterativeSubmissionIds([
+            {
+                id: 'submission-2',
+                placement: 2,
+                submittedDate: '',
+            },
+            {
+                id: 'submission-1',
+                placement: 1,
+                submittedDate: '',
+            },
+        ]))
+            .toEqual(['submission-1'])
     })
 })
 

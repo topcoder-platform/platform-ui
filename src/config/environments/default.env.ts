@@ -91,6 +91,8 @@ export const TIMELINE_WALL_API = getReactEnv<string>(
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
+export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
+export const REPORTS_API = `${API.V6}/reports`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
@@ -206,7 +208,7 @@ export const ADMIN = {
     ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',
     REVIEW_UI_URL: 'https://review.topcoder-dev.com',
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
-    WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
+    WORK_MANAGER_URL: 'https://work.topcoder-dev.com',
 }
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(

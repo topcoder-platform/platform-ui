@@ -1,10 +1,12 @@
 import type { FC, ReactNode } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { IconSolid } from '~/libs/ui'
 
+import { sanitizeRichTextSource } from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Engagement } from '../../lib/models'
 import { formatDuration, formatLocation } from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
@@ -99,13 +101,14 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
             </div>
             <div className={styles.description}>
                 <Markdown
+                    rehypePlugins={[rehypeRaw as any]}
                     remarkPlugins={[
                         remarkFrontmatter,
                         [remarkGfm, { singleTilde: false }],
                     ]}
                     components={compactMarkdownComponents}
                 >
-                    {engagement.description}
+                    {sanitizeRichTextSource(engagement.description)}
                 </Markdown>
             </div>
             <div className={styles.meta}>

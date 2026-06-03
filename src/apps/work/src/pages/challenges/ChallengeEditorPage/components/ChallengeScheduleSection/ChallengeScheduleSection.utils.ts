@@ -5,6 +5,8 @@ import {
 import { ChallengePhase } from '../../../../../lib/models'
 import { getPhaseEndDateInDate } from '../../../../../lib/utils/date.utils'
 
+export const AI_SCREENING_PHASE_NAME = 'AI Screening'
+
 export interface RecalculatePhasesResult {
     phases: ChallengePhase[]
     error?: string
@@ -13,6 +15,13 @@ export interface RecalculatePhasesResult {
 export interface RecalculatePhasesOptions {
     phaseStartOverrides?: ReadonlyMap<string, string>
     resetRootPhasesToStartDate?: boolean
+}
+
+export interface SchedulePhaseRow {
+    actualIndex: number
+    isVirtual?: boolean
+    key: string
+    phase: ChallengePhase
 }
 
 export function toDate(value?: Date | string | null): Date | undefined {
@@ -55,6 +64,10 @@ export function normalizePhaseName(value: unknown): string {
         .toLowerCase()
 }
 
+function getPredecessorEndDate(phase?: ChallengePhase): Date | undefined {
+    return toDate(phase?.actualEndDate || phase?.scheduledEndDate)
+}
+
 function isIterativeReviewPhase(phaseName: unknown): boolean {
     return normalizePhaseName(phaseName) === 'iterative review'
 }
@@ -94,6 +107,75 @@ export function canEditPhaseStartDate(
         || (isSubmissionPhaseByName && !isTwoRoundDesignChallenge)
 }
 
+function isAiScreeningInsertionPhase(phaseName: unknown): boolean {
+    const normalizedPhaseName = normalizePhaseName(phaseName)
+
+    return normalizedPhaseName === 'submission'
+        || normalizedPhaseName === 'checkpoint submission'
+}
+
+/**
+ * Builds the ordered schedule rows shown in the editor, injecting display-only
+ * AI screening rows when AI reviewers exist without a real AI screening phase.
+ *
+ * @param phases persisted challenge phases from the form state.
+ * @param hasAiReviewers whether AI reviewer assignments are present on the challenge.
+ * @returns ordered phase rows for the schedule editor display.
+ */
+export function buildSchedulePhaseRows(
+    phases: ChallengePhase[],
+    hasAiReviewers: boolean,
+): SchedulePhaseRow[] {
+    if (!Array.isArray(phases) || !phases.length) {
+        return []
+    }
+
+    const hasRealAiScreeningPhase = phases.some(
+        phase => normalizePhaseName(phase.name) === normalizePhaseName(AI_SCREENING_PHASE_NAME),
+    )
+    const shouldInsertVirtualAiScreening = hasAiReviewers && !hasRealAiScreeningPhase
+    const rows: SchedulePhaseRow[] = []
+    let insertedVirtualRow = false
+
+    phases.forEach((phase, index) => {
+        rows.push({
+            actualIndex: index,
+            key: getPhaseKey(phase, index),
+            phase,
+        })
+
+        if (!shouldInsertVirtualAiScreening || !isAiScreeningInsertionPhase(phase.name)) {
+            return
+        }
+
+        insertedVirtualRow = true
+        rows.push({
+            actualIndex: -1,
+            isVirtual: true,
+            key: `virtual-ai-screening-${index}`,
+            phase: {
+                name: AI_SCREENING_PHASE_NAME,
+            },
+        })
+    })
+
+    if (!shouldInsertVirtualAiScreening || insertedVirtualRow) {
+        return rows
+    }
+
+    return [
+        ...rows,
+        {
+            actualIndex: -1,
+            isVirtual: true,
+            key: 'virtual-ai-screening-fallback',
+            phase: {
+                name: AI_SCREENING_PHASE_NAME,
+            },
+        },
+    ]
+}
+
 // eslint-disable-next-line complexity
 export function recalculatePhases(
     phases: ChallengePhase[],
@@ -125,7 +207,7 @@ export function recalculatePhases(
         if (phase.predecessor) {
             const predecessorPhase = calculatedByPhaseId.get(phase.predecessor)
             const predecessorStartDate = toDate(predecessorPhase?.scheduledStartDate)
-            const predecessorEndDate = toDate(predecessorPhase?.scheduledEndDate)
+            const predecessorEndDate = getPredecessorEndDate(predecessorPhase)
 
             if (predecessorEndDate) {
                 phaseStartDate = isIterativeReviewPhase(phase.name)

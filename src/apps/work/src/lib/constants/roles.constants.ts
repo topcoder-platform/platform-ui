@@ -9,11 +9,15 @@ export const ADMIN_ROLES = [
     'connect admin',
 ] as const
 
+export const TALENT_MANAGER_ROLES = [
+    'talent manager',
+    'topcoder talent manager',
+] as const
+
 export const MANAGER_ROLES = [
     'project manager',
     'topcoder project manager',
-    'talent manager',
-    'topcoder talent manager',
+    ...TALENT_MANAGER_ROLES,
 ] as const
 
 export const COPILOT_ROLES = [
@@ -23,8 +27,7 @@ export const COPILOT_ROLES = [
 export const TASK_MANAGER_ROLES = [
     'topcoder task manager',
     'task manager',
-    'topcoder talent manager',
-    'talent manager',
+    ...TALENT_MANAGER_ROLES,
 ] as const
 
 export const ALLOWED_USER_ROLES = [

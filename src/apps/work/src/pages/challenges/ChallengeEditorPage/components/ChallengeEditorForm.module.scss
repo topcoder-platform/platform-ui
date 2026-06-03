@@ -6,6 +6,29 @@
     gap: 28px;
 }
 
+.formContent {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin: 0;
+    min-inline-size: 0;
+    padding: 0;
+
+    &[disabled] {
+        pointer-events: none;
+
+        :global(.EasyMDEContainer) {
+            pointer-events: auto;
+        }
+
+        :global(.EasyMDEContainer .editor-statusbar),
+        :global(.EasyMDEContainer .editor-toolbar) {
+            pointer-events: none;
+        }
+    }
+}
+
 .section {
     background-color: $tc-white;
     border: 2px solid $black-20;
@@ -28,6 +51,12 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.submissionSettingsGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .block {
     display: flex;
     flex-direction: column;
@@ -36,17 +65,37 @@
 
 .billingSummary {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+}
+
+.billingSummaryItem {
+    align-items: baseline;
+    color: $black-80;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.billingSummaryLabel {
+    color: $black-60;
+    font-weight: 500;
+}
+
+.billingSummaryValue {
+    font-weight: 700;
 }
 
 .prizesBillingGrid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
 }
 
 .prizeInputs {
     display: grid;
+    align-items: start;
     gap: 20px;
     grid-template-columns: minmax(0, 1fr);
 }
@@ -56,6 +105,7 @@
     flex-direction: column;
     gap: 20px;
     min-width: 0;
+    width: 100%;
 }
 
 .copilotFeeColumn {
@@ -63,18 +113,71 @@
     width: 100%;
 }
 
+.approvalSection {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 100%;
+    padding: 14px;
+}
+
+.approvalStatusRow {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.approvalStatusLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.approvalStatusValue {
+    color: $black-100;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.approvalReason {
+    color: $black-80;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.rejectionReasonInput {
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    min-height: 72px;
+    padding: 8px 10px;
+    resize: vertical;
+    width: 100%;
+    margin-top: $sp-2;
+}
+
+.approvalActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 @media (min-width: 1024px) {
-    .prizesBillingGrid {
-        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    .submissionSettingsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .prizeInputs {
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+        column-gap: 48px;
+        grid-template-columns: 472px 336px;
+        justify-content: start;
     }
 
     .copilotFeeColumn {
-        justify-self: end;
-        padding-left: 16px;
+        padding-left: 0;
     }
 }
 
@@ -106,6 +209,12 @@
 .errorText {
     color: $red-100;
     font-size: 12px;
+}
+
+.warningText {
+    color: #7c5b1b;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .actions {

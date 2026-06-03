@@ -14,7 +14,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -58,6 +58,10 @@ import {
     removeProjectAttachment,
     updateProjectAttachment,
 } from '../../../lib/services'
+import {
+    checkCanEditProjectDetails,
+    checkCanManageProject,
+} from '../../../lib/utils'
 
 import styles from './ProjectAssetsPage.module.scss'
 
@@ -305,7 +309,6 @@ export const ProjectAssetsPage: FC = () => {
     }: Readonly<{
         projectId?: string
     }> = useParams<'projectId'>()
-    const location = useLocation()
     const projectId = routeProjectId || ''
 
     const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
@@ -318,6 +321,18 @@ export const ProjectAssetsPage: FC = () => {
     const projectResult = useFetchProject(projectId || undefined)
     const projectMembersResult = useFetchProjectMembers(projectId || undefined)
     const attachmentsResult = useFetchProjectAttachments(projectId || undefined)
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(
+            workAppContext.userRoles,
+            workAppContext.loginUserInfo?.userId,
+            projectResult.project,
+        )
+    const canEditProjectDetails = !!projectResult.project
+        && checkCanEditProjectDetails(
+            workAppContext.userRoles,
+            workAppContext.loginUserInfo?.userId,
+            projectResult.project,
+        )
 
     const [activeTab, setActiveTab] = useState<AssetsTab>('files')
     const [isOpeningPicker, setIsOpeningPicker] = useState<boolean>(false)
@@ -397,7 +412,7 @@ export const ProjectAssetsPage: FC = () => {
         : linkAttachments
 
     const pageTitle = projectResult.project?.name
-        ? `${projectResult.project.name} Assets`
+        ? projectResult.project.name
         : 'Project Assets'
 
     const handleCloseUploadOptionsModal = useCallback(() => {
@@ -732,38 +747,28 @@ export const ProjectAssetsPage: FC = () => {
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
+                canManageProject={canManageProject}
+                displayMemberPaymentDetailsToCopilots={
+                    projectResult.project?.details?.displayMemberPaymentDetailsToCopilots
+                }
                 projectId={projectId}
-                projectStatus={projectResult.project?.status}
             />
         )
         : undefined
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
-                <Link
-                    aria-label='Edit project'
-                    className={styles.projectEditLink}
-                    to={`/projects/${projectId}/edit`}
-                >
-                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
-                </Link>
-                <Link
-                    aria-label='Manage project users'
-                    className={styles.projectUsersLink}
-                    state={{
-                        backTo: `${location.pathname}${location.search}${location.hash}`,
-                    }}
-                    to={`/projects/${projectId}/users`}
-                >
-                    <IconOutline.UserIcon className={styles.projectUsersIcon} />
-                </Link>
-                <Link
-                    aria-label='Open project assets'
-                    className={styles.projectAssetsLink}
-                    to={`/projects/${projectId}/assets`}
-                >
-                    <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
-                </Link>
+                {canEditProjectDetails
+                    ? (
+                        <Link
+                            aria-label='Edit project'
+                            className={styles.projectEditLink}
+                            to={`/projects/${projectId}/edit`}
+                        >
+                            <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                        </Link>
+                    )
+                    : undefined}
             </div>
         )
         : undefined

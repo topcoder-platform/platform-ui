@@ -83,8 +83,10 @@ interface ResolvePhaseMatchArguments {
     matchesPhase: boolean
     matchesScorecard: boolean
     normalizedPhaseName?: string
+    normalizedPhaseNameAlpha?: string
     normalizedPhaseNameForReviewType?: string
     normalizedReviewPhaseName?: string
+    normalizedReviewPhaseNameAlpha?: string
     normalizedReviewTypeAlpha?: string
     review: BackendReview
     reviewPhaseName?: string | null
@@ -95,8 +97,10 @@ function resolvePhaseOrTypeMatch({
     matchesPhase,
     matchesScorecard,
     normalizedPhaseName,
+    normalizedPhaseNameAlpha,
     normalizedPhaseNameForReviewType,
     normalizedReviewPhaseName,
+    normalizedReviewPhaseNameAlpha,
     normalizedReviewTypeAlpha,
     review,
     reviewPhaseName,
@@ -109,7 +113,9 @@ function resolvePhaseOrTypeMatch({
     if (normalizedReviewPhaseName) {
         const matches = enforceExactPhaseNameMatch({
             normalizedPhaseName,
+            normalizedPhaseNameAlpha,
             normalizedReviewPhaseName,
+            normalizedReviewPhaseNameAlpha,
             review,
             reviewPhaseName: reviewPhaseName ?? '',
         })
@@ -208,29 +214,43 @@ export function handleNoPhaseMatch(
  * Enforces an exact match requirement when the review contains an explicit phase name.
  *
  * @param normalizedPhaseName - Target phase name normalized to lowercase.
+ * @param normalizedPhaseNameAlpha - Target phase name normalized to letters only.
  * @param normalizedReviewPhaseName - Review phase name normalized to lowercase.
+ * @param normalizedReviewPhaseNameAlpha - Review phase name normalized to letters only.
  * @param review - Review being evaluated.
  * @param reviewPhaseName - Original review phase name for logging purposes.
- * @returns True when the normalized phase names match exactly.
+ * @returns True when the phase names match exactly after normalization, including
+ * continuation suffixes such as "Approval 2".
  */
 export function enforceExactPhaseNameMatch({
     normalizedPhaseName,
+    normalizedPhaseNameAlpha,
     normalizedReviewPhaseName,
+    normalizedReviewPhaseNameAlpha,
     review,
     reviewPhaseName,
 }: {
     normalizedPhaseName: string
+    normalizedPhaseNameAlpha?: string
     normalizedReviewPhaseName: string
+    normalizedReviewPhaseNameAlpha?: string
     review: BackendReview
     reviewPhaseName: string
 }): boolean {
     const matchesPhaseName = normalizedReviewPhaseName === normalizedPhaseName
+        || (
+            Boolean(normalizedPhaseNameAlpha)
+            && Boolean(normalizedReviewPhaseNameAlpha)
+            && normalizedReviewPhaseNameAlpha === normalizedPhaseNameAlpha
+        )
     const matchedCriteria = matchesPhaseName ? ['phaseName'] : []
 
     debugLog('reviewMatchesPhase.phaseNameExactMatchCheck', {
         matchesPhaseName,
         normalizedPhaseName,
+        normalizedPhaseNameAlpha,
         normalizedReviewPhaseName,
+        normalizedReviewPhaseNameAlpha,
         reviewId: review.id,
         reviewPhaseName: truncateForLog(reviewPhaseName),
     })
@@ -289,12 +309,23 @@ export function enforceExactReviewTypeMatch({
 const hasMatchingPhaseName = (
     normalizedPhaseName?: string,
     normalizedReviewPhaseName?: string,
+    normalizedPhaseNameAlpha?: string,
+    normalizedReviewPhaseNameAlpha?: string,
 ): boolean => {
     if (!normalizedPhaseName || !normalizedReviewPhaseName) {
-        return false
+        return Boolean(
+            normalizedPhaseNameAlpha
+            && normalizedReviewPhaseNameAlpha
+            && normalizedReviewPhaseNameAlpha === normalizedPhaseNameAlpha,
+        )
     }
 
     return normalizedReviewPhaseName === normalizedPhaseName
+        || (
+            Boolean(normalizedPhaseNameAlpha)
+            && Boolean(normalizedReviewPhaseNameAlpha)
+            && normalizedReviewPhaseNameAlpha === normalizedPhaseNameAlpha
+        )
 }
 
 const hasMatchingReviewTypeName = (
@@ -354,8 +385,9 @@ const doesReviewMatchScorecard = (
 
 /**
  * Determines whether a review matches the supplied phase context. Reviews that include an explicit
- * phase name must match the target phase name exactly; otherwise scorecard, phase identifier, type,
- * and metadata criteria are evaluated in order.
+ * phase name must match the target phase name after normalization (including continuation
+ * suffixes like "Approval 2"); otherwise scorecard, phase identifier, type, and metadata criteria
+ * are evaluated in order.
  *
  * @param review - Review to evaluate.
  * @param scorecardId - Scorecard identifier associated with the target phase.
@@ -395,10 +427,12 @@ export function reviewMatchesPhase(
     })
 
     const normalizedPhaseName = getNormalizedLowerCase(phaseName)
+    const normalizedPhaseNameAlpha = getNormalizedAlphaLowerCase(phaseName)
     const normalizedPhaseNameForReviewType = getNormalizedAlphaLowerCase(phaseName)
 
     const reviewPhaseName = (review as { phaseName?: string | null }).phaseName ?? undefined
     const normalizedReviewPhaseName = getNormalizedLowerCase(reviewPhaseName)
+    const normalizedReviewPhaseNameAlpha = getNormalizedAlphaLowerCase(reviewPhaseName)
     const reviewType = (review as { reviewType?: string | null }).reviewType ?? undefined
     const normalizedReviewType = getNormalizedLowerCase(reviewType)
     const normalizedReviewTypeAlpha = getNormalizedAlphaLowerCase(reviewType)
@@ -406,14 +440,18 @@ export function reviewMatchesPhase(
     const matchesPhaseName = hasMatchingPhaseName(
         normalizedPhaseName,
         normalizedReviewPhaseName,
+        normalizedPhaseNameAlpha,
+        normalizedReviewPhaseNameAlpha,
     )
 
     const phaseBasedMatch = resolvePhaseOrTypeMatch({
         matchesPhase,
         matchesScorecard,
         normalizedPhaseName,
+        normalizedPhaseNameAlpha,
         normalizedPhaseNameForReviewType,
         normalizedReviewPhaseName,
+        normalizedReviewPhaseNameAlpha,
         normalizedReviewTypeAlpha,
         review,
         reviewPhaseName,

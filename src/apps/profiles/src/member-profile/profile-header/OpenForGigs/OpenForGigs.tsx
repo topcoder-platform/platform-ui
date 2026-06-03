@@ -12,6 +12,7 @@ import styles from './OpenForGigs.module.scss'
 
 interface OpenForGigsProps {
     canEdit: boolean
+    isOpenToWork: boolean | null
     authProfile: UserProfile | undefined
     profile: UserProfile
     refreshProfile: (handle: string) => void
@@ -27,7 +28,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const openForWork = props.profile.availableForGigs
+    const openForWork = props.isOpenToWork
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.openForWork) {
@@ -53,9 +54,16 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
 
     return props.canEdit || openForWork || props.isPrivilegedViewer ? (
         <div className={styles.container}>
-            <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
-                {openForWork ? 'open to work' : 'not open to work'}
-            </p>
+            {openForWork === null ? (
+                <p className={classNames('body-main-bold', styles.unknownOopenToWork)}>
+                    Unknown
+                </p>
+            ) : (
+                <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
+                    {openForWork ? 'open to work' : 'not open to work'}
+                </p>
+            )}
+
             {
                 props.canEdit && (
                     <EditMemberPropertyBtn
@@ -69,6 +77,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                         onClose={handleModifyOpenForWorkClose}
                         onSave={handleModifyOpenForWorkSave}
                         profile={props.profile}
+                        openForWork={openForWork}
                         memberPersonalizationTraits={props.memberPersonalizationTraits}
                         mutatePersonalizationTraits={props.mutatePersonalizationTraits}
                     />

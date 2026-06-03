@@ -4,6 +4,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendResource } from './BackendResource.model'
 import { BackendSubmission } from './BackendSubmission.model'
+import { BackendSubmissionStatus } from './BackendSubmissionStatus.enum'
 import {
     adjustReviewInfo,
     convertBackendReviewToReviewInfo,
@@ -19,7 +20,19 @@ import {
  */
 export interface SubmissionInfo {
     id: string
+    /**
+     * Legacy submission identifier used by older review payloads and result lookups.
+     */
+    legacySubmissionId?: string
     memberId: string
+    /**
+     * Placement assigned to the submission when available from the backend.
+     */
+    placement?: number | null
+    /**
+     * Submitter handle returned by the submissions API for legacy winner matching.
+     */
+    submitterHandle?: string
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
     reviewInfos?: ReviewInfo[]
@@ -60,6 +73,27 @@ export interface SubmissionInfo {
      * Flag indicating whether the submission includes an uploaded file.
      */
     isFileSubmission?: boolean
+    /**
+     * Submission status (e.g. 'ACTIVE', 'FAILED_REVIEW', 'AI_FAILED_REVIEW').
+     */
+    status?: string
+}
+
+/**
+ * Normalize backend submission status to string representation
+ * @param status - The status value from backend (can be number or string)
+ * @returns Normalized status string
+ */
+function normalizeSubmissionStatus(status: BackendSubmissionStatus | string | undefined): string | undefined {
+    if (typeof status === 'number') {
+        return BackendSubmissionStatus[status] ?? String(status)
+    }
+
+    if (typeof status === 'string') {
+        return status
+    }
+
+    return undefined
 }
 
 /**
@@ -135,13 +169,19 @@ export function convertBackendSubmissionToSubmissionInfo(
         isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         isPassingReview,
+        legacySubmissionId: data.legacySubmissionId,
         memberId: data.memberId,
+        placement: data.placement,
         review: primaryReviewInfo,
         reviewInfos,
         reviews: reviewResults,
         reviewTypeId: primaryReview?.typeId ?? undefined,
+        status: normalizeSubmissionStatus(data.status),
         submittedDate,
         submittedDateString,
+        submitterHandle: (data as BackendSubmission & {
+            submitterHandle?: string | null
+        }).submitterHandle?.trim() || undefined,
         type: data.type,
         userInfo: registrantMap.get(data.memberId),
         virusScan: data.virusScan,

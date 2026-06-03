@@ -10,7 +10,7 @@ export interface SubmissionInfo {
     legacySubmissionId?: string
     memberHandle?: string
     memberId: string
-    review?: Record<string, unknown>
+    review?: Record<string, unknown> | Array<Record<string, unknown>>
     status: string
     type: string
     updated: string
@@ -26,5 +26,9 @@ export interface SubmissionInfo {
 export function convertBackendSubmission(data: BackendSubmission): SubmissionInfo {
     return {
         ...data,
+        created: data.created ?? data.submittedDate ?? data.createdAt ?? '',
+        memberHandle: data.memberHandle ?? data.submitterHandle,
+        updated: data.updated ?? data.updatedAt ?? '',
+        url: data.url ?? '',
     }
 }

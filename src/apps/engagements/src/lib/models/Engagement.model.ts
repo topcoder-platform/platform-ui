@@ -2,6 +2,7 @@ export enum EngagementStatus {
     OPEN = 'open',
     PENDING_ASSIGNMENT = 'pending_assignment',
     ACTIVE = 'active',
+    ON_HOLD = 'on_hold',
     CANCELLED = 'cancelled',
     CLOSED = 'closed',
 }
@@ -14,6 +15,11 @@ export interface EngagementAssignment {
     status?: string
     termsAccepted?: boolean
     agreementRate?: string
+    paymentCycle?: string
+    ratePerHour?: string
+    standardHoursPerWeek?: number
+    standardHoursPerDay?: number
+    durationMonths?: number
     otherRemarks?: string
     startDate?: string
     endDate?: string

@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import {
     DESIGN_WORK_TYPES,
     PHASE_DURATION_MAX_HOURS,
@@ -8,6 +9,7 @@ import {
     SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS,
 } from '../constants/challenge-editor.constants'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
 } from '../constants'
 import {
@@ -28,6 +30,7 @@ import {
 
 interface BillingInfo {
     billingAccountId?: number | string
+    markup?: number
 }
 
 interface ChallengeMetadataEntry extends Record<string, unknown> {
@@ -44,7 +47,10 @@ const MILESTONE_METADATA_NAMES = {
 } as const
 
 const MILESTONE_METADATA_KEYS: readonly string[] = Object.values(MILESTONE_METADATA_NAMES)
-const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>(['terms'])
+const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>([
+    'groups',
+    'terms',
+])
 
 function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0
@@ -225,6 +231,28 @@ function normalizeOptionalId(value: unknown): number | string | undefined {
 }
 
 /**
+ * Normalizes optional billing data used by the challenge editor form.
+ *
+ * Preserves both the billing-account id and billing markup when either value
+ * is present so challenge edits do not drop the persisted markup record.
+ */
+function normalizeBillingInfo(
+    billing: BillingInfo | undefined,
+): BillingInfo | undefined {
+    const billingAccountId = normalizeOptionalId(billing?.billingAccountId)
+    const billingMarkup = normalizeOptionalNumber(billing?.markup)
+
+    if (billingAccountId === undefined && billingMarkup === undefined) {
+        return undefined
+    }
+
+    return {
+        billingAccountId,
+        markup: billingMarkup,
+    }
+}
+
+/**
  * Normalizes persisted member selector values into a string token that can be
  * used by form controls for assigned member and copilot fields.
  *
@@ -264,44 +292,108 @@ function normalizeMemberSelectorValue(value: unknown): string | undefined {
     return undefined
 }
 
-function getChallengeAssignedMemberSelectorValue(
-    challenge?: Partial<Challenge>,
+function getObjectValue(
+    value: unknown,
+): Record<string, unknown> | undefined {
+    return typeof value === 'object' && !!value
+        ? value as Record<string, unknown>
+        : undefined
+}
+
+/**
+ * Resolves a selector field from challenge payloads that may store assignee-like
+ * values on the challenge root, on the task object, or as nested member objects.
+ */
+function getChallengeMemberSelectorValue(
+    challenge: Partial<Challenge> | undefined,
+    rootKeys: readonly string[],
+    taskKeys: readonly string[],
 ): string | undefined {
-    const directAssignedMemberValue = normalizeMemberSelectorValue(challenge?.assignedMemberId)
-    if (directAssignedMemberValue) {
-        return directAssignedMemberValue
+    const typedChallenge = getObjectValue(challenge)
+
+    if (typedChallenge) {
+        for (const key of rootKeys) {
+            const normalizedValue = normalizeMemberSelectorValue(typedChallenge[key])
+
+            if (normalizedValue) {
+                return normalizedValue
+            }
+        }
     }
 
-    const task = challenge?.task
-    if (typeof task !== 'object' || !task) {
+    const typedTask = getObjectValue(challenge?.task)
+
+    if (!typedTask) {
         return undefined
     }
 
-    const typedTask = task as Record<string, unknown>
+    for (const key of taskKeys) {
+        const normalizedValue = normalizeMemberSelectorValue(typedTask[key])
 
-    return normalizeMemberSelectorValue(typedTask.memberId)
-        || normalizeMemberSelectorValue(typedTask.assignedMemberId)
-        || normalizeMemberSelectorValue(typedTask.memberHandle)
+        if (normalizedValue) {
+            return normalizedValue
+        }
+    }
+
+    return undefined
+}
+
+function getChallengeAssignedMemberSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'assignedMemberId',
+            'assignedMember',
+            'assignedMemberHandle',
+            'memberId',
+            'memberHandle',
+        ],
+        [
+            'memberId',
+            'assignedMemberId',
+            'memberHandle',
+            'assignedMember',
+            'assignedMemberHandle',
+        ],
+    )
 }
 
 function getChallengeCopilotSelectorValue(
     challenge?: Partial<Challenge>,
 ): string | undefined {
-    const directCopilotValue = normalizeMemberSelectorValue(challenge?.copilot)
-    if (directCopilotValue) {
-        return directCopilotValue
-    }
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'copilot',
+            'copilotHandle',
+            'copilotId',
+        ],
+        [
+            'copilot',
+            'copilotHandle',
+            'copilotId',
+        ],
+    )
+}
 
-    const task = challenge?.task
-    if (typeof task !== 'object' || !task) {
-        return undefined
-    }
-
-    const typedTask = task as Record<string, unknown>
-
-    return normalizeMemberSelectorValue(typedTask.copilot)
-        || normalizeMemberSelectorValue(typedTask.copilotHandle)
-        || normalizeMemberSelectorValue(typedTask.copilotId)
+function getChallengeReviewerSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'reviewer',
+            'reviewerHandle',
+            'reviewerId',
+        ],
+        [
+            'reviewer',
+            'reviewerHandle',
+            'reviewerId',
+        ],
+    )
 }
 
 function normalizeRoundType(value: unknown): ChallengeEditorFormData['roundType'] | undefined {
@@ -572,6 +664,7 @@ function normalizeReviewers(reviewers: unknown): ChallengeReviewer[] | undefined
             shouldOpenOpportunity: typeof reviewer.shouldOpenOpportunity === 'boolean'
                 ? reviewer.shouldOpenOpportunity
                 : undefined,
+            type: normalizeOptionalString(reviewer.type),
         }))
 }
 
@@ -694,8 +787,11 @@ function normalizeAttachments(attachments: unknown): Attachment[] | undefined {
                 return undefined
             }
 
-            const typedAttachment = attachment as Partial<Attachment>
+            const typedAttachment = attachment as Partial<Attachment> & {
+                fileName?: unknown
+            }
             const name = normalizeOptionalString(typedAttachment.name)
+                || normalizeOptionalString(typedAttachment.fileName)
             const url = normalizeOptionalString(typedAttachment.url)
 
             if (!name || !url) {
@@ -761,6 +857,8 @@ function normalizePhasesForForm(phases: unknown): ChallengePhase[] {
             const durationMinutes = normalizeOptionalNumber(typedPhase.duration)
 
             return {
+                actualEndDate: typedPhase.actualEndDate,
+                actualStartDate: typedPhase.actualStartDate,
                 duration: normalizePhaseDurationMinutes(
                     durationMinutes !== undefined
                         ? durationMinutes / 60
@@ -799,6 +897,7 @@ function serializePhasesForApi(phases: unknown): ChallengePhase[] | undefined {
                 duration: normalizePhaseDurationMinutes(typedPhase.duration),
                 phaseId: typedPhase.phaseId,
                 predecessor: typedPhase.predecessor,
+                scheduledEndDate: toIsoDateString(typedPhase.scheduledEndDate),
                 scheduledStartDate: toIsoDateString(typedPhase.scheduledStartDate),
             }
         })
@@ -903,25 +1002,27 @@ export function transformChallengeToFormData(
             : ROUND_TYPES.SINGLE_ROUND)
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
-    const reviewer = normalizeOptionalString(challenge?.reviewer)
     const status = normalizeOptionalString(challenge?.status)
         ?.toUpperCase()
-    const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
+    const approvalStatus = normalizeOptionalString(challenge?.approvalStatus)
+        ?.toUpperCase()
+    const billing = normalizeBillingInfo(challenge?.billing)
     const normalizedPrizeSets = normalizePrizeSets(challenge?.prizeSets)
     const prizeSetsForForm = challenge?.id && status !== CHALLENGE_STATUS.NEW
         ? normalizedPrizeSets
         : ensurePlacementPrizeSet(normalizedPrizeSets)
 
     return {
+        approvalApprovedBy: normalizeStringValue(challenge?.approvalApprovedBy) || undefined,
+        approvalRejectionReason: normalizeStringValue(challenge?.approvalRejectionReason) || undefined,
+        approvalStatus: approvalStatus
+            || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         assignedMemberId: getChallengeAssignedMemberSelectorValue(challenge),
         attachments: normalizeAttachments(challenge?.attachments),
-        billing: billingAccountId !== undefined
-            ? {
-                billingAccountId,
-            }
-            : undefined,
+        billing,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
         copilot: getChallengeCopilotSelectorValue(challenge),
+        createdBy: normalizeOptionalString(challenge?.createdBy),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
@@ -939,10 +1040,11 @@ export function transformChallengeToFormData(
             milestoneDurationDays: normalizeOptionalNumber(milestoneConfiguration.milestoneDurationDays),
         },
         name,
+        numOfSubmissions: normalizeOptionalNumber(challenge?.numOfSubmissions),
         phases,
         privateDescription,
         prizeSets: prizeSetsForForm,
-        reviewer,
+        reviewer: getChallengeReviewerSelectorValue(challenge),
         reviewers: normalizeReviewers(challenge?.reviewers),
         roundType,
         skills,
@@ -980,7 +1082,9 @@ export function transformFormDataToChallenge(
     const reviewType = normalizeReviewType(formData.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const status = normalizeOptionalString(formData.status)
         ?.toUpperCase()
-    const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
+    const approvalStatus = normalizeOptionalString(formData.approvalStatus)
+        ?.toUpperCase()
+    const billing = normalizeBillingInfo(formData.billing)
     const prizeSets = formData.funChallenge === true
         ? []
         : filterEmptyPrizeSets(normalizePrizeSets(formData.prizeSets))
@@ -990,12 +1094,13 @@ export function transformFormDataToChallenge(
     )
 
     const challenge: Partial<Challenge> = {
+        approvalApprovedBy: normalizeOptionalString(formData.approvalApprovedBy)
+            || undefined,
+        approvalRejectionReason: normalizeOptionalString(formData.approvalRejectionReason)
+            || undefined,
+        approvalStatus: approvalStatus || CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL,
         assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
-        billing: billingAccountId !== undefined
-            ? {
-                billingAccountId,
-            }
-            : undefined,
+        billing,
         challengeFee: normalizeOptionalNumber(formData.challengeFee),
         copilot: normalizeMemberSelectorValue(formData.copilot),
         description: formData.description,
@@ -1017,7 +1122,7 @@ export function transformFormDataToChallenge(
             : undefined,
         privateDescription: formData.privateDescription,
         prizeSets,
-        reviewer: normalizeOptionalString(formData.reviewer),
+        reviewer: normalizeMemberSelectorValue(formData.reviewer),
         reviewers: normalizeReviewers(formData.reviewers),
         roundType,
         skills: normalizedSkills,

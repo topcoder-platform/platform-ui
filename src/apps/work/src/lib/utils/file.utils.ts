@@ -1,3 +1,6 @@
+// `fflate` is declared in the root package.json; CRA's build-time lint check
+// misclassifies this nested app import as extraneous.
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { zip } from 'fflate'
 
 const DEFAULT_TEXT_FILE_EXTENSIONS: ReadonlyArray<string> = [

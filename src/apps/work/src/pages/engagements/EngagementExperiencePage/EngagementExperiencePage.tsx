@@ -144,29 +144,11 @@ export const EngagementExperiencePage: FC = () => {
         ? `${engagementResult.engagement.title} Experience`
         : 'Experience'
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Engagements',
-            },
-            {
-                index: 2,
-                label: 'Assignments',
-            },
-            {
-                index: 3,
-                label: 'Experience',
-            },
-        ],
-        [],
-    )
-
     if (engagementResult.isLoading) {
         return (
             <PageWrapper
                 backAction={handleBackNavigation}
-                breadCrumb={breadCrumb}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
                 rightHeader={rightHeader}
             >
@@ -179,7 +161,7 @@ export const EngagementExperiencePage: FC = () => {
         return (
             <PageWrapper
                 backAction={handleBackNavigation}
-                breadCrumb={breadCrumb}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
                 rightHeader={rightHeader}
             >
@@ -191,7 +173,7 @@ export const EngagementExperiencePage: FC = () => {
     return (
         <PageWrapper
             backAction={handleBackNavigation}
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             pageTitle={pageTitle}
             rightHeader={rightHeader}
         >

@@ -1,0 +1,276 @@
+@import '@libs/ui/styles/includes';
+
+.overlay {
+    align-items: center;
+    background: rgb(44 44 44 / 45%);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.container {
+    background: $tc-white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    max-width: 920px;
+    width: 100%;
+}
+
+.header {
+    align-items: center;
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    justify-content: space-between;
+    padding: 18px 20px 12px;
+}
+
+.title {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.closeIcon {
+    color: $black-60;
+    height: 20px;
+    width: 20px;
+}
+
+.closeButton:hover .closeIcon {
+    color: $black-80;
+}
+
+.summary {
+    background: $black-5;
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+}
+
+.summaryItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summaryLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.summaryValue {
+    color: $black-80;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.budgetValue {
+    border-radius: 4px;
+    display: inline-flex;
+    padding: 4px 8px;
+}
+
+.budgetHealthy {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.budgetWarning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.budgetCritical {
+    background: #fee4e2;
+    color: #b42318;
+}
+
+.body {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 20px;
+}
+
+.emptyState {
+    color: $black-60;
+    font-size: 14px;
+    padding: 24px 0;
+    text-align: center;
+}
+
+.table {
+    border-collapse: collapse;
+    min-width: 820px;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid $black-10;
+    font-size: 14px;
+    padding: 12px 8px;
+    text-align: left;
+}
+
+.table th {
+    color: $black-60;
+    font-weight: 600;
+}
+
+.table td {
+    color: $black-80;
+}
+
+.table th:first-child,
+.table td:first-child {
+    padding-left: 0;
+}
+
+.table th:last-child,
+.table td:last-child {
+    padding-right: 0;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 15%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 13%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 14%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 13%;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 30%;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 15%;
+}
+
+.tableWithoutFee th:nth-child(1),
+.tableWithoutFee td:nth-child(1) {
+    width: 16%;
+}
+
+.tableWithoutFee th:nth-child(2),
+.tableWithoutFee td:nth-child(2) {
+    width: 17%;
+}
+
+.tableWithoutFee th:nth-child(3),
+.tableWithoutFee td:nth-child(3) {
+    width: 15%;
+}
+
+.tableWithoutFee th:nth-child(4),
+.tableWithoutFee td:nth-child(4) {
+    width: 34%;
+}
+
+.tableWithoutFee th:nth-child(5),
+.tableWithoutFee td:nth-child(5) {
+    width: 18%;
+}
+
+.sortButton {
+    align-items: center;
+    background: none;
+    border: none;
+    color: $black-60;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 4px;
+    padding: 0;
+    text-align: left;
+}
+
+.sortButton:hover {
+    color: $black-80;
+}
+
+.sortIcon {
+    height: 14px;
+    width: 14px;
+}
+
+.statusLocked,
+.statusConsumed {
+    align-items: center;
+    border-radius: 4px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 500;
+    gap: 4px;
+    padding: 4px 8px;
+}
+
+.statusLocked {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.statusConsumed {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.statusIcon {
+    height: 14px;
+    width: 14px;
+}
+
+.nameCell {
+    overflow-wrap: anywhere;
+}
+
+.resourceLink {
+    color: #137d60;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.resourceLink:hover {
+    text-decoration: underline;
+}
+
+.footer {
+    border-top: 1px solid $black-10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 20px;
+}

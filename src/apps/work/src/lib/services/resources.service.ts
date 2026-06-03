@@ -17,6 +17,10 @@ import {
 
 const CHALLENGE_RESOURCES_PER_PAGE = 5000
 
+interface RawResource extends Partial<Resource> {
+    memberEmail?: unknown
+}
+
 function normalizeError(error: unknown, fallbackMessage: string): Error {
     const typedError = error as {
         message?: string
@@ -58,25 +62,27 @@ function toRequiredString(value: unknown): string {
         : ''
 }
 
-function normalizeResource(resource: Partial<Resource>): Resource | undefined {
+function normalizeResource(resource: RawResource): Resource | undefined {
     const challengeId = toRequiredString(resource.challengeId)
-    const roleId = toRequiredString(resource.roleId)
+    const roleId = toOptionalString(resource.roleId) || ''
+    const role = toOptionalString(resource.role)
+    const roleName = toOptionalString(resource.roleName)
 
-    if (!challengeId || !roleId) {
+    if (!challengeId || (!roleId && !role && !roleName)) {
         return undefined
     }
 
     return {
         challengeId,
         created: toOptionalString(resource.created),
-        email: toOptionalString(resource.email),
+        email: toOptionalString(resource.email) || toOptionalString(resource.memberEmail),
         id: toOptionalString(resource.id),
         memberHandle: toOptionalString(resource.memberHandle),
         memberId: toOptionalString(resource.memberId),
         rating: toOptionalFiniteNumber(resource.rating),
-        role: toOptionalString(resource.role),
+        role,
         roleId,
-        roleName: toOptionalString(resource.roleName),
+        roleName,
     }
 }
 

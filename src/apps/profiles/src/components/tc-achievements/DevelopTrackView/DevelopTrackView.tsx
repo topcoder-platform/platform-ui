@@ -3,42 +3,52 @@ import { isEmpty } from 'lodash'
 
 import {
     MemberStats,
-    UserProfile,
+    StatsHistory,
     UserStatsDistributionResponse,
     useStatsDistribution,
 } from '~/libs/core'
 
 import { DetailedTrackView } from '../DetailedTrackView'
 import { ChallengeHistoryView } from '../ChallengeHistoryView'
-import { useTrackHistory } from '../../../hooks'
 
 interface DevelopTrackViewProps {
-    profile: UserProfile
     trackData: MemberStats
+    trackHistory: StatsHistory[]
 }
 
 const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
     const trackName: string = (props.trackData as MemberStats).name ?? 'SRM'
-    const trackHistory = useTrackHistory(props.profile?.handle, props.trackData)
+    const isDesignTrack = useMemo(() => props.trackData.parentTrack === 'DESIGN', [props.trackData.parentTrack])
+    const isFirst2FinishTrack = useMemo(() => [
+        'FIRST_2_FINISH',
+        'First2Finish',
+        'DESIGN_FIRST_2_FINISH',
+    ].includes(trackName), [trackName])
 
-    const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
-        subTrack: trackName,
-        track: props.trackData.parentTrack,
-    })
+    const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution(
+        isDesignTrack ? undefined : {
+            subTrack: trackName,
+            track: props.trackData.parentTrack,
+        },
+    )
 
     const showDetailsViewBtn = useMemo(() => (
-        (!!ratingDistribution && !isEmpty(ratingDistribution))
-        || (!!trackHistory && !isEmpty(trackHistory))
-    ), [ratingDistribution, trackHistory])
+        !isDesignTrack
+        && !isFirst2FinishTrack
+        && (
+            (!!ratingDistribution && !isEmpty(ratingDistribution))
+            || (!!props.trackHistory && !isEmpty(props.trackHistory))
+        )
+    ), [isDesignTrack, isFirst2FinishTrack, props.trackHistory, ratingDistribution])
 
     return (
         <DetailedTrackView
             trackData={props.trackData}
-            trackHistory={trackHistory}
+            trackHistory={props.trackHistory}
             ratingDistribution={ratingDistribution}
             showDetailsViewBtn={showDetailsViewBtn}
             challengesDetailedView={(
-                <ChallengeHistoryView profile={props.profile} trackData={props.trackData} />
+                <ChallengeHistoryView trackHistory={props.trackHistory} />
             )}
         />
     )

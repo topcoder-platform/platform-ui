@@ -2,11 +2,13 @@ import {
     FC,
     MouseEvent as ReactMouseEvent,
     useCallback,
+    useContext,
     useEffect,
     useRef,
     useState,
 } from 'react'
 import {
+    useLocation,
     useNavigate,
     useParams,
 } from 'react-router-dom'
@@ -15,6 +17,7 @@ import { PageWrapper } from '~/apps/review/src/lib'
 import {
     Button,
     IconOutline,
+    Tooltip,
 } from '~/libs/ui'
 
 import {
@@ -24,21 +27,31 @@ import {
     LoadingSpinner,
 } from '../../../lib/components'
 import {
+    CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     COMMUNITY_APP_URL,
     REVIEW_APP_URL,
 } from '../../../lib/constants'
+import { WorkAppContext } from '../../../lib/contexts'
 import {
     useFetchChallenge,
+    useFetchProject,
+    useFetchResourceRoles,
+    useFetchResources,
+} from '../../../lib/hooks'
+import type {
     UseFetchChallengeResult,
+    UseFetchProjectResult,
 } from '../../../lib/hooks'
 import {
     deleteChallenge,
     patchChallenge,
 } from '../../../lib/services'
 import {
+    checkProjectAccess,
     extractErrorMessage,
     getStatusText,
+    isChallengeCompletedOrCancelled,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -48,6 +61,15 @@ import {
     ResourcesSection,
     SubmissionsSection,
 } from './components'
+import {
+    buildTaskWinnerPayload,
+    getAssignedTaskMember,
+    getCompleteTaskConfirmationMessage,
+    getTaskPrizeAmount,
+    isChallengeEditorViewPath,
+    isSelfAssignedCopilot,
+    shouldShowCompleteTaskAction,
+} from './ChallengeEditorPage.utils'
 import styles from './ChallengeEditorPage.module.scss'
 
 interface ErrorWithStatus extends Error {
@@ -66,6 +88,11 @@ const CANCEL_CHALLENGE_STATUSES: string[] = [
     CHALLENGE_STATUS.CANCELLED_ZERO_REGISTRATIONS,
 ]
 
+const NO_TASK_ASSIGNEE_MESSAGE = 'Task is not assigned yet'
+const MARK_COMPLETE_TOOLTIP_MESSAGE
+    = 'This will close the task and generate a payment for the assignee and copilot.'
+const PROJECT_ACCESS_DENIED_MESSAGE = 'You don’t have access to this project. Please contact support@topcoder.com.'
+
 interface EditorTabsProps {
     activeTab: EditorTab
     onDetailsTabClick: () => void
@@ -73,33 +100,126 @@ interface EditorTabsProps {
     onSubmissionsTabClick: () => void
 }
 
+interface CreatedChallengeState {
+    id: string
+    name?: string
+    projectId?: string | number
+    status?: string
+}
+
 interface ChallengeEditorContentProps {
     activeTab: EditorTab
+    canLaunchChallenge: boolean
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
-    isEditMode: boolean
+    isExistingChallenge: boolean
+    isLaunchDisabled: boolean
+    isReadOnly: boolean
+    launchButtonLabel: string
+    onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
+    onChallengeStatusChange: (status?: string) => void
+    onLaunchOpen: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
+    onSavingChange: (isSaving: boolean) => void
     projectId?: string
 }
 
 interface ChallengeEditorBodyProps {
     activeTab: EditorTab
+    canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
-    isEditMode: boolean
+    isProjectAccessDenied: boolean
+    isProjectAccessLoading: boolean
+    isExistingChallenge: boolean
+    isLaunchDisabled: boolean
+    isReadOnly: boolean
+    launchButtonLabel: string
+    onChallengeCreated: (challenge: CreatedChallengeState) => void
+    onChallengeApprovalStatusChange: (status?: string) => void
+    onChallengeStatusChange: (status?: string) => void
+    onLaunchOpen: () => void
     onDetailsTabClick: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
     onResourcesTabClick: () => void
     onRetry: () => void
+    onSavingChange: (isSaving: boolean) => void
     onSubmissionsTabClick: () => void
     projectId?: string
 }
 
 interface ChallengeQuickLinksProps {
     challenge: UseFetchChallengeResult['challenge']
-    challengeId?: string
-    isEditMode: boolean
+}
+
+interface ChallengeProjectAccessParams {
+    hasChallengeProjectMismatch: boolean
+    isProjectLoading: boolean
+    project?: UseFetchProjectResult['project']
+    projectError?: Error
     projectId?: string
+    userId?: number | string
+    userRoles: string[]
+}
+
+interface ChallengeProjectAccessState {
+    isDenied: boolean
+    isLoading: boolean
+}
+
+/**
+ * Normalizes a project identifier from route, challenge, or created challenge data.
+ *
+ * @param projectId project id value that may be a number, string, or absent.
+ * @returns trimmed project id text when present; otherwise `undefined`.
+ */
+function normalizeProjectId(projectId: number | string | undefined): string | undefined {
+    if (projectId === undefined || projectId === null) {
+        return undefined
+    }
+
+    const normalizedProjectId = String(projectId)
+        .trim()
+
+    return normalizedProjectId || undefined
+}
+
+/**
+ * Resolves whether challenge editor content can render for a project-owned challenge.
+ *
+ * @param params project lookup, route/challenge ownership, and caller identity state.
+ * @returns loading and denied flags used to hide challenge details until access is confirmed.
+ */
+function resolveChallengeProjectAccess(
+    params: ChallengeProjectAccessParams,
+): ChallengeProjectAccessState {
+    if (!params.projectId) {
+        return {
+            isDenied: params.hasChallengeProjectMismatch,
+            isLoading: false,
+        }
+    }
+
+    if (params.isProjectLoading) {
+        return {
+            isDenied: false,
+            isLoading: true,
+        }
+    }
+
+    const hasProjectAccess = checkProjectAccess(
+        params.userRoles,
+        params.userId,
+        params.project,
+    )
+
+    return {
+        isDenied: params.hasChallengeProjectMismatch
+            || !!params.projectError
+            || !hasProjectAccess,
+        isLoading: false,
+    }
 }
 
 function getErrorMessage(error: Error | undefined): string {
@@ -116,6 +236,16 @@ function getErrorMessage(error: Error | undefined): string {
     return typedError.message || 'Something went wrong while loading the challenge.'
 }
 
+function normalizeStatus(status: string | undefined): string {
+    return (status || '')
+        .trim()
+        .toUpperCase()
+}
+
+function isBudgetApprovedForLaunch(approvalStatus: string | undefined): boolean {
+    return normalizeStatus(approvalStatus) === CHALLENGE_APPROVAL_STATUS.APPROVED
+}
+
 function getTabClassName(activeTab: EditorTab, tab: EditorTab): string {
     return activeTab === tab
         ? `${styles.tabButton} ${styles.activeTabButton}`
@@ -123,12 +253,12 @@ function getTabClassName(activeTab: EditorTab, tab: EditorTab): string {
 }
 
 function shouldShowLaunchAction(
-    isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: EditorTab,
     challengeStatus: string | undefined,
     hasLaunchAction: boolean,
 ): boolean {
-    return isEditMode
+    return isExistingChallenge
         && activeTab === 'details'
         && challengeStatus === CHALLENGE_STATUS.DRAFT
         && hasLaunchAction
@@ -136,12 +266,22 @@ function shouldShowLaunchAction(
 
 function shouldShowCancelAction(
     isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: EditorTab,
     challengeStatus: string | undefined,
 ): boolean {
-    return isEditMode
-        && activeTab === 'details'
-        && challengeStatus === CHALLENGE_STATUS.ACTIVE
+    const normalizedStatus = (challengeStatus || '')
+        .trim()
+        .toUpperCase()
+
+    const isDraftChallenge = normalizedStatus === CHALLENGE_STATUS.DRAFT
+    const isActiveChallenge = normalizedStatus === CHALLENGE_STATUS.ACTIVE
+
+    return activeTab === 'details'
+        && (
+            (isExistingChallenge && isDraftChallenge)
+            || (isEditMode && isActiveChallenge)
+        )
 }
 
 function shouldShowDeleteAction(
@@ -154,6 +294,53 @@ function shouldShowDeleteAction(
 
     return isEditMode
         && normalizedStatus === CHALLENGE_STATUS.NEW
+}
+
+function useResolvedChallengeStatus(
+    challengeId: string | undefined,
+    fetchedChallengeStatus: string | undefined,
+    shouldResetChallengeStatus: boolean,
+): [
+    string | undefined,
+    (status?: string) => void,
+] {
+    const [challengeStatus, setChallengeStatus] = useState<string | undefined>()
+    const lastFetchedChallengeStatusRef = useRef<string | undefined>()
+
+    useEffect(() => {
+        lastFetchedChallengeStatusRef.current = undefined
+        setChallengeStatus(undefined)
+    }, [challengeId])
+
+    useEffect(() => {
+        if (!shouldResetChallengeStatus) {
+            return
+        }
+
+        lastFetchedChallengeStatusRef.current = undefined
+        setChallengeStatus(undefined)
+    }, [shouldResetChallengeStatus])
+
+    useEffect(() => {
+        if (
+            !fetchedChallengeStatus
+            || fetchedChallengeStatus === lastFetchedChallengeStatusRef.current
+        ) {
+            return
+        }
+
+        lastFetchedChallengeStatusRef.current = fetchedChallengeStatus
+        setChallengeStatus(fetchedChallengeStatus)
+    }, [fetchedChallengeStatus])
+
+    const handleChallengeStatusChange = useCallback((status?: string): void => {
+        setChallengeStatus(status)
+    }, [])
+
+    return [
+        challengeStatus || fetchedChallengeStatus,
+        handleChallengeStatusChange,
+    ]
 }
 
 function formatCancelStatusLabel(status: string): string {
@@ -184,6 +371,26 @@ function getCancelConfirmationMessage(
     return `Do you want to cancel challenge ${challengeName} with status ${statusLabel}?`
 }
 
+function getChallengeEditorPageTitle(
+    challengeId: string | undefined,
+    isViewMode: boolean,
+    challengeName: string | undefined,
+): string {
+    if (!challengeId) {
+        return 'Create Challenge'
+    }
+
+    return isViewMode
+        ? `View ${challengeName || 'Challenge'}`
+        : `Edit ${challengeName || 'Challenge'}`
+}
+
+function getChallengesListPath(projectId?: string): string {
+    return projectId
+        ? `/projects/${projectId}/challenges`
+        : '/challenges'
+}
+
 interface CancelChallengeActionProps {
     challengeId: string
     challengeName: string
@@ -197,7 +404,11 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
     const [showCancelMenu, setShowCancelMenu] = useState<boolean>(false)
     const [showCancelModal, setShowCancelModal] = useState<boolean>(false)
     const [selectedCancelStatus, setSelectedCancelStatus] = useState<string | undefined>()
+    // eslint-disable-next-line unicorn/no-null
     const cancelActionRef = useRef<HTMLDivElement>(null)
+    const challengeId: string = props.challengeId
+    const challengeName: string = props.challengeName
+    const onCancelled: () => void = props.onCancelled
 
     const selectedCancelStatusLabel = selectedCancelStatus
         ? formatCancelStatusLabel(selectedCancelStatus)
@@ -234,12 +445,12 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
         setIsCancelling(true)
 
         try {
-            await patchChallenge(props.challengeId, {
+            await patchChallenge(challengeId, {
                 status: selectedCancelStatus,
             })
             showSuccessToast('Challenge cancelled successfully')
             setShowCancelModal(false)
-            props.onCancelled()
+            onCancelled()
         } catch (error) {
             const errorMessage = error instanceof Error
                 ? error.message
@@ -249,8 +460,9 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
             setIsCancelling(false)
         }
     }, [
+        challengeId,
         isCancelling,
-        props,
+        onCancelled,
         selectedCancelStatus,
     ])
     const handleCancelConfirmClick = useCallback((): void => {
@@ -288,10 +500,9 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                         ? 'Cancelling...'
                         : 'Cancel'}
                     onClick={handleCancelMenuToggle}
-                    primary
-                    size='md'
+                    secondary
+                    size='lg'
                     type='button'
-                    variant='danger'
                 />
                 {showCancelMenu
                     ? (
@@ -321,7 +532,7 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                             ? 'Cancelling...'
                             : 'Confirm'}
                         message={getCancelConfirmationMessage(
-                            props.challengeName,
+                            challengeName,
                             selectedCancelStatusLabel,
                         )}
                         onCancel={handleCancelModalClose}
@@ -334,49 +545,218 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
     )
 }
 
+interface CompleteTaskActionProps {
+    challenge: NonNullable<UseFetchChallengeResult['challenge']>
+    challengeId: string
+    onCompleted: () => void
+}
+
+const CompleteTaskAction = (
+    props: CompleteTaskActionProps,
+): JSX.Element => {
+    const [isCompleting, setIsCompleting] = useState<boolean>(false)
+    const [showCompleteModal, setShowCompleteModal] = useState<boolean>(false)
+    const challenge: NonNullable<UseFetchChallengeResult['challenge']> = props.challenge
+    const challengeId: string = props.challengeId
+    const onCompleted: () => void = props.onCompleted
+    const workAppContext = useContext(WorkAppContext)
+    const resourcesResult = useFetchResources(challengeId)
+    const resourceRolesResult = useFetchResourceRoles()
+    const assignedTaskMember = getAssignedTaskMember(
+        challenge,
+        resourcesResult.resources,
+        resourceRolesResult.resourceRoles,
+    )
+    const taskPrizeAmount = getTaskPrizeAmount(challenge.prizeSets)
+    const isHiddenForSelfAssignedCopilot = isSelfAssignedCopilot(
+        workAppContext,
+        assignedTaskMember,
+    )
+
+    const handleCompleteOpen = useCallback((): void => {
+        if (isCompleting || !assignedTaskMember) {
+            return
+        }
+
+        setShowCompleteModal(true)
+    }, [
+        assignedTaskMember,
+        isCompleting,
+    ])
+    const handleCompleteCancel = useCallback((): void => {
+        if (isCompleting) {
+            return
+        }
+
+        setShowCompleteModal(false)
+    }, [isCompleting])
+    const handleCompleteConfirm = useCallback(async (): Promise<void> => {
+        if (isCompleting || !assignedTaskMember) {
+            return
+        }
+
+        setIsCompleting(true)
+
+        try {
+            await patchChallenge(challengeId, {
+                status: CHALLENGE_STATUS.COMPLETED,
+                winners: buildTaskWinnerPayload(assignedTaskMember),
+            })
+            showSuccessToast('Task closed successfully')
+            setShowCompleteModal(false)
+            onCompleted()
+        } catch (error) {
+            showErrorToast(extractErrorMessage(error, 'Unable to close the task'))
+        } finally {
+            setIsCompleting(false)
+        }
+    }, [
+        assignedTaskMember,
+        challengeId,
+        isCompleting,
+        onCompleted,
+    ])
+    const handleCompleteConfirmClick = useCallback((): void => {
+        handleCompleteConfirm()
+            .catch(() => undefined)
+    }, [handleCompleteConfirm])
+    const isLoadingAssignee = resourcesResult.isLoading && !assignedTaskMember
+    const completeButton = (
+        <div>
+            <Button
+                disabled={isCompleting || !assignedTaskMember || isLoadingAssignee}
+                label={isCompleting
+                    ? 'Completing...'
+                    : 'Mark Complete'}
+                onClick={handleCompleteOpen}
+                secondary
+                size='lg'
+                type='button'
+            />
+        </div>
+    )
+    const tooltipContent = assignedTaskMember
+        ? MARK_COMPLETE_TOOLTIP_MESSAGE
+        : (
+            isLoadingAssignee
+                ? undefined
+                : NO_TASK_ASSIGNEE_MESSAGE
+        )
+
+    if (isHiddenForSelfAssignedCopilot) {
+        return <></>
+    }
+
+    return (
+        <>
+            {tooltipContent
+                ? (
+                    <Tooltip content={tooltipContent}>
+                        {completeButton}
+                    </Tooltip>
+                )
+                : completeButton}
+            {showCompleteModal && assignedTaskMember
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmDisabled={isCompleting}
+                        confirmText={isCompleting
+                            ? 'Completing...'
+                            : 'Confirm'}
+                        message={getCompleteTaskConfirmationMessage(
+                            challenge.name,
+                            taskPrizeAmount,
+                            assignedTaskMember,
+                        )}
+                        onCancel={handleCompleteCancel}
+                        onConfirm={handleCompleteConfirmClick}
+                        title='Complete Task Confirmation'
+                    />
+                )
+                : undefined}
+        </>
+    )
+}
+
 interface RenderHeaderActionParams {
     canCancelChallenge: boolean
+    canEditChallenge: boolean
+    canCompleteTask: boolean
     canDeleteChallenge: boolean
     canLaunchChallenge: boolean
+    challenge?: UseFetchChallengeResult['challenge']
     challengeId?: string
+    challengeQuickLinks?: JSX.Element
     challengeName: string
     isDeleting: boolean
+    isLaunchDisabled: boolean
     isLaunching: boolean
-    onChallengeCancelled: () => void
+    isSaving: boolean
+    onChallengeUpdated: () => void
     onDeleteOpen: () => void
+    onEditOpen: () => void
     onLaunchOpen: () => void
 }
 
 function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | undefined {
-    if (params.canLaunchChallenge) {
-        return (
+    const actions: JSX.Element[] = []
+
+    if (params.canEditChallenge) {
+        actions.push(
             <Button
-                className={styles.launchButton}
-                disabled={params.isLaunching}
+                key='edit'
+                label='Edit'
+                onClick={params.onEditOpen}
+                secondary
+                size='lg'
+                type='button'
+            />,
+        )
+    }
+
+    if (params.canLaunchChallenge) {
+        actions.push(
+            <Button
+                key='launch'
+                disabled={params.isLaunchDisabled}
                 label={params.isLaunching
                     ? 'Launching...'
                     : 'Launch'}
                 onClick={params.onLaunchOpen}
                 primary
-                size='md'
+                size='lg'
                 type='button'
-            />
+            />,
         )
     }
 
     if (params.canCancelChallenge && params.challengeId) {
-        return (
+        actions.push(
             <CancelChallengeAction
+                key='cancel'
                 challengeId={params.challengeId}
                 challengeName={params.challengeName}
-                onCancelled={params.onChallengeCancelled}
-            />
+                onCancelled={params.onChallengeUpdated}
+            />,
+        )
+    }
+
+    if (params.canCompleteTask && params.challengeId && params.challenge) {
+        actions.push(
+            <CompleteTaskAction
+                key='complete'
+                challenge={params.challenge}
+                challengeId={params.challengeId}
+                onCompleted={params.onChallengeUpdated}
+            />,
         )
     }
 
     if (params.canDeleteChallenge) {
-        return (
+        actions.push(
             <Button
+                key='delete'
                 disabled={params.isDeleting}
                 label={params.isDeleting
                     ? 'Deleting...'
@@ -386,11 +766,18 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
                 size='md'
                 type='button'
                 variant='danger'
-            />
+            />,
         )
     }
 
-    return undefined
+    return actions.length > 0 || params.challengeQuickLinks
+        ? (
+            <div className={styles.headerActions}>
+                {params.challengeQuickLinks}
+                {actions}
+            </div>
+        )
+        : undefined
 }
 
 interface RenderLaunchModalParams {
@@ -414,7 +801,11 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
             confirmText={params.isLaunching
                 ? 'Launching...'
                 : 'Launch'}
-            message={`Are you ready to launch challenge ${params.challengeName}?`}
+            message={
+                `Are you ready to launch challenge ${params.challengeName}?
+
+Prizes and copilot fees are locked after launch. Contact the Project Manager for any updates post-launch.`
+            }
             onCancel={params.onLaunchCancel}
             onConfirm={params.onLaunchConfirmClick}
             title='Launch Challenge'
@@ -422,12 +813,41 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
     )
 }
 
+interface RenderDeleteModalParams {
+    canDeleteChallenge: boolean
+    challengeName: string
+    isDeleting: boolean
+    onDeleteCancel: () => void
+    onDeleteConfirmClick: () => void
+    showDeleteModal: boolean
+}
+
+function renderDeleteModal(params: RenderDeleteModalParams): JSX.Element | undefined {
+    if (!params.canDeleteChallenge || !params.showDeleteModal) {
+        return undefined
+    }
+
+    return (
+        <ConfirmationModal
+            cancelText='Cancel'
+            confirmButtonDanger
+            confirmDisabled={params.isDeleting}
+            confirmText={params.isDeleting
+                ? 'Deleting...'
+                : 'Delete'}
+            message={`Do you want to delete "${params.challengeName}"?`}
+            onCancel={params.onDeleteCancel}
+            onConfirm={params.onDeleteConfirmClick}
+            title='Confirm Delete'
+        />
+    )
+}
+
 function renderTitleAction(
-    isEditMode: boolean,
+    isExistingChallenge: boolean,
     challengeStatus: string | undefined,
-    challengeQuickLinks?: JSX.Element,
 ): JSX.Element | undefined {
-    const statusPill = isEditMode && challengeStatus
+    const statusPill = isExistingChallenge && challengeStatus
         ? (
             <ChallengeStatus
                 status={challengeStatus}
@@ -436,14 +856,13 @@ function renderTitleAction(
         )
         : undefined
 
-    if (!statusPill && !challengeQuickLinks) {
+    if (!statusPill) {
         return undefined
     }
 
     return (
         <div className={styles.titleAction}>
             {statusPill}
-            {challengeQuickLinks}
         </div>
     )
 }
@@ -477,12 +896,23 @@ const EditorTabs: FC<EditorTabsProps> = (props: EditorTabsProps) => (
 const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     props: ChallengeEditorContentProps,
 ) => {
-    if (!props.isEditMode || props.activeTab === 'details') {
+    const isEditMode = props.isExistingChallenge && !props.isReadOnly
+
+    if (!props.isExistingChallenge || props.activeTab === 'details') {
         return (
             <ChallengeEditorForm
+                canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
-                isEditMode={props.isEditMode}
+                isLaunchDisabled={props.isLaunchDisabled}
+                isEditMode={isEditMode}
+                isReadOnly={props.isReadOnly}
+                launchButtonLabel={props.launchButtonLabel}
+                onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
+                onChallengeStatusChange={props.onChallengeStatusChange}
+                onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
+                onSavingChange={props.onSavingChange}
                 projectId={props.projectId}
             />
         )
@@ -508,9 +938,18 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
 
     return (
         <ChallengeEditorForm
+            canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
-            isEditMode={props.isEditMode}
+            isLaunchDisabled={props.isLaunchDisabled}
+            isEditMode={isEditMode}
+            isReadOnly={props.isReadOnly}
+            launchButtonLabel={props.launchButtonLabel}
+            onChallengeCreated={props.onChallengeCreated}
+            onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
+            onChallengeStatusChange={props.onChallengeStatusChange}
+            onLaunchOpen={props.onLaunchOpen}
             onRegisterLaunchAction={props.onRegisterLaunchAction}
+            onSavingChange={props.onSavingChange}
             projectId={props.projectId}
         />
     )
@@ -519,6 +958,14 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
 const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
     props: ChallengeEditorBodyProps,
 ) => {
+    if (props.isProjectAccessLoading) {
+        return <LoadingSpinner />
+    }
+
+    if (props.isProjectAccessDenied) {
+        return <ErrorMessage message={PROJECT_ACCESS_DENIED_MESSAGE} />
+    }
+
     if (props.challengeResult.isLoading) {
         return <LoadingSpinner />
     }
@@ -534,7 +981,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 
     return (
         <>
-            {props.isEditMode
+            {props.isExistingChallenge
                 ? (
                     <EditorTabs
                         activeTab={props.activeTab}
@@ -546,10 +993,19 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 : undefined}
             <ChallengeEditorContent
                 activeTab={props.activeTab}
+                canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challengeResult.challenge}
                 challengeId={props.challengeId}
-                isEditMode={props.isEditMode}
+                isExistingChallenge={props.isExistingChallenge}
+                isLaunchDisabled={props.isLaunchDisabled}
+                isReadOnly={props.isReadOnly}
+                launchButtonLabel={props.launchButtonLabel}
+                onChallengeCreated={props.onChallengeCreated}
+                onChallengeApprovalStatusChange={props.onChallengeApprovalStatusChange}
+                onChallengeStatusChange={props.onChallengeStatusChange}
+                onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
+                onSavingChange={props.onSavingChange}
                 projectId={props.projectId}
             />
         </>
@@ -559,11 +1015,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 function renderChallengeQuickLinks(
     props: ChallengeQuickLinksProps,
 ): JSX.Element | undefined {
-    if (!props.isEditMode) {
-        return undefined
-    }
-
-    const resolvedChallengeId = props.challenge?.id || props.challengeId
+    const resolvedChallengeId = props.challenge?.id
 
     if (!resolvedChallengeId) {
         return undefined
@@ -572,12 +1024,18 @@ function renderChallengeQuickLinks(
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${resolvedChallengeId}/challenge-details`
     const forumLink = props.challenge?.discussions?.find(discussion => !!discussion.url)?.url
     const communityChallengeLink = `${COMMUNITY_APP_URL}/challenges/${resolvedChallengeId}`
-    const projectChallengesLink = props.projectId
-        ? `/projects/${props.projectId}/challenges`
-        : undefined
 
     return (
         <div className={styles.quickLinks}>
+            <a
+                className={styles.quickLink}
+                href={communityChallengeLink}
+                rel='noopener noreferrer'
+                target='_blank'
+            >
+                Challenge
+                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+            </a>
             <a
                 className={styles.quickLink}
                 href={reviewLink}
@@ -600,47 +1058,60 @@ function renderChallengeQuickLinks(
                     </a>
                 )
                 : undefined}
-            {projectChallengesLink
-                ? (
-                    <a
-                        className={styles.quickLink}
-                        href={projectChallengesLink}
-                        rel='noopener noreferrer'
-                        target='_blank'
-                    >
-                        Project
-                        <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
-                    </a>
-                )
-                : undefined}
-            <a
-                className={styles.quickLink}
-                href={communityChallengeLink}
-                rel='noopener noreferrer'
-                target='_blank'
-            >
-                Community
-                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
-            </a>
         </div>
     )
 }
 
+// eslint-disable-next-line complexity
 export const ChallengeEditorPage: FC = () => {
+    const location = useLocation()
     const navigate = useNavigate()
     const params: Readonly<{ challengeId?: string; projectId?: string }>
         = useParams<'challengeId' | 'projectId'>()
     const challengeId = params.challengeId
-    const routeProjectId = params.projectId
+    const routeProjectId = normalizeProjectId(params.projectId)
 
-    const isEditMode = !!challengeId
+    const isExistingChallenge = !!challengeId
+    const isViewMode = isChallengeEditorViewPath(location.pathname)
+    const isEditMode = isExistingChallenge && !isViewMode
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
+    const [isSavingChallenge, setIsSavingChallenge] = useState<boolean>(false)
+    const [challengeApprovalStatus, setChallengeApprovalStatus] = useState<string | undefined>()
     const [launchAction, setLaunchAction] = useState<(() => Promise<void>) | undefined>()
+    const [createdChallenge, setCreatedChallenge] = useState<CreatedChallengeState | undefined>()
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
     const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false)
-    const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
+    const workAppContext = useContext(WorkAppContext)
+    const routeProjectResult: UseFetchProjectResult = useFetchProject(routeProjectId)
+    const canFetchProjectRouteChallenge = !routeProjectId
+        || (
+            !routeProjectResult.isLoading
+            && !routeProjectResult.error
+            && checkProjectAccess(
+                workAppContext.userRoles,
+                workAppContext.loginUserInfo?.userId,
+                routeProjectResult.project,
+            )
+        )
+    const challengeResult: UseFetchChallengeResult = useFetchChallenge(
+        canFetchProjectRouteChallenge
+            ? challengeId
+            : undefined,
+    )
+    const [
+        challengeStatus,
+        handleChallengeStatusChange,
+    ] = useResolvedChallengeStatus(
+        challengeId,
+        challengeResult.challenge?.status,
+        isExistingChallenge
+            && (
+                challengeResult.isError
+                || (!challengeResult.isLoading && !challengeResult.challenge)
+            ),
+    )
     const handleRetry = useCallback((): void => {
         challengeResult.mutate()
             .catch(() => undefined)
@@ -660,44 +1131,109 @@ export const ChallengeEditorPage: FC = () => {
         },
         [],
     )
+    const handleChallengeCreated = useCallback((challenge: CreatedChallengeState): void => {
+        setCreatedChallenge(challenge)
+        handleChallengeStatusChange(challenge.status)
+    }, [handleChallengeStatusChange])
 
-    const challengeProjectId = challengeResult.challenge?.projectId
-        ? String(challengeResult.challenge.projectId)
+    const challengeProjectId = normalizeProjectId(challengeResult.challenge?.projectId)
+    const createdChallengeProjectId = normalizeProjectId(createdChallenge?.projectId)
+    const challengeProjectResult: UseFetchProjectResult = useFetchProject(
+        routeProjectId
+            ? undefined
+            : challengeProjectId,
+    )
+    const projectId = routeProjectId || challengeProjectId || createdChallengeProjectId
+    const persistedChallengeId = challengeId || createdChallenge?.id
+    const isCreatedChallenge = !isExistingChallenge && !!createdChallenge?.id
+    const challengesListPath = getChallengesListPath(projectId)
+    const editChallengePath = challengeId
+        ? (
+            projectId
+                ? `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/edit`
+                : `/challenges/${encodeURIComponent(challengeId)}/edit`
+        )
         : undefined
-    const projectId = routeProjectId || challengeProjectId
-    const challengesListPath = projectId
-        ? `/projects/${projectId}/challenges`
-        : '/challenges'
 
     useEffect(() => {
-        if (isEditMode) {
+        if (isExistingChallenge && !isViewMode) {
             return
         }
 
         setActiveTab('details')
-    }, [isEditMode])
+    }, [
+        challengeId,
+        isExistingChallenge,
+        isViewMode,
+    ])
+    useEffect(() => {
+        setIsSavingChallenge(false)
+    }, [challengeId])
+    useEffect(() => {
+        if (challengeId) {
+            setCreatedChallenge(undefined)
+            setChallengeApprovalStatus(undefined)
+        }
+    }, [challengeId])
 
-    const pageTitle = isEditMode
-        ? `Edit ${challengeResult.challenge?.name || 'Challenge'}`
-        : 'Create Challenge'
+    const hasSuccessfulCurrentChallengeFetch = !isExistingChallenge
+        || (
+            !challengeResult.isError
+            && !challengeResult.isLoading
+            && !!challengeResult.challenge
+        )
+    const currentChallenge = hasSuccessfulCurrentChallengeFetch
+        ? challengeResult.challenge
+        : undefined
+    const effectiveChallengeStatus = challengeStatus
+        || createdChallenge?.status
+        || currentChallenge?.status
+    const headerChallenge = currentChallenge
+        ? {
+            ...currentChallenge,
+            status: effectiveChallengeStatus || currentChallenge.status,
+        }
+        : undefined
     const canLaunchChallenge = shouldShowLaunchAction(
-        isEditMode,
+        isExistingChallenge,
         activeTab,
-        challengeResult.challenge?.status,
+        effectiveChallengeStatus,
         !!launchAction,
     )
     const canCancelChallenge = shouldShowCancelAction(
         isEditMode,
+        isExistingChallenge,
         activeTab,
-        challengeResult.challenge?.status,
+        effectiveChallengeStatus,
     )
     const canDeleteChallenge = shouldShowDeleteAction(
-        isEditMode,
-        challengeResult.challenge?.status,
+        isEditMode || isCreatedChallenge,
+        effectiveChallengeStatus,
     )
-    const handleLaunchOpen = useCallback((): void => {
-        setShowLaunchModal(true)
+    const canCompleteTask = shouldShowCompleteTaskAction(
+        isExistingChallenge,
+        activeTab,
+        headerChallenge,
+    )
+    const isBudgetApproved = isBudgetApprovedForLaunch(
+        challengeApprovalStatus || headerChallenge?.approvalStatus,
+    )
+    const isLaunchDisabled = isLaunching || isSavingChallenge || !isBudgetApproved
+    const handleSavingChange = useCallback((isSaving: boolean): void => {
+        setIsSavingChallenge(isSaving)
     }, [])
+    const handleChallengeApprovalStatusChange = useCallback((status?: string): void => {
+        setChallengeApprovalStatus(status)
+    }, [])
+    const handleLaunchOpen = useCallback((): void => {
+        if (isLaunchDisabled) {
+            return
+        }
+
+        setShowLaunchModal(true)
+    }, [
+        isLaunchDisabled,
+    ])
     const launchChallengeName = challengeResult.challenge?.name || 'Challenge'
     const handleLaunchCancel = useCallback((): void => {
         if (isLaunching) {
@@ -732,17 +1268,17 @@ export const ChallengeEditorPage: FC = () => {
         handleLaunchConfirm()
             .catch(() => undefined)
     }, [handleLaunchConfirm])
-    const handleChallengeCancelled = useCallback((): void => {
+    const handleChallengeUpdated = useCallback((): void => {
         challengeResult.mutate()
             .catch(() => undefined)
     }, [challengeResult])
     const handleDeleteOpen = useCallback((): void => {
-        if (isDeleting || !challengeId) {
+        if (isDeleting || !persistedChallengeId) {
             return
         }
 
         setShowDeleteModal(true)
-    }, [challengeId, isDeleting])
+    }, [isDeleting, persistedChallengeId])
     const handleDeleteCancel = useCallback((): void => {
         if (isDeleting) {
             return
@@ -750,16 +1286,18 @@ export const ChallengeEditorPage: FC = () => {
 
         setShowDeleteModal(false)
     }, [isDeleting])
-    const deleteChallengeName = challengeResult.challenge?.name || 'this challenge'
+    const deleteChallengeName = challengeResult.challenge?.name
+        || createdChallenge?.name
+        || 'this challenge'
     const handleDeleteConfirm = useCallback(async (): Promise<void> => {
-        if (isDeleting || !challengeId) {
+        if (isDeleting || !persistedChallengeId) {
             return
         }
 
         setIsDeleting(true)
 
         try {
-            await deleteChallenge(challengeId)
+            await deleteChallenge(persistedChallengeId)
             showSuccessToast('Challenge deleted successfully')
             setShowDeleteModal(false)
             navigate(challengesListPath)
@@ -769,51 +1307,110 @@ export const ChallengeEditorPage: FC = () => {
             setIsDeleting(false)
         }
     }, [
-        challengeId,
         challengesListPath,
         isDeleting,
         navigate,
+        persistedChallengeId,
     ])
     const handleDeleteConfirmClick = useCallback((): void => {
         handleDeleteConfirm()
             .catch(() => undefined)
     }, [handleDeleteConfirm])
-    const rightHeader = renderHeaderAction({
-        canCancelChallenge,
-        canDeleteChallenge,
-        canLaunchChallenge,
+    const handleEditOpen = useCallback((): void => {
+        if (!editChallengePath) {
+            return
+        }
+
+        navigate(editChallengePath)
+    }, [editChallengePath, navigate])
+    const projectAccessResult = routeProjectId
+        ? routeProjectResult
+        : challengeProjectResult
+    const hasChallengeProjectMismatch = !!routeProjectId
+        && !!challengeProjectId
+        && routeProjectId !== challengeProjectId
+    const projectAccessState = resolveChallengeProjectAccess({
+        hasChallengeProjectMismatch,
+        isProjectLoading: projectAccessResult.isLoading,
+        project: projectAccessResult.project,
+        projectError: projectAccessResult.error,
+        projectId,
+        userId: workAppContext.loginUserInfo?.userId,
+        userRoles: workAppContext.userRoles,
+    })
+    const canRenderChallengeDetails = !projectAccessState.isDenied && !projectAccessState.isLoading
+    const pageTitle = getChallengeEditorPageTitle(
         challengeId,
+        isViewMode,
+        canRenderChallengeDetails
+            ? challengeResult.challenge?.name
+            : undefined,
+    )
+    const challengeQuickLinks = renderChallengeQuickLinks({
+        challenge: canRenderChallengeDetails
+            ? currentChallenge
+            : undefined,
+    })
+    const canEditChallenge = hasSuccessfulCurrentChallengeFetch
+        && canRenderChallengeDetails
+        && isViewMode
+        && !!editChallengePath
+        && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
+    const rightHeader = renderHeaderAction({
+        canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,
+        canCompleteTask: canRenderChallengeDetails && canCompleteTask,
+        canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
+        canEditChallenge,
+        canLaunchChallenge: canRenderChallengeDetails && canLaunchChallenge,
+        challenge: canRenderChallengeDetails
+            ? headerChallenge
+            : undefined,
+        challengeId: canRenderChallengeDetails
+            ? persistedChallengeId
+            : undefined,
         challengeName: launchChallengeName,
+        challengeQuickLinks,
         isDeleting,
+        isLaunchDisabled,
         isLaunching,
-        onChallengeCancelled: handleChallengeCancelled,
+        isSaving: isSavingChallenge,
+        onChallengeUpdated: handleChallengeUpdated,
         onDeleteOpen: handleDeleteOpen,
+        onEditOpen: handleEditOpen,
         onLaunchOpen: handleLaunchOpen,
     })
+    const deleteModal = renderDeleteModal({
+        canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
+        challengeName: deleteChallengeName,
+        isDeleting,
+        onDeleteCancel: handleDeleteCancel,
+        onDeleteConfirmClick: handleDeleteConfirmClick,
+        showDeleteModal,
+    })
     const launchModal = renderLaunchModal({
-        canLaunchChallenge,
+        canLaunchChallenge: canRenderChallengeDetails && canLaunchChallenge,
         challengeName: launchChallengeName,
         isLaunching,
         onLaunchCancel: handleLaunchCancel,
         onLaunchConfirmClick: handleLaunchConfirmClick,
         showLaunchModal,
     })
-    const challengeQuickLinks = renderChallengeQuickLinks({
-        challenge: challengeResult.challenge,
-        challengeId,
-        isEditMode,
-        projectId,
-    })
     const titleAction = renderTitleAction(
-        isEditMode,
-        challengeResult.challenge?.status,
-        challengeQuickLinks,
+        canRenderChallengeDetails
+            && ((isExistingChallenge && hasSuccessfulCurrentChallengeFetch) || isCreatedChallenge),
+        effectiveChallengeStatus,
     )
+    const launchButtonLabel = isLaunching
+        ? 'Launching...'
+        : 'Launch'
+    const backUrl = canRenderChallengeDetails
+        ? challengesListPath
+        : getChallengesListPath()
 
     return (
         <>
             <PageWrapper
-                backUrl={challengesListPath}
+                backUrl={backUrl}
                 breadCrumb={[]}
                 pageTitle={pageTitle}
                 rightHeader={rightHeader}
@@ -822,35 +1419,31 @@ export const ChallengeEditorPage: FC = () => {
                 <div className={styles.container}>
                     <ChallengeEditorBody
                         activeTab={activeTab}
+                        canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
-                        isEditMode={isEditMode}
+                        isProjectAccessDenied={projectAccessState.isDenied}
+                        isProjectAccessLoading={projectAccessState.isLoading}
+                        isExistingChallenge={isExistingChallenge}
+                        isLaunchDisabled={isLaunchDisabled}
+                        isReadOnly={isViewMode}
+                        launchButtonLabel={launchButtonLabel}
+                        onChallengeCreated={handleChallengeCreated}
+                        onChallengeApprovalStatusChange={handleChallengeApprovalStatusChange}
+                        onChallengeStatusChange={handleChallengeStatusChange}
+                        onLaunchOpen={handleLaunchOpen}
                         onDetailsTabClick={handleDetailsTabClick}
                         onRegisterLaunchAction={handleRegisterLaunchAction}
                         onResourcesTabClick={handleResourcesTabClick}
                         onRetry={handleRetry}
+                        onSavingChange={handleSavingChange}
                         onSubmissionsTabClick={handleSubmissionsTabClick}
                         projectId={projectId}
                     />
                 </div>
             </PageWrapper>
             {launchModal}
-            {showDeleteModal && canDeleteChallenge
-                ? (
-                    <ConfirmationModal
-                        cancelText='Cancel'
-                        confirmButtonDanger
-                        confirmDisabled={isDeleting}
-                        confirmText={isDeleting
-                            ? 'Deleting...'
-                            : 'Delete'}
-                        message={`Do you want to delete "${deleteChallengeName}"?`}
-                        onCancel={handleDeleteCancel}
-                        onConfirm={handleDeleteConfirmClick}
-                        title='Confirm Delete'
-                    />
-                )
-                : undefined}
+            {deleteModal}
         </>
     )
 }

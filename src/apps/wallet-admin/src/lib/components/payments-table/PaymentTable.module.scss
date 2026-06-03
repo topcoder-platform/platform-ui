@@ -9,19 +9,17 @@
 
 table {
     width: 100%;
-    min-width: 980px;
+    min-width: 1100px;
     border-collapse: separate;
     border-spacing: 0;
     margin: 16px 0;
+    table-layout: fixed;
 
     th,
     td {
         text-align: left;
         padding: 8px;
-
-        &:last-child {
-            width: 50px;
-        }
+        vertical-align: top;
     }
 
     tbody {
@@ -45,9 +43,56 @@ table {
         text-transform: uppercase;
 
         &.description {
-            width: 360px;
-            max-width: 360px;
+            width: 32%;
         }
+
+        &.descriptionCompact {
+            width: 22%;
+        }
+
+        &.type {
+            width: 14%;
+        }
+    }
+
+    .description {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .descriptionCompact {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .handleColumn {
+        overflow-wrap: anywhere;
+        width: 11%;
+        word-break: break-word;
+    }
+
+    .paymentColumn {
+        white-space: nowrap;
+        width: 9%;
+    }
+
+    .statusColumn {
+        overflow-wrap: anywhere;
+        width: 14%;
+    }
+
+    .dateColumn {
+        white-space: nowrap;
+        width: 10%;
+    }
+
+    .actionsColumn {
+        width: 96px;
+    }
+
+    .bulkSelectColumn {
+        padding-right: 4px;
+        width: 34px;
     }
 
     tbody tr td:first-child {
@@ -60,6 +105,20 @@ table {
         border-bottom-right-radius: 8px;
     }
 
+}
+
+.approverTable {
+    .handleColumn {
+        width: 10%;
+    }
+
+    .description {
+        width: 26%;
+    }
+
+    .descriptionCompact {
+        width: 20%;
+    }
 }
 
 .selected {
@@ -102,10 +161,12 @@ table {
 }
 
 .actionButtons {
-    padding-left: 8px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: $sp-2;
+    padding-left: 4px;
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {

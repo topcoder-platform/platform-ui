@@ -1,3 +1,9 @@
+export enum WinningsType {
+  PAYMENT = 'PAYMENT',
+  ENGAGEMENT = 'ENGAGEMENT',
+  POINTS = 'POINTS',
+}
+
 export interface PaymentDetail {
     id: string
     grossAmount: string
@@ -11,9 +17,62 @@ export interface PaymentDetail {
 export interface PayoutStatus {
     payoutSetupComplete: boolean;
     taxFormSetupComplete: boolean;
+    idVerificationComplete?: boolean;
+}
+
+export interface PaymentEngagementDetails {
+    assignmentId?: string
+    engagementId?: string
+    projectId?: string
+    projectName?: string
+    engagementTitle?: string
+    billingStartDate?: string
+    durationMonths?: number
+    paymentCycle?: string
+    ratePerHour?: string
+    standardHoursPerDay?: number
+    standardHoursPerWeek?: number
+    otherRemarks?: string
+    paymentApproverHandle?: string
+}
+
+export interface PaymentWorkLog {
+    hoursWorked?: number
+    remarks?: string
+}
+
+export interface PaymentTaskDetails {
+    projectId?: string
+    projectName?: string
+    paymentApproverHandle?: string
+    paymentCreatorHandle?: string
+    taskDescription?: string
+}
+
+export type PaymentAgreementStatus = 'match' | 'under' | 'over'
+
+export interface PaymentAgreementSummary {
+    status: PaymentAgreementStatus
+    actualAmount: number
+    differenceAmount: number
+    expectedAmount: number
+    expectedAmountMax?: number
+    hoursPerDay: number
+    paymentCycle: string
+    ratePerHour: number
+    workDays: number
+}
+
+export interface WinningPaymentDetails {
+    agreementSummary?: PaymentAgreementSummary
+    engagementDetails?: PaymentEngagementDetails
+    paymentCreatorHandle?: string
+    workLog?: PaymentWorkLog
+    taskDetails?: PaymentTaskDetails
 }
 
 export interface Winning {
+    assignmentId?: string
     id: string
     description: string
     externalId: string
@@ -28,6 +87,7 @@ export interface Winning {
     datePaid: string
     currency: string
     details: PaymentDetail[]
+    winnerId?: string
 }
 
 export interface WinningDetail {
@@ -41,7 +101,10 @@ export interface WinningDetail {
     description: string
     externalId: string
     attributes: {
-        url: string
+        assignmentId?: number | string
+        hoursWorked?: number | string
+        remarks?: string
+        url?: string
     }
     details: PaymentDetail[]
     createdAt: string

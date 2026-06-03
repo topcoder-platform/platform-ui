@@ -1,4 +1,7 @@
-import { defaultToFieldValue } from './FormSelectField'
+import {
+    defaultFromFieldValue,
+    defaultToFieldValue,
+} from './FormSelectField'
 
 describe('FormSelectField defaultToFieldValue', () => {
     it('returns an empty array for multi-select clear actions', () => {
@@ -23,5 +26,18 @@ describe('FormSelectField defaultToFieldValue', () => {
                 'term-a',
                 'term-b',
             ])
+    })
+})
+
+describe('FormSelectField defaultFromFieldValue', () => {
+    it('matches single-select options case-insensitively when persisted values drift in casing', () => {
+        expect(defaultFromFieldValue('SandhiyaKavi', [{
+            label: 'sandhiyakavi',
+            value: 'sandhiyakavi',
+        }], false))
+            .toEqual({
+                label: 'sandhiyakavi',
+                value: 'sandhiyakavi',
+            })
     })
 })

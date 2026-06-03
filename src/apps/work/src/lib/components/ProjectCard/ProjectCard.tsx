@@ -1,14 +1,23 @@
-import { FC } from 'react'
+import type {
+    FC,
+    ReactNode,
+} from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Project } from '../../models'
-import { formatDateTime } from '../../utils'
+import {
+    Project,
+} from '../../models'
+import {
+    buildProjectChallengesPath,
+    formatDateTime,
+} from '../../utils'
 import { ProjectStatus } from '../ProjectStatus'
 
 import styles from './ProjectCard.module.scss'
 
 interface ProjectCardProps {
+    billingAccountContent?: ReactNode
     canEdit?: boolean
     project: Project
     selected?: boolean
@@ -17,7 +26,7 @@ interface ProjectCardProps {
 export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
     const project: Project = props.project
     const projectId: string = String(project.id)
-    const path: string = `/projects/${projectId}/challenges`
+    const path: string = buildProjectChallengesPath(projectId)
     const editPath = `/projects/${projectId}/edit`
 
     const lastActivity = formatDateTime(
@@ -42,6 +51,13 @@ export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
                     <span className={styles.metaValue}>{lastActivity}</span>
                 </div>
             </Link>
+            {props.billingAccountContent
+                ? (
+                    <div className={styles.billingAccount}>
+                        {props.billingAccountContent}
+                    </div>
+                )
+                : undefined}
             {props.canEdit
                 ? (
                     <div className={styles.actions}>

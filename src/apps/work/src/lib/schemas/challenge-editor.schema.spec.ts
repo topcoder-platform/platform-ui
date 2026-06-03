@@ -1,5 +1,7 @@
 import {
+    MAX_MANUAL_REVIEWER_COUNT,
     PRIZE_SET_TYPES,
+    PRIZE_TYPES,
     REVIEW_TYPES,
     ROUND_TYPES,
 } from '../constants/challenge-editor.constants'
@@ -34,7 +36,7 @@ describe('challenge-editor schema task reviewer validation', () => {
         roundType: ROUND_TYPES.SINGLE_ROUND,
     }
 
-    it('requires reviewer for task internal review', async () => {
+    it('does not require reviewer for task internal review', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
                 ...baseFormData,
@@ -45,8 +47,8 @@ describe('challenge-editor schema task reviewer validation', () => {
                 reviewer: '',
             }),
         )
-            .rejects
-            .toThrow('Select a reviewer')
+            .resolves
+            .toBeTruthy()
     })
 
     it('does not require reviewer for non-task internal review', async () => {
@@ -73,6 +75,56 @@ describe('challenge-editor schema task reviewer validation', () => {
                     reviewType: REVIEW_TYPES.COMMUNITY,
                 },
                 reviewer: '',
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+})
+
+describe('challenge-editor schema copilot validation', () => {
+    const baseFormData = {
+        roundType: ROUND_TYPES.SINGLE_ROUND,
+    }
+
+    it('requires a copilot when a copilot fee is set', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                copilot: '',
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: PRIZE_TYPES.USD,
+                                value: 5,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.COPILOT,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow('Copilot is required when copilot fee is greater than 0')
+    })
+
+    it('does not require a copilot when no copilot fee is set', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                copilot: '',
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: PRIZE_TYPES.USD,
+                                value: 12,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
             }),
         )
             .resolves
@@ -138,6 +190,70 @@ describe('challenge-editor schema fun challenge prize validation', () => {
             .resolves
             .toBeTruthy()
     })
+
+    it('allows equal lower placement prizes when funChallenge is false', async () => {
+        await expect(
+            challengeBasicInfoSchema.validate({
+                ...baseBasicInfo,
+                funChallenge: false,
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                            {
+                                type: 'USD',
+                                value: 20,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('rejects lower placement prizes that increase when funChallenge is false', async () => {
+        await expect(
+            challengeBasicInfoSchema.validate({
+                ...baseBasicInfo,
+                funChallenge: false,
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                            {
+                                type: 'USD',
+                                value: 50,
+                            },
+                            {
+                                type: 'USD',
+                                value: 60,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow('Placement prizes must stay the same or decrease for lower placements')
+    })
 })
 
 describe('challenge-editor schema reviewer slot assignment validation', () => {
@@ -184,5 +300,23 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
         )
             .resolves
             .toBeTruthy()
+    })
+
+    it('rejects reviewer counts above the manual reviewer limit', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: MAX_MANUAL_REVIEWER_COUNT + 1,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: true,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow(`Number of reviewers cannot exceed ${MAX_MANUAL_REVIEWER_COUNT}`)
     })
 })

@@ -1,6 +1,7 @@
 import moment from 'moment'
 
 import type { BackendSubmission } from './BackendSubmission.model'
+import { convertBackendSubmission } from './SubmissionInfo.model'
 import { ChallengeInfo, ChallengeTrack, ChallengeType } from './ChallengeInfo.model'
 
 export interface BackendChallengeType {
@@ -257,9 +258,7 @@ export function convertBackendChallengeInfo(
         round2Introduction: data.round2Introduction,
         roundId: data.roundId,
         skills: data.skills,
-        submissions: data.submissions?.map(submission => ({
-            ...submission,
-        })),
+        submissions: data.submissions?.map(convertBackendSubmission),
         timeLeft: toTimeLeftString(currentPhaseEndDate),
         track: normalizeTrack(data.track, data.trackId),
         type: normalizeType(data.type, data.typeId),

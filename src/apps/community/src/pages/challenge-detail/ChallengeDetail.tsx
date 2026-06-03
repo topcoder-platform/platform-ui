@@ -8,20 +8,17 @@ import {
     useRef,
     useState,
 } from 'react'
-import { generatePath, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { mutate } from 'swr'
 import { toast } from 'react-toastify'
 
 import { authUrlLogin, profileContext, ProfileContextData } from '~/libs/core'
 import {
-    Breadcrumb,
-    BreadcrumbItemModel,
     LoadingSpinner,
     type TabsNavItem,
 } from '~/libs/ui'
 
 import {
-    challengeDetailRouteId,
     challengeListingRouteId,
     rootRoute,
 } from '../../config/routes.config'
@@ -39,7 +36,6 @@ import type {
 import {
     fetchChallengeResources,
     getDisplayWinners,
-    getForumLink,
     getPlacementPrizes,
     hasOpenSubmissionPhase,
     isDesignChallenge,
@@ -56,6 +52,7 @@ import {
     useThriveArticles,
 } from '../../lib'
 
+import { ChallengeDiscussion } from './components/ChallengeDiscussion'
 import { ChallengeHeader } from './components/ChallengeHeader'
 import { Checkpoints } from './components/Checkpoints'
 import { Registrants } from './components/Registrants'
@@ -71,6 +68,7 @@ const WIPRO_REGISTRATION_BLOCKED_MESSAGE = 'Wipro employees are not allowed to p
 enum ChallengeDetailTab {
     checkpoints = 'checkpoints',
     details = 'details',
+    discussion = 'discussion',
     registrants = 'registrants',
     submissions = 'submissions',
     winners = 'winners',
@@ -97,7 +95,7 @@ function getSubmissionsViewable(challenge: ChallengeInfo): boolean {
     if (Array.isArray(metadata)) {
         const match = metadata.find(item => (
             typeof item === 'object'
-            && item !== null
+            && Boolean(item)
             && (item as { name?: string }).name === 'submissionsViewable'
         )) as { value?: string | boolean } | undefined
 
@@ -113,7 +111,7 @@ function getSubmissionsViewable(challenge: ChallengeInfo): boolean {
 }
 
 /**
- * Challenge detail page container.
+ * Challenge detail page container with real challenge data tabs and mock discussion data.
  *
  * @returns Challenge detail page content.
  */
@@ -188,9 +186,7 @@ const ChallengeDetail: FC = () => {
     const isLegacyMM = challenge
         ? isMarathonMatch(challenge) && Boolean(challenge.roundId)
         : false
-    const forumLink = challenge ? getForumLink(challenge) : undefined
     const hasRegistered = challenge?.isRegistered ?? false
-    const userRoles = challenge?.userDetails?.roles ?? []
     const allAvailableTermIds = useMemo(() => {
         const challengeTermIds = (challenge?.terms ?? [])
             .map(term => (typeof term === 'string' ? term : term.id))
@@ -211,6 +207,15 @@ const ChallengeDetail: FC = () => {
     const challengeSubmissions = submissions.length
         ? submissions
         : challenge?.submissions ?? []
+    const registrantCount = challenge
+        ? Math.max(challengeRegistrants.length, challenge.numOfRegistrants ?? 0)
+        : 0
+    const submissionCount = challenge
+        ? Math.max(
+            challengeSubmissions.length,
+            challenge.numOfSubmissions + (challenge.numOfCheckpointSubmissions ?? 0),
+        )
+        : 0
 
     const mySubmissions = useMemo(() => {
         if (!profile?.handle) {
@@ -246,12 +251,16 @@ const ChallengeDetail: FC = () => {
             return nextTabs
         }
 
-        if (challenge.numOfRegistrants > 0) {
-            nextTabs.push({
-                id: ChallengeDetailTab.registrants,
-                title: 'Registrants',
-            })
-        }
+        nextTabs.push({
+            badges: [
+                {
+                    count: registrantCount,
+                    type: 'info',
+                },
+            ],
+            id: ChallengeDetailTab.registrants,
+            title: 'Registrants',
+        })
 
         if (isDesignChallenge(challenge) && (challenge.numOfCheckpointSubmissions ?? 0) > 0) {
             nextTabs.push({
@@ -260,13 +269,16 @@ const ChallengeDetail: FC = () => {
             })
         }
 
-        const numOfSubmissions = challenge.numOfSubmissions + (challenge.numOfCheckpointSubmissions ?? 0)
-        if (isLoggedIn && numOfSubmissions > 0) {
-            nextTabs.push({
-                id: ChallengeDetailTab.submissions,
-                title: 'Submissions',
-            })
-        }
+        nextTabs.push({
+            badges: [
+                {
+                    count: submissionCount,
+                    type: 'info',
+                },
+            ],
+            id: ChallengeDetailTab.submissions,
+            title: 'Submissions',
+        })
 
         if (displayWinners.length > 0 && !isLegacyMM) {
             nextTabs.push({
@@ -275,8 +287,13 @@ const ChallengeDetail: FC = () => {
             })
         }
 
+        nextTabs.push({
+            id: ChallengeDetailTab.discussion,
+            title: 'Challenge Discussion',
+        })
+
         return nextTabs
-    }, [challenge, displayWinners.length, isLegacyMM, isLoggedIn])
+    }, [challenge, displayWinners.length, isLegacyMM, registrantCount, submissionCount])
 
     useEffect(() => {
         const activeTabExists = tabs.some(tab => tab.id === activeTab)
@@ -285,6 +302,14 @@ const ChallengeDetail: FC = () => {
             setActiveTab(ChallengeDetailTab.details)
         }
     }, [activeTab, tabs])
+
+    useEffect(() => {
+        const queryTab = (searchParams.get('tab') ?? undefined) as ChallengeDetailTab | undefined
+
+        if (queryTab && tabs.some(tab => tab.id === queryTab)) {
+            setActiveTab(queryTab)
+        }
+    }, [searchParams, tabs])
 
     useEffect(() => {
         termsStateRef.current = termsState
@@ -350,50 +375,6 @@ const ChallengeDetail: FC = () => {
             ? `${path}?${query}`
             : path
     }, [searchParams])
-
-    const challengeUrl = useMemo(() => {
-        if (!challengeId) {
-            return challengesUrl
-        }
-
-        const detailPath = generatePath(challengeDetailRouteId, { challengeId })
-        const path = withLeadingSlash(`${rootRoute}/${detailPath}`.replace(/\/{2,}/g, '/'))
-        const query = searchParams.toString()
-
-        return query
-            ? `${path}?${query}`
-            : path
-    }, [challengeId, challengesUrl, searchParams])
-
-    const breadcrumbs = useMemo<Array<BreadcrumbItemModel>>(() => {
-        const items: Array<BreadcrumbItemModel> = [
-            {
-                name: 'Community',
-                url: rootRoute || '/',
-            },
-        ]
-
-        if (communityMeta?.communityName) {
-            items.push({
-                name: communityMeta.communityName,
-                url: challengesUrl,
-            })
-        }
-
-        items.push({
-            name: 'Challenges',
-            url: challengesUrl,
-        })
-
-        if (challenge?.name) {
-            items.push({
-                name: challenge.name,
-                url: challengeUrl,
-            })
-        }
-
-        return items
-    }, [challenge?.name, challengeUrl, challengesUrl, communityMeta?.communityName])
 
     const handleRegisterClick = useCallback((): void => {
         if (isWiproRegistrationBlocked(profile?.email, challenge?.isWiproAllowed)) {
@@ -524,9 +505,11 @@ const ChallengeDetail: FC = () => {
 
     if (isLoading) {
         return (
-            <div className={styles.spinnerWrap}>
-                <LoadingSpinner />
-            </div>
+            <section className={styles.page}>
+                <div className={styles.spinnerWrap}>
+                    <LoadingSpinner />
+                </div>
+            </section>
         )
     }
 
@@ -540,20 +523,12 @@ const ChallengeDetail: FC = () => {
 
     return (
         <section className={styles.page}>
-            <header className={styles.header}>
-                <Breadcrumb
-                    items={breadcrumbs}
-                    renderInline
-                />
-            </header>
-
             <ChallengeHeader
                 activeTab={activeTab}
                 challenge={challenge}
                 challengePrizes={challengePrizes}
                 challengesUrl={challengesUrl}
                 displayWinners={displayWinners}
-                forumLink={forumLink}
                 hasRegistered={hasRegistered}
                 isLegacyMM={isLegacyMM}
                 isLoggedIn={isLoggedIn}
@@ -564,7 +539,6 @@ const ChallengeDetail: FC = () => {
                 onUnregisterClick={handleUnregisterClick}
                 registering={registering}
                 showDeadlineDetail={showDeadlineDetail}
-                showForumLink={hasRegistered || userRoles.length > 0}
                 submissionEnded={submissionEnded}
                 tabs={tabs}
                 unregistering={unregistering}
@@ -575,6 +549,7 @@ const ChallengeDetail: FC = () => {
                     <Specification
                         challenge={challenge}
                         communityMeta={communityMeta}
+                        isLoggedIn={isLoggedIn}
                     />
                 )}
 
@@ -625,12 +600,16 @@ const ChallengeDetail: FC = () => {
                         winners={displayWinners}
                     />
                 )}
+
+                {activeTab === ChallengeDetailTab.discussion && (
+                    <ChallengeDiscussion challengeName={challenge.name} />
+                )}
             </div>
 
             {!!articles.length && <ThriveArticlesSidebar articles={articles} />}
 
             {(isLoadingRegistrants || isLoadingSubmissions) && (
-                <div className={styles.inlineLoading}>Updating challenge data…</div>
+                <div className={styles.inlineLoading}>Updating challenge data...</div>
             )}
 
             {showSecurityReminder && (

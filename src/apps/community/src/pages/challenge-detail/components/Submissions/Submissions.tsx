@@ -131,6 +131,10 @@ function sortSubmissions(
 const Submissions: FC<SubmissionsProps> = (props: SubmissionsProps) => {
     const hideDownloadForMMRDM = true
     const isMM = isMarathonMatch(props.challenge)
+    const columnCount = isMM ? 3 : 4
+    const gridStyle = {
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+    }
     const sortedSubmissions = useMemo(
         () => sortSubmissions(props.sort, props.submissions),
         [props.sort, props.submissions],
@@ -187,7 +191,7 @@ const Submissions: FC<SubmissionsProps> = (props: SubmissionsProps) => {
             )}
 
             <div className={styles.table} role='table'>
-                <div className={styles.header} role='row'>
+                <div className={styles.header} role='row' style={gridStyle}>
                     <button
                         className={classNames(styles.headCell, isMM && styles.columns3)}
                         data-field='Username'
@@ -234,6 +238,7 @@ const Submissions: FC<SubmissionsProps> = (props: SubmissionsProps) => {
                                 className={classNames(styles.row, isMM && styles.rowColumns3)}
                                 key={submission.id}
                                 role='row'
+                                style={gridStyle}
                             >
                                 <div className={classNames(styles.cell, isMM && styles.columns3)}>
                                     {submission.memberHandle ?? '-'}

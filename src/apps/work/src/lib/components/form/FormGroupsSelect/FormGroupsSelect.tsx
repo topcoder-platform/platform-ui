@@ -11,6 +11,7 @@ import {
     useFormContext,
 } from 'react-hook-form'
 import AsyncCreatableSelect from 'react-select/async-creatable'
+import AsyncSelect from 'react-select/async'
 
 import {
     AUTOCOMPLETE_DEBOUNCE_TIME_MS,
@@ -22,7 +23,6 @@ import {
 } from '../../../models'
 import {
     createGroup,
-    fetchGroupById,
     fetchGroups,
 } from '../../../services'
 import { FormFieldWrapper } from '../FormFieldWrapper'
@@ -30,7 +30,10 @@ import { FormFieldWrapper } from '../FormFieldWrapper'
 import styles from './FormGroupsSelect.module.scss'
 
 interface FormGroupsSelectProps {
+    additionalGroups?: Group[]
     disabled?: boolean
+    hideLabel?: boolean
+    isCreatable?: boolean
     label: string
     name: string
     required?: boolean
@@ -103,6 +106,11 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     const fieldState = controller.fieldState
 
     const [optionCache, setOptionCache] = useState<GroupOption[]>([])
+    const isCreatable = props.isCreatable ?? true
+    const SelectComponent = useMemo<any>(
+        () => (isCreatable ? AsyncCreatableSelect : AsyncSelect),
+        [isCreatable],
+    )
 
     const menuPortalTarget = useMemo(
         () => (typeof document === 'undefined' ? undefined : document.body),
@@ -150,32 +158,56 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     )
 
     useEffect(() => {
+        const additionalGroups = props.additionalGroups
+
+        if (!additionalGroups?.length) {
+            return
+        }
+
+        setOptionCache(previousOptions => mergeOptions(
+            previousOptions,
+            additionalGroups.map(group => toOption(group)),
+        ))
+    }, [props.additionalGroups])
+
+    useEffect(() => {
         if (!missingGroupIds.length) {
             return undefined
         }
 
         let isMounted = true
 
-        Promise.all(missingGroupIds.map(async groupId => {
-            try {
-                const group = await fetchGroupById(groupId)
-
-                return toOption(group)
-            } catch {
-                return {
-                    label: groupId,
-                    value: groupId,
-                }
-            }
-        }))
-            .then(resolvedOptions => {
+        fetchGroups()
+            .then(accessibleGroups => {
                 if (!isMounted) {
                     return
                 }
 
+                const accessibleGroupsById = new Map(
+                    accessibleGroups.map(group => [group.id, toOption(group)]),
+                )
+                const resolvedOptions = missingGroupIds.map(groupId => (
+                    accessibleGroupsById.get(groupId) || {
+                        label: groupId,
+                        value: groupId,
+                    }
+                ))
+
                 setOptionCache(previousOptions => mergeOptions(previousOptions, resolvedOptions))
             })
-            .catch(() => undefined)
+            .catch(() => {
+                if (!isMounted) {
+                    return
+                }
+
+                setOptionCache(previousOptions => mergeOptions(
+                    previousOptions,
+                    missingGroupIds.map(groupId => ({
+                        label: groupId,
+                        value: groupId,
+                    })),
+                ))
+            })
 
         return () => {
             isMounted = false
@@ -238,11 +270,12 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     return (
         <FormFieldWrapper
             error={fieldState.error?.message}
+            hideLabel={props.hideLabel}
             label={props.label}
             name={props.name}
             required={props.required}
         >
-            <AsyncCreatableSelect
+            <SelectComponent
                 cacheOptions
                 className={styles.select}
                 classNamePrefix='challenge-select'
@@ -254,7 +287,9 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
                 menuPortalTarget={menuPortalTarget}
                 onBlur={field.onBlur}
                 onChange={handleSelectionChange}
-                onCreateOption={handleCreateGroup}
+                onCreateOption={isCreatable
+                    ? handleCreateGroup
+                    : undefined}
                 placeholder='Search groups'
                 value={selectedValue}
             />

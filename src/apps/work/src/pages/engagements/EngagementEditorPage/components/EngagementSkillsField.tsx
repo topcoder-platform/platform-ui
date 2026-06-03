@@ -15,6 +15,7 @@ import Select from 'react-select'
 
 import { Button } from '~/libs/ui'
 
+import { renderRichTextToPlainText } from '../../../../../../../libs/shared/lib/utils/rich-text'
 import {
     FormFieldWrapper,
     FormSelectOption,
@@ -108,7 +109,7 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
         control: formContext.control,
         name: 'skills',
     })
-    const description = String(formContext.watch('description') || '')
+    const description = renderRichTextToPlainText(String(formContext.watch('description') || ''))
         .trim()
 
     const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false)

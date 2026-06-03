@@ -114,7 +114,10 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Overview</div>
-                    <div>{props.request.overview}</div>
+                    <div
+                        className={styles.overviewContent}
+                        dangerouslySetInnerHTML={{ __html: props.request.overview ?? '' }}
+                    />
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Skills</div>

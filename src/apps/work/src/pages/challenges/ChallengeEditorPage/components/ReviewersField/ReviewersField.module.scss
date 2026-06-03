@@ -1,7 +1,75 @@
+@import '@libs/ui/styles/includes';
+
+.tabsContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.tabList {
+    align-items: flex-end;
+    border-bottom: 1px solid #d5d5d5;
+    display: flex;
+    gap: 24px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+    pointer-events: auto;
+}
+
+.tabButton {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 0;
+    pointer-events: auto;
+    white-space: nowrap;
+
+    &:hover {
+        color: $black-60;
+    }
+}
+
+.activeTab {
+    border-bottom-color: #2a62d5;
+    color: #2a62d5;
+
+    &:hover {
+        color: #2a62d5;
+    }
+}
+
+.tabPanel {
+    display: block;
+}
+
+.tabPanelHidden {
+    display: none;
+}
+
+.tabPanels {
+    border: 0;
+    margin: 0;
+    min-inline-size: 0;
+    padding: 0;
+}
+
+.aiOnlyNotice {
+    background-color: #e8f0fe;
+    border: 1px solid #c5d8fb;
+    border-radius: 4px;
+    color: #1a4a9e;
+    font-size: 13px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+}
+
 .container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 .summary {
@@ -26,13 +94,14 @@
     align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
 }
 
 .rows {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 20px;
+    margin-top: 8px;
 }
 
 .row {
@@ -40,31 +109,46 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: 16px;
+    padding: 16px;
 }
 
 .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.primaryFields {
     display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    grid-template-columns: minmax(220px, 260px) minmax(280px, 1fr);
+}
+
+@media (max-width: 767px) {
+    .primaryFields {
+        grid-template-columns: 1fr;
+    }
 }
 
 .memberScorecardField {
-    grid-column: 1 / -1;
+    min-width: 0;
 }
 
 .memberReviewSettings {
     display: grid;
-    gap: 12px;
-    grid-column: 1 / -1;
-    grid-template-columns: minmax(130px, 160px) minmax(220px, 1fr);
+    gap: 16px;
+    grid-template-columns: minmax(130px, 160px) minmax(220px, 280px) minmax(220px, 1fr);
 }
 
 @media (max-width: 767px) {
     .memberReviewSettings {
         grid-template-columns: 1fr;
     }
+}
+
+.memberReviewTypeField {
+    min-width: 0;
 }
 
 .publicOpportunityField {
@@ -93,7 +177,8 @@
 .memberAssignments {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+    padding-top: 12px;
 }
 
 .memberAssignmentsLabel {
@@ -104,7 +189,7 @@
 
 .memberAssignmentsGrid {
     display: grid;
-    gap: 12px;
+    gap: 16px;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 

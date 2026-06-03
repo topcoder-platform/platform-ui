@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import {
     FC,
     MouseEvent,
@@ -8,6 +9,8 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -18,7 +21,11 @@ import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
-import { useRole, useScorecardPassingScores, useSubmissionDownloadAccess } from '../../hooks'
+import {
+    useRole,
+    useScorecardPassingScores,
+    useSubmissionDownloadAccess,
+} from '../../hooks'
 import type { useRoleProps } from '../../hooks/useRole'
 import { useSubmissionHistory } from '../../hooks/useSubmissionHistory'
 import type { UseSubmissionHistoryResult } from '../../hooks/useSubmissionHistory'
@@ -26,6 +33,7 @@ import { useRolePermissions } from '../../hooks/useRolePermissions'
 import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
+    AiReviewDecisionEscalation,
     ChallengeDetailContextModel,
     MappingReviewAppeal,
     ReviewAppContextModel,
@@ -34,6 +42,7 @@ import {
 import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
+    isMarathonMatchChallenge,
     isReviewPhase,
     isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
@@ -45,7 +54,11 @@ import type {
     AggregatedSubmissionReviews,
 } from '../../utils'
 import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
-import { updateReview } from '../../services'
+import {
+    AiReviewEscalationDecision,
+    getAiReviewDecisionsCacheKey,
+    updateReview,
+} from '../../services'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { ConfirmModal } from '../ConfirmModal'
@@ -61,12 +74,19 @@ import {
 import type {
     DownloadButtonConfig,
     ScoreVisibilityConfig,
+    SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
-import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import {
+    buildSubmissionReviewerRows,
+    getSubmissionReviewerRowReview,
+    isSubmissionReviewerActionRow,
+    resolveSubmissionReviewResult,
+} from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
+import { EscalationModals } from './EscalationModals'
 import styles from './TableReview.module.scss'
 
 export interface TableReviewProps {
@@ -103,9 +123,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
+        aiReviewConfig,
+        aiReviewDecisionsBySubmissionId,
         reviewers,
+        resources,
         myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { mutate }: FullConfiguration = useSWRConfig()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const { actionChallengeRole }: useRoleProps = useRole()
     const {
@@ -175,6 +199,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         () => challengeHasSubmissionLimit(challengeInfo),
         [challengeInfo],
     )
+    const useAggregateReviewScore = useMemo<boolean>(
+        () => isMarathonMatchChallenge(challengeInfo),
+        [challengeInfo],
+    )
 
     const submissionMetaById = useMemo<Map<string, SubmissionInfo>>(
         () => createSubmissionMetaMap(filteredChallengeSubmissions, reviewPhaseDatas),
@@ -238,7 +266,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const filterScreeningPassedReviews = useCallback(
         (submissions: SubmissionInfo[]): SubmissionInfo[] => submissions.filter(
-            submission => !props.screeningOutcome.failingSubmissionIds.has(submission.id ?? ''),
+            submission => {
+                const submissionId = submission.id ?? ''
+                if (!props.screeningOutcome.failingSubmissionIds.has(submissionId)) {
+                    return true
+                }
+
+                return (submission.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
+            },
         ),
         [props.screeningOutcome.failingSubmissionIds],
     )
@@ -296,25 +331,83 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         return rows.filter(row => row.id && latestSubmissionIds.has(row.id))
     }, [aggregatedSubmissionRows, latestSubmissionIds, restrictToLatest])
 
-    const maxReviewCount = useMemo<number>(
-        () => aggregatedSubmissionRows.reduce(
-            (max, aggregated) => Math.max(max, aggregated.reviews?.length ?? 0),
-            0,
-        ),
-        [aggregatedSubmissionRows],
+    const reviewerRows = useMemo<SubmissionReviewerRow[]>(
+        () => buildSubmissionReviewerRows(aggregatedRows),
+        [aggregatedRows],
     )
-    interface ReviewerColumnMetadata {
-        label: string
-        renderLabel?: () => JSX.Element
-    }
-    const reviewerColumnMetadata = useMemo<ReviewerColumnMetadata[]>(() => (
-        Array.from({ length: maxReviewCount }, (_unused, index) => ({
-            label: `Reviewer ${index + 1}`,
-        }))
-    ), [maxReviewCount])
+
+    const escalationDecisionBySubmissionId = useMemo<Map<string, AiReviewEscalationDecision>>(
+        () => aggregatedRows.reduce((result, row) => {
+            const aiDecision = row.id
+                ? aiReviewDecisionsBySubmissionId[row.id]
+                : undefined
+
+            if (!row.id || !aiDecision?.id) {
+                return result
+            }
+
+            result.set(row.id, {
+                aiReviewDecisionId: aiDecision.id,
+                challengeId: challengeInfo?.id ?? undefined,
+                decisionStatus: aiDecision.status,
+                escalations: aiDecision.escalations ?? [],
+                submissionId: row.id,
+                submissionLocked: aiDecision.submissionLocked,
+            })
+
+            return result
+        }, new Map<string, AiReviewEscalationDecision>()),
+        [aggregatedRows, aiReviewDecisionsBySubmissionId, challengeInfo?.id],
+    )
+
+    const isSubmissionAiLocked = useCallback((
+        submission: SubmissionReviewerRow,
+        decision?: AiReviewEscalationDecision,
+    ): boolean => {
+        if (submission.status !== 'AI_FAILED_REVIEW') {
+            return false
+        }
+
+        const hasApprovedEscalation = Boolean(decision?.escalations?.some(escalation => (
+            (escalation.status ?? '').toUpperCase() === 'APPROVED'
+        )))
+
+        if (decision && decision.submissionLocked === false && hasApprovedEscalation) {
+            return false
+        }
+
+        return true
+    }, [])
+
+    const handleByMemberId = useMemo<Map<string, { handle?: string; color?: string }>>(
+        () => {
+            const map = new Map<string, { handle?: string; color?: string }>();
+            [
+                ...resources,
+                ...reviewers,
+            ].forEach(resource => {
+                if (resource.memberId) {
+                    map.set(String(resource.memberId), {
+                        color: (resource as any).handleColor ?? undefined,
+                        handle: resource.memberHandle,
+                    })
+                }
+            })
+
+            return map
+        },
+        [resources, reviewers],
+    )
 
     const [isReopening, setIsReopening] = useState(false)
     const [pendingReopen, setPendingReopen] = useState<PendingReopenState | undefined>(undefined)
+    const [escalateTarget, setEscalateTarget] = useState<SubmissionReviewerRow | undefined>(undefined)
+    const [unlockTarget, setUnlockTarget] = useState<SubmissionReviewerRow | undefined>(undefined)
+    const [verifyTarget, setVerifyTarget] = useState<{
+        submission: SubmissionReviewerRow
+        decision: AiReviewEscalationDecision
+        escalations: AiReviewDecisionEscalation[]
+    } | undefined>(undefined)
 
     const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail): void => {
         const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
@@ -330,6 +423,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const closeReopenDialog = useCallback((): void => {
         setPendingReopen(undefined)
     }, [])
+
+    const revalidateEscalationData = useCallback(async (): Promise<void> => {
+        if (aiReviewConfig?.id) {
+            await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+        }
+
+        if (challengeInfo?.id) {
+            await refreshChallengeReviewData(challengeInfo.id)
+        }
+    }, [aiReviewConfig?.id, challengeInfo?.id, mutate])
 
     const handleConfirmReopen = useCallback(async (): Promise<void> => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
@@ -377,8 +480,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             canDisplayScores: () => true,
             canViewScorecard: true,
             isAppealsTab: false,
+            useAggregateScore: useAggregateReviewScore,
         }),
-        [],
+        [useAggregateReviewScore],
     )
 
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
@@ -436,12 +540,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         ],
     )
 
-    const renderActionsCell = useCallback<(submission: SubmissionRow) => JSX.Element>((submission: SubmissionRow) => {
-        const reviews = submission.aggregated?.reviews ?? []
-        const myReviewDetail = reviews.find(review => {
-            const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
-            return resourceId ? myReviewerResourceIds.has(resourceId) : false
-        })
+    const renderActionsCell = useCallback<(submission: SubmissionReviewerRow) => JSX.Element>((
+        submission: SubmissionReviewerRow,
+    ) => {
+        const rowReviewDetail = getSubmissionReviewerRowReview(submission)
+        const myReviewDetail = isSubmissionReviewerActionRow(submission, myReviewerResourceIds)
+            ? rowReviewDetail
+            : undefined
         const actionEntries: Array<{ element: JSX.Element; wrapperKey: string }> = []
 
         const appendAction = (element: JSX.Element | undefined, fallbackKey: string): void => {
@@ -571,8 +676,167 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )
         }
 
+        const buildEscalateAction = (): JSX.Element | undefined => {
+            if (!submission.id) {
+                return undefined
+            }
+
+            const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
+            if (!decision?.submissionLocked) {
+                return undefined
+            }
+
+            const isReviewerOnly = (hasReviewRole || isCopilotWithReviewerAssignments)
+                && !canManageCompletedReviews
+            if (!isReviewerOnly || !isReviewPhase(challengeInfo)) {
+                return undefined
+            }
+
+            const hasOwnEscalation = decision.escalations.some(escalation => (
+                String(escalation.createdBy ?? '') === String(loginUserInfo?.userId ?? '')
+            ))
+            if (hasOwnEscalation) {
+                // If there are escalations already, show the latest status pill
+                const escalations = decision.escalations ?? []
+                if (escalations.length) {
+                    const latest = escalations.slice()
+                        .sort((a, b) => (
+                            new Date(b.createdAt)
+                                .getTime() - new Date(a.createdAt)
+                                .getTime()
+                        ))[0]
+
+                    if (latest) {
+                        const status = (latest.status ?? '').toUpperCase()
+                        if (status === 'PENDING_APPROVAL') {
+                            return (
+                                <span className={styles.resultPending}>
+                                    Escalation Pending
+                                </span>
+                            )
+                        }
+
+                        if (status === 'APPROVED') {
+                            return (
+                                <span className={styles.resultPass}>
+                                    Escalation Approved
+                                </span>
+                            )
+                        }
+
+                        if (status === 'REJECTED') {
+                            return (
+                                <span className={styles.resultFail}>
+                                    Escalation Rejected
+                                </span>
+                            )
+                        }
+                    }
+                }
+
+                return undefined
+            }
+
+            return (
+                <button
+                    key='escalate-submission'
+                    type='button'
+                    className={classNames(styles.actionButton, styles.textBlue)}
+                    onClick={function onClick() {
+                        setEscalateTarget(submission)
+                    }}
+                >
+                    <IconOutline.ArrowCircleUpIcon className='icon-lg' />
+                    Escalate
+                </button>
+            )
+        }
+
+        const buildVerifyAction = (): JSX.Element | undefined => {
+            if (!submission.id || !canManageCompletedReviews) {
+                return undefined
+            }
+
+            const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
+            if (!decision?.submissionLocked) {
+                return undefined
+            }
+
+            const pendingEscalations = decision.escalations.filter(escalation => (
+                escalation.status === 'PENDING_APPROVAL'
+            ))
+
+            if (!pendingEscalations.length) {
+                return undefined
+            }
+
+            return (
+                <button
+                    key='verify-escalation'
+                    type='button'
+                    className={classNames(styles.actionButton, styles.textBlue)}
+                    onClick={function onClick() {
+                        setVerifyTarget({
+                            decision,
+                            escalations: pendingEscalations,
+                            submission,
+                        })
+                    }}
+                >
+                    <IconOutline.SearchIcon className='icon-lg' />
+                    Verify
+                </button>
+            )
+        }
+
+        const buildUnlockAction = (): JSX.Element | undefined => {
+            if (!submission.id || !canManageCompletedReviews) {
+                return undefined
+            }
+
+            const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
+            if (!decision?.submissionLocked) {
+                return undefined
+            }
+
+            return (
+                <button
+                    key='unlock-submission'
+                    type='button'
+                    className={classNames(styles.actionButton, styles.textBlue)}
+                    onClick={function onClick() {
+                        setUnlockTarget(submission)
+                    }}
+                >
+                    <IconOutline.LockOpenIcon className='icon-lg' />
+                    Unlock
+                </button>
+            )
+        }
+
         appendAction(buildPrimaryAction(), 'primary')
-        appendAction(buildHistoryAction(), 'history')
+        if (submission.isFirstReviewerRow) {
+            appendAction(buildEscalateAction(), 'escalate')
+            appendAction(buildVerifyAction(), 'verify')
+            appendAction(buildUnlockAction(), 'unlock')
+            appendAction(buildHistoryAction(), 'history')
+        }
+
         appendAction(buildReopenAction(), 'reopen')
 
         if (!actionEntries.length) {
@@ -605,90 +869,118 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         canManageCompletedReviews,
         canViewHistory,
         challengeInfo,
+        escalationDecisionBySubmissionId,
         handleHistoryButtonClick,
         hasReviewRole,
         historyByMember,
         isCopilotWithReviewerAssignments,
         isReopening,
+        loginUserInfo?.userId,
         myReviewerResourceIds,
         openReopenDialog,
         pendingReopen,
+        isSubmissionAiLocked,
         shouldShowHistoryActions,
     ])
 
-    const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
-        const submissionIdColumn: TableColumn<SubmissionRow> = {
-            className: styles.submissionColumn,
+    const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
+        const submissionIdColumn: TableColumn<SubmissionReviewerRow> = {
+            className: classNames(styles.submissionColumn, 'no-row-border'),
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
-            renderer: (submission: SubmissionRow) => renderSubmissionIdCell(
-                submission,
-                downloadButtonConfig,
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderSubmissionIdCell(row, downloadButtonConfig)
+                    : <span />
             ),
             type: 'element',
         }
 
-        const baseColumns: TableColumn<SubmissionRow>[] = [submissionIdColumn]
+        const baseColumns: TableColumn<SubmissionReviewerRow>[] = [submissionIdColumn]
 
         if (!hideHandleColumn) {
             baseColumns.push({
+                className: 'no-row-border',
                 columnId: 'handle-aggregated',
                 label: 'Submitter',
                 propertyName: 'handle',
-                renderer: renderSubmitterHandleCell,
+                renderer: (row: SubmissionReviewerRow) => (
+                    row.isFirstReviewerRow
+                        ? renderSubmitterHandleCell(row)
+                        : <span />
+                ),
                 type: 'element',
             })
         }
 
-        for (let index = 0; index < maxReviewCount; index += 1) {
-            const metadata = reviewerColumnMetadata[index] ?? {
-                label: `Reviewer ${index + 1}`,
-            }
-            baseColumns.push(
-                {
-                    columnId: `reviewer-${index}`,
-                    label: metadata.renderLabel ?? metadata.label,
-                    renderer: (submission: SubmissionRow) => renderReviewerCell(submission, index),
-                    type: 'element',
-                },
-                {
-                    columnId: `score-${index}`,
-                    label: `Score ${index + 1}`,
-                    renderer: (submission: SubmissionRow) => renderScoreCell(
-                        submission,
-                        index,
-                        scoreVisibilityConfig,
-                        challengeInfo,
-                        pendingReopen,
-                        canManageCompletedReviews,
-                        isReopening,
-                        openReopenDialog,
-                    ),
-                    type: 'element',
-                },
-            )
-        }
+        baseColumns.push({
+            className: 'no-row-border',
+            columnId: 'review-score',
+            label: 'Review Score',
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderReviewScoreCell(row, scoreVisibilityConfig)
+                    : <span />
+            ),
+            type: 'element',
+        })
 
         baseColumns.push(
             {
-                columnId: 'review-date',
-                label: 'Review Date',
-                renderer: renderReviewDateCell,
+                columnId: 'reviewer',
+                label: 'Reviewer',
+                renderer: (row: SubmissionReviewerRow) => renderReviewerCell(
+                    row,
+                    row.reviewerIndex,
+                ),
                 type: 'element',
             },
             {
-                columnId: 'review-score',
-                label: 'Review Score',
-                renderer: (submission: SubmissionRow) => renderReviewScoreCell(submission, scoreVisibilityConfig),
+                columnId: 'review-date',
+                label: 'Review Date',
+                renderer: (row: SubmissionReviewerRow) => renderReviewDateCell(row),
+                type: 'element',
+            },
+            {
+                columnId: 'score',
+                label: 'Score',
+                renderer: (row: SubmissionReviewerRow) => renderScoreCell(
+                    row,
+                    row.reviewerIndex,
+                    scoreVisibilityConfig,
+                    challengeInfo,
+                    pendingReopen,
+                    canManageCompletedReviews,
+                    isReopening,
+                    openReopenDialog,
+                ),
                 type: 'element',
             },
             {
                 columnId: 'review-result',
                 label: 'Review Result',
-                renderer: (submission: SubmissionRow) => {
-                    const result = resolveSubmissionReviewResult(submission, {
+                renderer: (row: SubmissionReviewerRow) => {
+                    const decision = row.id
+                        ? escalationDecisionBySubmissionId.get(row.id)
+                        : undefined
+                    const isLocked = isSubmissionAiLocked(row, decision)
+
+                    if (!row.isFirstReviewerRow) {
+                        return <span />
+                    }
+
+                    if (isLocked) {
+                        return (
+                            <span className={styles.statusLocked}>
+                                AI Locked
+                            </span>
+                        )
+                    }
+
+                    const result = resolveSubmissionReviewResult(row, {
                         minimumPassingScoreByScorecardId,
+                        preferAggregateScore: useAggregateReviewScore,
                     })
                     if (result === 'PASS') {
                         return (
@@ -717,7 +1009,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 className: styles.textBlue,
                 columnId: 'actions',
                 label: 'Actions',
-                renderer: renderActionsCell,
+                renderer: (row: SubmissionReviewerRow) => renderActionsCell(row),
                 type: 'element',
             })
         }
@@ -727,16 +1019,26 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
-                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
-                    props.aiReviewers && (
+                renderer: (row: SubmissionReviewerRow, allRows?: SubmissionReviewerRow[]) => {
+                    if (!row.isLastReviewerRow || !props.aiReviewers) {
+                        return <span />
+                    }
+
+                    const rows = allRows ?? []
+                    const firstIndexForSubmission = rows.findIndex(candidate => (
+                        candidate.id === row.id && candidate.isFirstReviewerRow
+                    ))
+                    const defaultOpen = firstIndexForSubmission === 0
+
+                    return (
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
                             aiReviewers={props.aiReviewers}
-                            submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                            submission={row as any}
+                            defaultOpen={defaultOpen}
                         />
                     )
-                ),
+                },
                 type: 'element',
             })
         }
@@ -745,53 +1047,25 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     }, [
         downloadButtonConfig,
         hideHandleColumn,
-        maxReviewCount,
         minimumPassingScoreByScorecardId,
         renderActionsCell,
         scoreVisibilityConfig,
         shouldShowAggregatedActions,
         canManageCompletedReviews,
+        escalationDecisionBySubmissionId,
+        isSubmissionAiLocked,
         isReopening,
         openReopenDialog,
         challengeInfo,
         pendingReopen,
-        reviewerColumnMetadata,
+        useAggregateReviewScore,
     ])
 
-    const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
+    const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(
         () => columns.map(column => {
-            const resolveLabelString = (): string => {
-                if (typeof column.label === 'string') {
-                    return column.label
-                }
-
-                if (typeof column.label === 'function') {
-                    const labelResult = column.label()
-                    if (typeof labelResult === 'string') {
-                        return labelResult
-                    }
-
-                    const columnId = column.columnId ?? ''
-                    if (columnId.startsWith('reviewer-')) {
-                        const reviewerIndexRaw = columnId.split('-')[1]
-                        const reviewerIndex = reviewerIndexRaw
-                            ? Number.parseInt(reviewerIndexRaw, 10)
-                            : NaN
-                        if (!Number.isNaN(reviewerIndex)) {
-                            return reviewerColumnMetadata[reviewerIndex]?.label
-                                ?? `Reviewer ${reviewerIndex + 1}`
-                        }
-
-                        return 'Reviewer'
-                    }
-
-                    return ''
-                }
-
-                return column.label ?? ''
-            }
-
-            const resolvedLabel = resolveLabelString()
+            const resolvedLabel = typeof column.label === 'function'
+                ? column.label() ?? ''
+                : (column.label ?? '')
             const labelForAction = typeof column.label === 'string'
                 ? column.label
                 : resolvedLabel
@@ -829,9 +1103,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     colSpan: labelText ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
+            ].filter(Boolean) as MobileTableColumn<SubmissionReviewerRow>[]
         }),
-        [columns, reviewerColumnMetadata],
+        [columns],
     )
 
     return (
@@ -843,19 +1117,31 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={aggregatedRows} />
+                <TableMobile columns={columnsMobile} data={reviewerRows} />
             ) : (
                 <Table
                     key={tableKey}
                     showExpand
                     expandMode='always'
                     columns={columns}
-                    data={aggregatedRows}
+                    data={reviewerRows}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
                 />
             )}
+
+            <EscalationModals
+                escalateTarget={escalateTarget}
+                setEscalateTarget={setEscalateTarget}
+                unlockTarget={unlockTarget}
+                setUnlockTarget={setUnlockTarget}
+                verifyTarget={verifyTarget}
+                setVerifyTarget={setVerifyTarget}
+                escalationDecisionBySubmissionId={escalationDecisionBySubmissionId}
+                revalidateEscalationData={revalidateEscalationData}
+                handleByMemberId={handleByMemberId}
+            />
 
             <SubmissionHistoryModal
                 open={Boolean(historyKey)}
@@ -865,6 +1151,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 isDownloading={isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
 
             <ConfirmModal

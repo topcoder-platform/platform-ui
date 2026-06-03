@@ -8,7 +8,9 @@ interface StatusLabelProps {
     hideLabel?: boolean
     label?: string
     score?: number
-    status: 'pending' | 'failed' | 'passed' | 'failed-score'
+    status: 'pending' | 'failed' | 'passed' | 'failed-score' | 'human-override'
+    action?: ReactNode
+    isAiIcon?: boolean
 }
 
 const StatusLabel: FC<StatusLabelProps> = props => (
@@ -17,11 +19,17 @@ const StatusLabel: FC<StatusLabelProps> = props => (
             <span className={classNames(styles[props.status], styles.score)}>{props.score}</span>
         )}
         {props.icon && (
-            <span className={classNames(styles.icon, styles[props.status])}>
+            <span className={classNames(
+                !props.isAiIcon && styles.icon,
+                styles[props.status],
+                props.isAiIcon && styles.aiIcon,
+            )}
+            >
                 {props.icon}
             </span>
         )}
         {!props.hideLabel && props.label}
+        {props.action}
     </div>
 )
 

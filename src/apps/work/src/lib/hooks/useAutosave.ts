@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
 import debounce from 'lodash/debounce'
+import isEqual from 'lodash/isEqual'
 
 import { AUTOSAVE_DELAY_MS } from '../constants/challenge-editor.constants'
 
@@ -28,6 +30,7 @@ export function useAutosave<T>(
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle')
     const isInitialRender = useRef<boolean>(true)
+    const lastQueuedValuesRef = useRef<T | undefined>()
     const onSaveRef = useRef<(values: T) => Promise<void>>(onSave)
 
     useEffect(() => {
@@ -51,6 +54,8 @@ export function useAutosave<T>(
 
     useEffect(() => {
         if (!enabled) {
+            debouncedSave.cancel()
+            lastQueuedValuesRef.current = undefined
             return undefined
         }
 
@@ -59,12 +64,22 @@ export function useAutosave<T>(
             return undefined
         }
 
+        if (
+            lastQueuedValuesRef.current !== undefined
+            && isEqual(lastQueuedValuesRef.current, formValues)
+        ) {
+            return undefined
+        }
+
+        lastQueuedValuesRef.current = cloneDeep(formValues)
         debouncedSave(formValues)
 
-        return () => {
-            debouncedSave.cancel()
-        }
+        return undefined
     }, [debouncedSave, enabled, formValues])
+
+    useEffect(() => () => {
+        debouncedSave.cancel()
+    }, [debouncedSave])
 
     return {
         lastSaved,

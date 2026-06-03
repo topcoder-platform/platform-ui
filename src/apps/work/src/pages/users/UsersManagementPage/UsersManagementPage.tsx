@@ -4,22 +4,22 @@ import {
     FC,
     useCallback,
     useContext,
-    useMemo,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
+import { PageWrapper } from '~/apps/review/src/lib'
 import {
     Button,
-    IconSolid,
-    PageTitle,
+    IconOutline,
 } from '~/libs/ui'
 
 import {
     AddUserModal,
     InviteUserModal,
     LoadingSpinner,
-    NullLayout,
+    ProjectListTabs,
+    ProjectStatus,
     UserCard,
 } from '../../../lib/components'
 import { WorkAppContext } from '../../../lib/contexts'
@@ -30,6 +30,7 @@ import {
 import {
     ProjectInvite,
     ProjectMember,
+    ProjectStatusValue,
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
@@ -37,7 +38,8 @@ import {
     removeMemberFromProject,
 } from '../../../lib/services'
 import {
-    checkIsCopilotOrManager,
+    checkCanEditProjectDetails,
+    checkCanManageProject,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -53,30 +55,38 @@ function toOptionalString(value: unknown): string | undefined {
     return normalizedValue || undefined
 }
 
-function resolveBackToPath(locationState: unknown, projectId: string): string {
-    const fallbackPath = projectId
-        ? `/projects/${projectId}/challenges`
-        : '/projects'
+interface RenderProjectTitleActionParams {
+    canEditProjectDetails: boolean
+    projectId: string | undefined
+    projectStatus: ProjectStatusValue | undefined
+}
 
-    if (typeof locationState !== 'object' || !locationState || !('backTo' in locationState)) {
-        return fallbackPath
+function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.Element | undefined {
+    if (!params.projectId) {
+        return undefined
     }
 
-    const backTo = toOptionalString((locationState as {
-        backTo?: unknown
-    }).backTo)
-
-    if (!backTo || !projectId) {
-        return fallbackPath
-    }
-
-    return backTo.startsWith(`/projects/${projectId}/`)
-        ? backTo
-        : fallbackPath
+    return (
+        <div className={styles.projectTitleActions}>
+            {params.projectStatus
+                ? <ProjectStatus status={params.projectStatus} />
+                : undefined}
+            {params.canEditProjectDetails
+                ? (
+                    <Link
+                        aria-label='Edit project'
+                        className={styles.projectEditLink}
+                        to={`/projects/${params.projectId}/edit`}
+                    >
+                        <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                    </Link>
+                )
+                : undefined}
+        </div>
+    )
 }
 
 export const UsersManagementPage: FC = () => {
-    const location = useLocation()
     const {
         projectId: projectIdFromRoute,
     }: Readonly<{
@@ -88,10 +98,8 @@ export const UsersManagementPage: FC = () => {
     const [showInviteUserModal, setShowInviteUserModal] = useState<boolean>(false)
 
     const {
-        isAdmin,
-        isCopilot,
-        isManager,
         loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const projectResult = useFetchProject(projectId || undefined)
@@ -104,22 +112,25 @@ export const UsersManagementPage: FC = () => {
     const mutateProjectMembers = projectMembersResult.mutate
 
     const selectedProjectName = toOptionalString(projectResult.project?.name)
-    const pageHeading = selectedProjectName
-        ? `${selectedProjectName} users`
-        : 'Project users'
-    const loginHandle = loginUserInfo?.handle || ''
-    const canManageMembers = (isAdmin || isCopilot || isManager)
-        || checkIsCopilotOrManager(members, loginHandle)
+    const pageTitle = selectedProjectName || 'Project users'
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(
+            userRoles,
+            loginUserInfo?.userId,
+            projectResult.project,
+        )
+    const canEditProjectDetails = !!projectResult.project
+        && checkCanEditProjectDetails(
+            userRoles,
+            loginUserInfo?.userId,
+            projectResult.project,
+        )
+    const canManageMembers = canManageProject
 
     const hasMembers = members.length > 0
     const hasDeclinedInvites = declinedInvites.length > 0
     const hasInvites = invites.length > 0
     const isLoading = projectResult.isLoading || isProjectMembersLoading
-
-    const backToPath = useMemo(
-        () => resolveBackToPath(location.state, projectId),
-        [location.state, projectId],
-    )
 
     const handleRemove = useCallback(
         async (
@@ -214,44 +225,40 @@ export const UsersManagementPage: FC = () => {
     const closeInviteUserModal = useCallback(() => {
         setShowInviteUserModal(false)
     }, [])
+    const titleAction = renderProjectTitleAction({
+        canEditProjectDetails,
+        projectId,
+        projectStatus: projectResult.project?.status,
+    })
+    const rightHeader = canManageMembers && projectId
+        ? (
+            <div className={styles.buttonGroup}>
+                <Button
+                    label='Add User'
+                    onClick={openAddUserModal}
+                    primary
+                    size='lg'
+                />
+                <Button
+                    label='Invite User'
+                    onClick={openInviteUserModal}
+                    primary
+                    size='lg'
+                />
+            </div>
+        )
+        : undefined
 
     return (
-        <NullLayout>
-            <PageTitle>{pageHeading}</PageTitle>
-            <div className={styles.pageHeadingRow}>
-                <div className={styles.pageHeadingMain}>
-                    {projectId
-                        ? (
-                            <Link
-                                aria-label='Go back'
-                                className={styles.backArrowLink}
-                                to={backToPath}
-                            >
-                                <IconSolid.ArrowLeftIcon className={styles.backArrowIcon} />
-                            </Link>
-                        )
-                        : undefined}
-                    <h3 className={styles.pageHeading}>{pageHeading}</h3>
-                </div>
-                {canManageMembers && projectId
-                    ? (
-                        <div className={styles.buttonGroup}>
-                            <Button
-                                label='Add User'
-                                onClick={openAddUserModal}
-                                primary
-                                size='lg'
-                            />
-                            <Button
-                                label='Invite User'
-                                onClick={openInviteUserModal}
-                                primary
-                                size='lg'
-                            />
-                        </div>
-                    )
-                    : undefined}
-            </div>
+        <PageWrapper
+            breadCrumb={[]}
+            pageTitle={pageTitle}
+            rightHeader={rightHeader}
+            titleAction={titleAction}
+        >
+            {projectId
+                ? <ProjectListTabs projectId={projectId} />
+                : undefined}
 
             {projectResult.error
                 ? (
@@ -386,7 +393,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {showAddUserModal && projectId
+            {showAddUserModal && projectId && canManageMembers
                 ? (
                     <AddUserModal
                         onClose={closeAddUserModal}
@@ -398,7 +405,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {showInviteUserModal && projectId
+            {showInviteUserModal && projectId && canManageMembers
                 ? (
                     <InviteUserModal
                         invitedMembers={invites}
@@ -409,7 +416,7 @@ export const UsersManagementPage: FC = () => {
                     />
                 )
                 : undefined}
-        </NullLayout>
+        </PageWrapper>
     )
 }
 

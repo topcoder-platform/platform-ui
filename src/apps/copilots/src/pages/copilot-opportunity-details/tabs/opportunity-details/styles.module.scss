@@ -41,3 +41,67 @@
     white-space: nowrap;
     font-size: 14px;
 }
+
+.overviewContent {
+    font-size: 14px;
+    line-height: 22px;
+    font-family: 'Roboto', Arial, Helvetica, sans-serif;
+
+    p {
+        margin: 0 0 8px 0;
+    }
+
+    strong, b {
+        font-weight: 700;
+    }
+
+    em, i {
+        font-style: italic;
+    }
+
+    u {
+        text-decoration: underline;
+    }
+
+    s {
+        text-decoration: line-through;
+    }
+
+    a {
+        color: #0d61bf;
+        text-decoration: underline;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
+
+    ul, ol {
+        margin: 0 0 8px 0;
+        padding-left: 24px;
+    }
+
+    ul {
+        list-style-type: disc;
+    }
+
+    ol {
+        list-style-type: decimal;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 0 0 8px 0;
+
+        td, th {
+            border: 1px solid #d4d4d4;
+            padding: 8px 12px;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: 700;
+        }
+    }
+}

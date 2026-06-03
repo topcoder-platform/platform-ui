@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 
 import { IconOutline } from '~/libs/ui'
 
@@ -7,21 +7,25 @@ import { aiRunFailed, aiRunInProgress, AiWorkflowRun } from '../../hooks'
 import StatusLabel from './StatusLabel'
 
 interface AiWorkflowRunStatusProps {
-    run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>
-    status?: 'passed' | 'pending' | 'failed-score'
+    run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
+    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'cancelled' | 'human-override'
     score?: number
     hideLabel?: boolean
     showScore?: boolean
+    action?: ReactNode
 }
 
-const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): string => {
+const aiRunStatus = (
+    run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>,
+): 'pending' | 'failed' | 'cancelled' | 'passed' | 'failed-score' => {
     const isInProgress = aiRunInProgress(run)
     const isFailed = aiRunFailed(run)
+    const isCancelled = run.status === 'CANCELLED'
     const isPassing = (
         run.status === 'SUCCESS'
         && run.score >= (run.workflow.scorecard?.minimumPassingScore ?? 0)
     )
-    return isInProgress ? 'pending' : isFailed ? 'failed' : (
+    return isInProgress ? 'pending' : isCancelled ? 'cancelled' : isFailed ? 'failed' : (
         isPassing ? 'passed' : 'failed-score'
     )
 }
@@ -39,44 +43,69 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
         return ''
     }, [props.status, props.run])
 
-    const score = props.showScore ? (props.score ?? props.run?.score) : undefined
+    const displayStatus = status
+    const score: number | undefined = props.showScore ? (props.score ?? props.run?.score) : undefined
 
     return (
         <>
-            {status === 'passed' && (
+            {displayStatus === 'passed' && (
                 <StatusLabel
                     icon={<IconOutline.CheckIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
                     label='Passed'
-                    status={status}
+                    status={displayStatus}
                     score={score}
+                    action={props.action}
                 />
             )}
-            {status === 'failed-score' && (
+            {displayStatus === 'failed-score' && (
                 <StatusLabel
                     icon={<IconOutline.MinusCircleIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
                     label='Failed'
-                    status={status}
+                    status={displayStatus}
                     score={score}
+                    action={props.action}
                 />
             )}
-            {status === 'pending' && (
+            {displayStatus === 'pending' && (
                 <StatusLabel
                     icon={<IconOutline.MinusIcon className='icon-md' />}
                     hideLabel={props.hideLabel}
                     label='To be filled'
-                    status={status}
+                    status={displayStatus}
                     score={score}
+                    action={props.action}
                 />
             )}
-            {status === 'failed' && (
+            {displayStatus === 'failed' && (
                 <StatusLabel
                     icon={<IconOutline.XCircleIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
-                    status={status}
+                    status={displayStatus}
                     label='Failure'
                     score={score}
+                    action={props.action}
+                />
+            )}
+            {displayStatus === 'cancelled' && (
+                <StatusLabel
+                    icon={<IconOutline.XCircleIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
+                    status='failed'
+                    label='Cancelled'
+                    score={score}
+                    action={props.action}
+                />
+            )}
+            {displayStatus === 'human-override' && (
+                <StatusLabel
+                    icon={<IconOutline.UserIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
+                    status={displayStatus}
+                    label='Unlocked'
+                    score={score}
+                    action={props.action}
                 />
             )}
         </>

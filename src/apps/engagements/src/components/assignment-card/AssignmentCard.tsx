@@ -1,14 +1,25 @@
 import type { FC, ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { Button, IconSolid } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
+import {
+    renderRichTextToPlainText,
+    sanitizeRichTextSource,
+} from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { formatDate, formatLocation, truncateText } from '../../lib/utils'
+import {
+    formatCurrencyAmount,
+    formatStandardHoursPerDay,
+} from '../../lib/utils/currency.utils'
+import { formatDate } from '../../lib/utils/date.utils'
+import { formatLocation } from '../../lib/utils/api.utils'
+import { truncateText } from '../../lib/utils/application.utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './AssignmentCard.module.scss'
@@ -105,19 +116,19 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_VALUE_LABEL : formatted
 }
 
-const formatAgreementRate = (value?: string | number): string => {
-    if (value === null || value === undefined) {
+const formatDurationMonths = (value?: number): string => {
+    if (!value) {
         return FALLBACK_VALUE_LABEL
     }
 
-    const normalized = typeof value === 'string' ? value.trim() : value.toString()
-    return normalized || FALLBACK_VALUE_LABEL
+    return `${value} month${value === 1 ? '' : 's'}`
 }
 
 const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => {
     const engagement = props.engagement
     const assignment = props.assignment
     const canContactTalentManager = props.canContactTalentManager ?? true
+    const contactEmail = props.contactEmail
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
@@ -126,11 +137,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         engagement.timeZones ?? [],
     )
     const handleContactTalentManagerClick = useCallback(() => {
-        props.onContactTalentManager(props.contactEmail)
-    }, [props.contactEmail, props.onContactTalentManager])
+        props.onContactTalentManager(contactEmail)
+    }, [contactEmail, props.onContactTalentManager])
 
     const descriptionSnippet = useMemo(() => (
-        truncateText(engagement.description, DESCRIPTION_MAX_LENGTH)
+        truncateText(renderRichTextToPlainText(engagement.description), DESCRIPTION_MAX_LENGTH)
     ), [engagement.description])
 
     const assignmentStatusLabel = useMemo(
@@ -141,17 +152,21 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => normalizeStatusKey(assignment?.status),
         [assignment?.status],
     )
-    const paymentLabel = useMemo(
-        () => formatAgreementRate(assignment?.agreementRate),
-        [assignment?.agreementRate],
+    const ratePerHourLabel = useMemo(
+        () => formatCurrencyAmount(assignment?.ratePerHour, FALLBACK_VALUE_LABEL),
+        [assignment?.ratePerHour],
     )
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment?.startDate),
         [assignment?.startDate],
     )
-    const endDateLabel = useMemo(
-        () => formatAssignmentDate(assignment?.endDate),
-        [assignment?.endDate],
+    const durationMonthsLabel = useMemo(
+        () => formatDurationMonths(assignment?.durationMonths),
+        [assignment?.durationMonths],
+    )
+    const standardHoursPerDayLabel = useMemo(
+        () => formatStandardHoursPerDay(assignment?.standardHoursPerDay, FALLBACK_VALUE_LABEL),
+        [assignment?.standardHoursPerDay],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()
     const showAssignedActions = assignmentStatus === 'assigned'
@@ -201,23 +216,24 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
             </div>
             <div className={styles.description}>
                 <Markdown
+                    rehypePlugins={[rehypeRaw as any]}
                     remarkPlugins={[
                         remarkFrontmatter,
                         [remarkGfm, { singleTilde: false }],
                     ]}
                     components={compactMarkdownComponents}
                 >
-                    {descriptionSnippet || 'Description not available.'}
+                    {sanitizeRichTextSource(descriptionSnippet || 'Description not available.')}
                 </Markdown>
             </div>
             <div className={styles.meta}>
                 <div className={styles.metaItem}>
                     <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`Start: ${startDateLabel}`}</span>
+                    <span>{`Billing start: ${startDateLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`End: ${endDateLabel}`}</span>
+                    <span>{`Duration: ${durationMonthsLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.GlobeAltIcon className={styles.metaIcon} />
@@ -229,7 +245,14 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Payment: $${paymentLabel} per week`}</span>
+                    <span>{`Rate / hr: ${ratePerHourLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.ClockIcon className={styles.metaIcon} />
+                    <span>{`Std hrs / day: ${standardHoursPerDayLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <span>{`Payment cycle: ${assignment?.paymentCycle ?? 'TBD'}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>

@@ -22,3 +22,16 @@
     }
   }
 }
+
+.radioGroup {
+    display: flex;
+    margin-bottom: $sp-6;
+    > * {
+        flex: 1;
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-4;
+    }
+}

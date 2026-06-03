@@ -46,6 +46,15 @@
     color: $orange-140;
 }
 
+.statusDisabled {
+    background-color: $black-10;
+    color: $black-40;
+}
+
+.disabledCell {
+    color: $black-40;
+}
+
 .actionsList {
     display: inline-flex;
     flex-wrap: wrap;

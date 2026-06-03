@@ -1,0 +1,3738 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, complexity, react/jsx-no-bind */
+import {
+    act,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react'
+import '@testing-library/jest-dom'
+import userEvent from '@testing-library/user-event'
+import {
+    MemoryRouter,
+    useLocation,
+} from 'react-router-dom'
+
+import {
+    useAutosave,
+    useFetchChallengeTracks,
+    useFetchChallengeTypes,
+    useFetchProject,
+    useFetchProjectBillingAccount,
+    useFetchResourceRoles,
+    useFetchResources,
+    useFetchTimelineTemplates,
+} from '../../../../lib/hooks'
+import {
+    WorkAppContext,
+} from '../../../../lib/contexts/WorkAppContext'
+import type {
+    Challenge,
+    ChallengeEditorFormData,
+    WorkAppContextModel,
+} from '../../../../lib/models'
+import {
+    createResource,
+    createChallenge,
+    deleteResource,
+    fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
+    fetchChallenge,
+    fetchProfile,
+    fetchProjectBillingAccount,
+    fetchWorkflows,
+    patchChallenge,
+    fetchResourceRoles,
+    fetchResources,
+    searchProfilesByUserIds,
+} from '../../../../lib/services'
+import {
+    showErrorToast,
+    showSuccessToast,
+} from '../../../../lib/utils'
+
+import {
+    ChallengeEditorForm,
+    getTaskLaunchValidationError,
+} from './ChallengeEditorForm'
+import { TermsField } from './TermsField'
+
+let mockShouldAutoDirtyDuringInitialHydration = false
+let mockShouldAutoDirtyAfterChallengeIdHydrates = false
+let mockMaximumSubmissionsDeferDirtyValues: boolean[] = []
+
+jest.mock('../../../../lib/components/form', () => ({
+    FormCheckboxField: () => <></>,
+}))
+jest.mock('../../../../lib/hooks', () => ({
+    useAutosave: jest.fn(),
+    useFetchChallengeTracks: jest.fn(),
+    useFetchChallengeTypes: jest.fn(),
+    useFetchProject: jest.fn(),
+    useFetchProjectBillingAccount: jest.fn(),
+    useFetchResourceRoles: jest.fn(),
+    useFetchResources: jest.fn(),
+    useFetchTimelineTemplates: jest.fn(),
+}))
+jest.mock('../../../../lib/services', () => ({
+    createChallenge: jest.fn(),
+    createResource: jest.fn(),
+    deleteResource: jest.fn(),
+    fetchAiReviewConfigByChallenge: jest.fn(),
+    fetchAiReviewTemplates: jest.fn(),
+    fetchChallenge: jest.fn(),
+    fetchProfile: jest.fn(),
+    fetchProjectBillingAccount: jest.fn(),
+    fetchResourceRoles: jest.fn(),
+    fetchResources: jest.fn(),
+    fetchWorkflows: jest.fn(),
+    patchChallenge: jest.fn(),
+    searchProfilesByUserIds: jest.fn(),
+}))
+jest.mock('../../../../lib/utils', () => ({
+    formatLastSaved: () => '',
+    showErrorToast: jest.fn(),
+    showSuccessToast: jest.fn(),
+    transformChallengeToFormData: (challenge?: Partial<Challenge>) => ({
+        assignedMemberId: challenge?.assignedMemberId,
+        attachments: Array.isArray(challenge?.attachments)
+            ? challenge?.attachments
+            : undefined,
+        billing: challenge?.billing,
+        challengeFee: challenge?.challengeFee,
+        copilot: typeof challenge?.copilot === 'string'
+            ? challenge.copilot
+            : undefined,
+        createdBy: challenge?.createdBy,
+        description: challenge?.description || '',
+        discussionForum: challenge?.discussionForum,
+        funChallenge: challenge?.funChallenge === true,
+        groups: Array.isArray(challenge?.groups)
+            ? challenge?.groups
+            : [],
+        id: challenge?.id,
+        legacy: challenge?.legacy || {
+            isTask: false,
+            reviewType: 'INTERNAL',
+            useSchedulingAPI: false,
+        },
+        metadata: Array.isArray(challenge?.metadata)
+            ? challenge?.metadata
+            : [],
+        milestoneConfiguration: {
+            enabled: false,
+            milestoneCount: undefined,
+            milestoneDurationDays: undefined,
+        },
+        name: challenge?.name || '',
+        phases: Array.isArray(challenge?.phases)
+            ? challenge?.phases
+            : [],
+        privateDescription: challenge?.privateDescription || '',
+        prizeSets: Array.isArray(challenge?.prizeSets)
+            ? challenge?.prizeSets
+            : [],
+        reviewer: typeof challenge?.reviewer === 'string'
+            ? challenge.reviewer
+            : undefined,
+        reviewers: Array.isArray(challenge?.reviewers)
+            ? challenge?.reviewers
+            : [],
+        roundType: challenge?.roundType || 'Single round',
+        skills: Array.isArray(challenge?.skills)
+            ? challenge?.skills
+            : [],
+        startDate: challenge?.startDate,
+        status: challenge?.status,
+        tags: Array.isArray(challenge?.tags)
+            ? challenge?.tags
+            : [],
+        terms: Array.isArray(challenge?.terms)
+            ? challenge?.terms as string[]
+            : [],
+        trackId: challenge?.trackId || '',
+        typeId: challenge?.typeId || '',
+        wiproAllowed: challenge?.wiproAllowed === true,
+        workType: typeof challenge?.workType === 'string'
+            ? challenge.workType
+            : undefined,
+    }),
+    transformFormDataToChallenge: (formData: unknown) => formData,
+}))
+jest.mock('~/libs/ui', () => ({
+    Button: (props: {
+        className?: string
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+        primary?: boolean
+        secondary?: boolean
+        size?: string
+        type?: 'button' | 'submit'
+    }) => (
+        <button
+            className={props.className}
+            data-primary={props.primary
+                ? 'true'
+                : 'false'}
+            data-secondary={props.secondary
+                ? 'true'
+                : 'false'}
+            data-size={props.size}
+            disabled={props.disabled}
+            onClick={props.onClick}
+            type={props.type === 'submit'
+                ? 'submit'
+                : 'button'}
+        >
+            {props.label}
+        </button>
+    ),
+}), {
+    virtual: true,
+})
+jest.mock('~/config', () => ({
+    AppSubdomain: {
+        work: 'work',
+    },
+    EnvironmentConfig: {
+        ADMIN: {
+            DIRECT_URL: 'https://example.com/direct',
+            REVIEW_UI_URL: 'https://example.com/review',
+        },
+        API: {
+            V5: 'https://example.com/v5',
+            V6: 'https://example.com/v6',
+        },
+        CHALLENGE_API_URL: 'https://example.com/challenges',
+        CHALLENGE_API_VERSION: 'v5',
+        COMMUNITY_APP_URL: 'https://example.com/community',
+        COPILOTS_URL: 'https://example.com/copilots',
+        DIRECT_PROJECT_URL: 'https://example.com/direct-project',
+        ENGAGEMENTS_URL: 'https://example.com/engagements',
+        REVIEW_APP_URL: 'https://example.com/review',
+        SUBDOMAIN: 'work',
+        TC_DOMAIN: 'example.com',
+        TC_FINANCE_API: 'https://example.com/finance',
+        TOPCODER_URL: 'https://example.com/topcoder',
+    },
+}), {
+    virtual: true,
+})
+jest.mock('./AssignedMemberField', () => ({
+    AssignedMemberField: () => <span>Assigned Member Field</span>,
+}))
+jest.mock('./AttachmentsField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        AttachmentsField: function AttachmentsField() {
+            const formContext = reactHookForm.useFormContext()
+            const attachments = reactHookForm.useWatch({
+                control: formContext.control,
+                name: 'attachments',
+            })
+            const attachmentCount = Array.isArray(attachments)
+                ? attachments.length
+                : 0
+            const handleAddAttachment = (): void => {
+                formContext.setValue('attachments', [{
+                    fileSize: 1024,
+                    id: 'attachment-1',
+                    name: 'spec.pdf',
+                    url: 'https://example.com/spec.pdf',
+                }], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+
+            return (
+                <>
+                    <div>{`Attachment Count: ${attachmentCount}`}</div>
+                    <button
+                        onClick={handleAddAttachment}
+                        type='button'
+                    >
+                        Mock Add Attachment
+                    </button>
+                </>
+            )
+        },
+    }
+})
+jest.mock('./ChallengeDescriptionField', () => ({
+    ChallengeDescriptionField: function ChallengeDescriptionField(props: {
+        readOnly?: boolean
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'description',
+        })
+
+        return (
+            <div
+                data-read-only={props.readOnly === true ? 'true' : 'false'}
+                data-testid='challenge-description-field'
+            >
+                <label htmlFor='description'>
+                    Public Specification
+                    <textarea
+                        id='description'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        readOnly={props.readOnly}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+            </div>
+        )
+    },
+}))
+jest.mock('./ChallengeScheduleSection', () => ({
+    ChallengeScheduleSection: function ChallengeScheduleSection(props: {
+        disabled?: boolean
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+        const phases = reactHookForm.useWatch({
+            control: formContext.control,
+            name: 'phases',
+        }) as Array<{
+            duration?: number
+            phaseId?: string
+            scheduledEndDate?: string
+            scheduledStartDate?: string
+        }> | undefined
+        const handleSetDirtyPhaseEnd = (): void => {
+            const currentPhases = formContext.getValues('phases') as typeof phases
+
+            formContext.setValue('phases', (currentPhases || []).map((phase, index) => (
+                index === 0
+                    ? {
+                        ...phase,
+                        duration: 1440,
+                        phaseId: phase?.phaseId || 'submission-phase-id',
+                        scheduledEndDate: '2026-04-18T04:58:51.000Z',
+                        scheduledStartDate: phase?.scheduledStartDate || '2026-04-11T04:58:51.000Z',
+                    }
+                    : phase
+            )), {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        const handleMarkFormClean = (): void => {
+            formContext.reset(formContext.getValues())
+        }
+
+        return (
+            <>
+                <div
+                    data-disabled={props.disabled === true ? 'true' : 'false'}
+                    data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                    data-testid='challenge-schedule-section'
+                />
+                <button
+                    data-testid='mock-dirty-phase-end'
+                    onClick={handleSetDirtyPhaseEnd}
+                    type='button'
+                >
+                    Mock Dirty Phase End
+                </button>
+                <button
+                    data-testid='mock-clean-form'
+                    onClick={handleMarkFormClean}
+                    type='button'
+                >
+                    Mock Clean Form
+                </button>
+            </>
+        )
+    },
+}))
+jest.mock('./ChallengeFeeField', () => ({
+    ChallengeFeeField: function ChallengeFeeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const billing = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'billing',
+        }) as {
+            markup?: number
+        } | undefined
+
+        return (
+            <div data-testid='challenge-fee-field'>
+                <span data-testid='billing-markup'>{String(billing?.markup ?? '')}</span>
+            </div>
+        )
+    },
+}))
+jest.mock('./ChallengeNameField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        ChallengeNameField: function ChallengeNameField() {
+            const controller = reactHookForm.useController({
+                control: reactHookForm.useFormContext().control,
+                name: 'name',
+            })
+
+            return (
+                <label htmlFor='name'>
+                    Challenge Name
+                    <input
+                        id='name'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+            )
+        },
+    }
+})
+jest.mock('./ChallengePrivateDescriptionField', () => ({
+    ChallengePrivateDescriptionField: (props: {
+        readOnly?: boolean
+    }) => (
+        <div
+            data-read-only={props.readOnly === true ? 'true' : 'false'}
+            data-testid='challenge-private-description-field'
+        />
+    ),
+}))
+jest.mock('./ChallengePrizesField', () => ({
+    ChallengePrizesField: () => <></>,
+}))
+jest.mock('./ChallengeSkillsField', () => ({
+    ChallengeSkillsField: () => <></>,
+}))
+jest.mock('./ChallengeTagsField', () => ({
+    ChallengeTagsField: () => <></>,
+}))
+jest.mock('./ChallengeTotalField', () => ({
+    ChallengeTotalField: (props: {
+        includeChallengeFee?: boolean
+        label?: string
+    }) => (
+        <div
+            data-include-challenge-fee={props.includeChallengeFee === false
+                ? 'false'
+                : 'true'}
+            data-testid='challenge-total-field'
+        >
+            {props.label || 'Estimated challenge total:'}
+        </div>
+    ),
+}))
+jest.mock('./ChallengeTrackField', () => ({
+    ChallengeTrackField: function ChallengeTrackField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'trackId',
+        })
+
+        return (
+            <label htmlFor='trackId'>
+                Challenge Track
+                <input
+                    id='trackId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
+}))
+jest.mock('./ChallengeTypeField', () => ({
+    ChallengeTypeField: function ChallengeTypeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'typeId',
+        })
+
+        return (
+            <label htmlFor='typeId'>
+                Challenge Type
+                <input
+                    id='typeId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
+}))
+jest.mock('./CheckpointPrizesField', () => ({
+    CheckpointPrizesField: () => <></>,
+}))
+jest.mock('./CopilotField', () => ({
+    CopilotField: function CopilotField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const {
+            control,
+            setValue,
+        }: Pick<
+            import('react-hook-form').UseFormReturn<ChallengeEditorFormData>,
+            'control' | 'setValue'
+        > = reactHookForm.useFormContext<ChallengeEditorFormData>()
+        const controller = reactHookForm.useController({
+            control,
+            name: 'copilot',
+        })
+        function handleAssignYourself(): void {
+            setValue('copilot', 'self-copilot', {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        return (
+            <div>
+                <label htmlFor='copilot'>
+                    Copilot Field
+                    <input
+                        id='copilot'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+                <button
+                    onClick={handleAssignYourself}
+                    type='button'
+                >
+                    Assign yourself
+                </button>
+            </div>
+        )
+    },
+}))
+jest.mock('./CopilotFeeField', () => ({
+    CopilotFeeField: () => <></>,
+}))
+jest.mock('./DesignWorkTypeField', () => ({
+    DesignWorkTypeField: function DesignWorkTypeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'workType',
+        })
+
+        return (
+            <label htmlFor='workType'>
+                Work Type
+                <input
+                    id='workType'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
+}))
+jest.mock('./FinalDeliverablesField', () => ({
+    FinalDeliverablesField: () => <>Final Deliverables Field</>,
+}))
+jest.mock('./FunChallengeField', () => ({
+    FunChallengeField: () => <></>,
+}))
+jest.mock('./GroupsField', () => ({
+    GroupsField: () => <></>,
+}))
+jest.mock('./MaximumSubmissionsField', () => ({
+    MaximumSubmissionsField: (props: {
+        deferDirty?: boolean
+    }) => {
+        mockMaximumSubmissionsDeferDirtyValues.push(props.deferDirty === true)
+
+        return (
+            <div
+                data-defer-dirty={props.deferDirty === true
+                    ? 'true'
+                    : 'false'}
+                data-testid='maximum-submissions-field'
+            >
+                Maximum Submissions Field
+            </div>
+        )
+    },
+}))
+jest.mock('./MarathonMatchScorerSection', () => ({
+    MarathonMatchScorerSection: () => <></>,
+}))
+jest.mock('./NDAField', () => ({
+    NDAField: () => <></>,
+}))
+jest.mock('./ReviewCostField', () => ({
+    ReviewCostField: () => <></>,
+}))
+jest.mock('./ReviewersField', () => ({
+    ReviewersField: (props: { isReadOnly?: boolean }) => {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const reviewers = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'reviewers',
+        })
+
+        return (
+            <div
+                data-read-only={props.isReadOnly === true ? 'true' : 'false'}
+                data-reviewers={JSON.stringify(reviewers || [])}
+                data-testid='reviewers-field'
+            >
+                Reviewers Field
+            </div>
+        )
+    },
+}))
+jest.mock('./ReviewTypeField', () => ({
+    ReviewTypeField: () => <span>Review Type Field</span>,
+}))
+jest.mock('./RoundTypeField', () => ({
+    RoundTypeField: () => <></>,
+}))
+jest.mock('./StockArtsField', () => ({
+    StockArtsField: function StockArtsField() {
+        const React: typeof import('react') = jest.requireActual('react')
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+        const hasAutoDirtiedRef = React.useRef(false)
+        const challengeId = reactHookForm.useWatch({
+            control: formContext.control,
+            name: 'id',
+        })
+
+        React.useEffect(() => {
+            if (!mockShouldAutoDirtyDuringInitialHydration || hasAutoDirtiedRef.current) {
+                return
+            }
+
+            if (mockShouldAutoDirtyAfterChallengeIdHydrates && !challengeId) {
+                return
+            }
+
+            hasAutoDirtiedRef.current = true
+            formContext.setValue('metadata', [{
+                name: 'autoDirty',
+                value: 'true',
+            }], {
+                shouldDirty: true,
+                shouldValidate: false,
+            })
+        }, [
+            challengeId,
+            formContext,
+        ])
+
+        return <>Stock Arts Field</>
+    },
+}))
+jest.mock('./SubmissionVisibilityField', () => ({
+    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
+}))
+jest.mock('./TermsField', () => ({
+    TermsField: jest.fn(() => <></>),
+}))
+
+const mockedUseAutosave = useAutosave as jest.Mock
+const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
+const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedUseFetchProject = useFetchProject as jest.Mock
+const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.Mock
+const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
+const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
+const mockedCreateResource = createResource as jest.Mock
+const mockedCreateChallenge = createChallenge as jest.Mock
+const mockedDeleteResource = deleteResource as jest.Mock
+const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
+const mockedFetchAiReviewTemplates = fetchAiReviewTemplates as jest.Mock
+const mockedFetchChallenge = fetchChallenge as jest.Mock
+const mockedFetchWorkflows = fetchWorkflows as jest.Mock
+const mockedFetchProfile = fetchProfile as jest.Mock
+const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
+const mockedPatchChallenge = patchChallenge as jest.Mock
+const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
+const mockedFetchResourcesService = fetchResources as jest.Mock
+const mockedSearchProfilesByUserIds = searchProfilesByUserIds as jest.Mock
+const mockedShowErrorToast = showErrorToast as jest.Mock
+const mockedShowSuccessToast = showSuccessToast as jest.Mock
+const mockedTermsField = TermsField as jest.MockedFunction<typeof TermsField>
+
+const LocationDisplay = (): JSX.Element => {
+    const location = useLocation()
+
+    return <div data-testid='location-display'>{location.pathname}</div>
+}
+
+describe('ChallengeEditorForm', () => {
+    const copilotContextValue: WorkAppContextModel = {
+        isAdmin: false,
+        isAnonymous: false,
+        isCopilot: true,
+        isManager: false,
+        isReadOnly: false,
+        loginUserInfo: {
+            roles: ['copilot'],
+            token: 'token',
+            userId: 123,
+        } as WorkAppContextModel['loginUserInfo'],
+        userRoles: ['copilot'],
+    }
+    const draftChallenge = {
+        id: '12345',
+        name: 'Draft challenge',
+        projectId: '3001',
+        status: 'DRAFT',
+    } as Challenge
+    const validDraftChallenge = {
+        ...draftChallenge,
+        description: 'Valid public specification for the attachment save regression test.',
+        prizeSets: [{
+            prizes: [{
+                type: 'USD',
+                value: 500,
+            }],
+            type: 'PLACEMENT',
+        }],
+        skills: [{
+            id: 'skill-1',
+            name: 'React',
+        }],
+        trackId: 'track-id',
+        typeId: 'type-id',
+    } as Challenge
+    const validNewChallenge = {
+        ...validDraftChallenge,
+        status: 'NEW',
+    } as Challenge
+    const taskDraftChallenge = {
+        ...draftChallenge,
+        task: {
+            isTask: true,
+        },
+        type: {
+            abbreviation: 'TSK',
+            name: 'Task',
+        },
+        typeId: 'task-type-id',
+    } as Challenge
+    const first2FinishDraftChallenge = {
+        ...validDraftChallenge,
+        phases: [{
+            duration: 60,
+            name: 'Iterative Review',
+            phaseId: 'iterative-review-phase-id',
+        }],
+        reviewers: [{
+            isMemberReview: true,
+            memberId: 'manual-reviewer-member-id',
+            phaseId: 'iterative-review-phase-id',
+            scorecardId: 'iterative-review-scorecard-id',
+            shouldOpenOpportunity: false,
+        }],
+        trackId: 'design-track',
+        type: {
+            abbreviation: 'F2F',
+            name: 'First2Finish',
+        },
+        typeId: 'design-first2finish',
+    } as Challenge
+
+    beforeEach(() => {
+        mockedUseAutosave.mockReturnValue({
+            lastSaved: undefined,
+            saveStatus: 'idle',
+        })
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: '3001',
+                members: [{
+                    role: 'manager',
+                    userId: 123,
+                }],
+                name: 'Project 3001',
+                status: 'active',
+            },
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: undefined,
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockImplementation(() => ({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [],
+        }))
+        mockedUseFetchResources.mockImplementation(() => ({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [],
+        }))
+        mockedUseFetchTimelineTemplates.mockReturnValue({
+            timelineTemplates: [],
+        })
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedFetchAiReviewTemplates.mockResolvedValue([])
+        mockedFetchWorkflows.mockResolvedValue([])
+        mockedFetchProjectBillingAccountService.mockResolvedValue({
+            billingAccount: undefined,
+        })
+        mockedFetchProfile.mockResolvedValue(undefined)
+        mockedFetchResourceRolesService.mockResolvedValue([])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedSearchProfilesByUserIds.mockResolvedValue([])
+        mockedCreateResource.mockResolvedValue(undefined)
+    })
+
+    afterEach(() => {
+        mockShouldAutoDirtyDuringInitialHydration = false
+        mockShouldAutoDirtyAfterChallengeIdHydrates = false
+        mockMaximumSubmissionsDeferDirtyValues = []
+        jest.clearAllMocks()
+    })
+
+    it('preserves the challenge name while the create form rerenders', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const challengeNameInput = screen.getByLabelText('Challenge Name') as HTMLInputElement
+
+        await user.type(challengeNameInput, 'Create challenge regression')
+
+        expect(challengeNameInput.value)
+            .toBe('Create challenge regression')
+    })
+
+    it('renders the copilot field inside basic information for new challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .getByText('Copilot Field'),
+        )
+            .toBeTruthy()
+    })
+
+    it('renders the copilot field inside basic information for existing challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .getByText('Copilot Field'),
+        )
+            .toBeTruthy()
+        expect(
+            within(advancedOptionsSection as HTMLElement)
+                .queryByText('Copilot Field'),
+        )
+            .toBeNull()
+    })
+
+    it('renders billing metadata inside prizes and billing when project billing is available', async () => {
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                id: '80001063',
+            },
+            isLoading: false,
+        })
+        mockedSearchProfilesByUserIds.mockResolvedValue([{
+            handle: 'challenge.creator',
+            userId: '123456',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        createdBy: '123456',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+        const prizesBillingSection = screen.getByRole('heading', { name: 'Prizes & Billing' })
+            .closest('section')
+
+        expect(prizesBillingSection)
+            .toHaveTextContent('Billing Account Id')
+        expect(prizesBillingSection)
+            .toHaveTextContent('80001063')
+        expect(prizesBillingSection)
+            .toHaveTextContent('Payment Creator')
+        await waitFor(() => {
+            expect(prizesBillingSection)
+                .toHaveTextContent('challenge.creator')
+        })
+        expect(prizesBillingSection)
+            .not.toHaveTextContent('123456')
+        expect(advancedOptionsSection)
+            .not.toHaveTextContent('Billing Account Id')
+    })
+
+    it('shows approval confirmation before approving budget', async () => {
+        const user = userEvent.setup()
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['manager'],
+        }
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            approvalApprovedBy: 'manager.user',
+            approvalStatus: 'APPROVED',
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={validDraftChallenge}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Approve Budget' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(screen.getByText('Are you sure you want to approve this challenge budget?'))
+            .toBeInTheDocument()
+
+        await user.click(
+            within(screen.getByRole('dialog'))
+                .getByRole('button', { name: 'Approve Budget' }),
+        )
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    approvalStatus: 'APPROVED',
+                }))
+        })
+    })
+
+    it('hides budget approval actions for manager users without full access', () => {
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: '3001',
+                members: [{
+                    role: 'customer',
+                    userId: 123,
+                }],
+                name: 'Project 3001',
+                status: 'active',
+            },
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={validDraftChallenge}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Approve Budget' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Reject Budget' }))
+            .toBeNull()
+    })
+
+    it('hides budget approval actions when challenge status is approved', () => {
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...validDraftChallenge,
+                            status: 'APPROVED',
+                        }}
+                        isReadOnly
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Approve Budget' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Reject Budget' }))
+            .toBeNull()
+    })
+
+    it('hides the editable timeline section for task challenges in edit mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('hides the editable timeline section for task challenges in create mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={taskDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('hides the editable timeline section for task challenges in read-only view mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps the task timeline hidden in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps task-only controls visible in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Assigned Member Field'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Review Type Field'))
+            .toBeInTheDocument()
+    })
+
+    it('renders secondary footer actions and a primary launch action for draft challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    canLaunchChallenge
+                    challenge={draftChallenge}
+                    launchButtonLabel='Launch'
+                    onLaunchOpen={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+        expect(
+            screen.getByRole('button', { name: 'Save Challenge' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Save Challenge' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+        expect(
+            screen.getByRole('button', { name: 'Launch' })
+                .getAttribute('data-primary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Launch' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+    })
+
+    it('renders existing challenges as read-only in view mode', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect((document.querySelector('fieldset') as HTMLFieldSetElement).disabled)
+            .toBe(true)
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-disabled', 'true')
+        expect(screen.getByTestId('challenge-schedule-section')
+            .closest('fieldset[disabled]'))
+            .toBeNull()
+        expect(screen.getByTestId('challenge-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.getByTestId('challenge-private-description-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.queryByRole('button', { name: 'Cancel' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Save Challenge' }))
+            .toBeNull()
+        expect(mockedUseAutosave)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+            }))
+    })
+
+    it('does not default the standard term when viewing an existing challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: false,
+            }))
+    })
+
+    it('defaults the standard term for created challenges outside edit and view mode', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: true,
+            }))
+    })
+
+    it('preserves project billing markup when fetched draft data resets the form', async () => {
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                id: '80001063',
+                markup: 0.33,
+            },
+            isLoading: false,
+        })
+
+        const renderResult: ReturnType<typeof render> = render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        id: 'initial-draft-id',
+                        projectId: '100578',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('billing-markup'))
+            .toHaveTextContent('0.33')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        billing: {
+                            billingAccountId: '80001063',
+                            markup: 0,
+                        },
+                        projectId: '100578',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('billing-markup'))
+                .toHaveTextContent('0.33')
+        })
+    })
+
+    it('uses the copilot-safe challenge billing summary for copilot-only users', () => {
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={draftChallenge}
+                        projectId='100578'
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByTestId('challenge-fee-field'))
+            .toBeNull()
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveAttribute('data-include-challenge-fee', 'false')
+        expect(screen.getByTestId('challenge-total-field'))
+            .toHaveTextContent('Estimated challenge cost:')
+    })
+
+    it('requires an assigned member before launching a task challenge', () => {
+        expect(getTaskLaunchValidationError({
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBe('Assign a member before launching a task challenge.')
+    })
+
+    it('allows task launches when an assignee exists', () => {
+        expect(getTaskLaunchValidationError({
+            assignedMemberId: '12345',
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBeUndefined()
+    })
+
+    it('rejects launch when task validation blocks activation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'TSK',
+                            name: 'Task',
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Assign a member before launching a task challenge.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('registers the launch action for read-only draft challenges', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+    })
+
+    it('launches a read-only draft when manual reviewer assignments exist only in resources', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'manual-reviewer',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Reviewer',
+                roleId: 'reviewer-role-id',
+            }],
+        })
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberHandle: 'manual-reviewer',
+            memberId: 'manual-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberId: 'manual-reviewer-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: [
+                        expect.objectContaining({
+                            memberId: 'manual-reviewer-member-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                    ],
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
+    it('launches a read-only draft when approval assignments are stored under the generic reviewer role', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberId: 'approval-reviewer-member-id',
+                role: 'Reviewer',
+                roleId: 'reviewer-role-id',
+            }],
+        })
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'approval-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 24,
+                name: 'Approval',
+                phaseId: 'approval-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'approval-phase-id',
+                scorecardId: 'approval-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 24,
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: [
+                        expect.objectContaining({
+                            memberId: 'approval-reviewer-member-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                    ],
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
+    it('launches a read-only draft when AI reviewers appear before persisted human reviewer assignments', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberId: 'approval-reviewer-member-id',
+                role: 'Reviewer',
+                roleId: 'reviewer-role-id',
+            }],
+        })
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'approval-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 24,
+                name: 'Approval',
+                phaseId: 'approval-phase-id',
+            }],
+            reviewers: [
+                {
+                    aiWorkflowId: 'workflow-1',
+                    isMemberReview: false,
+                    phaseId: 'approval-phase-id',
+                },
+                {
+                    isMemberReview: true,
+                    memberId: 'approval-reviewer-member-id',
+                    memberReviewerCount: 1,
+                    phaseId: 'approval-phase-id',
+                    scorecardId: 'approval-scorecard-id',
+                    shouldOpenOpportunity: false,
+                },
+            ],
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 24,
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        }],
+                        reviewers: [
+                            {
+                                aiWorkflowId: 'workflow-1',
+                                isMemberReview: false,
+                                phaseId: 'approval-phase-id',
+                            },
+                            {
+                                isMemberReview: true,
+                                memberReviewerCount: 1,
+                                phaseId: 'approval-phase-id',
+                                scorecardId: 'approval-scorecard-id',
+                                shouldOpenOpportunity: false,
+                            },
+                        ],
+                    }}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: [
+                        expect.objectContaining({
+                            aiWorkflowId: 'workflow-1',
+                            isMemberReview: false,
+                            phaseId: 'approval-phase-id',
+                        }),
+                        expect.objectContaining({
+                            memberId: 'approval-reviewer-member-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                    ],
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
+    it('returns to view mode after launching from an edit route', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('renders submission settings for design first2finish challenges', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'F2F',
+                            name: 'First2Finish',
+                        },
+                        typeId: 'design-first2finish',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
+            .closest('section')
+
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Final Deliverables Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Submission Visibility Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Stock Arts Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('keeps submission-limit normalization pristine until initial resource hydration finishes', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                        typeId: 'design-challenge',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'true')
+
+        await act(async () => {
+            resolveFetchedResources?.([])
+            resolveFetchedResourceRoles?.([])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByTestId('maximum-submissions-field'))
+                .toHaveAttribute('data-defer-dirty', 'false')
+        })
+    })
+
+    it('defers compatibility normalization while asynchronously loaded assignments hydrate', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockShouldAutoDirtyDuringInitialHydration = true
+        mockShouldAutoDirtyAfterChallengeIdHydrates = true
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        const renderResult: ReturnType<typeof render> = render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByTestId('maximum-submissions-field'))
+            .toBeNull()
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                        typeId: 'design-challenge',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(mockMaximumSubmissionsDeferDirtyValues[0])
+            .toBe(true)
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'true')
+
+        await act(async () => {
+            resolveFetchedResourceRoles?.([
+                {
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                },
+                {
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                },
+            ])
+            resolveFetchedResources?.([
+                {
+                    challengeId: '12345',
+                    memberHandle: 'saved-copilot',
+                    roleId: 'copilot-role-id',
+                },
+                {
+                    challengeId: '12345',
+                    memberId: 'manual-reviewer-member-id',
+                    role: 'Reviewer',
+                    roleId: 'reviewer-role-id',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('saved-copilot')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'false')
+    })
+
+    it('rehydrates the copilot field from member-id-only copilot resources on refresh', async () => {
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: '40158994',
+            roleId: 'copilot-role-id',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('40158994')
+        })
+    })
+
+    it('rehydrates persisted assignments during initial hydration when mount-time dirty state exists', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockShouldAutoDirtyDuringInitialHydration = true
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await act(async () => {
+            resolveFetchedResourceRoles?.([
+                {
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                },
+                {
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                },
+            ])
+            resolveFetchedResources?.([
+                {
+                    challengeId: '12345',
+                    memberHandle: 'saved-copilot',
+                    roleId: 'copilot-role-id',
+                },
+                {
+                    challengeId: '12345',
+                    memberId: 'manual-reviewer-member-id',
+                    role: 'Reviewer',
+                    roleId: 'reviewer-role-id',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('saved-copilot')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
+    it('rehydrates handle-only reviewer resources before the refreshed form settles', async () => {
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'reviewer-role-id',
+            name: 'Reviewer',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberHandle: 'manual-reviewer',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'manual-reviewer',
+            userId: 'manual-reviewer-member-id',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers-field')
+                .getAttribute('data-reviewers'))
+                .toContain('"memberId":"manual-reviewer-member-id"')
+        })
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"handle":"manual-reviewer"')
+    })
+
+    it('replaces member-id-only copilot resources with handle-based resources on save', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberId: '40158994',
+                roleId: 'copilot-role-id',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: '40158994',
+            roleId: 'copilot-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            copilot: 'resolved-copilot',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        copilot: 'resolved-copilot',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('resolved-copilot')
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+        await waitFor(() => {
+            expect(mockedDeleteResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberId: '40158994',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'resolved-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        expect(mockedDeleteResource.mock.invocationCallOrder[0])
+            .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+    })
+
+    it('creates a copilot resource from the selected dropdown value even when cached resources are stale', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'selected-copilot',
+                roleId: 'copilot-role-id',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            copilot: 'selected-copilot',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('selected-copilot')
+        })
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    copilot: 'selected-copilot',
+                }))
+        })
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: '12345',
+                    memberHandle: 'selected-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('rehydrates persisted reviewer assignments from fresh resources after saving a draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'reviewer-role-id',
+            name: 'Reviewer',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([{
+            challengeId: '12345',
+            memberId: 'manual-reviewer-member-id',
+            role: 'Reviewer',
+            roleId: 'reviewer-role-id',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            phases: [{
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            }],
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        phases: [{
+                            duration: 60,
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        }],
+                        reviewers: [{
+                            isMemberReview: true,
+                            memberId: 'manual-reviewer-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+
+        mockedFetchResourceRolesService.mockClear()
+        mockedFetchResourcesService.mockClear()
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByLabelText('Challenge Name'))
+                .toHaveValue(validDraftChallenge.name)
+        })
+        expect(mockedFetchResourceRolesService)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(1, '12345')
+        expect(mockedFetchResourcesService)
+            .toHaveBeenNthCalledWith(2, '12345')
+        expect(screen.getByTestId('reviewers-field')
+            .getAttribute('data-reviewers'))
+            .toContain('"memberId":"manual-reviewer-member-id"')
+    })
+
+    it('keeps public specification edits made while autosave is in flight', async () => {
+        const user = userEvent.setup()
+        let resolvePatch: ((challenge: Challenge) => void) | undefined
+
+        mockedPatchChallenge.mockImplementation(
+            () => new Promise(resolve => {
+                resolvePatch = resolve as (challenge: Challenge) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const specificationInput = screen.getByLabelText('Public Specification') as HTMLTextAreaElement
+        const autosavedDescription = `${validDraftChallenge.description} Autosaved markdown`
+        const currentDescription = `${autosavedDescription} plus unsaved text`
+
+        await user.type(specificationInput, ' Autosaved markdown')
+
+        const autosaveParams = mockedUseAutosave.mock
+            .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                formValues: ChallengeEditorFormData
+                onSave: (formData: ChallengeEditorFormData) => Promise<void>
+            }
+        let autosavePromise: Promise<void> = Promise.resolve()
+
+        await act(async () => {
+            autosavePromise = autosaveParams.onSave({
+                ...autosaveParams.formValues,
+                description: autosavedDescription,
+            })
+            await Promise.resolve()
+        })
+
+        await user.type(specificationInput, ' plus unsaved text')
+
+        await act(async () => {
+            resolvePatch?.({
+                ...validDraftChallenge,
+                description: 'Rendered specification from challenge-api',
+            })
+            await autosavePromise
+        })
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('12345', expect.objectContaining({
+                description: autosavedDescription,
+            }))
+        expect(specificationInput)
+            .toHaveValue(currentDescription)
+    })
+
+    it('keeps the review section after submission settings in read-only mode', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        const sectionHeadings = screen.getAllByRole('heading', { level: 3 })
+            .map(heading => heading.textContent)
+        const timelineIndex = sectionHeadings.indexOf('Timeline & Schedule')
+        const submissionSettingsIndex = sectionHeadings.indexOf('Submission Settings')
+        const reviewIndex = sectionHeadings.indexOf('Review')
+
+        expect(timelineIndex)
+            .toBeGreaterThanOrEqual(0)
+        expect(submissionSettingsIndex)
+            .toBeGreaterThan(timelineIndex)
+        expect(reviewIndex)
+            .toBeGreaterThan(submissionSettingsIndex)
+        expect(sectionHeadings)
+            .not.toContain('Attachments')
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.getByTestId('reviewers-field')
+            .closest('fieldset[disabled]'))
+            .toBeNull()
+    })
+
+    it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue(first2FinishDraftChallenge)
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={first2FinishDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('does not delete submitter resources when saving a non-task draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'type-id',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'submitter-role-id',
+                name: 'Submitter',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'task-user',
+                memberId: '12345',
+                role: 'Submitter',
+                roleId: 'submitter-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            type: {
+                abbreviation: 'CH',
+                name: 'Challenge',
+            },
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('launches a first2finish draft with iterative reviewer resources without task-only validation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...first2FinishDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+    })
+
+    it('launches a first2finish draft with legacy reviewer root fields without task-only validation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...first2FinishDraftChallenge,
+            reviewer: 'legacyTaskReviewer',
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...first2FinishDraftChallenge,
+                        reviewer: 'legacyTaskReviewer',
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+    })
+
+    it('blocks launch when the project billing account is inactive', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: false,
+                id: '80001061',
+            },
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because the project billing account is inactive.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Cannot launch challenges because the project billing account is inactive.',
+            )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks launch with a clear reason when the project has no billing account', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    projectId='100578'
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because this project does not have a billing account.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Cannot launch challenges because this project does not have a billing account.',
+            )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks launching when an assigned AI workflow has been disabled', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [{
+                            aiWorkflowId: 'workflow-disabled',
+                            isMemberReview: false,
+                            phaseId: 'review-phase-id',
+                        }],
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError?.message)
+            .toContain('One or more saved AI workflows were disabled.')
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+    })
+
+    it('blocks launching when the saved AI template has been disabled', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            templateId: 'template-disabled',
+            workflows: [],
+        })
+        mockedFetchAiReviewTemplates.mockResolvedValue([{
+            autoFinalize: false,
+            challengeTrack: 'DESIGN',
+            challengeType: 'First2Finish',
+            description: 'Disabled template',
+            disabled: true,
+            id: 'template-disabled',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            title: 'Disabled template',
+            workflows: [],
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError?.message)
+            .toContain('The saved AI review template was disabled.')
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('The saved AI review template was disabled.'))
+    })
+
+    it('does not render the attachments section while editing a draft', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { level: 3, name: 'Attachments' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Mock Add Attachment' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('returns to view mode after saving from an edit route', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('blocks saving when an assigned AI workflow has been disabled', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [{
+                            aiWorkflowId: 'workflow-disabled',
+                            isMemberReview: false,
+                            phaseId: 'review-phase-id',
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
+    it('blocks saving when disabled workflow exists only in persisted AI config', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_HUMAN',
+            workflows: [{
+                id: 'config-workflow-1',
+                isGating: false,
+                weightPercent: 100,
+                workflowId: 'workflow-disabled',
+            }],
+        })
+        mockedFetchWorkflows.mockResolvedValue([{
+            disabled: true,
+            id: 'workflow-disabled',
+            name: 'Disabled workflow',
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        reviewers: [],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedFetchAiReviewConfigByChallenge)
+            .toHaveBeenCalledWith('12345')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('One or more saved AI workflows were disabled.'))
+    })
+
+    it('blocks saving when the saved AI template has been disabled', async () => {
+        const user = userEvent.setup()
+
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            challengeId: '12345',
+            id: 'config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            templateId: 'template-disabled',
+            workflows: [],
+        })
+        mockedFetchAiReviewTemplates.mockResolvedValue([{
+            autoFinalize: false,
+            challengeTrack: 'DESIGN',
+            challengeType: 'First2Finish',
+            description: 'Disabled template',
+            disabled: true,
+            id: 'template-disabled',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            title: 'Disabled template',
+            workflows: [],
+        }])
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .not.toHaveBeenCalled()
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('The saved AI review template was disabled.'))
+    })
+
+    it('refreshes phase data when the fetched challenge updates for the same id', async () => {
+        const initialChallenge = {
+            ...validDraftChallenge,
+            phases: [{
+                duration: 1440,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-17T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+            updated: '2026-04-13T01:00:00.000Z',
+        } as Challenge
+        const refreshedChallenge = {
+            ...initialChallenge,
+            phases: [{
+                ...initialChallenge.phases?.[0],
+                scheduledEndDate: '2026-04-18T04:58:51.000Z',
+            }],
+            updated: '2026-04-13T01:05:00.000Z',
+        } as Challenge
+
+        const renderResult = render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={initialChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-17T04:58:51.000Z')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={refreshedChallenge} />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+        })
+    })
+
+    it('reapplies a same-id challenge refresh after the form becomes clean again', async () => {
+        const user = userEvent.setup()
+        const initialChallenge = {
+            ...validDraftChallenge,
+            phases: [{
+                duration: 1440,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-17T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+        } as Challenge
+        const refreshedChallenge = {
+            ...initialChallenge,
+            phases: [{
+                ...initialChallenge.phases?.[0],
+                scheduledEndDate: '2026-04-19T04:58:51.000Z',
+            }],
+        } as Challenge
+
+        const renderResult = render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={initialChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={refreshedChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+
+        await user.click(screen.getByTestId('mock-clean-form'))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-19T04:58:51.000Z')
+        })
+    })
+
+    it('returns to view mode after saving a new draft from the create route', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validNewChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('returns to view mode after saving from an edit route with a trailing slash', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit/']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('clears Marathon Match when a new challenge switches to the Design track', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [
+                {
+                    id: 'development-track',
+                    name: 'Development',
+                    track: 'DEVELOPMENT',
+                },
+                {
+                    id: 'design-track',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                isActive: true,
+                isTask: false,
+                name: 'Marathon Match',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const challengeTrackInput = screen.getByLabelText('Challenge Track') as HTMLInputElement
+        const challengeTypeInput = screen.getByLabelText('Challenge Type') as HTMLInputElement
+
+        await user.type(challengeTrackInput, 'development-track')
+        await user.type(challengeTypeInput, 'marathon-match-id')
+
+        expect(challengeTypeInput.value)
+            .toBe('marathon-match-id')
+
+        await user.clear(challengeTrackInput)
+        await user.type(challengeTrackInput, 'design-track')
+
+        await waitFor(() => {
+            expect(challengeTypeInput.value)
+                .toBe('')
+        })
+    })
+
+    it('prevents creating a design challenge without a work type', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                isActive: true,
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
+        await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Work Type'))
+                .toBeTruthy()
+        })
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .not.toHaveBeenCalled()
+            expect(screen.getByText('Select a work type'))
+                .toBeTruthy()
+        })
+    })
+
+    it('clears a stale create error when work type validation blocks a retry', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                isActive: true,
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockRejectedValueOnce(new Error('Original create failure'))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
+        await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+        await user.type(screen.getByLabelText('Work Type'), 'Web Design')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Original create failure'))
+                .toBeTruthy()
+        })
+
+        await user.clear(screen.getByLabelText('Work Type'))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Select a work type'))
+                .toBeTruthy()
+            expect(screen.queryByText('Original create failure'))
+                .toBeNull()
+        })
+    })
+
+    it('creates a forum discussion for forum-enabled challenge types', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                isActive: true,
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Forum Enabled Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), '927abff4-7af9-4145-8ba1-577c16e64e2e')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    discussions: [{
+                        name: 'Forum Enabled Challenge Discussion',
+                        provider: 'vanilla',
+                        type: 'CHALLENGE',
+                    }],
+                    name: 'Forum Enabled Challenge',
+                    projectId: '12345',
+                    status: 'NEW',
+                    trackId: 'track-id',
+                    typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                }))
+        })
+    })
+
+    it('persists an assigned-yourself copilot during initial draft creation', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockResolvedValue({
+            challengeId: 'created-challenge-id',
+            memberHandle: 'self-copilot',
+            roleId: 'copilot-role-id',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Copilot Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'Assign yourself' }))
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('self-copilot')
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: 'created-challenge-id',
+                    memberHandle: 'self-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('self-copilot')
+        })
+    })
+
+    it('keeps the created draft when the initial copilot sync fails', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockRejectedValue(new Error('resource sync failed'))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Copilot Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'Assign yourself' }))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Save as Draft' }))
+                .toBeInTheDocument()
+        })
+        expect(screen.queryByRole('button', { name: 'New' }))
+            .toBeNull()
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge created successfully')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+            )
+    })
+
+    it('keeps the created challenge sections visible after creating from the new route', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Created Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Created Draft Challenge',
+            status: 'NEW',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/12345/challenges/new']}>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Created Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Specification'))
+                .toBeInTheDocument()
+        })
+
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('Specification'))
+                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Save as Draft' }))
+                .toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: 'New' }))
+                .toBeNull()
+        })
+    })
+})

@@ -36,10 +36,22 @@
 }
 
 .itemHeader {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
+}
+
+.amountBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.amount {
+    color: #2a2a2a;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .status {
@@ -59,6 +71,25 @@
 
 .remarks {
     color: #5b5b5b;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.hoursWorked {
+    color: #5b5b5b;
+    font-size: 12px;
+}
+
+.metaRow {
+    color: #5b5b5b;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 4px;
+}
+
+.metaLabel {
+    font-weight: 600;
 }
 
 .date {
