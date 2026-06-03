@@ -25,7 +25,6 @@ import {
     ChallengeDetailContextModel,
 } from '../../models'
 import { ChallengeDetailContext } from '../../contexts'
-import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { TableNoRecord } from '../TableNoRecord'
 import { useRole, useRoleProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
@@ -41,7 +40,6 @@ interface Props {
 interface SubmissionApprovalRowProps {
     submission: BackendSubmission
     decision: AiReviewDecision | undefined
-    aiReviewers: { aiWorkflowId: string }[]
     aiReviewConfig?: AiReviewConfig
     isPrivilegedRole: boolean
     isApprovalPhaseOpen: boolean
@@ -305,11 +303,6 @@ export const TabContentAiApproval: FC<Props> = props => {
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { isPrivilegedRole }: useRoleProps = useRole()
 
-    const aiReviewers = useMemo<{ aiWorkflowId: string }[]>(
-        () => (challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]) ?? [],
-        [challengeInfo?.reviewers],
-    )
-
     const isApprovalPhaseOpen = useMemo<boolean>(
         () => (challengeInfo?.phases ?? []).some(
             p => (p.name || '').toLowerCase() === 'approval' && Boolean(p.isOpen),
@@ -359,7 +352,6 @@ export const TabContentAiApproval: FC<Props> = props => {
                     key={submission.id}
                     submission={submission}
                     decision={getDecision(submission.id)}
-                    aiReviewers={aiReviewers}
                     aiReviewConfig={aiReviewConfig}
                     isPrivilegedRole={isPrivilegedRole}
                     isApprovalPhaseOpen={isApprovalPhaseOpen}
