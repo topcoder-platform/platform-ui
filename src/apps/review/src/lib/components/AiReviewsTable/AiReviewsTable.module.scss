@@ -218,16 +218,22 @@
     border-top: 1px solid rgba(255,255,255,0.3);
 }
 
-// Override column
-.overrideCol {
-    text-align: center;
-    min-width: 90px;
+// Score with inline override
+.scoreWithOverride {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.originalScore {
+    color: $black-40;
+    font-size: 12px;
 }
 
 .overrideInput {
-    width: 80px;
-    padding: 4px 8px;
-    border: 1px solid $black-20;
+    width: 70px;
+    padding: 4px 6px;
+    border: 1px solid $link-blue-dark;
     border-radius: 4px;
     font-size: 13px;
     font-family: inherit;
@@ -241,15 +247,20 @@
 
     &::placeholder {
         color: $black-40;
-        font-size: 11px;
+        font-size: 10px;
     }
 }
 
-.overrideValue {
-    color: $black-40;
+.overriddenScore {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: $orange-120;
+    font-weight: 600;
 }
 
-.hasOverride {
-    color: $orange-100;
-    font-weight: 600;
+.overrideLabel {
+    font-size: 11px;
+    font-weight: 400;
+    color: $black-40;
 }
