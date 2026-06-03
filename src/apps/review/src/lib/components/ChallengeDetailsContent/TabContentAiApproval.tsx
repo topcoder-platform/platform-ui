@@ -1,34 +1,43 @@
 /* eslint-disable complexity */
 /**
  * Approval tab content for AI Only challenges.
- * Allows copilots/admins to review AI scorecards and add manager comments
- * or score overrides before the challenge is finalized.
+ * Renders submissions in a table format consistent with other tabs.
+ * Allows admins/copilots/PMs/TMs to edit decision scores and workflow scores.
  */
 import {
     ChangeEvent,
     FC,
     useCallback,
     useContext,
-    useEffect,
     useMemo,
     useState,
 } from 'react'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 import moment from 'moment'
 
 import { TableLoading } from '~/apps/admin/src/lib'
-
 import {
-    AiReviewConfig,
+    BaseModal,
+    Button,
+    IconOutline,
+    Table,
+    TableColumn,
+} from '~/libs/ui'
+
+import { TABLE_DATE_FORMAT } from '../../../config/index.config'
+import { ChallengeDetailContext } from '../../contexts'
+import { useRole, useRoleProps } from '../../hooks'
+import {
     AiReviewDecision,
+    AiReviewDecisionBreakdownWorkflow,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
-import { ChallengeDetailContext } from '../../contexts'
+import { patchAiReviewDecision, WorkflowManagerOverride } from '../../services/aiReview.service'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { TableNoRecord } from '../TableNoRecord'
-import { useRole, useRoleProps } from '../../hooks'
-import { TABLE_DATE_FORMAT } from '../../../config/index.config'
-import { patchAiReviewDecision } from '../../services/aiReview.service'
+import { TableWrapper } from '../TableWrapper'
 
 import styles from './TabContentAiApproval.module.scss'
 
@@ -37,271 +46,98 @@ interface Props {
     isLoading: boolean
 }
 
-interface SubmissionApprovalRowProps {
+interface EditableDecisionState {
+    managerComment: string
+    workflows: Record<string, {
+        managerScore: string
+        managerComment: string
+    }>
+}
+
+interface SubmissionRowData {
     submission: BackendSubmission
     decision: AiReviewDecision | undefined
-    aiReviewConfig?: AiReviewConfig
-    isPrivilegedRole: boolean
-    isApprovalPhaseOpen: boolean
-    onSaved: (updated: AiReviewDecision) => void
 }
 
-interface WorkflowOverrideState {
-    managerScoreInput: string
-    workflowComment: string
+function formatScore(score: number | null | undefined): string {
+    if (score === null || score === undefined) {
+        return '-'
+    }
+
+    return Number.isInteger(score) ? `${score}` : score.toFixed(2)
 }
 
-const getWorkflowOverrideState = (
-    decision: AiReviewDecision | undefined,
-): Record<string, WorkflowOverrideState> => {
+function getInitialEditState(decision: AiReviewDecision | undefined): EditableDecisionState {
     const workflows = decision?.breakdown?.workflows ?? []
 
-    return workflows.reduce<Record<string, WorkflowOverrideState>>((acc, workflow) => {
-        acc[workflow.workflowId] = {
-            managerScoreInput:
-                workflow.managerScore === null || workflow.managerScore === undefined
-                    ? ''
-                    : String(workflow.managerScore),
-            workflowComment: workflow.managerComment ?? '',
-        }
-        return acc
-    }, {})
-}
-
-const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: SubmissionApprovalRowProps) => {
-    const [managerComment, setManagerComment] = useState<string>(props.decision?.managerComment ?? '')
-    const [workflowOverrides, setWorkflowOverrides] = useState<Record<string, WorkflowOverrideState>>(
-        () => getWorkflowOverrideState(props.decision),
-    )
-    const [isSaving, setIsSaving] = useState<boolean>(false)
-    const canEdit = props.isPrivilegedRole && props.isApprovalPhaseOpen
-    const workflows = props.decision?.breakdown?.workflows ?? []
-
-    const workflowNameById = useMemo<Record<string, string>>(() => {
-        const configWorkflows = props.aiReviewConfig?.workflows ?? []
-        return configWorkflows.reduce<Record<string, string>>((acc, cw) => {
-            if (cw.workflowId && cw.workflow?.name) {
-                acc[cw.workflowId] = cw.workflow.name
+    return {
+        managerComment: decision?.managerComment ?? '',
+        workflows: workflows.reduce<Record<string, { managerScore: string; managerComment: string }>>((acc, wf) => {
+            acc[wf.workflowId] = {
+                managerComment: wf.managerComment ?? '',
+                managerScore: wf.managerScore !== undefined && wf.managerScore !== null
+                    ? String(wf.managerScore)
+                    : '',
             }
 
             return acc
-        }, {})
-    }, [props.aiReviewConfig?.workflows])
-
-    useEffect(() => {
-        setManagerComment(props.decision?.managerComment ?? '')
-        setWorkflowOverrides(getWorkflowOverrideState(props.decision))
-    }, [props.decision?.id, props.decision?.updatedAt, props.decision?.managerComment])
-
-    const handleSave = useCallback(async () => {
-        if (!props.decision?.id) return
-
-        const payloadOverrides = [] as {
-            workflowId: string
-            managerScore?: number | undefined
-            workflowComment?: string | undefined
-        }[]
-
-        for (const workflow of workflows) {
-            const override = workflowOverrides[workflow.workflowId]
-            const scoreInput = override?.managerScoreInput?.trim() ?? ''
-            let parsedScore: number | undefined
-
-            if (!scoreInput) {
-                parsedScore = undefined
-            } else {
-                parsedScore = Number(scoreInput)
-                if (!Number.isFinite(parsedScore)) {
-                    toast.error(`Invalid manager score for workflow ${workflow.workflowId}.`)
-                    return
-                }
-            }
-
-            payloadOverrides.push({
-                managerScore: parsedScore,
-                workflowComment: override?.workflowComment?.trim() || undefined,
-                workflowId: workflow.workflowId,
-            })
-        }
-
-        setIsSaving(true)
-        try {
-            const updated = await patchAiReviewDecision(props.decision.id, {
-                managerComment: managerComment.trim() || undefined,
-                workflowOverrides: payloadOverrides,
-            })
-            props.onSaved(updated)
-            toast.success('Manager comment and score overrides saved.')
-        } catch (err) {
-            toast.error('Failed to save manager comment and score overrides.')
-        } finally {
-            setIsSaving(false)
-        }
-    }, [props.decision?.id, managerComment, props.onSaved, workflowOverrides, workflows])
-
-    const submittedDate = props.submission.createdAt
-        ? moment(props.submission.createdAt)
-            .format(TABLE_DATE_FORMAT)
-        : '-'
-
-    return (
-        <div className={styles.submissionRow}>
-            <div className={styles.submissionHeader}>
-                <span className={styles.submissionId}>
-                    {props.submission.id}
-                </span>
-                <span className={styles.submissionDate}>{submittedDate}</span>
-                {props.decision && (
-                    <span className={styles.submissionScore}>
-                        <strong>AI Score:</strong>
-                        {' '}
-                        {props.decision.totalScore !== undefined && props.decision.totalScore !== null
-                            ? props.decision.totalScore.toFixed(2)
-                            : '-'}
-                        {props.decision.status === 'HUMAN_OVERRIDE' && (
-                            <span className={styles.overrideBadge}> (Override)</span>
-                        )}
-                    </span>
-                )}
-            </div>
-
-            {props.decision && canEdit && (
-                <div className={styles.managerCommentSection}>
-                    {workflows.length > 0 && (
-                        <div className={styles.workflowOverridesSection}>
-                            <div className={styles.workflowOverridesTitle}>Workflow Score Overrides</div>
-                            {workflows.map(workflow => {
-                                const override = workflowOverrides[workflow.workflowId]
-
-                                return (
-                                    <div key={workflow.workflowId} className={styles.workflowOverrideRow}>
-                                        <div className={styles.workflowMeta}>
-                                            <span className={styles.workflowId}>
-                                                {workflowNameById[workflow.workflowId] || workflow.workflowId}
-                                            </span>
-                                            <span className={styles.workflowRunScore}>
-                                                Run Score:
-                                                {' '}
-                                                {workflow.runScore ?? '-'}
-                                            </span>
-                                        </div>
-                                        <label
-                                            className={styles.workflowInputLabel}
-                                            htmlFor={`ms-${props.submission.id}-${workflow.workflowId}`}
-                                        >
-                                            Manager Score
-                                        </label>
-                                        <input
-                                            id={`ms-${props.submission.id}-${workflow.workflowId}`}
-                                            type='number'
-                                            step='0.01'
-                                            className={styles.workflowScoreInput}
-                                            value={override?.managerScoreInput ?? ''}
-                                            onChange={function onScoreChange(e: ChangeEvent<HTMLInputElement>): void {
-                                                const value = e.target.value
-                                                setWorkflowOverrides(prev => ({
-                                                    ...prev,
-                                                    [workflow.workflowId]: {
-                                                        managerScoreInput: value,
-                                                        workflowComment: (
-                                                            prev[workflow.workflowId]?.workflowComment ?? ''
-                                                        ),
-                                                    },
-                                                }))
-                                            }}
-                                            placeholder='Leave empty to clear override'
-                                        />
-                                        <label
-                                            className={styles.workflowInputLabel}
-                                            htmlFor={`wc-${props.submission.id}-${workflow.workflowId}`}
-                                        >
-                                            Workflow Comment
-                                        </label>
-                                        <textarea
-                                            id={`wc-${props.submission.id}-${workflow.workflowId}`}
-                                            className={styles.workflowCommentInput}
-                                            rows={2}
-                                            value={override?.workflowComment ?? ''}
-                                            onChange={function onWorkflowCommentChange(
-                                                e: ChangeEvent<HTMLTextAreaElement>,
-                                            ): void {
-                                                const value = e.target.value
-                                                setWorkflowOverrides(prev => ({
-                                                    ...prev,
-                                                    [workflow.workflowId]: {
-                                                        managerScoreInput:
-                                                            prev[workflow.workflowId]?.managerScoreInput ?? '',
-                                                        workflowComment: value,
-                                                    },
-                                                }))
-                                            }}
-                                            placeholder='Optional workflow-level comment'
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    )}
-
-                    <label className={styles.managerCommentLabel} htmlFor={`mc-${props.submission.id}`}>
-                        Manager Comment
-                    </label>
-                    <textarea
-                        id={`mc-${props.submission.id}`}
-                        className={styles.managerCommentInput}
-                        rows={3}
-                        value={managerComment}
-                        onChange={function onChange(e: ChangeEvent<HTMLTextAreaElement>): void {
-                            setManagerComment(e.target.value)
-                        }}
-                        placeholder='Enter a manager comment (optional)...'
-                    />
-                    <button
-                        type='button'
-                        className={styles.saveButton}
-                        disabled={isSaving}
-                        onClick={handleSave}
-                    >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                </div>
-            )}
-
-            {!canEdit
-                && workflows.some(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
-                && (
-                    <div className={styles.workflowOverridesReadOnly}>
-                        <strong>Manager Score Overrides:</strong>
-                        {workflows
-                            .filter(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
-                            .map(workflow => (
-                                <p key={workflow.workflowId}>
-                                    {workflowNameById[workflow.workflowId] || workflow.workflowId}
-                                    :
-                                    {' '}
-                                    {workflow.managerScore}
-                                </p>
-                            ))}
-                    </div>
-                )}
-
-            {props.decision?.managerComment && !canEdit && (
-                <div className={styles.managerCommentReadOnly}>
-                    <strong>Manager Comment:</strong>
-                    <p>{props.decision.managerComment}</p>
-                </div>
-            )}
-        </div>
-    )
+        }, {}),
+    }
 }
 
-export const TabContentAiApproval: FC<Props> = props => {
+function hasChanges(
+    original: AiReviewDecision | undefined,
+    edited: EditableDecisionState,
+): boolean {
+    if (!original) {
+        return false
+    }
+
+    const originalComment = original.managerComment ?? ''
+
+    if (edited.managerComment.trim() !== originalComment) {
+        return true
+    }
+
+    const workflows = original.breakdown?.workflows ?? []
+
+    for (const wf of workflows) {
+        const editedWf = edited.workflows[wf.workflowId]
+
+        if (!editedWf) {
+            // eslint-disable-next-line no-continue
+            continue
+        }
+
+        const originalScore = wf.managerScore !== undefined && wf.managerScore !== null
+            ? String(wf.managerScore)
+            : ''
+        const originalWfComment = wf.managerComment ?? ''
+
+        if (editedWf.managerScore.trim() !== originalScore) {
+            return true
+        }
+
+        if (editedWf.managerComment.trim() !== originalWfComment) {
+            return true
+        }
+    }
+
+    return false
+}
+
+export const TabContentAiApproval: FC<Props> = (props: Props) => {
     const {
-        challengeInfo,
         aiReviewConfig,
         aiReviewDecisionsBySubmissionId,
+        challengeInfo,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { isPrivilegedRole }: useRoleProps = useRole()
+
+    const aiReviewers = useMemo<{ aiWorkflowId: string }[]>(
+        () => (challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]) ?? [],
+        [challengeInfo?.reviewers],
+    )
 
     const isApprovalPhaseOpen = useMemo<boolean>(
         () => (challengeInfo?.phases ?? []).some(
@@ -310,26 +146,460 @@ export const TabContentAiApproval: FC<Props> = props => {
         [challengeInfo?.phases],
     )
 
-    // Local copy of decisions to allow optimistic updates after PATCH
-    const [localDecisionOverrides, setLocalDecisionOverrides] = useState<
-        Record<string, AiReviewDecision>
-    >({})
+    const canEdit = isPrivilegedRole && isApprovalPhaseOpen
+
+    const [localDecisionOverrides, setLocalDecisionOverrides] = useState<Record<string, AiReviewDecision>>({})
+    const [editStates, setEditStates] = useState<Record<string, EditableDecisionState>>({})
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+    const [savingSubmissionId, setSavingSubmissionId] = useState<string | undefined>(undefined)
+    const [confirmModal, setConfirmModal] = useState<{
+        submissionId: string
+        decision: AiReviewDecision
+    } | undefined>(undefined)
 
     const getDecision = useCallback((submissionId: string): AiReviewDecision | undefined => (
         localDecisionOverrides[submissionId] ?? aiReviewDecisionsBySubmissionId[submissionId]
     ), [aiReviewDecisionsBySubmissionId, localDecisionOverrides])
 
-    const handleDecisionSaved = useCallback((updated: AiReviewDecision) => {
-        setLocalDecisionOverrides(prev => ({
+    const getEditState = useCallback((submissionId: string): EditableDecisionState => {
+        if (editStates[submissionId]) {
+            return editStates[submissionId]
+        }
+
+        return getInitialEditState(getDecision(submissionId))
+    }, [editStates, getDecision])
+
+    const updateEditState = useCallback((
+        submissionId: string,
+        updater: (prev: EditableDecisionState) => EditableDecisionState,
+    ): void => {
+        setEditStates(prev => ({
             ...prev,
-            [updated.submissionId]: updated,
+            [submissionId]: updater(prev[submissionId] ?? getInitialEditState(getDecision(submissionId))),
         }))
-    }, [])
+    }, [getDecision])
+
+    const workflowNameById = useMemo<Record<string, string>>(() => {
+        const configWorkflows = aiReviewConfig?.workflows ?? []
+
+        return configWorkflows.reduce<Record<string, string>>((acc, cw) => {
+            if (cw.workflowId && cw.workflow?.name) {
+                acc[cw.workflowId] = cw.workflow.name
+            }
+
+            return acc
+        }, {})
+    }, [aiReviewConfig?.workflows])
 
     const contestSubmissions = useMemo<BackendSubmission[]>(
         () => props.submissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION' && s.isLatest),
         [props.submissions],
     )
+
+    const tableData = useMemo<SubmissionRowData[]>(
+        () => contestSubmissions.map(submission => ({
+            decision: getDecision(submission.id),
+            submission,
+        })),
+        [contestSubmissions, getDecision],
+    )
+
+    const toggleRowExpansion = useCallback((submissionId: string): void => {
+        setExpandedRows(prev => {
+            const next = new Set(prev)
+
+            if (next.has(submissionId)) {
+                next.delete(submissionId)
+            } else {
+                next.add(submissionId)
+            }
+
+            return next
+        })
+    }, [])
+
+    const handleSaveClick = useCallback((submissionId: string, decision: AiReviewDecision): void => {
+        setConfirmModal({ decision, submissionId })
+    }, [])
+
+    const handleConfirmSave = useCallback(async (): Promise<void> => {
+        if (!confirmModal) {
+            return
+        }
+
+        const decision: AiReviewDecision = confirmModal.decision
+        const submissionId: string = confirmModal.submissionId
+        const editState: EditableDecisionState = getEditState(submissionId)
+        const workflows = decision.breakdown?.workflows ?? []
+
+        const payloadOverrides: WorkflowManagerOverride[] = []
+
+        for (const workflow of workflows) {
+            const override = editState.workflows[workflow.workflowId]
+            const scoreInput = override?.managerScore?.trim() ?? ''
+            let parsedScore: number | undefined
+
+            if (!scoreInput) {
+                parsedScore = undefined
+            } else {
+                parsedScore = Number(scoreInput)
+
+                if (!Number.isFinite(parsedScore)) {
+                    const wfName = workflowNameById[workflow.workflowId] || workflow.workflowId
+                    toast.error(`Invalid manager score for workflow ${wfName}.`)
+
+                    return
+                }
+            }
+
+            payloadOverrides.push({
+                managerScore: parsedScore,
+                workflowComment: override?.managerComment?.trim() || undefined,
+                workflowId: workflow.workflowId,
+            })
+        }
+
+        setSavingSubmissionId(submissionId)
+        setConfirmModal(undefined)
+
+        try {
+            const updated = await patchAiReviewDecision(decision.id, {
+                managerComment: editState.managerComment.trim() || undefined,
+                workflowOverrides: payloadOverrides,
+            })
+
+            setLocalDecisionOverrides(prev => ({
+                ...prev,
+                [updated.submissionId]: updated,
+            }))
+            setEditStates(prev => {
+                const next = { ...prev }
+                delete next[submissionId]
+
+                return next
+            })
+            toast.success('Changes saved successfully.')
+        } catch {
+            toast.error('Failed to save changes.')
+        } finally {
+            setSavingSubmissionId(undefined)
+        }
+    }, [confirmModal, getEditState, workflowNameById])
+
+    const handleCancelSave = useCallback((): void => {
+        setConfirmModal(undefined)
+    }, [])
+
+    const handleToggleClick = useCallback((submissionId: string) => (): void => {
+        toggleRowExpansion(submissionId)
+    }, [toggleRowExpansion])
+
+    const handleSaveButtonClick = useCallback(
+        (submissionId: string, decision: AiReviewDecision) => (): void => {
+            handleSaveClick(submissionId, decision)
+        },
+        [handleSaveClick],
+    )
+
+    const handleScoreChange = useCallback(
+        (submissionId: string, workflowId: string) => (e: ChangeEvent<HTMLInputElement>): void => {
+            const val = e.target.value
+            updateEditState(submissionId, prev => ({
+                ...prev,
+                workflows: {
+                    ...prev.workflows,
+                    [workflowId]: {
+                        ...prev.workflows[workflowId],
+                        managerScore: val,
+                    },
+                },
+            }))
+        },
+        [updateEditState],
+    )
+
+    const handleWorkflowCommentChange = useCallback(
+        (submissionId: string, workflowId: string) => (e: ChangeEvent<HTMLTextAreaElement>): void => {
+            const val = e.target.value
+            updateEditState(submissionId, prev => ({
+                ...prev,
+                workflows: {
+                    ...prev.workflows,
+                    [workflowId]: {
+                        ...prev.workflows[workflowId],
+                        managerComment: val,
+                    },
+                },
+            }))
+        },
+        [updateEditState],
+    )
+
+    const handleManagerCommentChange = useCallback(
+        (submissionId: string) => (e: ChangeEvent<HTMLTextAreaElement>): void => {
+            const val = e.target.value
+            updateEditState(submissionId, prev => ({
+                ...prev,
+                managerComment: val,
+            }))
+        },
+        [updateEditState],
+    )
+
+    const handleConfirmCommentChange = useCallback(
+        (e: ChangeEvent<HTMLTextAreaElement>): void => {
+            if (!confirmModal) {
+                return
+            }
+
+            const val = e.target.value
+            updateEditState(confirmModal.submissionId, prev => ({
+                ...prev,
+                managerComment: val,
+            }))
+        },
+        [confirmModal, updateEditState],
+    )
+
+    const columns = useMemo<TableColumn<SubmissionRowData>[]>(() => {
+        const cols: TableColumn<SubmissionRowData>[] = [
+            {
+                columnId: 'submission-id',
+                label: 'Submission ID',
+                renderer: (row: SubmissionRowData) => (
+                    <span className={styles.submissionId}>
+                        {row.submission.id}
+                    </span>
+                ),
+                type: 'element',
+            },
+            {
+                columnId: 'submitted-date',
+                label: 'Submitted',
+                renderer: (row: SubmissionRowData) => {
+                    const date = row.submission.createdAt
+                        ? moment(row.submission.createdAt)
+                            .format(TABLE_DATE_FORMAT)
+                        : '-'
+
+                    return <span>{date}</span>
+                },
+                type: 'element',
+            },
+            {
+                columnId: 'status',
+                label: 'Status',
+                renderer: (row: SubmissionRowData) => {
+                    const status = row.decision?.status ?? 'PENDING'
+                    const statusMap: Record<string, { label: string; className: string }> = {
+                        ERROR: { className: styles.statusError, label: 'Error' },
+                        FAILED: { className: styles.statusFailed, label: 'Failed' },
+                        HUMAN_OVERRIDE: { className: styles.statusOverride, label: 'Override' },
+                        PASSED: { className: styles.statusPassed, label: 'Passed' },
+                        PENDING: { className: styles.statusPending, label: 'Pending' },
+                    }
+                    const config = statusMap[status] ?? statusMap.PENDING
+
+                    return (
+                        <span className={classNames(styles.statusBadge, config.className)}>
+                            {config.label}
+                        </span>
+                    )
+                },
+                type: 'element',
+            },
+            {
+                columnId: 'ai-score',
+                label: 'AI Score',
+                renderer: (row: SubmissionRowData) => (
+                    <span className={styles.scoreValue}>
+                        {formatScore(row.decision?.totalScore)}
+                    </span>
+                ),
+                type: 'element',
+            },
+        ]
+
+        if (canEdit) {
+            cols.push({
+                columnId: 'actions',
+                label: 'Actions',
+                renderer: (row: SubmissionRowData) => {
+                    if (!row.decision) {
+                        return <span>-</span>
+                    }
+
+                    const editState = getEditState(row.submission.id)
+                    const hasUnsavedChanges = hasChanges(row.decision, editState)
+                    const isSaving = savingSubmissionId === row.submission.id
+                    const isExpanded = expandedRows.has(row.submission.id)
+
+                    return (
+                        <div className={styles.actionsCell}>
+                            <button
+                                type='button'
+                                className={styles.expandButton}
+                                onClick={handleToggleClick(row.submission.id)}
+                                title={isExpanded ? 'Collapse' : 'Edit scores'}
+                            >
+                                {isExpanded ? (
+                                    <IconOutline.ChevronUpIcon />
+                                ) : (
+                                    <IconOutline.PencilIcon />
+                                )}
+                            </button>
+                            {hasUnsavedChanges && (
+                                <button
+                                    type='button'
+                                    className={styles.saveButton}
+                                    onClick={handleSaveButtonClick(row.submission.id, row.decision)}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </button>
+                            )}
+                        </div>
+                    )
+                },
+                type: 'element',
+            })
+        }
+
+        cols.push({
+            columnId: 'ai-reviews-expand',
+            isExpand: true,
+            label: '',
+            renderer: (row: SubmissionRowData) => {
+                const isExpanded = expandedRows.has(row.submission.id)
+                const editState = getEditState(row.submission.id)
+                const workflows = row.decision?.breakdown?.workflows ?? []
+
+                return (
+                    <div className={styles.expandContent}>
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={aiReviewers}
+                            submission={row.submission as any}
+                            defaultOpen={false}
+                        />
+
+                        {canEdit && isExpanded && row.decision && (
+                            <div className={styles.editSection}>
+                                <div className={styles.editSectionTitle}>
+                                    Edit Scores & Comments
+                                </div>
+
+                                {workflows.length > 0 && (
+                                    <div className={styles.workflowsGrid}>
+                                        {workflows.map((wf: AiReviewDecisionBreakdownWorkflow) => {
+                                            const wfEdit = editState.workflows[wf.workflowId]
+                                                ?? { managerComment: '', managerScore: '' }
+                                            const workflowName = workflowNameById[wf.workflowId] || wf.workflowId
+
+                                            return (
+                                                <div key={wf.workflowId} className={styles.workflowCard}>
+                                                    <div className={styles.workflowHeader}>
+                                                        <span className={styles.workflowName}>{workflowName}</span>
+                                                        <span className={styles.workflowRunScore}>
+                                                            Run Score:
+                                                            {' '}
+                                                            {formatScore(wf.runScore)}
+                                                        </span>
+                                                    </div>
+                                                    <div className={styles.workflowInputs}>
+                                                        <label className={styles.inputLabel}>
+                                                            Manager Score Override
+                                                            <input
+                                                                type='number'
+                                                                step='0.01'
+                                                                className={styles.scoreInput}
+                                                                value={wfEdit.managerScore}
+                                                                onChange={handleScoreChange(
+                                                                    row.submission.id,
+                                                                    wf.workflowId,
+                                                                )}
+                                                                placeholder='Leave empty to clear'
+                                                            />
+                                                        </label>
+                                                        <label className={styles.inputLabel}>
+                                                            Workflow Comment
+                                                            <textarea
+                                                                className={styles.commentInput}
+                                                                rows={2}
+                                                                value={wfEdit.managerComment}
+                                                                onChange={handleWorkflowCommentChange(
+                                                                    row.submission.id,
+                                                                    wf.workflowId,
+                                                                )}
+                                                                placeholder='Optional comment'
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+
+                                <div className={styles.managerCommentSection}>
+                                    <label className={styles.inputLabel}>
+                                        Manager Comment
+                                        <textarea
+                                            className={styles.commentInput}
+                                            rows={3}
+                                            value={editState.managerComment}
+                                            onChange={handleManagerCommentChange(row.submission.id)}
+                                            placeholder='Enter a manager comment (optional)...'
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {!canEdit && row.decision?.managerComment && (
+                            <div className={styles.readOnlySection}>
+                                <div className={styles.readOnlyTitle}>Manager Comment</div>
+                                <div className={styles.readOnlyContent}>{row.decision.managerComment}</div>
+                            </div>
+                        )}
+
+                        {!canEdit && workflows.some(wf => wf.managerScore !== undefined) && (
+                            <div className={styles.readOnlySection}>
+                                <div className={styles.readOnlyTitle}>Manager Score Overrides</div>
+                                <div className={styles.overridesList}>
+                                    {workflows
+                                        .filter(wf => wf.managerScore !== undefined)
+                                        .map(wf => (
+                                            <p key={wf.workflowId}>
+                                                {workflowNameById[wf.workflowId] || wf.workflowId}
+                                                :
+                                                {' '}
+                                                {wf.managerScore}
+                                            </p>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )
+            },
+            type: 'element',
+        })
+
+        return cols
+    }, [
+        aiReviewers,
+        canEdit,
+        expandedRows,
+        getEditState,
+        handleManagerCommentChange,
+        handleSaveButtonClick,
+        handleScoreChange,
+        handleToggleClick,
+        handleWorkflowCommentChange,
+        savingSubmissionId,
+        workflowNameById,
+    ])
 
     if (props.isLoading) {
         return <TableLoading />
@@ -340,25 +610,67 @@ export const TabContentAiApproval: FC<Props> = props => {
     }
 
     return (
-        <div className={styles.container}>
+        <TableWrapper className={classNames(styles.container, 'enhanced-table')}>
             <p className={styles.approvalHint}>
                 Review the AI scorecards below.
-                {isPrivilegedRole && isApprovalPhaseOpen && (
-                    <> You may add a manager comment and workflow score overrides before the Approval phase closes.</>
+                {canEdit && (
+                    <>
+                        {' '}
+                        Click the edit icon to modify scores and add manager comments.
+                    </>
                 )}
             </p>
-            {contestSubmissions.map(submission => (
-                <SubmissionApprovalRow
-                    key={submission.id}
-                    submission={submission}
-                    decision={getDecision(submission.id)}
-                    aiReviewConfig={aiReviewConfig}
-                    isPrivilegedRole={isPrivilegedRole}
-                    isApprovalPhaseOpen={isApprovalPhaseOpen}
-                    onSaved={handleDecisionSaved}
-                />
-            ))}
-        </div>
+
+            <Table
+                columns={columns}
+                data={tableData}
+                showExpand
+                expandMode='always'
+                disableSorting
+                removeDefaultSort
+            />
+
+            {confirmModal && (
+                <BaseModal
+                    open
+                    onClose={handleCancelSave}
+                    title='Confirm Save'
+                    size='md'
+                    buttons={(
+                        <>
+                            <Button
+                                secondary
+                                onClick={handleCancelSave}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                primary
+                                onClick={handleConfirmSave}
+                            >
+                                Save Changes
+                            </Button>
+                        </>
+                    )}
+                >
+                    <div className={styles.confirmContent}>
+                        <p>Are you sure you want to save these changes?</p>
+                        <div className={styles.confirmComment}>
+                            <label className={styles.inputLabel}>
+                                Manager Comment (for this save):
+                                <textarea
+                                    className={styles.commentInput}
+                                    rows={3}
+                                    value={getEditState(confirmModal.submissionId).managerComment}
+                                    onChange={handleConfirmCommentChange}
+                                    placeholder='Add a comment explaining the changes...'
+                                />
+                            </label>
+                        </div>
+                    </div>
+                </BaseModal>
+            )}
+        </TableWrapper>
     )
 }
 

@@ -1,161 +1,107 @@
+@import '@libs/ui/styles/includes';
+
 .container {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    padding: 16px 0;
 }
 
 .approvalHint {
     font-size: 14px;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-.submissionRow {
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    padding: 16px;
-    background: #fafafa;
-}
-
-.submissionHeader {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 12px;
-    font-size: 14px;
+    color: var(--GrayFontColor);
+    margin-bottom: $sp-4;
+    padding: 0 $sp-2;
 }
 
 .submissionId {
     font-family: monospace;
     font-weight: 600;
-    color: #333;
+    color: $link-blue-dark;
 }
 
-.submissionDate {
-    color: #777;
-}
-
-.submissionScore {
-    color: #333;
-}
-
-.overrideBadge {
-    font-style: italic;
-    color: #e87722;
-}
-
-.managerCommentSection {
-    margin-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.workflowOverridesSection {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-    border: 1px solid #e5e5e5;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.workflowOverridesTitle {
-    font-size: 13px;
+.scoreValue {
     font-weight: 600;
-    color: #444;
+    color: var(--black-100);
 }
 
-.workflowOverrideRow {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    background: #fcfcfc;
-}
-
-.workflowMeta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+// Status badges
+.statusBadge {
+    display: inline-flex;
     align-items: center;
-}
-
-.workflowId {
-    font-family: monospace;
-    font-size: 12px;
-    color: #333;
-}
-
-.workflowRunScore {
-    font-size: 12px;
-    color: #666;
-}
-
-.workflowInputLabel {
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    color: #555;
 }
 
-.workflowScoreInput,
-.workflowCommentInput {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 13px;
+.statusPending {
+    background-color: $orange-25;
+    color: $orange-140;
+}
 
-    &:focus {
-        outline: none;
-        border-color: #0d69d4;
-        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.2);
+.statusPassed {
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusFailed {
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.statusError {
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.statusOverride {
+    background-color: $purple-25;
+    color: $purple-100;
+}
+
+// Actions cell
+.actionsCell {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.expandButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    color: $link-blue-dark;
+    transition: all 0.15s;
+
+    &:hover {
+        background: $black-10;
+        border-color: $link-blue-dark;
     }
-}
 
-.workflowCommentInput {
-    resize: vertical;
-}
-
-.managerCommentLabel {
-    font-size: 13px;
-    font-weight: 600;
-    color: #444;
-}
-
-.managerCommentInput {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-    resize: vertical;
-
-    &:focus {
-        outline: none;
-        border-color: #0d69d4;
-        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.2);
+    svg {
+        width: 16px;
+        height: 16px;
     }
 }
 
 .saveButton {
-    align-self: flex-start;
-    padding: 6px 16px;
-    background: #0d69d4;
+    padding: $sp-1 $sp-3;
+    background: $link-blue-dark;
     color: #fff;
     border: none;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
 
     &:hover:not(:disabled) {
-        background: #095bb3;
+        background: $blue-110;
     }
 
     &:disabled {
@@ -164,27 +110,165 @@
     }
 }
 
-.managerCommentReadOnly {
-    margin-top: 12px;
-    font-size: 14px;
-    color: #333;
+// Edit section (expanded row content)
+.editSection {
+    padding: $sp-4;
+    background: $black-10;
+    border-radius: 6px;
+    margin: $sp-2 0;
+}
 
-    p {
-        margin-top: 4px;
-        white-space: pre-wrap;
-        background: #f5f5f5;
-        padding: 8px;
-        border-radius: 4px;
-        border-left: 3px solid #e87722;
+.editSectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--black-100);
+    margin-bottom: $sp-4;
+}
+
+.workflowsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $sp-4;
+    margin-bottom: $sp-4;
+}
+
+.workflowCard {
+    background: white;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    padding: $sp-3;
+}
+
+.workflowHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $sp-3;
+    padding-bottom: $sp-2;
+    border-bottom: 1px solid $black-20;
+}
+
+.workflowName {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--black-100);
+}
+
+.workflowRunScore {
+    font-size: 12px;
+    color: var(--GrayFontColor);
+}
+
+.workflowInputs {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.inputLabel {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--GrayFontColor);
+}
+
+.scoreInput,
+.commentInput {
+    width: 100%;
+    padding: $sp-2;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+
+    &:focus {
+        outline: none;
+        border-color: $link-blue-dark;
+        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.15);
+    }
+
+    &::placeholder {
+        color: $black-60;
     }
 }
 
-.workflowOverridesReadOnly {
-    margin-top: 12px;
+.commentInput {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.managerCommentSection {
+    margin-top: $sp-2;
+}
+
+// Confirmation modal
+.confirmContent {
+    p {
+        margin-bottom: $sp-4;
+        font-size: 14px;
+        color: var(--black-100);
+    }
+}
+
+.confirmComment {
+    margin-top: $sp-2;
+}
+
+// Expand content wrapper
+.expandContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+// AI Reviews expandable section
+.aiReviews {
+    :global(.trigger) {
+        width: fit-content;
+        margin-left: auto;
+    }
+
+    :global(.reviews-table) {
+        margin-left: auto;
+        width: 60%;
+        margin-bottom: -9px;
+
+        @include ltelg {
+            width: auto;
+            margin-left: -1*$sp-4;
+        }
+    }
+}
+
+// Read-only display for non-editors
+.readOnlySection {
+    margin-top: $sp-3;
+    padding: $sp-3;
+    background: $black-10;
+    border-radius: 4px;
+}
+
+.readOnlyTitle {
     font-size: 13px;
-    color: #333;
+    font-weight: 600;
+    color: var(--black-100);
+    margin-bottom: $sp-2;
+}
+
+.readOnlyContent {
+    font-size: 13px;
+    color: var(--GrayFontColor);
+    white-space: pre-wrap;
+}
+
+.overridesList {
+    margin-top: $sp-2;
 
     p {
-        margin: 4px 0 0;
+        margin: $sp-1 0;
+        font-size: 13px;
+        color: var(--GrayFontColor);
     }
 }
