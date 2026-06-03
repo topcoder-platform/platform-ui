@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /* eslint-disable max-len */
 import { FC, MouseEvent as ReactMouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
