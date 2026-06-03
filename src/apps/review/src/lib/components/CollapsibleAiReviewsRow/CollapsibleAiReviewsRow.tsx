@@ -24,6 +24,12 @@ interface CollapsibleAiReviewsRowProps {
     defaultOpen?: boolean
     aiReviewers: { aiWorkflowId: string }[]
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
+    /** Enable editing mode for manager score overrides */
+    editMode?: boolean
+    /** Current edited scores by workflowId */
+    editedScores?: Record<string, string>
+    /** Callback when a score is changed */
+    onScoreChange?: (workflowId: string, value: string) => void
 }
 
 export function normalizeDecisionStatus(
@@ -246,7 +252,13 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
             </div>
             {isOpen && portalContainer && createPortal(
                 <div className={classNames(styles.table, 'reviews-table')}>
-                    <AiReviewsTable submission={props.submission} aiReviewers={props.aiReviewers} />
+                    <AiReviewsTable
+                        submission={props.submission}
+                        aiReviewers={props.aiReviewers}
+                        editMode={props.editMode}
+                        editedScores={props.editedScores}
+                        onScoreChange={props.onScoreChange}
+                    />
                 </div>,
                 portalContainer,
             )}

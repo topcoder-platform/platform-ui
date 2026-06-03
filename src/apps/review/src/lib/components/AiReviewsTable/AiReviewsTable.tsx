@@ -41,11 +41,18 @@ import styles from './AiReviewsTable.module.scss'
 interface AiReviewsTableProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
     aiReviewers?: { aiWorkflowId: string }[]
+    /** Enable editing mode for manager score overrides */
+    editMode?: boolean
+    /** Current edited scores by workflowId */
+    editedScores?: Record<string, string>
+    /** Callback when a score is changed */
+    onScoreChange?: (workflowId: string, value: string) => void
 }
 
 interface AiReviewerRow {
     id: string
     isGating?: boolean
+    managerScore?: number | null
     minScore?: number
     reviewDate?: string
     run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'>
@@ -228,6 +235,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             return {
                 id: workflowId,
                 isGating: fromDecision?.isGating ?? configured?.isGating,
+                managerScore: fromDecision?.managerScore,
                 minScore,
                 reviewDate: run?.completedAt,
                 run,
@@ -504,6 +512,42 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 />
                             </div>
                         </div>
+
+                        {(props.editMode || hasConfig) && (
+                            <div className={styles.mobileRow}>
+                                <div className={styles.label}>Override</div>
+                                <div className={styles.value}>
+                                    {row.workflowId && props.editMode && props.onScoreChange ? (
+                                        <input
+                                            type='number'
+                                            step='0.01'
+                                            className={styles.overrideInput}
+                                            value={props.editedScores?.[row.workflowId] ?? ''}
+                                            onChange={function onChange(
+                                                e: React.ChangeEvent<HTMLInputElement>,
+                                            ) {
+                                                if (props.onScoreChange && row.workflowId) {
+                                                    props.onScoreChange(row.workflowId, e.target.value)
+                                                }
+                                            }}
+                                            placeholder='Override'
+                                        />
+                                    ) : (
+                                        <span className={classNames(
+                                            styles.overrideValue,
+                                            row.managerScore !== null
+                                                && row.managerScore !== undefined
+                                                && styles.hasOverride,
+                                        )}
+                                        >
+                                            {row.managerScore !== null && row.managerScore !== undefined
+                                                ? formatScore(row.managerScore)
+                                                : '-'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -537,6 +581,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <th>Review Date</th>
                         <th className={styles.scoreCol}>Score</th>
                         <th>Result</th>
+                        {(props.editMode || hasConfig) && <th className={styles.overrideCol}>Override</th>}
                     </tr>
                 </thead>
 
@@ -611,6 +656,38 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                     }
                                 />
                             </td>
+                            {(props.editMode || hasConfig) && (
+                                <td className={styles.overrideCol}>
+                                    {row.workflowId && props.editMode && props.onScoreChange ? (
+                                        <input
+                                            type='number'
+                                            step='0.01'
+                                            className={styles.overrideInput}
+                                            value={props.editedScores?.[row.workflowId] ?? ''}
+                                            onChange={function onChange(
+                                                e: React.ChangeEvent<HTMLInputElement>,
+                                            ) {
+                                                if (props.onScoreChange && row.workflowId) {
+                                                    props.onScoreChange(row.workflowId, e.target.value)
+                                                }
+                                            }}
+                                            placeholder='Override'
+                                        />
+                                    ) : (
+                                        <span className={classNames(
+                                            styles.overrideValue,
+                                            row.managerScore !== null
+                                                && row.managerScore !== undefined
+                                                && styles.hasOverride,
+                                        )}
+                                        >
+                                            {row.managerScore !== null && row.managerScore !== undefined
+                                                ? formatScore(row.managerScore)
+                                                : '-'}
+                                        </span>
+                                    )}
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>

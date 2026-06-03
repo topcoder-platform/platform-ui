@@ -2,7 +2,7 @@
 /**
  * Approval tab content for AI Only challenges.
  * Renders submissions in a table format consistent with other tabs.
- * Allows admins/copilots/PMs/TMs to edit decision scores and workflow scores.
+ * Allows admins/copilots/PMs/TMs to edit decision scores via the AiReviewsTable.
  */
 import {
     ChangeEvent,
@@ -20,7 +20,6 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import {
     BaseModal,
     Button,
-    IconOutline,
     Table,
     TableColumn,
 } from '~/libs/ui'
@@ -30,7 +29,6 @@ import { ChallengeDetailContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     AiReviewDecision,
-    AiReviewDecisionBreakdownWorkflow,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
@@ -46,12 +44,8 @@ interface Props {
     isLoading: boolean
 }
 
-interface EditableDecisionState {
-    managerComment: string
-    workflows: Record<string, {
-        managerScore: string
-        managerComment: string
-    }>
+interface EditableScores {
+    workflows: Record<string, string>
 }
 
 interface SubmissionRowData {
@@ -67,58 +61,37 @@ function formatScore(score: number | null | undefined): string {
     return Number.isInteger(score) ? `${score}` : score.toFixed(2)
 }
 
-function getInitialEditState(decision: AiReviewDecision | undefined): EditableDecisionState {
+function getInitialScores(decision: AiReviewDecision | undefined): EditableScores {
     const workflows = decision?.breakdown?.workflows ?? []
 
     return {
-        managerComment: decision?.managerComment ?? '',
-        workflows: workflows.reduce<Record<string, { managerScore: string; managerComment: string }>>((acc, wf) => {
-            acc[wf.workflowId] = {
-                managerComment: wf.managerComment ?? '',
-                managerScore: wf.managerScore !== undefined && wf.managerScore !== null
-                    ? String(wf.managerScore)
-                    : '',
-            }
+        workflows: workflows.reduce<Record<string, string>>((acc, wf) => {
+            acc[wf.workflowId] = wf.managerScore !== undefined && wf.managerScore !== null
+                ? String(wf.managerScore)
+                : ''
 
             return acc
         }, {}),
     }
 }
 
-function hasChanges(
+function hasScoreChanges(
     original: AiReviewDecision | undefined,
-    edited: EditableDecisionState,
+    edited: EditableScores,
 ): boolean {
     if (!original) {
         return false
     }
 
-    const originalComment = original.managerComment ?? ''
-
-    if (edited.managerComment.trim() !== originalComment) {
-        return true
-    }
-
     const workflows = original.breakdown?.workflows ?? []
 
     for (const wf of workflows) {
-        const editedWf = edited.workflows[wf.workflowId]
-
-        if (!editedWf) {
-            // eslint-disable-next-line no-continue
-            continue
-        }
-
+        const editedScore = edited.workflows[wf.workflowId] ?? ''
         const originalScore = wf.managerScore !== undefined && wf.managerScore !== null
             ? String(wf.managerScore)
             : ''
-        const originalWfComment = wf.managerComment ?? ''
 
-        if (editedWf.managerScore.trim() !== originalScore) {
-            return true
-        }
-
-        if (editedWf.managerComment.trim() !== originalWfComment) {
+        if (editedScore.trim() !== originalScore) {
             return true
         }
     }
@@ -149,35 +122,14 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     const canEdit = isPrivilegedRole && isApprovalPhaseOpen
 
     const [localDecisionOverrides, setLocalDecisionOverrides] = useState<Record<string, AiReviewDecision>>({})
-    const [editStates, setEditStates] = useState<Record<string, EditableDecisionState>>({})
-    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+    const [editScores, setEditScores] = useState<Record<string, EditableScores>>({})
+    const [editingRows, setEditingRows] = useState<Set<string>>(new Set())
     const [savingSubmissionId, setSavingSubmissionId] = useState<string | undefined>(undefined)
     const [confirmModal, setConfirmModal] = useState<{
         submissionId: string
         decision: AiReviewDecision
+        managerComment: string
     } | undefined>(undefined)
-
-    const getDecision = useCallback((submissionId: string): AiReviewDecision | undefined => (
-        localDecisionOverrides[submissionId] ?? aiReviewDecisionsBySubmissionId[submissionId]
-    ), [aiReviewDecisionsBySubmissionId, localDecisionOverrides])
-
-    const getEditState = useCallback((submissionId: string): EditableDecisionState => {
-        if (editStates[submissionId]) {
-            return editStates[submissionId]
-        }
-
-        return getInitialEditState(getDecision(submissionId))
-    }, [editStates, getDecision])
-
-    const updateEditState = useCallback((
-        submissionId: string,
-        updater: (prev: EditableDecisionState) => EditableDecisionState,
-    ): void => {
-        setEditStates(prev => ({
-            ...prev,
-            [submissionId]: updater(prev[submissionId] ?? getInitialEditState(getDecision(submissionId))),
-        }))
-    }, [getDecision])
 
     const workflowNameById = useMemo<Record<string, string>>(() => {
         const configWorkflows = aiReviewConfig?.workflows ?? []
@@ -190,6 +142,39 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
             return acc
         }, {})
     }, [aiReviewConfig?.workflows])
+
+    const getDecision = useCallback((submissionId: string): AiReviewDecision | undefined => (
+        localDecisionOverrides[submissionId] ?? aiReviewDecisionsBySubmissionId[submissionId]
+    ), [aiReviewDecisionsBySubmissionId, localDecisionOverrides])
+
+    const getScores = useCallback((submissionId: string): EditableScores => {
+        if (editScores[submissionId]) {
+            return editScores[submissionId]
+        }
+
+        return getInitialScores(getDecision(submissionId))
+    }, [editScores, getDecision])
+
+    const updateScores = useCallback((
+        submissionId: string,
+        workflowId: string,
+        value: string,
+    ): void => {
+        setEditScores(prev => {
+            const current = prev[submissionId] ?? getInitialScores(getDecision(submissionId))
+
+            return {
+                ...prev,
+                [submissionId]: {
+                    ...current,
+                    workflows: {
+                        ...current.workflows,
+                        [workflowId]: value,
+                    },
+                },
+            }
+        })
+    }, [getDecision])
 
     const contestSubmissions = useMemo<BackendSubmission[]>(
         () => props.submissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION' && s.isLatest),
@@ -204,12 +189,19 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
         [contestSubmissions, getDecision],
     )
 
-    const toggleRowExpansion = useCallback((submissionId: string): void => {
-        setExpandedRows(prev => {
+    const toggleEditMode = useCallback((submissionId: string): void => {
+        setEditingRows(prev => {
             const next = new Set(prev)
 
             if (next.has(submissionId)) {
                 next.delete(submissionId)
+                // Clear edit state when exiting edit mode
+                setEditScores(prevScores => {
+                    const nextScores = { ...prevScores }
+                    delete nextScores[submissionId]
+
+                    return nextScores
+                })
             } else {
                 next.add(submissionId)
             }
@@ -219,7 +211,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     }, [])
 
     const handleSaveClick = useCallback((submissionId: string, decision: AiReviewDecision): void => {
-        setConfirmModal({ decision, submissionId })
+        setConfirmModal({ decision, managerComment: '', submissionId })
     }, [])
 
     const handleConfirmSave = useCallback(async (): Promise<void> => {
@@ -229,14 +221,14 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
 
         const decision: AiReviewDecision = confirmModal.decision
         const submissionId: string = confirmModal.submissionId
-        const editState: EditableDecisionState = getEditState(submissionId)
+        const managerComment: string = confirmModal.managerComment
+        const scores: EditableScores = getScores(submissionId)
         const workflows = decision.breakdown?.workflows ?? []
 
         const payloadOverrides: WorkflowManagerOverride[] = []
 
         for (const workflow of workflows) {
-            const override = editState.workflows[workflow.workflowId]
-            const scoreInput = override?.managerScore?.trim() ?? ''
+            const scoreInput = scores.workflows[workflow.workflowId]?.trim() ?? ''
             let parsedScore: number | undefined
 
             if (!scoreInput) {
@@ -254,7 +246,6 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
 
             payloadOverrides.push({
                 managerScore: parsedScore,
-                workflowComment: override?.managerComment?.trim() || undefined,
                 workflowId: workflow.workflowId,
             })
         }
@@ -264,7 +255,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
 
         try {
             const updated = await patchAiReviewDecision(decision.id, {
-                managerComment: editState.managerComment.trim() || undefined,
+                managerComment: managerComment.trim() || undefined,
                 workflowOverrides: payloadOverrides,
             })
 
@@ -272,9 +263,15 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 ...prev,
                 [updated.submissionId]: updated,
             }))
-            setEditStates(prev => {
+            setEditScores(prev => {
                 const next = { ...prev }
                 delete next[submissionId]
+
+                return next
+            })
+            setEditingRows(prev => {
+                const next = new Set(prev)
+                next.delete(submissionId)
 
                 return next
             })
@@ -284,15 +281,15 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
         } finally {
             setSavingSubmissionId(undefined)
         }
-    }, [confirmModal, getEditState, workflowNameById])
+    }, [confirmModal, getScores, workflowNameById])
 
     const handleCancelSave = useCallback((): void => {
         setConfirmModal(undefined)
     }, [])
 
     const handleToggleClick = useCallback((submissionId: string) => (): void => {
-        toggleRowExpansion(submissionId)
-    }, [toggleRowExpansion])
+        toggleEditMode(submissionId)
+    }, [toggleEditMode])
 
     const handleSaveButtonClick = useCallback(
         (submissionId: string, decision: AiReviewDecision) => (): void => {
@@ -302,63 +299,27 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     )
 
     const handleScoreChange = useCallback(
-        (submissionId: string, workflowId: string) => (e: ChangeEvent<HTMLInputElement>): void => {
-            const val = e.target.value
-            updateEditState(submissionId, prev => ({
-                ...prev,
-                workflows: {
-                    ...prev.workflows,
-                    [workflowId]: {
-                        ...prev.workflows[workflowId],
-                        managerScore: val,
-                    },
-                },
-            }))
+        (submissionId: string) => (workflowId: string, value: string): void => {
+            updateScores(submissionId, workflowId, value)
         },
-        [updateEditState],
+        [updateScores],
     )
 
-    const handleWorkflowCommentChange = useCallback(
-        (submissionId: string, workflowId: string) => (e: ChangeEvent<HTMLTextAreaElement>): void => {
-            const val = e.target.value
-            updateEditState(submissionId, prev => ({
-                ...prev,
-                workflows: {
-                    ...prev.workflows,
-                    [workflowId]: {
-                        ...prev.workflows[workflowId],
-                        managerComment: val,
-                    },
-                },
-            }))
-        },
-        [updateEditState],
-    )
-
-    const handleManagerCommentChange = useCallback(
-        (submissionId: string) => (e: ChangeEvent<HTMLTextAreaElement>): void => {
-            const val = e.target.value
-            updateEditState(submissionId, prev => ({
-                ...prev,
-                managerComment: val,
-            }))
-        },
-        [updateEditState],
-    )
-
-    const handleConfirmCommentChange = useCallback(
+    const handleCommentChange = useCallback(
         (e: ChangeEvent<HTMLTextAreaElement>): void => {
             if (!confirmModal) {
                 return
             }
 
-            const val = e.target.value
-            updateEditState(confirmModal.submissionId, prev => ({
-                ...prev,
-                managerComment: val,
-            }))
+            setConfirmModal(prev => {
+                if (!prev) {
+                    return undefined
+                }
+
+                return { ...prev, managerComment: e.target.value }
+            })
         },
-        [confirmModal, updateEditState],
+        [confirmModal],
     )
 
     const columns = useMemo<TableColumn<SubmissionRowData>[]>(() => {
@@ -429,24 +390,23 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                         return <span>-</span>
                     }
 
-                    const editState = getEditState(row.submission.id)
-                    const hasUnsavedChanges = hasChanges(row.decision, editState)
+                    const scores = getScores(row.submission.id)
+                    const hasUnsavedChanges = hasScoreChanges(row.decision, scores)
                     const isSaving = savingSubmissionId === row.submission.id
-                    const isExpanded = expandedRows.has(row.submission.id)
+                    const isEditing = editingRows.has(row.submission.id)
 
                     return (
                         <div className={styles.actionsCell}>
                             <button
                                 type='button'
-                                className={styles.expandButton}
-                                onClick={handleToggleClick(row.submission.id)}
-                                title={isExpanded ? 'Collapse' : 'Edit scores'}
-                            >
-                                {isExpanded ? (
-                                    <IconOutline.ChevronUpIcon />
-                                ) : (
-                                    <IconOutline.PencilIcon />
+                                className={classNames(
+                                    styles.editButton,
+                                    isEditing && styles.editButtonActive,
                                 )}
+                                onClick={handleToggleClick(row.submission.id)}
+                                title={isEditing ? 'Cancel editing' : 'Edit scores'}
+                            >
+                                {isEditing ? 'Cancel' : 'Edit'}
                             </button>
                             {hasUnsavedChanges && (
                                 <button
@@ -470,116 +430,29 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
             isExpand: true,
             label: '',
             renderer: (row: SubmissionRowData) => {
-                const isExpanded = expandedRows.has(row.submission.id)
-                const editState = getEditState(row.submission.id)
-                const workflows = row.decision?.breakdown?.workflows ?? []
+                const isEditing = editingRows.has(row.submission.id)
+                const scores = getScores(row.submission.id)
 
                 return (
                     <div className={styles.expandContent}>
+                        {/* Manager comment display */}
+                        {row.decision?.managerComment && (
+                            <div className={styles.managerCommentDisplay}>
+                                <span className={styles.managerCommentLabel}>Manager Comment:</span>
+                                <span className={styles.managerCommentText}>{row.decision.managerComment}</span>
+                            </div>
+                        )}
+
+                        {/* AI Reviews table with editing support */}
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
                             aiReviewers={aiReviewers}
                             submission={row.submission as any}
-                            defaultOpen={false}
+                            defaultOpen
+                            editMode={canEdit && isEditing}
+                            editedScores={scores.workflows}
+                            onScoreChange={handleScoreChange(row.submission.id)}
                         />
-
-                        {canEdit && isExpanded && row.decision && (
-                            <div className={styles.editSection}>
-                                <div className={styles.editSectionTitle}>
-                                    Edit Scores & Comments
-                                </div>
-
-                                {workflows.length > 0 && (
-                                    <div className={styles.workflowsGrid}>
-                                        {workflows.map((wf: AiReviewDecisionBreakdownWorkflow) => {
-                                            const wfEdit = editState.workflows[wf.workflowId]
-                                                ?? { managerComment: '', managerScore: '' }
-                                            const workflowName = workflowNameById[wf.workflowId] || wf.workflowId
-
-                                            return (
-                                                <div key={wf.workflowId} className={styles.workflowCard}>
-                                                    <div className={styles.workflowHeader}>
-                                                        <span className={styles.workflowName}>{workflowName}</span>
-                                                        <span className={styles.workflowRunScore}>
-                                                            Run Score:
-                                                            {' '}
-                                                            {formatScore(wf.runScore)}
-                                                        </span>
-                                                    </div>
-                                                    <div className={styles.workflowInputs}>
-                                                        <label className={styles.inputLabel}>
-                                                            Manager Score Override
-                                                            <input
-                                                                type='number'
-                                                                step='0.01'
-                                                                className={styles.scoreInput}
-                                                                value={wfEdit.managerScore}
-                                                                onChange={handleScoreChange(
-                                                                    row.submission.id,
-                                                                    wf.workflowId,
-                                                                )}
-                                                                placeholder='Leave empty to clear'
-                                                            />
-                                                        </label>
-                                                        <label className={styles.inputLabel}>
-                                                            Workflow Comment
-                                                            <textarea
-                                                                className={styles.commentInput}
-                                                                rows={2}
-                                                                value={wfEdit.managerComment}
-                                                                onChange={handleWorkflowCommentChange(
-                                                                    row.submission.id,
-                                                                    wf.workflowId,
-                                                                )}
-                                                                placeholder='Optional comment'
-                                                            />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-
-                                <div className={styles.managerCommentSection}>
-                                    <label className={styles.inputLabel}>
-                                        Manager Comment
-                                        <textarea
-                                            className={styles.commentInput}
-                                            rows={3}
-                                            value={editState.managerComment}
-                                            onChange={handleManagerCommentChange(row.submission.id)}
-                                            placeholder='Enter a manager comment (optional)...'
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-
-                        {!canEdit && row.decision?.managerComment && (
-                            <div className={styles.readOnlySection}>
-                                <div className={styles.readOnlyTitle}>Manager Comment</div>
-                                <div className={styles.readOnlyContent}>{row.decision.managerComment}</div>
-                            </div>
-                        )}
-
-                        {!canEdit && workflows.some(wf => wf.managerScore !== undefined) && (
-                            <div className={styles.readOnlySection}>
-                                <div className={styles.readOnlyTitle}>Manager Score Overrides</div>
-                                <div className={styles.overridesList}>
-                                    {workflows
-                                        .filter(wf => wf.managerScore !== undefined)
-                                        .map(wf => (
-                                            <p key={wf.workflowId}>
-                                                {workflowNameById[wf.workflowId] || wf.workflowId}
-                                                :
-                                                {' '}
-                                                {wf.managerScore}
-                                            </p>
-                                        ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )
             },
@@ -590,15 +463,12 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     }, [
         aiReviewers,
         canEdit,
-        expandedRows,
-        getEditState,
-        handleManagerCommentChange,
+        editingRows,
+        getScores,
         handleSaveButtonClick,
         handleScoreChange,
         handleToggleClick,
-        handleWorkflowCommentChange,
         savingSubmissionId,
-        workflowNameById,
     ])
 
     if (props.isLoading) {
@@ -616,7 +486,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 {canEdit && (
                     <>
                         {' '}
-                        Click the edit icon to modify scores and add manager comments.
+                        Click Edit to modify workflow scores.
                     </>
                 )}
             </p>
@@ -654,16 +524,16 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                     )}
                 >
                     <div className={styles.confirmContent}>
-                        <p>Are you sure you want to save these changes?</p>
+                        <p>Are you sure you want to save these score changes?</p>
                         <div className={styles.confirmComment}>
                             <label className={styles.inputLabel}>
-                                Manager Comment (for this save):
+                                Manager Comment:
                                 <textarea
                                     className={styles.commentInput}
                                     rows={3}
-                                    value={getEditState(confirmModal.submissionId).managerComment}
-                                    onChange={handleConfirmCommentChange}
-                                    placeholder='Add a comment explaining the changes...'
+                                    value={confirmModal.managerComment}
+                                    onChange={handleCommentChange}
+                                    placeholder='Add a comment explaining the changes (optional)...'
                                 />
                             </label>
                         </div>

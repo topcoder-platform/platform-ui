@@ -217,3 +217,39 @@
     padding-top: 8px;
     border-top: 1px solid rgba(255,255,255,0.3);
 }
+
+// Override column
+.overrideCol {
+    text-align: center;
+    min-width: 90px;
+}
+
+.overrideInput {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        border-color: $link-blue-dark;
+        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.15);
+    }
+
+    &::placeholder {
+        color: $black-40;
+        font-size: 11px;
+    }
+}
+
+.overrideValue {
+    color: $black-40;
+}
+
+.hasOverride {
+    color: $orange-100;
+    font-weight: 600;
+}
