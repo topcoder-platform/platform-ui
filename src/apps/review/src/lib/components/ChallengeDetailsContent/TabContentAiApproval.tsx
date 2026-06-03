@@ -19,6 +19,7 @@ import moment from 'moment'
 import { TableLoading } from '~/apps/admin/src/lib'
 
 import {
+    AiReviewConfig,
     AiReviewDecision,
     BackendSubmission,
     ChallengeDetailContextModel,
@@ -41,6 +42,7 @@ interface SubmissionApprovalRowProps {
     submission: BackendSubmission
     decision: AiReviewDecision | undefined
     aiReviewers: { aiWorkflowId: string }[]
+    aiReviewConfig?: AiReviewConfig
     isPrivilegedRole: boolean
     isApprovalPhaseOpen: boolean
     onSaved: (updated: AiReviewDecision) => void
@@ -76,6 +78,17 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const canEdit = props.isPrivilegedRole && props.isApprovalPhaseOpen
     const workflows = props.decision?.breakdown?.workflows ?? []
+
+    const workflowNameById = useMemo<Record<string, string>>(() => {
+        const configWorkflows = props.aiReviewConfig?.workflows ?? []
+        return configWorkflows.reduce<Record<string, string>>((acc, cw) => {
+            if (cw.workflowId && cw.workflow?.name) {
+                acc[cw.workflowId] = cw.workflow.name
+            }
+
+            return acc
+        }, {})
+    }, [props.aiReviewConfig?.workflows])
 
     useEffect(() => {
         setManagerComment(props.decision?.managerComment ?? '')
@@ -154,12 +167,6 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                 )}
             </div>
 
-            <CollapsibleAiReviewsRow
-                defaultOpen
-                aiReviewers={props.aiReviewers}
-                submission={props.submission}
-            />
-
             {props.decision && canEdit && (
                 <div className={styles.managerCommentSection}>
                     {workflows.length > 0 && (
@@ -171,7 +178,9 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                                 return (
                                     <div key={workflow.workflowId} className={styles.workflowOverrideRow}>
                                         <div className={styles.workflowMeta}>
-                                            <span className={styles.workflowId}>{workflow.workflowId}</span>
+                                            <span className={styles.workflowId}>
+                                                {workflowNameById[workflow.workflowId] || workflow.workflowId}
+                                            </span>
                                             <span className={styles.workflowRunScore}>
                                                 Run Score:
                                                 {' '}
@@ -269,7 +278,7 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
                             .filter(workflow => workflow.managerScore !== undefined && workflow.managerScore !== null)
                             .map(workflow => (
                                 <p key={workflow.workflowId}>
-                                    {workflow.workflowId}
+                                    {workflowNameById[workflow.workflowId] || workflow.workflowId}
                                     :
                                     {' '}
                                     {workflow.managerScore}
@@ -291,6 +300,7 @@ const SubmissionApprovalRow: FC<SubmissionApprovalRowProps> = (props: Submission
 export const TabContentAiApproval: FC<Props> = props => {
     const {
         challengeInfo,
+        aiReviewConfig,
         aiReviewDecisionsBySubmissionId,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { isPrivilegedRole }: useRoleProps = useRole()
@@ -324,7 +334,7 @@ export const TabContentAiApproval: FC<Props> = props => {
     }, [])
 
     const contestSubmissions = useMemo<BackendSubmission[]>(
-        () => props.submissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION'),
+        () => props.submissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION' && s.isLatest),
         [props.submissions],
     )
 
@@ -350,6 +360,7 @@ export const TabContentAiApproval: FC<Props> = props => {
                     submission={submission}
                     decision={getDecision(submission.id)}
                     aiReviewers={aiReviewers}
+                    aiReviewConfig={aiReviewConfig}
                     isPrivilegedRole={isPrivilegedRole}
                     isApprovalPhaseOpen={isApprovalPhaseOpen}
                     onSaved={handleDecisionSaved}
