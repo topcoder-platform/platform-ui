@@ -69,7 +69,7 @@
     overflow: hidden;
 
     @include ltesm {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -84,13 +84,19 @@
     @include ltesm {
         padding: $sp-4;
     }
+
+    &:first-child {
+        @include ltesm {
+            grid-column: 1 / -1;
+        }
+    }
 }
 
 .positionMetric {
     border-left: 1px solid $black-10;
 
     @include ltesm {
-        border-left: 0;
+        border-left: 1px solid $black-10;
         border-top: 1px solid $black-10;
     }
 }

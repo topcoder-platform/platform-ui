@@ -6,22 +6,29 @@
     container-type: inline-size;
 }
 
+.challengePointsStandalone {
+    container-type: inline-size;
+    margin: $sp-4 0 0;
+    width: 100%;
+}
+
 .challengePointsBar {
     display: flex;
     align-items: center;
-    gap: $sp-1;
-    min-height: 34px;
-    padding: 0 $sp-4;
-    border-radius: 8px 8px 0 0;
+    gap: $sp-2;
+    min-height: 66px;
+    padding: 0 $sp-7;
+    border-radius: 8px;
     background: linear-gradient(90deg, #008A72, #005B86);
     color: $tc-white;
     font-family: $font-roboto;
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 18px;
+    line-height: 24px;
 
     @include ltesm {
         flex-wrap: wrap;
-        padding: $sp-2 $sp-3;
+        min-height: 86px;
+        padding: $sp-4;
     }
 }
 
@@ -31,9 +38,9 @@
 
 .challengePointsValue {
     font-family: $font-barlow-condensed;
-    font-size: 20px;
+    font-size: 32px;
     font-weight: $font-weight-medium;
-    line-height: 22px;
+    line-height: 34px;
 }
 
 .challengePointsMeta {
@@ -74,10 +81,6 @@
     color: $tc-white;
     padding: $sp-8 $sp-9 $sp-7;
     min-height: 100%;
-
-    .challengePointsBar + & {
-        border-radius: 0 0 8px 8px;
-    }
 
     @include ltelg {
         padding: $sp-5;

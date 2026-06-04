@@ -17,6 +17,7 @@
         border-radius: 8px;
         width: 286px;
         max-width: 100%;
+        margin: 0 auto;
 
         .valueWrap {
             appearance: none;
@@ -94,14 +95,15 @@
         }
 
         @include ltesm {
-            grid-template-columns: 1fr;
-            width: 100%;
-            justify-items: start;
+            grid-template-columns: 52px 104px auto;
+            column-gap: $sp-3;
+            justify-items: stretch;
+            width: 300px;
 
             .link {
-                grid-column: auto;
-                justify-self: start;
-                margin-top: 0;
+                grid-column: -2 / -1;
+                justify-self: end;
+                margin-top: $sp-1;
             }
         }
     }

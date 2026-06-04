@@ -1,7 +1,7 @@
 @import "@libs/ui/styles/includes";
 
 .modal {
-    width: 520px !important;
+    width: 640px !important;
     min-width: 0 !important;
     max-width: calc(100vw - #{$sp-8}) !important;
     padding: $sp-6 !important;
@@ -40,36 +40,17 @@
 .content {
     display: flex;
     flex-direction: column;
-    gap: $sp-5;
+    gap: $sp-4;
     min-width: 0;
 }
 
-.summary {
-    align-items: baseline;
-    border-bottom: 1px solid $black-10;
-    display: flex;
-    gap: $sp-2;
-    padding-bottom: $sp-4;
-}
-
-.summaryValue {
-    color: $turq-160;
-    font-family: $font-barlow-condensed;
-    font-size: 34px;
-    font-weight: $font-weight-medium;
-    line-height: 36px;
-}
-
-.summaryLabel {
-    color: $black-80;
-    font-family: $font-roboto;
-    font-size: 13px;
-    line-height: 18px;
+.divider {
+    border: 0;
+    border-top: 1px solid $black-10;
+    margin: 0;
 }
 
 .table {
-    border: 1px solid $black-10;
-    border-radius: 6px;
     overflow: hidden;
 }
 
@@ -77,28 +58,32 @@
 .tableRow {
     display: grid;
     gap: $sp-3;
-    grid-template-columns: minmax(0, 1fr) 64px 82px;
+    grid-template-columns: 56px minmax(0, 1fr) 72px;
+
+    @include ltesm {
+        gap: $sp-2;
+        grid-template-columns: 44px minmax(0, 1fr) 52px;
+    }
 }
 
 .tableHeader {
-    background: $black-5;
-    color: $black-80;
+    border-bottom: 1px solid $black-20;
+    color: $black-100;
     font-family: $font-roboto;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: $font-weight-bold;
-    line-height: 16px;
-    padding: $sp-2 $sp-3;
-    text-transform: uppercase;
+    line-height: 20px;
+    padding: $sp-3 0;
 }
 
 .tableRow {
     align-items: center;
     color: $black-100;
     font-family: $font-roboto;
-    font-size: 13px;
-    line-height: 18px;
-    min-height: 44px;
-    padding: $sp-3;
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 52px;
+    padding: $sp-3 0;
 
     & + & {
         border-top: 1px solid $black-10;
@@ -107,11 +92,8 @@
 
 .challengeLink {
     color: $turq-160;
-    font-weight: $font-weight-bold;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
 
     &:hover {
         text-decoration: underline;

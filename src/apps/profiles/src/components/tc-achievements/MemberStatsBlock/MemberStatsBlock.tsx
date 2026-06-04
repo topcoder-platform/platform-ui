@@ -23,6 +23,11 @@ interface MemberStatsBlockProps {
     profile: UserProfile
 }
 
+interface MemberChallengePointsBarProps {
+    memberStats?: UserStats
+    profile: UserProfile
+}
+
 interface TrackDisplayStats {
     indicator?: 'rating' | 'winner'
     label: string
@@ -122,7 +127,7 @@ const sortTracksForDisplay = (tracks: MemberStatsTrack[]): MemberStatsTrack[] =>
 const ChallengePointsBar: FC<ChallengePointsBarProps> = props => (
     <div className={styles.challengePointsBar}>
         <span className={styles.challengePointsLabel}>
-            Challenge Points
+            Challenge Points:
         </span>
         <span className={styles.challengePointsValue}>
             {formatStatValue(props.points)}
@@ -148,6 +153,52 @@ const ChallengePointsBar: FC<ChallengePointsBarProps> = props => (
         )}
     </div>
 )
+
+/**
+ * Renders the standalone challenge-points row and its optional breakdown modal.
+ *
+ * @param {MemberChallengePointsBarProps} props - Profile data plus already-fetched member stats fallback data.
+ * @returns {JSX.Element} The challenge-points row, or an empty fragment when no points exist.
+ */
+export const MemberChallengePointsBar: FC<MemberChallengePointsBarProps> = props => {
+    const [isPointsModalOpen, setIsPointsModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const profileChallengePoints: UserChallengePointsSummary | undefined = (
+        (props.profile.challengePoints?.total ?? 0) > 0
+            ? props.profile.challengePoints
+            : undefined
+    )
+    const statsChallengePoints = useMemo(() => getMemberChallengePoints(props.memberStats), [props.memberStats])
+    const challengePoints = profileChallengePoints?.total
+        ?? ((statsChallengePoints ?? 0) > 0 ? statsChallengePoints : undefined)
+    const challengePointsChallenges = profileChallengePoints?.challenges ?? props.memberStats?.challenges
+    const canViewChallengePointsBreakdown = (profileChallengePoints?.details?.length ?? 0) > 0
+
+    function handleOpenPointsModal(): void {
+        setIsPointsModalOpen(true)
+    }
+
+    function handleClosePointsModal(): void {
+        setIsPointsModalOpen(false)
+    }
+
+    return challengePoints === undefined ? <></> : (
+        <div className={styles.challengePointsStandalone}>
+            <ChallengePointsBar
+                canViewBreakdown={canViewChallengePointsBreakdown}
+                challengeCount={challengePointsChallenges}
+                points={challengePoints}
+                onOpenBreakdown={handleOpenPointsModal}
+            />
+            {isPointsModalOpen && profileChallengePoints && (
+                <MemberChallengePointsModal
+                    challengePoints={profileChallengePoints}
+                    onClose={handleClosePointsModal}
+                />
+            )}
+        </div>
+    )
+}
 
 /**
  * Renders one linked member-stats track row.
@@ -194,79 +245,43 @@ const TrackListItem: FC<TrackListItemProps> = props => {
 
 const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
     const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
-    const [isPointsModalOpen, setIsPointsModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
 
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
     const activeTracks = useMemo(() => getActiveTracks(memberStats), [memberStats])
     const displayTracks = useMemo(() => sortTracksForDisplay(activeTracks), [activeTracks])
-    const profileChallengePoints: UserChallengePointsSummary | undefined = (
-        (props.profile.challengePoints?.total ?? 0) > 0
-            ? props.profile.challengePoints
-            : undefined
-    )
-    const statsChallengePoints = useMemo(() => getMemberChallengePoints(memberStats), [memberStats])
-    const challengePoints = profileChallengePoints?.total
-        ?? ((statsChallengePoints ?? 0) > 0 ? statsChallengePoints : undefined)
-    const challengePointsChallenges = profileChallengePoints?.challenges ?? memberStats?.challenges
-    const canViewChallengePointsBreakdown = (profileChallengePoints?.details?.length ?? 0) > 0
 
     const getTrackRoute = useCallback((trackName: string, subTracks?: MemberStats[]): string => {
         const subTrackName = subTracks?.length === 1 ? subTracks[0].name : ''
         return statsRoute(props.profile.handle, trackName, subTrackName)
     }, [props.profile.handle, statsRoute])
 
-    function handleOpenPointsModal(): void {
-        setIsPointsModalOpen(true)
-    }
-
-    function handleClosePointsModal(): void {
-        setIsPointsModalOpen(false)
-    }
-
-    return displayTracks.length === 0 && challengePoints === undefined ? <></> : (
+    return displayTracks.length === 0 ? <></> : (
         <div className={styles.containerWrap}>
-            {challengePoints !== undefined && (
-                <ChallengePointsBar
-                    canViewBreakdown={canViewChallengePointsBreakdown}
-                    challengeCount={challengePointsChallenges}
-                    points={challengePoints}
-                    onOpenBreakdown={handleOpenPointsModal}
-                />
-            )}
-            {displayTracks.length > 0 && (
-                <div className={styles.container}>
-                    <div className={styles.innerWrapper}>
-                        <p className={styles.sectionTitle}>
-                            <span className='body-large-bold'>
-                                Member Stats
-                            </span>
-                        </p>
-                        <ul className={styles.statsList}>
-                            {displayTracks.map(track => (
-                                <TrackListItem
-                                    getTrackRoute={getTrackRoute}
-                                    key={track.name}
-                                    track={track}
-                                />
-                            ))}
-                        </ul>
-                        <p className={styles.footerNote}>
-                            <span className='body-main'>
-                                Topcoder challenges are competitive events where community members collaborate
-                                on smaller tasks to complete a project,
-                                striving to showcase their skills and outperform others.
-                            </span>
-                        </p>
-                    </div>
+            <div className={styles.container}>
+                <div className={styles.innerWrapper}>
+                    <p className={styles.sectionTitle}>
+                        <span className='body-large-bold'>
+                            Member Stats
+                        </span>
+                    </p>
+                    <ul className={styles.statsList}>
+                        {displayTracks.map(track => (
+                            <TrackListItem
+                                getTrackRoute={getTrackRoute}
+                                key={track.name}
+                                track={track}
+                            />
+                        ))}
+                    </ul>
+                    <p className={styles.footerNote}>
+                        <span className='body-main'>
+                            Topcoder challenges are competitive events where community members collaborate
+                            on smaller tasks to complete a project,
+                            striving to showcase their skills and outperform others.
+                        </span>
+                    </p>
                 </div>
-            )}
-            {isPointsModalOpen && profileChallengePoints && (
-                <MemberChallengePointsModal
-                    challengePoints={profileChallengePoints}
-                    onClose={handleClosePointsModal}
-                />
-            )}
+            </div>
         </div>
     )
 }

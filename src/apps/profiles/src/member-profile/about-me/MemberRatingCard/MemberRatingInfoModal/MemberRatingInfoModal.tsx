@@ -357,7 +357,11 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                             {percentileLabel}
                             {percentileLabel === '--' ? '' : '%'}
                         </span>
-                        <span className={styles.summaryMeta}>{props.audienceLabel}</span>
+                        <span className={styles.summaryMeta}>
+                            of
+                            {' '}
+                            {props.audienceLabel.toLowerCase()}
+                        </span>
                     </div>
                 </div>
 
