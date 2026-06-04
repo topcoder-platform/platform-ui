@@ -8,7 +8,10 @@ import {
     useState,
 } from 'react'
 import {
+    FieldErrors,
+    UseFormClearErrors,
     useFormContext,
+    UseFormSetError,
     useWatch,
 } from 'react-hook-form'
 import classNames from 'classnames'
@@ -71,6 +74,10 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         setError,
         clearErrors,
         formState: { errors },
+    }: {
+        setError: UseFormSetError<ChallengeEditorFormData>
+        clearErrors: UseFormClearErrors<ChallengeEditorFormData>
+        formState: { errors: FieldErrors<ChallengeEditorFormData> }
     } = useFormContext<ChallengeEditorFormData>()
     const phases = useWatch({
         control: formContext.control,
@@ -139,9 +146,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const humanReviewLabel = `Human Review (${humanReviewersCount})`
     const aiReviewLabel = `AI Review (${aiReviewersCount})`
     const aiGatingManualReviewError = useMemo(
-        () => aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+        () => (aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
-            : undefined,
+            : undefined),
         [aiReviewMode, humanReviewersCount],
     )
 
@@ -155,8 +162,8 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         }
 
         setError('reviewers', {
-            type: 'aiGatingManualReview',
             message: aiGatingManualReviewError,
+            type: 'aiGatingManualReview',
         })
     }, [aiGatingManualReviewError, clearErrors, errors.reviewers?.type, setError])
 

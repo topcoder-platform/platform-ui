@@ -36,13 +36,13 @@ jest.mock('./AiReviewTab', () => ({
 
         function handlePersistClick(): void {
             props.onConfigPersisted?.({
-                id: 'config-1',
-                challengeId: 'challenge-1',
-                mode: 'AI_GATING',
-                workflows: [],
-                templateId: undefined,
-                minPassingThreshold: 75,
                 autoFinalize: false,
+                challengeId: 'challenge-1',
+                id: 'config-1',
+                minPassingThreshold: 75,
+                mode: 'AI_GATING',
+                templateId: undefined,
+                workflows: [],
             })
         }
 
@@ -271,7 +271,8 @@ describe('ReviewersField', () => {
 
         expect(screen.getByText(
             'Manual review configuration is required when AI Review mode is AI GATING.',
-        )).toBeInTheDocument()
+        ))
+            .toBeInTheDocument()
     })
 
     it('supports keyboard navigation between review tabs', async () => {
