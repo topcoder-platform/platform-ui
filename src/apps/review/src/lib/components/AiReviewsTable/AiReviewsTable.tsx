@@ -114,29 +114,45 @@ function getDecisionBySubmission(
 }
 
 /**
- * Builds a list of human-readable note strings from escalations.
- * Used to display notes for Escalating, Approving/Rejecting, and Unlocking actions.
+ * Resolves a memberId to a display handle using the resourceMemberIdMapping.
+ * Falls back to the raw id string if no match is found.
+ */
+function resolveHandle(
+    memberId: string | null | undefined,
+    resourceMemberIdMapping: Record<string, BackendResource>,
+): string {
+    if (!memberId) return ''
+    return resourceMemberIdMapping[memberId]?.memberHandle ?? memberId
+}
+
+/**
+ * Builds a list of human-readable note strings from escalations and unlock reason.
+ *
+ * @param escalations            - List of escalation objects from the AI review decision
+ * @param reason                 - The unlock reason string from the decision
+ * @param showAuthor             - When true, appends "(by <handle>)" to each note.
+ *                                 Pass false for reviewer role so author identity is hidden.
+ *                                 Defaults to true.
+ * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
  */
 function buildDecisionNotes(
     escalations?: AiReviewDecisionEscalation[],
-    resourceMemberIdMapping?: Record<string, any>,
+    reason?: string | null,
+    showAuthor = true,
+    resourceMemberIdMapping: Record<string, BackendResource> = {},
 ): string[] {
     const parts: string[] = []
 
-    const getMemberHandle = (memberId?: string | null): string => {
-        if (!memberId || !resourceMemberIdMapping) return ''
-        const resource = resourceMemberIdMapping[memberId]
-        return resource?.memberHandle || ''
-    }
-
     escalations?.forEach(esc => {
         if (esc.escalationNotes) {
-            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
+            const handle = resolveHandle(esc.createdBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
         }
 
         if (esc.approverNotes) {
-            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
+            const handle = resolveHandle(esc.updatedBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             const prefix = esc.status === 'APPROVED'
                 ? 'Approval Note'
                 : esc.status === 'REJECTED'
@@ -145,6 +161,10 @@ function buildDecisionNotes(
             parts.push(`${prefix}${by}: ${esc.approverNotes}`)
         }
     })
+
+    if (reason) {
+        parts.push(`Unlock Reason: ${reason}`)
+    }
 
     return parts
 }
@@ -346,18 +366,23 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         return 'Submission Locked - This submission won\'t be reviewed during the Review Phase.'
     }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
-    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
-
     /**
-     * Builds the list of notes from escalations (escalationNotes, approverNotes).
-     * These are shown to Copilot/Manager/Admin only (not to submitters) so they
-     * can see why a submission was escalated or approved/rejected.
+     * Builds the notes list shown in the banner.
+     *
+     * - Submitters              → NO notes shown at all (empty array)
+     * - Reviewers               → note text only, NO "(by handle)"  (canSeeAuthor = false)
+     * - Copilot / PM / Admin    → note text WITH "(by handle)"       (canSeeAuthor = true)
      */
     const decisionNotes = useMemo((): string[] => {
         if (!currentDecision || hasSubmitterRole) return []
 
-        return buildDecisionNotes(currentDecision.escalations, resourceMemberIdMapping)
-    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
+        return buildDecisionNotes(
+            currentDecision.escalations,
+            currentDecision.reason,
+            canSeeAuthor,
+            resourceMemberIdMapping,
+        )
+    }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const hasDecisionNotes = decisionNotes.length > 0
 
