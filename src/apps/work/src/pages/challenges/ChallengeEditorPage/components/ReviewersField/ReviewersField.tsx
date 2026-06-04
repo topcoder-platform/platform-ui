@@ -2,6 +2,7 @@ import {
     FC,
     KeyboardEvent,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -19,6 +20,7 @@ import {
     Reviewer,
 } from '../../../../../lib/models'
 import {
+    fetchAiReviewConfigByChallenge,
     fetchChallenge,
     patchChallenge,
 } from '../../../../../lib/services'
@@ -52,7 +54,8 @@ function hasReviewerChanges(
 export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
-    const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>(undefined)
+    const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>()
+    const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
 
@@ -64,6 +67,11 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         control: formContext.control,
         name: 'id',
     }) as string | undefined
+    const {
+        setError,
+        clearErrors,
+        formState: { errors },
+    } = useFormContext<ChallengeEditorFormData>()
     const phases = useWatch({
         control: formContext.control,
         name: 'phases',
@@ -85,6 +93,35 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         name: 'prizeSets',
     }) as ChallengeEditorFormData['prizeSets']
 
+    useEffect(() => {
+        let mounted = true
+
+        if (!challengeId || aiReviewMode !== undefined || hasLoadedAiConfig) {
+            return undefined
+        }
+
+        fetchAiReviewConfigByChallenge(challengeId)
+            .then((config: AiReviewConfig | undefined) => {
+                if (!mounted) {
+                    return
+                }
+
+                if (config?.mode) {
+                    setAiReviewMode(config.mode)
+                }
+            })
+            .catch(() => undefined)
+            .finally(() => {
+                if (mounted) {
+                    setHasLoadedAiConfig(true)
+                }
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [aiReviewMode, challengeId, hasLoadedAiConfig])
+
     const reviewerRows = useMemo(
         () => (Array.isArray(reviewers)
             ? reviewers
@@ -101,6 +138,28 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     )
     const humanReviewLabel = `Human Review (${humanReviewersCount})`
     const aiReviewLabel = `AI Review (${aiReviewersCount})`
+    const aiGatingManualReviewError = useMemo(
+        () => aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+            ? 'Manual review configuration is required.'
+            : undefined,
+        [aiReviewMode, humanReviewersCount],
+    )
+
+    useEffect(() => {
+        if (!aiGatingManualReviewError) {
+            if (errors.reviewers?.type === 'aiGatingManualReview') {
+                clearErrors('reviewers')
+            }
+
+            return
+        }
+
+        setError('reviewers', {
+            type: 'aiGatingManualReview',
+            message: aiGatingManualReviewError,
+        })
+    }, [aiGatingManualReviewError, clearErrors, errors.reviewers?.type, setError])
+
     const hasSubmissions = useMemo(
         () => Number(numOfSubmissions || 0) > 0,
         [numOfSubmissions],
@@ -282,6 +341,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         </div>
 
                         <fieldset className={styles.tabPanels}>
+                            {aiGatingManualReviewError && !errors.reviewers && (
+                                <p className={styles.error}>{aiGatingManualReviewError}</p>
+                            )}
                             <div
                                 aria-labelledby='reviewers-human-tab'
                                 className={classNames(
@@ -299,11 +361,8 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                         No manual reviewers are needed in AI Only mode.
                                     </p>
                                 )}
-                                {aiReviewMode !== 'AI_ONLY' && (
-                                    <HumanReviewTab />
-                                )}
+                                <HumanReviewTab />
                             </div>
-
                             <div
                                 aria-labelledby='reviewers-ai-tab'
                                 className={classNames(

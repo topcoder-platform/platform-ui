@@ -27,10 +27,23 @@ jest.mock('./AiReviewTab', () => ({
         props: {
             hasSubmissions?: boolean
             onConfigRemoved?: () => Promise<void> | void
+            onConfigPersisted?: (config: unknown) => void
         },
     ) {
         function handleRemoveClick(): void {
             props.onConfigRemoved?.()
+        }
+
+        function handlePersistClick(): void {
+            props.onConfigPersisted?.({
+                id: 'config-1',
+                challengeId: 'challenge-1',
+                mode: 'AI_GATING',
+                workflows: [],
+                templateId: undefined,
+                minPassingThreshold: 75,
+                autoFinalize: false,
+            })
         }
 
         return (
@@ -43,6 +56,12 @@ jest.mock('./AiReviewTab', () => ({
                     type='button'
                 >
                     Remove AI config
+                </button>
+                <button
+                    onClick={handlePersistClick}
+                    type='button'
+                >
+                    Persist AI config
                 </button>
                 AI review content
             </div>
@@ -236,6 +255,23 @@ describe('ReviewersField', () => {
         await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
 
         expect(screen.getByTestId('ai-review-tab-read-only')).not.toBeNull()
+    })
+
+    it('requires manual reviewer configuration when AI Review mode is AI GATING', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                reviewers={[]}
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(screen.getByText(
+            'Manual review configuration is required when AI Review mode is AI GATING.',
+        )).toBeInTheDocument()
     })
 
     it('supports keyboard navigation between review tabs', async () => {
