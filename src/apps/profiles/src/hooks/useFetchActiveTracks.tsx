@@ -1,7 +1,14 @@
 import { useMemo } from 'react'
 import { filter, find, get, orderBy } from 'lodash'
 
-import { MemberStats, MemberStatsGroup, SRMStats, useMemberStats, UserStats } from '~/libs/core'
+import {
+    DataScienceRatingPathStats,
+    MemberStats,
+    MemberStatsGroup,
+    SRMStats,
+    useMemberStats,
+    UserStats,
+} from '~/libs/core'
 
 import { calcProportionalAverage } from '../lib/math.utils'
 
@@ -9,6 +16,16 @@ const testingSubTrackNames = new Set([
     'BUG_HUNT',
     'TEST_SCENARIOS',
     'TEST_SUITES',
+])
+
+const nativeDataScienceStatsKeys = new Set([
+    'MARATHON_MATCH',
+    'SRM',
+    'challenges',
+    'mostRecentEventDate',
+    'mostRecentEventName',
+    'mostRecentSubmission',
+    'wins',
 ])
 
 /**
@@ -99,6 +116,23 @@ const mapSubTracksByName = (
 
 const getFiniteNumber = (value: unknown): number | undefined => (
     typeof value === 'number' && Number.isFinite(value) ? value : undefined
+)
+
+/**
+ * Determine whether a DATA_SCIENCE entry is a configured rating path.
+ *
+ * Native data science fields include counters and known subtracks; configured
+ * rating paths are keyed by their path name and should only become profile
+ * cells after the member has an actual rating.
+ *
+ * @param {unknown} statsEntry - A DATA_SCIENCE value from the member stats payload.
+ * @returns {boolean} Whether the value is a rated custom path stats object.
+ */
+const isDataScienceRatingPathStats = (statsEntry: unknown): statsEntry is DataScienceRatingPathStats => (
+    typeof statsEntry === 'object'
+    && statsEntry !== null
+    && !Array.isArray(statsEntry)
+    && getFiniteNumber((statsEntry as DataScienceRatingPathStats).rank?.rating) !== undefined
 )
 
 /**
@@ -228,6 +262,70 @@ const buildAIEngineeringTrackData = (memberStats?: UserStats): MemberStatsTrack 
 }
 
 /**
+ * Builds an active track from a configured DATA_SCIENCE rating path.
+ *
+ * The member API stores configured rating paths under `DATA_SCIENCE.<pathName>`,
+ * so each path is represented as its own single-subtrack cell while retaining
+ * `DATA_SCIENCE` as the API track for history and distribution calls.
+ *
+ * @param {string} ratingPathName - The configured rating path name, for example `AI`.
+ * @param {DataScienceRatingPathStats} ratingPathStats - Stats returned for the configured rating path.
+ * @returns {MemberStatsTrack} Display data for the configured rating path.
+ */
+const buildDataScienceRatingPathTrackData = (
+    ratingPathName: string,
+    ratingPathStats: DataScienceRatingPathStats,
+): MemberStatsTrack => {
+    const subTrack: MemberStats = {
+        ...(ratingPathStats as MemberStats),
+        name: ratingPathName,
+        parentTrack: 'DATA_SCIENCE',
+        path: 'DATA_SCIENCE',
+    }
+
+    return {
+        challenges: getFiniteNumber(ratingPathStats.challenges) ?? 0,
+        isActive: true,
+        isDSTrack: true,
+        name: ratingPathName,
+        order: -1,
+        percentile: getFiniteNumber(ratingPathStats.rank?.overallPercentile)
+            ?? getFiniteNumber(ratingPathStats.rank?.percentile),
+        rating: getFiniteNumber(ratingPathStats.rank?.rating),
+        subTracks: [subTrack],
+        wins: getFiniteNumber(ratingPathStats.wins) ?? 0,
+    }
+}
+
+/**
+ * Builds active tracks for custom DATA_SCIENCE rating paths returned by the member API.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStatsTrack[]} Rated custom data science paths to display in Member Stats.
+ */
+const getDataScienceRatingPathTrackData = (memberStats?: UserStats): MemberStatsTrack[] => {
+    const dataScienceStats = memberStats?.DATA_SCIENCE
+
+    if (!dataScienceStats) {
+        return []
+    }
+
+    return Object.entries(dataScienceStats)
+        .reduce((ratingPathTracks: MemberStatsTrack[], [ratingPathName, ratingPathStats]) => {
+            if (
+                nativeDataScienceStatsKeys.has(ratingPathName)
+                || !isDataScienceRatingPathStats(ratingPathStats)
+            ) {
+                return ratingPathTracks
+            }
+
+            ratingPathTracks.push(buildDataScienceRatingPathTrackData(ratingPathName, ratingPathStats))
+
+            return ratingPathTracks
+        }, [])
+}
+
+/**
  * Custom hook to fetch active tracks for a user, sorted by wins & submissions.
  *
  * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
@@ -298,6 +396,7 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     const dsSubTracks: MemberStats[] = [
         dataScienceSubTracks.MARATHON_MATCH,
     ].filter(d => d?.challenges > 0) as MemberStats[]
+    const dataScienceRatingPathTrackStats: MemberStatsTrack[] = getDataScienceRatingPathTrackData(memberStats)
 
     const dsTrackStats: MemberStatsTrack = {
         challenges: dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0,
@@ -337,6 +436,7 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
         designTrackStats,
         developTrackStats,
         testingTrackStats,
+        ...dataScienceRatingPathTrackStats,
     ], { isActive: true }), ['order', 'wins', 'submissions'], ['desc', 'desc', 'desc'])
 }
 

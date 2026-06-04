@@ -1,27 +1,101 @@
 @import '@libs/ui/styles/includes';
 
+.modal {
+    width: 626px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    padding: $sp-6 $sp-7 !important;
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-5;
+        top: $sp-5;
+
+        svg {
+            fill: $turq-160 !important;
+        }
+    }
+
+    @include ltemd {
+        width: calc(100vw - #{$sp-4}) !important;
+        max-width: calc(100vw - #{$sp-4}) !important;
+        padding: $sp-5 $sp-4 !important;
+    }
+}
+
 .body {
+    margin: 0 !important;
     overflow: visible !important;
+    padding: 0 !important;
 }
 
 .content {
     display: flex;
     flex-direction: column;
     gap: $sp-4;
+    min-width: 0;
 }
 
-.ratingPanel,
-.positionPanel {
+.title {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    margin: 0;
+    padding-right: $sp-8;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid $black-10;
+    margin: $sp-4 0 $sp-1;
+}
+
+.description {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 14px;
+    line-height: 21px;
+    margin: 0;
+}
+
+.summaryPanel {
+    align-items: stretch;
+    border: 1px solid $black-10;
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 126px minmax(0, 1fr);
+    min-height: 96px;
+    overflow: hidden;
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summaryMetric {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: $sp-4;
-    border: 1px solid $black-10;
-    border-radius: 6px;
-    background: $tc-white;
+    justify-content: center;
+    min-width: 0;
+    padding: $sp-3 $sp-6;
+
+    @include ltesm {
+        padding: $sp-4;
+    }
 }
 
-.panelLabel {
+.positionMetric {
+    border-left: 1px solid $black-10;
+
+    @include ltesm {
+        border-left: 0;
+        border-top: 1px solid $black-10;
+    }
+}
+
+.summaryLabel {
     color: $black-80;
     font-family: $font-roboto;
     font-size: 12px;
@@ -34,11 +108,226 @@
     font-size: 32px;
     font-weight: $font-weight-medium;
     line-height: 34px;
+    white-space: nowrap;
 }
 
-.panelMeta {
+.positionValue {
+    font-family: $font-barlow-condensed;
+    font-size: 28px;
+    font-weight: $font-weight-medium;
+    line-height: 32px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.summaryMeta {
     color: $black-60;
     font-family: $font-roboto;
     font-size: 12px;
     line-height: 16px;
+}
+
+.tierPyramid {
+    align-items: center;
+    border-left: 1px solid $black-10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: $sp-2 0;
+
+    @include ltesm {
+        border-left: 0;
+        border-top: 1px solid $black-10;
+        padding: $sp-4 0;
+    }
+}
+
+.tierPyramidSvg {
+    display: block;
+    height: 69px;
+    width: 76px;
+}
+
+.sectionTitle {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    line-height: 20px;
+    margin: $sp-1 0 0;
+}
+
+.chart {
+    background: $black-5;
+    border-radius: 6px;
+    height: 228px;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.bars {
+    align-items: flex-end;
+    bottom: $sp-7;
+    display: flex;
+    gap: 2px;
+    height: 176px;
+    left: $sp-5;
+    position: absolute;
+    right: $sp-5;
+}
+
+.bar {
+    border-radius: 1px 1px 0 0;
+    flex: 1 1 0;
+    min-width: 2px;
+}
+
+.memberMarker {
+    align-items: center;
+    bottom: $sp-7;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: $sp-12;
+    transform: translateX(-50%);
+    width: 0;
+    z-index: 2;
+
+    &::after {
+        background: #F2C900;
+        bottom: 0;
+        content: '';
+        display: block;
+        position: absolute;
+        top: $sp-6;
+        width: 1px;
+    }
+}
+
+.markerBadge {
+    align-items: center;
+    display: flex;
+    gap: $sp-2;
+    position: relative;
+    transform: translateX(34px);
+    z-index: 1;
+}
+
+.markerAvatar {
+    align-items: center;
+    background: $tc-white;
+    border: 2px solid $tc-white;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba($tc-black, 0.2);
+    display: flex;
+    height: 32px;
+    justify-content: center;
+    overflow: hidden;
+    width: 32px;
+
+    img {
+        display: block;
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+    }
+}
+
+.markerInitial {
+    align-items: center;
+    background: $black-20;
+    color: $black-80;
+    display: flex;
+    font-family: $font-roboto;
+    font-size: 12px;
+    font-weight: $font-weight-bold;
+    height: 100%;
+    justify-content: center;
+    width: 100%;
+}
+
+.markerRating {
+    font-family: $font-roboto;
+    font-size: 13px;
+    font-weight: $font-weight-bold;
+    line-height: 18px;
+}
+
+.axisLabels {
+    bottom: $sp-3;
+    color: $black-80;
+    font-family: $font-roboto;
+    font-size: 9px;
+    left: $sp-5;
+    line-height: 12px;
+    position: absolute;
+    right: $sp-5;
+
+    span {
+        position: absolute;
+        transform: translateX(-50%);
+        white-space: nowrap;
+    }
+}
+
+.emptyDistribution {
+    align-items: center;
+    color: $black-80;
+    display: flex;
+    font-family: $font-roboto;
+    font-size: 14px;
+    height: 100%;
+    justify-content: center;
+    margin: 0;
+}
+
+.legend {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    @include ltesm {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.legendCard {
+    border: 1px solid $black-10;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    min-height: 50px;
+    min-width: 0;
+    padding: $sp-2 $sp-3;
+}
+
+.legendCardActive {
+    background: var(--tier-highlight-color);
+    border-color: var(--tier-color);
+}
+
+.legendSwatch {
+    background: var(--tier-color);
+    border-radius: 3px;
+    display: block;
+    height: 4px;
+    margin-bottom: $sp-2;
+    width: 18px;
+}
+
+.legendRange {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    line-height: 14px;
+}
+
+.legendLabel {
+    color: $black-80;
+    font-family: $font-roboto;
+    font-size: 10px;
+    line-height: 14px;
 }

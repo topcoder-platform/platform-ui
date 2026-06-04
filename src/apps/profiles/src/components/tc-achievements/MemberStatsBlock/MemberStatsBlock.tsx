@@ -148,7 +148,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                     <span className={styles.trackName}>{track.name}</span>
                                     <div className={styles.trackDetails}>
                                         {getTrackDisplayStats(track).indicator === 'winner' && (
-                                            <WinnerIcon className={classNames('icon-lg', styles.winnerIcon)} />
+                                            <WinnerIcon className={classNames('icon-xxl', styles.winnerIcon)} />
                                         )}
                                         {getTrackDisplayStats(track).indicator === 'rating' && (
                                             <span
@@ -165,7 +165,7 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
                                             </span>
                                         </span>
                                         <IconOutline.ChevronRightIcon
-                                            className={classNames('icon-md', styles.rightArrowIcon)}
+                                            className={classNames('icon-lg', styles.rightArrowIcon)}
                                         />
                                     </div>
                                 </Link>

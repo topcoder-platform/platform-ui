@@ -8,35 +8,75 @@
         background: #07142F;
         color: $tc-white;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
-        align-items: center;
-        justify-content: space-between;
-        gap: $sp-3;
-        padding: $sp-3 $sp-4;
+        grid-template-columns: 52px 104px auto;
+        align-items: start;
+        column-gap: $sp-4;
+        justify-content: start;
+        min-height: 70px;
+        padding: $sp-4 $sp-5 $sp-3;
         border-radius: 8px;
+        width: 286px;
+        max-width: 100%;
 
         .valueWrap {
+            appearance: none;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
             min-width: 0;
+            padding: 0;
+            text-align: left;
+
+            &:hover {
+                .name {
+                    text-decoration: underline;
+                }
+            }
 
             .value {
-                font-size: 24px;
+                font-size: 26px;
                 font-weight: 500;
                 font-family: $font-barlow-condensed;
-                line-height: 26px;
+                line-height: 28px;
                 white-space: nowrap;
             }
 
             .name {
                 color: rgba($tc-white, 0.84);
-                font-size: 10px;
+                font-size: 12px;
                 line-height: 14px;
+            }
+
+            .percentileValue {
+                background: rgba($tc-white, 0.06);
+                border-radius: 2px;
+                font-family: $font-roboto;
+                font-size: 13px;
+                font-weight: $font-weight-bold;
+                line-height: 16px;
+                padding: 2px $sp-2;
+            }
+        }
+
+        .percentileWrap {
+            margin-top: 0;
+
+            .name {
+                margin-left: $sp-2;
+                margin-top: calc(#{$sp-2} + 2px);
+                white-space: nowrap;
             }
         }
 
         .link {
+            grid-column: -2 / -1;
+            align-self: start;
+            justify-self: end;
+            margin-top: $sp-1;
             color: $tc-white;
             font-size: 11px;
             line-height: 14px;
@@ -50,12 +90,39 @@
         }
 
         @include ltelg {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+            grid-template-columns: 52px 104px auto;
         }
 
         @include ltesm {
             grid-template-columns: 1fr;
+            width: 100%;
             justify-items: start;
+
+            .link {
+                grid-column: auto;
+                justify-self: start;
+                margin-top: 0;
+            }
         }
     }
+}
+
+.ratingTooltip {
+    --rt-opacity: 1;
+
+    background-color: $black-100 !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    line-height: 21px !important;
+    opacity: 1 !important;
+    padding: $sp-2 $sp-3 !important;
+
+    :global(.react-tooltip-arrow) {
+        background-color: $black-100 !important;
+    }
+}
+
+.tooltipContent {
+    display: block;
+    white-space: nowrap;
 }

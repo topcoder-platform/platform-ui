@@ -60,7 +60,7 @@
     border-radius: 8px;
     background-image: linear-gradient(112deg, #7A2FB0 0%, #0B5D9E 100%);
     color: $tc-white;
-    padding: $sp-5 $sp-5 $sp-4;
+    padding: $sp-8 $sp-9 $sp-7;
     min-height: 100%;
 
     .challengePointsBar + & {
@@ -68,26 +68,28 @@
     }
 
     @include ltelg {
-        padding: $sp-4;
+        padding: $sp-5;
     }
 
     :global(.body-large-bold) {
+        font-size: 26px;
+        line-height: 32px;
         text-align: center;
     }
 }
 
 .sectionTitle {
     text-align: center;
-    margin-bottom: $sp-2;
+    margin-bottom: $sp-5;
 }
 
 .footerNote {
-    margin-top: $sp-3;
+    margin-top: $sp-5;
     color: rgba($tc-white, 0.88);
 
     :global(.body-main) {
-        font-size: 11px;
-        line-height: 16px;
+        font-size: 18px;
+        line-height: 28px;
     }
 }
 
@@ -101,10 +103,11 @@
 .statsList {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $sp-2 $sp-4;
 
     margin: 0;
 
-    @container (max-width: 360px) {
+    @container (max-width: 520px) {
         grid-template-columns: 1fr;
     }
 
@@ -117,10 +120,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 41px;
-    padding: $sp-2 $sp-3;
-    border: 1px solid rgba($tc-white, 0.12);
-    border-width: 1px 0 0;
+    min-height: 68px;
+    padding: $sp-4 $sp-3 $sp-4 $sp-4;
+    border: 1px solid rgba($tc-white, 0.28);
+    border-radius: 8px;
     transition: 0.15s ease-in;
     cursor: pointer;
     color: $tc-white;
@@ -133,7 +136,7 @@
 .trackDetails {
     display: flex;
     align-items: center;
-    min-width: 84px;
+    min-width: 136px;
 
     > svg {
         flex: 0 0 auto;
@@ -141,44 +144,44 @@
 }
 
 .rightArrowIcon {
-    margin-left: $sp-1;
-    color: rgba($tc-white, 0.65);
+    margin-left: $sp-4;
+    color: rgba($tc-white, 0.9);
 }
 
 .winnerIcon {
     color: #F2C900;
-    margin-right: $sp-1;
+    margin-right: $sp-3;
 }
 
 .trackStats {
     display: flex;
     flex-direction: column;
     text-align: right;
-    min-width: 42px;
+    min-width: 58px;
 
     .count {
         font-family: $font-barlow-condensed;
         font-weight: $font-weight-medium;
-        font-size: 22px;
-        line-height: 24px;
+        font-size: 34px;
+        line-height: 36px;
     }
 
     .label {
         font-family: $font-roboto;
         font-weight: $font-weight-medium;
-        font-size: 10px;
-        line-height: 12px;
+        font-size: 14px;
+        line-height: 18px;
         color: rgba($tc-white, 0.82);
     }
 }
 
 .icon {
     display: block;
-    @include icon-lg;
+    @include icon-xxl;
 
     background: currentColor;
     border-radius: 50%;
-    margin-right: $sp-1;
+    margin-right: $sp-3;
 }
 
 .trackName {
@@ -186,8 +189,73 @@
     padding-right: $sp-2;
     overflow: hidden;
     font-family: $font-roboto;
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 18px;
+    line-height: 24px;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@container (max-width: 520px) {
+    .container {
+        padding: $sp-4;
+
+        :global(.body-large-bold) {
+            font-size: 18px;
+            line-height: 24px;
+        }
+    }
+
+    .sectionTitle {
+        margin-bottom: $sp-3;
+    }
+
+    .footerNote {
+        :global(.body-main) {
+            font-size: 12px;
+            line-height: 18px;
+        }
+    }
+
+    .trackListItem {
+        min-height: 50px;
+        padding: $sp-2 $sp-3;
+    }
+
+    .trackDetails {
+        min-width: 96px;
+    }
+
+    .trackStats {
+        min-width: 42px;
+
+        .count {
+            font-size: 22px;
+            line-height: 24px;
+        }
+
+        .label {
+            font-size: 10px;
+            line-height: 12px;
+        }
+    }
+
+    .trackName {
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .icon {
+        @include icon-lg;
+        margin-right: $sp-1;
+    }
+
+    .winnerIcon {
+        @include icon-lg;
+        margin-right: $sp-1;
+    }
+
+    .rightArrowIcon {
+        @include icon-md;
+        margin-left: $sp-1;
+    }
 }

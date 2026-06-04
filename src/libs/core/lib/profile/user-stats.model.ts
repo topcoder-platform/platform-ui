@@ -69,6 +69,29 @@ export type MemberStatsGroup = Partial<MemberStats> & {
     subTracks?: Array<MemberStats>
 }
 
+/**
+ * Sparse stats object returned for configured DATA_SCIENCE rating paths.
+ *
+ * Custom rating paths such as `AI` are stored under their configured path name
+ * and may only include counters plus the rank fields currently available for
+ * that path.
+ */
+export type DataScienceRatingPathStats = Partial<Omit<MemberStats, 'rank' | 'name'>> & {
+    name?: string
+    rank?: Partial<MemberStats['rank']>
+}
+
+export type DataScienceStats = {
+    MARATHON_MATCH?: MemberStats
+    SRM?: SRMStats
+    challenges?: number
+    mostRecentEventDate?: number
+    mostRecentEventName?: string
+    mostRecentSubmission?: number
+    wins?: number
+    [ratingPath: string]: DataScienceRatingPathStats | MemberStats | SRMStats | number | string | undefined
+}
+
 export type UserStats = {
     groupId: number
     handle: string
@@ -93,15 +116,7 @@ export type UserStats = {
         projects: number
         reposts: number
     }
-    DATA_SCIENCE?: {
-        MARATHON_MATCH: MemberStats
-        SRM: SRMStats
-        challenges: number
-        mostRecentEventDate: number
-        mostRecentEventName: string
-        mostRecentSubmission: number
-        wins: number
-    }
+    DATA_SCIENCE?: DataScienceStats
     DEVELOP?: {
         challenges: number
         mostRecentEventDate: number

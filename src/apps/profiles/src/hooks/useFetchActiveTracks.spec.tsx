@@ -140,4 +140,51 @@ describe('getActiveTracks', () => {
         expect(getMemberChallengePoints(memberStats))
             .toBe(2847)
     })
+
+    it('keeps rated custom data science paths visible as member stats tracks', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            challenges: 5,
+            DATA_SCIENCE: {
+                AI: {
+                    challenges: 3,
+                    rank: {
+                        overallPercentile: 12,
+                        rating: 1422,
+                    },
+                    wins: 1,
+                },
+                NO_RATING: {
+                    challenges: 2,
+                    rank: {},
+                    wins: 1,
+                },
+            },
+            groupId: 1,
+            handle: 'winterflame',
+            handleLower: 'winterflame',
+            userId: 15391415,
+            wins: 2,
+        } as UserStats)
+        const aiTrack: MemberStatsTrack | undefined = activeTracks.find(track => track.name === 'AI')
+
+        expect(aiTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 3,
+                isActive: true,
+                isDSTrack: true,
+                percentile: 12,
+                rating: 1422,
+                wins: 1,
+            }))
+        expect(aiTrack?.subTracks)
+            .toEqual([
+                expect.objectContaining({
+                    name: 'AI',
+                    parentTrack: 'DATA_SCIENCE',
+                    path: 'DATA_SCIENCE',
+                }),
+            ])
+        expect(activeTracks.map(track => track.name))
+            .not.toContain('NO_RATING')
+    })
 })
