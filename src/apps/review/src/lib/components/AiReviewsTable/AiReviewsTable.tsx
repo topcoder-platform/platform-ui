@@ -31,6 +31,7 @@ import {
     AiReviewDecision,
     AiReviewDecisionBreakdownWorkflow,
     AiReviewDecisionEscalation,
+    BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
@@ -125,29 +126,48 @@ function getDecisionBySubmission(
 }
 
 /**
- * Builds a list of human-readable note strings from escalations.
- * Used to display notes for Escalating, Approving/Rejecting, and Unlocking actions.
+ * Resolves a memberId to a display handle using the resourceMemberIdMapping.
+ * Falls back to the raw id string if no match is found.
+ */
+function resolveHandle(
+    memberId: string | null | undefined,
+    resourceMemberIdMapping: Record<string, BackendResource>,
+): string {
+    if (!memberId) return ''
+    return resourceMemberIdMapping[memberId]?.memberHandle ?? memberId
+}
+
+/**
+ * Builds a list of human-readable note strings from escalations and lock/unlock reason.
+ *
+ * @param escalations            - List of escalation objects from the AI review decision
+ * @param reason                 - The reason string from the decision
+ * @param showAuthor             - When true, appends "(by <handle>)" to each note.
+ *                                 Pass false for reviewer role so author identity is hidden.
+ *                                 Defaults to true.
+ * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
+ * @param submissionLocked       - When true, labels the reason as "Locked Reason";
+ *                                 otherwise labels it as "Unlock Reason".
  */
 function buildDecisionNotes(
     escalations?: AiReviewDecisionEscalation[],
-    resourceMemberIdMapping?: Record<string, any>,
+    reason?: string | null,
+    showAuthor: boolean = true,
+    resourceMemberIdMapping: Record<string, BackendResource> = {},
+    submissionLocked: boolean = false,
 ): string[] {
     const parts: string[] = []
 
-    const getMemberHandle = (memberId?: string | null): string => {
-        if (!memberId || !resourceMemberIdMapping) return ''
-        const resource = resourceMemberIdMapping[memberId]
-        return resource?.memberHandle || ''
-    }
-
     escalations?.forEach(esc => {
         if (esc.escalationNotes) {
-            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
+            const handle = resolveHandle(esc.createdBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
         }
 
         if (esc.approverNotes) {
-            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
+            const handle = resolveHandle(esc.updatedBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             const prefix = esc.status === 'APPROVED'
                 ? 'Approval Note'
                 : esc.status === 'REJECTED'
@@ -156,6 +176,11 @@ function buildDecisionNotes(
             parts.push(`${prefix}${by}: ${esc.approverNotes}`)
         }
     })
+
+    if (reason) {
+        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
+        parts.push(`${reasonLabel}: ${reason}`)
+    }
 
     return parts
 }
@@ -171,6 +196,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         = challengeDetailContext.isLoadingAiReviewConfig
     const isLoadingAiReviewDecisions: ChallengeDetailContextModel['isLoadingAiReviewDecisions']
         = challengeDetailContext.isLoadingAiReviewDecisions
+    const resourceMemberIdMapping: ChallengeDetailContextModel['resourceMemberIdMapping']
+        = challengeDetailContext.resourceMemberIdMapping
 
     const windowSize: WindowSize = useWindowSize()
     const isTablet = useMemo(
@@ -292,9 +319,16 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const loading = isLoading || isLoadingAiReviewConfig || isLoadingAiReviewDecisions
 
     const rolePermissions: UseRolePermissionsResult = useRolePermissions()
-    const { isAdmin, hasSubmitterRole }: UseRolePermissionsResult = rolePermissions
+    const { isAdmin, hasSubmitterRole, hasCopilotRole, isProjectManager }: UseRolePermissionsResult = rolePermissions
     const { mutate }: FullConfiguration = useSWRConfig()
     const [, setRerunningRunId] = useState<string | undefined>(undefined)
+
+    /**
+     * Only Copilot, Project Manager, and Admin can see WHO performed the action.
+     * Reviewers can see the note TEXT but NOT the author "(by handle)".
+     * Submitters cannot see notes at all.
+     */
+    const canSeeAuthor = isAdmin || hasCopilotRole || isProjectManager
 
     const handleRerun = useCallback(async (runId?: string): Promise<void> => {
         if (!runId || runId === '-1') return
@@ -349,29 +383,30 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         return 'Submission Locked - This submission won\'t be reviewed during the Review Phase.'
     }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
-    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
-
     /**
-     * Builds the list of notes from escalations (escalationNotes, approverNotes).
-     * These are shown to Copilot/Manager/Admin only (not to submitters) so they
-     * can see why a submission was escalated or approved/rejected.
+     * Builds the notes list shown in the banner.
+     *
+     * - Submitters              → NO notes shown at all (empty array)
+     * - Reviewers               → note text only, NO "(by handle)"  (canSeeAuthor = false)
+     * - Copilot / PM / Admin    → note text WITH "(by handle)"       (canSeeAuthor = true)
      */
     const decisionNotes = useMemo((): string[] => {
         if (!currentDecision || hasSubmitterRole) return []
 
-        return buildDecisionNotes(currentDecision.escalations, resourceMemberIdMapping)
-    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
+        return buildDecisionNotes(
+            currentDecision.escalations,
+            currentDecision.reason,
+            canSeeAuthor,
+            resourceMemberIdMapping,
+            currentDecision.submissionLocked,
+        )
+    }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const hasDecisionNotes = decisionNotes.length > 0
 
-    /**
-     * Notes panel shown when:
-     * - submission is UNLOCKED (HUMAN_OVERRIDE, not locked) — shows unlock/escalation notes
-     * - submission is still LOCKED — appended inside the locked banner
-     */
     const notesPanel = (
         <>
-            {/* Unlocked submission: show notes banner */}
+            {/* Unlocked submission: show blue notes banner */}
             {currentDecision?.status === 'HUMAN_OVERRIDE'
                 && !currentDecision?.submissionLocked
                 && hasDecisionNotes && (
@@ -387,7 +422,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 </div>
             )}
 
-            {/* Locked submission with escalation notes: append inside locked banner area */}
+            {/* Locked submission with escalation/approval notes: show yellow notes banner */}
             {currentDecision?.submissionLocked && hasDecisionNotes && (
                 <div className={styles.escalationNotesBanner}>
                     <IconOutline.InformationCircleIcon className='icon-xl' />
@@ -406,7 +441,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     if (isTablet) {
         return (
             <div className={styles.wrap}>
-                {/* Locked banner */}
                 {currentDecision?.submissionLocked && lockMessage && (
                     <div className={styles.lockedBanner}>
                         <div className={styles.lockedTitle}>
@@ -417,7 +451,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     </div>
                 )}
 
-                {/* Notes panel: escalation / approval / unlock notes for Copilot/Manager/Admin */}
                 {notesPanel}
 
                 {!reviewerRows.length && loading && (
@@ -548,7 +581,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
     return (
         <div className={styles.wrap} onClick={stopPropagation}>
-            {/* Locked banner */}
             {currentDecision?.submissionLocked && lockMessage && (
                 <div className={styles.lockedBanner}>
                     <IconOutline.LockClosedIcon className='icon-xl' />
@@ -561,7 +593,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 </div>
             )}
 
-            {/* Notes panel: escalation / approval / unlock notes for Copilot/Manager/Admin */}
             {notesPanel}
 
             <table className={styles.reviewsTable}>
