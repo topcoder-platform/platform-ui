@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+.body {
+    overflow: visible !important;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.ratingPanel,
+.positionPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: $sp-4;
+    border: 1px solid $black-10;
+    border-radius: 6px;
+    background: $tc-white;
+}
+
+.panelLabel {
+    color: $black-80;
+    font-family: $font-roboto;
+    font-size: 12px;
+    font-weight: $font-weight-medium;
+    line-height: 16px;
+}
+
+.ratingValue {
+    font-family: $font-barlow-condensed;
+    font-size: 32px;
+    font-weight: $font-weight-medium;
+    line-height: 34px;
+}
+
+.panelMeta {
+    color: $black-60;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 16px;
+}

@@ -6,14 +6,66 @@
     container-type: inline-size;
 }
 
+.challengePointsBar {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    min-height: 34px;
+    padding: 0 $sp-4;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(90deg, #008A72, #005B86);
+    color: $tc-white;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 16px;
+
+    @include ltesm {
+        flex-wrap: wrap;
+        padding: $sp-2 $sp-3;
+    }
+}
+
+.challengePointsLabel {
+    font-weight: $font-weight-bold;
+}
+
+.challengePointsValue {
+    font-family: $font-barlow-condensed;
+    font-size: 20px;
+    font-weight: $font-weight-medium;
+    line-height: 22px;
+}
+
+.challengePointsMeta {
+    color: rgba($tc-white, 0.78);
+}
+
+.challengePointsLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
+
+    @include ltesm {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
 .container {
     display: flex;
     flex-direction: column;
-    border-radius: 15px;
-    background-image: linear-gradient(90deg, #7B21A7, #1974AD);
+    border-radius: 8px;
+    background-image: linear-gradient(112deg, #7A2FB0 0%, #0B5D9E 100%);
     color: $tc-white;
-    padding: $sp-8;
+    padding: $sp-5 $sp-5 $sp-4;
     min-height: 100%;
+
+    .challengePointsBar + & {
+        border-radius: 0 0 8px 8px;
+    }
 
     @include ltelg {
         padding: $sp-4;
@@ -26,11 +78,17 @@
 
 .sectionTitle {
     text-align: center;
-    margin-bottom: $sp-3;
+    margin-bottom: $sp-2;
 }
 
 .footerNote {
-    margin-top: $sp-4;
+    margin-top: $sp-3;
+    color: rgba($tc-white, 0.88);
+
+    :global(.body-main) {
+        font-size: 11px;
+        line-height: 16px;
+    }
 }
 
 .innerWrapper {
@@ -41,75 +99,95 @@
 }
 
 .statsList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $sp-1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    margin: auto 0;
+    margin: 0;
+
+    @container (max-width: 360px) {
+        grid-template-columns: 1fr;
+    }
+
+    > li {
+        min-width: 0;
+    }
 }
 
 .trackListItem {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 62px;
+    min-height: 41px;
     padding: $sp-2 $sp-3;
-    background: rgba($tc-white, 0.05);
-    border: 1px solid rgba($tc-white, 0.25);
-    border-radius: $sp-2;
+    border: 1px solid rgba($tc-white, 0.12);
+    border-width: 1px 0 0;
     transition: 0.15s ease-in;
     cursor: pointer;
-
-
-    @container (max-width: 582px) {
-        flex: 1 1 auto;
-        width: 100%;
-    }
-    @container (min-width: 583px) {
-        width: calc(50% - 2px);
-    }
+    color: $tc-white;
 
     &:hover {
-        background: rgba($tc-white, 0.15);
-        border-color: rgba($tc-white, 0.35);
+        background: rgba($tc-white, 0.08);
     }
 }
 
 .trackDetails {
     display: flex;
     align-items: center;
+    min-width: 84px;
+
     > svg {
         flex: 0 0 auto;
     }
 }
 
 .rightArrowIcon {
-    margin-left: $sp-3;
+    margin-left: $sp-1;
+    color: rgba($tc-white, 0.65);
+}
+
+.winnerIcon {
+    color: #F2C900;
+    margin-right: $sp-1;
 }
 
 .trackStats {
     display: flex;
     flex-direction: column;
     text-align: right;
-    margin-left: $sp-1;
+    min-width: 42px;
+
     .count {
         font-family: $font-barlow-condensed;
         font-weight: $font-weight-medium;
-        font-size: 26px;
-        line-height: 34px;
+        font-size: 22px;
+        line-height: 24px;
     }
+
     .label {
         font-family: $font-roboto;
         font-weight: $font-weight-medium;
-        font-size: 11px;
+        font-size: 10px;
         line-height: 12px;
+        color: rgba($tc-white, 0.82);
     }
 }
 
 .icon {
     display: block;
-    @include icon-xxl;
+    @include icon-lg;
 
     background: currentColor;
     border-radius: 50%;
+    margin-right: $sp-1;
+}
+
+.trackName {
+    min-width: 0;
+    padding-right: $sp-2;
+    overflow: hidden;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

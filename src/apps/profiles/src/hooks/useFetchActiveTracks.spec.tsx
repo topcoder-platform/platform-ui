@@ -1,6 +1,6 @@
 import type { UserStats } from '~/libs/core'
 
-import { getActiveTracks, MemberStatsTrack } from './useFetchActiveTracks'
+import { getActiveTracks, getMemberChallengePoints, MemberStatsTrack } from './useFetchActiveTracks'
 
 jest.mock('~/libs/core', () => ({
     useMemberStats: jest.fn(),
@@ -110,5 +110,34 @@ describe('getActiveTracks', () => {
             .toEqual(['DEVELOPMENT'])
         expect(testingTrackNames)
             .toEqual(['BUG_HUNT'])
+    })
+
+    it('keeps AI engineering stats visible when the API returns them', () => {
+        const memberStats = {
+            AI_ENGINEERING: {
+                challenges: 14,
+                rank: {
+                    overallPercentile: 15,
+                    rating: 101,
+                },
+                submissions: {
+                    submissions: 100,
+                },
+            },
+            challengePoints: 2847,
+        } as UserStats
+        const activeTracks: MemberStatsTrack[] = getActiveTracks(memberStats)
+        const aiTrack: MemberStatsTrack | undefined = activeTracks.find(track => track.name === 'AI Engineering')
+
+        expect(aiTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 14,
+                isActive: true,
+                percentile: 15,
+                rating: 101,
+                submissions: 100,
+            }))
+        expect(getMemberChallengePoints(memberStats))
+            .toBe(2847)
     })
 })

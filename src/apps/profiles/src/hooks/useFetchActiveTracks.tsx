@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { filter, find, get, orderBy } from 'lodash'
 
-import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
+import { MemberStats, MemberStatsGroup, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
 import { calcProportionalAverage } from '../lib/math.utils'
 
@@ -24,6 +24,7 @@ export interface MemberStatsTrack {
     percentile?: number,
     submissionRate?: number
     screeningSuccessRate?: number
+    challengePoints?: number
     wins: number,
     order?: number
     isDSTrack?: boolean
@@ -82,7 +83,7 @@ const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
  * @returns {{[key: string]: MemberStats}} Map of subtracks keyed by subtrack name.
  */
 const mapSubTracksByName = (
-    parentTrack: 'DESIGN' | 'DEVELOP',
+    parentTrack: string,
     subTracks?: MemberStats[],
 ): {[key: string]: MemberStats} => (
     subTracks?.reduce((all, subTrack) => {
@@ -95,6 +96,41 @@ const mapSubTracksByName = (
         return all
     }, {} as {[key: string]: MemberStats}) ?? {}
 )
+
+const getFiniteNumber = (value: unknown): number | undefined => (
+    typeof value === 'number' && Number.isFinite(value) ? value : undefined
+)
+
+/**
+ * Returns the AI Engineering stats payload from the known API keys.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStatsGroup | undefined} AI Engineering stats when the API includes them.
+ */
+const getAIEngineeringStats = (memberStats?: UserStats): MemberStatsGroup | undefined => (
+    memberStats?.AI_ENGINEERING ?? memberStats?.AI ?? memberStats?.AI_ENGINEER
+)
+
+/**
+ * Returns the member's total challenge points from the known API keys.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {number | undefined} Challenge points when the API includes them.
+ */
+export const getMemberChallengePoints = (memberStats?: UserStats): number | undefined => {
+    const stats = memberStats as (
+        UserStats & {
+            challengePointsTotal?: number
+            points?: number
+        }
+    )
+
+    return getFiniteNumber(stats?.challengePoints)
+        ?? getFiniteNumber(stats?.CHALLENGE_POINTS)
+        ?? getFiniteNumber(stats?.challengePointsTotal)
+        ?? getFiniteNumber(stats?.points)
+        ?? getFiniteNumber(getAIEngineeringStats(memberStats)?.challengePoints)
+}
 
 /**
  * Helper function to build aggregated data for a track.
@@ -150,6 +186,48 @@ const enhanceDesignTrackData = (trackData: MemberStatsTrack): MemberStatsTrack =
 }
 
 /**
+ * Builds the AI Engineering aggregate stats row from a top-level API payload.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStatsTrack} Aggregated AI Engineering stats for the member stats UI.
+ */
+const buildAIEngineeringTrackData = (memberStats?: UserStats): MemberStatsTrack => {
+    const aiStats = getAIEngineeringStats(memberStats)
+    const subTracks: MemberStats[] = aiStats?.subTracks?.length ? (
+        Object.values(mapSubTracksByName('AI_ENGINEERING', aiStats.subTracks))
+    ) : (aiStats ? [{
+        ...(aiStats as MemberStats),
+        name: aiStats.name ?? 'AI_ENGINEERING',
+        parentTrack: 'AI_ENGINEERING',
+        path: 'AI_ENGINEERING',
+    }] : [])
+
+    const trackData = buildTrackData('AI Engineering', subTracks)
+    const submissions = getSubTrackSubmissionCount(aiStats as MemberStats | undefined) ?? trackData.submissions
+    const challenges = getFiniteNumber(aiStats?.challenges) ?? trackData.challenges
+    const rating = getFiniteNumber(aiStats?.rank?.rating)
+    const wins = getFiniteNumber(aiStats?.wins) ?? trackData.wins
+
+    return {
+        ...trackData,
+        challengePoints: getFiniteNumber(aiStats?.challengePoints),
+        challenges,
+        isActive: trackData.isActive
+            || !!rating
+            || !!challenges
+            || !!submissions
+            || !!wins,
+        name: 'AI Engineering',
+        order: 2,
+        percentile: getFiniteNumber(aiStats?.rank?.overallPercentile) ?? getFiniteNumber(aiStats?.rank?.percentile),
+        rating,
+        submissions,
+        subTracks,
+        wins,
+    }
+}
+
+/**
  * Custom hook to fetch active tracks for a user, sorted by wins & submissions.
  *
  * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
@@ -188,6 +266,9 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     )
 
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
+    // AI Engineering
+    const aiEngineeringTrackStats: MemberStatsTrack = buildAIEngineeringTrackData(memberStats)
+
     // Design
     const designTrackStats: MemberStatsTrack = (
         enhanceDesignTrackData(
@@ -250,6 +331,7 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
 
     // Order and filter active tracks based on wins and submissions
     return orderBy(filter([
+        aiEngineeringTrackStats,
         dsTrackStats,
         cpTrackStats,
         designTrackStats,

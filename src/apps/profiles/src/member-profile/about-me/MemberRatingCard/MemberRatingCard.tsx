@@ -1,14 +1,48 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import classNames from 'classnames'
 
-import { useMemberStats, UserProfile, UserStats } from '~/libs/core'
+import { getRatingColor, useMemberStats, UserProfile, UserStats } from '~/libs/core'
+
+import { numberToFixed } from '../../../lib'
 
 import { MemberRatingInfoModal } from './MemberRatingInfoModal'
 import styles from './MemberRatingCard.module.scss'
 
 interface MemberRatingCardProps {
     profile: UserProfile
+}
+
+/**
+ * Formats percentile values for the compact rating card.
+ *
+ * @param {number} percentile - The percentile value returned by the member stats API.
+ * @returns {string} A display-ready percentage without unnecessary decimal places.
+ */
+const formatPercentile = (percentile: number): string => (
+    Number.isInteger(percentile) ? `${percentile}` : numberToFixed(percentile)
+)
+
+/**
+ * Returns the audience label shown under the member's percentile.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {string} The track audience label for the rating card.
+ */
+const getRatingAudienceLabel = (memberStats?: UserStats): string => {
+    switch (memberStats?.maxRating?.track) {
+        case 'AI':
+        case 'AI_ENGINEER':
+        case 'AI_ENGINEERING':
+            return 'AI Engineers'
+        case 'DATA_SCIENCE':
+            return 'Data Scientists'
+        case 'DESIGN':
+            return 'Designers'
+        case 'DEVELOP':
+            return 'Developers'
+        default:
+            return 'Members'
+    }
 }
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
@@ -45,33 +79,41 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         setIsInfoModalOpen(true)
     }
 
+    const rating: number | undefined = memberStats?.maxRating?.rating
+    const audienceLabel: string = getRatingAudienceLabel(memberStats)
+
     return memberStats?.maxRating?.rating ? (
         <div className={styles.container}>
             <div className={styles.innerWrap}>
-                <div className={classNames(styles.valueWrap, !maxPercentile ? styles.noPercentile : '')}>
-                    <p className={styles.value}>{memberStats?.maxRating?.rating}</p>
+                <div className={styles.valueWrap}>
+                    <p className={styles.value} style={{ color: getRatingColor(rating) }}>
+                        {rating}
+                    </p>
                     <p className={styles.name}>Rating</p>
                 </div>
                 {
                     maxPercentile ? (
                         <div className={styles.valueWrap}>
-                            <p className={styles.value}>
-                                {Number(maxPercentile)
-                                    .toFixed(2)}
+                            <p className={styles.value} style={{ color: getRatingColor(rating) }}>
+                                Top
+                                {' '}
+                                {formatPercentile(maxPercentile)}
+                                %
                             </p>
-                            <p className={styles.name}>Percentile</p>
+                            <p className={styles.name}>{audienceLabel}</p>
                         </div>
                     ) : undefined
                 }
-                <div className='body-small-medium'>
-                    <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
-                </div>
+                <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
             </div>
 
             {
                 isInfoModalOpen && (
                     <MemberRatingInfoModal
                         onClose={handleInfoModalClose}
+                        percentile={maxPercentile}
+                        rating={rating}
+                        audienceLabel={audienceLabel}
                     />
                 )
             }

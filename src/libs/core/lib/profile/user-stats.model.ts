@@ -57,10 +57,24 @@ export type MemberStats = {
     path?: string
 }
 
+/**
+ * Top-level track stats returned by the member stats API.
+ *
+ * Some newer tracks are returned as a group with subtracks, while others can be returned
+ * directly as a stats object. This type keeps those optional payloads narrow enough for
+ * profile rendering without forcing every API field to be present.
+ */
+export type MemberStatsGroup = Partial<MemberStats> & {
+    challengePoints?: number
+    subTracks?: Array<MemberStats>
+}
+
 export type UserStats = {
     groupId: number
     handle: string
     handleLower: string
+    challengePoints?: number
+    CHALLENGE_POINTS?: number
     challenges: number
     userId: number
     wins: number
@@ -102,6 +116,9 @@ export type UserStats = {
         subTracks: Array<MemberStats>
         wins: number
     }
+    AI?: MemberStatsGroup
+    AI_ENGINEER?: MemberStatsGroup
+    AI_ENGINEERING?: MemberStatsGroup
 }
 
 export type StatsHistory = {
