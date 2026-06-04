@@ -53,7 +53,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         && !hasChallengePoints
         && !tcoWins
         && !tcoQualifications
-        && !memberBadges?.rows.length
+        && !tcoTrips
     ) {
         return <></>
     }

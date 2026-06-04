@@ -2,7 +2,6 @@ import { FC } from 'react'
 
 import { UserProfile, UserStats } from '~/libs/core'
 
-import { CommunityAwards } from '../../community-awards'
 import { MemberStatsBlock } from '../../../components/tc-achievements/MemberStatsBlock'
 import { TcSpecialRolesBanner } from '../../../components/tc-achievements/TcSpecialRolesBanner'
 import { TCOWinsBanner } from '../../../components/tc-achievements/TCOWinsBanner'
@@ -33,8 +32,6 @@ const DefaultAchievementsView: FC<DefaultAchievementsViewProps> = props => (
         </div>
 
         <TcSpecialRolesBanner memberStats={props.memberStats} />
-
-        <CommunityAwards profile={props.profile} />
     </>
 )
 

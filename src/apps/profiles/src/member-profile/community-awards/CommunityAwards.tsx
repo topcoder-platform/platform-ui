@@ -1,22 +1,27 @@
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { bind } from 'lodash'
 
 import { useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
-import { Button } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../../components'
 
 import styles from './CommunityAwards.module.scss'
+
+const COLLAPSED_BADGE_COUNT = 4
 
 interface CommunityAwardsProps {
     profile: UserProfile | undefined
 }
 
 const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) => {
-    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 6 })
+    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, {
+        limit: 500,
+    })
 
     const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const [isAwardsExpanded, setIsAwardsExpanded]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [selectedBadge, setSelectedBadge]: [UserBadge | undefined, Dispatch<SetStateAction<UserBadge | undefined>>]
@@ -27,44 +32,66 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
         setSelectedBadge(badge)
     }, [])
 
-    return memberBadges && memberBadges.count ? (
+    useEffect(() => {
+        setIsAwardsExpanded(false)
+    }, [props.profile?.userId])
+
+    function handleAwardsExpandClick(): void {
+        setIsAwardsExpanded(true)
+    }
+
+    function handleMemberBadgeModalClose(): void {
+        setIsBadgeDetailsOpen(false)
+    }
+
+    const badges: UserBadge[] = memberBadges?.rows ?? []
+    const visibleBadges: UserBadge[] = isAwardsExpanded
+        ? badges
+        : badges.slice(0, COLLAPSED_BADGE_COUNT)
+    const additionalBadgeCount: number = Math.max((memberBadges?.count ?? badges.length) - COLLAPSED_BADGE_COUNT, 0)
+
+    return badges.length ? (
         <div className={styles.container}>
             <div className={styles.title}>
-                <Link to='badges'>
-                    <Button
-                        label='View all badges'
-                        link
-                        variant='linkblue'
-                    />
-                </Link>
+                <p className='body-main-bold'>Awards</p>
             </div>
 
             <div className={styles.badges}>
                 {
-                    memberBadges.rows.map(badge => (
-                        <div
+                    visibleBadges.map(badge => (
+                        <button
+                            aria-label={`View ${badge.org_badge.badge_name} award details`}
                             key={badge.org_badge_id}
-                            className={styles.badgeCard}
+                            className={styles.badgeButton}
                             onClick={bind(onBadgeClick, this, badge)}
+                            title={badge.org_badge.badge_name}
+                            type='button'
                         >
-                            <div className={styles.badgeImageWrap}>
-                                <img
-                                    src={badge.org_badge.badge_image_url}
-                                    alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
-                                    className={styles.badgeImage}
-                                />
-                            </div>
-                            <span className={styles.badgeTitle}>{badge.org_badge.badge_name}</span>
-                        </div>
+                            <img
+                                src={badge.org_badge.badge_image_url}
+                                alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
+                                className={styles.badgeImage}
+                            />
+                        </button>
                     ))
                 }
             </div>
+
+            {!isAwardsExpanded && additionalBadgeCount > 0 && (
+                <button
+                    className={styles.moreBadgesButton}
+                    onClick={handleAwardsExpandClick}
+                    type='button'
+                >
+                    {`+ ${additionalBadgeCount} more ${additionalBadgeCount === 1 ? 'badge' : 'badges'}`}
+                </button>
+            )}
 
             {
                 selectedBadge && (
                     <MemberBadgeModal
                         isBadgeDetailsOpen={isBadgeDetailsOpen}
-                        onClose={bind(setIsBadgeDetailsOpen, this, false)}
+                        onClose={handleMemberBadgeModalClose}
                         selectedBadge={selectedBadge}
                     />
                 )

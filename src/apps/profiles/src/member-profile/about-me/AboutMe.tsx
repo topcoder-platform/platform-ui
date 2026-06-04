@@ -8,8 +8,10 @@ import { NamesAndHandleAppearance, useMemberTraits, UserProfile, UserTraitIds, U
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { canSeePhones, getFirstProfileSelfTitle } from '../../lib/helpers'
+import { CommunityAwards } from '../community-awards'
 import { Phones } from '../phones'
 
+import { getTruncatedBio, TruncatedBio } from './AboutMe.utils'
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
 import MemberRatingCard from './MemberRatingCard/MemberRatingCard'
 import styles from './AboutMe.module.scss'
@@ -38,6 +40,14 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
         [memberPersonalizationTraits],
     )
 
+    const truncatedBio: TruncatedBio = useMemo(
+        () => getTruncatedBio(props.profile.description),
+        [props.profile.description],
+    )
+
+    const [isBioExpanded, setIsBioExpanded]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
     const hasEmptyDescription = useMemo(() => (
         props.profile && !props.profile.description
     ), [props.profile])
@@ -49,10 +59,18 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.authProfile])
 
+    useEffect(() => {
+        setIsBioExpanded(false)
+    }, [props.profile.description])
+
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     function handleEditClick(): void {
         setIsEditMode(!isEditMode)
+    }
+
+    function handleBioToggleClick(): void {
+        setIsBioExpanded(!isBioExpanded)
     }
 
     function handleEditModalClose(): void {
@@ -109,7 +127,22 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                     )}
                 </>
             )}
-            <p>{props.profile?.description}</p>
+            {!hasEmptyDescription && (
+                <div className={styles.bioWrap}>
+                    <p>{isBioExpanded ? props.profile.description : truncatedBio.text}</p>
+                    {truncatedBio.isTruncated && (
+                        <button
+                            className={styles.bioToggle}
+                            onClick={handleBioToggleClick}
+                            type='button'
+                        >
+                            {isBioExpanded ? 'See Less' : 'See More'}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            <CommunityAwards profile={props.profile} />
 
             {
                 isEditMode && (
