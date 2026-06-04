@@ -28,7 +28,10 @@ import {
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
-import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
+import {
+    useSubmissionDownloadAccess,
+    UseSubmissionDownloadAccessResult,
+} from '../../hooks/useSubmissionDownloadAccess'
 import { useRolePermissions } from '../../hooks/useRolePermissions'
 import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import {
@@ -135,7 +138,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
         shouldRestrictSubmitterToOwnSubmission,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
     const {
         ownedMemberIds,
