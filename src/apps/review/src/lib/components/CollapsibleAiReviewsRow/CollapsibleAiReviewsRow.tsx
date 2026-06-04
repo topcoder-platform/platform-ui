@@ -81,7 +81,7 @@ function resolveHandle(
 function buildNotesTooltip(
     escalations?: AiReviewDecisionEscalation[],
     reason?: string | null,
-    showAuthor = true,
+    showAuthor: boolean = true,
     resourceMemberIdMapping: Record<string, BackendResource> = {},
 ): string | undefined {
     const parts: string[] = []
