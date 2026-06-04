@@ -157,6 +157,12 @@
     margin-top: $sp-2;
 }
 
+.confirmError {
+    margin: $sp-1 0 0;
+    font-size: 12px;
+    color: $red-100;
+}
+
 .inputLabel {
     display: flex;
     flex-direction: column;

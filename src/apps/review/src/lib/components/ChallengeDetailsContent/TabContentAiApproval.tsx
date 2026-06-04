@@ -13,6 +13,7 @@ import {
     useState,
 } from 'react'
 import { toast } from 'react-toastify'
+import { mutate } from 'swr'
 import classNames from 'classnames'
 import moment from 'moment'
 
@@ -39,7 +40,11 @@ import {
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
-import { patchAiReviewDecision, WorkflowManagerOverride } from '../../services/aiReview.service'
+import {
+    getAiReviewDecisionsCacheKey,
+    patchAiReviewDecision,
+    WorkflowManagerOverride,
+} from '../../services/aiReview.service'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
@@ -267,7 +272,13 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
 
         const decision: AiReviewDecision = confirmModal.decision
         const submissionId: string = confirmModal.submissionId
-        const managerComment: string = confirmModal.managerComment
+        const managerComment: string = confirmModal.managerComment.trim()
+
+        if (!managerComment) {
+            toast.error('Manager comment is required.')
+            return
+        }
+
         const scores: EditableScores = getScores(submissionId)
         const workflows = decision.breakdown?.workflows ?? []
 
@@ -322,12 +333,16 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 return next
             })
             toast.success('Changes saved successfully.')
+
+            if (aiReviewConfig?.id) {
+                await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+            }
         } catch {
             toast.error('Failed to save changes.')
         } finally {
             setSavingSubmissionId(undefined)
         }
-    }, [confirmModal, getScores, workflowNameById])
+    }, [confirmModal, getScores, workflowNameById, aiReviewConfig?.id])
 
     const handleCancelSave = useCallback((): void => {
         setConfirmModal(undefined)
@@ -564,6 +579,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                             <Button
                                 primary
                                 onClick={handleConfirmSave}
+                                disabled={!confirmModal.managerComment.trim()}
                             >
                                 Save Changes
                             </Button>
@@ -580,9 +596,14 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                                     rows={3}
                                     value={confirmModal.managerComment}
                                     onChange={handleCommentChange}
-                                    placeholder='Add a comment explaining the changes (optional)...'
+                                    placeholder='Add a comment explaining the changes...'
                                 />
                             </label>
+                            {!confirmModal.managerComment.trim() && (
+                                <p className={styles.confirmError}>
+                                    Manager comment is required.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </BaseModal>
