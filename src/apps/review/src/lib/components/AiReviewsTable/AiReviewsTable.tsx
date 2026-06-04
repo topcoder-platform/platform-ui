@@ -126,20 +126,23 @@ function resolveHandle(
 }
 
 /**
- * Builds a list of human-readable note strings from escalations and unlock reason.
+ * Builds a list of human-readable note strings from escalations and lock/unlock reason.
  *
  * @param escalations            - List of escalation objects from the AI review decision
- * @param reason                 - The unlock reason string from the decision
+ * @param reason                 - The reason string from the decision
  * @param showAuthor             - When true, appends "(by <handle>)" to each note.
  *                                 Pass false for reviewer role so author identity is hidden.
  *                                 Defaults to true.
  * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
+ * @param submissionLocked       - When true, labels the reason as "Locked Reason";
+ *                                 otherwise labels it as "Unlock Reason".
  */
 function buildDecisionNotes(
     escalations?: AiReviewDecisionEscalation[],
     reason?: string | null,
     showAuthor: boolean = true,
     resourceMemberIdMapping: Record<string, BackendResource> = {},
+    submissionLocked: boolean = false,
 ): string[] {
     const parts: string[] = []
 
@@ -163,7 +166,8 @@ function buildDecisionNotes(
     })
 
     if (reason) {
-        parts.push(`Unlock Reason: ${reason}`)
+        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
+        parts.push(`${reasonLabel}: ${reason}`)
     }
 
     return parts
@@ -381,6 +385,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             currentDecision.reason,
             canSeeAuthor,
             resourceMemberIdMapping,
+            currentDecision.submissionLocked,
         )
     }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 

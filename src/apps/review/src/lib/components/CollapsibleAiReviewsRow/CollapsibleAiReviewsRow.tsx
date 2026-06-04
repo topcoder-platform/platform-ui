@@ -67,14 +67,16 @@ function resolveHandle(
 
 /**
  * Builds a multi-line tooltip string from escalation notes, approver notes,
- * and the unlock reason.
+ * and the lock/unlock reason.
  *
  * @param escalations            - List of escalation objects from the AI review decision
- * @param reason                 - The unlock reason string from the decision
+ * @param reason                 - The reason string from the decision
  * @param showAuthor             - When true, appends "(by <handle>)" to each note.
  *                                 Pass false for reviewer role so author identity is hidden.
  *                                 Defaults to true.
  * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
+ * @param submissionLocked       - When true, labels the reason as "Locked Reason";
+ *                                 otherwise labels it as "Unlock Reason".
  *
  * Returns undefined if there are no notes at all.
  */
@@ -83,6 +85,7 @@ function buildNotesTooltip(
     reason?: string | null,
     showAuthor: boolean = true,
     resourceMemberIdMapping: Record<string, BackendResource> = {},
+    submissionLocked: boolean = false,
 ): string | undefined {
     const parts: string[] = []
 
@@ -106,7 +109,8 @@ function buildNotesTooltip(
     })
 
     if (reason) {
-        parts.push(`Unlock Reason: ${reason}`)
+        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
+        parts.push(`${reasonLabel}: ${reason}`)
     }
 
     return parts.length ? parts.join('\n') : undefined
@@ -191,6 +195,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
             currentDecision.reason,
             canSeeAuthor,
             resourceMemberIdMapping,
+            currentDecision.submissionLocked,
         )
     }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
