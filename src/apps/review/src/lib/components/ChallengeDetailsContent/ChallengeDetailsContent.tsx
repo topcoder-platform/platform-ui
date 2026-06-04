@@ -520,8 +520,8 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 ) : (
                     <TabContentAiApproval
                         submissions={props.submissions}
-                        isLoading={props.isLoadingSubmission}
-                    />
+                        isLoading={props.isLoadingSubmission}                        isDownloading={isDownloadingSubmission}
+                        downloadSubmission={handleSubmissionDownload}                    />
                 )
             }
 

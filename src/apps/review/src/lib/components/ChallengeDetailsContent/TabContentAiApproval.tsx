@@ -17,6 +17,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { TableLoading } from '~/apps/admin/src/lib'
+import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import {
     BaseModal,
     Button,
@@ -27,6 +28,9 @@ import {
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
+import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
+import { useRolePermissions } from '../../hooks/useRolePermissions'
+import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import {
     AiReviewDecision,
     BackendSubmission,
@@ -36,12 +40,16 @@ import { patchAiReviewDecision, WorkflowManagerOverride } from '../../services/a
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
+import { renderSubmissionIdCell } from '../common'
+import type { DownloadButtonConfig, SubmissionRow } from '../common/types'
 
 import styles from './TabContentAiApproval.module.scss'
 
 interface Props {
     submissions: BackendSubmission[]
     isLoading: boolean
+    isDownloading: IsRemovingType
+    downloadSubmission: (submissionId: string) => void
 }
 
 interface EditableScores {
@@ -120,6 +128,41 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     )
 
     const canEdit = isPrivilegedRole && isApprovalPhaseOpen
+
+    const {
+        getRestrictionMessageForMember,
+        isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestrictedForMember,
+        restrictionMessage,
+        shouldRestrictSubmitterToOwnSubmission,
+    } = useSubmissionDownloadAccess()
+
+    const {
+        ownedMemberIds,
+    }: UseRolePermissionsResult = useRolePermissions()
+
+    const downloadButtonConfig = useMemo<DownloadButtonConfig>(
+        () => ({
+            downloadSubmission: props.downloadSubmission,
+            getRestrictionMessageForMember,
+            isDownloading: props.isDownloading,
+            isSubmissionDownloadRestricted,
+            isSubmissionDownloadRestrictedForMember,
+            ownedMemberIds,
+            restrictionMessage,
+            shouldRestrictSubmitterToOwnSubmission,
+        }),
+        [
+            props.downloadSubmission,
+            props.isDownloading,
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestricted,
+            isSubmissionDownloadRestrictedForMember,
+            ownedMemberIds,
+            restrictionMessage,
+            shouldRestrictSubmitterToOwnSubmission,
+        ],
+    )
 
     const [localDecisionOverrides, setLocalDecisionOverrides] = useState<Record<string, AiReviewDecision>>({})
     const [editScores, setEditScores] = useState<Record<string, EditableScores>>({})
@@ -328,9 +371,10 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 columnId: 'submission-id',
                 label: 'Submission ID',
                 renderer: (row: SubmissionRowData) => (
-                    <span className={styles.submissionId}>
-                        {row.submission.id}
-                    </span>
+                    renderSubmissionIdCell(
+                        row.submission as unknown as SubmissionRow,
+                        downloadButtonConfig,
+                    )
                 ),
                 type: 'element',
             },

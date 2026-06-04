@@ -230,7 +230,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const status = fromDecision
                 ? normalizeStatus(run && aiRunInProgress(run)
                     ? undefined
-                    : fromDecision.runStatus, fromDecision.runScore, minScore)
+                    : fromDecision.runStatus, fromDecision.managerScore ?? fromDecision.runScore, minScore)
                 : undefined
 
             return {
@@ -240,7 +240,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 minScore,
                 reviewDate: run?.completedAt,
                 run,
-                score: fromDecision?.runScore ?? run?.score,
+                score: fromDecision?.managerScore ?? fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
@@ -498,18 +498,20 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             placeholder='Override'
                                         />
                                     </div>
-                                ) : row.managerScore !== null && row.managerScore !== undefined ? (
-                                    <span className={styles.overriddenScore}>
-                                        {formatScore(row.managerScore)}
-                                        <span className={styles.overrideLabel}>(override)</span>
-                                    </span>
                                 ) : typeof row.score === 'number' ? (
                                     row.workflowId ? (
-                                        <Link
-                                            to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
-                                        >
-                                            {formatScore(row.score)}
-                                        </Link>
+                                        <>
+                                            <Link
+                                                to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                            >
+                                                {formatScore(row.score)}
+                                            </Link>
+                                            {row.managerScore !== null && row.managerScore !== undefined && (
+                                                <span className={styles.overriddenScore}>
+                                                    <span className={styles.overrideLabel}>(override)</span>
+                                                </span>
+                                            )}
+                                        </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
                             </div>
@@ -635,18 +637,20 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             placeholder='Override'
                                         />
                                     </div>
-                                ) : row.managerScore !== null && row.managerScore !== undefined ? (
-                                    <span className={styles.overriddenScore}>
-                                        {formatScore(row.managerScore)}
-                                        <span className={styles.overrideLabel}>(override)</span>
-                                    </span>
                                 ) : typeof row.score === 'number' ? (
                                     row.workflowId ? (
-                                        <Link
-                                            to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
-                                        >
-                                            {formatScore(row.score)}
-                                        </Link>
+                                        <>
+                                            <Link
+                                                to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                            >
+                                                {formatScore(row.score)}
+                                            </Link>
+                                            {row.managerScore !== null && row.managerScore !== undefined && (
+                                                <span className={styles.overriddenScore}>
+                                                    <span className={styles.overrideLabel}>(override)</span>
+                                                </span>
+                                            )}
+                                        </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
                             </td>
