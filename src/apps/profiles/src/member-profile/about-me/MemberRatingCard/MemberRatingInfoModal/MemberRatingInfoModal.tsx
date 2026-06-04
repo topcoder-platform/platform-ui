@@ -371,7 +371,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
 
                 <div className={styles.chart}>
                     {distributionRanges.length > 0 ? (
-                        <>
+                        <div className={styles.chartScale}>
                             <div className={styles.bars}>
                                 {distributionRanges.map((range: RatingDistributionRange) => (
                                     <span
@@ -421,7 +421,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                                     </span>
                                 ))}
                             </div>
-                        </>
+                        </div>
                     ) : (
                         <p className={styles.emptyDistribution}>Rating distribution is loading.</p>
                     )}

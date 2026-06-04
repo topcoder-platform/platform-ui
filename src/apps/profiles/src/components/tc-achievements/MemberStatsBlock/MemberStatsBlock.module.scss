@@ -41,12 +41,24 @@
 }
 
 .challengePointsLink {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 2px;
+    font-family: inherit;
+    font-size: inherit;
     margin-left: auto;
     font-weight: $font-weight-bold;
+    padding: 0;
     white-space: nowrap;
+
+    &:hover {
+        text-decoration: underline;
+    }
 
     @include ltesm {
         width: 100%;

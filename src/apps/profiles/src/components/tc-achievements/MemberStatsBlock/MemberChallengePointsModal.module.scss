@@ -1,0 +1,129 @@
+@import "@libs/ui/styles/includes";
+
+.modal {
+    width: 520px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    padding: $sp-6 !important;
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-4;
+        top: $sp-4;
+
+        svg {
+            fill: $turq-160 !important;
+        }
+    }
+
+    @include ltesm {
+        max-width: calc(100vw - #{$sp-4}) !important;
+        padding: $sp-4 !important;
+        width: calc(100vw - #{$sp-4}) !important;
+    }
+}
+
+.body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.title {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 18px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    margin: 0;
+    padding-right: $sp-8;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    min-width: 0;
+}
+
+.summary {
+    align-items: baseline;
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    gap: $sp-2;
+    padding-bottom: $sp-4;
+}
+
+.summaryValue {
+    color: $turq-160;
+    font-family: $font-barlow-condensed;
+    font-size: 34px;
+    font-weight: $font-weight-medium;
+    line-height: 36px;
+}
+
+.summaryLabel {
+    color: $black-80;
+    font-family: $font-roboto;
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.table {
+    border: 1px solid $black-10;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.tableHeader,
+.tableRow {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: minmax(0, 1fr) 64px 82px;
+}
+
+.tableHeader {
+    background: $black-5;
+    color: $black-80;
+    font-family: $font-roboto;
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    line-height: 16px;
+    padding: $sp-2 $sp-3;
+    text-transform: uppercase;
+}
+
+.tableRow {
+    align-items: center;
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 13px;
+    line-height: 18px;
+    min-height: 44px;
+    padding: $sp-3;
+
+    & + & {
+        border-top: 1px solid $black-10;
+    }
+}
+
+.challengeLink {
+    color: $turq-160;
+    font-weight: $font-weight-bold;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.placement,
+.points {
+    white-space: nowrap;
+}
+
+.points {
+    font-weight: $font-weight-bold;
+    text-align: right;
+}

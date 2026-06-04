@@ -167,15 +167,23 @@
     position: relative;
 }
 
+.chartScale {
+    bottom: 0;
+    left: $sp-5;
+    position: absolute;
+    right: $sp-5;
+    top: 0;
+}
+
 .bars {
     align-items: flex-end;
     bottom: $sp-7;
     display: flex;
     gap: 2px;
     height: 176px;
-    left: $sp-5;
+    left: 0;
     position: absolute;
-    right: $sp-5;
+    right: 0;
 }
 
 .bar {
@@ -260,10 +268,10 @@
     color: $black-80;
     font-family: $font-roboto;
     font-size: 9px;
-    left: $sp-5;
+    left: 0;
     line-height: 12px;
     position: absolute;
-    right: $sp-5;
+    right: 0;
 
     span {
         position: absolute;
