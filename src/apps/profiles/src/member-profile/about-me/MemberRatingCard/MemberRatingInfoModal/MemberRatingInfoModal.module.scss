@@ -64,12 +64,12 @@
     border: 1px solid $black-10;
     border-radius: 6px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 126px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
     min-height: 96px;
     overflow: hidden;
 
     @include ltesm {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -93,12 +93,25 @@
 }
 
 .positionMetric {
+    align-items: center;
     border-left: 1px solid $black-10;
+    flex-direction: row;
+    gap: $sp-6;
+    justify-content: flex-start;
 
     @include ltesm {
-        border-left: 1px solid $black-10;
+        border-left: 0;
         border-top: 1px solid $black-10;
+        gap: $sp-4;
+        grid-column: 1 / -1;
     }
+}
+
+.positionDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .summaryLabel {
@@ -135,18 +148,10 @@
 
 .tierPyramid {
     align-items: center;
-    border-left: 1px solid $black-10;
     display: flex;
-    flex-direction: column;
+    flex: 0 0 76px;
     justify-content: center;
     min-width: 0;
-    padding: $sp-2 0;
-
-    @include ltesm {
-        border-left: 0;
-        border-top: 1px solid $black-10;
-        padding: $sp-4 0;
-    }
 }
 
 .tierPyramidSvg {
