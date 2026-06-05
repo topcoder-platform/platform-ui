@@ -4,6 +4,7 @@ import classNames from 'classnames'
 
 import { useMemberStats, UserProfile, UserStats } from '~/libs/core'
 
+import { getLatestProfileRating } from './MemberRatingCard.utils'
 import { MemberRatingInfoModal } from './MemberRatingInfoModal'
 import styles from './MemberRatingCard.module.scss'
 
@@ -13,6 +14,7 @@ interface MemberRatingCardProps {
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
+    const rating: number | undefined = useMemo(() => getLatestProfileRating(memberStats), [memberStats])
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
@@ -45,11 +47,11 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         setIsInfoModalOpen(true)
     }
 
-    return memberStats?.maxRating?.rating ? (
+    return rating !== undefined ? (
         <div className={styles.container}>
             <div className={styles.innerWrap}>
                 <div className={classNames(styles.valueWrap, !maxPercentile ? styles.noPercentile : '')}>
-                    <p className={styles.value}>{memberStats?.maxRating?.rating}</p>
+                    <p className={styles.value}>{rating}</p>
                     <p className={styles.name}>Rating</p>
                 </div>
                 {
