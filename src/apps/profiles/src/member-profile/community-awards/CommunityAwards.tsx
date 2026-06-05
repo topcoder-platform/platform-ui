@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from '
 import { bind } from 'lodash'
 
 import { useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
+import { Tooltip } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../../components'
 
@@ -59,20 +60,24 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
             <div className={styles.badges}>
                 {
                     visibleBadges.map(badge => (
-                        <button
-                            aria-label={`View ${badge.org_badge.badge_name} award details`}
+                        <Tooltip
+                            content={badge.org_badge.badge_name}
                             key={badge.org_badge_id}
-                            className={styles.badgeButton}
-                            onClick={bind(onBadgeClick, this, badge)}
-                            title={badge.org_badge.badge_name}
-                            type='button'
+                            place='top'
                         >
-                            <img
-                                src={badge.org_badge.badge_image_url}
-                                alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
-                                className={styles.badgeImage}
-                            />
-                        </button>
+                            <button
+                                aria-label={`View ${badge.org_badge.badge_name} award details`}
+                                className={styles.badgeButton}
+                                onClick={bind(onBadgeClick, this, badge)}
+                                type='button'
+                            >
+                                <img
+                                    src={badge.org_badge.badge_image_url}
+                                    alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
+                                    className={styles.badgeImage}
+                                />
+                            </button>
+                        </Tooltip>
                     ))
                 }
             </div>
