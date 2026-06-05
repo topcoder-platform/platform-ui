@@ -327,41 +327,46 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                         <span className={styles.summaryMeta}>{getRatingTierName(props.rating)}</span>
                     </div>
 
-                    <div className={styles.tierPyramid} aria-hidden='true'>
-                        <svg
-                            className={styles.tierPyramidSvg}
-                            viewBox='0 0 100 91'
-                            focusable='false'
-                        >
-                            {pyramidTierShapes.map((shape: PyramidTierShape) => {
-                                const tier = ratingTiers.find((ratingTier: RatingTier) => (
-                                    ratingTier.id === shape.tierId
-                                )) ?? ratingTiers[0]
+                    <div
+                        className={classNames(styles.summaryMetric, styles.positionMetric)}
+                        data-testid='rating-position-summary'
+                    >
+                        <div className={styles.tierPyramid} aria-hidden='true'>
+                            <svg
+                                className={styles.tierPyramidSvg}
+                                viewBox='0 0 100 91'
+                                focusable='false'
+                            >
+                                {pyramidTierShapes.map((shape: PyramidTierShape) => {
+                                    const tier = ratingTiers.find((ratingTier: RatingTier) => (
+                                        ratingTier.id === shape.tierId
+                                    )) ?? ratingTiers[0]
 
-                                return (
-                                    <polygon
-                                        key={shape.tierId}
-                                        points={shape.points}
-                                        fill={tier.id === selectedTier.id ? tier.color : '#D4D4D4'}
-                                    />
-                                )
-                            })}
-                        </svg>
-                    </div>
+                                    return (
+                                        <polygon
+                                            key={shape.tierId}
+                                            points={shape.points}
+                                            fill={tier.id === selectedTier.id ? tier.color : '#D4D4D4'}
+                                        />
+                                    )
+                                })}
+                            </svg>
+                        </div>
 
-                    <div className={classNames(styles.summaryMetric, styles.positionMetric)}>
-                        <span className={styles.summaryLabel}>Position</span>
-                        <span className={styles.positionValue} style={{ color: getRatingColor(props.rating) }}>
-                            TOP
-                            {' '}
-                            {percentileLabel}
-                            {percentileLabel === '--' ? '' : '%'}
-                        </span>
-                        <span className={styles.summaryMeta}>
-                            of
-                            {' '}
-                            {props.audienceLabel.toLowerCase()}
-                        </span>
+                        <div className={styles.positionDetails}>
+                            <span className={styles.summaryLabel}>Position</span>
+                            <span className={styles.positionValue} style={{ color: getRatingColor(props.rating) }}>
+                                TOP
+                                {' '}
+                                {percentileLabel}
+                                {percentileLabel === '--' ? '' : '%'}
+                            </span>
+                            <span className={styles.summaryMeta}>
+                                of
+                                {' '}
+                                {props.audienceLabel.toLowerCase()}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
