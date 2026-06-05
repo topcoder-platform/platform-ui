@@ -5,24 +5,36 @@
     width: 100%;
 
     .innerWrap {
-        background-image: linear-gradient(90deg, #05456D, #0A7AC0);
+        background: #07142F;
         color: $tc-white;
-        display: flex;
-        justify-content: space-between;
-        padding: $sp-4;
-        border-radius: 16px;
+        display: grid;
+        grid-template-columns: 52px 104px auto;
+        align-items: start;
+        column-gap: $sp-4;
+        justify-content: start;
+        min-height: 70px;
+        padding: $sp-4 $sp-5 $sp-3;
+        border-radius: 8px;
+        width: 286px;
+        max-width: 100%;
+        margin: 0 auto;
 
         .valueWrap {
+            appearance: none;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            cursor: pointer;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
+            min-width: 0;
+            padding: 0;
+            text-align: left;
 
-            &.noPercentile {
-                flex-direction: row;
-                align-items: flex-end;
-
+            &:hover {
                 .name {
-                    margin-left: $sp-2;
+                    text-decoration: underline;
                 }
             }
 
@@ -31,19 +43,145 @@
                 font-weight: 500;
                 font-family: $font-barlow-condensed;
                 line-height: 28px;
+                white-space: nowrap;
             }
 
             .name {
+                color: rgba($tc-white, 0.84);
+                font-family: $font-roboto;
                 font-size: 12px;
-                line-height: 18px;
+                line-height: 14px;
+            }
+
+            .percentileValue {
+                background: rgba($tc-white, 0.06);
+                border-radius: 2px;
+                font-family: $font-roboto;
+                font-size: 14px;
+                font-weight: $font-weight-bold;
+                line-height: 16px;
+                padding: 2px $sp-2;
+            }
+        }
+
+        .percentileWrap {
+            margin-top: 0;
+
+            .name {
+                margin-left: $sp-2;
+                margin-top: calc(#{$sp-2} + 2px);
+                white-space: nowrap;
             }
         }
 
         .link {
-            font-size: 14px;
+            grid-column: -2 / -1;
+            align-self: start;
+            justify-self: end;
+            margin-top: $sp-1;
+            color: $tc-white;
+            font-size: 12px;
             line-height: 14px;
             font-weight: $font-weight-medium;
             font-family: $font-roboto;
+            white-space: nowrap;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        @include ltelg {
+            grid-template-columns: 52px 104px auto;
+        }
+
+        @include ltesm {
+            grid-template-columns: 1fr;
+            column-gap: $sp-3;
+            row-gap: $sp-1;
+            justify-content: start;
+            justify-items: stretch;
+            width: 300px;
+
+            .percentileWrap {
+                .name {
+                    margin-left: 0;
+                }
+            }
+
+            .link {
+                grid-column: 1;
+                justify-self: start;
+                margin-top: 0;
+            }
         }
     }
+}
+
+.preferredRolesWrap {
+    align-items: flex-start;
+    color: $black-100;
+    display: flex;
+    justify-content: center;
+    margin: $sp-4 auto 0;
+    max-width: 320px;
+    position: relative;
+    width: 100%;
+}
+
+.preferredRolesList {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 16px;
+    gap: $sp-1 0;
+    justify-content: center;
+    line-height: 24px;
+    text-align: center;
+}
+
+.preferredRole {
+    display: inline-flex;
+    white-space: normal;
+
+    + .preferredRole::before {
+        content: '\00b7';
+        margin: 0 $sp-2;
+    }
+}
+
+.preferredRolesToggle {
+    color: $turq-160;
+    font-size: 16px;
+    line-height: 24px;
+    margin-left: $sp-2;
+    white-space: nowrap;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.preferredRolesEditButton {
+    color: $black-100;
+    padding-left: $sp-2 !important;
+}
+
+.ratingTooltip {
+    --rt-opacity: 1;
+
+    background-color: $black-100 !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    line-height: 21px !important;
+    opacity: 1 !important;
+    padding: $sp-2 $sp-3 !important;
+
+    :global(.react-tooltip-arrow) {
+        background-color: $black-100 !important;
+    }
+}
+
+.tooltipContent {
+    display: block;
+    white-space: nowrap;
 }

@@ -1,0 +1,111 @@
+@import "@libs/ui/styles/includes";
+
+.modal {
+    width: 640px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    padding: $sp-6 !important;
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-4;
+        top: $sp-4;
+
+        svg {
+            fill: $turq-160 !important;
+        }
+    }
+
+    @include ltesm {
+        max-width: calc(100vw - #{$sp-4}) !important;
+        padding: $sp-4 !important;
+        width: calc(100vw - #{$sp-4}) !important;
+    }
+}
+
+.body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.title {
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 18px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    margin: 0;
+    padding-right: $sp-8;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    min-width: 0;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid $black-10;
+    margin: 0;
+}
+
+.table {
+    overflow: hidden;
+}
+
+.tableHeader,
+.tableRow {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: 56px minmax(0, 1fr) 72px;
+
+    @include ltesm {
+        gap: $sp-2;
+        grid-template-columns: 44px minmax(0, 1fr) 52px;
+    }
+}
+
+.tableHeader {
+    border-bottom: 1px solid $black-20;
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    line-height: 20px;
+    padding: $sp-3 0;
+}
+
+.tableRow {
+    align-items: center;
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 52px;
+    padding: $sp-3 0;
+
+    & + & {
+        border-top: 1px solid $black-10;
+    }
+}
+
+.challengeLink {
+    color: $turq-160;
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.placement,
+.points {
+    white-space: nowrap;
+}
+
+.points {
+    font-weight: $font-weight-bold;
+    text-align: right;
+}
