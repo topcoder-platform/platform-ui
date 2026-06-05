@@ -25,10 +25,18 @@ interface CollapsibleAiReviewsRowProps {
     defaultOpen?: boolean
     aiReviewers: { aiWorkflowId: string }[]
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
+    /** Enable editing mode for manager score overrides */
+    editMode?: boolean
+    /** Current edited scores by workflowId */
+    editedScores?: Record<string, string>
+    /** Callback when a score is changed */
+    onScoreChange?: (workflowId: string, value: string) => void
 }
 
 export function normalizeDecisionStatus(
     status?: AiReviewDecisionStatus,
+    totalScore?: number | null,
+    minPassingThreshold?: number | null,
 ): 'passed' | 'failed-score' | 'pending' | 'failed' | 'human-override' {
     if (!status || status === 'PENDING') {
         return 'pending'
@@ -47,6 +55,13 @@ export function normalizeDecisionStatus(
     }
 
     if (status === 'HUMAN_OVERRIDE') {
+        if (
+            typeof totalScore === 'number'
+            && typeof minPassingThreshold === 'number'
+        ) {
+            return totalScore >= minPassingThreshold ? 'passed' : 'failed-score'
+        }
+
         return 'human-override'
     }
 
@@ -174,10 +189,17 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [aiReviewDecisionsBySubmissionId, props.submission.id],
     )
 
+    const minPassingThreshold = currentDecision?.breakdown?.minPassingThreshold
+        ?? aiReviewConfig?.minPassingThreshold
+
     // Extracted into its own memo to reduce the complexity count of the component arrow function
     const normalizedStatus = useMemo(
-        () => normalizeDecisionStatus(currentDecision?.status),
-        [currentDecision?.status],
+        () => normalizeDecisionStatus(
+            currentDecision?.status,
+            currentDecision?.totalScore,
+            minPassingThreshold,
+        ),
+        [currentDecision?.status, currentDecision?.totalScore, minPassingThreshold],
     )
 
     /**
@@ -291,7 +313,13 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
             </div>
             {isOpen && portalContainer && createPortal(
                 <div className={classNames(styles.table, 'reviews-table')}>
-                    <AiReviewsTable submission={props.submission} aiReviewers={props.aiReviewers} />
+                    <AiReviewsTable
+                        submission={props.submission}
+                        aiReviewers={props.aiReviewers}
+                        editMode={props.editMode}
+                        editedScores={props.editedScores}
+                        onScoreChange={props.onScoreChange}
+                    />
                 </div>,
                 portalContainer,
             )}

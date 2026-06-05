@@ -104,6 +104,8 @@ function formatScore(value?: number | null): string {
 
 function normalizeDecisionStatus(
     status?: string | null,
+    totalScore?: number | null,
+    minPassingThreshold?: number | null,
 ): 'passed' | 'failed-score' | 'pending' | 'failed' | 'human-override' {
     if (!status || status === 'PENDING') {
         return 'pending'
@@ -122,6 +124,13 @@ function normalizeDecisionStatus(
     }
 
     if (status === 'HUMAN_OVERRIDE') {
+        if (
+            typeof totalScore === 'number'
+            && typeof minPassingThreshold === 'number'
+        ) {
+            return totalScore >= minPassingThreshold ? 'passed' : 'failed-score'
+        }
+
         return 'human-override'
     }
 
@@ -294,7 +303,13 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             = challengeDetailContext.aiReviewDecisionsBySubmissionId
         const currentDecision = aiReviewDecisionsBySubmissionId[submission.id]
         const hasDecisionScore = currentDecision?.totalScore !== null && currentDecision?.totalScore !== undefined
-        const normalizedStatus = normalizeDecisionStatus(currentDecision?.status ?? undefined)
+        const minPassingThreshold = currentDecision?.breakdown?.minPassingThreshold
+            ?? aiReviewConfig?.minPassingThreshold
+        const normalizedStatus = normalizeDecisionStatus(
+            currentDecision?.status ?? undefined,
+            currentDecision?.totalScore,
+            minPassingThreshold,
+        )
 
         return (
             <Fragment key={submission.id}>

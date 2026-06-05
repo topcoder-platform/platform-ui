@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Challenge Details Content.
  */
@@ -34,6 +35,7 @@ import {
     shouldIncludeInReviewPhase,
 } from '../../utils/reviewPhaseGuards'
 
+import TabContentAiApproval from './TabContentAiApproval'
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
@@ -278,6 +280,21 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             : undefined),
         [challengeInfo?.phases, props.selectedPhaseId],
     )
+    const isFuturePhase = useMemo(() => {
+        if (!props.isActiveChallenge) return false
+        if (!selectedPhase) return false
+        const isOpen = Boolean((selectedPhase as { isOpen?: boolean }).isOpen)
+        const hasStarted = Boolean(selectedPhase.actualStartDate)
+        // If phase is not open and hasn't actually started, consider it future
+        if (!isOpen && !hasStarted) return true
+        // Fallback to scheduled start in the future if available
+        const startMs = Date.parse(selectedPhase.actualStartDate || selectedPhase.scheduledStartDate || '')
+        if (Number.isFinite(startMs)) {
+            return startMs > Date.now()
+        }
+
+        return false
+    }, [actionChallengeRole, selectedPhase, props.isActiveChallenge])
     const isFuturePhaseForSubmitter = useMemo(() => {
         if (!props.isActiveChallenge) return false
         if (actionChallengeRole !== SUBMITTER) return false
@@ -497,6 +514,19 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         }
 
         if (selectedTabNormalized === 'approval') {
+            if (aiReviewConfig?.mode === 'AI_ONLY') {
+                return isFuturePhase ? (
+                    <TabContentPlaceholder message={unopenedPhaseMessage || "This phase hasn't opened yet."} />
+                ) : (
+                    <TabContentAiApproval
+                        submissions={props.submissions}
+                        isLoading={props.isLoadingSubmission}
+                        isDownloading={isDownloadingSubmission}
+                        downloadSubmission={handleSubmissionDownload}
+                    />
+                )
+            }
+
             return (
                 <TabContentApproval
                     reviews={props.approvalReviews}

@@ -43,6 +43,7 @@ export interface AiWorkflowRun {
     status: AiWorkflowRunStatusEnum;
     gitRunId?: string;
     gitRunUrl?: string;
+    initialScore?: number
     score: number;
     workflow: AiWorkflow
     usage: {
