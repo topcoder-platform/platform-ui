@@ -37,10 +37,10 @@
 
 .title {
     color: $black-100;
-    font-family: $font-roboto;
-    font-size: 16px;
+    font-family: $font-barlow;
+    font-size: 22px;
     font-weight: $font-weight-bold;
-    line-height: 24px;
+    line-height: 28px;
     margin: 0;
     padding-right: $sp-8;
 }
@@ -54,8 +54,8 @@
 .description {
     color: $black-100;
     font-family: $font-roboto;
-    font-size: 14px;
-    line-height: 21px;
+    font-size: 16px;
+    line-height: 24px;
     margin: 0;
 }
 
@@ -117,9 +117,9 @@
 .summaryLabel {
     color: $black-80;
     font-family: $font-roboto;
-    font-size: 12px;
-    font-weight: $font-weight-medium;
-    line-height: 16px;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
 }
 
 .ratingValue {
@@ -132,9 +132,9 @@
 
 .positionValue {
     font-family: $font-barlow-condensed;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: $font-weight-medium;
-    line-height: 32px;
+    line-height: 34px;
     text-transform: uppercase;
     white-space: nowrap;
 }
@@ -163,10 +163,11 @@
 .sectionTitle {
     color: $black-100;
     font-family: $font-roboto;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: $font-weight-bold;
-    line-height: 20px;
+    line-height: 22px;
     margin: $sp-1 0 0;
+    text-transform: none;
 }
 
 .chart {
@@ -339,14 +340,14 @@
 .legendRange {
     color: $black-100;
     font-family: $font-roboto;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: $font-weight-bold;
-    line-height: 14px;
+    line-height: 16px;
 }
 
 .legendLabel {
     color: $black-80;
     font-family: $font-roboto;
-    font-size: 10px;
-    line-height: 14px;
+    font-size: 11px;
+    line-height: 15px;
 }

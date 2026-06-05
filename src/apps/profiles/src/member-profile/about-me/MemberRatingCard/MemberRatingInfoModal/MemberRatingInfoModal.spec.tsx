@@ -74,5 +74,7 @@ describe('MemberRatingInfoModal', () => {
             .toBeInTheDocument()
         expect(positionSummary.querySelector('svg'))
             .toBeInTheDocument()
+        expect(screen.getByText('Where Emily ranks in the distribution'))
+            .toBeInTheDocument()
     })
 })
