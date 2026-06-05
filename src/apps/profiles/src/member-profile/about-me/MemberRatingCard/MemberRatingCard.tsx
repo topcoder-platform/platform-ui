@@ -17,6 +17,7 @@ import { getPreferredRolesText, numberToFixed } from '../../../lib'
 
 import {
     calculateTopPercentileFromDistribution,
+    getPreferredRolesDisplay,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
     parsePreferredRolesText,
@@ -78,6 +79,10 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         () => parsePreferredRolesText(preferredRolesText),
         [preferredRolesText],
     )
+    const preferredRolesDisplay = useMemo(
+        () => getPreferredRolesDisplay(preferredRoles, arePreferredRolesExpanded),
+        [arePreferredRolesExpanded, preferredRoles],
+    )
 
     function handleInfoModalClose(): void {
         setIsInfoModalOpen(false)
@@ -105,34 +110,27 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     }
 
     function renderPreferredRoles(): JSX.Element {
-        const MAX_VISIBLE_PREFERRED_ROLES = 4
-
         if (preferredRoles.length === 0 && !canEditPreferredRoles) {
             return <></>
         }
-
-        const visiblePreferredRoles = arePreferredRolesExpanded
-            ? preferredRoles
-            : preferredRoles.slice(0, MAX_VISIBLE_PREFERRED_ROLES)
-        const hasMorePreferredRoles = preferredRoles.length > MAX_VISIBLE_PREFERRED_ROLES
 
         return (
             <div className={styles.preferredRolesWrap}>
                 {preferredRoles.length > 0 && (
                     <div className={styles.preferredRolesList}>
-                        {visiblePreferredRoles.map((role: string) => (
+                        {preferredRolesDisplay.visibleRoles.map((role: string) => (
                             <span className={styles.preferredRole} key={role}>
                                 {role}
                             </span>
                         ))}
 
-                        {hasMorePreferredRoles && (
+                        {preferredRolesDisplay.toggleLabel && (
                             <button
                                 className={styles.preferredRolesToggle}
                                 onClick={handlePreferredRolesToggle}
                                 type='button'
                             >
-                                {arePreferredRolesExpanded ? 'See less' : 'See more'}
+                                {preferredRolesDisplay.toggleLabel}
                             </button>
                         )}
                     </div>

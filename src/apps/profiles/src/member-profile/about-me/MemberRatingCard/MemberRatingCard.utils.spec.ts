@@ -2,6 +2,7 @@ import type { UserStats, UserStatsDistributionResponse } from '~/libs/core'
 
 import {
     calculateTopPercentileFromDistribution,
+    getPreferredRolesDisplay,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
     parsePreferredRolesText,
@@ -132,5 +133,44 @@ describe('parsePreferredRolesText', () => {
     it('keeps slash-separated role labels intact', () => {
         expect(parsePreferredRolesText('Cybersecurity Analyst / Security Engineer'))
             .toEqual(['Cybersecurity Analyst / Security Engineer'])
+    })
+})
+
+describe('getPreferredRolesDisplay', () => {
+    const preferredRoles = [
+        'Designer',
+        'Front-End Developer',
+        'Back-End Developer',
+        'Data Scientist',
+    ]
+
+    it('shows two roles and the hidden role count when collapsed', () => {
+        expect(getPreferredRolesDisplay(preferredRoles, false))
+            .toEqual({
+                hiddenCount: 2,
+                toggleLabel: '+ 2 more',
+                visibleRoles: [
+                    'Designer',
+                    'Front-End Developer',
+                ],
+            })
+    })
+
+    it('shows all roles and a collapse label when expanded', () => {
+        expect(getPreferredRolesDisplay(preferredRoles, true))
+            .toEqual({
+                hiddenCount: 0,
+                toggleLabel: 'See less',
+                visibleRoles: preferredRoles,
+            })
+    })
+
+    it('omits the toggle when all roles fit in the compact list', () => {
+        expect(getPreferredRolesDisplay(['Designer', 'Front-End Developer'], false))
+            .toEqual({
+                hiddenCount: 0,
+                toggleLabel: undefined,
+                visibleRoles: ['Designer', 'Front-End Developer'],
+            })
     })
 })

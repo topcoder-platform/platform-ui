@@ -11,6 +11,14 @@ interface RatingDistributionRange {
     value: number
 }
 
+export interface PreferredRolesDisplay {
+    hiddenCount: number
+    toggleLabel: string | undefined
+    visibleRoles: string[]
+}
+
+const maxCollapsedPreferredRoles = 2
+
 const aiEngineeringTrackNames: Set<string> = new Set([
     'AI',
     'AI_ENGINEER',
@@ -70,6 +78,30 @@ export const parsePreferredRolesText = (preferredRolesText?: string): string[] =
             .replace(/^[-*]\s+/, ''))
         .filter(Boolean)
 )
+
+/**
+ * Builds the compact preferred-role display state for the profile rating card.
+ *
+ * @param {string[]} preferredRoles - Parsed preferred role labels in display order.
+ * @param {boolean} areExpanded - Whether the compact list has been expanded by the user.
+ * @returns {PreferredRolesDisplay} Visible roles plus the toggle label and collapsed hidden count.
+ */
+export const getPreferredRolesDisplay = (
+    preferredRoles: string[],
+    areExpanded: boolean,
+): PreferredRolesDisplay => {
+    const hiddenCount = Math.max(preferredRoles.length - maxCollapsedPreferredRoles, 0)
+
+    return {
+        hiddenCount: areExpanded ? 0 : hiddenCount,
+        toggleLabel: hiddenCount > 0
+            ? (areExpanded ? 'See less' : `+ ${hiddenCount} more`)
+            : undefined,
+        visibleRoles: areExpanded
+            ? preferredRoles
+            : preferredRoles.slice(0, maxCollapsedPreferredRoles),
+    }
+}
 
 /**
  * Parses the stats distribution API response into sorted rating ranges.
