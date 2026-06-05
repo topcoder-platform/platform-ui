@@ -58,6 +58,20 @@ const getFiniteNumber = (value: unknown): number | undefined => (
 )
 
 /**
+ * Splits preferred role text into display-ready role labels.
+ *
+ * @param {string | undefined} preferredRolesText - Text from the profile preferred roles field.
+ * @returns {string[]} Cleaned role labels for the compact profile role list.
+ */
+export const parsePreferredRolesText = (preferredRolesText?: string): string[] => (
+    (preferredRolesText ?? '')
+        .split(/[\n,;\u00b7\u2022]+/)
+        .map((role: string) => role.trim()
+            .replace(/^[-*]\s+/, ''))
+        .filter(Boolean)
+)
+
+/**
  * Parses the stats distribution API response into sorted rating ranges.
  *
  * @param {UserStatsDistributionResponse['distribution'] | undefined} distribution - Raw distribution buckets.

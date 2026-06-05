@@ -4,6 +4,7 @@ import {
     calculateTopPercentileFromDistribution,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
+    parsePreferredRolesText,
 } from './MemberRatingCard.utils'
 
 describe('calculateTopPercentileFromDistribution', () => {
@@ -114,5 +115,22 @@ describe('getRatingDistributionQuery', () => {
                 subTrack: 'AI',
                 track: 'DATA_SCIENCE',
             })
+    })
+})
+
+describe('parsePreferredRolesText', () => {
+    it('splits preferred roles on supported separators', () => {
+        expect(parsePreferredRolesText('Designer\nFront-End Developer, Back-End Developer; Data Scientist'))
+            .toEqual([
+                'Designer',
+                'Front-End Developer',
+                'Back-End Developer',
+                'Data Scientist',
+            ])
+    })
+
+    it('keeps slash-separated role labels intact', () => {
+        expect(parsePreferredRolesText('Cybersecurity Analyst / Security Engineer'))
+            .toEqual(['Cybersecurity Analyst / Security Engineer'])
     })
 })

@@ -99,7 +99,12 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                 }
             </p>
 
-            <MemberRatingCard profile={props.profile} />
+            <MemberRatingCard
+                authProfile={props.authProfile}
+                memberPersonalizationTraitsData={memberPersonalizationTraits?.[0]?.traits?.data}
+                mutatePersonalizationTraits={mutateTraits}
+                profile={props.profile}
+            />
 
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
                 <p className='body-main-medium'>{memberTitle}</p>

@@ -1,6 +1,6 @@
-import { ChangeEvent, FC, useCallback } from 'react'
+import { ChangeEvent, FC } from 'react'
 
-import { InputMultiselect, InputMultiselectOption, InputRadio, InputSelect } from '~/libs/ui'
+import { InputRadio, InputSelect } from '~/libs/ui'
 
 import styles from './ModifyOpenToWorkModal.module.scss'
 
@@ -9,7 +9,6 @@ export type AvailabilityType = 'FULL_TIME' | 'PART_TIME'
 export interface OpenToWorkData {
     availableForGigs: boolean | null
     availability?: AvailabilityType
-    preferredRoles?: string[]
 }
 
 interface OpenToWorkFormProps {
@@ -21,11 +20,11 @@ interface OpenToWorkFormProps {
 }
 
 export const availabilityOptions = [
-    { label: 'Full-time', value: 'FULL_TIME' },
-    { label: 'Part-time', value: 'PART_TIME' },
+    { label: 'Full-Time', value: 'FULL_TIME' },
+    { label: 'Part-Time', value: 'PART_TIME' },
 ]
 
-export const preferredRoleOptions: InputMultiselectOption[] = [
+export const preferredRoleOptions: Array<{ label: string, value: string }> = [
     { label: 'AI / ML Engineer', value: 'AI_ML_ENGINEER' },
     { label: 'Data Scientist / Data Engineer', value: 'DATA_SCIENTIST_ENGINEER' },
     { label: 'Cybersecurity Analyst / Security Engineer', value: 'CYBERSECURITY_ENGINEER' },
@@ -49,10 +48,6 @@ export const validateOpenToWork = (value: OpenToWorkData): { [key: string]: stri
         errors.availability = 'Availability is required.'
     }
 
-    if (!value.preferredRoles || value.preferredRoles.length === 0) {
-        errors.preferredRoles = 'Select at least one preferred role.'
-    }
-
     return errors
 }
 
@@ -72,29 +67,6 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
             availability: e.target.value as AvailabilityType,
         })
     }
-
-    const handleRolesChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-        const options = (e.target as unknown as { value: InputMultiselectOption[] }).value
-
-        props.onChange({
-            ...props.value,
-            preferredRoles: options.map(o => o.value),
-        })
-    }, [props])
-
-    const fetchPreferredRoles = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
-        if (!query) {
-            return preferredRoleOptions
-        }
-
-        const normalizedQuery = query.toLowerCase()
-        return preferredRoleOptions.filter(option => {
-            const normalizedLabel = option.label?.toString()
-                .toLowerCase()
-
-            return normalizedLabel?.includes(normalizedQuery)
-        })
-    }, [])
 
     return (
         <div className={styles.container}>
@@ -134,22 +106,6 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         error={props.showErrors ? props.formErrors?.availability : undefined}
                     />
 
-                    <InputMultiselect
-                        className={styles.inputMultiSelect}
-                        name='preferredRoles'
-                        label='Preferred Roles *'
-                        placeholder='Select preferred roles'
-                        additionalPlaceholder='Add more...'
-                        onFetchOptions={fetchPreferredRoles}
-                        options={preferredRoleOptions}
-                        value={preferredRoleOptions.filter(
-                            option => props.value.preferredRoles?.includes(option.value),
-                        )}
-                        onChange={handleRolesChange}
-                        disabled={props.disabled}
-                        dirty={props.showErrors}
-                        error={props.showErrors ? props.formErrors?.preferredRoles : undefined}
-                    />
                 </>
             )}
         </div>

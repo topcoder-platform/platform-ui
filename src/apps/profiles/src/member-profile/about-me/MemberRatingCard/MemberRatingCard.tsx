@@ -7,21 +7,28 @@ import {
     UserProfile,
     UserStats,
     UserStatsDistributionResponse,
+    UserTrait,
     useStatsDistribution,
 } from '~/libs/core'
 import { Tooltip } from '~/libs/ui'
 
-import { numberToFixed } from '../../../lib'
+import { EditMemberPropertyBtn } from '../../../components'
+import { getPreferredRolesText, numberToFixed } from '../../../lib'
 
 import {
     calculateTopPercentileFromDistribution,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
+    parsePreferredRolesText,
 } from './MemberRatingCard.utils'
 import { MemberRatingInfoModal } from './MemberRatingInfoModal'
+import { ModifyPreferredRolesModal } from './ModifyPreferredRolesModal'
 import styles from './MemberRatingCard.module.scss'
 
 interface MemberRatingCardProps {
+    authProfile: UserProfile | undefined
+    memberPersonalizationTraitsData: UserTrait[] | undefined
+    mutatePersonalizationTraits: () => void
     profile: UserProfile
 }
 
@@ -40,6 +47,16 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
+    const [isPreferredRolesModalOpen, setIsPreferredRolesModalOpen]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState(false)
+
+    const [arePreferredRolesExpanded, setArePreferredRolesExpanded]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState(false)
+
     const ratingDistributionQuery = useMemo(() => getRatingDistributionQuery(memberStats), [memberStats])
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution(ratingDistributionQuery)
@@ -52,6 +69,15 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     const percentileLabel: string | undefined = maxPercentile
         ? `Top ${formatPercentile(maxPercentile)}%`
         : undefined
+    const canEditPreferredRoles: boolean = props.authProfile?.handle === props.profile.handle
+    const preferredRolesText: string = useMemo(
+        () => getPreferredRolesText(props.memberPersonalizationTraitsData),
+        [props.memberPersonalizationTraitsData],
+    )
+    const preferredRoles: string[] = useMemo(
+        () => parsePreferredRolesText(preferredRolesText),
+        [preferredRolesText],
+    )
 
     function handleInfoModalClose(): void {
         setIsInfoModalOpen(false)
@@ -59,6 +85,67 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
 
     function handleInfoModalOpen(): void {
         setIsInfoModalOpen(true)
+    }
+
+    function handlePreferredRolesModalClose(): void {
+        setIsPreferredRolesModalOpen(false)
+    }
+
+    function handlePreferredRolesModalOpen(): void {
+        setIsPreferredRolesModalOpen(true)
+    }
+
+    function handlePreferredRolesModalSave(): void {
+        setIsPreferredRolesModalOpen(false)
+        props.mutatePersonalizationTraits()
+    }
+
+    function handlePreferredRolesToggle(): void {
+        setArePreferredRolesExpanded(!arePreferredRolesExpanded)
+    }
+
+    function renderPreferredRoles(): JSX.Element {
+        const MAX_VISIBLE_PREFERRED_ROLES = 4
+
+        if (preferredRoles.length === 0 && !canEditPreferredRoles) {
+            return <></>
+        }
+
+        const visiblePreferredRoles = arePreferredRolesExpanded
+            ? preferredRoles
+            : preferredRoles.slice(0, MAX_VISIBLE_PREFERRED_ROLES)
+        const hasMorePreferredRoles = preferredRoles.length > MAX_VISIBLE_PREFERRED_ROLES
+
+        return (
+            <div className={styles.preferredRolesWrap}>
+                {preferredRoles.length > 0 && (
+                    <div className={styles.preferredRolesList}>
+                        {visiblePreferredRoles.map((role: string) => (
+                            <span className={styles.preferredRole} key={role}>
+                                {role}
+                            </span>
+                        ))}
+
+                        {hasMorePreferredRoles && (
+                            <button
+                                className={styles.preferredRolesToggle}
+                                onClick={handlePreferredRolesToggle}
+                                type='button'
+                            >
+                                {arePreferredRolesExpanded ? 'See less' : 'See more'}
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {canEditPreferredRoles && (
+                    <EditMemberPropertyBtn
+                        className={styles.preferredRolesEditButton}
+                        onClick={handlePreferredRolesModalOpen}
+                    />
+                )}
+            </div>
+        )
     }
 
     return memberStats?.maxRating?.rating ? (
@@ -115,6 +202,19 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                         rating={rating}
                         audienceLabel={audienceLabel}
                         ratingDistribution={ratingDistribution}
+                    />
+                )
+            }
+
+            {renderPreferredRoles()}
+
+            {
+                isPreferredRolesModalOpen && (
+                    <ModifyPreferredRolesModal
+                        memberPersonalizationTraitsData={props.memberPersonalizationTraitsData}
+                        onClose={handlePreferredRolesModalClose}
+                        onSave={handlePreferredRolesModalSave}
+                        profile={props.profile}
                     />
                 )
             }

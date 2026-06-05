@@ -109,6 +109,54 @@
     }
 }
 
+.preferredRolesWrap {
+    align-items: flex-start;
+    color: $black-100;
+    display: flex;
+    justify-content: center;
+    margin: $sp-4 auto 0;
+    max-width: 320px;
+    position: relative;
+    width: 100%;
+}
+
+.preferredRolesList {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 16px;
+    gap: $sp-1 0;
+    justify-content: center;
+    line-height: 24px;
+    text-align: center;
+}
+
+.preferredRole {
+    display: inline-flex;
+    white-space: normal;
+
+    + .preferredRole::before {
+        content: '\00b7';
+        margin: 0 $sp-2;
+    }
+}
+
+.preferredRolesToggle {
+    color: $turq-160;
+    font-size: 16px;
+    line-height: 24px;
+    margin-left: $sp-2;
+    white-space: nowrap;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.preferredRolesEditButton {
+    color: $black-100;
+    padding-left: $sp-2 !important;
+}
+
 .ratingTooltip {
     --rt-opacity: 1;
 
