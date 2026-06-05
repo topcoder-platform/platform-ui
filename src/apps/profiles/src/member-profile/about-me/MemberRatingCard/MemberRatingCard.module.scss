@@ -95,15 +95,23 @@
         }
 
         @include ltesm {
-            grid-template-columns: 52px 104px auto;
+            grid-template-columns: 1fr;
             column-gap: $sp-3;
+            row-gap: $sp-1;
+            justify-content: start;
             justify-items: stretch;
             width: 300px;
 
+            .percentileWrap {
+                .name {
+                    margin-left: 0;
+                }
+            }
+
             .link {
-                grid-column: -2 / -1;
-                justify-self: end;
-                margin-top: $sp-1;
+                grid-column: 1;
+                justify-self: start;
+                margin-top: 0;
             }
         }
     }
