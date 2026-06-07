@@ -9,7 +9,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 
 import {
     ChallengePhase,
@@ -127,6 +127,11 @@ interface LoadTesterByIdOptions {
     showErrorToast?: boolean
 }
 
+interface CompilationErrorModalProps {
+    onClose: () => void
+    tester: MarathonMatchTester
+}
+
 /**
  * Renders the inputs for a single marathon match phase configuration.
  * Used by `MarathonMatchScorerSection` for example, provisional, and system phases.
@@ -195,6 +200,47 @@ const PhaseConfigCard: FC<PhaseConfigCardProps> = (props: PhaseConfigCardProps) 
             </label>
         </div>
     </div>
+)
+
+/**
+ * Displays saved scorer compilation diagnostics for a failed tester build.
+ * @param props Modal visibility, close action, and failed tester details.
+ * @returns The modal body used by `MarathonMatchScorerSection` for FAILED compilation status.
+ */
+const CompilationErrorModal: FC<CompilationErrorModalProps> = (
+    props: CompilationErrorModalProps,
+) => (
+    <BaseModal
+        open
+        onClose={props.onClose}
+        size='lg'
+        title='Compilation Errors'
+        buttons={(
+            <div className={styles.modalActions}>
+                <Button
+                    label='Close'
+                    onClick={props.onClose}
+                    primary
+                    type='button'
+                />
+            </div>
+        )}
+    >
+        <div className={styles.modalContent}>
+            <div className={styles.compilationErrorMeta}>
+                <strong>
+                    {props.tester.name}
+                    {' '}
+                    v
+                    {props.tester.version}
+                </strong>
+                <span>{props.tester.className}</span>
+            </div>
+            <pre className={styles.compilationErrorOutput}>
+                {props.tester.compilationError || 'Compilation failed without an error message.'}
+            </pre>
+        </div>
+    </BaseModal>
 )
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -669,6 +715,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     const [testerLoadError, setTesterLoadError] = useState<string | undefined>()
     const [showNewTesterModal, setShowNewTesterModal] = useState<boolean>(false)
     const [showNewVersionModal, setShowNewVersionModal] = useState<boolean>(false)
+    const [showCompilationErrorsModal, setShowCompilationErrorsModal] = useState<boolean>(false)
 
     const phaseOptions = useMemo(
         (): PhaseOption[] => phases
@@ -758,6 +805,22 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
     const handleCloseNewVersionModal = useCallback((): void => {
         setShowNewVersionModal(false)
+    }, [])
+
+    /**
+     * Opens the failed scorer compilation diagnostics modal.
+     * @returns void
+     */
+    const handleOpenCompilationErrorsModal = useCallback((): void => {
+        setShowCompilationErrorsModal(true)
+    }, [])
+
+    /**
+     * Closes the failed scorer compilation diagnostics modal.
+     * @returns void
+     */
+    const handleCloseCompilationErrorsModal = useCallback((): void => {
+        setShowCompilationErrorsModal(false)
     }, [])
 
     const loadTesterById = useCallback(
@@ -1199,6 +1262,14 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     ])
 
     useEffect(() => {
+        if (selectedTester?.compilationStatus === 'FAILED') {
+            return
+        }
+
+        setShowCompilationErrorsModal(false)
+    }, [selectedTester?.compilationStatus])
+
+    useEffect(() => {
         clearPollingTimer()
 
         if (selectedTester?.compilationStatus !== 'PENDING') {
@@ -1286,8 +1357,16 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             {selectedTester?.compilationStatus === 'FAILED'
                 ? (
                     <div className={styles.error}>
-                        <strong>Scorer compilation failed.</strong>
-                        <div>{selectedTester.compilationError || 'Compilation failed without an error message.'}</div>
+                        <div className={styles.errorActionRow}>
+                            <strong>Scorer compilation failed.</strong>
+                            <button
+                                className={styles.linkButton}
+                                onClick={handleOpenCompilationErrorsModal}
+                                type='button'
+                            >
+                                View compilation errors
+                            </button>
+                        </div>
                     </div>
                 )
                 : undefined}
@@ -1586,6 +1665,15 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         mode='version'
                         onClose={handleCloseNewVersionModal}
                         onCreated={handleTesterCreated}
+                    />
+                )
+                : undefined}
+
+            {showCompilationErrorsModal && selectedTester?.compilationStatus === 'FAILED'
+                ? (
+                    <CompilationErrorModal
+                        onClose={handleCloseCompilationErrorsModal}
+                        tester={selectedTester}
                     />
                 )
                 : undefined}
