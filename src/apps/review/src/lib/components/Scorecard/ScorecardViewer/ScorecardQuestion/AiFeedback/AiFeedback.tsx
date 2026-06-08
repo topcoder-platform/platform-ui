@@ -30,13 +30,20 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const feedback: any = useMemo(() => (
         aiFeedbackItems?.find((r: any) => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
-    const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
+    const { workflowId, workflowRun, challengeInfo }: ReviewsContextModel = useReviewsContext()
     const { isPrivilegedRole } = useRole()
     const [showReply, setShowReply] = useState(false)
     const [isUpdatingScore, setIsUpdatingScore] = useState(false)
     const [isEditingScore, setIsEditingScore] = useState(false)
     const [editedScore, setEditedScore] = useState<string>('')
     const [editComment, setEditComment] = useState('')
+
+    const isApprovalPhaseOpen = useMemo(
+        () => (challengeInfo?.phases ?? []).some(
+            (p) => (p.name || '').toLowerCase() === 'approval' && Boolean(p.isOpen),
+        ),
+        [challengeInfo?.phases],
+    )
 
     const commentsArr: any[] = (feedback?.comments) || []
 
@@ -54,7 +61,11 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     }, [workflowId, workflowRun?.id, workflowRun?.status, feedback?.id])
 
     const isYesNo = props.question.type === 'YES_NO'
-    const hasQuestionScoreEditAccess = isPrivilegedRole && !!workflowId && !!workflowRun?.id && !!feedback?.id
+    const hasQuestionScoreEditAccess = isPrivilegedRole
+        && !!workflowId
+        && !!workflowRun?.id
+        && !!feedback?.id
+        && isApprovalPhaseOpen
 
     const scoreOptions = useMemo(() => getScoreResponseOptions(props.question), [props.question])
 
