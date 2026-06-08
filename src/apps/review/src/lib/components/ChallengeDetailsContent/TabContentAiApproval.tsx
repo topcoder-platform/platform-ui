@@ -65,7 +65,6 @@ function formatScore(score: number | null | undefined): string {
 
 export const TabContentAiApproval: FC<Props> = (props: Props) => {
     const {
-        aiReviewConfig,
         aiReviewDecisionsBySubmissionId,
         challengeInfo,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
@@ -121,18 +120,6 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
     )
 
     const navigate = useNavigate()
-
-    const workflowNameById = useMemo<Record<string, string>>(() => {
-        const configWorkflows = aiReviewConfig?.workflows ?? []
-
-        return configWorkflows.reduce<Record<string, string>>((acc, cw) => {
-            if (cw.workflowId && cw.workflow?.name) {
-                acc[cw.workflowId] = cw.workflow.name
-            }
-
-            return acc
-        }, {})
-    }, [aiReviewConfig?.workflows])
 
     const contestSubmissions = useMemo<BackendSubmission[]>(
         () => props.submissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION' && s.isLatest),

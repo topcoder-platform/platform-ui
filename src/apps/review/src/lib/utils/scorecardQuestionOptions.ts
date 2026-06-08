@@ -1,4 +1,4 @@
-import { SelectOption, ScorecardQuestion } from '../models'
+import { ScorecardQuestion, SelectOption } from '../models'
 import { QUESTION_YES_NO_OPTIONS } from '../../config/index.config'
 
 export function getScoreResponseOptions(
