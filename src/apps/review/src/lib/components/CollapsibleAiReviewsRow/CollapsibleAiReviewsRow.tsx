@@ -75,8 +75,8 @@ function resolveHandle(
  *                                 Pass false for reviewer role so author identity is hidden.
  *                                 Defaults to true.
  * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
- * @param submissionLocked       - When true, labels the reason as "Locked Reason";
- *                                 otherwise labels it as "Unlock Reason".
+ * @param submissionLocked       - When true, appends the locked reason to the notes.
+ *                                 When false (passed/unlocked), the reason is omitted.
  *
  * Returns undefined if there are no notes at all.
  */
@@ -108,9 +108,8 @@ function buildNotesTooltip(
         }
     })
 
-    if (reason) {
-        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
-        parts.push(`${reasonLabel}: ${reason}`)
+    if (reason && submissionLocked) {
+        parts.push(`Locked Reason: ${reason}`)
     }
 
     return parts.length ? parts.join('\n') : undefined
