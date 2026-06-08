@@ -118,6 +118,21 @@
     }
 }
 
+.testProcessList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.testProcessItem {
+    line-height: 18px;
+}
+
+.testProcessLabel {
+    color: $black-60;
+    font-weight: 600;
+}
+
 .level-1 {
     color: #555 !important;
 }

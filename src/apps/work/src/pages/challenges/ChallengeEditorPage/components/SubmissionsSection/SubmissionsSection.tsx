@@ -32,6 +32,8 @@ import {
     canDownloadSubmissions,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
+    type MarathonMatchTestTypeFilter,
+    matchesSubmissionMarathonTestTypeFilter,
     showErrorToast,
 } from '../../../../../lib/utils'
 import { ReactComponent as LockIcon } from '../../../../../lib/assets/icons/lock.svg'
@@ -41,6 +43,24 @@ import styles from './SubmissionsSection.module.scss'
 type SortOrder = 'asc' | 'desc'
 
 type MemberCache = Record<string, MemberProfile | false>
+
+const TEST_TYPE_FILTER_OPTIONS: Array<{
+    label: string
+    value: MarathonMatchTestTypeFilter
+}> = [
+    {
+        label: 'All',
+        value: 'all',
+    },
+    {
+        label: 'Provisional',
+        value: 'provisional',
+    },
+    {
+        label: 'System',
+        value: 'system',
+    },
+]
 
 interface DownloadAllItem {
     id: string
@@ -52,6 +72,7 @@ interface FilterState {
     handle: string
     minScore: string
     startDate: string
+    testType: MarathonMatchTestTypeFilter
 }
 
 interface SubmissionsSectionProps {
@@ -75,6 +96,45 @@ function normalizeChallengeTrack(challengeTrack: Challenge['track']): string {
     }
 
     return normalizeValue(challengeTrack.track || challengeTrack.name || challengeTrack.abbreviation)
+}
+
+/**
+ * Normalizes challenge type labels and abbreviations for Marathon Match detection.
+ *
+ * @param value raw challenge type name or abbreviation.
+ * @returns lowercase token with whitespace removed.
+ */
+function normalizeChallengeTypeToken(value: unknown): string {
+    return normalizeValue(value)
+        .toLowerCase()
+        .replace(/\s+/g, '')
+}
+
+/**
+ * Determines whether a challenge should expose Marathon Match submission test controls.
+ *
+ * @param challenge Challenge payload returned by challenge-api.
+ * @returns `true` when the challenge type name or abbreviation matches Marathon Match.
+ */
+function isMarathonMatchChallenge(challenge: Challenge): boolean {
+    const challengeType = challenge.type
+
+    if (typeof challengeType === 'string') {
+        const normalizedType = normalizeChallengeTypeToken(challengeType)
+
+        return normalizedType === 'marathonmatch' || normalizedType === 'mm'
+    }
+
+    if (typeof challengeType === 'object' && challengeType) {
+        const normalizedName = normalizeChallengeTypeToken(challengeType.name)
+        const normalizedAbbreviation = normalizeChallengeTypeToken(challengeType.abbreviation)
+
+        return normalizedName === 'marathonmatch'
+            || normalizedAbbreviation === 'marathonmatch'
+            || normalizedAbbreviation === 'mm'
+    }
+
+    return false
 }
 
 function toOptionalNumber(value: unknown): number | undefined {
@@ -311,7 +371,11 @@ function matchesFilterHandle(submission: Submission, handleFilter: string): bool
         .includes(normalizedHandleFilter)
 }
 
-function matchesFilters(submission: Submission, filters: FilterState): boolean {
+function matchesFilters(
+    submission: Submission,
+    filters: FilterState,
+    isMarathonMatch: boolean,
+): boolean {
     if (!matchesFilterHandle(submission, filters.handle)) {
         return false
     }
@@ -320,7 +384,12 @@ function matchesFilters(submission: Submission, filters: FilterState): boolean {
         return false
     }
 
-    return matchesFilterScore(submission, filters.minScore)
+    if (!matchesFilterScore(submission, filters.minScore)) {
+        return false
+    }
+
+    return !isMarathonMatch
+        || matchesSubmissionMarathonTestTypeFilter(submission, filters.testType)
 }
 
 function toDownloadAllItems(submissions: Submission[]): DownloadAllItem[] {
@@ -338,6 +407,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         handle: '',
         minScore: '',
         startDate: '',
+        testType: 'all',
     })
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
@@ -366,6 +436,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const downloadSubmissionResult = useDownloadSubmission()
 
     const submissionViewable = getChallengeSubmissionViewable(props.challenge)
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
     const isDesignTrack = challengeTrack
         .toLowerCase() === 'design'
 
@@ -456,10 +527,15 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     )
 
     const filteredSubmissions = useMemo<Submission[]>(() => (
-        enrichedSubmissions.filter(submission => matchesFilters(submission, filters))
+        enrichedSubmissions.filter(submission => matchesFilters(
+            submission,
+            filters,
+            isMarathonMatch,
+        ))
     ), [
         enrichedSubmissions,
         filters,
+        isMarathonMatch,
     ])
 
     const sortedSubmissions = useMemo<Submission[]>(() => sortSubmissions(
@@ -539,7 +615,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         setPerPage(nextPerPage)
     }, [])
 
-    const handleFilterChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    const handleFilterChange = useCallback((event: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const fieldName: string = event.target.name
         const fieldValue: string = event.target.value
 
@@ -635,6 +711,27 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         value={filters.minScore}
                     />
                 </label>
+
+                {isMarathonMatch
+                    ? (
+                        <label className={styles.filterLabel} htmlFor='submission-test-type-filter'>
+                            Test Type
+                            <select
+                                className={styles.filterInput}
+                                id='submission-test-type-filter'
+                                name='testType'
+                                onChange={handleFilterChange}
+                                value={filters.testType}
+                            >
+                                {TEST_TYPE_FILTER_OPTIONS.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    )
+                    : undefined}
             </div>
 
             <div className={styles.tableWrapper}>
@@ -646,6 +743,8 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     onDownloadSubmission={handleDownloadSubmission}
                     onOpenArtifacts={handleOpenArtifacts}
                     onSort={handleSort}
+                    marathonMatchTestType={filters.testType}
+                    showMarathonMatchTestProcess={isMarathonMatch}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
                     submissionDownloadLoading={downloadSubmissionResult.isLoading}

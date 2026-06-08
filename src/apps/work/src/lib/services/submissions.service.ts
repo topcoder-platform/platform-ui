@@ -6,6 +6,8 @@ import {
 import { SUBMISSIONS_API_URL } from '../constants'
 import {
     ReviewSummation,
+    ReviewSummationMetadata,
+    ReviewSummationTestProgressDetails,
     Submission,
     SubmissionReview,
 } from '../models'
@@ -148,6 +150,68 @@ function normalizeReview(review: unknown): SubmissionReview | undefined {
     }
 }
 
+/**
+ * Normalizes Marathon Match test-progress details from review summation metadata.
+ *
+ * @param value raw metadata progress details returned by review-api.
+ * @returns a shallow-copy details object with known numeric/string fields normalized,
+ * or `undefined` when the payload is not an object.
+ */
+function normalizeReviewSummationTestProgressDetails(
+    value: unknown,
+): ReviewSummationTestProgressDetails | undefined {
+    if (typeof value !== 'object' || !value || Array.isArray(value)) {
+        return undefined
+    }
+
+    const typedValue = value as UnknownRecord
+
+    return {
+        ...typedValue,
+        completedTests: toOptionalNumber(typedValue.completedTests),
+        failedTests: toOptionalNumber(typedValue.failedTests),
+        message: toOptionalString(typedValue.message),
+        progress: toOptionalNumber(typedValue.progress),
+        reviewId: toOptionalString(typedValue.reviewId),
+        status: toOptionalString(typedValue.status),
+        testProcess: toOptionalString(typedValue.testProcess),
+        totalTests: toOptionalNumber(typedValue.totalTests),
+        updatedAt: toOptionalString(typedValue.updatedAt),
+    }
+}
+
+/**
+ * Normalizes review summation metadata used by Marathon Match progress/status cells.
+ *
+ * @param metadata raw review summation metadata returned by review-api.
+ * @returns a shallow-copy metadata object with known progress fields normalized,
+ * or `undefined` when metadata is absent.
+ */
+function normalizeReviewSummationMetadata(
+    metadata: unknown,
+): ReviewSummationMetadata | undefined {
+    if (typeof metadata !== 'object' || !metadata || Array.isArray(metadata)) {
+        return undefined
+    }
+
+    const typedMetadata = metadata as UnknownRecord
+
+    return {
+        ...typedMetadata,
+        isFinal: toOptionalBoolean(typedMetadata.isFinal)
+            ?? toOptionalString(typedMetadata.isFinal),
+        isProvisional: toOptionalBoolean(typedMetadata.isProvisional)
+            ?? toOptionalString(typedMetadata.isProvisional),
+        testProcess: toOptionalString(typedMetadata.testProcess),
+        testProgress: toOptionalNumber(typedMetadata.testProgress),
+        testProgressDetails: normalizeReviewSummationTestProgressDetails(
+            typedMetadata.testProgressDetails,
+        ),
+        testStatus: toOptionalString(typedMetadata.testStatus),
+        testType: toOptionalString(typedMetadata.testType),
+    }
+}
+
 function normalizeReviewSummation(reviewSummation: unknown): ReviewSummation | undefined {
     if (typeof reviewSummation !== 'object' || !reviewSummation) {
         return undefined
@@ -163,6 +227,7 @@ function normalizeReviewSummation(reviewSummation: unknown): ReviewSummation | u
         isPassing: toOptionalBoolean(typedReviewSummation.isPassing),
         isProvisional: toOptionalBoolean(typedReviewSummation.isProvisional),
         memberId: toOptionalString(typedReviewSummation.memberId),
+        metadata: normalizeReviewSummationMetadata(typedReviewSummation.metadata),
         submissionId: toOptionalString(typedReviewSummation.submissionId),
     }
 }

@@ -14,6 +14,30 @@ export interface SubmissionReview {
     typeId?: string
 }
 
+export interface ReviewSummationTestProgressDetails {
+    completedTests?: number
+    failedTests?: number
+    message?: string
+    progress?: number
+    reviewId?: string
+    status?: string
+    testProcess?: string
+    totalTests?: number
+    updatedAt?: string
+    [key: string]: unknown
+}
+
+export interface ReviewSummationMetadata {
+    isFinal?: boolean | string
+    isProvisional?: boolean | string
+    testProcess?: string
+    testProgress?: number
+    testProgressDetails?: ReviewSummationTestProgressDetails
+    testStatus?: string
+    testType?: string
+    [key: string]: unknown
+}
+
 export interface ReviewSummation {
     aggregateScore?: number
     createdAt?: string
@@ -22,6 +46,7 @@ export interface ReviewSummation {
     isPassing?: boolean
     isProvisional?: boolean
     memberId?: string
+    metadata?: ReviewSummationMetadata
     submissionId?: string
 }
 

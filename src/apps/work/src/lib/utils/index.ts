@@ -8,6 +8,7 @@ export * from './date.utils'
 export * from './engagement.utils'
 export * from './error.utils'
 export * from './file.utils'
+export * from './marathon-match-submission.utils'
 export * from './metadata.utils'
 export * from './navigation.utils'
 export {
