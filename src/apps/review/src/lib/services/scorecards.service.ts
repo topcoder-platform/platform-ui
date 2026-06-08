@@ -117,6 +117,19 @@ export const updateRunItemComment = (
     body,
 )
 
+export const updateRunItemScore = (
+    workflowId: string,
+    runId: string,
+    feedbackId: string,
+    body: {
+        questionScore: number
+        comment?: string
+    },
+): Promise<void> => xhrPatchAsync(
+    `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}`,
+    body,
+)
+
 export const createFeedbackComment = (
     workflowId: string,
     runId: string,

@@ -20,8 +20,7 @@ import {
     ScorecardQuestion,
     SelectOption,
 } from '../../../../../../models'
-import { formAppealResponseSchema, isAppealsResponsePhase } from '../../../../../../utils'
-import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
+import { formAppealResponseSchema, getScoreResponseOptions, isAppealsResponsePhase } from '../../../../../../utils'
 import { useChallengeDetailsContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { MarkdownReview } from '../../../../../MarkdownReview'
@@ -53,29 +52,9 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
     const [appealResponse, setAppealResponse] = useState(props.appeal.appealResponse?.content || '')
     const [updatedResponse, setUpdatedResponse] = useState<SingleValue<SelectOption>>()
 
-    const responseOptions = useMemo<SelectOption[]>(() => {
-        if (!props.scorecardQuestion) {
-            return []
-        }
-
-        if (props.scorecardQuestion.type === 'SCALE') {
-            const length = props.scorecardQuestion.scaleMax - props.scorecardQuestion.scaleMin + 1
-            return Array.from(
-                new Array(length),
-                (x, i) => `${i + props.scorecardQuestion!.scaleMin}`,
-            )
-                .map(item => ({
-                    label: item,
-                    value: item,
-                }))
-        }
-
-        if (props.scorecardQuestion.type === 'YES_NO') {
-            return QUESTION_YES_NO_OPTIONS
-        }
-
-        return []
-    }, [props.scorecardQuestion])
+    const responseOptions = useMemo<SelectOption[]>(() => (
+        getScoreResponseOptions(props.scorecardQuestion)
+    ), [props.scorecardQuestion])
 
     const {
         handleSubmit,
