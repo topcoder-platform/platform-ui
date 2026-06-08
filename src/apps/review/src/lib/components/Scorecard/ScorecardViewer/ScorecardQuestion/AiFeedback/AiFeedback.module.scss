@@ -58,37 +58,49 @@
 .feedbackEditRow {
     display: flex;
     align-items: center;
-    gap: $sp-2;
+    gap: $sp-3;
     margin-bottom: $sp-3;
+    flex-wrap: wrap;
+}
+
+.editActions {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
 }
 
 .scoreEditSelect {
-    min-width: 120px;
+    min-width: 140px;
     padding: $sp-2 $sp-3;
     border: 1px solid var(--BorderColor);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--Background);
     color: var(--FontColor);
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 40px;
 }
 
 .scoreEditTextarea {
     width: 100%;
-    min-height: 96px;
+    min-height: 112px;
     margin-top: $sp-2;
     padding: $sp-3;
     border: 1px solid var(--BorderColor);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--Background);
     color: var(--FontColor);
     resize: vertical;
+    font-size: 14px;
+    line-height: 22px;
 }
 
 .scoreEditTrigger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     margin-left: $sp-2;
     padding: 0;
     border: none;

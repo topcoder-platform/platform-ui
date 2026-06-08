@@ -4,9 +4,11 @@ import { mutate } from 'swr'
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/models'
 import { createFeedbackComment, updateRunItemScore } from '~/apps/review/src/lib/services'
+import { getAiWorkflowRunsCacheKey } from '~/apps/review/src/lib/hooks/useFetchAiWorkflowRuns'
+import { getAiReviewDecisionsCacheKey } from '~/apps/review/src/lib/services/aiReview.service'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 import { EnvironmentConfig } from '~/config'
-import { Tooltip, IconOutline } from '~/libs/ui'
+import { Tooltip, IconOutline, Button } from '~/libs/ui'
 import { useRole } from '~/apps/review/src/lib/hooks'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
@@ -30,13 +32,18 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const feedback: any = useMemo(() => (
         aiFeedbackItems?.find((r: any) => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
-    const { workflowId, workflowRun, challengeInfo }: ReviewsContextModel = useReviewsContext()
+    const {
+        workflowId,
+        workflowRun,
+        challengeInfo,
+        submissionId,
+        aiReviewConfig,
+    }: ReviewsContextModel = useReviewsContext()
     const { isPrivilegedRole } = useRole()
     const [showReply, setShowReply] = useState(false)
     const [isUpdatingScore, setIsUpdatingScore] = useState(false)
     const [isEditingScore, setIsEditingScore] = useState(false)
     const [editedScore, setEditedScore] = useState<string>('')
-    const [editComment, setEditComment] = useState('')
 
     const isApprovalPhaseOpen = useMemo(
         () => (challengeInfo?.phases ?? []).some(
@@ -77,19 +84,17 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         } else {
             setEditedScore(String(feedback?.questionScore ?? ''))
         }
-
-        setEditComment('')
     }, [feedback?.questionScore, isYesNo])
 
     const handleScoreChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
         setEditedScore(event.target.value)
     }, [])
 
-    const handleCommentChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
-        setEditComment(event.target.value)
+    const handleCancelEditing = useCallback(() => {
+        setIsEditingScore(false)
     }, [])
 
-    const handleSaveScore = useCallback(async () => {
+    const handleSaveScore = useCallback(async (content: string) => {
         if (!hasQuestionScoreEditAccess || isUpdatingScore) {
             return
         }
@@ -114,26 +119,26 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         setIsUpdatingScore(true)
         const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
 
-        if (!editComment.trim()) {
-            handleError(new Error('A comment is required when updating the score.'))
-            setIsUpdatingScore(false)
-            return
-        }
-
         try {
             await updateRunItemScore(workflowId, workflowRun.id, feedback.id, {
                 questionScore,
-                comment: editComment.trim(),
+                comment: content.trim(),
             })
 
             await mutate(itemsKey)
+            if (submissionId) {
+                await mutate(getAiWorkflowRunsCacheKey(submissionId))
+            }
+            if (aiReviewConfig?.id) {
+                await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+            }
             setIsEditingScore(false)
         } catch (err) {
             handleError(err)
         } finally {
             setIsUpdatingScore(false)
         }
-    }, [editComment, editedScore, feedback?.id, hasQuestionScoreEditAccess, isYesNo, isUpdatingScore, workflowId, workflowRun?.id, workflowRun?.status])
+    }, [editedScore, feedback?.id, hasQuestionScoreEditAccess, isYesNo, isUpdatingScore, workflowId, workflowRun?.id, workflowRun?.status])
 
     if (!aiFeedbackItems?.length || !feedback) {
         return <></>
@@ -180,26 +185,26 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                     )}
                 </strong>
 
-                {hasQuestionScoreEditAccess && (
-                    <button
-                        type='button'
-                        className={styles.scoreEditTrigger}
-                        onClick={isEditingScore ? handleSaveScore : handleStartEditing}
-                        disabled={isUpdatingScore || (isEditingScore && !editComment.trim())}
-                        aria-label={isEditingScore ? 'Save score' : 'Edit question score'}
-                    >
-                        {isEditingScore ? <IconOutline.CheckIcon /> : <IconOutline.PencilIcon />}
-                    </button>
+                {hasQuestionScoreEditAccess && !isEditingScore && (
+                    <div className={styles.editActions}>
+                        <Button
+                            secondary
+                            size='sm'
+                            onClick={handleStartEditing}
+                            label='Edit'
+                            icon={IconOutline.PencilIcon}
+                        />
+                    </div>
                 )}
             </div>
 
             {isEditingScore && (
-                <textarea
-                    className={styles.scoreEditTextarea}
-                    value={editComment}
-                    onChange={handleCommentChange}
-                    placeholder='Add a comment explaining the score change'
-                    disabled={isUpdatingScore}
+                <AiFeedbackReply
+                    submitLabel='Save'
+                    onSubmitReply={async (content: string) => {
+                        await handleSaveScore(content)
+                    }}
+                    onCloseReply={handleCancelEditing}
                 />
             )}
 
