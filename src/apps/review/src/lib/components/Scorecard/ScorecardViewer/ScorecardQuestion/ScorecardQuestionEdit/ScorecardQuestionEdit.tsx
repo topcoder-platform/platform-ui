@@ -12,10 +12,8 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 import { IconComment } from '~/apps/review/src/lib/assets/icons'
 
-import {
-    QUESTION_RESPONSE_OPTIONS,
-    QUESTION_YES_NO_OPTIONS,
-} from '../../../../../../config/index.config'
+import { QUESTION_RESPONSE_OPTIONS } from '../../../../../../config/index.config'
+import { getScoreResponseOptions } from '../../../../../utils'
 import {
     FormReviews,
     ReviewItemInfo,
@@ -60,25 +58,9 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
     const touched = isTouched || {}
     const trigger = formTrigger || ((): Promise<boolean> => Promise.resolve(true))
 
-    const responseOptions = useMemo<SelectOption[]>(() => {
-        if (props.question.type === 'SCALE') {
-            const length = props.question.scaleMax - props.question.scaleMin + 1
-            return Array.from(
-                new Array(length),
-                (x, i) => `${i + props.question.scaleMin}`,
-            )
-                .map(item => ({
-                    label: item,
-                    value: item,
-                }))
-        }
-
-        if (props.question.type === 'YES_NO') {
-            return QUESTION_YES_NO_OPTIONS
-        }
-
-        return []
-    }, [props.question])
+    const responseOptions = useMemo<SelectOption[]>(() => (
+        getScoreResponseOptions(props.question)
+    ), [props.question])
 
     const {
         fields,

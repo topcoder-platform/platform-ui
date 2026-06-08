@@ -1,13 +1,16 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
 import { mutate } from 'swr'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/models'
-import { createFeedbackComment } from '~/apps/review/src/lib/services'
+import { createFeedbackComment, updateRunItemScore } from '~/apps/review/src/lib/services'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 import { EnvironmentConfig } from '~/config'
-import { Tooltip } from '~/libs/ui'
+import { Tooltip, IconOutline } from '~/libs/ui'
+import { useRole } from '~/apps/review/src/lib/hooks'
+import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
+import { getScoreResponseOptions } from '~/apps/review/src/lib/utils'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
@@ -28,7 +31,12 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         aiFeedbackItems?.find((r: any) => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
+    const { isPrivilegedRole } = useRole()
     const [showReply, setShowReply] = useState(false)
+    const [isUpdatingScore, setIsUpdatingScore] = useState(false)
+    const [isEditingScore, setIsEditingScore] = useState(false)
+    const [editedScore, setEditedScore] = useState<string>('')
+    const [editComment, setEditComment] = useState('')
 
     const commentsArr: any[] = (feedback?.comments) || []
 
@@ -45,11 +53,80 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         setShowReply(false)
     }, [workflowId, workflowRun?.id, workflowRun?.status, feedback?.id])
 
+    const isYesNo = props.question.type === 'YES_NO'
+    const hasQuestionScoreEditAccess = isPrivilegedRole && !!workflowId && !!workflowRun?.id && !!feedback?.id
+
+    const scoreOptions = useMemo(() => getScoreResponseOptions(props.question), [props.question])
+
+    const handleStartEditing = useCallback(() => {
+        setIsEditingScore(true)
+
+        if (isYesNo) {
+            setEditedScore(feedback?.questionScore ? 'Yes' : 'No')
+        } else {
+            setEditedScore(String(feedback?.questionScore ?? ''))
+        }
+
+        setEditComment('')
+    }, [feedback?.questionScore, isYesNo])
+
+    const handleScoreChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+        setEditedScore(event.target.value)
+    }, [])
+
+    const handleCommentChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
+        setEditComment(event.target.value)
+    }, [])
+
+    const handleSaveScore = useCallback(async () => {
+        if (!hasQuestionScoreEditAccess || isUpdatingScore) {
+            return
+        }
+
+        if (!workflowId || !workflowRun?.id || !feedback?.id) {
+            return
+        }
+
+        let questionScore = Number(editedScore)
+        if (isYesNo) {
+            if (editedScore === 'Yes') {
+                questionScore = 1
+            } else if (editedScore === 'No') {
+                questionScore = 0
+            }
+        }
+
+        if (!Number.isFinite(questionScore)) {
+            return
+        }
+
+        setIsUpdatingScore(true)
+        const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
+
+        if (!editComment.trim()) {
+            handleError(new Error('A comment is required when updating the score.'))
+            setIsUpdatingScore(false)
+            return
+        }
+
+        try {
+            await updateRunItemScore(workflowId, workflowRun.id, feedback.id, {
+                questionScore,
+                comment: editComment.trim(),
+            })
+
+            await mutate(itemsKey)
+            setIsEditingScore(false)
+        } catch (err) {
+            handleError(err)
+        } finally {
+            setIsUpdatingScore(false)
+        }
+    }, [editComment, editedScore, feedback?.id, hasQuestionScoreEditAccess, isYesNo, isUpdatingScore, workflowId, workflowRun?.id, workflowRun?.status])
+
     if (!aiFeedbackItems?.length || !feedback) {
         return <></>
     }
-
-    const isYesNo = props.question.type === 'YES_NO'
 
     return (
         <ScorecardQuestionRow
@@ -63,21 +140,57 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                 />
             )}
         >
-            <p>
+            <div className={styles.feedbackEditRow}>
                 <strong>
-                    {isYesNo && (feedback.questionScore ? 'Yes' : 'No')}
-                    {!isYesNo && (
-                        <Tooltip
-                            content={`On a scale of ${props.question.scaleMin} to ${props.question.scaleMax}`}
-                            triggerOn='hover'
+                    {isEditingScore ? (
+                        <select
+                            className={styles.scoreEditSelect}
+                            value={editedScore}
+                            onChange={handleScoreChange}
+                            disabled={isUpdatingScore}
                         >
-                            <span>
-                                {feedback.questionScore}
-                            </span>
-                        </Tooltip>
+                            {scoreOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    ) : (
+                        isYesNo ? (feedback.questionScore ? 'Yes' : 'No') : (
+                            <Tooltip
+                                content={`On a scale of ${props.question.scaleMin} to ${props.question.scaleMax}`}
+                                triggerOn='hover'
+                            >
+                                <span>
+                                    {feedback.questionScore}
+                                </span>
+                            </Tooltip>
+                        )
                     )}
                 </strong>
-            </p>
+
+                {hasQuestionScoreEditAccess && (
+                    <button
+                        type='button'
+                        className={styles.scoreEditTrigger}
+                        onClick={isEditingScore ? handleSaveScore : handleStartEditing}
+                        disabled={isUpdatingScore || (isEditingScore && !editComment.trim())}
+                        aria-label={isEditingScore ? 'Save score' : 'Edit question score'}
+                    >
+                        {isEditingScore ? <IconOutline.CheckIcon /> : <IconOutline.PencilIcon />}
+                    </button>
+                )}
+            </div>
+
+            {isEditingScore && (
+                <textarea
+                    className={styles.scoreEditTextarea}
+                    value={editComment}
+                    onChange={handleCommentChange}
+                    placeholder='Add a comment explaining the score change'
+                    disabled={isUpdatingScore}
+                />
+            )}
 
             <MarkdownReview
                 className={styles.mdReview}

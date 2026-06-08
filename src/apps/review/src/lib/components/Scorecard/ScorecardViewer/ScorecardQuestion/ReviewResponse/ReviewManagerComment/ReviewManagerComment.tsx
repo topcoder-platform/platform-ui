@@ -13,7 +13,7 @@ import { IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 
 import { FormManagerComment, ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../../../../../models'
 import { formManagerCommentSchema } from '../../../../../../utils'
-import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
+import { getScoreResponseOptions } from '../../../../../../utils'
 import { MarkdownReview } from '../../../../../MarkdownReview'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
@@ -39,29 +39,9 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
     const [comment, setComment] = useState(props.managerComment || '')
     const [showCommentForm, setShowCommentForm] = useState(false)
 
-    const responseOptions = useMemo<SelectOption[]>(() => {
-        if (!props.scorecardQuestion) {
-            return []
-        }
-
-        if (props.scorecardQuestion.type === 'SCALE') {
-            const length = props.scorecardQuestion.scaleMax - props.scorecardQuestion.scaleMin + 1
-            return Array.from(
-                new Array(length),
-                (x, i) => `${i + props.scorecardQuestion!.scaleMin}`,
-            )
-                .map(item => ({
-                    label: item,
-                    value: item,
-                }))
-        }
-
-        if (props.scorecardQuestion.type === 'YES_NO') {
-            return QUESTION_YES_NO_OPTIONS
-        }
-
-        return []
-    }, [props.scorecardQuestion])
+    const responseOptions = useMemo<SelectOption[]>(() => (
+        getScoreResponseOptions(props.scorecardQuestion)
+    ), [props.scorecardQuestion])
 
     const {
         handleSubmit,

@@ -55,6 +55,69 @@
     }
 }
 
+.feedbackEditRow {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    margin-bottom: $sp-3;
+}
+
+.scoreEditSelect {
+    min-width: 120px;
+    padding: $sp-2 $sp-3;
+    border: 1px solid var(--BorderColor);
+    border-radius: 6px;
+    background: var(--Background);
+    color: var(--FontColor);
+}
+
+.scoreEditTextarea {
+    width: 100%;
+    min-height: 96px;
+    margin-top: $sp-2;
+    padding: $sp-3;
+    border: 1px solid var(--BorderColor);
+    border-radius: 6px;
+    background: var(--Background);
+    color: var(--FontColor);
+    resize: vertical;
+}
+
+.scoreEditTrigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: $sp-2;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--TextSecondary);
+    cursor: pointer;
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+}
+
+.scoreEditItem {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    padding: $sp-3 $sp-4;
+    color: var(--FontColor);
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+        background: var(--Tertiary);
+    }
+}
+
 .mdReview {
     h1, h2, h3, h4, h5, h6 {
         font-size: 14px;

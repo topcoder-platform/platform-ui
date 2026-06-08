@@ -24,10 +24,7 @@ import {
     ScorecardQuestion,
     SelectOption,
 } from '../../models'
-import { formAppealResponseSchema, isAppealsResponsePhase } from '../../utils'
-import {
-    QUESTION_YES_NO_OPTIONS,
-} from '../../../config/index.config'
+import { formAppealResponseSchema, getScoreResponseOptions, isAppealsResponsePhase } from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './AppealComment.module.scss'
@@ -103,28 +100,9 @@ export const AppealComment: FC<Props> = (props: Props) => {
         }
     }, [addAppealResponse, appealInfo, reviewItem, updatedResponse])
 
-    const responseOptions = useMemo<SelectOption[]>(() => {
-        if (scorecardQuestion.type === 'SCALE') {
-            const length
-                = scorecardQuestion.scaleMax
-                - scorecardQuestion.scaleMin
-                + 1
-            return Array.from(
-                new Array(length),
-                (x, i) => `${i + scorecardQuestion.scaleMin}`,
-            )
-                .map(item => ({
-                    label: item,
-                    value: item,
-                }))
-        }
-
-        if (scorecardQuestion.type === 'YES_NO') {
-            return QUESTION_YES_NO_OPTIONS
-        }
-
-        return []
-    }, [scorecardQuestion])
+    const responseOptions = useMemo<SelectOption[]>(() => (
+        getScoreResponseOptions(scorecardQuestion)
+    ), [scorecardQuestion])
 
     useEffect(() => {
         setAppealResponse(data.appealResponse?.content ?? '')
