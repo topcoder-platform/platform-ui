@@ -838,7 +838,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                     </div>
                                 </>
                             )
-                            : <div className={styles.emptyState}>No human reviewers configured.</div>}
+                            : <div className={styles.emptyState}>
+                                {isAiOnlyMode ? 'No manual reviewers are needed in AI Only mode.' : 'No human reviewers configured.'}
+                            </div>}
                     </div>
                 </section>
 
