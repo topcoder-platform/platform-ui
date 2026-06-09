@@ -29,12 +29,13 @@
 
 .title {
     color: $black-100;
-    font-family: $font-roboto;
-    font-size: 18px;
+    font-family: $font-barlow;
+    font-size: 22px;
     font-weight: $font-weight-bold;
-    line-height: 24px;
+    line-height: 28px;
     margin: 0;
     padding-right: $sp-8;
+    text-transform: none;
 }
 
 .content {
@@ -101,11 +102,16 @@
 }
 
 .placement,
+.pointsHeader,
 .points {
     white-space: nowrap;
 }
 
+.pointsHeader {
+    text-align: right;
+}
+
 .points {
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-normal;
     text-align: right;
 }
