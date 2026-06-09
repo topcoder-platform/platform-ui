@@ -151,8 +151,17 @@ export function useFetchAiWorkflowsRuns(
         }
     }, [fetchError])
 
-    const uniqueRuns = uniqBy(orderBy(runs, ['startedAt', 'completedAt'], ['desc', 'desc']), 'workflow.id')
-        .reverse()
+    const uniqueRuns = uniqBy(
+        orderBy(
+            runs,
+            [
+                (run) => run.startedAt ?? '',
+                (run) => run.completedAt ?? '',
+            ],
+            ['desc', 'desc'],
+        ),
+        'workflow.id',
+    ).reverse()
 
     return {
         isLoading,
