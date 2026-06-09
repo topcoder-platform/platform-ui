@@ -1,4 +1,5 @@
 import type { ChallengeWinner, SubmissionInfo } from '../models'
+import { getSubmissionFinalScoreCandidate } from '../utils/challengeResultSubmissions'
 import { submissionMatchesWinner } from '../utils/winnerMatching'
 
 const buildWinner = (overrides: Partial<ChallengeWinner> = {}): ChallengeWinner => ({
@@ -53,5 +54,28 @@ describe('submissionMatchesWinner', () => {
             }),
         ))
             .toBe(true)
+    })
+})
+
+describe('getSubmissionFinalScoreCandidate', () => {
+    it('uses final aggregate scores before review scores', () => {
+        expect(getSubmissionFinalScoreCandidate(buildSubmission({
+            aggregateScore: 96.01,
+            finalAggregateScore: 95.81,
+            review: {
+                finalScore: 100,
+            } as SubmissionInfo['review'],
+        })))
+            .toBe(95.81)
+    })
+
+    it('falls back to review final score instead of provisional aggregate scores', () => {
+        expect(getSubmissionFinalScoreCandidate(buildSubmission({
+            aggregateScore: 96.01,
+            review: {
+                finalScore: 100,
+            } as SubmissionInfo['review'],
+        })))
+            .toBe(100)
     })
 })

@@ -46,6 +46,10 @@ export interface SubmissionInfo {
      */
     aggregateScore?: number
     /**
+     * Aggregated system/final score from review summations when available.
+     */
+    finalAggregateScore?: number
+    /**
      * Indicates whether the latest review summation meets the passing threshold.
      */
     isPassingReview?: boolean
@@ -96,6 +100,180 @@ function normalizeSubmissionStatus(status: BackendSubmissionStatus | string | un
     return undefined
 }
 
+type ReviewSummationLike = {
+    aggregateScore?: unknown
+    createdAt?: unknown
+    isFinal?: unknown
+    isPassing?: unknown
+    metadata?: unknown
+    reviewedDate?: unknown
+    updatedAt?: unknown
+}
+
+/**
+ * Parses boolean-like review summation flags from Review API payloads.
+ *
+ * @param value - Raw flag value from a summation row or metadata object.
+ * @returns Parsed boolean, or undefined when the value is not boolean-like.
+ * Used while selecting final/system Marathon Match summations for display.
+ */
+function parseBooleanFlag(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const normalized = value.trim()
+            .toLowerCase()
+        if (normalized === 'true') {
+            return true
+        }
+
+        if (normalized === 'false') {
+            return false
+        }
+    }
+
+    return undefined
+}
+
+/**
+ * Parses Review API summation metadata into an object.
+ *
+ * @param metadata - Raw metadata value, which may be an object or JSON string.
+ * @returns Metadata record, or an empty object when metadata is absent or malformed.
+ * Used for Marathon Match phase classification; malformed JSON is ignored.
+ */
+function parseSummationMetadata(metadata: unknown): Record<string, unknown> {
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+        return metadata as Record<string, unknown>
+    }
+
+    if (typeof metadata === 'string' && metadata.trim()) {
+        try {
+            const parsed = JSON.parse(metadata)
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+                ? parsed as Record<string, unknown>
+                : {}
+        } catch {
+            return {}
+        }
+    }
+
+    return {}
+}
+
+/**
+ * Normalizes Marathon Match scoring phase labels from summation metadata.
+ *
+ * @param value - Raw phase value such as testProcess or testType.
+ * @returns Normalized phase, or undefined when the value is not recognized.
+ * Used to treat metadata-only SYSTEM summations as final scores.
+ */
+function normalizeSummationPhase(value: unknown): 'example' | 'provisional' | 'system' | undefined {
+    const normalized = typeof value === 'string'
+        ? value.trim()
+            .toLowerCase()
+        : ''
+
+    if (normalized === 'system' || normalized === 'final') {
+        return 'system'
+    }
+
+    if (normalized === 'provisional') {
+        return 'provisional'
+    }
+
+    if (normalized === 'example') {
+        return 'example'
+    }
+
+    return undefined
+}
+
+/**
+ * Parses a finite aggregate score from a review summation.
+ *
+ * @param value - Raw aggregate score from Review API.
+ * @returns Numeric aggregate score, or undefined when not finite.
+ * Used by submission conversion before exposing score fields to tables.
+ */
+function parseAggregateScore(value: unknown): number | undefined {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const parsed = Number.parseFloat(value)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
+/**
+ * Resolves the best timestamp available for ordering review summations.
+ *
+ * @param summation - Review summation returned by Review API.
+ * @returns Epoch milliseconds, or 0 when no parseable timestamp exists.
+ * Used to prefer the newest final/system Marathon Match score.
+ */
+function getSummationTimestamp(summation: ReviewSummationLike): number {
+    const rawTimestamp = summation.updatedAt
+        ?? summation.reviewedDate
+        ?? summation.createdAt
+    const timestamp = typeof rawTimestamp === 'string' ? Date.parse(rawTimestamp) : Number.NaN
+
+    return Number.isFinite(timestamp) ? timestamp : 0
+}
+
+/**
+ * Determines whether a summation represents Marathon Match system/final scoring.
+ *
+ * @param summation - Review summation returned by Review API.
+ * @returns True when flags or metadata identify the summation as final/system.
+ * Used so provisional scores do not drive the Winners tab final score.
+ */
+function isFinalReviewSummation(summation: ReviewSummationLike): boolean {
+    const metadata = parseSummationMetadata(summation.metadata)
+    const phase = normalizeSummationPhase(
+        metadata.testProcess ?? metadata.testType,
+    )
+    const stage = typeof metadata.stage === 'string'
+        ? metadata.stage.trim()
+            .toLowerCase()
+        : ''
+
+    return parseBooleanFlag(summation.isFinal) === true
+        || parseBooleanFlag(metadata.isFinal) === true
+        || phase === 'system'
+        || stage === 'final'
+}
+
+/**
+ * Selects the newest final/system review summation with a usable score.
+ *
+ * @param reviewSummations - Summations attached to one submission.
+ * @returns Preferred final/system summation, or undefined when none exist.
+ * Used to populate final-only aggregate scores for Marathon Match winners.
+ */
+function findFinalReviewSummation(
+    reviewSummations: ReviewSummationLike[],
+): ReviewSummationLike | undefined {
+    return reviewSummations
+        .map((summation, index) => ({
+            index,
+            score: parseAggregateScore(summation.aggregateScore),
+            summation,
+            timestamp: getSummationTimestamp(summation),
+        }))
+        .filter(item => item.score !== undefined && isFinalReviewSummation(item.summation))
+        .sort((first, second) => (
+            second.timestamp - first.timestamp
+            || second.index - first.index
+        ))[0]?.summation
+}
+
 /**
  * Update review info to show in ui
  * @param data data from backend response
@@ -130,20 +308,13 @@ export function convertBackendSubmissionToSubmissionInfo(
             .local()
             .format(TABLE_DATE_FORMAT)
         : undefined
-    const reviewSummations = Array.isArray(data.reviewSummation) ? data.reviewSummation : []
-    const preferredSummation = reviewSummations.find(
-        entry => entry?.isFinal === true,
-    ) ?? reviewSummations[0]
-    const aggregateScoreRaw = preferredSummation?.aggregateScore
-    const aggregateScoreParsed = typeof aggregateScoreRaw === 'number'
-        ? aggregateScoreRaw
-        : typeof aggregateScoreRaw === 'string'
-            ? Number.parseFloat(aggregateScoreRaw)
-            : undefined
-    const aggregateScore = typeof aggregateScoreParsed === 'number'
-        && Number.isFinite(aggregateScoreParsed)
-        ? aggregateScoreParsed
-        : undefined
+    const reviewSummations: ReviewSummationLike[] = Array.isArray(data.reviewSummation)
+        ? data.reviewSummation
+        : []
+    const finalSummation = findFinalReviewSummation(reviewSummations)
+    const preferredSummation = finalSummation ?? reviewSummations[0]
+    const aggregateScore = parseAggregateScore(preferredSummation?.aggregateScore)
+    const finalAggregateScore = parseAggregateScore(finalSummation?.aggregateScore)
     const isPassingReviewRaw = preferredSummation?.isPassing
     const isPassingReview = typeof isPassingReviewRaw === 'boolean'
         ? isPassingReviewRaw
@@ -165,6 +336,7 @@ export function convertBackendSubmissionToSubmissionInfo(
 
     return {
         aggregateScore,
+        finalAggregateScore,
         id: data.id,
         isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
