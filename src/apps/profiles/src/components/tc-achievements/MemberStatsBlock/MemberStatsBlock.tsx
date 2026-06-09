@@ -148,7 +148,7 @@ const ChallengePointsBar: FC<ChallengePointsBarProps> = props => (
                 type='button'
             >
                 View breakdown
-                <IconOutline.ChevronRightIcon className='icon-sm' />
+                <IconOutline.ChevronRightIcon className='icon-lg' />
             </button>
         )}
     </div>
