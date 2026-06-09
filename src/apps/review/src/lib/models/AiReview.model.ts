@@ -51,7 +51,6 @@ export interface AiReviewDecisionBreakdownWorkflow {
     runId: string | null
     runStatus: string | null
     runScore: number | null
-    managerScore?: number | null
     managerComment?: string | null
 }
 

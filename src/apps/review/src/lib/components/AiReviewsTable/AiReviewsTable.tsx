@@ -43,18 +43,12 @@ import styles from './AiReviewsTable.module.scss'
 interface AiReviewsTableProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
     aiReviewers?: { aiWorkflowId: string }[]
-    /** Enable editing mode for manager score overrides */
-    editMode?: boolean
-    /** Current edited scores by workflowId */
-    editedScores?: Record<string, string>
-    /** Callback when a score is changed */
-    onScoreChange?: (workflowId: string, value: string) => void
 }
 
 interface AiReviewerRow {
     id: string
     isGating?: boolean
-    managerScore?: number | null
+    initialScore?: number
     minScore?: number
     reviewDate?: string
     run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'>
@@ -257,17 +251,16 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const status = fromDecision
                 ? normalizeStatus(run && aiRunInProgress(run)
                     ? undefined
-                    : fromDecision.runStatus, fromDecision.managerScore ?? fromDecision.runScore, minScore)
+                    : fromDecision.runStatus, fromDecision.runScore, minScore)
                 : undefined
 
             return {
                 id: workflowId,
                 isGating: fromDecision?.isGating ?? configured?.isGating,
-                managerScore: fromDecision?.managerScore ?? (run?.initialScore !== null && run?.initialScore !== undefined ? run.score : undefined),
                 minScore,
                 reviewDate: run?.completedAt,
                 run,
-                score: fromDecision?.managerScore ?? fromDecision?.runScore ?? run?.score,
+                score: fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
@@ -511,27 +504,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Score</div>
                             <div className={styles.value}>
-                                {row.workflowId && props.editMode && props.onScoreChange ? (
-                                    <div className={styles.scoreWithOverride}>
-                                        <span className={styles.originalScore}>
-                                            {typeof row.score === 'number' ? formatScore(row.score) : '-'}
-                                        </span>
-                                        <input
-                                            type='number'
-                                            step='0.01'
-                                            className={styles.overrideInput}
-                                            value={props.editedScores?.[row.workflowId] ?? ''}
-                                            onChange={function onChange(
-                                                e: React.ChangeEvent<HTMLInputElement>,
-                                            ) {
-                                                if (props.onScoreChange && row.workflowId) {
-                                                    props.onScoreChange(row.workflowId, e.target.value)
-                                                }
-                                            }}
-                                            placeholder='Override'
-                                        />
-                                    </div>
-                                ) : typeof row.score === 'number' ? (
+                                {typeof row.score === 'number' ? (
                                     row.workflowId ? (
                                         <>
                                             <Link
@@ -539,11 +512,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             >
                                                 {formatScore(row.score)}
                                             </Link>
-                                            {row.managerScore !== null && row.managerScore !== undefined && (
-                                                <span className={styles.overriddenScore}>
-                                                    <span className={styles.overrideLabel}>(override)</span>
-                                                </span>
-                                            )}
+                                            {JSON.stringify(row)}
                                         </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
@@ -648,27 +617,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 )}
                             </td>
                             <td className={styles.scoreCol}>
-                                {row.workflowId && props.editMode && props.onScoreChange ? (
-                                    <div className={styles.scoreWithOverride}>
-                                        <span className={styles.originalScore}>
-                                            {typeof row.score === 'number' ? formatScore(row.score) : '-'}
-                                        </span>
-                                        <input
-                                            type='number'
-                                            step='0.01'
-                                            className={styles.overrideInput}
-                                            value={props.editedScores?.[row.workflowId] ?? ''}
-                                            onChange={function onChange(
-                                                e: React.ChangeEvent<HTMLInputElement>,
-                                            ) {
-                                                if (props.onScoreChange && row.workflowId) {
-                                                    props.onScoreChange(row.workflowId, e.target.value)
-                                                }
-                                            }}
-                                            placeholder='Override'
-                                        />
-                                    </div>
-                                ) : typeof row.score === 'number' ? (
+                                {typeof row.score === 'number' ? (
                                     row.workflowId ? (
                                         <>
                                             <Link
@@ -676,7 +625,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             >
                                                 {formatScore(row.score)}
                                             </Link>
-                                            {row.managerScore !== null && row.managerScore !== undefined && (
+                                            {JSON.stringify(row)}
+                                            {row.initialScore !== null && row.initialScore !== undefined && (
                                                 <span className={styles.overriddenScore}>
                                                     <span className={styles.overrideLabel}>(override)</span>
                                                 </span>

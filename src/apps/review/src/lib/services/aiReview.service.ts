@@ -23,7 +23,6 @@ export const fetchAiReviewDecisions = async (configId: string): Promise<AiReview
 
 export interface WorkflowManagerOverride {
     workflowId: string
-    managerScore?: number | null
     workflowComment?: string | null
 }
 
