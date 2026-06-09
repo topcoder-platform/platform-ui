@@ -249,9 +249,13 @@ interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
     initialScorecardErrorMessage?: string
     restoreStaleAdditionalMemberIds?: boolean
+    restoreStaleScorecardId?: boolean
     showAdditionalMemberIdsValue?: boolean
     showMemberValue?: boolean
+    showRoleValue?: boolean
+    showRoleValueIndex?: number
     showScorecardValue?: boolean
+    showScorecardValueIndex?: number
 }
 
 const baseDefaultValues: ChallengeEditorFormData = {
@@ -343,6 +347,42 @@ const StaleAdditionalMemberIdsReporter = (): JSX.Element => {
     return <div data-testid='stale-additional-member-renders'>{renderCountRef.current}</div>
 }
 
+/**
+ * Simulates form state briefly reporting the same stale scorecard after cleanup.
+ *
+ * @returns render-count marker used to detect runaway scorecard cleanup loops.
+ * @throws when the regression repeatedly clears and restores the same scorecard id.
+ */
+const StaleScorecardIdReporter = (): JSX.Element => {
+    const formContext = useReactHookFormContext<ChallengeEditorFormData>()
+    const renderCountRef = useRef<number>(0)
+    const scorecardId = useWatch({
+        control: formContext.control,
+        name: 'reviewers.0.scorecardId',
+    }) as string | undefined
+
+    renderCountRef.current += 1
+    if (renderCountRef.current > 20) {
+        throw new Error('Scorecard cleanup looped')
+    }
+
+    useEffect(() => {
+        if (scorecardId !== undefined) {
+            return
+        }
+
+        formContext.setValue('reviewers.0.scorecardId', 'stale-scorecard', {
+            shouldDirty: false,
+            shouldValidate: false,
+        })
+    }, [
+        formContext,
+        scorecardId,
+    ])
+
+    return <div data-testid='stale-scorecard-renders'>{renderCountRef.current}</div>
+}
+
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
@@ -350,6 +390,8 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             ...props.defaultValues,
         },
     })
+    const roleValueIndex = props.showRoleValueIndex ?? 0
+    const scorecardValueIndex = props.showScorecardValueIndex ?? 0
 
     useEffect(() => {
         if (!props.initialScorecardErrorMessage) {
@@ -371,6 +413,9 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             {props.restoreStaleAdditionalMemberIds
                 ? <StaleAdditionalMemberIdsReporter />
                 : undefined}
+            {props.restoreStaleScorecardId
+                ? <StaleScorecardIdReporter />
+                : undefined}
             {props.showAdditionalMemberIdsValue
                 ? (
                     <div data-testid='additional-member-ids-value'>
@@ -387,10 +432,17 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
                     </div>
                 )
                 : undefined}
+            {props.showRoleValue
+                ? (
+                    <div data-testid='role-id-value'>
+                        {String(formMethods.watch(`reviewers.${roleValueIndex}.roleId` as never) || '')}
+                    </div>
+                )
+                : undefined}
             {props.showScorecardValue
                 ? (
                     <div data-testid='scorecard-id-value'>
-                        {formMethods.watch('reviewers.0.scorecardId') || ''}
+                        {String(formMethods.watch(`reviewers.${scorecardValueIndex}.scorecardId` as never) || '')}
                     </div>
                 )
                 : undefined}
@@ -772,6 +824,232 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('adds single-round design reviewers on the approval phase when default metadata is stale', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'design-track',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'challenge-type',
+                    name: 'Challenge',
+                },
+            ],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+                {
+                    id: 'role-approver',
+                    name: 'Approver',
+                },
+            ],
+        })
+        mockedFetchDefaultReviewers.mockResolvedValue([
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'stale-review-phase',
+                roleId: 'role-reviewer',
+                scorecardId: 'scorecard-approval',
+            },
+        ])
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-approval',
+                name: 'Approval scorecard',
+                type: 'Approval',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'registration',
+                            name: 'Registration',
+                            phaseId: 'registration',
+                        },
+                        {
+                            id: 'submission',
+                            name: 'Submission',
+                            phaseId: 'submission',
+                        },
+                        {
+                            id: 'approval',
+                            name: 'Approval',
+                            phaseId: 'approval',
+                        },
+                    ],
+                    reviewers: [],
+                    trackId: 'design-track',
+                    typeId: 'challenge-type',
+                }}
+                showRoleValue
+                showScorecardValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.phaseId')
+                .getAttribute('data-value'))
+                .toBe('approval')
+        })
+        expect(screen.getByTestId('role-id-value').textContent)
+            .toBe('role-approver')
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('scorecard-approval')
+    })
+
+    it('adds the missing approval reviewer when design default reviewers fail to load', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'design-track',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'challenge-type',
+                    name: 'Challenge',
+                },
+            ],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-screener',
+                    name: 'Screener',
+                },
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+                {
+                    id: 'role-approver',
+                    name: 'Approver',
+                },
+            ],
+        })
+        mockedFetchDefaultReviewers.mockRejectedValue(new Error('Default reviewers unavailable'))
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-screening',
+                name: 'Screening scorecard',
+                type: 'Screening',
+            },
+            {
+                id: 'scorecard-review',
+                name: 'Review scorecard',
+                type: 'Review',
+            },
+            {
+                id: 'scorecard-approval',
+                name: 'Approval scorecard',
+                type: 'Approval',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'submission-row',
+                            name: 'Submission',
+                            phaseId: 'submission',
+                        },
+                        {
+                            id: 'registration-row',
+                            name: 'Registration',
+                            phaseId: 'registration',
+                        },
+                        {
+                            id: 'screening-row',
+                            name: 'Screening',
+                            phaseId: 'screening',
+                        },
+                        {
+                            id: 'review-row',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                        {
+                            id: 'approval-row',
+                            name: 'Approval',
+                            phaseId: 'approval',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening',
+                            roleId: 'role-screener',
+                            scorecardId: 'scorecard-screening',
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review',
+                            roleId: 'role-reviewer',
+                            scorecardId: 'scorecard-review',
+                        },
+                    ],
+                    trackId: 'design-track',
+                    typeId: 'challenge-type',
+                }}
+                showRoleValue
+                showRoleValueIndex={2}
+                showScorecardValue
+                showScorecardValueIndex={2}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.2.phaseId')
+                .getAttribute('data-value'))
+                .toBe('approval')
+        })
+        expect(screen.getByTestId('role-id-value').textContent)
+            .toBe('role-approver')
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('')
+        expect(screen.getByTestId('reviewers.2.scorecardId')
+            .getAttribute('data-options'))
+            .toContain('Approval scorecard')
+    })
+
     it('caps assignment fields when closed-opportunity reviewer count is too large', async () => {
         render(<TestHarness />)
 
@@ -1046,6 +1324,50 @@ describe('HumanReviewTab', () => {
         expect(screen.getByTestId('reviewers.0.scorecardId')
             .getAttribute('data-options'))
             .not.toContain('315HuPeby34i2b')
+    })
+
+    it('does not loop when stale scorecard cleanup is reported again', async () => {
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-review',
+                name: 'Review scorecard',
+                type: 'Review',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review',
+                            roleId: 'role-1',
+                            scorecardId: 'stale-scorecard',
+                        },
+                    ],
+                }}
+                restoreStaleScorecardId
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchScorecards)
+                .toHaveBeenCalled()
+        })
+        await waitFor(() => {
+            expect(Number(screen.getByTestId('stale-scorecard-renders').textContent))
+                .toBeLessThanOrEqual(20)
+        })
     })
 
     it('clears the selected scorecard when the reviewer phase changes', async () => {

@@ -482,26 +482,102 @@ function applyHydratedReviewerAssignment(params: {
     }
 }
 
-function getReviewerPhaseId(
-    defaultReviewer: DefaultReviewer | undefined,
-    phases: ChallengeEditorFormData['phases'],
+/**
+ * Returns the stable id used by reviewer rows for a challenge phase.
+ *
+ * @param phase challenge phase row from the editor form.
+ * @returns the normalized phase id or `undefined` when the row has no id.
+ */
+function getChallengePhaseId(
+    phase: NonNullable<ChallengeEditorFormData['phases']>[number] | undefined,
 ): string | undefined {
-    if (defaultReviewer?.phaseId) {
-        return defaultReviewer.phaseId
-    }
+    return normalizeText(phase?.phaseId) || normalizeText(phase?.id) || undefined
+}
 
+/**
+ * Returns the first phase that is valid for a newly added manual reviewer row.
+ *
+ * @param phases current challenge schedule phases.
+ * @returns a review phase id, another selectable reviewer phase id, or `undefined`.
+ */
+function getFallbackReviewerPhaseId(
+    phases: ChallengeEditorFormData['phases'],
+    assignedPhaseIds: Set<string> = new Set(),
+): string | undefined {
     if (!Array.isArray(phases) || !phases.length) {
         return undefined
     }
 
+    const isUnassignedSelectablePhase = (
+        phase: NonNullable<ChallengeEditorFormData['phases']>[number] | undefined,
+    ): boolean => {
+        const phaseId = getChallengePhaseId(phase)
+
+        return !!phaseId
+            && !assignedPhaseIds.has(phaseId)
+            && isSelectableReviewerPhaseName(phase?.name, false)
+    }
+
     const reviewPhase = phases.find(phase => (
-        typeof phase?.name === 'string'
-            && phase.name
-                .toLowerCase()
-                .includes('review')
+        isUnassignedSelectablePhase(phase)
+        && normalizeKey(phase?.name)
+            .includes('review')
+    ))
+    const selectablePhase = phases.find(isUnassignedSelectablePhase)
+    const fallbackPhase = phases.find(phase => (
+        isSelectableReviewerPhaseName(phase?.name, false)
     ))
 
-    return reviewPhase?.phaseId || reviewPhase?.id || phases[0]?.phaseId || phases[0]?.id
+    return getChallengePhaseId(reviewPhase)
+        || getChallengePhaseId(selectablePhase)
+        || getChallengePhaseId(fallbackPhase)
+        || getChallengePhaseId(phases[0])
+}
+
+function getReviewerPhaseId(
+    defaultReviewer: DefaultReviewer | undefined,
+    phases: ChallengeEditorFormData['phases'],
+): string | undefined {
+    const defaultPhaseId = normalizeText(defaultReviewer?.phaseId)
+
+    if (defaultPhaseId) {
+        const phaseRows = Array.isArray(phases)
+            ? phases
+            : []
+        const hasMatchingPhase = !phaseRows.length
+            || phaseRows.some(phase => getChallengePhaseId(phase) === defaultPhaseId)
+
+        if (hasMatchingPhase) {
+            return defaultPhaseId
+        }
+    }
+
+    return getFallbackReviewerPhaseId(phases)
+}
+
+/**
+ * Returns the next default reviewer row that maps to an unassigned selectable phase.
+ *
+ * @param params default reviewer metadata and current manual reviewer phase usage.
+ * @returns matching default reviewer metadata, or `undefined` when no unused default phase exists.
+ */
+function getNextDefaultReviewerForManualRow(params: {
+    assignedPhaseIds: Set<string>
+    defaultReviewers: DefaultReviewer[]
+    phaseNameById: Map<string, string>
+    phases: ChallengeEditorFormData['phases']
+}): DefaultReviewer | undefined {
+    return params.defaultReviewers.find(defaultReviewer => {
+        if (!isMemberReviewer(defaultReviewer)) {
+            return false
+        }
+
+        const phaseId = getReviewerPhaseId(defaultReviewer, params.phases)
+
+        return !!phaseId
+            && !params.assignedPhaseIds.has(phaseId)
+            && isSelectableReviewerPhaseName(params.phaseNameById.get(phaseId), false)
+    })
 }
 
 /**
@@ -725,7 +801,7 @@ export const HumanReviewTab: FC = () => {
     const [loadError, setLoadError] = useState<string | undefined>()
     const autoBackfilledReviewerTypesRef = useRef<Record<string, string>>({})
     const trimmedAdditionalMemberIdsRef = useRef<Record<string, string>>({})
-    const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
+    const reconciledScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
         control: formContext.control,
@@ -1138,36 +1214,36 @@ export const HumanReviewTab: FC = () => {
 
             const scorecardFieldName = `reviewers.${fieldIndex}.scorecardId`
             const selectedScorecardId = normalizeText(reviewer.scorecardId)
+            const scorecardSelectionKey = `${normalizeText(reviewer.phaseId)}:${selectedScorecardId}`
             if (!selectedScorecardId) {
-                delete validatedScorecardSelectionsRef.current[scorecardFieldName]
+                if (!reconciledScorecardSelectionsRef.current[scorecardFieldName]?.startsWith('invalid:')) {
+                    delete reconciledScorecardSelectionsRef.current[scorecardFieldName]
+                }
+
                 return
             }
 
             const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
                 .some(scorecard => hasSameNormalizedText(scorecard.id, selectedScorecardId))
             if (hasSelectedScorecard) {
-                formContext.clearErrors(scorecardFieldName as any)
-
-                if (validatedScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardId) {
+                const selectedScorecardKey = `valid:${scorecardSelectionKey}`
+                if (reconciledScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardKey) {
                     return
                 }
 
-                validatedScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardId
+                reconciledScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardKey
 
-                // Mirror the manual re-selection path so stale scorecard validation clears.
-                formContext.setValue(
-                    scorecardFieldName as any,
-                    selectedScorecardId,
-                    {
-                        shouldDirty: false,
-                        shouldValidate: true,
-                    },
-                )
+                formContext.clearErrors(scorecardFieldName as any)
 
                 return
             }
 
-            delete validatedScorecardSelectionsRef.current[scorecardFieldName]
+            const selectedScorecardKey = `invalid:${scorecardSelectionKey}`
+            if (reconciledScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardKey) {
+                return
+            }
+
+            reconciledScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardKey
             formContext.setValue(
                 scorecardFieldName as any,
                 undefined,
@@ -1660,17 +1736,31 @@ export const HumanReviewTab: FC = () => {
     )
 
     const addReviewer = useCallback((): void => {
-        const defaultReviewer = defaultReviewers.find(reviewer => isMemberReviewer(reviewer))
+        const assignedPhaseIds = new Set(
+            reviewerRows
+                .map(reviewer => normalizeText(reviewer.phaseId))
+                .filter(Boolean),
+        )
+        const defaultReviewer = getNextDefaultReviewerForManualRow({
+            assignedPhaseIds,
+            defaultReviewers,
+            phaseNameById,
+            phases,
+        })
         const reviewerFromDefaults = mapDefaultReviewerToReviewer(
             defaultReviewer,
             phases,
         )
+        const phaseId = (defaultReviewer ? reviewerFromDefaults.phaseId : undefined)
+            || getFallbackReviewerPhaseId(phases, assignedPhaseIds)
+        const roleIdForResolvedPhase = resolveRoleIdForPhase(phaseId)
 
         formContext.setValue('reviewers', [
             ...allReviewerRows,
             {
                 ...reviewerFromDefaults,
-                roleId: reviewerFromDefaults.roleId || resolveRoleIdForPhase(reviewerFromDefaults.phaseId),
+                phaseId,
+                roleId: roleIdForResolvedPhase || reviewerFromDefaults.roleId,
             },
         ], {
             shouldDirty: true,
@@ -1680,7 +1770,9 @@ export const HumanReviewTab: FC = () => {
         defaultReviewers,
         allReviewerRows,
         formContext,
+        phaseNameById,
         phases,
+        reviewerRows,
         resolveRoleIdForPhase,
     ])
 
