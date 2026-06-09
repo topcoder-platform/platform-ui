@@ -22,8 +22,8 @@
     background: linear-gradient(90deg, #008A72, #005B86);
     color: $tc-white;
     font-family: $font-roboto;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 22px;
 
     @include ltesm {
         flex-wrap: wrap;
@@ -33,14 +33,14 @@
 }
 
 .challengePointsLabel {
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-normal;
 }
 
 .challengePointsValue {
     font-family: $font-barlow-condensed;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: $font-weight-medium;
-    line-height: 34px;
+    line-height: 28px;
 }
 
 .challengePointsMeta {
