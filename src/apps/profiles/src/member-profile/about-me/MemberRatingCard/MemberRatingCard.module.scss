@@ -96,12 +96,14 @@
         }
 
         @include ltesm {
+            box-sizing: border-box;
             grid-template-columns: 1fr;
             column-gap: $sp-3;
             row-gap: $sp-1;
             justify-content: start;
             justify-items: stretch;
-            width: 300px;
+            max-width: 300px;
+            width: 100%;
 
             .percentileWrap {
                 .name {
