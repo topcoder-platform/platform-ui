@@ -2,12 +2,31 @@ import type { UserStats, UserStatsDistributionResponse } from '~/libs/core'
 
 import {
     calculateTopPercentileFromDistribution,
+    getCompactRatingColor,
     getLatestProfileRating,
     getPreferredRolesDisplay,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
     parsePreferredRolesText,
 } from './MemberRatingCard.utils'
+
+describe('getCompactRatingColor', () => {
+    it('uses the lighter grey value for the lowest rating tier on the dark compact card', () => {
+        expect(getCompactRatingColor(840, '#555555'))
+            .toBe('#7F7F7F')
+    })
+
+    it('keeps the shared rating colors for higher rating tiers', () => {
+        expect(getCompactRatingColor(900, '#2D7E2D'))
+            .toBe('#2D7E2D')
+        expect(getCompactRatingColor(1200, '#616BD5'))
+            .toBe('#616BD5')
+        expect(getCompactRatingColor(1500, '#F2C900'))
+            .toBe('#F2C900')
+        expect(getCompactRatingColor(2200, '#EF3A3A'))
+            .toBe('#EF3A3A')
+    })
+})
 
 describe('getLatestProfileRating', () => {
     it('uses the newest rated track instead of the historical max rating', () => {

@@ -1,4 +1,4 @@
-import { UserStats, UserStatsDistributionResponse } from '~/libs/core'
+import type { UserStats, UserStatsDistributionResponse } from '~/libs/core'
 
 interface RatingCandidate {
     rating: number
@@ -27,6 +27,8 @@ export interface PreferredRolesDisplay {
 type StatsRecord = Record<string, unknown>
 
 const maxCollapsedPreferredRoles = 2
+const lowestRatingTierLimit = 900
+const compactLowestRatingColor = '#7F7F7F'
 
 const aiEngineeringTrackNames: Set<string> = new Set([
     'AI',
@@ -257,6 +259,25 @@ export const calculateTopPercentileFromDistribution = (
 
     return (membersAtOrAboveRating / totalMembers) * 100
 }
+
+/**
+ * Returns the rating text color for the dark compact profile rating card.
+ *
+ * The shared grey rating color is too dark against the compact card background,
+ * so the lowest rating tier is mapped to the lighter grey palette value while
+ * all other rating tiers continue to use the shared Topcoder rating color passed in.
+ * Used by MemberRatingCard for the rating value and top-percentile badge.
+ *
+ * @param {number | undefined} rating - The profile rating rendered in the compact card.
+ * @param {string} ratingColor - Shared Topcoder rating color for the same rating.
+ * @returns {string} Hex color to use for compact card rating text.
+ * @throws Does not throw.
+ */
+export const getCompactRatingColor = (rating: number | undefined, ratingColor: string): string => (
+    rating !== undefined && rating < lowestRatingTierLimit
+        ? compactLowestRatingColor
+        : ratingColor
+)
 
 /**
  * Extracts rated candidates from a design or development subtrack list.
