@@ -1,5 +1,12 @@
 import { UserStats, UserStatsDistributionResponse } from '~/libs/core'
 
+interface RatingCandidate {
+    rating: number
+    ratingDate: number
+    subTrack: string
+    track: string
+}
+
 interface RatingDistributionQuery {
     subTrack: string
     track: string
@@ -17,6 +24,8 @@ export interface PreferredRolesDisplay {
     visibleRoles: string[]
 }
 
+type StatsRecord = Record<string, unknown>
+
 const maxCollapsedPreferredRoles = 2
 
 const aiEngineeringTrackNames: Set<string> = new Set([
@@ -32,6 +41,9 @@ const testingSubTrackNames: Set<string> = new Set([
 ])
 
 const ratingAudienceLabels: {[key: string]: string} = {
+    AI: 'Data Scientists',
+    AI_ENGINEER: 'Data Scientists',
+    AI_ENGINEERING: 'Data Scientists',
     DATA_SCIENCE: 'Data Scientists',
     DATASCIENCE: 'Data Scientists',
     DESIGN: 'Designers',
@@ -64,6 +76,70 @@ const normalizeTrackToken = (value?: string): string => (
 const getFiniteNumber = (value: unknown): number | undefined => (
     typeof value === 'number' && Number.isFinite(value) ? value : undefined
 )
+
+/**
+ * Checks whether an unknown API value can be read as an object record.
+ *
+ * @param {unknown} value - A raw API value.
+ * @returns {boolean} True when the value is a non-array object record.
+ */
+const isStatsRecord = (value: unknown): value is StatsRecord => (
+    typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+)
+
+/**
+ * Returns a stat entry's display name when it is present.
+ *
+ * @param {unknown} stats - Raw subtrack or rating-path stats from the member stats API.
+ * @param {string} fallbackName - Name to use when the stats object does not include one.
+ * @returns {string} A usable subtrack name for rating metadata.
+ */
+const getStatsName = (stats: unknown, fallbackName: string): string => {
+    if (!isStatsRecord(stats) || typeof stats.name !== 'string') {
+        return fallbackName
+    }
+
+    const statsName = stats.name.trim()
+
+    return statsName || fallbackName
+}
+
+/**
+ * Builds a rating candidate from a stats object that includes rank.rating.
+ *
+ * The member stats API stores the current rating at `rank.rating` and the
+ * event timestamp at `mostRecentEventDate`. Entries without a finite rating
+ * are ignored because unrated subtracks should not drive the profile rating.
+ *
+ * @param {unknown} stats - Raw subtrack or rating-path stats from the member stats API.
+ * @param {string} track - API track that owns the stats entry.
+ * @param {string} subTrack - API subtrack or rating path for the stats entry.
+ * @returns {RatingCandidate | undefined} Rating, event date, and track metadata when the stats are rated.
+ */
+const getRatingCandidate = (
+    stats: unknown,
+    track: string,
+    subTrack: string,
+): RatingCandidate | undefined => {
+    if (!isStatsRecord(stats) || !isStatsRecord(stats.rank)) {
+        return undefined
+    }
+
+    const rating: number | undefined = getFiniteNumber(stats.rank.rating)
+
+    if (rating === undefined) {
+        return undefined
+    }
+
+    return {
+        rating,
+        ratingDate: getFiniteNumber(stats.mostRecentEventDate) ?? 0,
+        subTrack,
+        track,
+    }
+}
 
 /**
  * Splits preferred role text into display-ready role labels.
@@ -139,7 +215,7 @@ const getDistributionRanges = (
  * counts the proportional share at or above the member rating.
  *
  * @param {UserStatsDistributionResponse['distribution'] | undefined} distribution - Raw rating distribution buckets.
- * @param {number | undefined} memberRating - The member's maximum rating in the same track/subtrack.
+ * @param {number | undefined} memberRating - The visible member rating in the same track/subtrack.
  * @returns {number | undefined} Top percentage when the distribution and rating are available.
  */
 export const calculateTopPercentileFromDistribution = (
@@ -183,19 +259,138 @@ export const calculateTopPercentileFromDistribution = (
 }
 
 /**
- * Returns the distribution query that corresponds to the user's maximum rating track.
+ * Extracts rated candidates from a design or development subtrack list.
+ *
+ * @param {string} track - API track that owns the subtracks.
+ * @param {unknown} subTracks - Raw `subTracks` array from member stats.
+ * @returns {RatingCandidate[]} Rated subtracks available for profile rating selection.
+ */
+const getSubTrackRatingCandidates = (track: string, subTracks: unknown): RatingCandidate[] => (
+    Array.isArray(subTracks)
+        ? subTracks
+            .map((subTrack: unknown) => getRatingCandidate(
+                subTrack,
+                track,
+                getStatsName(subTrack, track),
+            ))
+            .filter((candidate: RatingCandidate | undefined): candidate is RatingCandidate => candidate !== undefined)
+        : []
+)
+
+/**
+ * Extracts rated candidates from native and configured DATA_SCIENCE rating paths.
+ *
+ * @param {unknown} dataScienceStats - Raw DATA_SCIENCE stats from member stats.
+ * @returns {RatingCandidate[]} Rated data science paths available for profile rating selection.
+ */
+const getDataScienceRatingCandidates = (dataScienceStats: unknown): RatingCandidate[] => (
+    isStatsRecord(dataScienceStats)
+        ? Object.entries(dataScienceStats)
+            .map(([subTrack, stats]: [string, unknown]) => getRatingCandidate(stats, 'DATA_SCIENCE', subTrack))
+            .filter((candidate: RatingCandidate | undefined): candidate is RatingCandidate => candidate !== undefined)
+        : []
+)
+
+/**
+ * Extracts rated candidates from the known AI Engineering top-level stat aliases.
+ *
+ * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
+ * @returns {RatingCandidate[]} Rated AI Engineering entries available for profile rating selection.
+ */
+const getAIEngineeringRatingCandidates = (memberStats?: UserStats): RatingCandidate[] => {
+    const aiEngineeringStats = memberStats?.AI_ENGINEERING ?? memberStats?.AI ?? memberStats?.AI_ENGINEER
+
+    return [
+        getRatingCandidate(aiEngineeringStats, 'AI_ENGINEERING', getStatsName(aiEngineeringStats, 'AI')),
+        ...getSubTrackRatingCandidates('AI_ENGINEERING', aiEngineeringStats?.subTracks),
+    ].filter((candidate: RatingCandidate | undefined): candidate is RatingCandidate => candidate !== undefined)
+}
+
+/**
+ * Builds the fallback rating candidate from the historical maximum rating payload.
+ *
+ * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
+ * @returns {RatingCandidate | undefined} Max rating candidate when enough metadata is available.
+ */
+const getMaxRatingCandidate = (memberStats?: UserStats): RatingCandidate | undefined => {
+    const maxRating = memberStats?.maxRating
+    const rating = getFiniteNumber(maxRating?.rating)
+
+    if (rating === undefined || !maxRating?.track || !maxRating?.subTrack) {
+        return undefined
+    }
+
+    return {
+        rating,
+        ratingDate: 0,
+        subTrack: maxRating.subTrack,
+        track: maxRating.track,
+    }
+}
+
+/**
+ * Returns the latest rated track candidate used by the compact rating card.
+ *
+ * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
+ * @returns {RatingCandidate | undefined} Latest current rating candidate, or max rating fallback.
+ */
+const getLatestProfileRatingCandidate = (memberStats?: UserStats): RatingCandidate | undefined => {
+    const candidates: RatingCandidate[] = [
+        ...getSubTrackRatingCandidates('DEVELOP', memberStats?.DEVELOP?.subTracks),
+        ...getSubTrackRatingCandidates('DESIGN', memberStats?.DESIGN?.subTracks),
+        ...getDataScienceRatingCandidates(memberStats?.DATA_SCIENCE),
+        ...getAIEngineeringRatingCandidates(memberStats),
+    ]
+
+    const latestCandidate: RatingCandidate | undefined = candidates.reduce((
+        latest: RatingCandidate | undefined,
+        candidate: RatingCandidate,
+    ) => (
+        latest === undefined || candidate.ratingDate > latest.ratingDate ? candidate : latest
+    ), undefined)
+
+    return latestCandidate ?? getMaxRatingCandidate(memberStats)
+}
+
+/**
+ * Returns the rating that should be shown on the compact profile rating card.
+ *
+ * The card should show the latest current rating from the user's rated tracks,
+ * not the historical maximum rating. `maxRating` is used only as a fallback
+ * when the stats payload does not include any rated track entries.
+ *
+ * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
+ * @returns {number | undefined} Latest current rating, or the max rating fallback when no track rating exists.
+ */
+export const getLatestProfileRating = (memberStats?: UserStats): number | undefined => (
+    getLatestProfileRatingCandidate(memberStats)?.rating
+)
+
+/**
+ * Checks whether a rating candidate should use the configured AI Engineering distribution.
+ *
+ * @param {RatingCandidate} ratingCandidate - The selected profile rating candidate.
+ * @returns {boolean} True when the candidate maps to the configured AI distribution.
+ */
+const isAIEngineeringRatingCandidate = (ratingCandidate: RatingCandidate): boolean => (
+    aiEngineeringTrackNames.has(normalizeTrackToken(ratingCandidate.track))
+    || aiEngineeringTrackNames.has(normalizeTrackToken(ratingCandidate.subTrack))
+)
+
+/**
+ * Returns the distribution query that corresponds to the visible profile rating.
  *
  * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
  * @returns {RatingDistributionQuery | undefined} The API query for rating distribution data.
  */
 export const getRatingDistributionQuery = (memberStats?: UserStats): RatingDistributionQuery | undefined => {
-    const maxRating = memberStats?.maxRating
+    const ratingCandidate = getLatestProfileRatingCandidate(memberStats)
 
-    if (!maxRating?.track || !maxRating?.subTrack) {
+    if (!ratingCandidate) {
         return undefined
     }
 
-    if (aiEngineeringTrackNames.has(normalizeTrackToken(maxRating.track))) {
+    if (isAIEngineeringRatingCandidate(ratingCandidate)) {
         return {
             subTrack: 'AI',
             track: 'DATA_SCIENCE',
@@ -203,8 +398,8 @@ export const getRatingDistributionQuery = (memberStats?: UserStats): RatingDistr
     }
 
     return {
-        subTrack: maxRating.subTrack,
-        track: maxRating.track,
+        subTrack: ratingCandidate.subTrack,
+        track: ratingCandidate.track,
     }
 }
 
@@ -215,9 +410,9 @@ export const getRatingDistributionQuery = (memberStats?: UserStats): RatingDistr
  * @returns {string} The broad track audience label for the rating card and modal.
  */
 export const getRatingAudienceLabel = (memberStats?: UserStats): string => {
-    const maxRating = memberStats?.maxRating
-    const normalizedTrack = normalizeTrackToken(maxRating?.track)
-    const normalizedSubTrack = normalizeTrackToken(maxRating?.subTrack)
+    const ratingCandidate = getLatestProfileRatingCandidate(memberStats)
+    const normalizedTrack = normalizeTrackToken(ratingCandidate?.track)
+    const normalizedSubTrack = normalizeTrackToken(ratingCandidate?.subTrack)
 
     if (testingSubTrackNames.has(normalizedSubTrack)) {
         return ratingAudienceLabels.QA

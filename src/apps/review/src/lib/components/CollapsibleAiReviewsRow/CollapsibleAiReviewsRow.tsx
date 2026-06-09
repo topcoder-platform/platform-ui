@@ -9,6 +9,7 @@ import {
     AiReviewDecision,
     AiReviewDecisionEscalation,
     AiReviewDecisionStatus,
+    BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
@@ -53,31 +54,51 @@ export function normalizeDecisionStatus(
 }
 
 /**
- * Builds a multi-line tooltip string from escalation notes and approver notes.
+ * Resolves a memberId to a display handle using the resourceMemberIdMapping.
+ * Falls back to the raw id string if no match is found.
+ */
+function resolveHandle(
+    memberId: string | null | undefined,
+    resourceMemberIdMapping: Record<string, BackendResource>,
+): string {
+    if (!memberId) return ''
+    return resourceMemberIdMapping[memberId]?.memberHandle ?? memberId
+}
+
+/**
+ * Builds a multi-line tooltip string from escalation notes, approver notes,
+ * and the lock/unlock reason.
+ *
+ * @param escalations            - List of escalation objects from the AI review decision
+ * @param reason                 - The reason string from the decision
+ * @param showAuthor             - When true, appends "(by <handle>)" to each note.
+ *                                 Pass false for reviewer role so author identity is hidden.
+ *                                 Defaults to true.
+ * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
+ * @param submissionLocked       - When true, labels the reason as "Locked Reason";
+ *                                 otherwise labels it as "Unlock Reason".
+ *
  * Returns undefined if there are no notes at all.
- * Used to show Copilot/Manager/Admin why a submission was escalated or
- * approved/rejected.
  */
 function buildNotesTooltip(
     escalations?: AiReviewDecisionEscalation[],
-    resourceMemberIdMapping?: Record<string, any>,
+    reason?: string | null,
+    showAuthor: boolean = true,
+    resourceMemberIdMapping: Record<string, BackendResource> = {},
+    submissionLocked: boolean = false,
 ): string | undefined {
     const parts: string[] = []
 
-    const getMemberHandle = (memberId?: string | null): string => {
-        if (!memberId || !resourceMemberIdMapping) return ''
-        const resource = resourceMemberIdMapping[memberId]
-        return resource?.memberHandle || ''
-    }
-
     escalations?.forEach(esc => {
         if (esc.escalationNotes) {
-            const by = esc.createdBy ? ` (by ${getMemberHandle(esc.createdBy)})` : ''
+            const handle = resolveHandle(esc.createdBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
         }
 
         if (esc.approverNotes) {
-            const by = esc.updatedBy ? ` (by ${getMemberHandle(esc.updatedBy)})` : ''
+            const handle = resolveHandle(esc.updatedBy, resourceMemberIdMapping)
+            const by = showAuthor && handle ? ` (by ${handle})` : ''
             const prefix = esc.status === 'APPROVED'
                 ? 'Approval Note'
                 : esc.status === 'REJECTED'
@@ -87,16 +108,61 @@ function buildNotesTooltip(
         }
     })
 
+    if (reason) {
+        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
+        parts.push(`${reasonLabel}: ${reason}`)
+    }
+
     return parts.length ? parts.join('\n') : undefined
 }
+
+interface ScoreBadgeProps {
+    score: number
+    normalizedStatus: ReturnType<typeof normalizeDecisionStatus>
+    aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig']
+}
+
+const ScoreBadge: FC<ScoreBadgeProps> = props => (
+    <span className={classNames(
+        styles.score,
+        props.normalizedStatus === 'passed' && styles.scorePassed,
+        (props.normalizedStatus === 'failed' || props.normalizedStatus === 'failed-score') && styles.scoreFailed,
+    )}
+    >
+        <Tooltip
+            content={<AiScoreFormulaTooltip aiReviewConfig={props.aiReviewConfig} />}
+            triggerOn='hover'
+        >
+            <span className={styles.infoIcon}>
+                <IconOutline.InformationCircleIcon className='icon-lg' />
+            </span>
+        </Tooltip>
+        {formatScore(props.score)}
+    </span>
+)
 
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     const challengeDetailContext: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig'] = challengeDetailContext.aiReviewConfig
     const aiReviewDecisionsBySubmissionId: ChallengeDetailContextModel['aiReviewDecisionsBySubmissionId']
         = challengeDetailContext.aiReviewDecisionsBySubmissionId
+    const resourceMemberIdMapping: ChallengeDetailContextModel['resourceMemberIdMapping']
+        = challengeDetailContext.resourceMemberIdMapping
 
-    const { hasSubmitterRole }: UseRolePermissionsResult = useRolePermissions()
+    const rolePermissions: UseRolePermissionsResult = useRolePermissions()
+    const {
+        hasSubmitterRole,
+        isAdmin,
+        hasCopilotRole,
+        isProjectManager,
+    }: UseRolePermissionsResult = rolePermissions
+
+    /**
+     * Only Copilot, Project Manager, and Admin can see WHO performed the action.
+     * Reviewers can see the note TEXT but NOT the author "(by handle)".
+     * Submitters cannot see notes at all.
+     */
+    const canSeeAuthor = isAdmin || hasCopilotRole || isProjectManager
 
     const aiReviewersCount = useMemo(() => {
         const reviewersCount = props.aiReviewers.length || aiReviewConfig?.workflows?.length || 0
@@ -108,23 +174,30 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [aiReviewDecisionsBySubmissionId, props.submission.id],
     )
 
+    // Extracted into its own memo to reduce the complexity count of the component arrow function
     const normalizedStatus = useMemo(
         () => normalizeDecisionStatus(currentDecision?.status),
         [currentDecision?.status],
     )
 
-    const resourceMemberIdMapping = challengeDetailContext.resourceMemberIdMapping
-
     /**
      * Builds the tooltip text for the notes icon shown next to the status label.
-     * Only shown to Copilot/Manager/Admin (not submitters).
-     * Covers: escalation notes and approval/rejection notes.
+     *
+     * - Submitters              → undefined (icon not shown at all)
+     * - Reviewers               → note text only, NO "(by handle)"  (canSeeAuthor = false)
+     * - Copilot / PM / Admin    → note text WITH "(by handle)"       (canSeeAuthor = true)
      */
     const notesTooltip = useMemo((): string | undefined => {
         if (hasSubmitterRole || !currentDecision) return undefined
 
-        return buildNotesTooltip(currentDecision.escalations, resourceMemberIdMapping)
-    }, [currentDecision, hasSubmitterRole, resourceMemberIdMapping])
+        return buildNotesTooltip(
+            currentDecision.escalations,
+            currentDecision.reason,
+            canSeeAuthor,
+            resourceMemberIdMapping,
+            currentDecision.submissionLocked,
+        )
+    }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
     const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
@@ -179,32 +252,20 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 </span>
                 <div className={styles.statusContainer}>
                     {hasScore && (
-                        <span className={classNames(
-                            styles.score,
-                            normalizedStatus === 'passed' && styles.scorePassed,
-                            (
-                                normalizedStatus === 'failed' || normalizedStatus === 'failed-score'
-                            ) && styles.scoreFailed,
-                        )}
-                        >
-                            <Tooltip
-                                content={<AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />}
-                                triggerOn='hover'
-                            >
-                                <span className={styles.infoIcon}>
-                                    <IconOutline.InformationCircleIcon className='icon-lg' />
-                                </span>
-                            </Tooltip>
-                            {formatScore(currentDecision!.totalScore)}
-                        </span>
+                        <ScoreBadge
+                            score={currentDecision!.totalScore!}
+                            normalizedStatus={normalizedStatus}
+                            aiReviewConfig={aiReviewConfig}
+                        />
                     )}
                     {currentDecision && (
                         <div className={styles.runStatus}>
                             <AiWorkflowRunStatus status={normalizedStatus} showScore={false} />
                             {/*
-                             * Notes icon: shown only to Copilot/Manager/Admin (not submitters)
-                             * when there are escalation notes, approval/rejection notes,
-                             * or an unlock reason to display.
+                             * Notes icon: visible to Reviewers, Copilot, PM, Admin.
+                             * Hidden from Submitters entirely.
+                             * Reviewers see note text only (no author handle).
+                             * Copilot / PM / Admin see note text with "(by handle)".
                              */}
                             {notesTooltip && (
                                 <Tooltip
