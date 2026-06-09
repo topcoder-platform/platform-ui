@@ -512,7 +512,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             >
                                                 {formatScore(row.score)}
                                             </Link>
-                                            {JSON.stringify(row)}
+                                            {row.initialScore !== null && row.initialScore !== undefined && (
+                                                <span className={styles.overriddenScore}>
+                                                    <span className={styles.overrideLabel}>(overriden)</span>
+                                                </span>
+                                            )}
                                         </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
@@ -625,7 +629,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             >
                                                 {formatScore(row.score)}
                                             </Link>
-                                            {JSON.stringify(row)}
                                             {row.initialScore !== null && row.initialScore !== undefined && (
                                                 <span className={styles.overriddenScore}>
                                                     <span className={styles.overrideLabel}>(overriden)</span>
