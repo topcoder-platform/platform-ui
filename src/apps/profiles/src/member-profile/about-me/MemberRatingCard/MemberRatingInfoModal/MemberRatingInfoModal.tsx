@@ -163,6 +163,39 @@ const getRatingTierName = (rating?: number): string => (
 )
 
 /**
+ * Returns the pyramid tier that represents a member's top percentile.
+ *
+ * Used by MemberRatingInfoModal to place the highlighted pyramid segment by position instead of
+ * rating range: top 10%, top 25%, top 50%, top 75%, then everyone else.
+ *
+ * @param {number | undefined} percentile - The member's top percentile in the selected audience.
+ * @returns {RatingTier | undefined} The pyramid tier for the percentile, or undefined without a usable percentile.
+ */
+const getPyramidTierByPercentile = (percentile?: number): RatingTier | undefined => {
+    if (percentile === undefined || !Number.isFinite(percentile)) {
+        return undefined
+    }
+
+    if (percentile <= 10) {
+        return ratingTiers[4]
+    }
+
+    if (percentile <= 25) {
+        return ratingTiers[3]
+    }
+
+    if (percentile <= 50) {
+        return ratingTiers[2]
+    }
+
+    if (percentile <= 75) {
+        return ratingTiers[1]
+    }
+
+    return ratingTiers[0]
+}
+
+/**
  * Parses the API distribution payload into ordered rating ranges.
  *
  * Used by MemberRatingInfoModal to render custom histogram bars from the same
@@ -279,7 +312,8 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const displayName: string = getMemberDisplayName(props.profile)
     const titleDisplayName: string = displayName
         .toUpperCase()
-    const selectedTier: RatingTier = getRatingTier(props.rating)
+    const selectedRatingTier: RatingTier = getRatingTier(props.rating)
+    const selectedPyramidTier: RatingTier = getPyramidTierByPercentile(props.percentile) ?? selectedRatingTier
     const distributionRanges: RatingDistributionRange[] = useMemo(() => (
         getDistributionRanges(props.ratingDistribution?.distribution)
     ), [props.ratingDistribution])
@@ -346,7 +380,9 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                                         <polygon
                                             key={shape.tierId}
                                             points={shape.points}
-                                            fill={tier.id === selectedTier.id ? tier.color : '#D4D4D4'}
+                                            fill={tier.id === selectedPyramidTier.id
+                                                ? selectedRatingTier.color
+                                                : '#D4D4D4'}
                                         />
                                     )
                                 })}
@@ -438,7 +474,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
 
                 <div className={styles.legend}>
                     {ratingTiers.map((tier: RatingTier) => {
-                        const isActive = tier.id === selectedTier.id
+                        const isActive = tier.id === selectedRatingTier.id
 
                         return (
                             <div
