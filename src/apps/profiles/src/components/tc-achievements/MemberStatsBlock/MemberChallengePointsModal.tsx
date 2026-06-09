@@ -45,7 +45,7 @@ const MemberChallengePointsModal: FC<MemberChallengePointsModalProps> = (
             spacer={false}
             title={(
                 <h3 className={styles.title}>
-                    POINTS BREAKDOWN
+                    Points Breakdown
                 </h3>
             )}
             size='md'
@@ -57,7 +57,7 @@ const MemberChallengePointsModal: FC<MemberChallengePointsModalProps> = (
                     <div className={styles.tableHeader}>
                         <span>Place</span>
                         <span>Challenge</span>
-                        <span>Points</span>
+                        <span className={styles.pointsHeader}>Points</span>
                     </div>
 
                     {details.map((detail: UserChallengePointsDetail) => (
