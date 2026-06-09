@@ -17,6 +17,7 @@ import { getPreferredRolesText, numberToFixed } from '../../../lib'
 
 import {
     calculateTopPercentileFromDistribution,
+    getCompactRatingColor,
     getLatestProfileRating,
     getPreferredRolesDisplay,
     getRatingAudienceLabel,
@@ -47,6 +48,7 @@ const formatPercentile = (percentile: number): string => (
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
     const rating: number | undefined = useMemo(() => getLatestProfileRating(memberStats), [memberStats])
+    const compactRatingColor: string = getCompactRatingColor(rating, getRatingColor(rating))
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
@@ -151,7 +153,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         <div className={styles.container}>
             <div className={styles.innerWrap}>
                 <button type='button' className={styles.valueWrap} onClick={handleInfoModalOpen}>
-                    <p className={styles.value} style={{ color: getRatingColor(rating) }}>
+                    <p className={styles.value} style={{ color: compactRatingColor }}>
                         {rating}
                     </p>
                     <p className={styles.name}>Rating</p>
@@ -180,7 +182,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                             >
                                 <p
                                     className={classNames(styles.value, styles.percentileValue)}
-                                    style={{ color: getRatingColor(rating) }}
+                                    style={{ color: compactRatingColor }}
                                 >
                                     {percentileLabel}
                                 </p>
