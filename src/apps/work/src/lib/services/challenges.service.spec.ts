@@ -177,6 +177,7 @@ describe('patchChallenge', () => {
         await patchChallenge('challenge-1', {
             phases: [{
                 duration: 1440,
+                id: 'challenge-phase-1',
                 phaseId: 'submission-phase',
                 scheduledEndDate: '2026-04-15T15:05:00.000Z',
                 scheduledStartDate: '2026-04-09T15:05:00.000Z',
@@ -189,6 +190,7 @@ describe('patchChallenge', () => {
                 expect.objectContaining({
                     phases: [{
                         duration: 86400,
+                        id: 'challenge-phase-1',
                         phaseId: 'submission-phase',
                         scheduledEndDate: '2026-04-15T15:05:00.000Z',
                         scheduledStartDate: '2026-04-09T15:05:00.000Z',
