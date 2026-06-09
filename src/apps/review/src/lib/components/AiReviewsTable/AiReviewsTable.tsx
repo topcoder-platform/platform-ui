@@ -256,6 +256,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
             return {
                 id: workflowId,
+                initialScore: run?.initialScore,
                 isGating: fromDecision?.isGating ?? configured?.isGating,
                 minScore,
                 reviewDate: run?.completedAt,
