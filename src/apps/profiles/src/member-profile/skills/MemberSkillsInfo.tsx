@@ -5,7 +5,7 @@ import { filter, orderBy } from 'lodash'
 
 import { getMemberSkillDetails, UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
 import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill, useLocalStorage } from '~/libs/shared'
-import { Button } from '~/libs/ui'
+import { Button, IconSolid } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -76,6 +76,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     const [principalIntroModalVisible, setPrincipalIntroModalVisible]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const [
+        isAdditionalSkillsExpanded,
+        setIsAdditionalSkillsExpanded,
+    ]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
+    useEffect(() => {
+        setIsAdditionalSkillsExpanded(false)
+    }, [props.profile.handle])
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.skills) {
             setIsEditMode(true)
@@ -131,6 +140,19 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         }))
 
         setPrincipalIntroModalVisible(false)
+    }
+
+    /**
+     * Toggles visibility for the Additional Skills section from the section arrow.
+     *
+     * Used by the Additional Skills header button to expand or collapse grouped
+     * skills on the member profile page.
+     *
+     * @returns {void} Updates local component state and returns no value.
+     * @throws This handler does not throw errors.
+     */
+    function handleAdditionalSkillsToggle(): void {
+        setIsAdditionalSkillsExpanded(isExpanded => !isExpanded)
     }
 
     const fetchSkillDetails = useCallback((skillId: string) => getMemberSkillDetails(props.profile.handle, skillId)
@@ -193,15 +215,38 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                 )}
                 {additionalSkills.length > 0 && (
                     <div className={styles.additionalSkillsWrap}>
-                        {principalSkills.length > 0 && (
-                            <div className='large-subtitle'>
+                        <button
+                            type='button'
+                            className={styles.additionalSkillsToggle}
+                            onClick={handleAdditionalSkillsToggle}
+                            aria-expanded={isAdditionalSkillsExpanded}
+                            aria-controls='member-profile-additional-skills'
+                        >
+                            <span className={styles.additionalSkillsTitle}>
                                 Additional Skills
-                            </div>
-                        )}
-                        <GroupedSkillsUI
-                            groupedSkillsByCategory={groupedSkillsByCategory}
-                            fetchSkillDetails={canFetchSkillDetails ? fetchSkillDetails : undefined}
-                        />
+                            </span>
+                            {isAdditionalSkillsExpanded ? (
+                                <IconSolid.ChevronUpIcon
+                                    className={styles.additionalSkillsIcon}
+                                    aria-hidden='true'
+                                />
+                            ) : (
+                                <IconSolid.ChevronDownIcon
+                                    className={styles.additionalSkillsIcon}
+                                    aria-hidden='true'
+                                />
+                            )}
+                        </button>
+                        <div
+                            id='member-profile-additional-skills'
+                            className={styles.additionalSkillsContent}
+                            hidden={!isAdditionalSkillsExpanded}
+                        >
+                            <GroupedSkillsUI
+                                groupedSkillsByCategory={groupedSkillsByCategory}
+                                fetchSkillDetails={canFetchSkillDetails ? fetchSkillDetails : undefined}
+                            />
+                        </div>
                     </div>
                 )}
                 {!memberSkills.length && (

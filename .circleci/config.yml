@@ -228,7 +228,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - hide_ba_details
+                              - ai-ratings
                       tags:
                           only: /^dev-.*/
 

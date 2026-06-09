@@ -1,41 +1,82 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
-import { useMemberStats, UserProfile, UserStats } from '~/libs/core'
+import {
+    getRatingColor,
+    useMemberStats,
+    UserProfile,
+    UserStats,
+    UserStatsDistributionResponse,
+    UserTrait,
+    useStatsDistribution,
+} from '~/libs/core'
+import { Tooltip } from '~/libs/ui'
 
+import { EditMemberPropertyBtn } from '../../../components'
+import { getPreferredRolesText } from '../../../lib'
+
+import {
+    calculateTopPercentileFromDistribution,
+    formatTopPercentile,
+    getCompactRatingColor,
+    getLatestProfileRating,
+    getPreferredRolesDisplay,
+    getRatingAudienceLabel,
+    getRatingDistributionQuery,
+    parsePreferredRolesText,
+} from './MemberRatingCard.utils'
 import { MemberRatingInfoModal } from './MemberRatingInfoModal'
+import { ModifyPreferredRolesModal } from './ModifyPreferredRolesModal'
 import styles from './MemberRatingCard.module.scss'
 
 interface MemberRatingCardProps {
+    authProfile: UserProfile | undefined
+    memberPersonalizationTraitsData: UserTrait[] | undefined
+    mutatePersonalizationTraits: () => void
     profile: UserProfile
 }
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
+    const rating: number | undefined = useMemo(() => getLatestProfileRating(memberStats), [memberStats])
+    const compactRatingColor: string = getCompactRatingColor(rating, getRatingColor(rating))
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
 
-    const maxPercentile: number = useMemo(() => {
-        let memberPercentile: number = 0
-        if (memberStats?.DATA_SCIENCE) {
-            memberPercentile = memberStats.DATA_SCIENCE.MARATHON_MATCH?.rank?.percentile || 0
-            if ((memberStats.DATA_SCIENCE.SRM?.rank?.percentile || 0) > memberPercentile) {
-                memberPercentile = memberStats.DATA_SCIENCE.SRM.rank?.percentile || 0
-            }
-        }
+    const [isPreferredRolesModalOpen, setIsPreferredRolesModalOpen]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState(false)
 
-        if (memberStats?.DEVELOP) {
-            memberStats.DEVELOP.subTracks.forEach((subTrack: any) => {
-                const subPercentile = subTrack.rank.percentile || subTrack.rank.overallPercentile || 0
-                if (subPercentile > memberPercentile) {
-                    memberPercentile = subPercentile
-                }
-            })
-        }
+    const [arePreferredRolesExpanded, setArePreferredRolesExpanded]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState(false)
 
-        return memberPercentile
-    }, [memberStats])
+    const ratingDistributionQuery = useMemo(() => getRatingDistributionQuery(memberStats), [memberStats])
+
+    const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution(ratingDistributionQuery)
+
+    const maxPercentile: number | undefined = useMemo(() => (
+        calculateTopPercentileFromDistribution(ratingDistribution?.distribution, rating)
+    ), [rating, ratingDistribution])
+    const audienceLabel: string = getRatingAudienceLabel(memberStats)
+    const percentileLabel: string | undefined = maxPercentile
+        ? `Top ${formatTopPercentile(maxPercentile)}%`
+        : undefined
+    const canEditPreferredRoles: boolean = props.authProfile?.handle === props.profile.handle
+    const preferredRolesText: string = useMemo(
+        () => getPreferredRolesText(props.memberPersonalizationTraitsData),
+        [props.memberPersonalizationTraitsData],
+    )
+    const preferredRoles: string[] = useMemo(
+        () => parsePreferredRolesText(preferredRolesText),
+        [preferredRolesText],
+    )
+    const preferredRolesDisplay = useMemo(
+        () => getPreferredRolesDisplay(preferredRoles, arePreferredRolesExpanded),
+        [arePreferredRolesExpanded, preferredRoles],
+    )
 
     function handleInfoModalClose(): void {
         setIsInfoModalOpen(false)
@@ -45,33 +86,127 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         setIsInfoModalOpen(true)
     }
 
-    return memberStats?.maxRating?.rating ? (
+    function handlePreferredRolesModalClose(): void {
+        setIsPreferredRolesModalOpen(false)
+    }
+
+    function handlePreferredRolesModalOpen(): void {
+        setIsPreferredRolesModalOpen(true)
+    }
+
+    function handlePreferredRolesModalSave(): void {
+        setIsPreferredRolesModalOpen(false)
+        props.mutatePersonalizationTraits()
+    }
+
+    function handlePreferredRolesToggle(): void {
+        setArePreferredRolesExpanded(!arePreferredRolesExpanded)
+    }
+
+    function renderPreferredRoles(): JSX.Element {
+        if (preferredRoles.length === 0 && !canEditPreferredRoles) {
+            return <></>
+        }
+
+        return (
+            <div className={styles.preferredRolesWrap}>
+                {preferredRoles.length > 0 && (
+                    <div className={styles.preferredRolesList}>
+                        {preferredRolesDisplay.visibleRoles.map((role: string) => (
+                            <span className={styles.preferredRole} key={role}>
+                                {role}
+                            </span>
+                        ))}
+
+                        {preferredRolesDisplay.toggleLabel && (
+                            <button
+                                className={styles.preferredRolesToggle}
+                                onClick={handlePreferredRolesToggle}
+                                type='button'
+                            >
+                                {preferredRolesDisplay.toggleLabel}
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {canEditPreferredRoles && (
+                    <EditMemberPropertyBtn
+                        className={styles.preferredRolesEditButton}
+                        onClick={handlePreferredRolesModalOpen}
+                    />
+                )}
+            </div>
+        )
+    }
+
+    return rating !== undefined ? (
         <div className={styles.container}>
             <div className={styles.innerWrap}>
-                <div className={classNames(styles.valueWrap, !maxPercentile ? styles.noPercentile : '')}>
-                    <p className={styles.value}>{memberStats?.maxRating?.rating}</p>
+                <button type='button' className={styles.valueWrap} onClick={handleInfoModalOpen}>
+                    <p className={styles.value} style={{ color: compactRatingColor }}>
+                        {rating}
+                    </p>
                     <p className={styles.name}>Rating</p>
-                </div>
+                </button>
                 {
-                    maxPercentile ? (
-                        <div className={styles.valueWrap}>
-                            <p className={styles.value}>
-                                {Number(maxPercentile)
-                                    .toFixed(2)}
-                            </p>
-                            <p className={styles.name}>Percentile</p>
-                        </div>
+                    percentileLabel ? (
+                        <Tooltip
+                            className={styles.ratingTooltip}
+                            content={(
+                                <span className={styles.tooltipContent}>
+                                    {percentileLabel}
+                                    {' '}
+                                    of
+                                    <br />
+                                    2M
+                                    {' '}
+                                    {audienceLabel.toLowerCase()}
+                                </span>
+                            )}
+                            place='top'
+                        >
+                            <button
+                                type='button'
+                                className={classNames(styles.valueWrap, styles.percentileWrap)}
+                                onClick={handleInfoModalOpen}
+                            >
+                                <p
+                                    className={classNames(styles.value, styles.percentileValue)}
+                                    style={{ color: compactRatingColor }}
+                                >
+                                    {percentileLabel}
+                                </p>
+                                <p className={styles.name}>{audienceLabel}</p>
+                            </button>
+                        </Tooltip>
                     ) : undefined
                 }
-                <div className='body-small-medium'>
-                    <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
-                </div>
+                <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
             </div>
 
             {
                 isInfoModalOpen && (
                     <MemberRatingInfoModal
                         onClose={handleInfoModalClose}
+                        percentile={maxPercentile}
+                        profile={props.profile}
+                        rating={rating}
+                        audienceLabel={audienceLabel}
+                        ratingDistribution={ratingDistribution}
+                    />
+                )
+            }
+
+            {renderPreferredRoles()}
+
+            {
+                isPreferredRolesModalOpen && (
+                    <ModifyPreferredRolesModal
+                        memberPersonalizationTraitsData={props.memberPersonalizationTraitsData}
+                        onClose={handlePreferredRolesModalClose}
+                        onSave={handlePreferredRolesModalSave}
+                        profile={props.profile}
                     />
                 )
             }

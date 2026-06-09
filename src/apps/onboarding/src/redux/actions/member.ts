@@ -376,7 +376,6 @@ export const createPersonalizationsPayloadData: any = (personalizations: Persona
             openToWork: openToWork
                 ? {
                     availability: openToWork.availability,
-                    preferredRoles: openToWork.preferredRoles,
                 }
                 : undefined,
             profileSelfTitle,
