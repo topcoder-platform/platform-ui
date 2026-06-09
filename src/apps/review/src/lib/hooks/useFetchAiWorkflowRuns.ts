@@ -43,6 +43,7 @@ export interface AiWorkflowRun {
     status: AiWorkflowRunStatusEnum;
     gitRunId?: string;
     gitRunUrl?: string;
+    initialScore?: number
     score: number;
     workflow: AiWorkflow
     usage: {
@@ -150,7 +151,17 @@ export function useFetchAiWorkflowsRuns(
         }
     }, [fetchError])
 
-    const uniqueRuns = uniqBy(orderBy(runs, ['startedAt', 'completedAt'], ['desc', 'desc']), 'workflow.id')
+    const uniqueRuns = uniqBy(
+        orderBy(
+            runs,
+            [
+                run => run.startedAt ?? '',
+                run => run.completedAt ?? '',
+            ],
+            ['desc', 'desc'],
+        ),
+        'workflow.id',
+    )
         .reverse()
 
     return {

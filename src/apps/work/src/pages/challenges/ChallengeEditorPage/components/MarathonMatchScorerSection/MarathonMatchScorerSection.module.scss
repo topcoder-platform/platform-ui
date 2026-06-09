@@ -67,6 +67,30 @@
     color: #b04337;
 }
 
+.errorActionRow {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.linkButton {
+    background: transparent;
+    border: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.linkButton:focus {
+    outline: 2px solid $link-blue-dark;
+    outline-offset: 3px;
+}
+
 .sectionCard,
 .phaseCard,
 .summaryCard {
@@ -143,6 +167,12 @@
     font-size: 14px;
     min-height: 42px;
     padding: 10px 12px;
+}
+
+.fieldGroup input:disabled {
+    background: $black-5;
+    color: $black-40;
+    cursor: not-allowed;
 }
 
 .selectInput {
@@ -246,6 +276,45 @@
     margin: 4px 0 0;
 }
 
+.operationPanel {
+    display: flex;
+    flex: 1 1 520px;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 280px;
+}
+
+.testSubmissionGrid {
+    align-items: flex-end;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(150px, 180px) minmax(220px, 1fr) auto;
+}
+
+.operationButton,
+.rerunButtonRow {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.testSubmissionResult {
+    align-items: center;
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    border-radius: 8px;
+    color: #137d60;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 13px;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+.testSubmissionResult a {
+    color: $link-blue-dark;
+    font-weight: 600;
+}
+
 .validationCard {
     border-radius: 8px;
     padding: 14px;
@@ -272,6 +341,37 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.compilationErrorMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.compilationErrorMeta strong {
+    color: $black-80;
+    font-size: 16px;
+}
+
+.compilationErrorMeta span {
+    color: $black-60;
+    font-size: 13px;
+}
+
+.compilationErrorOutput {
+    background: #101820;
+    border-radius: 8px;
+    color: #f3f7fb;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+    max-height: 420px;
+    overflow: auto;
+    padding: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .codeEditor {
@@ -353,5 +453,14 @@
     .footerActions,
     .modalActions {
         justify-content: stretch;
+    }
+
+    .testSubmissionGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .operationButton,
+    .rerunButtonRow {
+        justify-content: flex-start;
     }
 }

@@ -21,6 +21,7 @@ interface AiFeedbackReplyProps {
     initialValue?: string
     onCloseReply: () => void
     onSubmitReply: (content: string, id?: string) => Promise<void>
+    submitLabel?: string
 }
 
 export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
@@ -94,9 +95,7 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
                         className='filledButton'
                         type='submit'
                     >
-                        {
-                            props.id ? 'Edit Reply' : 'Submit Reply'
-                        }
+                        {props.submitLabel ?? (props.id ? 'Edit Reply' : 'Submit Reply')}
                     </button>
                     <button
                         type='button'

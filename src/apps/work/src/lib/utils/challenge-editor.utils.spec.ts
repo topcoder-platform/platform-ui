@@ -251,6 +251,7 @@ describe('challenge-editor utils schedule mapping', () => {
             name: 'Scheduled challenge',
             phases: [{
                 duration: 1440,
+                id: 'challenge-phase-1',
                 phaseId: 'submission-phase',
                 scheduledEndDate: '2026-04-15T15:05:00.000Z',
                 scheduledStartDate: '2026-04-09T15:05:00.000Z',
@@ -266,6 +267,7 @@ describe('challenge-editor utils schedule mapping', () => {
         expect(result.phases)
             .toEqual([{
                 duration: 1440,
+                id: 'challenge-phase-1',
                 phaseId: 'submission-phase',
                 scheduledEndDate: '2026-04-15T15:05:00.000Z',
                 scheduledStartDate: '2026-04-09T15:05:00.000Z',

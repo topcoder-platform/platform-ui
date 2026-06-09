@@ -23,6 +23,31 @@ function normalizeIdentifier(value: unknown): string | undefined {
 }
 
 /**
+ * Returns a finite number when the value is already numeric and usable.
+ *
+ * @param value - Numeric candidate from a normalized submission.
+ * @returns Finite number, or undefined when absent or invalid.
+ * Used by winner score resolution before calculating fallback review averages.
+ */
+function toFiniteNumber(value?: number | null): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+}
+
+/**
+ * Resolves the final score candidate for a winner submission.
+ *
+ * @param submission - Submission being evaluated for a challenge winner row.
+ * @returns Final/system aggregate score, review final score, or undefined when neither exists.
+ * Used by the Winners tab so provisional Marathon Match aggregates do not override final review scores.
+ */
+export function getSubmissionFinalScoreCandidate(
+    submission: SubmissionInfo,
+): number | undefined {
+    return toFiniteNumber(submission.finalAggregateScore)
+        ?? toFiniteNumber(submission?.review?.finalScore)
+}
+
+/**
  * Enriches a submission with member-mapping user info when it is missing.
  *
  * @param submission - Submission to normalize.
@@ -105,6 +130,10 @@ function mergeSubmissionInfo(
         ...fallback,
         ...preferred,
         aggregateScore: preferDefinedValue(preferred.aggregateScore, fallback.aggregateScore),
+        finalAggregateScore: preferDefinedValue(
+            preferred.finalAggregateScore,
+            fallback.finalAggregateScore,
+        ),
         id: preferred.id || fallback.id,
         isFileSubmission: preferDefinedValue(preferred.isFileSubmission, fallback.isFileSubmission),
         isLatest: preferDefinedValue(preferred.isLatest, fallback.isLatest),

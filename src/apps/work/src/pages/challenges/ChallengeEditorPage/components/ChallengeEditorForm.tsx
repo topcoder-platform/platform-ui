@@ -1847,6 +1847,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         && normalizedChallengeStatus !== CHALLENGE_STATUS.ACTIVE
         && normalizedChallengeStatus !== CHALLENGE_STATUS.COMPLETED
         && !(normalizedChallengeStatus ?? '').startsWith(CHALLENGE_STATUS.CANCELLED)
+
     const isBudgetPending = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.PENDING_APPROVAL
     const isBudgetApproved = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.APPROVED
     const isBudgetRejected = normalizedApprovalStatus === CHALLENGE_APPROVAL_STATUS.REJECTED
@@ -3156,13 +3157,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         saveChallenge,
     ])
 
+    const launchChallengeRef = useRef(launchChallenge)
+
+    useEffect(() => {
+        launchChallengeRef.current = launchChallenge
+    }, [launchChallenge])
+
+    const launchChallengeAction = useCallback(async (): Promise<void> => {
+        await launchChallengeRef.current()
+    }, [])
+
     useEffect(() => {
         if (!onRegisterLaunchAction) {
             return undefined
         }
 
         onRegisterLaunchAction(currentChallengeId && !isScorerBlockingChallengeActions
-            ? launchChallenge
+            ? launchChallengeAction
             : undefined)
 
         return () => {
@@ -3171,7 +3182,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [
         currentChallengeId,
         isScorerBlockingChallengeActions,
-        launchChallenge,
+        launchChallengeAction,
         onRegisterLaunchAction,
     ])
 

@@ -219,6 +219,7 @@ function serializeChallengePhases(phases: unknown): ChallengePhase[] | undefined
 
             return {
                 duration: serializePhaseDurationToSeconds(typedPhase.duration),
+                id: typedPhase.id,
                 phaseId: typedPhase.phaseId,
                 predecessor: typedPhase.predecessor,
                 scheduledEndDate: asIsoDateString(typedPhase.scheduledEndDate),

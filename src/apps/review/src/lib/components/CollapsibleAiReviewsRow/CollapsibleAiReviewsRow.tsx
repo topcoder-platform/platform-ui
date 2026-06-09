@@ -7,16 +7,13 @@ import { IconOutline, Tooltip } from '~/libs/ui'
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
 import {
     AiReviewDecision,
-    AiReviewDecisionEscalation,
     AiReviewDecisionStatus,
-    BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
 import { ChallengeDetailContext } from '../../contexts'
 import { AiScoreFormulaTooltip } from '../AiScoreFormulaTooltip'
 import { formatScore } from '../AiScoreFormulaTooltip/AiScoreFormulaTooltip'
-import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
@@ -29,6 +26,8 @@ interface CollapsibleAiReviewsRowProps {
 
 export function normalizeDecisionStatus(
     status?: AiReviewDecisionStatus,
+    totalScore?: number | null,
+    minPassingThreshold?: number | null,
 ): 'passed' | 'failed-score' | 'pending' | 'failed' | 'human-override' {
     if (!status || status === 'PENDING') {
         return 'pending'
@@ -47,73 +46,17 @@ export function normalizeDecisionStatus(
     }
 
     if (status === 'HUMAN_OVERRIDE') {
+        if (
+            typeof totalScore === 'number'
+            && typeof minPassingThreshold === 'number'
+        ) {
+            return totalScore >= minPassingThreshold ? 'passed' : 'failed-score'
+        }
+
         return 'human-override'
     }
 
     return 'pending'
-}
-
-/**
- * Resolves a memberId to a display handle using the resourceMemberIdMapping.
- * Falls back to the raw id string if no match is found.
- */
-function resolveHandle(
-    memberId: string | null | undefined,
-    resourceMemberIdMapping: Record<string, BackendResource>,
-): string {
-    if (!memberId) return ''
-    return resourceMemberIdMapping[memberId]?.memberHandle ?? memberId
-}
-
-/**
- * Builds a multi-line tooltip string from escalation notes, approver notes,
- * and the lock/unlock reason.
- *
- * @param escalations            - List of escalation objects from the AI review decision
- * @param reason                 - The reason string from the decision
- * @param showAuthor             - When true, appends "(by <handle>)" to each note.
- *                                 Pass false for reviewer role so author identity is hidden.
- *                                 Defaults to true.
- * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
- * @param submissionLocked       - When true, labels the reason as "Locked Reason";
- *                                 otherwise labels it as "Unlock Reason".
- *
- * Returns undefined if there are no notes at all.
- */
-function buildNotesTooltip(
-    escalations?: AiReviewDecisionEscalation[],
-    reason?: string | null,
-    showAuthor: boolean = true,
-    resourceMemberIdMapping: Record<string, BackendResource> = {},
-    submissionLocked: boolean = false,
-): string | undefined {
-    const parts: string[] = []
-
-    escalations?.forEach(esc => {
-        if (esc.escalationNotes) {
-            const handle = resolveHandle(esc.createdBy, resourceMemberIdMapping)
-            const by = showAuthor && handle ? ` (by ${handle})` : ''
-            parts.push(`Escalation Note${by}: ${esc.escalationNotes}`)
-        }
-
-        if (esc.approverNotes) {
-            const handle = resolveHandle(esc.updatedBy, resourceMemberIdMapping)
-            const by = showAuthor && handle ? ` (by ${handle})` : ''
-            const prefix = esc.status === 'APPROVED'
-                ? 'Approval Note'
-                : esc.status === 'REJECTED'
-                    ? 'Rejection Note'
-                    : 'Approver Note'
-            parts.push(`${prefix}${by}: ${esc.approverNotes}`)
-        }
-    })
-
-    if (reason) {
-        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
-        parts.push(`${reasonLabel}: ${reason}`)
-    }
-
-    return parts.length ? parts.join('\n') : undefined
 }
 
 interface ScoreBadgeProps {
@@ -146,23 +89,6 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     const aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig'] = challengeDetailContext.aiReviewConfig
     const aiReviewDecisionsBySubmissionId: ChallengeDetailContextModel['aiReviewDecisionsBySubmissionId']
         = challengeDetailContext.aiReviewDecisionsBySubmissionId
-    const resourceMemberIdMapping: ChallengeDetailContextModel['resourceMemberIdMapping']
-        = challengeDetailContext.resourceMemberIdMapping
-
-    const rolePermissions: UseRolePermissionsResult = useRolePermissions()
-    const {
-        hasSubmitterRole,
-        isAdmin,
-        hasCopilotRole,
-        isProjectManager,
-    }: UseRolePermissionsResult = rolePermissions
-
-    /**
-     * Only Copilot, Project Manager, and Admin can see WHO performed the action.
-     * Reviewers can see the note TEXT but NOT the author "(by handle)".
-     * Submitters cannot see notes at all.
-     */
-    const canSeeAuthor = isAdmin || hasCopilotRole || isProjectManager
 
     const aiReviewersCount = useMemo(() => {
         const reviewersCount = props.aiReviewers.length || aiReviewConfig?.workflows?.length || 0
@@ -174,30 +100,18 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [aiReviewDecisionsBySubmissionId, props.submission.id],
     )
 
+    const minPassingThreshold = currentDecision?.breakdown?.minPassingThreshold
+        ?? aiReviewConfig?.minPassingThreshold
+
     // Extracted into its own memo to reduce the complexity count of the component arrow function
     const normalizedStatus = useMemo(
-        () => normalizeDecisionStatus(currentDecision?.status),
-        [currentDecision?.status],
+        () => normalizeDecisionStatus(
+            currentDecision?.status,
+            currentDecision?.totalScore,
+            minPassingThreshold,
+        ),
+        [currentDecision?.status, currentDecision?.totalScore, minPassingThreshold],
     )
-
-    /**
-     * Builds the tooltip text for the notes icon shown next to the status label.
-     *
-     * - Submitters              → undefined (icon not shown at all)
-     * - Reviewers               → note text only, NO "(by handle)"  (canSeeAuthor = false)
-     * - Copilot / PM / Admin    → note text WITH "(by handle)"       (canSeeAuthor = true)
-     */
-    const notesTooltip = useMemo((): string | undefined => {
-        if (hasSubmitterRole || !currentDecision) return undefined
-
-        return buildNotesTooltip(
-            currentDecision.escalations,
-            currentDecision.reason,
-            canSeeAuthor,
-            resourceMemberIdMapping,
-            currentDecision.submissionLocked,
-        )
-    }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
     const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
@@ -261,37 +175,16 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                     {currentDecision && (
                         <div className={styles.runStatus}>
                             <AiWorkflowRunStatus status={normalizedStatus} showScore={false} />
-                            {/*
-                             * Notes icon: visible to Reviewers, Copilot, PM, Admin.
-                             * Hidden from Submitters entirely.
-                             * Reviewers see note text only (no author handle).
-                             * Copilot / PM / Admin see note text with "(by handle)".
-                             */}
-                            {notesTooltip && (
-                                <Tooltip
-                                    content={(
-                                        <div className={styles.notesTooltipContent}>
-                                            {notesTooltip.split('\n')
-                                                .map((line, i) => (
-                                                // eslint-disable-next-line react/no-array-index-key
-                                                    <div key={i} className={styles.notesTooltipLine}>{line}</div>
-                                                ))}
-                                        </div>
-                                    )}
-                                    triggerOn='hover'
-                                >
-                                    <span className={styles.notesIcon}>
-                                        <IconOutline.ClipboardListIcon className='icon-lg' />
-                                    </span>
-                                </Tooltip>
-                            )}
                         </div>
                     )}
                 </div>
             </div>
             {isOpen && portalContainer && createPortal(
                 <div className={classNames(styles.table, 'reviews-table')}>
-                    <AiReviewsTable submission={props.submission} aiReviewers={props.aiReviewers} />
+                    <AiReviewsTable
+                        submission={props.submission}
+                        aiReviewers={props.aiReviewers}
+                    />
                 </div>,
                 portalContainer,
             )}

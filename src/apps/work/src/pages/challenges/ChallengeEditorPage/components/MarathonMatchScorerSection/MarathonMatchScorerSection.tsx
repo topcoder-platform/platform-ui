@@ -9,16 +9,18 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 
 import {
     ChallengePhase,
     CreateMarathonMatchConfigInput,
     MarathonMatchConfig,
+    MarathonMatchConfigType,
     MarathonMatchDefaults,
     MarathonMatchPhaseConfig,
     MarathonMatchTester,
     MarathonMatchTesterSummary,
+    MarathonMatchTestSubmissionResponse,
     UpdateMarathonMatchConfigInput,
 } from '../../../../../lib/models'
 import {
@@ -29,6 +31,7 @@ import {
     fetchTesters,
     rerunMarathonMatchScores,
     updateMarathonMatchConfig,
+    uploadMarathonMatchTestSubmission,
 } from '../../../../../lib/services'
 import {
     showErrorToast,
@@ -111,6 +114,11 @@ interface PhaseOption {
     value: string
 }
 
+interface TestSubmissionPhaseOption {
+    label: string
+    value: MarathonMatchConfigType
+}
+
 interface PhaseConfigCardProps {
     errors: PhaseValidationErrors
     label: string
@@ -127,6 +135,11 @@ interface LoadTesterByIdOptions {
     clearSelectionOnFailure?: boolean
     setBlockingErrorOnFailure?: boolean
     showErrorToast?: boolean
+}
+
+interface CompilationErrorModalProps {
+    onClose: () => void
+    tester: MarathonMatchTester
 }
 
 /**
@@ -197,6 +210,47 @@ const PhaseConfigCard: FC<PhaseConfigCardProps> = (props: PhaseConfigCardProps) 
             </label>
         </div>
     </div>
+)
+
+/**
+ * Displays saved scorer compilation diagnostics for a failed tester build.
+ * @param props Modal visibility, close action, and failed tester details.
+ * @returns The modal body used by `MarathonMatchScorerSection` for FAILED compilation status.
+ */
+const CompilationErrorModal: FC<CompilationErrorModalProps> = (
+    props: CompilationErrorModalProps,
+) => (
+    <BaseModal
+        open
+        onClose={props.onClose}
+        size='lg'
+        title='Compilation Errors'
+        buttons={(
+            <div className={styles.modalActions}>
+                <Button
+                    label='Close'
+                    onClick={props.onClose}
+                    primary
+                    type='button'
+                />
+            </div>
+        )}
+    >
+        <div className={styles.modalContent}>
+            <div className={styles.compilationErrorMeta}>
+                <strong>
+                    {props.tester.name}
+                    {' '}
+                    v
+                    {props.tester.version}
+                </strong>
+                <span>{props.tester.className}</span>
+            </div>
+            <pre className={styles.compilationErrorOutput}>
+                {props.tester.compilationError || 'Compilation failed without an error message.'}
+            </pre>
+        </div>
+    </BaseModal>
 )
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -611,6 +665,41 @@ function buildSaveInput(
     }
 }
 
+/**
+ * Builds test-submission phase choices from saved scorer phase configs.
+ * Used by `MarathonMatchScorerSection` so validation upload only targets runnable saved phases.
+ */
+function getTestSubmissionPhaseOptions(
+    config: MarathonMatchConfig | undefined,
+): TestSubmissionPhaseOption[] {
+    if (!config) {
+        return []
+    }
+
+    return [
+        {
+            label: PHASE_LABELS.example,
+            phaseConfig: config.example,
+            value: PHASE_CONFIG_TYPES.example,
+        },
+        {
+            label: PHASE_LABELS.provisional,
+            phaseConfig: config.provisional,
+            value: PHASE_CONFIG_TYPES.provisional,
+        },
+        {
+            label: PHASE_LABELS.system,
+            phaseConfig: config.system,
+            value: PHASE_CONFIG_TYPES.system,
+        },
+    ]
+        .filter(item => !!item.phaseConfig)
+        .map(item => ({
+            label: item.label,
+            value: item.value as MarathonMatchConfigType,
+        }))
+}
+
 function getPhaseInputKeys(
     phaseKey: PhaseDraftKey,
 ): {
@@ -667,12 +756,18 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [isRerunning, setIsRerunning] = useState<boolean>(false)
+    const [isUploadingTestSubmission, setIsUploadingTestSubmission] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [rerunError, setRerunError] = useState<string | undefined>()
+    const [testSubmissionError, setTestSubmissionError] = useState<string | undefined>()
     const [testerLoadError, setTesterLoadError] = useState<string | undefined>()
+    const [selectedTestSubmissionFile, setSelectedTestSubmissionFile] = useState<File | undefined>()
+    const [testSubmissionConfigType, setTestSubmissionConfigType] = useState<MarathonMatchConfigType>('PROVISIONAL')
+    const [testSubmissionResult, setTestSubmissionResult] = useState<MarathonMatchTestSubmissionResponse | undefined>()
     const [showNewTesterModal, setShowNewTesterModal] = useState<boolean>(false)
     const [showNewVersionModal, setShowNewVersionModal] = useState<boolean>(false)
+    const [showCompilationErrorsModal, setShowCompilationErrorsModal] = useState<boolean>(false)
 
     const phaseOptions = useMemo(
         (): PhaseOption[] => phases
@@ -682,6 +777,10 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             }))
             .filter(option => !!option.value),
         [phases],
+    )
+    const testSubmissionPhaseOptions = useMemo(
+        (): TestSubmissionPhaseOption[] => getTestSubmissionPhaseOptions(config),
+        [config],
     )
 
     const validationErrors = useMemo(
@@ -762,6 +861,22 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
     const handleCloseNewVersionModal = useCallback((): void => {
         setShowNewVersionModal(false)
+    }, [])
+
+    /**
+     * Opens the failed scorer compilation diagnostics modal.
+     * @returns void
+     */
+    const handleOpenCompilationErrorsModal = useCallback((): void => {
+        setShowCompilationErrorsModal(true)
+    }, [])
+
+    /**
+     * Closes the failed scorer compilation diagnostics modal.
+     * @returns void
+     */
+    const handleCloseCompilationErrorsModal = useCallback((): void => {
+        setShowCompilationErrorsModal(false)
     }, [])
 
     const loadTesterById = useCallback(
@@ -990,6 +1105,8 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 setDraft(nextDraft)
                 setSavedSnapshot(nextDraft)
                 setNumericInputs(buildNumericInputState(nextDraft))
+                setTestSubmissionError(undefined)
+                setTestSubmissionResult(undefined)
 
                 if (savedConfig.testerId) {
                     await loadTesterById(savedConfig.testerId, {
@@ -1048,6 +1165,26 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         [handleTesterSelectionChange],
     )
 
+    const handleTestSubmissionPhaseChange = useCallback(
+        (event: ChangeEvent<HTMLSelectElement>): void => {
+            setTestSubmissionConfigType(event.target.value as MarathonMatchConfigType)
+            setTestSubmissionError(undefined)
+            setTestSubmissionResult(undefined)
+        },
+        [],
+    )
+
+    const handleTestSubmissionFileChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>): void => {
+            const nextFile = event.target.files?.[0]
+
+            setSelectedTestSubmissionFile(nextFile)
+            setTestSubmissionError(undefined)
+            setTestSubmissionResult(undefined)
+        },
+        [],
+    )
+
     useEffect(() => {
         phaseListRef.current = phases
     }, [phases])
@@ -1064,6 +1201,9 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         setLoadError(undefined)
         setSaveError(undefined)
         setRerunError(undefined)
+        setTestSubmissionError(undefined)
+        setTestSubmissionResult(undefined)
+        setSelectedTestSubmissionFile(undefined)
         setTesterLoadError(undefined)
         setSelectedTester(undefined)
 
@@ -1204,6 +1344,14 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     ])
 
     useEffect(() => {
+        if (selectedTester?.compilationStatus === 'FAILED') {
+            return
+        }
+
+        setShowCompilationErrorsModal(false)
+    }, [selectedTester?.compilationStatus])
+
+    useEffect(() => {
         clearPollingTimer()
 
         if (selectedTester?.compilationStatus !== 'PENDING') {
@@ -1249,6 +1397,19 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         selectedTester?.id,
     ])
 
+    useEffect(() => {
+        if (testSubmissionPhaseOptions.some(option => option.value === testSubmissionConfigType)) {
+            return
+        }
+
+        setTestSubmissionConfigType(
+            testSubmissionPhaseOptions[0]?.value || 'PROVISIONAL',
+        )
+    }, [
+        testSubmissionConfigType,
+        testSubmissionPhaseOptions,
+    ])
+
     const currentTesterId = draft?.testerId || ''
     const currentVersionTarget = selectedTester
     const currentVersionMax = currentVersionTarget?.name
@@ -1259,6 +1420,58 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         && !hasUnsavedChanges
         && !hasBlockingError
         && !isRerunning
+    const canUploadTestSubmission = !!config
+        && !hasUnsavedChanges
+        && !hasBlockingError
+        && !isUploadingTestSubmission
+        && !!selectedTestSubmissionFile
+        && testSubmissionPhaseOptions.some(option => option.value === testSubmissionConfigType)
+
+    const handleUploadTestSubmission = useCallback(
+        async (): Promise<void> => {
+            if (!canUploadTestSubmission || !selectedTestSubmissionFile) {
+                return
+            }
+
+            setIsUploadingTestSubmission(true)
+            setTestSubmissionError(undefined)
+            setTestSubmissionResult(undefined)
+
+            try {
+                const uploadResponse = await uploadMarathonMatchTestSubmission(
+                    challengeId,
+                    {
+                        configType: testSubmissionConfigType,
+                        file: selectedTestSubmissionFile,
+                    },
+                )
+
+                setTestSubmissionResult(uploadResponse)
+                showSuccessToast('Validation submission queued for scoring')
+            } catch (error) {
+                const errorMessage = getErrorMessage(
+                    error,
+                    'Failed to upload marathon match validation submission',
+                )
+
+                setTestSubmissionError(errorMessage)
+                showErrorToast(errorMessage)
+            } finally {
+                setIsUploadingTestSubmission(false)
+            }
+        },
+        [
+            canUploadTestSubmission,
+            challengeId,
+            selectedTestSubmissionFile,
+            testSubmissionConfigType,
+        ],
+    )
+
+    const handleUploadTestSubmissionClick = useCallback((): void => {
+        handleUploadTestSubmission()
+            .catch(() => undefined)
+    }, [handleUploadTestSubmission])
 
     const handleRerunScores = useCallback(
         async (): Promise<void> => {
@@ -1340,8 +1553,16 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             {selectedTester?.compilationStatus === 'FAILED'
                 ? (
                     <div className={styles.error}>
-                        <strong>Scorer compilation failed.</strong>
-                        <div>{selectedTester.compilationError || 'Compilation failed without an error message.'}</div>
+                        <div className={styles.errorActionRow}>
+                            <strong>Scorer compilation failed.</strong>
+                            <button
+                                className={styles.linkButton}
+                                onClick={handleOpenCompilationErrorsModal}
+                                type='button'
+                            >
+                                View compilation errors
+                            </button>
+                        </div>
                     </div>
                 )
                 : undefined}
@@ -1416,6 +1637,10 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     ? <div className={styles.error}>{rerunError}</div>
                     : undefined}
 
+                {testSubmissionError
+                    ? <div className={styles.error}>{testSubmissionError}</div>
+                    : undefined}
+
                 {selectedTester
                     ? (
                         <div className={styles.summaryGrid}>
@@ -1447,17 +1672,102 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         <div className={styles.rerunActions}>
                             <div>
                                 <h4>Score Operations</h4>
-                                <p>Queue the latest submissions for scoring with the saved scorer config.</p>
+                                <p>Queue validation or latest submissions with the saved scorer config.</p>
                             </div>
-                            <Button
-                                disabled={!canRerunScores}
-                                label={isRerunning ? 'Rerunning...' : 'Rerun scores'}
-                                loading={isRerunning}
-                                onClick={handleRerunScoresClick}
-                                secondary
-                                size='sm'
-                                type='button'
-                            />
+                            <div className={styles.operationPanel}>
+                                <div className={styles.testSubmissionGrid}>
+                                    <label className={styles.fieldGroup}>
+                                        <span>Validation Phase</span>
+                                        <select
+                                            className={styles.selectInput}
+                                            disabled={
+                                                isUploadingTestSubmission
+                                                || testSubmissionPhaseOptions.length === 0
+                                            }
+                                            onChange={handleTestSubmissionPhaseChange}
+                                            value={testSubmissionConfigType}
+                                        >
+                                            {testSubmissionPhaseOptions.length === 0
+                                                ? (
+                                                    <option value={testSubmissionConfigType}>
+                                                        No saved phase configs
+                                                    </option>
+                                                )
+                                                : testSubmissionPhaseOptions.map(option => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </label>
+
+                                    <label className={styles.fieldGroup}>
+                                        <span>Test Submission</span>
+                                        <input
+                                            accept='.zip,application/zip,application/x-zip-compressed'
+                                            disabled={isUploadingTestSubmission}
+                                            onChange={handleTestSubmissionFileChange}
+                                            type='file'
+                                        />
+                                    </label>
+
+                                    <div className={styles.operationButton}>
+                                        <Button
+                                            disabled={!canUploadTestSubmission}
+                                            label={
+                                                isUploadingTestSubmission
+                                                    ? 'Uploading...'
+                                                    : 'Upload test submission'
+                                            }
+                                            loading={isUploadingTestSubmission}
+                                            onClick={handleUploadTestSubmissionClick}
+                                            secondary
+                                            size='sm'
+                                            type='button'
+                                        />
+                                    </div>
+                                </div>
+
+                                {testSubmissionResult
+                                    ? (
+                                        <div className={styles.testSubmissionResult}>
+                                            <span>
+                                                Submission
+                                                {' '}
+                                                {testSubmissionResult.submissionId}
+                                            </span>
+                                            <span>
+                                                Task
+                                                {' '}
+                                                {testSubmissionResult.taskId}
+                                            </span>
+                                            {testSubmissionResult.cloudWatchLogsConsoleUrl
+                                                ? (
+                                                    <a
+                                                        href={testSubmissionResult.cloudWatchLogsConsoleUrl}
+                                                        rel='noreferrer'
+                                                        target='_blank'
+                                                    >
+                                                        CloudWatch logs
+                                                    </a>
+                                                )
+                                                : undefined}
+                                        </div>
+                                    )
+                                    : undefined}
+
+                                <div className={styles.rerunButtonRow}>
+                                    <Button
+                                        disabled={!canRerunScores}
+                                        label={isRerunning ? 'Rerunning...' : 'Rerun scores'}
+                                        loading={isRerunning}
+                                        onClick={handleRerunScoresClick}
+                                        secondary
+                                        size='sm'
+                                        type='button'
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )
                     : undefined}
@@ -1664,6 +1974,15 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         mode='version'
                         onClose={handleCloseNewVersionModal}
                         onCreated={handleTesterCreated}
+                    />
+                )
+                : undefined}
+
+            {showCompilationErrorsModal && selectedTester?.compilationStatus === 'FAILED'
+                ? (
+                    <CompilationErrorModal
+                        onClose={handleCloseCompilationErrorsModal}
+                        tester={selectedTester}
                     />
                 )
                 : undefined}

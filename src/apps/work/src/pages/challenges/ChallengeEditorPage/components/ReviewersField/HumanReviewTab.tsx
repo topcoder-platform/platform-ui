@@ -556,31 +556,6 @@ function getReviewerPhaseId(
 }
 
 /**
- * Returns the next default reviewer row that maps to an unassigned selectable phase.
- *
- * @param params default reviewer metadata and current manual reviewer phase usage.
- * @returns matching default reviewer metadata, or `undefined` when no unused default phase exists.
- */
-function getNextDefaultReviewerForManualRow(params: {
-    assignedPhaseIds: Set<string>
-    defaultReviewers: DefaultReviewer[]
-    phaseNameById: Map<string, string>
-    phases: ChallengeEditorFormData['phases']
-}): DefaultReviewer | undefined {
-    return params.defaultReviewers.find(defaultReviewer => {
-        if (!isMemberReviewer(defaultReviewer)) {
-            return false
-        }
-
-        const phaseId = getReviewerPhaseId(defaultReviewer, params.phases)
-
-        return !!phaseId
-            && !params.assignedPhaseIds.has(phaseId)
-            && isSelectableReviewerPhaseName(params.phaseNameById.get(phaseId), false)
-    })
-}
-
-/**
  * Resolves the stored review opportunity type for a manual reviewer row.
  *
  * Legacy drafts may omit the manual-reviewer `type` field even though work-manager
@@ -688,6 +663,62 @@ function mapDefaultReviewerToReviewer(
             )
             : undefined,
     }
+}
+
+/**
+ * Selects the default reviewer metadata used when adding the next manual
+ * reviewer card.
+ *
+ * @param params.defaultReviewers default reviewer rows for the selected challenge type and track.
+ * @param params.phases current challenge phases used to resolve legacy defaults without a phase id.
+ * @param params.phaseNameById current challenge phase names keyed by phase id.
+ * @param params.reviewers existing manual reviewer rows already shown in the human review tab.
+ * @param params.allowAppealPhases whether appeal phases are valid manual reviewer phases.
+ * @returns the first member-review default for a selectable phase, or `undefined` to use fallback defaults.
+ * @remarks Used by `HumanReviewTab` so environment-specific default-reviewer rows for unrelated phases are skipped.
+ * @throws Does not throw.
+ */
+function getNextDefaultReviewer(params: {
+    allowAppealPhases: boolean
+    defaultReviewers: DefaultReviewer[]
+    phaseNameById: Map<string, string>
+    phases: ChallengeEditorFormData['phases']
+    reviewers: Reviewer[]
+}): DefaultReviewer | undefined {
+    const memberDefaultReviewers = params.defaultReviewers.filter(reviewer => isMemberReviewer(reviewer))
+    const assignedPhaseIds = new Set(
+        params.reviewers
+            .map(reviewer => normalizeText(reviewer.phaseId))
+            .filter(Boolean),
+    )
+    const currentPhaseIds = new Set(
+        (Array.isArray(params.phases)
+            ? params.phases
+            : [])
+            .map(phase => getChallengePhaseId(phase))
+            .filter(Boolean),
+    )
+    const getSelectableDefaultPhaseId = (defaultReviewer: DefaultReviewer): string => {
+        const configuredPhaseId = normalizeText(defaultReviewer.phaseId)
+        const defaultPhaseId = configuredPhaseId
+            ? (currentPhaseIds.has(configuredPhaseId) ? configuredPhaseId : '')
+            : normalizeText(getReviewerPhaseId(defaultReviewer, params.phases))
+        const defaultPhaseName = params.phaseNameById.get(defaultPhaseId)
+
+        return defaultPhaseId
+            && defaultPhaseName
+            && isSelectableReviewerPhaseName(defaultPhaseName, params.allowAppealPhases)
+            ? defaultPhaseId
+            : ''
+    }
+
+    const unassignedDefaultReviewer = memberDefaultReviewers.find(defaultReviewer => {
+        const defaultPhaseId = getSelectableDefaultPhaseId(defaultReviewer)
+
+        return defaultPhaseId && !assignedPhaseIds.has(defaultPhaseId)
+    })
+
+    return unassignedDefaultReviewer
 }
 
 function getSelectValue(selected: unknown): string {
@@ -1741,18 +1772,23 @@ export const HumanReviewTab: FC = () => {
                 .map(reviewer => normalizeText(reviewer.phaseId))
                 .filter(Boolean),
         )
-        const defaultReviewer = getNextDefaultReviewerForManualRow({
-            assignedPhaseIds,
+        const defaultReviewer = getNextDefaultReviewer({
+            allowAppealPhases,
             defaultReviewers,
             phaseNameById,
             phases,
+            reviewers: reviewerRows,
         })
         const reviewerFromDefaults = mapDefaultReviewerToReviewer(
             defaultReviewer,
             phases,
         )
-        const phaseId = (defaultReviewer ? reviewerFromDefaults.phaseId : undefined)
-            || getFallbackReviewerPhaseId(phases, assignedPhaseIds)
+        const defaultPhaseId = defaultReviewer
+            ? reviewerFromDefaults.phaseId
+            : undefined
+        const phaseId = defaultPhaseId && !assignedPhaseIds.has(defaultPhaseId)
+            ? defaultPhaseId
+            : getFallbackReviewerPhaseId(phases, assignedPhaseIds)
         const roleIdForResolvedPhase = resolveRoleIdForPhase(phaseId)
 
         formContext.setValue('reviewers', [
@@ -1767,6 +1803,7 @@ export const HumanReviewTab: FC = () => {
             shouldValidate: true,
         })
     }, [
+        allowAppealPhases,
         defaultReviewers,
         allReviewerRows,
         formContext,

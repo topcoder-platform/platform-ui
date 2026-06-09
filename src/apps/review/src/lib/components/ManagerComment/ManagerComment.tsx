@@ -17,8 +17,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { MarkdownReview } from '../MarkdownReview'
 import { FieldMarkdownEditor } from '../FieldMarkdownEditor'
 import { FormManagerComment, ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../models'
-import { formManagerCommentSchema } from '../../utils'
-import { QUESTION_YES_NO_OPTIONS } from '../../../config/index.config'
+import { formManagerCommentSchema, getScoreResponseOptions } from '../../utils'
 
 import styles from './ManagerComment.module.scss'
 
@@ -69,28 +68,9 @@ export const ManagerComment: FC<Props> = (props: Props) => {
         )
     }, [addManagerComment, reviewItem])
 
-    const responseOptions = useMemo<SelectOption[]>(() => {
-        if (scorecardQuestion.type === 'SCALE') {
-            const length
-                = scorecardQuestion.scaleMax
-                - scorecardQuestion.scaleMin
-                + 1
-            return Array.from(
-                new Array(length),
-                (x, i) => `${i + scorecardQuestion.scaleMin}`,
-            )
-                .map(item => ({
-                    label: item,
-                    value: item,
-                }))
-        }
-
-        if (scorecardQuestion.type === 'YES_NO') {
-            return QUESTION_YES_NO_OPTIONS
-        }
-
-        return []
-    }, [scorecardQuestion])
+    const responseOptions = useMemo<SelectOption[]>(() => (
+        getScoreResponseOptions(scorecardQuestion)
+    ), [scorecardQuestion])
 
     useEffect(() => {
         if (reviewItem.managerComment) {

@@ -824,6 +824,90 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('adds the next selectable default reviewer phase for one-round design challenges', async () => {
+        mockedFetchDefaultReviewers.mockResolvedValue([
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-review',
+                scorecardId: 'checkpoint-review-scorecard',
+                shouldOpenOpportunity: true,
+            },
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'screening',
+                scorecardId: 'screening-scorecard',
+                shouldOpenOpportunity: true,
+            },
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review',
+                scorecardId: 'review-scorecard',
+                shouldOpenOpportunity: false,
+            },
+        ])
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'screening-scorecard',
+                name: 'Screening scorecard',
+                phaseId: 'screening',
+            },
+            {
+                id: 'review-scorecard',
+                name: 'Review scorecard',
+                phaseId: 'review',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'screening',
+                            name: 'Screening',
+                            phaseId: 'screening',
+                        },
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening',
+                            roleId: 'role-1',
+                            scorecardId: 'screening-scorecard',
+                            shouldOpenOpportunity: true,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.1.phaseId')
+                .getAttribute('data-value'))
+                .toBe('review')
+        })
+        expect(screen.getByTestId('reviewers.1.scorecardId')
+            .getAttribute('data-value'))
+            .toBe('review-scorecard')
+    })
+
     it('adds single-round design reviewers on the approval phase when default metadata is stale', async () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             tracks: [
@@ -915,7 +999,10 @@ describe('HumanReviewTab', () => {
         expect(screen.getByTestId('role-id-value').textContent)
             .toBe('role-approver')
         expect(screen.getByTestId('scorecard-id-value').textContent)
-            .toBe('scorecard-approval')
+            .toBe('')
+        expect(screen.getByTestId('reviewers.0.scorecardId')
+            .getAttribute('data-options'))
+            .toContain('Approval scorecard')
     })
 
     it('adds the missing approval reviewer when design default reviewers fail to load', async () => {

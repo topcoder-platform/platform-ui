@@ -27,7 +27,10 @@ import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
     isContestSubmissionType,
 } from '../constants'
-import { buildChallengeResultSubmissionSource } from '../utils/challengeResultSubmissions'
+import {
+    buildChallengeResultSubmissionSource,
+    getSubmissionFinalScoreCandidate,
+} from '../utils/challengeResultSubmissions'
 import { submissionMatchesWinner } from '../utils/winnerMatching'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
@@ -181,9 +184,7 @@ const buildProjectResult = ({
         const fallbackReviews = submission?.reviews ?? []
         const mappedReviews = reviewsBySubmissionId.get(submission.id) ?? fallbackReviews
         const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
-        const aggregateScoreCandidate = toFiniteNumber(submission?.aggregateScore)
-        const finalScoreCandidate = aggregateScoreCandidate
-            ?? toFiniteNumber(submission?.review?.finalScore)
+        const finalScoreCandidate = getSubmissionFinalScoreCandidate(submission)
         const computedFinalScore = computeFinalScore(orderedReviews, finalScoreCandidate)
         const initialScoreCandidate = toFiniteNumber(submission?.review?.initialScore)
         const computedInitialScore = initialScoreCandidate ?? computedFinalScore

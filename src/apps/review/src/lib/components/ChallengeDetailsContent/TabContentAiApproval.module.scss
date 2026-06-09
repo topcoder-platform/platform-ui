@@ -1,0 +1,208 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.approvalHint {
+    font-size: 14px;
+    color: var(--GrayFontColor);
+    margin-bottom: $sp-4;
+    padding: 0 $sp-2;
+}
+
+.submissionId {
+    font-family: monospace;
+    font-weight: 600;
+    color: $link-blue-dark;
+}
+
+.scoreValue {
+    font-weight: 600;
+    color: var(--black-100);
+}
+
+// Status badges
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.statusPending {
+    background-color: $orange-25;
+    color: $orange-140;
+}
+
+.statusPassed {
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusFailed {
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.statusError {
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.statusOverride {
+    background-color: $purple-25;
+    color: $purple-100;
+    cursor: default;
+}
+
+// Actions cell
+.actionsCell {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.editButton {
+    padding: $sp-1 $sp-2;
+    border: 1px solid $link-blue-dark;
+    border-radius: 4px;
+    background: white;
+    color: $link-blue-dark;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        background: $blue-10;
+    }
+}
+
+.editButtonActive {
+    background: $black-10;
+    border-color: $black-40;
+    color: $black-80;
+
+    &:hover {
+        background: $black-20;
+    }
+}
+
+.saveButton {
+    padding: $sp-1 $sp-3;
+    background: $green-1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover:not(:disabled) {
+        background: $green-140;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+// Expand content wrapper
+.expandContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+// Manager comment display
+.managerCommentDisplay {
+    display: flex;
+    gap: $sp-2;
+    padding: $sp-2 $sp-3;
+    background: $orange-25;
+    border-radius: 4px;
+    border-left: 3px solid $orange-100;
+}
+
+.managerCommentLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: $orange-100;
+    white-space: nowrap;
+}
+
+.managerCommentText {
+    font-size: 13px;
+    color: var(--black-100);
+    white-space: pre-wrap;
+}
+
+// Confirmation modal
+.confirmContent {
+    p {
+        margin-bottom: $sp-4;
+        font-size: 14px;
+        color: var(--black-100);
+    }
+}
+
+.confirmComment {
+    margin-top: $sp-2;
+}
+
+.confirmError {
+    margin: $sp-1 0 0;
+    font-size: 12px;
+    color: $red-100;
+}
+
+.inputLabel {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--GrayFontColor);
+}
+
+.commentInput {
+    width: 100%;
+    padding: $sp-2;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+
+    &:focus {
+        outline: none;
+        border-color: $link-blue-dark;
+        box-shadow: 0 0 0 2px rgba(13, 105, 212, 0.15);
+    }
+
+    &::placeholder {
+        color: $black-40;
+    }
+}
+
+// AI Reviews expandable section
+.aiReviews {
+    :global(.trigger) {
+        width: fit-content;
+        margin-left: auto;
+    }
+
+    :global(.reviews-table) {
+        margin-left: auto;
+        width: 100%;
+        margin-bottom: -9px;
+    }
+}

@@ -51,6 +51,7 @@ export interface AiReviewDecisionBreakdownWorkflow {
     runId: string | null
     runStatus: string | null
     runScore: number | null
+    managerComment?: string | null
 }
 
 export interface AiReviewDecisionBreakdown {
@@ -73,6 +74,7 @@ export interface AiReviewDecision {
     breakdown: AiReviewDecisionBreakdown | null
     isFinal: boolean
     finalizedAt: string | null
+    managerComment: string | null
     createdAt: string
     updatedAt: string
     escalations?: AiReviewDecisionEscalation[]

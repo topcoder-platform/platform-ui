@@ -70,4 +70,6 @@ export interface Submission {
     status?: SubmissionStatus
     submissionTime?: string
     type?: string
+    initialScore?: string
+    finalScore?: string
 }

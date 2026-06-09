@@ -156,6 +156,28 @@ export interface MarathonMatchRerunResponse {
 }
 
 /**
+ * Payload used to upload one Marathon Match validation submission.
+ * Used by the scorer section to queue a pre-launch ECS scoring run.
+ */
+export interface MarathonMatchTestSubmissionInput {
+    configType: MarathonMatchConfigType
+    file: File
+}
+
+/**
+ * Response returned after uploading one Marathon Match validation submission.
+ * Used by the scorer section to show the created submission and queued ECS task.
+ */
+export interface MarathonMatchTestSubmissionResponse {
+    challengeId: string
+    cloudWatchLogsConsoleUrl?: string
+    configType: MarathonMatchConfigType
+    submissionId: string
+    taskArn: string
+    taskId: string
+}
+
+/**
  * Payload for creating a new marathon match scorer configuration.
  * Used by POST /challenge/:challengeId requests.
  */

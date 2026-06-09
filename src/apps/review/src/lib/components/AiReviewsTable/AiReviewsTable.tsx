@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /* eslint-disable max-len */
 import { FC, MouseEvent as ReactMouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -47,6 +48,7 @@ interface AiReviewsTableProps {
 interface AiReviewerRow {
     id: string
     isGating?: boolean
+    initialScore?: number
     minScore?: number
     reviewDate?: string
     run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'>
@@ -254,6 +256,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
             return {
                 id: workflowId,
+                initialScore: run?.initialScore,
                 isGating: fromDecision?.isGating ?? configured?.isGating,
                 minScore,
                 reviewDate: run?.completedAt,
@@ -415,7 +418,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
             {/* Locked submission with escalation/approval notes: show yellow notes banner */}
             {currentDecision?.submissionLocked && hasDecisionNotes && (
-                <div className={styles.escalationNotesBanner}>
+                <div className={styles.notesBanner}>
                     <IconOutline.InformationCircleIcon className='icon-xl' />
                     <div>
                         <div className={styles.notesTitle}>Review Activity Notes</div>
@@ -504,11 +507,18 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.value}>
                                 {typeof row.score === 'number' ? (
                                     row.workflowId ? (
-                                        <Link
-                                            to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
-                                        >
-                                            {formatScore(row.score)}
-                                        </Link>
+                                        <>
+                                            <Link
+                                                to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                            >
+                                                {formatScore(row.score)}
+                                            </Link>
+                                            {row.initialScore !== null && row.initialScore !== undefined && (
+                                                <span className={styles.overriddenScore}>
+                                                    <span className={styles.overrideLabel}>(overriden)</span>
+                                                </span>
+                                            )}
+                                        </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
                             </div>
@@ -614,11 +624,18 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <td className={styles.scoreCol}>
                                 {typeof row.score === 'number' ? (
                                     row.workflowId ? (
-                                        <Link
-                                            to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
-                                        >
-                                            {formatScore(row.score)}
-                                        </Link>
+                                        <>
+                                            <Link
+                                                to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                            >
+                                                {formatScore(row.score)}
+                                            </Link>
+                                            {row.initialScore !== null && row.initialScore !== undefined && (
+                                                <span className={styles.overriddenScore}>
+                                                    <span className={styles.overrideLabel}>(overriden)</span>
+                                                </span>
+                                            )}
+                                        </>
                                     ) : formatScore(row.score)
                                 ) : '-'}
                             </td>
