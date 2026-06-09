@@ -154,13 +154,14 @@ export function useFetchAiWorkflowsRuns(
         orderBy(
             runs,
             [
-                (run) => run.startedAt ?? '',
-                (run) => run.completedAt ?? '',
+                run => run.startedAt ?? '',
+                run => run.completedAt ?? '',
             ],
             ['desc', 'desc'],
         ),
         'workflow.id',
-    ).reverse()
+    )
+        .reverse()
 
     return {
         isLoading,
