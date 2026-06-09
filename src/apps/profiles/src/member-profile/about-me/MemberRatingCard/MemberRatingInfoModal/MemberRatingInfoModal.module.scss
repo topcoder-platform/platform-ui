@@ -102,8 +102,11 @@
     @include ltesm {
         border-left: 0;
         border-top: 1px solid $black-10;
+        flex-direction: row;
+        flex-wrap: nowrap;
         gap: $sp-4;
         grid-column: 1 / -1;
+        justify-content: center;
     }
 }
 
