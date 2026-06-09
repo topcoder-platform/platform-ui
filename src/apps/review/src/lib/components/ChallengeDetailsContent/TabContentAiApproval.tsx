@@ -221,9 +221,9 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                                 type='button'
                                 className={styles.editButton}
                                 onClick={handleViewScorecard(row.submission.id, workflowId)}
-                                title='View scorecard'
+                                title='Edit scorecard'
                             >
-                                View scorecard
+                                Edit scorecard
                             </button>
                         </div>
                     )
@@ -278,7 +278,7 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 {canEdit && (
                     <>
                         {' '}
-                        Click View scorecard to inspect workflow scores.
+                        Click Edit scorecard to inspect workflow scores.
                     </>
                 )}
             </p>
