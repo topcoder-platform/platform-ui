@@ -2,6 +2,7 @@ import type { UserStats, UserStatsDistributionResponse } from '~/libs/core'
 
 import {
     calculateTopPercentileFromDistribution,
+    formatTopPercentile,
     getCompactRatingColor,
     getLatestProfileRating,
     getPreferredRolesDisplay,
@@ -130,6 +131,20 @@ describe('calculateTopPercentileFromDistribution', () => {
             .toBeUndefined()
         expect(calculateTopPercentileFromDistribution({}, 1500))
             .toBeUndefined()
+    })
+})
+
+describe('formatTopPercentile', () => {
+    it('shows top one percent for positive percentages that would round to zero', () => {
+        expect(formatTopPercentile(0.4))
+            .toBe('1')
+    })
+
+    it('keeps normal whole-number rounding for visible top percentages', () => {
+        expect(formatTopPercentile(12.4))
+            .toBe('12')
+        expect(formatTopPercentile(12.5))
+            .toBe('13')
     })
 })
 

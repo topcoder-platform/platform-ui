@@ -261,6 +261,19 @@ export const calculateTopPercentileFromDistribution = (
 }
 
 /**
+ * Formats the compact rating card's visible top percentage.
+ *
+ * @param {number} percentile - Top percentage calculated from the rating distribution.
+ * @returns {string} Rounded whole percentage, with positive values clamped to at least 1.
+ * @throws Does not throw.
+ */
+export const formatTopPercentile = (percentile: number): string => {
+    const roundedPercentile = Math.round(percentile)
+
+    return `${percentile > 0 ? Math.max(roundedPercentile, 1) : roundedPercentile}`
+}
+
+/**
  * Returns the rating text color for the dark compact profile rating card.
  *
  * The shared grey rating color is too dark against the compact card background,

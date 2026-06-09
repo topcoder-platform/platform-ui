@@ -13,10 +13,11 @@ import {
 import { Tooltip } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../../components'
-import { getPreferredRolesText, numberToFixed } from '../../../lib'
+import { getPreferredRolesText } from '../../../lib'
 
 import {
     calculateTopPercentileFromDistribution,
+    formatTopPercentile,
     getCompactRatingColor,
     getLatestProfileRating,
     getPreferredRolesDisplay,
@@ -34,16 +35,6 @@ interface MemberRatingCardProps {
     mutatePersonalizationTraits: () => void
     profile: UserProfile
 }
-
-/**
- * Formats percentile values for the compact rating card.
- *
- * @param {number} percentile - The percentile value calculated from the rating distribution.
- * @returns {string} A display-ready percentage without unnecessary decimal places.
- */
-const formatPercentile = (percentile: number): string => (
-    numberToFixed(percentile, 0)
-)
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
@@ -71,7 +62,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     ), [rating, ratingDistribution])
     const audienceLabel: string = getRatingAudienceLabel(memberStats)
     const percentileLabel: string | undefined = maxPercentile
-        ? `Top ${formatPercentile(maxPercentile)}%`
+        ? `Top ${formatTopPercentile(maxPercentile)}%`
         : undefined
     const canEditPreferredRoles: boolean = props.authProfile?.handle === props.profile.handle
     const preferredRolesText: string = useMemo(
