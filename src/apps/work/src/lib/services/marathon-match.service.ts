@@ -22,6 +22,8 @@ import {
     MarathonMatchScoreDirection,
     MarathonMatchTester,
     MarathonMatchTesterSummary,
+    MarathonMatchTestSubmissionInput,
+    MarathonMatchTestSubmissionResponse,
     UpdateMarathonMatchConfigInput,
 } from '../models'
 
@@ -39,6 +41,8 @@ export interface FetchTestersParams {
     page?: number
     perPage?: number
 }
+
+type TestSubmissionResponseConfigType = MarathonMatchTestSubmissionResponse['configType']
 
 function normalizeText(value: unknown): string | undefined {
     if (value === undefined || value === null) {
@@ -468,6 +472,40 @@ function normalizeMarathonMatchRerunResponse(
 }
 
 /**
+ * Normalizes a raw validation submission upload response.
+ * @param response Raw response from POST /challenge/:challengeId/test-submission.
+ * @returns Normalized upload response when required fields are present; otherwise `undefined`.
+ * Used by `uploadMarathonMatchTestSubmission` before resolving the API call.
+ */
+function normalizeMarathonMatchTestSubmissionResponse(
+    response: unknown,
+): MarathonMatchTestSubmissionResponse | undefined {
+    if (typeof response !== 'object' || !response) {
+        return undefined
+    }
+
+    const typedResponse = response as Record<string, unknown>
+    const challengeId = normalizeText(typedResponse.challengeId)
+    const configType = normalizeText(typedResponse.configType) as TestSubmissionResponseConfigType | undefined
+    const submissionId = normalizeText(typedResponse.submissionId)
+    const taskArn = normalizeText(typedResponse.taskArn)
+    const taskId = normalizeText(typedResponse.taskId)
+
+    if (!challengeId || !configType || !submissionId || !taskArn || !taskId) {
+        return undefined
+    }
+
+    return {
+        challengeId,
+        cloudWatchLogsConsoleUrl: normalizeText(typedResponse.cloudWatchLogsConsoleUrl),
+        configType,
+        submissionId,
+        taskArn,
+        taskId,
+    }
+}
+
+/**
  * Extracts tester-list pagination metadata from the response payload.
  * Used by `fetchTesters` to keep paging resilient when header metadata is absent.
  */
@@ -660,6 +698,46 @@ export async function rerunMarathonMatchScores(
         return normalizedResponse
     } catch (error) {
         throw normalizeError(error, 'Failed to rerun marathon match scores')
+    }
+}
+
+/**
+ * Uploads a test submission and queues scorer validation for a marathon match challenge.
+ * @param challengeId Challenge identifier used in the validation upload route path.
+ * @param input File and phase configuration type to score.
+ * @returns Created validation submission id and queued ECS task details.
+ * @throws Error When the API request fails or returns an invalid validation upload response.
+ * Used by `MarathonMatchScorerSection` before challenge launch.
+ */
+export async function uploadMarathonMatchTestSubmission(
+    challengeId: string,
+    input: MarathonMatchTestSubmissionInput,
+): Promise<MarathonMatchTestSubmissionResponse> {
+    const formData = new FormData()
+
+    formData.append('configType', input.configType)
+    formData.append('fileName', input.file.name)
+    formData.append('file', input.file, input.file.name)
+
+    try {
+        const response = await xhrPostAsync<FormData, unknown>(
+            `${MARATHON_MATCH_API_URL}/challenge/${encodeURIComponent(challengeId.trim())}/test-submission`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        )
+        const normalizedResponse = normalizeMarathonMatchTestSubmissionResponse(response)
+
+        if (!normalizedResponse) {
+            throw new Error('Marathon match validation upload response was invalid')
+        }
+
+        return normalizedResponse
+    } catch (error) {
+        throw normalizeError(error, 'Failed to upload marathon match validation submission')
     }
 }
 
