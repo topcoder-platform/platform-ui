@@ -5,8 +5,8 @@ import {
     useMemo,
 } from 'react'
 import {
-    useController,
     useFormContext,
+    useWatch,
 } from 'react-hook-form'
 import type {
     UseFormReturn,
@@ -36,7 +36,7 @@ type PrizeType = 'USD' | 'POINT'
 
 interface CheckpointPrizesFieldProps {
     disabled?: boolean
-    name: string
+    name: 'prizeSets'
 }
 
 function createCheckpointPrizeSet(
@@ -83,21 +83,43 @@ export const CheckpointPrizesField: FC<CheckpointPrizesFieldProps> = (
 ) => {
     const formContext: UseFormReturn<ChallengeEditorFormData> = useFormContext<ChallengeEditorFormData>()
     const control = formContext.control
+    const getValues = formContext.getValues
     const setValue = formContext.setValue
-    const prizeSetsController = useController({
+    const watchedPrizeSets = useWatch<ChallengeEditorFormData, 'prizeSets'>({
         control,
-        name: props.name as never,
+        name: props.name,
     })
-    const field = prizeSetsController.field
 
     const prizeSets = useMemo<PrizeSet[]>(
-        () => (Array.isArray(field.value) ? field.value : []),
-        [field.value],
+        () => (Array.isArray(watchedPrizeSets) ? watchedPrizeSets : []),
+        [watchedPrizeSets],
     )
     const currentPrizeType = getPrizeType(prizeSets)
     const checkpointPrizeSet = prizeSets.find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.CHECKPOINT)
-    const checkpointPrizeCount = checkpointPrizeSet?.prizes?.length || DEFAULT_CHECKPOINT_PRIZE_COUNT
     const checkpointPrizeAmount = Number(checkpointPrizeSet?.prizes?.[0]?.value) || DEFAULT_CHECKPOINT_PRIZE
+
+    /**
+     * Reads the latest prize sets from the form store before writing checkpoint changes.
+     *
+     * Placement prizes update nested paths directly, so the checkpoint field must not reuse an
+     * older array snapshot when it replaces the checkpoint prize set.
+     *
+     * @returns Current form prize sets, or an empty array when the field is unset.
+     * @throws Does not throw.
+     */
+    const getCurrentPrizeSets = useCallback(
+        (): PrizeSet[] => {
+            const currentPrizeSets = getValues(props.name)
+
+            return Array.isArray(currentPrizeSets)
+                ? currentPrizeSets
+                : []
+        },
+        [
+            getValues,
+            props.name,
+        ],
+    )
 
     const countOptions = useMemo<FormSelectOption[]>(
         () => Array.from({
@@ -114,23 +136,23 @@ export const CheckpointPrizesField: FC<CheckpointPrizesFieldProps> = (
             return
         }
 
+        const currentPrizeSets = getCurrentPrizeSets()
         const nextPrizeSets = upsertCheckpointPrizeSet(
-            prizeSets,
+            currentPrizeSets,
             createCheckpointPrizeSet(
-                currentPrizeType,
+                getPrizeType(currentPrizeSets),
                 DEFAULT_CHECKPOINT_PRIZE,
                 DEFAULT_CHECKPOINT_PRIZE_COUNT,
             ),
         )
 
-        setValue(props.name as never, nextPrizeSets as never, {
+        setValue(props.name, nextPrizeSets, {
             shouldDirty: false,
             shouldValidate: true,
         })
     }, [
         checkpointPrizeSet,
-        currentPrizeType,
-        prizeSets,
+        getCurrentPrizeSets,
         props.name,
         setValue,
     ])
@@ -163,40 +185,51 @@ export const CheckpointPrizesField: FC<CheckpointPrizesFieldProps> = (
                 ? parsedCount
                 : DEFAULT_CHECKPOINT_PRIZE_COUNT
 
+            const currentPrizeSets = getCurrentPrizeSets()
+            const currentCheckpointPrizeSet = currentPrizeSets
+                .find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.CHECKPOINT)
+            const currentCheckpointPrizeAmount = Number(currentCheckpointPrizeSet?.prizes?.[0]?.value)
+                || DEFAULT_CHECKPOINT_PRIZE
+
             return upsertCheckpointPrizeSet(
-                prizeSets,
+                currentPrizeSets,
                 createCheckpointPrizeSet(
-                    currentPrizeType,
-                    checkpointPrizeAmount,
+                    getPrizeType(currentPrizeSets),
+                    currentCheckpointPrizeAmount,
                     nextCount,
                 ),
             )
         },
         [
-            checkpointPrizeAmount,
-            currentPrizeType,
-            prizeSets,
+            getCurrentPrizeSets,
         ],
     )
 
     const handleAmountChange = useCallback(
         (nextAmount: number): void => {
+            const currentPrizeSets = getCurrentPrizeSets()
+            const currentCheckpointPrizeSet = currentPrizeSets
+                .find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.CHECKPOINT)
+            const currentCheckpointPrizeCount = currentCheckpointPrizeSet?.prizes?.length
+                || DEFAULT_CHECKPOINT_PRIZE_COUNT
             const nextPrizeSets = upsertCheckpointPrizeSet(
-                prizeSets,
+                currentPrizeSets,
                 createCheckpointPrizeSet(
-                    currentPrizeType,
+                    getPrizeType(currentPrizeSets),
                     nextAmount,
-                    checkpointPrizeCount,
+                    currentCheckpointPrizeCount,
                 ),
             )
 
-            field.onChange(nextPrizeSets)
+            setValue(props.name, nextPrizeSets, {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
         },
         [
-            checkpointPrizeCount,
-            currentPrizeType,
-            field,
-            prizeSets,
+            getCurrentPrizeSets,
+            props.name,
+            setValue,
         ],
     )
 
