@@ -424,7 +424,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
             {/* Locked submission with escalation/approval notes: show yellow notes banner */}
             {currentDecision?.submissionLocked && hasDecisionNotes && (
-                <div className={styles.escalationNotesBanner}>
+                <div className={styles.notesBanner}>
                     <IconOutline.InformationCircleIcon className='icon-xl' />
                     <div>
                         <div className={styles.notesTitle}>Review Activity Notes</div>
