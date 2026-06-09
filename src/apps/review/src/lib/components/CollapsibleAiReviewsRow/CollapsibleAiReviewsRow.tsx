@@ -7,16 +7,13 @@ import { IconOutline, Tooltip } from '~/libs/ui'
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
 import {
     AiReviewDecision,
-    AiReviewDecisionEscalation,
     AiReviewDecisionStatus,
-    BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
 import { ChallengeDetailContext } from '../../contexts'
 import { AiScoreFormulaTooltip } from '../AiScoreFormulaTooltip'
 import { formatScore } from '../AiScoreFormulaTooltip/AiScoreFormulaTooltip'
-import { aiRunFailed, useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
@@ -66,18 +63,6 @@ export function normalizeDecisionStatus(
     }
 
     return 'pending'
-}
-
-/**
- * Resolves a memberId to a display handle using the resourceMemberIdMapping.
- * Falls back to the raw id string if no match is found.
- */
-function resolveHandle(
-    memberId: string | null | undefined,
-    resourceMemberIdMapping: Record<string, BackendResource>,
-): string {
-    if (!memberId) return ''
-    return resourceMemberIdMapping[memberId]?.memberHandle ?? memberId
 }
 
 interface ScoreBadgeProps {
