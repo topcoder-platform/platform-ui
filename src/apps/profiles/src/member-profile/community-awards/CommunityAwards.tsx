@@ -37,8 +37,13 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
         setIsAwardsExpanded(false)
     }, [props.profile?.userId])
 
-    function handleAwardsExpandClick(): void {
-        setIsAwardsExpanded(true)
+    /**
+     * Toggles the awards section between the collapsed four-badge preview and
+     * the expanded list. It is used by the more/less control, takes no
+     * parameters, returns nothing, and does not raise exceptions.
+     */
+    function handleAwardsToggleClick(): void {
+        setIsAwardsExpanded(isExpanded => !isExpanded)
     }
 
     function handleMemberBadgeModalClose(): void {
@@ -82,13 +87,15 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
                 }
             </div>
 
-            {!isAwardsExpanded && additionalBadgeCount > 0 && (
+            {additionalBadgeCount > 0 && (
                 <button
                     className={styles.moreBadgesButton}
-                    onClick={handleAwardsExpandClick}
+                    onClick={handleAwardsToggleClick}
                     type='button'
                 >
-                    {`+ ${additionalBadgeCount} more ${additionalBadgeCount === 1 ? 'badge' : 'badges'}`}
+                    {isAwardsExpanded
+                        ? 'See less'
+                        : `+ ${additionalBadgeCount} more ${additionalBadgeCount === 1 ? 'badge' : 'badges'}`}
                 </button>
             )}
 
