@@ -1,15 +1,21 @@
 .editor {
-    height: 420px;
     min-height: 280px;
-    overflow: hidden;
-    resize: vertical;
-
-    :global(.EasyMDEContainer) {
-        min-height: 280px;
-    }
 }
 
 .editor .markdownEditor {
-    height: 100%;
+    height: auto;
     min-height: 280px;
+
+    :global(.EasyMDEContainer) {
+        height: auto;
+        min-height: 280px;
+    }
+
+    :global(.EasyMDEContainer .CodeMirror.CodeMirror-wrap) {
+        flex: none;
+        height: 340px;
+        min-height: 180px;
+        overflow: hidden;
+        resize: vertical;
+    }
 }
