@@ -252,6 +252,7 @@ interface TestHarnessProps {
     restoreStaleScorecardId?: boolean
     showAdditionalMemberIdsValue?: boolean
     showMemberValue?: boolean
+    showPublicOpportunityValue?: boolean
     showRoleValue?: boolean
     showRoleValueIndex?: number
     showScorecardValue?: boolean
@@ -429,6 +430,13 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
                 ? (
                     <div data-testid='member-id-value'>
                         {formMethods.watch('reviewers.0.memberId') || ''}
+                    </div>
+                )
+                : undefined}
+            {props.showPublicOpportunityValue
+                ? (
+                    <div data-testid='public-opportunity-value'>
+                        {String(formMethods.watch('reviewers.0.shouldOpenOpportunity'))}
                     </div>
                 )
                 : undefined}
@@ -797,6 +805,66 @@ describe('HumanReviewTab', () => {
             ).checked)
                 .toBe(true)
         })
+    })
+
+    it('disables and clears public review opportunity for design manual reviewers', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'track-1',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedFetchDefaultReviewers.mockResolvedValue([
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'phase-1',
+                roleId: 'role-1',
+                scorecardId: 'scorecard-1',
+                shouldOpenOpportunity: true,
+            },
+        ])
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-1',
+                name: 'Scorecard 1',
+                phaseId: 'phase-1',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [],
+                }}
+                showPublicOpportunityValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        const checkbox = await screen.findByRole('checkbox', {
+            name: 'Open public review opportunity',
+        }) as HTMLInputElement
+
+        expect(checkbox.checked)
+            .toBe(false)
+        expect(checkbox.disabled)
+            .toBe(true)
+        await waitFor(() => {
+            expect(screen.getByTestId('public-opportunity-value').textContent)
+                .toBe('false')
+        })
+        expect(screen.getByTestId('reviewers.0.memberId'))
+            .not.toBeNull()
     })
 
     it('defaults new manual reviewer cards to regular review type', async () => {

@@ -762,6 +762,7 @@ function getErrorMessage(error: unknown, fallbackMessage: string): string {
 }
 
 interface PublicOpportunityCheckboxFieldProps {
+    disabled?: boolean
     name: string
     onChange?: (checked: boolean) => void
 }
@@ -775,10 +776,14 @@ const PublicOpportunityCheckboxField: FC<PublicOpportunityCheckboxFieldProps> = 
         name: props.name,
     })
     const field = controller.field
-    const checked = field.value === true
+    const checked = !props.disabled && field.value === true
 
     const handleChange = useCallback(
         (event: ChangeEvent<HTMLInputElement>): void => {
+            if (props.disabled) {
+                return
+            }
+
             const nextValue = event.target.checked
             field.onChange(nextValue)
             props.onChange?.(nextValue)
@@ -798,6 +803,7 @@ const PublicOpportunityCheckboxField: FC<PublicOpportunityCheckboxFieldProps> = 
                 <input
                     checked={checked}
                     className={styles.publicOpportunityInput}
+                    disabled={props.disabled}
                     id={props.name}
                     name={field.name}
                     onBlur={field.onBlur}
@@ -1020,6 +1026,7 @@ export const HumanReviewTab: FC = () => {
         },
         [challengeTracks, normalizedTrackId],
     )
+    const isDesignTrackSelected = selectedScorecardTrack === 'DESIGN'
     const selectedScorecardType = useMemo(
         (): string => {
             if (!normalizedTypeId) {
@@ -1225,6 +1232,37 @@ export const HumanReviewTab: FC = () => {
         getReviewerFieldIndex,
         phaseNameById,
         phases,
+        reviewerRows,
+    ])
+
+    useEffect(() => {
+        if (!isDesignTrackSelected) {
+            return
+        }
+
+        reviewerRows.forEach((reviewer, reviewerIndex) => {
+            const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+
+            if (
+                fieldIndex === undefined
+                || !isPublicOpportunityOpen(reviewer)
+            ) {
+                return
+            }
+
+            formContext.setValue(
+                `reviewers.${fieldIndex}.shouldOpenOpportunity` as any,
+                false,
+                {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                },
+            )
+        })
+    }, [
+        formContext,
+        getReviewerFieldIndex,
+        isDesignTrackSelected,
         reviewerRows,
     ])
 
@@ -1797,6 +1835,9 @@ export const HumanReviewTab: FC = () => {
                 ...reviewerFromDefaults,
                 phaseId,
                 roleId: roleIdForResolvedPhase || reviewerFromDefaults.roleId,
+                shouldOpenOpportunity: isDesignTrackSelected
+                    ? false
+                    : reviewerFromDefaults.shouldOpenOpportunity,
             },
         ], {
             shouldDirty: true,
@@ -1807,6 +1848,7 @@ export const HumanReviewTab: FC = () => {
         defaultReviewers,
         allReviewerRows,
         formContext,
+        isDesignTrackSelected,
         phaseNameById,
         phases,
         reviewerRows,
@@ -1930,7 +1972,9 @@ export const HumanReviewTab: FC = () => {
                         return undefined
                     }
 
-                    const shouldOpenOpportunity = isPublicOpportunityOpen(reviewer)
+                    const shouldOpenOpportunity = isDesignTrackSelected
+                        ? false
+                        : isPublicOpportunityOpen(reviewer)
                     const reviewerCount = getReviewerCount(reviewer)
                     const scorecardOptions = getScorecardOptionsForReviewer(reviewer)
                     const reviewerPrefix = `reviewers.${fieldIndex}`
@@ -1938,6 +1982,7 @@ export const HumanReviewTab: FC = () => {
                         || reviewer.phaseId
                         || index
                     const reviewerKey = `${reviewerPrefix}-${reviewerIdentity}`
+                    const shouldDisablePublicOpportunity = isDesignTrackSelected
 
                     return (
                         <div
@@ -1979,6 +2024,7 @@ export const HumanReviewTab: FC = () => {
                                         options={REVIEW_OPPORTUNITY_OPTIONS}
                                     />
                                     <PublicOpportunityCheckboxField
+                                        disabled={shouldDisablePublicOpportunity}
                                         name={`${reviewerPrefix}.shouldOpenOpportunity`}
                                         onChange={getPublicOpportunityChangeHandler(index)}
                                     />
