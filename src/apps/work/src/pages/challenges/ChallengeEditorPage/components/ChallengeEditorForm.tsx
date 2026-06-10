@@ -1869,6 +1869,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             isTaskChallenge,
         ],
     )
+    const isManualReviewerConfigurationMissing = formState.errors.reviewers?.type === 'aiGatingManualReview'
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
 
@@ -3448,6 +3449,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         disabled={
                             (!formState.isDirty || isSaving)
                             || isScorerBlockingChallengeActions
+                            || isManualReviewerConfigurationMissing
                         }
                         label={submitButtonLabel}
                         secondary
