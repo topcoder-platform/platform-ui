@@ -3,6 +3,7 @@ import moment from 'moment'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendResource } from './BackendResource.model'
+import type { BackendReview } from './BackendReview.model'
 import { BackendSubmission } from './BackendSubmission.model'
 import { BackendSubmissionStatus } from './BackendSubmissionStatus.enum'
 import {
@@ -275,6 +276,43 @@ function findFinalReviewSummation(
 }
 
 /**
+ * Normalizes a backend submission identifier candidate.
+ *
+ * @param value - Raw identifier value from a submission or review payload.
+ * @returns Trimmed identifier text, or undefined when the candidate is empty.
+ * Used when Review API omits the top-level submission id for reviewer-visible
+ * rows but still includes the review assignment's submissionId.
+ */
+function normalizeSubmissionIdentifier(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
+
+/**
+ * Resolves the modern submission id for a backend submission payload.
+ *
+ * @param data - Backend submission payload returned by Review API.
+ * @param reviewEntries - Review assignments attached to the submission.
+ * @returns The top-level submission id, or the first review submissionId
+ * fallback when the top-level id is omitted.
+ * Used by review tables so pending reviewer assignments remain renderable.
+ */
+function resolveSubmissionInfoId(
+    data: BackendSubmission,
+    reviewEntries: BackendReview[],
+): string {
+    return normalizeSubmissionIdentifier(data.id)
+        ?? reviewEntries
+            .map(review => normalizeSubmissionIdentifier(review?.submissionId))
+            .find((submissionId): submissionId is string => Boolean(submissionId))
+        ?? ''
+}
+
+/**
  * Update review info to show in ui
  * @param data data from backend response
  * @returns updated data
@@ -320,6 +358,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         ? isPassingReviewRaw
         : undefined
     const reviewEntries = Array.isArray(data.review) ? data.review : []
+    const submissionId = resolveSubmissionInfoId(data, reviewEntries)
     const reviewInfos = reviewEntries.map(convertBackendReviewToReviewInfo)
     const reviewResults = reviewEntries.map(convertBackendReviewToReviewResult)
     const primaryReviewInfo = reviewInfos[0]
@@ -337,7 +376,7 @@ export function convertBackendSubmissionToSubmissionInfo(
     return {
         aggregateScore,
         finalAggregateScore,
-        id: data.id,
+        id: submissionId,
         isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         isPassingReview,
