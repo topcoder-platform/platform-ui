@@ -3,9 +3,9 @@ import { Params, useNavigate, useParams } from 'react-router-dom'
 import { AxiosError } from 'axios'
 
 import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile } from '~/libs/core'
-import { TALENT_SEARCH_PATHS } from '~/apps/talent-search'
 import { LoadingSpinner } from '~/libs/ui'
 
+import { rootRoute } from '../profiles.routes'
 import { notifyUniNavi } from '../lib'
 
 import { ProfilePageLayout } from './page-layout'
@@ -38,7 +38,7 @@ const MemberProfilePage: FC<{}> = () => {
                 })
                 .catch((e: AxiosError) => {
                     if (e.code === AxiosError.ERR_BAD_REQUEST && e.response?.status === 404) {
-                        window.location.href = `${TALENT_SEARCH_PATHS.absoluteUrl}?memberNotFound`
+                        navigate(rootRoute)
                     }
                 })
         }
