@@ -159,11 +159,6 @@ Application that allows users to manage their own profile data, and allows visit
 
 Located `src/apps/profiles`.
 
-#### Talent Search App
-This is an internal app for finding members based on skills and other search facets.
-
-Located `src/apps/talent-search`.
-
 #### Skills Manager
 Admin app that allows one to manage the standardized skills.
 

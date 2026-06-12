@@ -3,7 +3,6 @@ import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { learnRoutes } from '~/apps/learn'
 import { devCenterRoutes } from '~/apps/dev-center'
 import { profilesRoutes } from '~/apps/profiles'
-import { talentSearchRoutes } from '~/apps/talent-search'
 import { accountsRoutes } from '~/apps/accounts'
 import { onboardingRoutes } from '~/apps/onboarding'
 import { walletRoutes } from '~/apps/wallet'
@@ -38,7 +37,6 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...devCenterRoutes,
     ...copilotsRoutes,
     ...learnRoutes,
-    ...talentSearchRoutes,
     ...profilesRoutes,
     ...walletRoutes,
     ...walletAdminRoutes,

@@ -96,7 +96,6 @@ module.exports = {
             '@learn': resolve('src/apps/learn/src'),
             '@devCenter': resolve('src/apps/dev-center/src'),
             '@gamificationAdmin': resolve('src/apps/gamification-admin/src'),
-            '@talentSearch': resolve('src/apps/talent-search/src'),
             '@profiles': resolve('src/apps/profiles/src'),
             '@wallet': resolve('src/apps/wallet/src'),
             '@walletAdmin': resolve('src/apps/wallet-admin/src'),

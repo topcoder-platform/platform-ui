@@ -1,0 +1,218 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.headerRow {
+    display: flex;
+    align-items: flex-end;
+    gap: $sp-4;
+    justify-content: space-between;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.filterWrapper {
+    display: flex;
+    gap: $sp-4;
+
+    :global([class*='__value-container']) {
+        min-height: 18px;
+    }
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filterWrap {
+        min-width: 280px;
+        max-width: 360px;
+    
+        @include ltemd {
+            max-width: unset;
+            min-width: unset;
+            width: 100%;
+        }
+    }
+}
+
+.counterCard {
+    border: 1px solid $black-20;
+    border-radius: $sp-2;
+    background: $tc-white;
+    padding: $sp-4;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.counterLabel {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.counterValue {
+    color: $black-100;
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: 700;
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+.loadingWrap {
+    position: relative;
+    height: 90px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.errorMessage {
+    color: $red-100;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+}
+
+.emptyMessage {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.tableWrap {
+    overflow: auto;
+    border: 1px solid $black-20;
+    border-radius: $sp-2;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1120px;
+    }
+
+    th,
+    td {
+        text-align: left;
+        padding: $sp-3 $sp-4;
+        border-bottom: 1px solid $black-20;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    th {
+        color: $black-100;
+        font-weight: 700;
+        background: $black-5;
+    }
+
+    td {
+        color: $black-100;
+        vertical-align: middle;
+    }
+
+    tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+.memberCell {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid $black-20;
+}
+
+.paginationRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-3;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.paginationInfo {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.paginationButtons {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.skillsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.skillTag {
+    display: inline-block;
+    background: $black-5;
+    border: 1px solid $black-20;
+    border-radius: $sp-1;
+    padding: $sp-1 $sp-2;
+    font-size: 12px;
+    line-height: 16px;
+    color: $black-80;
+    white-space: nowrap;
+}
+
+.moreIndicator {
+    display: inline-block;
+    background: $black-5;
+    border: 1px solid $black-20;
+    border-radius: $sp-1;
+    padding: $sp-1 $sp-2;
+    font-size: 12px;
+    line-height: 16px;
+    color: $black-80;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    cursor: help;
+}
+
+.link {
+    display: flex;
+    gap: $sp-1;
+    text-decoration: underline;
+    color: $link-blue;
+    cursor: pointer;
+}
+
+.openToWorkYes {
+    color: $green-100;
+    font-weight: 600;
+}
+
+.openToWorkNo {
+    color: $red-100;
+    font-weight: 600;
+}
