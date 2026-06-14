@@ -194,7 +194,7 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     rel='noopener noreferrer'
                     target='_blank'
                 >
-                    Experience Match
+                    View Profile
                     <IconOutline.ArrowRightIcon aria-hidden className={styles.experienceLinkIcon} />
                 </a>
             </div>

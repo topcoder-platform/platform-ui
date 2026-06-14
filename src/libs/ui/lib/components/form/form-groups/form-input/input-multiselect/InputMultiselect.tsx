@@ -52,6 +52,7 @@ export interface InputMultiselectProps {
     readonly inputRef?: Ref<any>
     // Custom method to filter whether an option should be displayed in the menu
     readonly filterOption?: SelectInstance['filterOption']
+    readonly openMenuOnClick?: boolean
 }
 
 const MultiValueRemove: FC = (props: any) => (
@@ -151,7 +152,7 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
             isMulti
             cacheOptions
             autoFocus={props.autoFocus}
-            defaultOptions
+            defaultOptions={props.options}
             placeholder={placeholder}
             loadOptions={props.onFetchOptions}
             name={props.name}
@@ -166,7 +167,7 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
                 MultiValueRemove,
             }}
             value={props.value}
-            openMenuOnClick={false}
+            openMenuOnClick={props.openMenuOnClick ?? false}
             onKeyDown={handleKeyPress}
             filterOption={props.filterOption}
             menuPortalTarget={menuPortalTarget}
