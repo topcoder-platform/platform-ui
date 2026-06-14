@@ -8,4 +8,4 @@ export const rootRoute: string
         ? ''
         : `/${AppSubdomain.customer}`
 
-export const profileCompletionRouteId = 'profile-completion'
+export const talentSearchRouteId = 'talent-search'
