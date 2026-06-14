@@ -90,6 +90,7 @@ export const TalentSearchPage: FC = () => {
                 .slice()
                 .sort(),
             openToWork: onlyOpenToWork,
+            preferredRoles: selectedPreferredRoleValues,
             profileComplete: onlyProfileComplete,
             recentlyActive: onlyActive,
             skills: selectedSkills
@@ -97,9 +98,15 @@ export const TalentSearchPage: FC = () => {
                     .trim())
                 .filter(Boolean)
                 .sort(),
-            preferredRoles: selectedPreferredRoleValues,
         }),
-        [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedPreferredRoleValues, selectedSkills],
+        [
+            onlyActive,
+            onlyOpenToWork,
+            onlyProfileComplete,
+            selectedCountryCodesList,
+            selectedPreferredRoleValues,
+            selectedSkills,
+        ],
     )
 
     // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
@@ -344,9 +351,9 @@ export const TalentSearchPage: FC = () => {
         const hadSkills = selectedSkills.length > 0
         const searchSucceeded = await runMemberSearch(selectedSkills, {
             countries: selectedCountryCodesList,
-            preferredRoles: selectedPreferredRoleValues,
             openToWork: onlyOpenToWork,
             page: 1,
+            preferredRoles: selectedPreferredRoleValues,
             profileComplete: onlyProfileComplete,
             recentlyActive: onlyActive,
         })

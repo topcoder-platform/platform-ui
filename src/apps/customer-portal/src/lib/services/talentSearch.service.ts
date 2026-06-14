@@ -49,7 +49,7 @@ export const MEMBER_SEARCH_LIMIT = 10
 
 export async function searchMembers(payload: MemberSearchPayload): Promise<MemberSearchResponse> {
     return xhrPostAsync<MemberSearchPayload, MemberSearchResponse>(
-        `${'https://local.topcoder-dev.com:4443/v6/reports'}/member/search`,
+        `${EnvironmentConfig.REPORTS_API}/member/search`,
         payload,
     )
 }
