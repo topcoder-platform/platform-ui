@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 
 import { Button, PageDivider } from '~/libs/ui'
-import { Member } from '~/apps/talent-search/src/lib/models'
+import { UserProfile } from '~/libs/core'
 import { MemberSkillEditor, useMemberSkillEditor } from '~/libs/shared'
 
 import { ProgressBar } from '../../components/progress-bar'
@@ -12,7 +12,7 @@ import { ProgressBar } from '../../components/progress-bar'
 import styles from './styles.module.scss'
 
 export const PageSkillsContent: FC<{
-    reduxMemberInfo: Member | undefined
+    reduxMemberInfo: UserProfile | undefined
 }> = props => {
     const navigate: any = useNavigate()
     const [loading, setLoading] = useState(false)

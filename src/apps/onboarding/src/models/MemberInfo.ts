@@ -1,7 +1,10 @@
-import { MemberMaxRating } from '~/apps/talent-search/src/lib/models'
 import { MemberStats, UserSkill } from '~/libs/core'
 
 import MemberAddress from './MemberAddress'
+
+export type MemberMaxRating = {
+    rating?: number
+}
 
 export default interface MemberInfo {
     userId: number

@@ -1,4 +1,5 @@
 import { BackendSubmissionStatus } from './BackendSubmissionStatus.enum'
+import type { BackendReview } from './BackendReview.model'
 import type { BackendSubmission } from './BackendSubmission.model'
 import { convertBackendSubmissionToSubmissionInfo } from './SubmissionInfo.model'
 
@@ -51,6 +52,41 @@ function buildBackendSubmission(overrides: Partial<BackendSubmission> = {}): Bac
     } as unknown as BackendSubmission
 }
 
+/**
+ * Builds a minimal backend review for submission conversion specs.
+ *
+ * @param overrides - Review fields to override for a test case.
+ * @returns Backend review payload accepted by convertBackendSubmissionToSubmissionInfo.
+ * Used to model reviewer assignment payloads returned with submissions.
+ */
+function buildBackendReview(overrides: Partial<BackendReview> = {}): BackendReview {
+    return {
+        committed: false,
+        createdAt: '2026-06-05T05:00:00.000Z',
+        createdBy: 'system',
+        finalScore: undefined,
+        id: 'review-1',
+        initialScore: undefined,
+        legacyId: '',
+        legacySubmissionId: '',
+        metadata: undefined,
+        phaseId: 'review-phase-1',
+        phaseName: 'Review',
+        resourceId: 'reviewer-resource-1',
+        reviewDate: undefined,
+        reviewerHandle: 'reviewer1',
+        reviewItems: [],
+        reviewType: 'Review',
+        scorecardId: 'scorecard-review',
+        status: 'PENDING',
+        submissionId: 'submission-1',
+        typeId: 'review-type-1',
+        updatedAt: '2026-06-05T05:00:00.000Z',
+        updatedBy: 'system',
+        ...overrides,
+    } as unknown as BackendReview
+}
+
 describe('convertBackendSubmissionToSubmissionInfo', () => {
     it('uses metadata-only system summations as final aggregate scores', () => {
         const result = convertBackendSubmissionToSubmissionInfo(buildBackendSubmission({
@@ -91,5 +127,19 @@ describe('convertBackendSubmissionToSubmissionInfo', () => {
             .toBe(96.01)
         expect(result.finalAggregateScore)
             .toBeUndefined()
+    })
+
+    it('uses the review submission id when the backend omits the top-level submission id', () => {
+        const result = convertBackendSubmissionToSubmissionInfo(buildBackendSubmission({
+            id: undefined,
+            review: [
+                buildBackendReview({
+                    submissionId: 'review-submission-1',
+                }),
+            ],
+        } as unknown as Partial<BackendSubmission>))
+
+        expect(result.id)
+            .toBe('review-submission-1')
     })
 })

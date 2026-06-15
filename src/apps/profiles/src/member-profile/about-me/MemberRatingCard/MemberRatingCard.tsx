@@ -61,9 +61,11 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         calculateTopPercentileFromDistribution(ratingDistribution?.distribution, rating)
     ), [rating, ratingDistribution])
     const audienceLabel: string = getRatingAudienceLabel(memberStats)
-    const percentileLabel: string | undefined = maxPercentile
+    const hasPositiveRating: boolean = Number(rating) > 0
+    const percentileLabel: string | undefined = hasPositiveRating && maxPercentile
         ? `Top ${formatTopPercentile(maxPercentile)}%`
         : undefined
+    const visiblePercentile: number | undefined = hasPositiveRating ? maxPercentile : undefined
     const canEditPreferredRoles: boolean = props.authProfile?.handle === props.profile.handle
     const preferredRolesText: string = useMemo(
         () => getPreferredRolesText(props.memberPersonalizationTraitsData),
@@ -189,7 +191,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                 isInfoModalOpen && (
                     <MemberRatingInfoModal
                         onClose={handleInfoModalClose}
-                        percentile={maxPercentile}
+                        percentile={visiblePercentile}
                         profile={props.profile}
                         rating={rating}
                         audienceLabel={audienceLabel}
