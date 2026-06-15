@@ -167,6 +167,7 @@ import {
 import {
     ReviewersField,
 } from './ReviewersField'
+import type { AiReviewConfigSaveController } from './ReviewersField/AiReviewTab'
 import {
     ReviewTypeField,
 } from './ReviewTypeField'
@@ -2927,8 +2928,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     throw createHandledLaunchBlockError(projectBillingAccountErrorMessage)
                 }
 
+                let formDataToSave = formData
+                if (aiReviewConfigSaveControllerRef.current) {
+                    await aiReviewConfigSaveControllerRef.current.flushPendingSave()
+                    formDataToSave = getValues()
+                }
+
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
-                    formData,
+                    formDataToSave,
                     resolvedProjectBillingAccount,
                 )
                 const payload = transformFormDataToChallenge({
@@ -3402,12 +3409,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         loginUserId,
         rawPaymentCreator,
     ])
+    const aiReviewConfigSaveControllerRef = useRef<AiReviewConfigSaveController | null>(null)
+
     const reviewSection = usesManualReviewers
         ? (
             <section className={styles.section}>
                 <h3 className={styles.sectionTitle}>Review</h3>
                 <div className={styles.block}>
-                    <ReviewersField isReadOnly={isReadOnly} />
+                    <ReviewersField
+                        isReadOnly={isReadOnly}
+                        onConfigSaveControllerReady={controller => {
+                            aiReviewConfigSaveControllerRef.current = controller
+                        }}
+                    />
                 </div>
             </section>
         )

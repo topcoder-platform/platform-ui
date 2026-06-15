@@ -32,7 +32,7 @@ import {
     isAiReviewer,
     syncAiConfigReviewers,
 } from './reviewers-field.utils'
-import AiReviewTab from './AiReviewTab'
+import AiReviewTab, { AiReviewConfigSaveController } from './AiReviewTab'
 import HumanReviewTab from './HumanReviewTab'
 import ReviewConfigurationSummary from './ReviewConfigurationSummary'
 import styles from './ReviewersField.module.scss'
@@ -41,6 +41,7 @@ type ReviewTab = 'ai' | 'human'
 
 interface ReviewersFieldProps {
     isReadOnly?: boolean
+    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | null) => void
 }
 
 function hasReviewerChanges(
@@ -387,6 +388,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                     hasSubmissions={hasSubmissions}
                                     onConfigPersisted={handleAiConfigPersisted}
                                     onConfigRemoved={handleAiConfigRemoved}
+                                    onConfigSaveControllerReady={props.onConfigSaveControllerReady}
                                     reviewers={reviewerRows}
                                     trackId={trackId}
                                     typeId={typeId}

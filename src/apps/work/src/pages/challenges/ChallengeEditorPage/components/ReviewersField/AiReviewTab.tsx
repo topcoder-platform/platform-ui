@@ -47,6 +47,10 @@ import {
 } from './reviewers-field.utils'
 import styles from './AiReviewTab.module.scss'
 
+export interface AiReviewConfigSaveController {
+    flushPendingSave: () => Promise<void>
+}
+
 interface AiReviewTabProps {
     challengeId?: string
     hasSubmissions?: boolean
@@ -55,6 +59,7 @@ interface AiReviewTabProps {
     trackId?: string
     typeId?: string
     onConfigPersisted?: (config: AiReviewConfig) => void
+    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | null) => void
 }
 
 type ConfigurationMode = 'manual' | 'template'
@@ -461,6 +466,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const onConfigRemoved = props.onConfigRemoved
     const readOnly = props.hasSubmissions === true
     const onConfigPersisted = props.onConfigPersisted
+    const onConfigSaveControllerReady = props.onConfigSaveControllerReady
     const reviewers = props.reviewers
     const trackId = props.trackId
     const typeId = props.typeId
@@ -470,6 +476,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const initialConfigLookupChallengeIdRef = useRef<string | undefined>()
     const onConfigPersistedRef = useRef<typeof onConfigPersisted>(onConfigPersisted)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>()
+    const configSavePromiseRef = useRef<Promise<void> | null>(null)
 
     const [availableWorkflows, setAvailableWorkflows] = useState<Workflow[]>([])
     const [configuration, setConfiguration] = useState<AiReviewConfigurationDraft>(DEFAULT_CONFIGURATION)
@@ -614,6 +621,15 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             templates,
             templatesLoading,
         ],
+    )
+
+    const hasPendingConfigurationChanges = useMemo(
+        (): boolean => (
+            !!normalizedConfiguration
+            && aiReviewConfigHasChanges(lastSavedConfigurationRef.current, normalizedConfiguration)
+            && validationErrors.length === 0
+        ),
+        [normalizedConfiguration, validationErrors],
     )
     const hasPersistedConfigForCurrentChallenge = useMemo(
         () => (
@@ -999,6 +1015,71 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         }
     }, [configurationMode, selectedTrackName, selectedTypeName])
 
+    const persistConfiguration = useCallback(async (): Promise<void> => {
+        if (!normalizedConfiguration || readOnly || validationErrors.length > 0) {
+            return
+        }
+
+        setIsSaving(true)
+
+        const savePromise = (async (): Promise<void> => {
+            try {
+                const savedConfiguration = configId
+                    ? await updateAiReviewConfig(configId, normalizedConfiguration)
+                    : await createAiReviewConfig(normalizedConfiguration)
+                const nextConfiguration = mapConfigToDraft(savedConfiguration)
+
+                setConfigId(savedConfiguration.id)
+                setConfiguration(nextConfiguration)
+                lastSavedConfigurationRef.current = savedConfiguration
+                onConfigPersistedRef.current?.(savedConfiguration)
+            } catch (error) {
+                showErrorToast(error instanceof Error
+                    ? error.message
+                    : 'Failed to autosave AI review configuration')
+            } finally {
+                setIsSaving(false)
+            }
+        })()
+
+        configSavePromiseRef.current = savePromise
+        try {
+            await savePromise
+        } finally {
+            if (configSavePromiseRef.current === savePromise) {
+                configSavePromiseRef.current = null
+            }
+        }
+    }, [configId, normalizedConfiguration, readOnly, validationErrors])
+
+    const flushPendingSave = useCallback(async (): Promise<void> => {
+        if (configSavePromiseRef.current) {
+            await configSavePromiseRef.current.catch(() => undefined)
+            return
+        }
+
+        if (!hasPendingConfigurationChanges) {
+            return
+        }
+
+        if (saveTimerRef.current) {
+            clearTimeout(saveTimerRef.current)
+            saveTimerRef.current = undefined
+        }
+
+        await persistConfiguration().catch(() => undefined)
+    }, [hasPendingConfigurationChanges, persistConfiguration])
+
+    useEffect(() => {
+        onConfigSaveControllerReady?.({
+            flushPendingSave,
+        })
+
+        return () => {
+            onConfigSaveControllerReady?.(null)
+        }
+    }, [flushPendingSave, onConfigSaveControllerReady])
+
     useEffect(() => {
         if (!normalizedChallengeId || !configurationMode || !normalizedConfiguration || readOnly) {
             return undefined
@@ -1016,28 +1097,6 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         }
 
         saveTimerRef.current = setTimeout(() => {
-            setIsSaving(true)
-
-            const persistConfiguration = async (): Promise<void> => {
-                try {
-                    const savedConfiguration = configId
-                        ? await updateAiReviewConfig(configId, normalizedConfiguration)
-                        : await createAiReviewConfig(normalizedConfiguration)
-                    const nextConfiguration = mapConfigToDraft(savedConfiguration)
-
-                    setConfigId(savedConfiguration.id)
-                    setConfiguration(nextConfiguration)
-                    lastSavedConfigurationRef.current = savedConfiguration
-                    onConfigPersistedRef.current?.(savedConfiguration)
-                } catch (error) {
-                    showErrorToast(error instanceof Error
-                        ? error.message
-                        : 'Failed to autosave AI review configuration')
-                } finally {
-                    setIsSaving(false)
-                }
-            }
-
             persistConfiguration()
                 .catch(() => undefined)
         }, 1500)
