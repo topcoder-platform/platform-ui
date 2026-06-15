@@ -15,7 +15,6 @@ import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { TabsNavItem } from '~/libs/ui'
-import { UserRole } from '~/libs/core'
 
 import {
     billingAccountsPageRouteId,
@@ -24,6 +23,7 @@ import {
     talentPageRouteId,
 } from '../../../config/routes.config'
 import { ReportsAppContext, ReportsAppContextModel } from '../../contexts'
+import { canAccessTalentReport } from '../../utils'
 
 import styles from './NavTabs.module.scss'
 
@@ -33,8 +33,8 @@ const NavTabs: FC = () => {
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
     const { loginUserInfo }: ReportsAppContextModel = useContext(ReportsAppContext)
-    const isAdministrator = useMemo(() => (
-        !!loginUserInfo?.roles?.some(role => role.toLowerCase() === UserRole.administrator)
+    const canAccessTalent = useMemo(() => (
+        canAccessTalentReport(loginUserInfo?.roles)
     ), [loginUserInfo])
 
     const tabs = useMemo<TabsNavItem[]>(() => {
@@ -53,7 +53,7 @@ const NavTabs: FC = () => {
             },
         ]
 
-        return isAdministrator
+        return canAccessTalent
             ? [
                 ...baseTabs,
                 {
@@ -62,7 +62,7 @@ const NavTabs: FC = () => {
                 },
             ]
             : baseTabs
-    }, [isAdministrator])
+    }, [canAccessTalent])
 
     const activeTabPathName: string = useMemo<string>(() => {
         const matchingTabs = tabs

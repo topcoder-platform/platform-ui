@@ -1,5 +1,7 @@
 import { toast } from 'react-toastify'
 
+export { canAccessTalentReport } from './talent-access.utils'
+
 /**
  * Handles API errors by extracting the most useful message and showing a toast.
  * @param error Axios error-like object.
