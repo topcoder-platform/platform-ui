@@ -16,6 +16,8 @@ import {
 import OpenToWorkForm,
 { validateOpenToWork } from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
+import { getOpenToWorkWithoutPreferredRoles } from '../../../lib'
+
 import styles from './OpenForGigsModifyModal.module.scss'
 
 interface OpenForGigsModifyModalProps {
@@ -36,7 +38,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
         availableForGigs: props.openForWork,
-        preferredRoles: [],
     })
 
     const [submitAttempted, setSubmitAttempted] = useState(false)
@@ -58,7 +59,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             ...prev,
             availability: openToWorkItem?.availability,
             availableForGigs: props.openForWork,
-            preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [
         memberPersonalizationTraits,
@@ -91,9 +91,8 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         const personalizationData = [{
             ...existing,
             openToWork: {
-                ...(existing.openToWork || {}),
+                ...getOpenToWorkWithoutPreferredRoles(existing.openToWork || {}),
                 availability: formValue.availability,
-                preferredRoles: formValue.preferredRoles,
             },
         }]
 
@@ -101,7 +100,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         // Update availableForGigs in member profile
             updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
 
-            // Update personalization trait for availability & preferredRoles
+            // Update personalization trait for availability.
             updateOrCreateMemberTraitsAsync(props.profile.handle, [{
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,

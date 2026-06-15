@@ -3,65 +3,67 @@
 .container {
     display: flex;
     flex-direction: column;
-    padding-bottom: $sp-4;
-
-    @include ltelg {
-        margin-top: $sp-4;
-    }
+    margin-top: $sp-8;
 
     .title {
         display: flex;
-        justify-content: flex-end;
         align-items: center;
+        margin-bottom: $sp-4;
     }
 
     .badges {
+        display: grid;
+        grid-template-columns: repeat(4, 56px);
+        gap: $sp-4;
+    }
+
+    .badgeButton {
+        appearance: none;
+        align-items: center;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
         display: flex;
-        column-gap: $sp-4;
-        row-gap: $sp-4;
-        flex-wrap: wrap;
+        height: 56px;
+        justify-content: center;
+        padding: 0;
+        transition: transform 0.15s ease-in-out;
+        width: 56px;
 
-        @include ltelg {
-            flex-direction: column;
+        &:hover {
+            transform: translateY(-2px);
         }
 
-        .badgeCard {
-            background-color: $tc-white;
-            padding: $sp-4;
-            display: flex;
-            cursor: pointer;
-            min-width: 280px;
-            border-radius: 8px;
-            align-items: center;
-            transition: 0.25s ease-in-out;
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-
-            @include ltelg {
-                padding-bottom: 0;
-                padding-left: $sp-2;
-                min-width: 100%;
-            }
-
-            &:hover {
-                box-shadow: 0 0 16px rgba(22, 103, 154, 0.5);
-            }
-
-            .badgeImageWrap {
-                width: 48px;
-                height: 48px;
-                .badgeImage {
-                    height: 48px;
-                    margin: auto;
-                }
-            }
-
-            .badgeTitle {
-                font-size: 14px;
-                font-weight: $font-weight-bold;
-                line-height: 16px;
-                margin-left: $sp-2;
-                max-width: 130px;
-            }
+        &:focus-visible {
+            border-radius: 4px;
+            outline: 2px solid $link-blue-dark;
+            outline-offset: 2px;
         }
+    }
+
+    .badgeImage {
+        max-height: 56px;
+        max-width: 56px;
+    }
+}
+
+.moreBadgesButton {
+    appearance: none;
+    align-self: flex-start;
+    background: transparent;
+    border: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-family: $font-roboto;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    margin-top: $sp-4;
+    padding: 0;
+    text-align: left;
+
+    &:hover {
+        color: darken($link-blue-dark, 5);
+        text-decoration: underline;
     }
 }

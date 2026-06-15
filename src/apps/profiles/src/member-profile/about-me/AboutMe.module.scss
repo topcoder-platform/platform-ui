@@ -19,6 +19,31 @@
     }
 }
 
+.bioWrap {
+    p {
+        margin-bottom: $sp-2;
+    }
+}
+
+.bioToggle {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-family: $font-roboto;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    padding: 0;
+    text-align: left;
+
+    &:hover {
+        color: darken($link-blue-dark, 5);
+        text-decoration: underline;
+    }
+}
+
 .empty {
     height: auto;
     margin-top: $sp-4;
