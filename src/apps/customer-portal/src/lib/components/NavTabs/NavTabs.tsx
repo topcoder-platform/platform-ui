@@ -4,15 +4,22 @@ import {
     MouseEvent,
     SetStateAction,
     useCallback,
+    useContext,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { IconOutline } from '~/libs/ui'
+
+import { CustomerPortalAppContext } from '../../contexts'
+import { CustomerPortalAppContextModel } from '../../models'
+import { PRIVILEGED_ROLES } from '../../../config/index.config'
 
 import { getTabIdFromPathName, getTabsConfig } from './config'
 import styles from './NavTabs.module.scss'
@@ -23,8 +30,23 @@ const NavTabs: FC = () => {
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
 
-    const tabs = getTabsConfig()
-    const activeTabPathName: string = getTabIdFromPathName(pathname)
+    const { loginUserInfo }: CustomerPortalAppContextModel = useContext(CustomerPortalAppContext)
+    const isAnonymous = isEmpty(loginUserInfo)
+    const userRoles = useMemo(() => loginUserInfo?.roles || [], [loginUserInfo?.roles])
+    const isUnprivilegedUser = useMemo(() => {
+        if (!loginUserInfo) return true
+
+        return !userRoles.some(role => PRIVILEGED_ROLES.includes(role))
+    }, [loginUserInfo, userRoles])
+    const tabs = useMemo(
+        () => getTabsConfig(userRoles, isAnonymous, isUnprivilegedUser),
+        [userRoles, isAnonymous, isUnprivilegedUser],
+    )
+
+    const activeTabPathName: string = useMemo<string>(
+        () => getTabIdFromPathName(pathname, userRoles, isAnonymous, isUnprivilegedUser),
+        [pathname, userRoles, isAnonymous, isUnprivilegedUser],
+    )
     const [activeTab, setActiveTab]: [
         string,
         Dispatch<SetStateAction<string>>
@@ -32,7 +54,7 @@ const NavTabs: FC = () => {
 
     useEffect(() => {
         setActiveTab(activeTabPathName)
-    }, [pathname])
+    }, [activeTabPathName])
 
     const triggerTab = useCallback(() => {
         setIsOpen(!isOpen)
