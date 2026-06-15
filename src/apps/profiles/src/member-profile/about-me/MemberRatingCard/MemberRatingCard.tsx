@@ -15,6 +15,9 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
+    const maxRating = memberStats?.maxRating?.rating
+    const hasMaxRating = maxRating !== undefined && maxRating !== null
+    const hasPositiveRating = Number(maxRating) > 0
 
     const maxPercentile: number = useMemo(() => {
         let memberPercentile: number = 0
@@ -36,6 +39,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
 
         return memberPercentile
     }, [memberStats])
+    const showPercentile = hasPositiveRating && maxPercentile > 0
 
     function handleInfoModalClose(): void {
         setIsInfoModalOpen(false)
@@ -45,15 +49,15 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         setIsInfoModalOpen(true)
     }
 
-    return memberStats?.maxRating?.rating ? (
+    return hasMaxRating ? (
         <div className={styles.container}>
             <div className={styles.innerWrap}>
-                <div className={classNames(styles.valueWrap, !maxPercentile ? styles.noPercentile : '')}>
-                    <p className={styles.value}>{memberStats?.maxRating?.rating}</p>
+                <div className={classNames(styles.valueWrap, !showPercentile ? styles.noPercentile : '')}>
+                    <p className={styles.value}>{maxRating}</p>
                     <p className={styles.name}>Rating</p>
                 </div>
                 {
-                    maxPercentile ? (
+                    showPercentile ? (
                         <div className={styles.valueWrap}>
                             <p className={styles.value}>
                                 {Number(maxPercentile)
