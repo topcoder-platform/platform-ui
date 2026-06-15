@@ -15,6 +15,7 @@ import {
     bulkMemberLookupRouteId,
     reportsPageRouteId,
     rootRoute,
+    talentPageRouteId,
 } from './config/routes.config'
 
 const ReportsApp: LazyLoadedComponent = lazyLoad(() => import('./ReportsApp'))
@@ -28,6 +29,10 @@ const BillingAccountsPage: LazyLoadedComponent = lazyLoad(
 const BulkMemberLookupPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/bulk-member-lookup/BulkMemberLookupPage'),
     'BulkMemberLookupPage',
+)
+const TalentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/talent'),
+    'TalentPage',
 )
 
 export const toolTitle: string = ToolTitle.reports
@@ -56,6 +61,11 @@ export const reportsRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <BulkMemberLookupPage />,
                 route: bulkMemberLookupRouteId,
+            },
+            {
+                authRequired: true,
+                element: <TalentPage />,
+                route: talentPageRouteId,
             },
         ],
         domain: AppSubdomain.reports,

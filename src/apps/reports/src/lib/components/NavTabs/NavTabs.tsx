@@ -4,6 +4,7 @@ import {
     MouseEvent,
     SetStateAction,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -14,12 +15,15 @@ import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { TabsNavItem } from '~/libs/ui'
+import { UserRole } from '~/libs/core'
 
 import {
     billingAccountsPageRouteId,
     bulkMemberLookupRouteId,
     reportsPageRouteId,
+    talentPageRouteId,
 } from '../../../config/routes.config'
+import { ReportsAppContext, ReportsAppContextModel } from '../../contexts'
 
 import styles from './NavTabs.module.scss'
 
@@ -28,21 +32,37 @@ const NavTabs: FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
+    const { loginUserInfo }: ReportsAppContextModel = useContext(ReportsAppContext)
+    const isAdministrator = useMemo(() => (
+        !!loginUserInfo?.roles?.some(role => role.toLowerCase() === UserRole.administrator)
+    ), [loginUserInfo])
 
-    const tabs = useMemo<TabsNavItem[]>(() => [
-        {
-            id: reportsPageRouteId,
-            title: 'Reports',
-        },
-        {
-            id: bulkMemberLookupRouteId,
-            title: 'Bulk Member Lookup',
-        },
-        {
-            id: billingAccountsPageRouteId,
-            title: 'SFDC Payments',
-        },
-    ], [])
+    const tabs = useMemo<TabsNavItem[]>(() => {
+        const baseTabs: TabsNavItem[] = [
+            {
+                id: reportsPageRouteId,
+                title: 'Reports',
+            },
+            {
+                id: bulkMemberLookupRouteId,
+                title: 'Bulk Member Lookup',
+            },
+            {
+                id: billingAccountsPageRouteId,
+                title: 'SFDC Payments',
+            },
+        ]
+
+        return isAdministrator
+            ? [
+                ...baseTabs,
+                {
+                    id: talentPageRouteId,
+                    title: 'Talent',
+                },
+            ]
+            : baseTabs
+    }, [isAdministrator])
 
     const activeTabPathName: string = useMemo<string>(() => {
         const matchingTabs = tabs

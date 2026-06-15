@@ -68,11 +68,81 @@ export type BillingAccountsViewData = {
     payments: SfdcBillingAccountPaymentRow[]
 }
 
+export type OpenToWorkTalentAvailability = 'FULL_TIME' | 'PART_TIME'
+
+export type OpenToWorkTalentQuery = {
+    role?: string
+    availability?: OpenToWorkTalentAvailability
+    page?: number
+    perPage?: number
+}
+
+export type OpenToWorkTalentRoleCount = {
+    role: string
+    count: number
+}
+
+export type OpenToWorkTalentMember = {
+    userId: string
+    handle: string
+    firstName: string | null
+    lastName: string | null
+    country: string | null
+    availability: string | null
+    preferredRoles: string[]
+    memberSince: string | null
+    maxRating: number | null
+    challengeWins: number
+    taskWins: number
+    totalWins: number
+}
+
+export type OpenToWorkTalentResponse = {
+    totalMembers: number
+    total: number
+    page: number
+    perPage: number
+    roleCounts: OpenToWorkTalentRoleCount[]
+    data: OpenToWorkTalentMember[]
+}
+
 const reportsDownloadClient: AxiosInstance = xhrCreateInstance()
 
 const buildReportUrl = (path: string): string => {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     return `${EnvironmentConfig.API.V6}/reports${normalizedPath}`
+}
+
+/**
+ * Builds a reports API path with Talent query parameters.
+ * @param basePath Reports API path relative to `/reports`.
+ * @param query Optional role, availability, and pagination values.
+ * @returns Path and query string suitable for reports API calls.
+ */
+export const buildOpenToWorkTalentPath = (
+    basePath: string,
+    query: OpenToWorkTalentQuery = {},
+): string => {
+    const params = new URLSearchParams()
+
+    if (query.role) {
+        params.append('role', query.role)
+    }
+
+    if (query.availability) {
+        params.append('availability', query.availability)
+    }
+
+    if (query.page) {
+        params.append('page', String(query.page))
+    }
+
+    if (query.perPage) {
+        params.append('perPage', String(query.perPage))
+    }
+
+    const queryString = params.toString()
+    return queryString ? `${basePath}?${queryString}` : basePath
 }
 
 export const fetchReportsIndex = async (): Promise<ReportsIndexResponse> => (
@@ -189,6 +259,30 @@ export const fetchReportJson = async <T>(path: string): Promise<T> => {
 
 export const downloadReportAsCsv = (path: string): Promise<Blob> => (
     downloadReportBlob(path, 'text/csv')
+)
+
+/**
+ * Fetches the Talent tab dashboard and paginated member list.
+ * @param query Optional role, availability, and pagination values.
+ * @returns Open-to-work Talent report data.
+ */
+export const fetchOpenToWorkTalent = (
+    query: OpenToWorkTalentQuery,
+): Promise<OpenToWorkTalentResponse> => (
+    fetchReportJson<OpenToWorkTalentResponse>(
+        buildOpenToWorkTalentPath('/member/open-to-work', query),
+    )
+)
+
+/**
+ * Downloads the Talent tab CSV export for the selected filters.
+ * @param query Optional role and availability filters.
+ * @returns Blob response encoded as CSV.
+ */
+export const downloadOpenToWorkTalentCsv = (
+    query: OpenToWorkTalentQuery,
+): Promise<Blob> => (
+    downloadReportAsCsv(buildOpenToWorkTalentPath('/member/open-to-work/export', query))
 )
 
 /**
