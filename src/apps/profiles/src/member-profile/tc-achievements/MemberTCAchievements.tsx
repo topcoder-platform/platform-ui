@@ -36,6 +36,7 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
     const tcoTrips: number = useMemo(() => memberBadges?.rows.filter(
         (badge: UserBadge) => /TCO.*Trip Winner/.test(badge.org_badge.badge_name),
     ).length || 0, [memberBadges])
+    const hasChallengePoints: boolean = (props.profile.challengePoints?.total ?? 0) > 0
 
     const renderDefaultRoute = useCallback(() => (
         <DefaultAchievementsView
@@ -47,7 +48,13 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         />
     ), [memberStats, props.profile, tcoQualifications, tcoTrips, tcoWins])
 
-    if (!memberStats?.challenges && !tcoWins && !tcoQualifications && !memberBadges?.rows.length) {
+    if (
+        !memberStats?.challenges
+        && !hasChallengePoints
+        && !tcoWins
+        && !tcoQualifications
+        && !tcoTrips
+    ) {
         return <></>
     }
 

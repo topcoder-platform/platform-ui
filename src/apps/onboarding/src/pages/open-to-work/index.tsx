@@ -44,7 +44,6 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
         availableForGigs: !!props.availableForGigs,
-        preferredRoles: [],
     })
 
     const [submitAttempted, setSubmitAttempted] = useState(false)
@@ -66,7 +65,6 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
             ...prev,
             availability: openToWorkItem?.availability,
             availableForGigs: !!props.availableForGigs,
-            preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [memberPersonalizationTraits, props.availableForGigs])
 
@@ -103,13 +101,14 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         setLoading(true)
 
         const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+        const openToWork = { ...(existing.openToWork || {}) }
+        delete openToWork.preferredRoles
 
         const personalizationData = [{
             ...existing,
             openToWork: {
-                ...(existing.openToWork || {}),
+                ...openToWork,
                 availability: formValue.availability,
-                preferredRoles: formValue.preferredRoles,
             },
         }]
 

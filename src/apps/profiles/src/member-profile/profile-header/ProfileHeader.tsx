@@ -19,7 +19,7 @@ import { Tooltip } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { formatRoleList, getAvailabilityLabel, getPreferredRoleLabels } from '../../lib'
+import { getAvailabilityLabel } from '../../lib'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
@@ -190,45 +190,19 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         if (
             !hasOpenToWork
             || !props.profile.availableForGigs
-            || (openToWorkItem.preferredRoles?.length === 0 && openToWorkItem.availability === undefined)) return <></>
+            || !openToWorkItem.availability) return <></>
 
         const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
-        const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)
 
-        const MAX_VISIBLE_ROLES = 5
-        const visibleRoles = roleLabels.slice(0, MAX_VISIBLE_ROLES)
-        const hasMoreRoles = roleLabels.length > MAX_VISIBLE_ROLES
-        const tooltipContent = roleLabels.join(', ')
-
-        const rolesContent = (
-            <span className={styles.rolesText}>
-                as
-                {' '}
-                <span className={styles.roleText}>
-                    {formatRoleList(visibleRoles)}
-                    {hasMoreRoles && '…'}
-                </span>
-            </span>
-        )
-        const shouldShowTooltip = openToWorkItem.preferredRoles?.length > 5
+        if (!availabilityLabel) return <></>
 
         return (
             <p className={styles.openToWorkSummary}>
                 Interested in
                 {' '}
-                {openToWorkItem.availability && <span>{availabilityLabel}</span>}
+                {availabilityLabel}
                 {' '}
                 roles
-                {' '}
-                {openToWorkItem.preferredRoles?.length > 0 && (
-                    shouldShowTooltip ? (
-                        <Tooltip content={tooltipContent} triggerOn='hover'>
-                            {rolesContent}
-                        </Tooltip>
-                    ) : (
-                        rolesContent
-                    )
-                )}
             </p>
         )
     }
