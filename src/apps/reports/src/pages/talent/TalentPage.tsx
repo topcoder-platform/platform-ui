@@ -13,7 +13,6 @@ import { Navigate } from 'react-router-dom'
 import { EnvironmentConfig } from '~/config'
 import { ReportsAppContext, ReportsAppContextModel } from '~/apps/reports/src/lib'
 import { Pagination } from '~/apps/admin/src/lib'
-import { UserRole } from '~/libs/core'
 import {
     Button,
     IconOutline,
@@ -30,7 +29,7 @@ import {
     OpenToWorkTalentResponse,
     OpenToWorkTalentRoleCount,
 } from '../../lib/services'
-import { handleError } from '../../lib/utils'
+import { canAccessTalentReport, handleError } from '../../lib/utils'
 import { reportsPageRouteId, rootRoute } from '../../config/routes.config'
 
 import {
@@ -77,15 +76,6 @@ const availabilityOptions: AvailabilityOption[] = [
 ]
 
 /**
- * Returns true when the loaded token belongs to an administrator.
- * @param roles Roles from the decoded Topcoder token.
- * @returns Whether the role list includes the administrator role.
- */
-function hasAdministratorRole(roles?: string[]): boolean {
-    return !!roles?.some(role => role.toLowerCase() === UserRole.administrator)
-}
-
-/**
  * Builds the conic-gradient background used by the role summary chart.
  * @param segments Role count segments with colors and percentages.
  * @returns CSS background value for the donut chart.
@@ -121,7 +111,7 @@ function formatMemberName(member: OpenToWorkTalentMember): string {
 }
 
 /**
- * Admin-only Talent report page for open-to-work members.
+ * Administrator and Talent Manager report page for open-to-work members.
  *
  * It fetches preferred-role aggregates, renders a role-filterable member list,
  * and downloads the matching CSV export from reports-api.
@@ -130,7 +120,7 @@ function formatMemberName(member: OpenToWorkTalentMember): string {
 const TalentPage: FC = () => {
     const { loginUserInfo }: ReportsAppContextModel = useContext(ReportsAppContext)
     const isAuthLoaded = loginUserInfo !== undefined
-    const isAdministrator = hasAdministratorRole(loginUserInfo?.roles)
+    const canAccessTalent = canAccessTalentReport(loginUserInfo?.roles)
 
     const [selectedRole, setSelectedRole] = useState<string | undefined>(undefined)
     const [availability, setAvailability] = useState<OpenToWorkTalentAvailability | undefined>(undefined)
@@ -166,7 +156,7 @@ const TalentPage: FC = () => {
     } members`
 
     useEffect(() => {
-        if (!isAdministrator) {
+        if (!canAccessTalent) {
             return undefined
         }
 
@@ -194,7 +184,7 @@ const TalentPage: FC = () => {
         return () => {
             cancelled = true
         }
-    }, [availability, isAdministrator, page, perPage, refreshKey, selectedRole])
+    }, [availability, canAccessTalent, page, perPage, refreshKey, selectedRole])
 
     useEffect(() => {
         if (page > totalPages) {
@@ -244,7 +234,7 @@ const TalentPage: FC = () => {
         }
     }, [availability, selectedRole])
 
-    if (isAuthLoaded && !isAdministrator) {
+    if (isAuthLoaded && !canAccessTalent) {
         return <Navigate to={reportsLandingRoute} replace />
     }
 
