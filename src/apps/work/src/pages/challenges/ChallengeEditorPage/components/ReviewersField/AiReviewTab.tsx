@@ -59,7 +59,7 @@ interface AiReviewTabProps {
     trackId?: string
     typeId?: string
     onConfigPersisted?: (config: AiReviewConfig) => void
-    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | null) => void
+    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | undefined) => void
 }
 
 type ConfigurationMode = 'manual' | 'template'
@@ -476,7 +476,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const initialConfigLookupChallengeIdRef = useRef<string | undefined>()
     const onConfigPersistedRef = useRef<typeof onConfigPersisted>(onConfigPersisted)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>()
-    const configSavePromiseRef = useRef<Promise<void> | null>(null)
+    const configSavePromiseRef = useRef<Promise<void> | undefined>(undefined)
 
     const [availableWorkflows, setAvailableWorkflows] = useState<Workflow[]>([])
     const [configuration, setConfiguration] = useState<AiReviewConfigurationDraft>(DEFAULT_CONFIGURATION)
@@ -1047,7 +1047,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             await savePromise
         } finally {
             if (configSavePromiseRef.current === savePromise) {
-                configSavePromiseRef.current = null
+                configSavePromiseRef.current = undefined
             }
         }
     }, [configId, normalizedConfiguration, readOnly, validationErrors])
@@ -1067,7 +1067,8 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             saveTimerRef.current = undefined
         }
 
-        await persistConfiguration().catch(() => undefined)
+        await persistConfiguration()
+            .catch(() => undefined)
     }, [hasPendingConfigurationChanges, persistConfiguration])
 
     useEffect(() => {
@@ -1076,7 +1077,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         })
 
         return () => {
-            onConfigSaveControllerReady?.(null)
+            onConfigSaveControllerReady?.(undefined)
         }
     }, [flushPendingSave, onConfigSaveControllerReady])
 

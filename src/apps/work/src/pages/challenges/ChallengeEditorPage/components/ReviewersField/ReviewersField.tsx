@@ -41,7 +41,7 @@ type ReviewTab = 'ai' | 'human'
 
 interface ReviewersFieldProps {
     isReadOnly?: boolean
-    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | null) => void
+    onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | undefined) => void
 }
 
 function hasReviewerChanges(

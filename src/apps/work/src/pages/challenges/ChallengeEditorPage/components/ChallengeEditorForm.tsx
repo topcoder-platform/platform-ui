@@ -1513,6 +1513,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const challengeRef = useRef<Challenge | undefined>(props.challenge)
     const pendingChallengeRefreshRef = useRef<Challenge | undefined>()
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
+    const aiReviewConfigSaveControllerRef = useRef<AiReviewConfigSaveController | undefined>(undefined)
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
         [
@@ -3409,7 +3410,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         loginUserId,
         rawPaymentCreator,
     ])
-    const aiReviewConfigSaveControllerRef = useRef<AiReviewConfigSaveController | null>(null)
 
     const reviewSection = usesManualReviewers
         ? (
@@ -3418,7 +3418,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 <div className={styles.block}>
                     <ReviewersField
                         isReadOnly={isReadOnly}
-                        onConfigSaveControllerReady={controller => {
+                        onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
                             aiReviewConfigSaveControllerRef.current = controller
                         }}
                     />
