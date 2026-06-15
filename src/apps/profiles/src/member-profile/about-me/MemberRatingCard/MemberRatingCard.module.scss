@@ -97,25 +97,12 @@
 
         @include ltesm {
             box-sizing: border-box;
-            grid-template-columns: 1fr;
+            grid-template-columns: 52px 104px minmax(0, 1fr);
             column-gap: $sp-3;
-            row-gap: $sp-1;
             justify-content: start;
             justify-items: stretch;
             max-width: 300px;
             width: 100%;
-
-            .percentileWrap {
-                .name {
-                    margin-left: 0;
-                }
-            }
-
-            .link {
-                grid-column: 1;
-                justify-self: start;
-                margin-top: 0;
-            }
         }
     }
 }
