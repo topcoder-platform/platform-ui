@@ -75,6 +75,26 @@ const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
 )
 
 /**
+ * Pick the Data Science subtrack rating used by the summary card.
+ *
+ * Data Science can include Marathon Match and challenge ratings. The summary
+ * should show the strongest visible rating instead of always using Marathon
+ * Match, otherwise Data Science Challenge ratings are hidden from the profile.
+ *
+ * @param {MemberStats[]} subTracks - Active Data Science subtracks.
+ * @returns {MemberStats | undefined} The subtrack with the highest rating.
+ */
+const getDataScienceSummarySubTrack = (subTracks: MemberStats[]): MemberStats | undefined => orderBy(
+    subTracks,
+    [
+        subTrack => subTrack.rank?.rating ?? 0,
+        subTrack => subTrack.rank?.percentile ?? 0,
+        subTrack => subTrack.challenges ?? 0,
+    ],
+    ['desc', 'desc', 'desc'],
+)[0]
+
+/**
  * Attach parent track metadata to legacy design/develop subtracks and index them by name.
  *
  * @param {string} parentTrack - The top-level track that owns these subtracks.
@@ -158,6 +178,13 @@ const enhanceDesignTrackData = (trackData: MemberStatsTrack): MemberStatsTrack =
 export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => {
     // Create mappings for data science subtracks
     const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = {
+        // Map Challenge subtrack
+        Challenge: (memberStats?.DATA_SCIENCE?.Challenge && ({
+            ...memberStats.DATA_SCIENCE.Challenge,
+            name: 'Challenge',
+            parentTrack: 'DATA_SCIENCE',
+            path: 'DATA_SCIENCE',
+        })) as MemberStats,
         // Map MARATHON_MATCH subtrack
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
@@ -215,19 +242,18 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
 
     // Data science
     const dsSubTracks: MemberStats[] = [
+        dataScienceSubTracks.Challenge,
         dataScienceSubTracks.MARATHON_MATCH,
     ].filter(d => d?.challenges > 0) as MemberStats[]
+    const dsTrackData: MemberStatsTrack = buildTrackData('Data Science', dsSubTracks)
+    const dsSummarySubTrack: MemberStats | undefined = getDataScienceSummarySubTrack(dsTrackData.subTracks)
 
     const dsTrackStats: MemberStatsTrack = {
-        challenges: dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0,
-        isActive: (dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0) > 0,
+        ...dsTrackData,
         isDSTrack: true,
-        name: 'Data Science',
         order: -1,
-        percentile: dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
-        rating: dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
-        subTracks: dsSubTracks,
-        wins: dataScienceSubTracks.MARATHON_MATCH?.wins ?? 0,
+        percentile: dsSummarySubTrack?.rank?.percentile ?? 0,
+        rating: dsSummarySubTrack?.rank?.rating ?? 0,
     }
 
     // Competitive Programming

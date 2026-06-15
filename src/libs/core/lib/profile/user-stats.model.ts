@@ -80,6 +80,7 @@ export type UserStats = {
         reposts: number
     }
     DATA_SCIENCE?: {
+        Challenge?: MemberStats
         MARATHON_MATCH: MemberStats
         SRM: SRMStats
         challenges: number
@@ -127,6 +128,9 @@ export type UserStatsHistory = {
         }>
     }
     DATA_SCIENCE?: {
+        Challenge?: {
+            history: Array<StatsHistory>
+        },
         SRM?: {
             history: Array<StatsHistory>
         },

@@ -74,6 +74,39 @@ describe('getActiveTracks', () => {
             .toEqual(['Challenge', 'Task'])
     })
 
+    it('includes Data Science Challenge stats in the Data Science track', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            DATA_SCIENCE: {
+                Challenge: {
+                    challenges: 1,
+                    rank: {
+                        rating: 1499,
+                    },
+                    wins: 1,
+                },
+                MARATHON_MATCH: {
+                    challenges: 1,
+                    rank: {
+                        percentile: 20,
+                        rating: 763,
+                    },
+                    wins: 0,
+                },
+            },
+        } as UserStats)
+        const dataScienceTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Data Science')
+
+        expect(dataScienceTrack?.challenges)
+            .toEqual(2)
+        expect(dataScienceTrack?.wins)
+            .toEqual(1)
+        expect(dataScienceTrack?.rating)
+            .toEqual(1499)
+        expect(dataScienceTrack?.subTracks.map(track => track.name))
+            .toEqual(['Challenge', 'MARATHON_MATCH'])
+    })
+
     it('keeps legacy testing subtracks in the testing track', () => {
         const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DEVELOP: {
