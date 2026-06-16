@@ -203,6 +203,8 @@ workflows:
                           ignore:
                               - master
                               - qa
+                      tags:
+                          only: /^dev-.*/
 
             - build-qa:
                   context: org-global
@@ -227,6 +229,8 @@ workflows:
                           only:
                               - dev
                               - hide_ba_details
+                      tags:
+                          only: /^dev-.*/
 
             - deployQa:
                   context: org-global

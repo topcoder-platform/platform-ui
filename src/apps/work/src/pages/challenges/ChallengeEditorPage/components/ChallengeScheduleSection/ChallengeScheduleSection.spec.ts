@@ -1,6 +1,7 @@
 import { ChallengePhase } from '../../../../../lib/models'
 
 import {
+    AI_REVIEW_PHASE_NAME,
     AI_SCREENING_PHASE_NAME,
     buildSchedulePhaseRows,
     canEditPhaseStartDate,
@@ -168,6 +169,28 @@ describe('ChallengeScheduleSection helpers', () => {
 
             expect(rows.filter(row => row.isVirtual))
                 .toHaveLength(0)
+        })
+
+        it('does not inject a virtual AI screening row when an AI Review phase is present (AI_ONLY challenge)', () => {
+            const rows = buildSchedulePhaseRows([
+                buildPhase({
+                    name: 'Registration',
+                    phaseId: 'registration',
+                }),
+                buildPhase({
+                    name: 'Submission',
+                    phaseId: 'submission',
+                }),
+                buildPhase({
+                    name: AI_REVIEW_PHASE_NAME,
+                    phaseId: 'ai-review',
+                }),
+            ], true)
+
+            expect(rows.filter(row => row.isVirtual))
+                .toHaveLength(0)
+            expect(rows.map(row => row.phase.name))
+                .toEqual(['Registration', 'Submission', AI_REVIEW_PHASE_NAME])
         })
     })
 })

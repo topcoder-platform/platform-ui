@@ -59,7 +59,14 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     = currentDecision?.totalScore !== null
     && currentDecision?.totalScore !== undefined
 
-    const overallStatus = normalizeDecisionStatus(currentDecision?.status)
+    const minPassingThreshold = currentDecision?.breakdown?.minPassingThreshold
+        ?? aiReviewConfig?.minPassingThreshold
+
+    const overallStatus = normalizeDecisionStatus(
+        currentDecision?.status,
+        currentDecision?.totalScore,
+        minPassingThreshold,
+    )
     const overallScore = currentDecision?.totalScore
 
     return (

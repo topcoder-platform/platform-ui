@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Challenge Details Content.
  */
@@ -34,6 +35,7 @@ import {
     shouldIncludeInReviewPhase,
 } from '../../utils/reviewPhaseGuards'
 
+import TabContentAiApproval from './TabContentAiApproval'
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
@@ -83,6 +85,7 @@ const TabContentPlaceholder = (props: { message: string }): JSX.Element => (
     </TabContentWrapper>
 )
 
+const AI_REVIEW_KEY = normalizeType('ai review')
 const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('submission'),
     normalizeType('specification submission'),
@@ -90,6 +93,7 @@ const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('ai screening'),
     normalizeType('submission / screening'),
     normalizeType('topgear submission'),
+    AI_REVIEW_KEY,
 ])
 
 const CHECKPOINT_REVIEW_KEY = normalizeType('checkpoint review')
@@ -156,6 +160,7 @@ const renderSubmissionTab = ({
         .startsWith('submission')
         || isSpecificationSubmissionTab
         || selectedTabNormalized === AI_SCREENING_KEY
+        || selectedTabNormalized === AI_REVIEW_KEY
         || isTopgearSubmissionTab
     const visibleSubmissions = shouldRestrictToContestSubmissions
         ? submissions.filter(
@@ -196,6 +201,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
         myResources,
+        aiReviewConfig,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { actionChallengeRole }: useRoleProps = useRole()
     const hasIterativeReviewerRole = useMemo(
@@ -274,6 +280,21 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             : undefined),
         [challengeInfo?.phases, props.selectedPhaseId],
     )
+    const isFuturePhase = useMemo(() => {
+        if (!props.isActiveChallenge) return false
+        if (!selectedPhase) return false
+        const isOpen = Boolean((selectedPhase as { isOpen?: boolean }).isOpen)
+        const hasStarted = Boolean(selectedPhase.actualStartDate)
+        // If phase is not open and hasn't actually started, consider it future
+        if (!isOpen && !hasStarted) return true
+        // Fallback to scheduled start in the future if available
+        const startMs = Date.parse(selectedPhase.actualStartDate || selectedPhase.scheduledStartDate || '')
+        if (Number.isFinite(startMs)) {
+            return startMs > Date.now()
+        }
+
+        return false
+    }, [actionChallengeRole, selectedPhase, props.isActiveChallenge])
     const isFuturePhaseForSubmitter = useMemo(() => {
         if (!props.isActiveChallenge) return false
         if (actionChallengeRole !== SUBMITTER) return false
@@ -493,6 +514,19 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         }
 
         if (selectedTabNormalized === 'approval') {
+            if (aiReviewConfig?.mode === 'AI_ONLY') {
+                return isFuturePhase ? (
+                    <TabContentPlaceholder message={unopenedPhaseMessage || "This phase hasn't opened yet."} />
+                ) : (
+                    <TabContentAiApproval
+                        submissions={props.submissions}
+                        isLoading={props.isLoadingSubmission}
+                        isDownloading={isDownloadingSubmission}
+                        downloadSubmission={handleSubmissionDownload}
+                    />
+                )
+            }
+
             return (
                 <TabContentApproval
                     reviews={props.approvalReviews}
@@ -536,6 +570,12 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     phaseIdFilter={props.selectedPhaseId}
                     aiReviewers={aiReviewers}
                 />
+            )
+        }
+
+        if (selectedTabNormalized === 'review' && aiReviewConfig?.mode === 'AI_ONLY') {
+            return (
+                <TabContentPlaceholder message='Review is handled automatically in AI Only mode.' />
             )
         }
 

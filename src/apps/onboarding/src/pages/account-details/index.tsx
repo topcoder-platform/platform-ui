@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { Button, IconOutline, InputSelect, PageDivider } from '~/libs/ui'
 import { getCountryLookup } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 import { EnvironmentConfig } from '~/config'
-import { Member } from '~/apps/talent-search/src/lib/models'
+import { UserProfile } from '~/libs/core'
 
 import { ProgressBar } from '../../components/progress-bar'
 import { validatePhonenumber } from '../../utils/validation'
@@ -28,7 +28,7 @@ const blankConnectInfo: ConnectInfo = emptyConnectInfo()
 const PageAccountDetailsContent: FC<{
     reduxAddress: MemberAddress | undefined
     reduxConnectInfo: ConnectInfo | undefined
-    reduxMemberInfo: Member | undefined
+    reduxMemberInfo: UserProfile | undefined
     updateMemberConnectInfos: (infos: ConnectInfo[]) => void
     createMemberConnectInfos: (infos: ConnectInfo[]) => void
     updateMemberHomeAddresss: (infos: MemberAddress[]) => void

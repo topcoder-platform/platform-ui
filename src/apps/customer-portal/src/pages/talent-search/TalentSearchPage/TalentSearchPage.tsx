@@ -13,6 +13,7 @@ import {
     Tooltip,
 } from '~/libs/ui'
 import { extractSkillsFromText, fetchSkillAutocompleteOptions } from '~/libs/shared'
+import { preferredRoleOptions } from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { TalentResultCard } from '../components/TalentResultCard'
 import {
@@ -37,9 +38,10 @@ export const TalentSearchPage: FC = () => {
     const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
+    const [selectedPreferredRoles, setSelectedPreferredRoles] = useState<InputMultiselectOption[]>([])
     const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(false)
-    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
-    const [onlyActive, setOnlyActive] = useState<boolean>(true)
+    const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
+    const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
@@ -71,6 +73,15 @@ export const TalentSearchPage: FC = () => {
             .filter(Boolean),
         [selectedCountries],
     )
+    const selectedPreferredRoleValues = useMemo(
+        (): string[] => selectedPreferredRoles
+            .map(role => String(role.value || '')
+                .trim()
+                .toUpperCase())
+            .filter(Boolean)
+            .sort(),
+        [selectedPreferredRoles],
+    )
 
     const shouldShowIntroState = !hasSearched
     const currentSearchSignature = useMemo(
@@ -79,6 +90,7 @@ export const TalentSearchPage: FC = () => {
                 .slice()
                 .sort(),
             openToWork: onlyOpenToWork,
+            preferredRoles: selectedPreferredRoleValues,
             profileComplete: onlyProfileComplete,
             recentlyActive: onlyActive,
             skills: selectedSkills
@@ -87,7 +99,14 @@ export const TalentSearchPage: FC = () => {
                 .filter(Boolean)
                 .sort(),
         }),
-        [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedSkills],
+        [
+            onlyActive,
+            onlyOpenToWork,
+            onlyProfileComplete,
+            selectedCountryCodesList,
+            selectedPreferredRoleValues,
+            selectedSkills,
+        ],
     )
 
     // Order comes from reports-api (sortBy/sortOrder on each request) so pagination stays globally consistent.
@@ -136,6 +155,18 @@ export const TalentSearchPage: FC = () => {
             .includes(normalizedQuery))
     }, [countryFilterOptions])
 
+    const loadPreferredRoleOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        const normalizedQuery = query.trim()
+            .toLowerCase()
+        if (!normalizedQuery) {
+            return preferredRoleOptions
+        }
+
+        return preferredRoleOptions.filter(option => String(option.label || '')
+            .toLowerCase()
+            .includes(normalizedQuery))
+    }, [])
+
     const runMemberSearch = useCallback(async (
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
@@ -144,6 +175,7 @@ export const TalentSearchPage: FC = () => {
             generation?: number
             openToWork?: boolean
             page?: number
+            preferredRoles?: string[]
             profileComplete?: boolean
             recentlyActive?: boolean
         },
@@ -157,7 +189,8 @@ export const TalentSearchPage: FC = () => {
         const page = overrides?.page ?? 1
         const profileComplete = overrides?.profileComplete ?? onlyProfileComplete
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
-        const hasSkills = skillsToSearch.length > 0
+        const preferredRoles = (overrides?.preferredRoles ?? selectedPreferredRoleValues)
+            .filter(Boolean)
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
             page,
@@ -170,12 +203,14 @@ export const TalentSearchPage: FC = () => {
                     wins: 1,
                 })),
             skillSearchType: 'OR',
-            sortBy: hasSkills ? 'matchIndex' : 'handle',
-            sortOrder: hasSkills ? 'desc' : 'asc',
         }
 
         if (countries.length > 0) {
             payload.countries = countries
+        }
+
+        if (preferredRoles.length > 0) {
+            payload.preferredRoles = preferredRoles
         }
 
         if (openToWork) {
@@ -240,13 +275,14 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList])
+    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedPreferredRoleValues])
 
     const clearAllFilters = useCallback((): void => {
         setSelectedCountries([])
+        setSelectedPreferredRoles([])
         setOnlyProfileComplete(false)
-        setOnlyOpenToWork(true)
-        setOnlyActive(true)
+        setOnlyOpenToWork(false)
+        setOnlyActive(false)
         setSelectedSkills([])
         setErrorMessage('')
         setLastSearchedDescription('')
@@ -307,7 +343,7 @@ export const TalentSearchPage: FC = () => {
     }, [isExtractingSkills, jobDescription])
 
     const handleSearch = useCallback(async (): Promise<void> => {
-        if (isSearchingMembers || selectedSkills.length === 0) {
+        if (isSearchingMembers) {
             return
         }
 
@@ -317,6 +353,7 @@ export const TalentSearchPage: FC = () => {
             countries: selectedCountryCodesList,
             openToWork: onlyOpenToWork,
             page: 1,
+            preferredRoles: selectedPreferredRoleValues,
             profileComplete: onlyProfileComplete,
             recentlyActive: onlyActive,
         })
@@ -332,6 +369,7 @@ export const TalentSearchPage: FC = () => {
         onlyProfileComplete,
         runMemberSearch,
         selectedCountryCodesList,
+        selectedPreferredRoleValues,
         selectedSkills,
     ])
 
@@ -431,6 +469,21 @@ export const TalentSearchPage: FC = () => {
                                     placeholder='Select country'
                                 />
                             </div>
+                            <div className={styles.filterBlock}>
+                                <InputMultiselect
+                                    label='Preferred role'
+                                    name='preferredRole'
+                                    openMenuOnClick
+                                    options={preferredRoleOptions}
+                                    onFetchOptions={loadPreferredRoleOptions}
+                                    value={selectedPreferredRoles}
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        const value = (event.target.value || []) as InputMultiselectOption[]
+                                        setSelectedPreferredRoles(value)
+                                    }}
+                                    placeholder='Select preferred roles'
+                                />
+                            </div>
                             <label className={styles.checkboxRow}>
                                 <input
                                     type='checkbox'
@@ -491,8 +544,7 @@ export const TalentSearchPage: FC = () => {
                                 <Button
                                     primary
                                     disabled={
-                                        selectedSkills.length === 0
-                                        || isSearchingMembers
+                                        isSearchingMembers
                                         || currentSearchSignature === lastAppliedSearchSignature
                                     }
                                     onClick={handleSearch}

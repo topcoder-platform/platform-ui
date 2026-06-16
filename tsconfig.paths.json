@@ -21,9 +21,6 @@
             "@platform/*": [
                 "./src/apps/platform/src/*"
             ],
-            "@talentSearch/*": [
-                "./src/apps/talent-search/src/*"
-            ],
             "@profiles/*": [
                 "./src/apps/profiles/src/*"
             ],

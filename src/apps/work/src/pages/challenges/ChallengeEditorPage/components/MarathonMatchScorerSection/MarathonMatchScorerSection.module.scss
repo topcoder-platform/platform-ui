@@ -169,6 +169,12 @@
     padding: 10px 12px;
 }
 
+.fieldGroup input:disabled {
+    background: $black-5;
+    color: $black-40;
+    cursor: not-allowed;
+}
+
 .selectInput {
     appearance: none;
     -webkit-appearance: none;
@@ -268,6 +274,45 @@
     font-size: 14px;
     line-height: 1.5;
     margin: 4px 0 0;
+}
+
+.operationPanel {
+    display: flex;
+    flex: 1 1 520px;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 280px;
+}
+
+.testSubmissionGrid {
+    align-items: flex-end;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(150px, 180px) minmax(220px, 1fr) auto;
+}
+
+.operationButton,
+.rerunButtonRow {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.testSubmissionResult {
+    align-items: center;
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    border-radius: 8px;
+    color: #137d60;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 13px;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+.testSubmissionResult a {
+    color: $link-blue-dark;
+    font-weight: 600;
 }
 
 .validationCard {
@@ -408,5 +453,14 @@
     .footerActions,
     .modalActions {
         justify-content: stretch;
+    }
+
+    .testSubmissionGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .operationButton,
+    .rerunButtonRow {
+        justify-content: flex-start;
     }
 }

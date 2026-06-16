@@ -20,6 +20,8 @@ interface ScoredSubmissionLike {
         finalScore?: number
         score?: number
     }>
+    initialScore?: string
+    finalScore?: string
     reviewSummation?: ReviewSummation[]
     submissions?: SubmissionScore[]
 }
@@ -515,6 +517,10 @@ export function getSubmissionInitialScore(submission: ScoredSubmissionLike): num
             .map(review => toValidScore(review.score ?? review.finalScore)),
     )
 
+    if (submission.initialScore !== null && submission.initialScore !== undefined) {
+        return toValidScore(submission.initialScore) ?? 0
+    }
+
     return fallbackInitialScore || 0
 }
 
@@ -569,6 +575,10 @@ export function getSubmissionFinalScore(submission: ScoredSubmissionLike): numbe
     )
     if (fallbackSummationScore !== undefined) {
         return fallbackSummationScore
+    }
+
+    if (submission.finalScore !== null && submission.finalScore !== undefined) {
+        return toValidScore(submission.finalScore) ?? 0
     }
 
     return 0

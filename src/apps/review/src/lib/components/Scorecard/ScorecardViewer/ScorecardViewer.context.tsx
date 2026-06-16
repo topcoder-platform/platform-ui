@@ -146,7 +146,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         aiFeedbackItems: props.aiFeedbackItems,
         canAddManagerComment: props.canAddManagerComment,
         doDeleteAppeal: props.doDeleteAppeal,
-        form: props.isEdit ? reviewFormCtx.form : undefined,
+        form: reviewFormCtx.form,
         formErrors: props.isEdit ? reviewFormCtx.form.formState.errors : undefined,
         formTrigger: props.isEdit ? reviewFormCtx.form.trigger : undefined,
         isEdit: props.isEdit,
