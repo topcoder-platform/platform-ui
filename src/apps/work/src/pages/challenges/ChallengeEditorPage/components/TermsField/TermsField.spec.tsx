@@ -28,6 +28,7 @@ jest.mock('../../../../../lib/hooks', () => ({
 const mockedUseFetchTerms = useFetchTerms as jest.MockedFunction<typeof useFetchTerms>
 
 const STANDARD_TERM_ID = 'standard-terms-id'
+const CONFIGURED_STANDARD_TERM_ID = 'configured-standard-terms-id'
 
 const baseDefaultValues: ChallengeEditorFormData = {
     description: 'Public challenge specification',
@@ -101,6 +102,20 @@ describe('TermsField', () => {
             },
         ]))
             .toBe(STANDARD_TERM_ID)
+    })
+
+    it('prefers the configured standard term id over legacy matches', () => {
+        expect(findDefaultStandardTermId([
+            {
+                id: STANDARD_TERM_ID,
+                title: 'Standard Terms v3',
+            },
+            {
+                id: CONFIGURED_STANDARD_TERM_ID,
+                title: 'Updated Standard Terms',
+            },
+        ], CONFIGURED_STANDARD_TERM_ID))
+            .toBe(CONFIGURED_STANDARD_TERM_ID)
     })
 
     it('defaults the standard term for new challenges', async () => {

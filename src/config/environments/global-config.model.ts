@@ -56,6 +56,7 @@ export interface GlobalConfig {
     }
     TERMS_URL?: string
     NDA_TERMS_URL?: string
+    DEFAULT_STANDARD_TERMS_UUID?: string
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {
