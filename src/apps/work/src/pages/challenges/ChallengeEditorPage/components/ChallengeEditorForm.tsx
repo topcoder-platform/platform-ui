@@ -167,6 +167,7 @@ import {
 import {
     ReviewersField,
 } from './ReviewersField'
+import type { AiReviewConfigSaveController } from './ReviewersField/AiReviewTab'
 import {
     ReviewTypeField,
 } from './ReviewTypeField'
@@ -1512,6 +1513,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const challengeRef = useRef<Challenge | undefined>(props.challenge)
     const pendingChallengeRefreshRef = useRef<Challenge | undefined>()
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
+    const aiReviewConfigSaveControllerRef = useRef<AiReviewConfigSaveController | undefined>(undefined)
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
         [
@@ -2927,8 +2929,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     throw createHandledLaunchBlockError(projectBillingAccountErrorMessage)
                 }
 
+                let formDataToSave = formData
+                if (aiReviewConfigSaveControllerRef.current) {
+                    await aiReviewConfigSaveControllerRef.current.flushPendingSave()
+                    formDataToSave = getValues()
+                }
+
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
-                    formData,
+                    formDataToSave,
                     resolvedProjectBillingAccount,
                 )
                 const payload = transformFormDataToChallenge({
@@ -3402,12 +3410,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         loginUserId,
         rawPaymentCreator,
     ])
+
     const reviewSection = usesManualReviewers
         ? (
             <section className={styles.section}>
                 <h3 className={styles.sectionTitle}>Review</h3>
                 <div className={styles.block}>
-                    <ReviewersField isReadOnly={isReadOnly} />
+                    <ReviewersField
+                        isReadOnly={isReadOnly}
+                        onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
+                            aiReviewConfigSaveControllerRef.current = controller
+                        }}
+                    />
                 </div>
             </section>
         )
