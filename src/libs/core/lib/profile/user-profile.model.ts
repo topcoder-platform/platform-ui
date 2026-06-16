@@ -10,6 +10,20 @@ export enum NamesAndHandleAppearance {
 
 export type AvailabilityType = 'FULL_TIME' | 'PART_TIME'
 
+export interface UserChallengePointsDetail {
+    challengeId: string
+    challengeName: string
+    placement: number
+    points: number
+    userId: number
+}
+
+export interface UserChallengePointsSummary {
+    challenges: number
+    details: Array<UserChallengePointsDetail>
+    total: number
+}
+
 export interface UserProfile {
     addresses?: Array<{
         city?: string
@@ -46,6 +60,7 @@ export interface UserProfile {
     updatedAt: number
     userId: number
     namesAndHandleAppearance: NamesAndHandleAppearance
+    challengePoints?: UserChallengePointsSummary
     identityVerified?: boolean
     recentActivity?: boolean
 
