@@ -237,8 +237,8 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
                 : ''
 
             setSelectedOption(nextSelectedOption)
-            field.onChange(nextValue)
             onValueChange?.(nextValue)
+            field.onChange(nextValue)
         },
         [field, onValueChange],
     )
