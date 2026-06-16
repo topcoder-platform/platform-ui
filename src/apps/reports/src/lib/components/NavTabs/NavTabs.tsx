@@ -4,6 +4,7 @@ import {
     MouseEvent,
     SetStateAction,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -19,7 +20,10 @@ import {
     billingAccountsPageRouteId,
     bulkMemberLookupRouteId,
     reportsPageRouteId,
+    talentPageRouteId,
 } from '../../../config/routes.config'
+import { ReportsAppContext, ReportsAppContextModel } from '../../contexts'
+import { canAccessTalentReport } from '../../utils'
 
 import styles from './NavTabs.module.scss'
 
@@ -28,21 +32,37 @@ const NavTabs: FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
+    const { loginUserInfo }: ReportsAppContextModel = useContext(ReportsAppContext)
+    const canAccessTalent = useMemo(() => (
+        canAccessTalentReport(loginUserInfo?.roles)
+    ), [loginUserInfo])
 
-    const tabs = useMemo<TabsNavItem[]>(() => [
-        {
-            id: reportsPageRouteId,
-            title: 'Reports',
-        },
-        {
-            id: bulkMemberLookupRouteId,
-            title: 'Bulk Member Lookup',
-        },
-        {
-            id: billingAccountsPageRouteId,
-            title: 'SFDC Payments',
-        },
-    ], [])
+    const tabs = useMemo<TabsNavItem[]>(() => {
+        const baseTabs: TabsNavItem[] = [
+            {
+                id: reportsPageRouteId,
+                title: 'Reports',
+            },
+            {
+                id: bulkMemberLookupRouteId,
+                title: 'Bulk Member Lookup',
+            },
+            {
+                id: billingAccountsPageRouteId,
+                title: 'SFDC Payments',
+            },
+        ]
+
+        return canAccessTalent
+            ? [
+                ...baseTabs,
+                {
+                    id: talentPageRouteId,
+                    title: 'Talent',
+                },
+            ]
+            : baseTabs
+    }, [canAccessTalent])
 
     const activeTabPathName: string = useMemo<string>(() => {
         const matchingTabs = tabs
