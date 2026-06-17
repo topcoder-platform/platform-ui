@@ -15,6 +15,8 @@ import { ModifySkillsModal } from './ModifySkillsModal'
 import { PrincipalSkillsModal } from './PrincipalSkillsModal'
 import styles from './MemberSkillsInfo.module.scss'
 
+const COLLAPSED_PRINCIPAL_SKILL_COUNT = 5
+
 interface MemberSkillsInfoProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
@@ -81,8 +83,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setIsAdditionalSkillsExpanded,
     ]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
+    const [
+        isPrincipalSkillsExpanded,
+        setIsPrincipalSkillsExpanded,
+    ]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+
     useEffect(() => {
         setIsAdditionalSkillsExpanded(false)
+        setIsPrincipalSkillsExpanded(false)
     }, [props.profile.handle])
 
     useEffect(() => {
@@ -143,6 +151,16 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
     }
 
     /**
+     * Toggles Principal Skills between the five-skill preview and full list.
+     *
+     * Used by the Principal Skills more/less control on the member profile
+     * page. It takes no parameters, returns no value, and does not throw.
+     */
+    function handlePrincipalSkillsToggle(): void {
+        setIsPrincipalSkillsExpanded(isExpanded => !isExpanded)
+    }
+
+    /**
      * Toggles visibility for the Additional Skills section from the section arrow.
      *
      * Used by the Additional Skills header button to expand or collapse grouped
@@ -163,6 +181,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
 
             throw e
         }), [props.profile.handle])
+
+    const visiblePrincipalSkills: UserSkill[] = isPrincipalSkillsExpanded
+        ? principalSkills
+        : principalSkills.slice(0, COLLAPSED_PRINCIPAL_SKILL_COUNT)
+    const hiddenPrincipalSkillCount: number = Math.max(
+        principalSkills.length - COLLAPSED_PRINCIPAL_SKILL_COUNT,
+        0,
+    )
 
     return (
         <div className={styles.container}>
@@ -202,7 +228,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                             Principal Skills
                         </div>
                         <div className={styles.principalSkills}>
-                            {principalSkills.map((skill: UserSkill) => (
+                            {visiblePrincipalSkills.map((skill: UserSkill) => (
                                 <SkillPill
                                     skill={skill}
                                     key={skill.id}
@@ -210,6 +236,17 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                                     fetchSkillDetails={canFetchSkillDetails ? fetchSkillDetails : undefined}
                                 />
                             ))}
+                            {hiddenPrincipalSkillCount > 0 && (
+                                <button
+                                    type='button'
+                                    className={styles.principalSkillsToggle}
+                                    onClick={handlePrincipalSkillsToggle}
+                                >
+                                    {isPrincipalSkillsExpanded
+                                        ? 'See less'
+                                        : `+ ${hiddenPrincipalSkillCount} more skills`}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
