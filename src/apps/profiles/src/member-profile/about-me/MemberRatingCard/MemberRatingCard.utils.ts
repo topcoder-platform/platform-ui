@@ -341,7 +341,7 @@ const getAIEngineeringRatingCandidates = (memberStats?: UserStats): RatingCandid
 }
 
 /**
- * Builds the fallback rating candidate from the historical maximum rating payload.
+ * Builds a rating candidate from the API maxRating payload.
  *
  * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
  * @returns {RatingCandidate | undefined} Max rating candidate when enough metadata is available.
@@ -363,41 +363,48 @@ const getMaxRatingCandidate = (memberStats?: UserStats): RatingCandidate | undef
 }
 
 /**
- * Returns the latest rated track candidate used by the compact rating card.
+ * Returns the highest rated track candidate used by the compact rating card.
  *
  * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
- * @returns {RatingCandidate | undefined} Latest current rating candidate, or max rating fallback.
+ * @returns {RatingCandidate | undefined} Highest current rating candidate, with event date as a tie-breaker.
  */
-const getLatestProfileRatingCandidate = (memberStats?: UserStats): RatingCandidate | undefined => {
+const getProfileRatingCandidate = (memberStats?: UserStats): RatingCandidate | undefined => {
     const candidates: RatingCandidate[] = [
+        getMaxRatingCandidate(memberStats),
         ...getSubTrackRatingCandidates('DEVELOP', memberStats?.DEVELOP?.subTracks),
         ...getSubTrackRatingCandidates('DESIGN', memberStats?.DESIGN?.subTracks),
         ...getDataScienceRatingCandidates(memberStats?.DATA_SCIENCE),
         ...getAIEngineeringRatingCandidates(memberStats),
-    ]
+    ].filter((candidate: RatingCandidate | undefined): candidate is RatingCandidate => candidate !== undefined)
 
-    const latestCandidate: RatingCandidate | undefined = candidates.reduce((
-        latest: RatingCandidate | undefined,
+    return candidates.reduce((
+        highest: RatingCandidate | undefined,
         candidate: RatingCandidate,
-    ) => (
-        latest === undefined || candidate.ratingDate > latest.ratingDate ? candidate : latest
-    ), undefined)
+    ) => {
+        if (
+            highest === undefined
+            || candidate.rating > highest.rating
+            || (candidate.rating === highest.rating && candidate.ratingDate > highest.ratingDate)
+        ) {
+            return candidate
+        }
 
-    return latestCandidate ?? getMaxRatingCandidate(memberStats)
+        return highest
+    }, undefined)
 }
 
 /**
  * Returns the rating that should be shown on the compact profile rating card.
  *
- * The card should show the latest current rating from the user's rated tracks,
- * not the historical maximum rating. `maxRating` is used only as a fallback
- * when the stats payload does not include any rated track entries.
+ * The card should show the highest current rating from the user's rated tracks.
+ * The API `maxRating` payload participates in selection so the compact card
+ * stays aligned with the stats response, while rating event date only breaks ties.
  *
  * @param {UserStats | undefined} memberStats - Raw member stats for the profile user.
- * @returns {number | undefined} Latest current rating, or the max rating fallback when no track rating exists.
+ * @returns {number | undefined} Highest current rating when available.
  */
-export const getLatestProfileRating = (memberStats?: UserStats): number | undefined => (
-    getLatestProfileRatingCandidate(memberStats)?.rating
+export const getProfileRating = (memberStats?: UserStats): number | undefined => (
+    getProfileRatingCandidate(memberStats)?.rating
 )
 
 /**
@@ -418,7 +425,7 @@ const isAIEngineeringRatingCandidate = (ratingCandidate: RatingCandidate): boole
  * @returns {RatingDistributionQuery | undefined} The API query for rating distribution data.
  */
 export const getRatingDistributionQuery = (memberStats?: UserStats): RatingDistributionQuery | undefined => {
-    const ratingCandidate = getLatestProfileRatingCandidate(memberStats)
+    const ratingCandidate = getProfileRatingCandidate(memberStats)
 
     if (!ratingCandidate) {
         return undefined
@@ -444,7 +451,7 @@ export const getRatingDistributionQuery = (memberStats?: UserStats): RatingDistr
  * @returns {string} The broad track audience label for the rating card and modal.
  */
 export const getRatingAudienceLabel = (memberStats?: UserStats): string => {
-    const ratingCandidate = getLatestProfileRatingCandidate(memberStats)
+    const ratingCandidate = getProfileRatingCandidate(memberStats)
     const normalizedTrack = normalizeTrackToken(ratingCandidate?.track)
     const normalizedSubTrack = normalizeTrackToken(ratingCandidate?.subTrack)
 
