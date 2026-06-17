@@ -12,7 +12,10 @@ import {
     FormSelectField,
     FormSelectOption,
 } from '../../../../../lib/components/form'
-import { DEFAULT_NDA_UUID } from '../../../../../lib/constants/challenge-editor.constants'
+import {
+    DEFAULT_NDA_UUID,
+    DEFAULT_STANDARD_TERMS_UUID,
+} from '../../../../../lib/constants/challenge-editor.constants'
 import {
     useFetchTerms,
     UseFetchTermsResult,
@@ -44,7 +47,20 @@ function normalizeTermTitle(value: string): string {
         .toLowerCase()
 }
 
-export function findDefaultStandardTermId(terms: Term[]): string | undefined {
+export function findDefaultStandardTermId(
+    terms: Term[],
+    configuredDefaultTermId: string | undefined = DEFAULT_STANDARD_TERMS_UUID,
+): string | undefined {
+    const normalizedConfiguredDefaultTermId = configuredDefaultTermId?.trim()
+
+    if (
+        normalizedConfiguredDefaultTermId
+        && terms.some(term => term.id === normalizedConfiguredDefaultTermId)
+    ) {
+        return normalizedConfiguredDefaultTermId
+    }
+
+    // Keep legacy discovery as a fallback until every environment has an explicit default UUID.
     return terms.find(term => (
         LEGACY_DEFAULT_STANDARD_TERM_IDS.has(term.id)
         || DEFAULT_STANDARD_TERM_TITLES.has(normalizeTermTitle(term.title))
