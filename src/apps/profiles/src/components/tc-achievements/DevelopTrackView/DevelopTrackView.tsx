@@ -24,11 +24,13 @@ const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
         'First2Finish',
         'DESIGN_FIRST_2_FINISH',
     ].includes(trackName), [trackName])
+    const statsDistributionTrack = props.trackData.statsDistributionTrack ?? props.trackData.parentTrack
+    const statsDistributionSubTrack = props.trackData.statsDistributionSubTrack ?? trackName
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution(
         isDesignTrack ? undefined : {
-            subTrack: trackName,
-            track: props.trackData.parentTrack,
+            subTrack: statsDistributionSubTrack,
+            track: statsDistributionTrack,
         },
     )
 

@@ -35,11 +35,6 @@ interface RatingTier {
     tierLabel: string
 }
 
-interface PyramidTierShape {
-    points: string
-    tierId: string
-}
-
 const ratingTiers: RatingTier[] = [{
     color: '#555555',
     end: 899,
@@ -103,23 +98,6 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
     value: 2200,
 }]
 
-const pyramidTierShapes: PyramidTierShape[] = [{
-    points: '50 0 60 16 40 16',
-    tierId: 'elite',
-}, {
-    points: '36 21 64 21 70 34 30 34',
-    tierId: 'advanced',
-}, {
-    points: '29 39 71 39 78 52 22 52',
-    tierId: 'skilled',
-}, {
-    points: '20 57 80 57 88 70 12 70',
-    tierId: 'intermediate',
-}, {
-    points: '12 75 88 75 100 91 0 91',
-    tierId: 'beginner',
-}]
-
 /**
  * Formats percentile values for the rating comparison modal.
  *
@@ -137,7 +115,7 @@ const formatPercentile = (percentile?: number): string => (
 /**
  * Returns the Topcoder rating tier metadata for a rating.
  *
- * Used by MemberRatingInfoModal to color the summary, histogram, pyramid, and legend.
+ * Used by MemberRatingInfoModal to color the summary, histogram, and legend.
  *
  * @param {number | undefined} rating - The member rating value or a rating range start.
  * @returns {RatingTier} The tier metadata that matches the rating.
@@ -161,39 +139,6 @@ const getRatingTier = (rating?: number): RatingTier => (
 const getRatingTierName = (rating?: number): string => (
     rating === undefined ? 'Unrated' : getRatingTier(rating).tierLabel
 )
-
-/**
- * Returns the pyramid tier that represents a member's top percentile.
- *
- * Used by MemberRatingInfoModal to place the highlighted pyramid segment by position instead of
- * rating range: top 10%, top 25%, top 50%, top 75%, then everyone else.
- *
- * @param {number | undefined} percentile - The member's top percentile in the selected audience.
- * @returns {RatingTier | undefined} The pyramid tier for the percentile, or undefined without a usable percentile.
- */
-const getPyramidTierByPercentile = (percentile?: number): RatingTier | undefined => {
-    if (percentile === undefined || !Number.isFinite(percentile)) {
-        return undefined
-    }
-
-    if (percentile <= 10) {
-        return ratingTiers[4]
-    }
-
-    if (percentile <= 25) {
-        return ratingTiers[3]
-    }
-
-    if (percentile <= 50) {
-        return ratingTiers[2]
-    }
-
-    if (percentile <= 75) {
-        return ratingTiers[1]
-    }
-
-    return ratingTiers[0]
-}
 
 /**
  * Parses the API distribution payload into ordered rating ranges.
@@ -313,7 +258,6 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const titleDisplayName: string = displayName
         .toUpperCase()
     const selectedRatingTier: RatingTier = getRatingTier(props.rating)
-    const selectedPyramidTier: RatingTier = getPyramidTierByPercentile(props.percentile) ?? selectedRatingTier
     const distributionRanges: RatingDistributionRange[] = useMemo(() => (
         getDistributionRanges(props.ratingDistribution?.distribution)
     ), [props.ratingDistribution])
@@ -365,33 +309,9 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                         className={classNames(styles.summaryMetric, styles.positionMetric)}
                         data-testid='rating-position-summary'
                     >
-                        <div className={styles.tierPyramid} aria-hidden='true'>
-                            <svg
-                                className={styles.tierPyramidSvg}
-                                viewBox='0 0 100 91'
-                                focusable='false'
-                            >
-                                {pyramidTierShapes.map((shape: PyramidTierShape) => {
-                                    const tier = ratingTiers.find((ratingTier: RatingTier) => (
-                                        ratingTier.id === shape.tierId
-                                    )) ?? ratingTiers[0]
-
-                                    return (
-                                        <polygon
-                                            key={shape.tierId}
-                                            points={shape.points}
-                                            fill={tier.id === selectedPyramidTier.id
-                                                ? selectedRatingTier.color
-                                                : '#D4D4D4'}
-                                        />
-                                    )
-                                })}
-                            </svg>
-                        </div>
-
                         <div className={styles.positionDetails}>
                             <span className={styles.summaryLabel}>Position</span>
-                            <span className={styles.positionValue} style={{ color: getRatingColor(props.rating) }}>
+                            <span className={styles.positionValue}>
                                 TOP
                                 {' '}
                                 {percentileLabel}

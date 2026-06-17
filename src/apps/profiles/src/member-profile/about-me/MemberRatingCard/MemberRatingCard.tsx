@@ -19,8 +19,8 @@ import {
     calculateTopPercentileFromDistribution,
     formatTopPercentile,
     getCompactRatingColor,
-    getLatestProfileRating,
     getPreferredRolesDisplay,
+    getProfileRating,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
     parsePreferredRolesText,
@@ -38,7 +38,7 @@ interface MemberRatingCardProps {
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
-    const rating: number | undefined = useMemo(() => getLatestProfileRating(memberStats), [memberStats])
+    const rating: number | undefined = useMemo(() => getProfileRating(memberStats), [memberStats])
     const compactRatingColor: string = getCompactRatingColor(rating, getRatingColor(rating))
 
     const [isInfoModalOpen, setIsInfoModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
@@ -175,7 +175,6 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                             >
                                 <p
                                     className={classNames(styles.value, styles.percentileValue)}
-                                    style={{ color: compactRatingColor }}
                                 >
                                     {percentileLabel}
                                 </p>

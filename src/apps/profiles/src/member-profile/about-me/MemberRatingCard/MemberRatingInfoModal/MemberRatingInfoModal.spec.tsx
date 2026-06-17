@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import type { PropsWithChildren } from 'react'
-import type { RenderResult } from '@testing-library/react'
 import { render, screen, within } from '@testing-library/react'
 
 import type { UserProfile } from '~/libs/core'
@@ -27,11 +26,6 @@ const ratingDistribution = {
     track: 'DATA_SCIENCE',
     updatedAt: '2026-06-04T00:00:00.000Z',
     updatedBy: 'test',
-}
-
-function getPyramidFills(container: HTMLElement): string[] {
-    return Array.from(container.querySelectorAll('polygon'))
-        .map((polygon: Element) => polygon.getAttribute('fill') ?? '')
 }
 
 jest.mock('~/libs/core', () => ({
@@ -62,7 +56,7 @@ jest.mock('../../../../lib', () => ({
 }))
 
 describe('MemberRatingInfoModal', () => {
-    it('keeps the pyramid graphic in the position summary cell', () => {
+    it('renders the position summary without the pyramid graphic', () => {
         render(
             <MemberRatingInfoModal
                 audienceLabel='developers'
@@ -82,39 +76,14 @@ describe('MemberRatingInfoModal', () => {
         expect(within(positionSummary)
             .getByText(/TOP\s+15%/))
             .toBeInTheDocument()
+        expect(within(positionSummary)
+            .getByText(/TOP\s+15%/))
+            .not
+            .toHaveAttribute('style')
         expect(positionSummary.querySelector('svg'))
+            .not
             .toBeInTheDocument()
         expect(screen.getByText('Where Emily ranks in the distribution'))
             .toBeInTheDocument()
-    })
-
-    it('highlights pyramid segments from top percentile buckets', () => {
-        const rendered: RenderResult = render(
-            <MemberRatingInfoModal
-                audienceLabel='developers'
-                onClose={jest.fn()}
-                percentile={8}
-                profile={baseProfile}
-                rating={1200}
-                ratingDistribution={ratingDistribution}
-            />,
-        )
-
-        expect(getPyramidFills(rendered.container))
-            .toEqual(['#616BD5', '#D4D4D4', '#D4D4D4', '#D4D4D4', '#D4D4D4'])
-
-        rendered.rerender(
-            <MemberRatingInfoModal
-                audienceLabel='developers'
-                onClose={jest.fn()}
-                percentile={59}
-                profile={baseProfile}
-                rating={1200}
-                ratingDistribution={ratingDistribution}
-            />,
-        )
-
-        expect(getPyramidFills(rendered.container))
-            .toEqual(['#D4D4D4', '#D4D4D4', '#D4D4D4', '#616BD5', '#D4D4D4'])
     })
 })

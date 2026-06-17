@@ -134,6 +134,7 @@
 }
 
 .positionValue {
+    color: $black-100;
     font-family: $font-barlow-condensed;
     font-size: 32px;
     font-weight: $font-weight-medium;
@@ -147,20 +148,6 @@
     font-family: $font-roboto;
     font-size: 12px;
     line-height: 16px;
-}
-
-.tierPyramid {
-    align-items: center;
-    display: flex;
-    flex: 0 0 76px;
-    justify-content: center;
-    min-width: 0;
-}
-
-.tierPyramidSvg {
-    display: block;
-    height: 69px;
-    width: 76px;
 }
 
 .sectionTitle {
