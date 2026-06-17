@@ -127,6 +127,11 @@ jest.mock('../../../../../lib/utils', () => ({
             : String(metadataEntry.value)
     },
     getPhaseDuration: () => 0,
+    getPhaseEndDateInDate: (
+        startDate: Date | string,
+        durationMinutes: number,
+    ): Date => new Date(new Date(startDate)
+        .getTime() + durationMinutes * 60 * 1000),
     setMetadataValue: (
         metadata: Array<{
             name?: string
@@ -188,6 +193,7 @@ interface TestHarnessProps {
     metadata?: ChallengeEditorFormData['metadata']
     phases?: ChallengeEditorFormData['phases']
     startDate?: ChallengeEditorFormData['startDate']
+    trackId?: string
 }
 
 const StartDateValue = (): JSX.Element => {
@@ -235,7 +241,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             phases: props.phases || [],
             reviewers: [],
             startDate: props.startDate,
-            trackId: '',
+            trackId: props.trackId || '',
         },
     })
 
@@ -513,6 +519,88 @@ describe('ChallengeScheduleSection component', () => {
                 isDurationEditable: true,
                 isEndDateEditable: true,
             }))
+    })
+
+    it('uses the current date as the minimum end date for active Design phases', () => {
+        mockUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+
+        render(
+            <TestHarness
+                phases={[
+                    {
+                        duration: 4320,
+                        id: 'phase-1',
+                        isOpen: true,
+                        name: 'Review',
+                        phaseId: 'review-phase',
+                        scheduledEndDate: '2026-04-02T12:34:00.000Z',
+                        scheduledStartDate: '2026-03-30T12:34:00.000Z',
+                    },
+                ]}
+                startDate='2026-03-30T12:34:00.000Z'
+                trackId='design-track'
+            />,
+        )
+
+        const reviewRow = [...mockPhaseEditorRow.mock.calls]
+            .map(([props]) => props as {
+                minEndDate?: Date
+                phase?: {
+                    name?: string
+                }
+            })
+            .reverse()
+            .find(props => props.phase?.name === 'Review')
+
+        expect(reviewRow?.minEndDate?.toISOString())
+            .toBe('2026-03-31T12:34:00.000Z')
+    })
+
+    it('uses the current scheduled end date as the minimum end date for active non-Design phases', () => {
+        mockUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'development-track',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            }],
+        })
+
+        render(
+            <TestHarness
+                phases={[
+                    {
+                        duration: 4320,
+                        id: 'phase-1',
+                        isOpen: true,
+                        name: 'Review',
+                        phaseId: 'review-phase',
+                        scheduledEndDate: '2026-04-02T12:34:00.000Z',
+                        scheduledStartDate: '2026-03-30T12:34:00.000Z',
+                    },
+                ]}
+                startDate='2026-03-30T12:34:00.000Z'
+                trackId='development-track'
+            />,
+        )
+
+        const reviewRow = [...mockPhaseEditorRow.mock.calls]
+            .map(([props]) => props as {
+                minEndDate?: Date
+                phase?: {
+                    name?: string
+                }
+            })
+            .reverse()
+            .find(props => props.phase?.name === 'Review')
+
+        expect(reviewRow?.minEndDate?.toISOString())
+            .toBe('2026-04-02T12:34:00.000Z')
     })
 
     it('uses a completed predecessor actual end date for the submission row start time', () => {

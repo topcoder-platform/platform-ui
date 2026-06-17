@@ -29,6 +29,7 @@ import {
     canChangeDuration,
     getMetadataValue,
     getPhaseDuration,
+    getPhaseEndDateInDate,
     setMetadataValue,
 } from '../../../../../lib/utils'
 import { PhaseEditorRow } from '../PhaseEditorRow'
@@ -97,6 +98,83 @@ function resolveStartDateMode(
 
 function noopVirtualPhaseChange(): void {
     // Display-only schedule rows do not mutate persisted phase state.
+}
+
+/**
+ * Returns the latest valid date from a candidate list.
+ *
+ * @param dates candidate date values.
+ * @returns the latest date, or `undefined` when no valid date is provided.
+ */
+function getLatestDate(dates: Array<Date | undefined>): Date | undefined {
+    return dates.reduce<Date | undefined>((latestDate, date) => {
+        if (!date) {
+            return latestDate
+        }
+
+        if (!latestDate || date.getTime() > latestDate.getTime()) {
+            return date
+        }
+
+        return latestDate
+    }, undefined)
+}
+
+/**
+ * Resolves the minimum allowed phase end date for schedule edits.
+ *
+ * @param phase phase currently being edited.
+ * @param phaseStartDate resolved phase start date.
+ * @param isDesignTrackChallenge whether the challenge is in the Design track.
+ * @param minScheduleDate current schedule floor used by the editor.
+ * @returns minimum allowed end date for the phase.
+ */
+function getMinimumPhaseEndDate(
+    phase: ChallengePhase,
+    phaseStartDate: Date | undefined,
+    isDesignTrackChallenge: boolean,
+    minScheduleDate: Date,
+): Date | undefined {
+    if (phase.isOpen) {
+        const currentEndDate = toDate(phase.scheduledEndDate)
+
+        return getLatestDate(
+            isDesignTrackChallenge
+                ? [
+                    phaseStartDate,
+                    minScheduleDate,
+                ]
+                : [
+                    currentEndDate,
+                    phaseStartDate,
+                    minScheduleDate,
+                ],
+        )
+    }
+
+    return phaseStartDate || minScheduleDate
+}
+
+/**
+ * Resolves the validation message for edits before the phase end-date minimum.
+ *
+ * @param phase phase currently being edited.
+ * @param isDesignTrackChallenge whether the challenge is in the Design track.
+ * @returns validation message shown below the phase end-date control.
+ */
+function getMinimumPhaseEndDateError(
+    phase: ChallengePhase,
+    isDesignTrackChallenge: boolean,
+): string {
+    if (phase.isOpen && isDesignTrackChallenge) {
+        return 'End date must be at or after the current date/time.'
+    }
+
+    if (phase.isOpen) {
+        return 'Active phase end date cannot be shortened for this track.'
+    }
+
+    return 'End date must be after start date.'
 }
 
 // eslint-disable-next-line complexity
@@ -379,20 +457,61 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
     const handleDurationChange = useCallback(
         (index: number, durationMinutes: number): void => {
-            const nextPhases = phases.map((phase, phaseIndex) => {
+            const phase = phases[index]
+            if (!phase) {
+                return
+            }
+
+            const phaseKey = getPhaseKey(phase, index)
+            const phaseStartDate = toDate(phase.scheduledStartDate)
+            const nextDuration = normalizeDuration(durationMinutes)
+            const nextEndDate = phaseStartDate
+                ? getPhaseEndDateInDate(phaseStartDate, nextDuration)
+                : undefined
+            const minimumEndDate = getMinimumPhaseEndDate(
+                phase,
+                phaseStartDate,
+                isDesignTrackChallenge,
+                minScheduleDate,
+            )
+
+            if (
+                minimumEndDate
+                && nextEndDate
+                && nextEndDate.getTime() < minimumEndDate.getTime()
+            ) {
+                setPhaseEndDateErrors(previousState => ({
+                    ...previousState,
+                    [phaseKey]: getMinimumPhaseEndDateError(phase, isDesignTrackChallenge),
+                }))
+                return
+            }
+
+            setPhaseEndDateErrors(previousState => {
+                const nextState = { ...previousState }
+                delete nextState[phaseKey]
+                return nextState
+            })
+
+            const nextPhases = phases.map((currentPhase, phaseIndex) => {
                 if (phaseIndex !== index) {
-                    return phase
+                    return currentPhase
                 }
 
                 return {
-                    ...phase,
-                    duration: normalizeDuration(durationMinutes),
+                    ...currentPhase,
+                    duration: nextDuration,
                 }
             })
 
             applyPhases(nextPhases)
         },
-        [applyPhases, phases],
+        [
+            applyPhases,
+            isDesignTrackChallenge,
+            minScheduleDate,
+            phases,
+        ],
     )
     const handlePhaseStartDateChange = useCallback(
         (index: number, date: Date | null): void => {
@@ -457,6 +576,29 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 return
             }
 
+            const minimumEndDate = getMinimumPhaseEndDate(
+                phase,
+                phaseStartDate,
+                isDesignTrackChallenge,
+                minScheduleDate,
+            )
+            if (
+                minimumEndDate
+                && nextEndDate.getTime() < minimumEndDate.getTime()
+            ) {
+                setPhaseEndDateErrors(previousState => ({
+                    ...previousState,
+                    [phaseKey]: getMinimumPhaseEndDateError(phase, isDesignTrackChallenge),
+                }))
+                return
+            }
+
+            setPhaseEndDateErrors(previousState => {
+                const nextState = { ...previousState }
+                delete nextState[phaseKey]
+                return nextState
+            })
+
             const nextPhases = phases.map((currentPhase, phaseIndex) => {
                 if (phaseIndex !== index) {
                     return currentPhase
@@ -474,7 +616,12 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
             applyPhases(nextPhases)
         },
-        [applyPhases, phases],
+        [
+            applyPhases,
+            isDesignTrackChallenge,
+            minScheduleDate,
+            phases,
+        ],
     )
 
     const handleStartDateModeChange = useCallback(
@@ -675,7 +822,12 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                                             getPhaseKey(phase, index),
                                         )}
                                         key={phase.id || phase.phaseId || `${index}`}
-                                        minEndDate={phaseStartDate || minScheduleDate}
+                                        minEndDate={getMinimumPhaseEndDate(
+                                            phase,
+                                            phaseStartDate,
+                                            isDesignTrackChallenge,
+                                            minScheduleDate,
+                                        )}
                                         minStartDate={minScheduleDate}
                                         onDurationChange={handleDurationChange}
                                         onEndDateChange={handlePhaseEndDateChange}
