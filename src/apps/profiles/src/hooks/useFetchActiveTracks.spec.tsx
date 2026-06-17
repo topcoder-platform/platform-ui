@@ -74,7 +74,7 @@ describe('getActiveTracks', () => {
             .toEqual(['Challenge', 'Task'])
     })
 
-    it('includes Data Science Challenge stats in the Data Science track', () => {
+    it('shows Data Science Challenge stats under the Development Code subtrack', () => {
         const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DATA_SCIENCE: {
                 Challenge: {
@@ -96,15 +96,34 @@ describe('getActiveTracks', () => {
         } as UserStats)
         const dataScienceTrack: MemberStatsTrack | undefined = activeTracks
             .find(track => track.name === 'Data Science')
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+        const codeSubTrack = developmentTrack?.subTracks
+            .find(track => track.name === 'CODE')
 
         expect(dataScienceTrack?.challenges)
-            .toEqual(2)
-        expect(dataScienceTrack?.wins)
             .toEqual(1)
         expect(dataScienceTrack?.rating)
-            .toEqual(1499)
+            .toEqual(763)
         expect(dataScienceTrack?.subTracks.map(track => track.name))
-            .toEqual(['Challenge', 'MARATHON_MATCH'])
+            .toEqual(['MARATHON_MATCH'])
+        expect(developmentTrack?.challenges)
+            .toEqual(1)
+        expect(developmentTrack?.wins)
+            .toEqual(1)
+        expect(developmentTrack?.subTracks.map(track => track.name))
+            .toEqual(['CODE'])
+        expect(codeSubTrack)
+            .toEqual(expect.objectContaining({
+                historyPaths: ['DATA_SCIENCE.Challenge.history'],
+                name: 'CODE',
+                parentTrack: 'DEVELOP',
+                path: 'DEVELOP.subTracks',
+                statsDistributionSubTrack: 'Challenge',
+                statsDistributionTrack: 'DATA_SCIENCE',
+            }))
+        expect(codeSubTrack?.rank?.rating)
+            .toEqual(1499)
         expect(activeTracks.map(track => track.name))
             .not.toContain('Challenge')
     })

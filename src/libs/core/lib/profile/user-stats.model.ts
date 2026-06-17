@@ -55,6 +55,23 @@ export type MemberStats = {
     }
     parentTrack?: string
     path?: string
+    /**
+     * Exact stats-history paths to merge into this displayed subtrack.
+     *
+     * Used when a legacy display bucket is backed by stats stored under a newer
+     * API dimension.
+     */
+    historyPaths?: string[]
+    /**
+     * Track key used for rating-distribution lookups when it differs from the
+     * displayed parent track.
+     */
+    statsDistributionTrack?: string
+    /**
+     * Subtrack key used for rating-distribution lookups when it differs from
+     * the displayed subtrack name.
+     */
+    statsDistributionSubTrack?: string
 }
 
 /**
