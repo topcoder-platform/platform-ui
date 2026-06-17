@@ -377,6 +377,35 @@ describe('BillingAccountLineItemsModal', () => {
             )
     })
 
+    it('uses persisted engagement payment split amounts before deriving markup', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '762.66',
+                    challengeFee: '420.66',
+                    date: '2026-06-02T13:10:48.235Z',
+                    externalId: 'assignment-5245',
+                    externalName: 'Eng BA',
+                    externalType: 'ENGAGEMENT',
+                    paymentAmount: '342.00',
+                },
+            ],
+            consumedBudget: 762.66,
+            markup: 0.01226408,
+            totalBudgetRemaining: 237.34,
+        })
+
+        expect(screen.getByText('$342.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$420.66'))
+            .toBeTruthy()
+        expect(screen.queryByText('$753.42'))
+            .toBeNull()
+        expect(screen.queryByText('$9.24'))
+            .toBeNull()
+    })
+
     it('builds engagement links from assignment-backed billing rows for copilot views', () => {
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [
