@@ -177,12 +177,14 @@ describe('combineBillingAccountLineItems', () => {
             budget: 2000,
             consumedAmounts: [
                 {
-                    amount: '75',
+                    amount: '762.66',
+                    challengeFee: '420.66',
                     date: '2026-02-12T00:00:00.000Z',
                     engagementId: 'engagement-300',
                     externalId: 'assignment-300',
                     externalName: 'Engagement Assignment',
                     externalType: 'ENGAGEMENT',
+                    paymentAmount: '342.00',
                 },
                 {
                     amount: '75',
@@ -192,7 +194,7 @@ describe('combineBillingAccountLineItems', () => {
                     externalType: 'ENGAGEMENT',
                 },
             ],
-            consumedBudget: 150,
+            consumedBudget: 837.66,
             id: 80001063,
             lockedAmounts: [
                 {
@@ -249,10 +251,12 @@ describe('combineBillingAccountLineItems', () => {
             .toHaveLength(2)
         expect(consumedRows[0])
             .toMatchObject({
+                challengeFee: 420.66,
                 date: '2026-02-12T00:00:00.000Z',
                 engagementId: 'engagement-300',
                 externalId: 'assignment-300',
                 externalType: 'ENGAGEMENT',
+                paymentAmount: 342,
                 status: 'consumed',
             })
         expect(consumedRows[1])

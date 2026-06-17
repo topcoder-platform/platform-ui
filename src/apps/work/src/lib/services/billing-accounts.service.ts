@@ -25,12 +25,14 @@ export type BillingAccountExternalType = 'CHALLENGE' | 'ENGAGEMENT'
 export interface BillingAccountBudgetEntry {
     amount: number | string
     challengeId?: string
+    challengeFee?: number | string
     date: string
     engagementId?: string
     externalId?: string
     externalName: string | null
     externalType: BillingAccountExternalType
     memberPaymentAmount?: number | string
+    paymentAmount?: number | string
 }
 
 export type BillingAccountLockedAmount = BillingAccountBudgetEntry
@@ -40,12 +42,14 @@ export interface BillingAccountLineItem {
     id: string
     amount: number
     challengeId?: string
+    challengeFee?: number
     date: string
     engagementId?: string
     externalId?: string
     externalName?: string | null
     externalType: BillingAccountExternalType
     memberPaymentAmount?: number
+    paymentAmount?: number
     status: BillingAccountLineItemStatus
 }
 
@@ -170,8 +174,9 @@ function createLineItemKey(
  * @param index The entry index within its source bucket, used in the generated row key.
  * @returns A normalized line item with numeric amount, original date, display
  * fallback for nullable external names, optional canonical external id,
- * optional engagement id, optional legacy challenge id, optional copilot-safe
- * member payment amount, and a deterministic UI row key.
+ * optional engagement id, optional legacy challenge id, optional persisted
+ * payment split amounts, optional copilot-safe member payment amount, and a
+ * deterministic UI row key.
  */
 function createLineItem(
     status: BillingAccountLineItemStatus,
@@ -209,6 +214,18 @@ function createLineItem(
 
     if (Number.isFinite(memberPaymentAmount)) {
         lineItem.memberPaymentAmount = memberPaymentAmount
+    }
+
+    const paymentAmount = Number(item.paymentAmount)
+
+    if (Number.isFinite(paymentAmount)) {
+        lineItem.paymentAmount = paymentAmount
+    }
+
+    const challengeFee = Number(item.challengeFee)
+
+    if (Number.isFinite(challengeFee)) {
+        lineItem.challengeFee = challengeFee
     }
 
     return lineItem
@@ -257,10 +274,11 @@ export async function searchBillingAccounts(
  * Fetches a single billing account by its identifier.
  *
  * The detail payload includes budget totals plus locked and consumed external
- * entries with `amount`, optional copilot-safe `memberPaymentAmount`, `date`,
+ * entries with `amount`, optional persisted `paymentAmount` and
+ * `challengeFee`, optional copilot-safe `memberPaymentAmount`, `date`,
  * optional canonical `externalId`, optional `engagementId`, `externalType`,
- * and nullable `externalName`. Top-level `id` and `name` remain available
- * for lookup labels.
+ * and nullable `externalName`. Top-level `id` and `name` remain available for
+ * lookup labels.
  */
 export async function fetchBillingAccountById(
     billingAccountId: string,
@@ -285,8 +303,8 @@ export async function fetchBillingAccountById(
  *
  * @param details Billing account details containing locked and consumed entry arrays.
  * @returns Normalized line items with numeric amounts, optional engagement
- * ids, optional member payment amounts, API dates, external metadata,
- * status, and UI row keys.
+ * ids, optional persisted payment split amounts, optional member payment
+ * amounts, API dates, external metadata, status, and UI row keys.
  */
 export function combineBillingAccountLineItems(
     details: BillingAccountDetails,
