@@ -175,7 +175,6 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                             >
                                 <p
                                     className={classNames(styles.value, styles.percentileValue)}
-                                    style={{ color: compactRatingColor }}
                                 >
                                     {percentileLabel}
                                 </p>
