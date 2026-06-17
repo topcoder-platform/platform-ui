@@ -4,8 +4,8 @@ import {
     calculateTopPercentileFromDistribution,
     formatTopPercentile,
     getCompactRatingColor,
-    getLatestProfileRating,
     getPreferredRolesDisplay,
+    getProfileRating,
     getRatingAudienceLabel,
     getRatingDistributionQuery,
     parsePreferredRolesText,
@@ -29,41 +29,38 @@ describe('getCompactRatingColor', () => {
     })
 })
 
-describe('getLatestProfileRating', () => {
-    it('uses the newest rated track instead of the historical max rating', () => {
-        expect(getLatestProfileRating({
+describe('getProfileRating', () => {
+    it('uses the highest rated track instead of the newest lower rating', () => {
+        expect(getProfileRating({
             DATA_SCIENCE: {
                 'AI Engineering': {
                     mostRecentEventDate: 1000,
                     rank: {
-                        rating: 840,
+                        rating: 1200,
+                    },
+                },
+                Challenge: {
+                    mostRecentEventDate: 2000,
+                    rank: {
+                        rating: 732,
                     },
                 },
             },
-            DEVELOP: {
-                subTracks: [{
-                    mostRecentEventDate: 2000,
-                    name: 'Challenge',
-                    rank: {
-                        rating: 748,
-                    },
-                }],
-            },
             maxRating: {
-                rating: 840,
-                ratingColor: '#9D9FA0',
+                rating: 1200,
+                ratingColor: '#616BD5',
                 subTrack: 'AI Engineering',
                 track: 'DATA_SCIENCE',
             },
         } as unknown as UserStats))
-            .toBe(748)
+            .toBe(1200)
     })
 
-    it('uses configured data science rating paths when they are newest', () => {
-        expect(getLatestProfileRating({
+    it('uses configured data science rating paths when they are highest', () => {
+        expect(getProfileRating({
             DATA_SCIENCE: {
                 AI: {
-                    mostRecentEventDate: 2000,
+                    mostRecentEventDate: 1000,
                     rank: {
                         rating: 840,
                     },
@@ -71,7 +68,7 @@ describe('getLatestProfileRating', () => {
             },
             DEVELOP: {
                 subTracks: [{
-                    mostRecentEventDate: 1000,
+                    mostRecentEventDate: 2000,
                     name: 'Challenge',
                     rank: {
                         rating: 748,
@@ -89,7 +86,7 @@ describe('getLatestProfileRating', () => {
     })
 
     it('falls back to maxRating when no rated track entries are available', () => {
-        expect(getLatestProfileRating({
+        expect(getProfileRating({
             DEVELOP: {
                 subTracks: [{
                     mostRecentEventDate: 2000,
@@ -200,7 +197,7 @@ describe('getRatingAudienceLabel', () => {
             .toBe('QA Professionals')
     })
 
-    it('uses the latest rating track for the audience label', () => {
+    it('uses the highest rating track for the audience label', () => {
         expect(getRatingAudienceLabel({
             DATA_SCIENCE: {
                 SRM: {
@@ -226,7 +223,7 @@ describe('getRatingAudienceLabel', () => {
                 track: 'DATA_SCIENCE',
             },
         } as unknown as UserStats))
-            .toBe('Developers')
+            .toBe('Data Scientists')
     })
 })
 
@@ -246,7 +243,7 @@ describe('getRatingDistributionQuery', () => {
             })
     })
 
-    it('uses the latest rating track and subtrack for distribution lookup', () => {
+    it('uses the highest rating track and subtrack for distribution lookup', () => {
         expect(getRatingDistributionQuery({
             DATA_SCIENCE: {
                 SRM: {
@@ -273,8 +270,8 @@ describe('getRatingDistributionQuery', () => {
             },
         } as unknown as UserStats))
             .toEqual({
-                subTrack: 'Challenge',
-                track: 'DEVELOP',
+                subTrack: 'SRM',
+                track: 'DATA_SCIENCE',
             })
     })
 
