@@ -119,6 +119,9 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Top 70%'))
             .toBeInTheDocument()
+        expect(screen.getByText('Top 70%'))
+            .not
+            .toHaveAttribute('style')
         expect(screen.getByText('Data Scientists'))
             .toBeInTheDocument()
     })
