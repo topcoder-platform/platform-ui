@@ -8,7 +8,11 @@ import {
     getDocuSignUrl,
     getTermDetails,
 } from '../services'
-import { extractTermId, resolveStandardTermsConfig } from '../utils'
+import {
+    extractTermId,
+    resolveDocuSignTemplateId,
+    resolveStandardTermsConfig,
+} from '../utils'
 
 type TermsConfig = {
     id: string
@@ -285,11 +289,12 @@ export const useTermsAgreementGate = (
         () => getTermsViewData(termsDetails),
         [termsDetails],
     )
-    const docuSignTemplateId = termsDetails?.docusignTemplateId
+    const docuSignTemplateId = resolveDocuSignTemplateId(
+        termsDetails,
+        EnvironmentConfig.NDA_DOCUSIGN_TEMPLATE_ID,
+    )
     const isDocuSignTerm = Boolean(
-        termsDetails?.agreeabilityType
-            && termsDetails.agreeabilityType !== 'Electronically-agreeable'
-            && docuSignTemplateId,
+        termsDetails && docuSignTemplateId,
     )
     const termsUrl = activeTerm?.url || termsDetails?.url
 
