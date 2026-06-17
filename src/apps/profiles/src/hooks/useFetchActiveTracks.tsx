@@ -29,6 +29,8 @@ const nativeDataScienceStatsKeys = new Set([
     'wins',
 ])
 
+const dataScienceChallengeCodeHistoryPath = 'DATA_SCIENCE.Challenge.history'
+
 /**
  * The structure of a track for a member.
  */
@@ -66,9 +68,8 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
 /**
  * Determine whether the subtrack should be considered active.
  *
- * Unified member stats do not currently include legacy submission counters for
- * development/design rows, so fall back to the challenge count when the
- * submission count is unavailable.
+ * Some rated Code rows can have zero submissions while still having challenge
+ * history, so challenge count also keeps the subtrack visible.
  *
  * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
  * @returns {boolean} Whether the subtrack has activity worth rendering.
@@ -76,7 +77,7 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
 const isActiveSubTrack = (subTrack?: MemberStats): boolean => {
     const submissionCount = getSubTrackSubmissionCount(subTrack)
 
-    return (submissionCount ?? subTrack?.challenges ?? 0) > 0
+    return (submissionCount ?? 0) > 0 || (subTrack?.challenges ?? 0) > 0
 }
 
 /**
@@ -94,24 +95,30 @@ const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
 )
 
 /**
- * Pick the Data Science subtrack rating used by the summary card.
+ * Convert a Data Science Challenge stats payload into the legacy Code subtrack
+ * shown under Development.
  *
- * Data Science can include Marathon Match and challenge ratings. The summary
- * should show the strongest visible rating instead of always using Marathon
- * Match, otherwise Data Science Challenge ratings are hidden from the profile.
+ * Member-api stores newly rated Data Science Challenge rows under
+ * `DATA_SCIENCE.Challenge`, but the profile history UI presents non-MM data
+ * science challenges in Development > Code for parity with existing profiles.
  *
- * @param {MemberStats[]} subTracks - Active Data Science subtracks.
- * @returns {MemberStats | undefined} The subtrack with the highest rating.
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStats | undefined} Display-ready Code stats when available.
  */
-const getDataScienceSummarySubTrack = (subTracks: MemberStats[]): MemberStats | undefined => orderBy(
-    subTracks,
-    [
-        subTrack => subTrack.rank?.rating ?? 0,
-        subTrack => subTrack.rank?.percentile ?? 0,
-        subTrack => subTrack.challenges ?? 0,
-    ],
-    ['desc', 'desc', 'desc'],
-)[0]
+const buildDataScienceChallengeCodeSubTrack = (memberStats?: UserStats): MemberStats | undefined => {
+    const challengeStats = memberStats?.DATA_SCIENCE?.Challenge
+
+    return !challengeStats ? undefined : ({
+        ...challengeStats,
+        historyPaths: [dataScienceChallengeCodeHistoryPath],
+        name: 'CODE',
+        parentTrack: 'DEVELOP',
+        path: 'DEVELOP.subTracks',
+        statsDistributionSubTrack: 'Challenge',
+        statsDistributionTrack: 'DATA_SCIENCE',
+        submissions: challengeStats.submissions ?? { submissions: 0 },
+    } as MemberStats)
+}
 
 /**
  * Attach parent track metadata to legacy design/develop subtracks and index them by name.
@@ -138,6 +145,96 @@ const mapSubTracksByName = (
 const getFiniteNumber = (value: unknown): number | undefined => (
     typeof value === 'number' && Number.isFinite(value) ? value : undefined
 )
+
+/**
+ * Return the rank object that should represent a merged subtrack.
+ *
+ * When both streams have ratings, the visible Code stats should keep the
+ * stronger rating so a Data Science Challenge rating is not hidden by a lower
+ * legacy Development Code rating.
+ *
+ * @param {MemberStats} currentSubTrack - Existing displayed subtrack stats.
+ * @param {MemberStats} additionalSubTrack - Additional stats to merge.
+ * @returns {MemberStats['rank']} Rank data for the merged subtrack.
+ */
+const getMergedSubTrackRank = (
+    currentSubTrack: MemberStats,
+    additionalSubTrack: MemberStats,
+): MemberStats['rank'] => {
+    const currentRating = getFiniteNumber(currentSubTrack.rank?.rating)
+    const additionalRating = getFiniteNumber(additionalSubTrack.rank?.rating)
+
+    if (currentRating === undefined) {
+        return additionalSubTrack.rank ?? currentSubTrack.rank
+    }
+
+    if (additionalRating === undefined) {
+        return currentSubTrack.rank
+    }
+
+    return additionalRating > currentRating ? additionalSubTrack.rank : currentSubTrack.rank
+}
+
+/**
+ * Merge two displayed subtracks with the same name.
+ *
+ * This keeps Development > Code as one profile bucket when a member has both
+ * legacy Code stats and Data Science Challenge stats backed by different API
+ * dimensions.
+ *
+ * @param {MemberStats} currentSubTrack - Existing displayed subtrack stats.
+ * @param {MemberStats} additionalSubTrack - Additional stats to merge.
+ * @returns {MemberStats} Merged stats for the displayed subtrack.
+ */
+const mergeDisplayedSubTrackStats = (
+    currentSubTrack: MemberStats,
+    additionalSubTrack: MemberStats,
+): MemberStats => {
+    const currentSubmissions = getSubTrackSubmissionCount(currentSubTrack)
+    const additionalSubmissions = getSubTrackSubmissionCount(additionalSubTrack)
+    const hasSubmissionCounts = currentSubmissions !== undefined || additionalSubmissions !== undefined
+
+    return {
+        ...currentSubTrack,
+        challenges: (currentSubTrack.challenges ?? 0) + (additionalSubTrack.challenges ?? 0),
+        historyPaths: Array.from(new Set([
+            ...(currentSubTrack.historyPaths ?? []),
+            ...(additionalSubTrack.historyPaths ?? []),
+        ])),
+        rank: getMergedSubTrackRank(currentSubTrack, additionalSubTrack),
+        submissions: hasSubmissionCounts
+            ? { submissions: (currentSubmissions ?? 0) + (additionalSubmissions ?? 0) }
+            : currentSubTrack.submissions,
+        wins: (currentSubTrack.wins ?? 0) + (additionalSubTrack.wins ?? 0),
+    }
+}
+
+/**
+ * Adds Data Science Challenge stats to the Development > Code bucket.
+ *
+ * @param {{[key: string]: MemberStats}} developSubTracks - Existing Development subtracks.
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {{[key: string]: MemberStats}} Development subtracks with the Code compatibility mapping.
+ */
+const addDataScienceChallengeToDevelopmentCode = (
+    developSubTracks: {[key: string]: MemberStats},
+    memberStats?: UserStats,
+): {[key: string]: MemberStats} => {
+    const dataScienceChallengeCodeSubTrack = buildDataScienceChallengeCodeSubTrack(memberStats)
+
+    if (!dataScienceChallengeCodeSubTrack) {
+        return developSubTracks
+    }
+
+    const codeSubTrack = developSubTracks[dataScienceChallengeCodeSubTrack.name]
+
+    return {
+        ...developSubTracks,
+        [dataScienceChallengeCodeSubTrack.name]: codeSubTrack
+            ? mergeDisplayedSubTrackStats(codeSubTrack, dataScienceChallengeCodeSubTrack)
+            : dataScienceChallengeCodeSubTrack,
+    }
+}
 
 /**
  * Determine whether a DATA_SCIENCE entry is a configured rating path.
@@ -355,13 +452,6 @@ const getDataScienceRatingPathTrackData = (memberStats?: UserStats): MemberStats
 export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => {
     // Create mappings for data science subtracks
     const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = {
-        // Map Challenge subtrack
-        Challenge: (memberStats?.DATA_SCIENCE?.Challenge && ({
-            ...memberStats.DATA_SCIENCE.Challenge,
-            name: 'Challenge',
-            parentTrack: 'DATA_SCIENCE',
-            path: 'DATA_SCIENCE',
-        })) as MemberStats,
         // Map MARATHON_MATCH subtrack
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
@@ -386,9 +476,12 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     )
 
     // Create mappings for develop subtracks
-    const developSubTracks: {[key: string]: MemberStats} = mapSubTracksByName(
-        'DEVELOP',
-        memberStats?.DEVELOP?.subTracks,
+    const developSubTracks: {[key: string]: MemberStats} = addDataScienceChallengeToDevelopmentCode(
+        mapSubTracksByName(
+            'DEVELOP',
+            memberStats?.DEVELOP?.subTracks,
+        ),
+        memberStats,
     )
 
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
@@ -422,19 +515,17 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
 
     // Data science
     const dsSubTracks: MemberStats[] = [
-        dataScienceSubTracks.Challenge,
         dataScienceSubTracks.MARATHON_MATCH,
     ].filter(d => d?.challenges > 0) as MemberStats[]
     const dsTrackData: MemberStatsTrack = buildTrackData('Data Science', dsSubTracks)
-    const dsSummarySubTrack: MemberStats | undefined = getDataScienceSummarySubTrack(dsTrackData.subTracks)
     const dataScienceRatingPathTrackStats: MemberStatsTrack[] = getDataScienceRatingPathTrackData(memberStats)
 
     const dsTrackStats: MemberStatsTrack = {
         ...dsTrackData,
         isDSTrack: true,
         order: -1,
-        percentile: dsSummarySubTrack?.rank?.percentile ?? 0,
-        rating: dsSummarySubTrack?.rank?.rating ?? 0,
+        percentile: dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
+        rating: dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
     }
 
     // Competitive Programming
