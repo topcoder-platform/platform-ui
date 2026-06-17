@@ -1,12 +1,14 @@
 import {
     extractTermId,
     replaceTermIdInUrl,
+    resolveDocuSignTemplateId,
     resolveStandardTermsConfig,
 } from './terms.utils'
 
 describe('engagement terms utils', () => {
     const OLD_TERMS_ID = '317cd8f9-d66c-4f2a-8774-63c612d99cd4'
     const NEW_TERMS_ID = '0a507fb7-3fe0-402b-b121-1a24af4a9cf1'
+    const NEW_NDA_TEMPLATE_ID = '8b101e82-87c0-42c9-8440-d922749c4076'
     const TERMS_URL = `https://www.topcoder-dev.com/challenges/terms/detail/${OLD_TERMS_ID}`
 
     it('extracts the terms id from a terms detail URL', () => {
@@ -33,5 +35,21 @@ describe('engagement terms utils', () => {
                 id: OLD_TERMS_ID,
                 url: TERMS_URL,
             })
+    })
+
+    it('prefers the configured DocuSign template for NDA terms', () => {
+        expect(resolveDocuSignTemplateId({
+            docusignTemplateId: 'old-template-id',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }, NEW_NDA_TEMPLATE_ID))
+            .toBe(NEW_NDA_TEMPLATE_ID)
+    })
+
+    it('keeps the Terms API DocuSign template for non-NDA terms', () => {
+        expect(resolveDocuSignTemplateId({
+            docusignTemplateId: 'assignment-template-id',
+            title: 'Assignment Terms',
+        }, NEW_NDA_TEMPLATE_ID))
+            .toBe('assignment-template-id')
     })
 })

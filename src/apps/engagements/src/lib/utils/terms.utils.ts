@@ -3,6 +3,13 @@ export type ResolvedTermsConfig = {
     url?: string
 }
 
+type TermsTemplateDetails = {
+    docusignTemplateId?: string | number
+    title?: string
+}
+
+const NDA_TITLE_PATTERN = /\bnda\b|non[-\s]?disclosure/i
+
 /**
  * Extracts the trailing terms identifier from a terms detail URL or path.
  *
@@ -94,4 +101,34 @@ export const resolveStandardTermsConfig = (
         id,
         url: replaceTermIdInUrl(termsUrl, id),
     }
+}
+
+/**
+ * Checks whether a terms record represents an NDA-style agreement.
+ *
+ * @param term - Terms API details or search result payload.
+ * @returns true when the term title is NDA/non-disclosure related.
+ */
+export const isNdaTerm = (term?: TermsTemplateDetails): boolean => (
+    NDA_TITLE_PATTERN.test(term?.title ?? '')
+)
+
+/**
+ * Resolves the DocuSign template id for a terms record.
+ *
+ * @param term - Terms API details or search result payload.
+ * @param configuredNdaTemplateId - Preferred DocuSign template id for NDA terms.
+ * @returns The configured NDA template id for NDA terms, otherwise the Terms API template id.
+ */
+export const resolveDocuSignTemplateId = (
+    term?: TermsTemplateDetails,
+    configuredNdaTemplateId?: string,
+): string | number | undefined => {
+    const normalizedConfiguredNdaTemplateId = configuredNdaTemplateId?.trim()
+
+    if (normalizedConfiguredNdaTemplateId && isNdaTerm(term)) {
+        return normalizedConfiguredNdaTemplateId
+    }
+
+    return term?.docusignTemplateId
 }
