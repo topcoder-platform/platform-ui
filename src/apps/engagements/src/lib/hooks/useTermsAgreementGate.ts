@@ -8,7 +8,7 @@ import {
     getDocuSignUrl,
     getTermDetails,
 } from '../services'
-import { extractTermId } from '../utils'
+import { extractTermId, resolveStandardTermsConfig } from '../utils'
 
 type TermsConfig = {
     id: string
@@ -56,11 +56,15 @@ type TermsViewData = {
     isElectronicallyAgreeable: boolean
 }
 
-const TERMS_ID = extractTermId(EnvironmentConfig.TERMS_URL)
+const STANDARD_TERMS = resolveStandardTermsConfig(
+    EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID,
+    EnvironmentConfig.TERMS_URL,
+)
+const TERMS_ID = STANDARD_TERMS.id
 const NDA_TERMS_ID = extractTermId(EnvironmentConfig.NDA_TERMS_URL)
 
 const TERMS_CONFIG: TermsConfig[] = [
-    { id: TERMS_ID ?? '', label: 'Standard Topcoder Terms', url: EnvironmentConfig.TERMS_URL },
+    { id: TERMS_ID ?? '', label: 'Standard Topcoder Terms', url: STANDARD_TERMS.url },
     { id: NDA_TERMS_ID ?? '', label: 'Topcoder NDA', url: EnvironmentConfig.NDA_TERMS_URL },
 ].filter(term => term.id)
 
