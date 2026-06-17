@@ -59,7 +59,13 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 - `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
-- `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`, excluding `Topgear Task` because that flow is not launchable from the work app editor. When the selected track is Design or QA, it also hides `Marathon Match` to match the legacy work-manager create flow and clears any now-invalid preselection.
+- `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`, limited by the
+  `WORK_CREATE_CHALLENGE_TYPES_BY_TRACK` config. The default work-app allowlist is Design:
+  `Challenge`, `First2Finish`, `Task`; Development and Data Science: `Challenge`, `First2Finish`,
+  `Marathon Match`, `Task`; QA: `Challenge`, `First2Finish`, `Task`. Topgear Task, AI, AI
+  Engineering, and other active API-only/internal challenge types stay hidden from the create
+  dropdown, and any now-invalid preselection is cleared when the track changes. Deployments can
+  override the allowlist with `REACT_APP_WORK_CREATE_CHALLENGE_TYPES_BY_TRACK` JSON.
 - `ChallengeScheduleSection`: schedule editor for challenge start and phase dates. It keeps the detected timezone above the controls, renders the `Start Date` label with the `Scheduled` and `Immediately` start-mode radios aligned to the end of that header row above the input with a green selected state, persists the selected start mode in challenge metadata so saved `/edit` and `/view` routes reopen with the correct radio state, recalculates root phase dates when the challenge start changes, honors a completed predecessor phase's actual end date when deriving successor schedule rows, lets active Design phases be shortened no earlier than the current date/time, prevents active non-Design phases from being shortened, and keeps completed phases' end-date and duration controls locked to match legacy work-manager behavior. `Task` challenges hide this editable section across create, edit, and read-only view routes to match legacy work-manager behavior.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.

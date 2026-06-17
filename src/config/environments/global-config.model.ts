@@ -9,6 +9,8 @@ export interface LocalServiceOverride {
     target: string
 }
 
+export type ChallengeTypeNamesByTrackConfig = Record<string, string[]>
+
 export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
@@ -17,6 +19,7 @@ export interface GlobalConfig {
     USER_PROFILE_URL: string
     CHALLENGE_API_URL?: string
     CHALLENGE_API_VERSION?: string
+    WORK_CREATE_CHALLENGE_TYPES_BY_TRACK: ChallengeTypeNamesByTrackConfig
     COMMUNITY_APP_URL?: string
     REVIEW_APP_URL?: string
     DIRECT_PROJECT_URL?: string

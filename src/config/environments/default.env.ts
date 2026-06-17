@@ -3,9 +3,35 @@ import { get } from 'lodash'
 
 import { getReactEnv } from './react-env'
 import type {
+    ChallengeTypeNamesByTrackConfig,
     LocalServiceOverride,
     SSOLoginProviderConfig,
 } from './global-config.model'
+
+const DEFAULT_WORK_CREATE_CHALLENGE_TYPES_BY_TRACK: ChallengeTypeNamesByTrackConfig = {
+    DATA_SCIENCE: [
+        'Challenge',
+        'First2Finish',
+        'Marathon Match',
+        'Task',
+    ],
+    DESIGN: [
+        'Challenge',
+        'First2Finish',
+        'Task',
+    ],
+    DEVELOP: [
+        'Challenge',
+        'First2Finish',
+        'Marathon Match',
+        'Task',
+    ],
+    QA: [
+        'Challenge',
+        'First2Finish',
+        'Task',
+    ],
+}
 
 function parseSSOLoginProviders(
     raw: string | undefined,
@@ -20,6 +46,56 @@ function parseSSOLoginProviders(
     } catch (error) {
         // Swallow parsing issues and fall back to an empty list to keep boot resilient
         return []
+    }
+}
+
+/**
+ * Parses the work-app create-challenge type allowlist from a JSON environment value.
+ *
+ * @param raw JSON object whose keys are challenge tracks and values are allowed challenge type names.
+ * @param fallback default allowlist used when the environment value is missing or invalid.
+ * @returns parsed track-to-type-name config, or `fallback` when parsing cannot produce one.
+ * @remarks Used by `WORK_CREATE_CHALLENGE_TYPES_BY_TRACK` so deployments can hide active internal
+ * challenge types without changing work-app code.
+ * @throws Does not throw.
+ */
+function parseChallengeTypeNamesByTrack(
+    raw: string | undefined,
+    fallback: ChallengeTypeNamesByTrackConfig,
+): ChallengeTypeNamesByTrackConfig {
+    if (!raw) {
+        return fallback
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as unknown
+
+        if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+            return fallback
+        }
+
+        const config = Object.entries(parsed)
+            .reduce<ChallengeTypeNamesByTrackConfig>((result, [track, challengeTypes]) => {
+                if (!Array.isArray(challengeTypes)) {
+                    return result
+                }
+
+                const normalizedChallengeTypes = challengeTypes
+                    .filter((challengeType): challengeType is string => (
+                        typeof challengeType === 'string' && challengeType.trim().length > 0
+                    ))
+                    .map(challengeType => challengeType.trim())
+
+                if (track.trim().length > 0 && normalizedChallengeTypes.length > 0) {
+                    result[track.trim()] = normalizedChallengeTypes
+                }
+
+                return result
+            }, {})
+
+        return Object.keys(config).length > 0 ? config : fallback
+    } catch (error) {
+        return fallback
     }
 }
 
@@ -51,6 +127,14 @@ export const CHALLENGE_API_VERSION: string = getReactEnv<string>(
     'CHALLENGE_API_VERSION',
     'v5',
 )
+export const WORK_CREATE_CHALLENGE_TYPES_BY_TRACK: ChallengeTypeNamesByTrackConfig
+    = parseChallengeTypeNamesByTrack(
+        getReactEnv<string | undefined>(
+            'WORK_CREATE_CHALLENGE_TYPES_BY_TRACK',
+            undefined,
+        ),
+        DEFAULT_WORK_CREATE_CHALLENGE_TYPES_BY_TRACK,
+    )
 export const COMMUNITY_APP_URL: string = getReactEnv<string>(
     'COMMUNITY_APP_URL',
     TOPCODER_URL,
