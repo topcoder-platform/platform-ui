@@ -53,6 +53,30 @@
     gap: $sp-2;
 }
 
+.principalSkillsToggle {
+    @include resetBtnStyle;
+
+    align-self: center;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 16px;
+    padding: $sp-2 0;
+    text-align: left;
+
+    &:hover {
+        color: darken($link-blue-dark, 5);
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $link-blue-dark;
+        outline-offset: $sp-1;
+        border-radius: $sp-1;
+    }
+}
+
 .additionalSkillsWrap {
     display: flex;
     flex-direction: column;
