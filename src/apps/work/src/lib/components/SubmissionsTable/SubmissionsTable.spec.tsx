@@ -22,6 +22,13 @@ jest.mock('../../constants', () => ({
 jest.mock('../../utils', () => ({
     formatDateTime: (value: string) => value,
     getRatingLevel: () => 'gray',
+    getSubmissionExampleScore: (
+        submission: { reviewSummation?: Array<{ aggregateScore?: number, isExample?: boolean }> },
+    ) => (
+        submission.reviewSummation
+            ?.find(item => item.isExample === true)
+            ?.aggregateScore
+    ),
     getSubmissionFinalScore: (submission: { review?: Array<{ finalScore?: number }> }) => (
         submission.review?.[0]?.finalScore ?? 0
     ),
@@ -46,9 +53,10 @@ jest.mock('../../utils', () => ({
         submission: {
             reviewSummation?: Array<{
                 metadata?: {
-                    testProcess?: 'provisional' | 'system'
+                    testProcess?: 'example' | 'provisional' | 'system'
                     testProgress?: number
                     testStatus?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
+                    testType?: 'example' | 'provisional' | 'system'
                 }
             }>
         },
@@ -57,7 +65,7 @@ jest.mock('../../utils', () => ({
         const progress = metadata?.testProgress
 
         return {
-            process: metadata?.testProcess,
+            process: metadata?.testProcess ?? metadata?.testType,
             progressPercent: typeof progress === 'number'
                 ? `${Math.round(progress * 100)}%`
                 : undefined,
@@ -389,5 +397,48 @@ describe('SubmissionsTable', () => {
             .toBeNull()
         expect(screen.queryByRole('link', { name: '80.00 / 85.00' }))
             .toBeNull()
+    })
+
+    it('renders example validation process and score for marathon submissions', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        reviewSummation: [
+                            {
+                                aggregateScore: 15.25,
+                                isExample: true,
+                                metadata: {
+                                    testProgress: 1,
+                                    testStatus: 'SUCCESS',
+                                    testType: 'example',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: '15.25 / -' }))
+            .toBeTruthy()
+        expect(screen.getByText('Example'))
+            .toBeTruthy()
+        expect(screen.getByText('100%'))
+            .toBeTruthy()
+        expect(screen.getByRole('img', { name: 'Test status: SUCCESS' }))
+            .toBeTruthy()
     })
 })

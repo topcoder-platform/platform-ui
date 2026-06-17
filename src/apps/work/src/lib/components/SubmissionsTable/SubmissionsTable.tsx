@@ -19,6 +19,7 @@ import { Submission } from '../../models'
 import {
     formatDateTime,
     getRatingLevel,
+    getSubmissionExampleScore,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
     getSubmissionProvisionalScore,
@@ -139,6 +140,50 @@ function formatScore(value?: number, emptyValue: string = 'N/A'): string {
     }
 
     return value.toFixed(2)
+}
+
+/**
+ * Converts normalized marathon test process metadata into a table display label.
+ * @param process Current marathon test process from review summation metadata.
+ * @returns Human-readable process label, or an empty string when absent.
+ * Used by `SubmissionsTable` for the Current tests process column.
+ */
+function formatTestProcess(process?: string): string {
+    if (process === 'example') {
+        return 'Example'
+    }
+
+    if (process === 'provisional') {
+        return 'Provisional'
+    }
+
+    if (process === 'system') {
+        return 'System'
+    }
+
+    return ''
+}
+
+/**
+ * Selects the marathon score shown in the left side of the score column.
+ * @param submission Submission row with review summation data.
+ * @param process Current marathon test process from progress metadata.
+ * @returns Example score when Example is current; otherwise the provisional score.
+ * Used by `SubmissionsTable` for marathon score display.
+ */
+function getMarathonInitialScore(
+    submission: Submission,
+    process?: string,
+): number | undefined {
+    if (process === 'example') {
+        const exampleScore = getSubmissionExampleScore(submission)
+
+        if (exampleScore !== undefined) {
+            return exampleScore
+        }
+    }
+
+    return getSubmissionProvisionalScore(submission)
 }
 
 function getSortIndicator(
@@ -327,8 +372,11 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const handleDisplay = getHandleDisplay(submission, !!props.isLoadingMembers)
                         const emailDisplay = getEmailDisplay(submission, !!props.isLoadingMembers)
                         const submissionDate = formatDateTime(getCreatedAt(submission))
+                        const testProgress = props.showMarathonMatchTestProgress
+                            ? getSubmissionTestProgress(submission)
+                            : undefined
                         const initialScoreValue = props.showMarathonMatchTestProgress
-                            ? getSubmissionProvisionalScore(submission)
+                            ? getMarathonInitialScore(submission, testProgress?.process)
                             : getSubmissionInitialScore(submission)
                         const finalScoreValue = props.showMarathonMatchTestProgress
                             ? getSubmissionSystemScore(submission)
@@ -338,9 +386,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                             : 'N/A'
                         const initialScore = formatScore(initialScoreValue, emptyScoreValue)
                         const finalScore = formatScore(finalScoreValue, emptyScoreValue)
-                        const testProgress = props.showMarathonMatchTestProgress
-                            ? getSubmissionTestProgress(submission)
-                            : undefined
                         const reviewTab = submission.type === 'CHECKPOINT_SUBMISSION'
                             ? 'checkpoint-submission'
                             : 'submission'
@@ -396,7 +441,7 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                     ? (
                                         <>
                                             <td>
-                                                <span>{testProgress?.process || ''}</span>
+                                                <span>{formatTestProcess(testProgress?.process)}</span>
                                             </td>
 
                                             <td className={styles.testStatusCell}>

@@ -1,6 +1,8 @@
 import {
+    getSubmissionExampleScore,
     getSubmissionProvisionalScore,
     getSubmissionSystemScore,
+    getSubmissionTestProgress,
     isMarathonMatchChallenge,
 } from './challenge.utils'
 
@@ -31,6 +33,71 @@ describe('challenge utils', () => {
                 typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
             }))
                 .toBe(false)
+        })
+    })
+
+    describe('getSubmissionExampleScore', () => {
+        it('returns only example marathon scores', () => {
+            expect(getSubmissionExampleScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 10,
+                        isExample: true,
+                        metadata: {
+                            testType: 'example',
+                        },
+                    },
+                    {
+                        aggregateScore: 12,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                        },
+                    },
+                ],
+            }))
+                .toBe(10)
+        })
+
+        it('returns the latest example summation', () => {
+            expect(getSubmissionExampleScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: 10,
+                        isExample: true,
+                        updatedAt: '2026-06-17T01:00:00.000Z',
+                    },
+                    {
+                        aggregateScore: 15.25,
+                        isExample: true,
+                        updatedAt: '2026-06-17T02:00:00.000Z',
+                    },
+                ],
+            }))
+                .toBe(15.25)
+        })
+    })
+
+    describe('getSubmissionTestProgress', () => {
+        it('returns example progress from marathon metadata test type', () => {
+            expect(getSubmissionTestProgress({
+                reviewSummation: [
+                    {
+                        aggregateScore: 10,
+                        isExample: true,
+                        metadata: {
+                            testProgress: 1,
+                            testStatus: 'SUCCESS',
+                            testType: 'example',
+                        },
+                    },
+                ],
+            }))
+                .toEqual({
+                    process: 'example',
+                    progressPercent: '100%',
+                    status: 'SUCCESS',
+                })
         })
     })
 
