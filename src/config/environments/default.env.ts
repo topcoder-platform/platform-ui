@@ -223,7 +223,7 @@ export const TERMS_URL
 export const NDA_TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
 export const DEFAULT_STANDARD_TERMS_UUID = '0a507fb7-3fe0-402b-b121-1a24af4a9cf1'
-export const NDA_DOCUSIGN_TEMPLATE_ID = '8b101e82-87c0-42c9-8440-d922749c4076'
+export const NDA_DOCUSIGN_TEMPLATE_ID = '400b989d-1c75-4889-b6f6-421e1f924709'
 
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 

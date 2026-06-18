@@ -8,7 +8,7 @@ import {
 describe('engagement terms utils', () => {
     const OLD_TERMS_ID = '317cd8f9-d66c-4f2a-8774-63c612d99cd4'
     const NEW_TERMS_ID = '0a507fb7-3fe0-402b-b121-1a24af4a9cf1'
-    const NEW_NDA_TEMPLATE_ID = '8b101e82-87c0-42c9-8440-d922749c4076'
+    const NEW_NDA_TEMPLATE_ID = '400b989d-1c75-4889-b6f6-421e1f924709'
     const TERMS_URL = `https://www.topcoder-dev.com/challenges/terms/detail/${OLD_TERMS_ID}`
 
     it('extracts the terms id from a terms detail URL', () => {

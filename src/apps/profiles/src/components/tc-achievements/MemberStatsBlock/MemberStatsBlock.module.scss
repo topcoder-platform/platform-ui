@@ -87,7 +87,7 @@
     }
 
     :global(.body-large-bold) {
-        font-size: 26px;
+        font-size: 24px;
         line-height: 32px;
         text-align: center;
     }
@@ -103,8 +103,8 @@
     color: rgba($tc-white, 0.88);
 
     :global(.body-main) {
-        font-size: 18px;
-        line-height: 28px;
+        font-size: 16px;
+        line-height: 24px;
     }
 }
 
@@ -177,15 +177,15 @@
     .count {
         font-family: $font-barlow-condensed;
         font-weight: $font-weight-medium;
-        font-size: 34px;
-        line-height: 36px;
+        font-size: 26px;
+        line-height: 28px;
     }
 
     .label {
         font-family: $font-roboto;
         font-weight: $font-weight-medium;
-        font-size: 14px;
-        line-height: 18px;
+        font-size: 11px;
+        line-height: 14px;
         color: rgba($tc-white, 0.82);
     }
 }
@@ -204,8 +204,8 @@
     padding-right: $sp-2;
     overflow: hidden;
     font-family: $font-roboto;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 22px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -215,8 +215,8 @@
         padding: $sp-4;
 
         :global(.body-large-bold) {
-            font-size: 18px;
-            line-height: 24px;
+            font-size: 24px;
+            line-height: 32px;
         }
     }
 
@@ -226,8 +226,8 @@
 
     .footerNote {
         :global(.body-main) {
-            font-size: 12px;
-            line-height: 18px;
+            font-size: 16px;
+            line-height: 24px;
         }
     }
 
@@ -244,19 +244,19 @@
         min-width: 42px;
 
         .count {
-            font-size: 22px;
-            line-height: 24px;
+            font-size: 26px;
+            line-height: 28px;
         }
 
         .label {
-            font-size: 10px;
-            line-height: 12px;
+            font-size: 11px;
+            line-height: 14px;
         }
     }
 
     .trackName {
-        font-size: 12px;
-        line-height: 16px;
+        font-size: 16px;
+        line-height: 22px;
     }
 
     .icon {
