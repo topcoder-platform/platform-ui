@@ -5,7 +5,10 @@ export * from './default.env'
 
 export const TERMS_URL = 'https://www.topcoder.com/challenges/terms/detail/564a981e-6840-4a5c-894e-d5ad22e9cd6f'
 export const NDA_TERMS_URL = 'https://www.topcoder.com/challenges/terms/detail/c41e90e5-4d0e-4811-bd09-38ff72674490'
-export const NDA_DOCUSIGN_TEMPLATE_ID = getReactEnv<string | undefined>('NDA_DOCUSIGN_TEMPLATE_ID', undefined)
+export const NDA_DOCUSIGN_TEMPLATE_ID = getReactEnv<string>(
+    'NDA_DOCUSIGN_TEMPLATE_ID',
+    '8b101e82-87c0-42c9-8440-d922749c4076',
+)
 
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder.com/api/v2',
