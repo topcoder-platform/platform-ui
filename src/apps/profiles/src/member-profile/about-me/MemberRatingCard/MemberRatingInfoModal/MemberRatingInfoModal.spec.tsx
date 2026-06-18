@@ -105,4 +105,20 @@ describe('MemberRatingInfoModal', () => {
             .not
             .toBeInTheDocument()
     })
+
+    it('stacks the marker rating for high ratings near the right edge of the chart', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={0.4}
+                profile={baseProfile}
+                rating={3664}
+                ratingDistribution={ratingDistribution}
+            />,
+        )
+
+        expect(screen.getByTestId('rating-member-marker'))
+            .toHaveClass('memberMarkerStacked')
+    })
 })
