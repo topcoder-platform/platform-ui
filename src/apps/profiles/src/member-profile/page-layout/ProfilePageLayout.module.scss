@@ -160,7 +160,7 @@
         .expirenceWrap {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 40px;
+            gap: 0;
 
             @include ltelg {
                 grid-template-columns: 1fr;
