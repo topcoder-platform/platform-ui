@@ -29,6 +29,14 @@ const nativeDataScienceStatsKeys = new Set([
     'wins',
 ])
 
+const AI_ENGINEERING_DISPLAY_NAME = 'AI Engineering'
+
+const aiEngineeringRatingPathNames = new Set([
+    'AI',
+    'AI_ENGINEER',
+    'AI_ENGINEERING',
+])
+
 /**
  * The structure of a track for a member.
  */
@@ -111,6 +119,28 @@ const getDataScienceSummarySubTrack = (subTracks: MemberStats[]): MemberStats | 
     ],
     ['desc', 'desc', 'desc'],
 )[0]
+
+/**
+ * Normalizes a track or rating path name for alias comparison.
+ *
+ * @param {string | undefined} value - Raw track, subtrack, or configured rating path name.
+ * @returns {string} Uppercase underscore-delimited token.
+ */
+const normalizeTrackToken = (value?: string): string => (
+    value?.trim()
+        .toUpperCase()
+        .replace(/[\s-]+/g, '_') ?? ''
+)
+
+/**
+ * Checks whether a configured rating path is one of the AI Engineering aliases.
+ *
+ * @param {string | undefined} ratingPathName - DATA_SCIENCE rating path key.
+ * @returns {boolean} Whether the path should render as Development > AI Engineering.
+ */
+const isAIEngineeringRatingPathName = (ratingPathName?: string): boolean => (
+    aiEngineeringRatingPathNames.has(normalizeTrackToken(ratingPathName))
+)
 
 /**
  * Attach parent track metadata to legacy design/develop subtracks and index them by name.
@@ -240,46 +270,179 @@ const enhanceDesignTrackData = (trackData: MemberStatsTrack): MemberStatsTrack =
 }
 
 /**
- * Builds the AI Engineering aggregate stats row from a top-level API payload.
+ * Converts a top-level AI payload into source subtracks for aggregation.
  *
- * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
- * @returns {MemberStatsTrack} Aggregated AI Engineering stats for the member stats UI.
+ * @param {MemberStatsGroup | undefined} aiStats - Raw top-level AI stats payload.
+ * @returns {MemberStats[]} Source subtracks used to aggregate an AI Engineering row.
  */
-const buildAIEngineeringTrackData = (memberStats?: UserStats): MemberStatsTrack => {
-    const aiStats = getAIEngineeringStats(memberStats)
-    const subTracks: MemberStats[] = aiStats?.subTracks?.length ? (
-        Object.values(mapSubTracksByName('AI_ENGINEERING', aiStats.subTracks))
-    ) : (aiStats ? [{
+const getTopLevelAIEngineeringSourceSubTracks = (aiStats?: MemberStatsGroup): MemberStats[] => {
+    if (!aiStats) {
+        return []
+    }
+
+    if (aiStats.subTracks?.length) {
+        return Object.values(mapSubTracksByName('AI_ENGINEERING', aiStats.subTracks))
+    }
+
+    return [{
         ...(aiStats as MemberStats),
-        name: aiStats.name ?? 'AI_ENGINEERING',
+        name: AI_ENGINEERING_DISPLAY_NAME,
         parentTrack: 'AI_ENGINEERING',
         path: 'AI_ENGINEERING',
-    }] : [])
+    }]
+}
 
-    const trackData = buildTrackData('AI Engineering', subTracks)
+/**
+ * Checks whether a top-level AI payload has visible profile activity.
+ *
+ * @param {MemberStatsTrack} trackData - Aggregated AI source subtrack data.
+ * @param {number | undefined} rating - Current AI Engineering rating.
+ * @param {number | undefined} challenges - Current AI Engineering challenge count.
+ * @param {number | undefined} submissions - Current AI Engineering submission count.
+ * @param {number | undefined} wins - Current AI Engineering win count.
+ * @returns {boolean} Whether the payload should create a Development subtrack.
+ */
+const hasTopLevelAIEngineeringActivity = (
+    trackData: MemberStatsTrack,
+    rating?: number,
+    challenges?: number,
+    submissions?: number,
+    wins?: number,
+): boolean => (
+    trackData.isActive
+    || !!rating
+    || !!challenges
+    || !!submissions
+    || !!wins
+)
+
+/**
+ * Builds the rank object for a Development AI Engineering subtrack.
+ *
+ * @param {MemberStatsGroup} aiStats - Raw top-level AI stats payload.
+ * @param {number | undefined} rating - Current AI Engineering rating.
+ * @param {number | undefined} percentile - Current AI Engineering percentile.
+ * @returns {MemberStats['rank']} Rank fields for the display subtrack.
+ */
+const buildAIEngineeringRank = (
+    aiStats: MemberStatsGroup,
+    rating?: number,
+    percentile?: number,
+): MemberStats['rank'] => ({
+    ...((aiStats as MemberStats).rank ?? {}),
+    ...(rating === undefined ? {} : { rating }),
+    ...(percentile === undefined ? {} : { overallPercentile: percentile }),
+})
+
+/**
+ * Builds the submissions field for a Development AI Engineering subtrack.
+ *
+ * @param {MemberStatsGroup} aiStats - Raw top-level AI stats payload.
+ * @param {number | undefined} submissions - Aggregated submission count.
+ * @returns {MemberStats['submissions']} Submission stats for the display subtrack.
+ */
+const buildAIEngineeringSubmissions = (
+    aiStats: MemberStatsGroup,
+    submissions?: number,
+): MemberStats['submissions'] => (
+    submissions === undefined
+        ? (aiStats as MemberStats).submissions
+        : { submissions }
+)
+
+/**
+ * Builds a Development subtrack from a top-level AI Engineering API payload.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStats | undefined} AI Engineering subtrack data when active stats exist.
+ */
+const buildTopLevelAIEngineeringSubTrack = (memberStats?: UserStats): MemberStats | undefined => {
+    const aiStats = getAIEngineeringStats(memberStats)
+
+    if (!aiStats) {
+        return undefined
+    }
+
+    const subTracks = getTopLevelAIEngineeringSourceSubTracks(aiStats)
+    const trackData = buildTrackData(AI_ENGINEERING_DISPLAY_NAME, subTracks)
     const submissions = getSubTrackSubmissionCount(aiStats as MemberStats | undefined) ?? trackData.submissions
-    const challenges = getFiniteNumber(aiStats?.challenges) ?? trackData.challenges
+    const challenges = getFiniteNumber(aiStats?.challenges) ?? trackData.challenges ?? 0
     const rating = getFiniteNumber(aiStats?.rank?.rating)
     const wins = getFiniteNumber(aiStats?.wins) ?? trackData.wins
+    const percentile = getFiniteNumber(aiStats?.rank?.overallPercentile)
+        ?? getFiniteNumber(aiStats?.rank?.percentile)
+
+    if (!hasTopLevelAIEngineeringActivity(trackData, rating, challenges, submissions, wins)) {
+        return undefined
+    }
 
     return {
-        ...trackData,
-        challengePoints: getFiniteNumber(aiStats?.challengePoints),
+        ...(aiStats as MemberStats),
         challenges,
-        isActive: trackData.isActive
-            || !!rating
-            || !!challenges
-            || !!submissions
-            || !!wins,
-        name: 'AI Engineering',
-        order: 2,
-        percentile: getFiniteNumber(aiStats?.rank?.overallPercentile) ?? getFiniteNumber(aiStats?.rank?.percentile),
-        rating,
-        submissions,
-        subTracks,
+        name: AI_ENGINEERING_DISPLAY_NAME,
+        parentTrack: 'AI_ENGINEERING',
+        path: 'AI_ENGINEERING',
+        rank: buildAIEngineeringRank(aiStats, rating, percentile),
+        submissions: buildAIEngineeringSubmissions(aiStats, submissions),
         wins,
     }
 }
+
+/**
+ * Builds a Development subtrack from a DATA_SCIENCE AI Engineering rating path.
+ *
+ * The API can return configured AI Engineering rows under DATA_SCIENCE while
+ * the profile hierarchy displays that rating path under Development. The
+ * returned subtrack keeps DATA_SCIENCE metadata so history and distribution
+ * calls still use the stored API dimension.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStats | undefined} AI Engineering subtrack data when the path is rated.
+ */
+const buildDataScienceAIEngineeringSubTrack = (memberStats?: UserStats): MemberStats | undefined => {
+    const dataScienceStats = memberStats?.DATA_SCIENCE
+
+    if (!dataScienceStats) {
+        return undefined
+    }
+
+    const candidates = Object.entries(dataScienceStats)
+        .reduce((subTracks: MemberStats[], [ratingPathName, ratingPathStats]) => {
+            if (
+                nativeDataScienceStatsKeys.has(ratingPathName)
+                || !isAIEngineeringRatingPathName(ratingPathName)
+                || !isDataScienceRatingPathStats(ratingPathStats)
+            ) {
+                return subTracks
+            }
+
+            subTracks.push({
+                ...(ratingPathStats as MemberStats),
+                name: AI_ENGINEERING_DISPLAY_NAME,
+                parentTrack: 'DATA_SCIENCE',
+                path: 'DATA_SCIENCE',
+            })
+
+            return subTracks
+        }, [])
+
+    return getDataScienceSummarySubTrack(candidates)
+}
+
+/**
+ * Returns the AI Engineering subtrack that should be grouped under Development.
+ *
+ * DATA_SCIENCE rating-path rows are preferred because they retain the native
+ * history/distribution path for existing API payloads. Top-level AI payloads
+ * are still supported for compatibility.
+ *
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
+ * @returns {MemberStats | undefined} Display-ready Development subtrack.
+ */
+const getAIEngineeringDevelopmentSubTrack = (memberStats?: UserStats): MemberStats | undefined => (
+    buildDataScienceAIEngineeringSubTrack(memberStats)
+        ?? buildTopLevelAIEngineeringSubTrack(memberStats)
+)
 
 /**
  * Builds an active track from a configured DATA_SCIENCE rating path.
@@ -334,6 +497,7 @@ const getDataScienceRatingPathTrackData = (memberStats?: UserStats): MemberStats
         .reduce((ratingPathTracks: MemberStatsTrack[], [ratingPathName, ratingPathStats]) => {
             if (
                 nativeDataScienceStatsKeys.has(ratingPathName)
+                || isAIEngineeringRatingPathName(ratingPathName)
                 || !isDataScienceRatingPathStats(ratingPathStats)
             ) {
                 return ratingPathTracks
@@ -396,9 +560,6 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     )
 
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
-    // AI Engineering
-    const aiEngineeringTrackStats: MemberStatsTrack = buildAIEngineeringTrackData(memberStats)
-
     // Design
     const designTrackStats: MemberStatsTrack = (
         enhanceDesignTrackData(
@@ -407,10 +568,19 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     )
 
     // Development
+    const aiEngineeringDevelopmentSubTrack = getAIEngineeringDevelopmentSubTrack(memberStats)
+    const developSubTrackValues = Object.values(developSubTracks)
+    const hasDevelopmentAIEngineeringSubTrack = developSubTrackValues
+        .some(subTrack => isAIEngineeringRatingPathName(subTrack.name))
     const developTrackStats: MemberStatsTrack = (
         buildTrackData(
             'Development',
-            Object.values(developSubTracks)
+            [
+                ...developSubTrackValues,
+                ...(hasDevelopmentAIEngineeringSubTrack || !aiEngineeringDevelopmentSubTrack
+                    ? []
+                    : [aiEngineeringDevelopmentSubTrack]),
+            ]
                 .filter(subTrack => !isTestingSubTrack(subTrack)),
         )
     )
@@ -464,7 +634,6 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
 
     // Order and filter active tracks based on wins and submissions
     return orderBy(filter([
-        aiEngineeringTrackStats,
         dsTrackStats,
         cpTrackStats,
         designTrackStats,
