@@ -484,6 +484,11 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
         memberStats,
     )
 
+    const qaSubTracks: {[key: string]: MemberStats} = mapSubTracksByName(
+        'QA',
+        memberStats?.QA?.subTracks,
+    )
+
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
     // AI Engineering
     const aiEngineeringTrackStats: MemberStatsTrack = buildAIEngineeringTrackData(memberStats)
@@ -508,8 +513,11 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     const testingTrackStats: MemberStatsTrack = (
         buildTrackData(
             'Testing',
-            Object.values(developSubTracks)
-                .filter(isTestingSubTrack),
+            [
+                ...Object.values(developSubTracks)
+                    .filter(isTestingSubTrack),
+                ...Object.values(qaSubTracks),
+            ],
         )
     )
 
