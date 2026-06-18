@@ -9,12 +9,11 @@ jest.mock('~/libs/core', () => ({
 })
 
 describe('getTrackHistoryFromStats', () => {
-    it('reads compatibility history paths for displayed subtracks', () => {
+    it('reads keyed Data Science Challenge history', () => {
         const trackData = {
-            historyPaths: ['DATA_SCIENCE.Challenge.history'],
-            name: 'CODE',
-            parentTrack: 'DEVELOP',
-            path: 'DEVELOP.subTracks',
+            name: 'Challenge',
+            parentTrack: 'DATA_SCIENCE',
+            path: 'DATA_SCIENCE',
         } as MemberStats
         const history = getTrackHistoryFromStats({
             DATA_SCIENCE: {
@@ -28,9 +27,6 @@ describe('getTrackHistoryFromStats', () => {
                         },
                     ],
                 },
-            },
-            DEVELOP: {
-                subTracks: [],
             },
             groupId: 10,
             handle: 'testcoun',

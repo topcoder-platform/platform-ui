@@ -74,13 +74,17 @@ describe('getActiveTracks', () => {
             .toEqual(['Challenge', 'Task'])
     })
 
-    it('shows Data Science Challenge stats under the Development Code subtrack', () => {
+    it('includes Data Science Challenge stats in the Data Science track', () => {
         const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DATA_SCIENCE: {
                 Challenge: {
                     challenges: 1,
                     rank: {
+                        percentile: 10,
                         rating: 1499,
+                    },
+                    submissions: {
+                        submissions: 0,
                     },
                     wins: 1,
                 },
@@ -98,34 +102,27 @@ describe('getActiveTracks', () => {
             .find(track => track.name === 'Data Science')
         const developmentTrack: MemberStatsTrack | undefined = activeTracks
             .find(track => track.name === 'Development')
-        const codeSubTrack = developmentTrack?.subTracks
-            .find(track => track.name === 'CODE')
+        const challengeSubTrack = dataScienceTrack?.subTracks
+            .find(track => track.name === 'Challenge')
 
         expect(dataScienceTrack?.challenges)
+            .toEqual(2)
+        expect(dataScienceTrack?.wins)
             .toEqual(1)
         expect(dataScienceTrack?.rating)
-            .toEqual(763)
-        expect(dataScienceTrack?.subTracks.map(track => track.name))
-            .toEqual(['MARATHON_MATCH'])
-        expect(developmentTrack?.challenges)
-            .toEqual(1)
-        expect(developmentTrack?.wins)
-            .toEqual(1)
-        expect(developmentTrack?.subTracks.map(track => track.name))
-            .toEqual(['CODE'])
-        expect(codeSubTrack)
-            .toEqual(expect.objectContaining({
-                historyPaths: ['DATA_SCIENCE.Challenge.history'],
-                name: 'CODE',
-                parentTrack: 'DEVELOP',
-                path: 'DEVELOP.subTracks',
-                statsDistributionSubTrack: 'Challenge',
-                statsDistributionTrack: 'DATA_SCIENCE',
-            }))
-        expect(codeSubTrack?.rank?.rating)
             .toEqual(1499)
-        expect(activeTracks.map(track => track.name))
-            .not.toContain('Challenge')
+        expect(dataScienceTrack?.percentile)
+            .toEqual(10)
+        expect(dataScienceTrack?.subTracks.map(track => track.name))
+            .toEqual(['Challenge', 'MARATHON_MATCH'])
+        expect(challengeSubTrack)
+            .toEqual(expect.objectContaining({
+                name: 'Challenge',
+                parentTrack: 'DATA_SCIENCE',
+                path: 'DATA_SCIENCE',
+            }))
+        expect(developmentTrack)
+            .toBeUndefined()
     })
 
     it('keeps legacy testing subtracks in the testing track', () => {
