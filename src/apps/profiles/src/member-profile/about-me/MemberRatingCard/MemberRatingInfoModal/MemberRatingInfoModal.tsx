@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { getRatingColor, UserProfile, UserStatsDistributionResponse } from '~/libs/core'
 import { BaseModal } from '~/libs/ui'
 
-import { numberToFixed } from '../../../../lib'
+import { formatTopPercentile } from '../MemberRatingCard.utils'
 
 import styles from './MemberRatingInfoModal.module.scss'
 
@@ -101,7 +101,8 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
 /**
  * Formats percentile values for the rating comparison modal.
  *
- * Used by MemberRatingInfoModal to keep the top percentile text compact.
+ * Used by MemberRatingInfoModal to keep the top percentile text consistent with
+ * the compact rating card, including showing positive sub-1% values as 1%.
  *
  * @param {number | undefined} percentile - The percentile value calculated from the rating distribution.
  * @returns {string} A display-ready percentage or `--` when the percentile is unavailable.
@@ -109,7 +110,7 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
 const formatPercentile = (percentile?: number): string => (
     percentile === undefined || percentile === 0
         ? '--'
-        : numberToFixed(percentile, 0)
+        : formatTopPercentile(percentile)
 )
 
 /**

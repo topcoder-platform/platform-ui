@@ -86,4 +86,23 @@ describe('MemberRatingInfoModal', () => {
         expect(screen.getByText('Where Emily ranks in the distribution'))
             .toBeInTheDocument()
     })
+
+    it('shows a positive sub-one percentile as top one percent', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={0.4}
+                profile={baseProfile}
+                rating={3664}
+                ratingDistribution={ratingDistribution}
+            />,
+        )
+
+        expect(screen.getByText(/TOP\s+1%/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/TOP\s+0%/))
+            .not
+            .toBeInTheDocument()
+    })
 })
