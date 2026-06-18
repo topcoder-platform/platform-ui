@@ -24,6 +24,7 @@ import {
     MarathonMatchTesterSummary,
     MarathonMatchTestSubmissionInput,
     MarathonMatchTestSubmissionResponse,
+    MarathonMatchTestSubmissionStatusResponse,
     UpdateMarathonMatchConfigInput,
 } from '../models'
 
@@ -43,6 +44,36 @@ export interface FetchTestersParams {
 }
 
 type TestSubmissionResponseConfigType = MarathonMatchTestSubmissionResponse['configType']
+
+/**
+ * Normalizes a JSON-like value into a plain object record.
+ * @param value Candidate API payload fragment.
+ * @returns Record value when the fragment is an object; otherwise `undefined`.
+ * Used by validation-submission status normalization for metadata fields.
+ */
+function normalizeRecord(value: unknown): Record<string, unknown> | undefined {
+    if (typeof value !== 'object' || !value || Array.isArray(value)) {
+        return undefined
+    }
+
+    return value as Record<string, unknown>
+}
+
+/**
+ * Normalizes a JSON-like value into an array of plain object records.
+ * @param value Candidate API payload fragment.
+ * @returns Record array when the fragment is an array of objects; otherwise `undefined`.
+ * Used by validation-submission status normalization for impacted review details.
+ */
+function normalizeRecordArray(value: unknown): Record<string, unknown>[] | undefined {
+    if (!Array.isArray(value)) {
+        return undefined
+    }
+
+    return value
+        .map(normalizeRecord)
+        .filter((entry): entry is Record<string, unknown> => !!entry)
+}
 
 function normalizeText(value: unknown): string | undefined {
     if (value === undefined || value === null) {
@@ -488,10 +519,12 @@ function normalizeMarathonMatchTestSubmissionResponse(
     const challengeId = normalizeText(typedResponse.challengeId)
     const configType = normalizeText(typedResponse.configType) as TestSubmissionResponseConfigType | undefined
     const submissionId = normalizeText(typedResponse.submissionId)
+    const testSubmissionId = normalizeText(typedResponse.testSubmissionId) || submissionId
+    const status = normalizeText(typedResponse.status)
     const taskArn = normalizeText(typedResponse.taskArn)
     const taskId = normalizeText(typedResponse.taskId)
 
-    if (!challengeId || !configType || !submissionId || !taskArn || !taskId) {
+    if (!challengeId || !configType || !submissionId || !testSubmissionId || !status || !taskArn || !taskId) {
         return undefined
     }
 
@@ -499,9 +532,54 @@ function normalizeMarathonMatchTestSubmissionResponse(
         challengeId,
         cloudWatchLogsConsoleUrl: normalizeText(typedResponse.cloudWatchLogsConsoleUrl),
         configType,
+        status,
         submissionId,
         taskArn,
         taskId,
+        testSubmissionId,
+    }
+}
+
+/**
+ * Normalizes a raw validation submission status response.
+ * @param response Raw response from GET /challenge/:challengeId/test-submission/:testSubmissionId.
+ * @returns Normalized status response when required fields are present; otherwise `undefined`.
+ * Used by `fetchMarathonMatchTestSubmissionStatus` before resolving the API call.
+ */
+function normalizeMarathonMatchTestSubmissionStatusResponse(
+    response: unknown,
+): MarathonMatchTestSubmissionStatusResponse | undefined {
+    const baseResponse = normalizeMarathonMatchTestSubmissionResponse(response)
+
+    if (!baseResponse || typeof response !== 'object' || !response) {
+        return undefined
+    }
+
+    const typedResponse = response as Record<string, unknown>
+    const fileName = normalizeText(typedResponse.fileName)
+    const fileSize = normalizeNumber(typedResponse.fileSize)
+    const updatedAt = normalizeText(typedResponse.updatedAt)
+
+    if (!fileName || fileSize === undefined || !updatedAt) {
+        return undefined
+    }
+
+    return {
+        ...baseResponse,
+        completedAt: normalizeText(typedResponse.completedAt),
+        completedTests: normalizeNumber(typedResponse.completedTests),
+        currentReview: normalizeRecord(typedResponse.currentReview),
+        failedTests: normalizeNumber(typedResponse.failedTests),
+        fileName,
+        fileSize,
+        impactedReviews: normalizeRecordArray(typedResponse.impactedReviews),
+        memberId: normalizeText(typedResponse.memberId),
+        message: normalizeText(typedResponse.message),
+        metadata: normalizeRecord(typedResponse.metadata),
+        progress: normalizeNumber(typedResponse.progress),
+        score: normalizeNumber(typedResponse.score),
+        totalTests: normalizeNumber(typedResponse.totalTests),
+        updatedAt,
     }
 }
 
@@ -738,6 +816,36 @@ export async function uploadMarathonMatchTestSubmission(
         return normalizedResponse
     } catch (error) {
         throw normalizeError(error, 'Failed to upload marathon match validation submission')
+    }
+}
+
+/**
+ * Fetches the current status for an isolated marathon match validation submission run.
+ * @param challengeId Challenge identifier used in the validation status route path.
+ * @param testSubmissionId Validation run identifier returned by upload.
+ * @returns Current validation run progress and final scoring details when complete.
+ * @throws Error When the API request fails or returns an invalid status response.
+ * Used by `MarathonMatchScorerSection` to poll until validation scoring completes.
+ */
+export async function fetchMarathonMatchTestSubmissionStatus(
+    challengeId: string,
+    testSubmissionId: string,
+): Promise<MarathonMatchTestSubmissionStatusResponse> {
+    try {
+        const encodedChallengeId = encodeURIComponent(challengeId.trim())
+        const encodedTestSubmissionId = encodeURIComponent(testSubmissionId.trim())
+        const response = await xhrGetAsync<unknown>(
+            `${MARATHON_MATCH_API_URL}/challenge/${encodedChallengeId}/test-submission/${encodedTestSubmissionId}`,
+        )
+        const normalizedResponse = normalizeMarathonMatchTestSubmissionStatusResponse(response)
+
+        if (!normalizedResponse) {
+            throw new Error('Marathon match validation submission status response was invalid')
+        }
+
+        return normalizedResponse
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch marathon match validation submission status')
     }
 }
 

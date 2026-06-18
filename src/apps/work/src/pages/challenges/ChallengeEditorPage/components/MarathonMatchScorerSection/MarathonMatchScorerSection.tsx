@@ -21,12 +21,14 @@ import {
     MarathonMatchTester,
     MarathonMatchTesterSummary,
     MarathonMatchTestSubmissionResponse,
+    MarathonMatchTestSubmissionStatusResponse,
     UpdateMarathonMatchConfigInput,
 } from '../../../../../lib/models'
 import {
     createMarathonMatchConfig,
     fetchMarathonMatchConfig,
     fetchMarathonMatchDefaults,
+    fetchMarathonMatchTestSubmissionStatus,
     fetchTester,
     fetchTesters,
     rerunMarathonMatchScores,
@@ -34,6 +36,7 @@ import {
     uploadMarathonMatchTestSubmission,
 } from '../../../../../lib/services'
 import {
+    formatDateTime,
     showErrorToast,
     showInfoToast,
     showSuccessToast,
@@ -45,6 +48,7 @@ import styles from './MarathonMatchScorerSection.module.scss'
 const DEFAULT_SCORER_NAME = 'Marathon Match Scorer'
 const DEFAULT_SCORE_DIRECTION = 'MAXIMIZE'
 const POLL_INTERVAL_MS = 5000
+const TEST_SUBMISSION_TERMINAL_STATUSES = new Set(['SUCCESS', 'FAILED'])
 const PHASE_LABELS = {
     example: 'Example',
     provisional: 'Provisional',
@@ -117,6 +121,106 @@ interface PhaseOption {
 interface TestSubmissionPhaseOption {
     label: string
     value: MarathonMatchConfigType
+}
+
+type TestSubmissionResultState =
+    | MarathonMatchTestSubmissionResponse
+    | MarathonMatchTestSubmissionStatusResponse
+    | undefined
+
+/**
+ * Normalizes a validation submission status for comparisons and display.
+ * @param status Raw status returned by marathon-match-api.
+ * @returns Uppercase status text, or `UNKNOWN` when absent.
+ * Used by validation-run polling and modal rendering.
+ */
+function normalizeTestSubmissionStatus(status?: string): string {
+    const normalizedStatus = status?.trim()
+        .toUpperCase()
+
+    return normalizedStatus || 'UNKNOWN'
+}
+
+/**
+ * Checks whether validation submission polling should stop.
+ * @param status Raw status returned by marathon-match-api.
+ * @returns True when the validation run reached a terminal state.
+ * Used by `pollTestSubmissionStatus` after each status response.
+ */
+function isTerminalTestSubmissionStatus(status?: string): boolean {
+    return TEST_SUBMISSION_TERMINAL_STATUSES.has(normalizeTestSubmissionStatus(status))
+}
+
+/**
+ * Formats a numeric score for the validation result modal.
+ * @param score Optional final aggregate score.
+ * @returns Display-ready score text.
+ * Used by `renderTestSubmissionResultModal`.
+ */
+function formatTestSubmissionScore(score?: number): string {
+    return typeof score === 'number' && Number.isFinite(score)
+        ? score.toLocaleString(undefined, { maximumFractionDigits: 6 })
+        : 'Not available'
+}
+
+/**
+ * Formats a validation-run progress value as a percentage.
+ * @param progress Optional progress value from 0 to 1.
+ * @returns Display-ready progress text.
+ * Used by inline validation status and the result modal.
+ */
+function formatTestSubmissionProgress(progress?: number): string {
+    if (typeof progress !== 'number' || !Number.isFinite(progress)) {
+        return 'Pending'
+    }
+
+    return `${Math.round(Math.max(0, Math.min(1, progress)) * 100)}%`
+}
+
+/**
+ * Formats completed/total/failed testcase counts.
+ * @param result Validation run status response with optional testcase counters.
+ * @returns Compact testcase count summary.
+ * Used by `renderTestSubmissionResultModal`.
+ */
+function formatTestSubmissionTests(result: MarathonMatchTestSubmissionStatusResponse): string {
+    const completed = result.completedTests ?? 0
+    const total = result.totalTests ?? 0
+    const failed = result.failedTests ?? 0
+
+    if (!total) {
+        return failed
+            ? `${failed} failed`
+            : 'Not available'
+    }
+
+    return `${completed}/${total} complete${failed ? `, ${failed} failed` : ''}`
+}
+
+/**
+ * Formats validation-run metadata for a read-only modal preview.
+ * @param value Optional metadata object or array returned by the scorer.
+ * @returns Pretty JSON text, or an empty string when no metadata exists.
+ * Used by `renderJsonPreview`.
+ */
+function formatJsonPreview(value?: Record<string, unknown> | Record<string, unknown>[]): string {
+    if (!value) {
+        return ''
+    }
+
+    return JSON.stringify(value, undefined, 2)
+}
+
+/**
+ * Checks whether a validation result includes full status fields.
+ * @param result Upload response or status response stored in component state.
+ * @returns True when the response has final/polling fields from the status endpoint.
+ * Used before rendering the validation result modal.
+ */
+function isTestSubmissionStatusResponse(
+    result: MarathonMatchTestSubmissionResponse | MarathonMatchTestSubmissionStatusResponse | undefined,
+): result is MarathonMatchTestSubmissionStatusResponse {
+    return !!result && 'fileName' in result
 }
 
 interface PhaseConfigCardProps {
@@ -736,6 +840,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     const phaseListRef = useRef<ChallengePhase[]>(phases)
     const isMountedRef = useRef<boolean>(true)
     const pollingTimerRef = useRef<number | undefined>()
+    const testSubmissionPollingTimerRef = useRef<number | undefined>()
 
     const [config, setConfig] = useState<MarathonMatchConfig | undefined>()
     const [defaults, setDefaults] = useState<MarathonMatchDefaults | undefined>()
@@ -764,7 +869,8 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     const [testerLoadError, setTesterLoadError] = useState<string | undefined>()
     const [selectedTestSubmissionFile, setSelectedTestSubmissionFile] = useState<File | undefined>()
     const [testSubmissionConfigType, setTestSubmissionConfigType] = useState<MarathonMatchConfigType>('PROVISIONAL')
-    const [testSubmissionResult, setTestSubmissionResult] = useState<MarathonMatchTestSubmissionResponse | undefined>()
+    const [testSubmissionResult, setTestSubmissionResult] = useState<TestSubmissionResultState>()
+    const [showTestSubmissionResultModal, setShowTestSubmissionResultModal] = useState<boolean>(false)
     const [showNewTesterModal, setShowNewTesterModal] = useState<boolean>(false)
     const [showNewVersionModal, setShowNewVersionModal] = useState<boolean>(false)
     const [showCompilationErrorsModal, setShowCompilationErrorsModal] = useState<boolean>(false)
@@ -845,6 +951,20 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
         window.clearTimeout(pollingTimerRef.current)
         pollingTimerRef.current = undefined
+    }, [])
+
+    /**
+     * Clears the active validation-submission polling timeout.
+     * @returns void
+     * Used when a new validation upload starts, the selected file changes, or the component unmounts.
+     */
+    const clearTestSubmissionPollingTimer = useCallback((): void => {
+        if (testSubmissionPollingTimerRef.current === undefined) {
+            return
+        }
+
+        window.clearTimeout(testSubmissionPollingTimerRef.current)
+        testSubmissionPollingTimerRef.current = undefined
     }, [])
 
     const handleOpenNewTesterModal = useCallback((): void => {
@@ -1181,8 +1301,10 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             setSelectedTestSubmissionFile(nextFile)
             setTestSubmissionError(undefined)
             setTestSubmissionResult(undefined)
+            setShowTestSubmissionResultModal(false)
+            clearTestSubmissionPollingTimer()
         },
-        [],
+        [clearTestSubmissionPollingTimer],
     )
 
     useEffect(() => {
@@ -1191,7 +1313,8 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
     useEffect(() => () => {
         isMountedRef.current = false
-    }, [])
+        clearTestSubmissionPollingTimer()
+    }, [clearTestSubmissionPollingTimer])
 
     useEffect(() => {
         let isMounted = true
@@ -1203,7 +1326,9 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         setRerunError(undefined)
         setTestSubmissionError(undefined)
         setTestSubmissionResult(undefined)
+        setShowTestSubmissionResultModal(false)
         setSelectedTestSubmissionFile(undefined)
+        clearTestSubmissionPollingTimer()
         setTesterLoadError(undefined)
         setSelectedTester(undefined)
 
@@ -1258,9 +1383,11 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         return () => {
             isMounted = false
             clearPollingTimer()
+            clearTestSubmissionPollingTimer()
         }
     }, [
         clearPollingTimer,
+        clearTestSubmissionPollingTimer,
         loadTesterById,
         challengeId,
     ])
@@ -1426,6 +1553,73 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         && !isUploadingTestSubmission
         && !!selectedTestSubmissionFile
         && testSubmissionPhaseOptions.some(option => option.value === testSubmissionConfigType)
+    const testSubmissionStatus = normalizeTestSubmissionStatus(testSubmissionResult?.status)
+    const isTestSubmissionComplete = isTerminalTestSubmissionStatus(testSubmissionResult?.status)
+    const modalTestSubmissionResult = isTestSubmissionStatusResponse(testSubmissionResult)
+        ? testSubmissionResult
+        : undefined
+
+    /**
+     * Starts polling a validation submission run until scoring reaches a terminal state.
+     * @param testSubmissionId Validation run identifier returned by upload.
+     * @returns void
+     * Used by `handleUploadTestSubmission` after the ECS task is queued.
+     */
+    const startTestSubmissionStatusPolling = useCallback((testSubmissionId: string): void => {
+        clearTestSubmissionPollingTimer()
+
+        const pollStatus = async (): Promise<void> => {
+            try {
+                const statusResponse = await fetchMarathonMatchTestSubmissionStatus(
+                    challengeId,
+                    testSubmissionId,
+                )
+
+                if (!isMountedRef.current) {
+                    return
+                }
+
+                setTestSubmissionResult(statusResponse)
+
+                if (isTerminalTestSubmissionStatus(statusResponse.status)) {
+                    clearTestSubmissionPollingTimer()
+                    setShowTestSubmissionResultModal(true)
+
+                    if (normalizeTestSubmissionStatus(statusResponse.status) === 'FAILED') {
+                        showErrorToast('Validation scoring failed')
+                    } else {
+                        showSuccessToast('Validation scoring complete')
+                    }
+
+                    return
+                }
+
+                testSubmissionPollingTimerRef.current = window.setTimeout(() => {
+                    pollStatus()
+                        .catch(() => undefined)
+                }, POLL_INTERVAL_MS)
+            } catch (error) {
+                if (!isMountedRef.current) {
+                    return
+                }
+
+                const errorMessage = getErrorMessage(
+                    error,
+                    'Failed to fetch marathon match validation submission status',
+                )
+
+                clearTestSubmissionPollingTimer()
+                setTestSubmissionError(errorMessage)
+                showErrorToast(errorMessage)
+            }
+        }
+
+        pollStatus()
+            .catch(() => undefined)
+    }, [
+        challengeId,
+        clearTestSubmissionPollingTimer,
+    ])
 
     const handleUploadTestSubmission = useCallback(
         async (): Promise<void> => {
@@ -1433,9 +1627,11 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 return
             }
 
+            clearTestSubmissionPollingTimer()
             setIsUploadingTestSubmission(true)
             setTestSubmissionError(undefined)
             setTestSubmissionResult(undefined)
+            setShowTestSubmissionResultModal(false)
 
             try {
                 const uploadResponse = await uploadMarathonMatchTestSubmission(
@@ -1447,7 +1643,8 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 )
 
                 setTestSubmissionResult(uploadResponse)
-                showSuccessToast('Validation submission queued for scoring')
+                showSuccessToast('Validation scoring queued')
+                startTestSubmissionStatusPolling(uploadResponse.testSubmissionId)
             } catch (error) {
                 const errorMessage = getErrorMessage(
                     error,
@@ -1463,7 +1660,9 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         [
             canUploadTestSubmission,
             challengeId,
+            clearTestSubmissionPollingTimer,
             selectedTestSubmissionFile,
+            startTestSubmissionStatusPolling,
             testSubmissionConfigType,
         ],
     )
@@ -1472,6 +1671,15 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         handleUploadTestSubmission()
             .catch(() => undefined)
     }, [handleUploadTestSubmission])
+
+    /**
+     * Closes the validation submission result modal.
+     * @returns void
+     * Used by the modal close button and footer action.
+     */
+    const handleCloseTestSubmissionResultModal = useCallback((): void => {
+        setShowTestSubmissionResultModal(false)
+    }, [])
 
     const handleRerunScores = useCallback(
         async (): Promise<void> => {
@@ -1728,30 +1936,23 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                                     </div>
                                 </div>
 
-                                {testSubmissionResult
+                                {testSubmissionResult && !isTestSubmissionComplete
                                     ? (
                                         <div className={styles.testSubmissionResult}>
                                             <span>
-                                                Submission
+                                                Validation scoring
                                                 {' '}
-                                                {testSubmissionResult.submissionId}
+                                                {testSubmissionStatus.toLowerCase()}
                                             </span>
                                             <span>
-                                                Task
+                                                Progress
                                                 {' '}
-                                                {testSubmissionResult.taskId}
+                                                {formatTestSubmissionProgress(
+                                                    isTestSubmissionStatusResponse(testSubmissionResult)
+                                                        ? testSubmissionResult.progress
+                                                        : undefined,
+                                                )}
                                             </span>
-                                            {testSubmissionResult.cloudWatchLogsConsoleUrl
-                                                ? (
-                                                    <a
-                                                        href={testSubmissionResult.cloudWatchLogsConsoleUrl}
-                                                        rel='noreferrer'
-                                                        target='_blank'
-                                                    >
-                                                        CloudWatch logs
-                                                    </a>
-                                                )
-                                                : undefined}
                                         </div>
                                     )
                                     : undefined}
@@ -1955,6 +2156,119 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     type='button'
                 />
             </div>
+
+            {showTestSubmissionResultModal && modalTestSubmissionResult
+                ? (
+                    <BaseModal
+                        buttons={(
+                            <Button
+                                label='Close'
+                                onClick={handleCloseTestSubmissionResultModal}
+                                primary
+                            />
+                        )}
+                        onClose={handleCloseTestSubmissionResultModal}
+                        open
+                        size='md'
+                        title={
+                            normalizeTestSubmissionStatus(modalTestSubmissionResult.status) === 'FAILED'
+                                ? 'Validation Scoring Failed'
+                                : 'Validation Scoring Complete'
+                        }
+                    >
+                        <div className={styles.modalContent}>
+                            <div className={styles.resultGrid}>
+                                <div className={styles.resultItem}>
+                                    <span>Status</span>
+                                    <strong>{normalizeTestSubmissionStatus(modalTestSubmissionResult.status)}</strong>
+                                </div>
+                                <div className={styles.resultItem}>
+                                    <span>Score</span>
+                                    <strong>{formatTestSubmissionScore(modalTestSubmissionResult.score)}</strong>
+                                </div>
+                                <div className={styles.resultItem}>
+                                    <span>Phase</span>
+                                    <strong>{modalTestSubmissionResult.configType}</strong>
+                                </div>
+                                <div className={styles.resultItem}>
+                                    <span>Tests</span>
+                                    <strong>{formatTestSubmissionTests(modalTestSubmissionResult)}</strong>
+                                </div>
+                                <div className={styles.resultItem}>
+                                    <span>Progress</span>
+                                    <strong>{formatTestSubmissionProgress(modalTestSubmissionResult.progress)}</strong>
+                                </div>
+                                <div className={styles.resultItem}>
+                                    <span>Completed</span>
+                                    <strong>{formatDateTime(modalTestSubmissionResult.completedAt)}</strong>
+                                </div>
+                            </div>
+
+                            {modalTestSubmissionResult.message
+                                ? (
+                                    <div className={styles.resultMessage}>
+                                        {modalTestSubmissionResult.message}
+                                    </div>
+                                )
+                                : undefined}
+
+                            <div className={styles.resultMeta}>
+                                <span>File</span>
+                                <strong>{modalTestSubmissionResult.fileName}</strong>
+                            </div>
+
+                            {modalTestSubmissionResult.taskId
+                                ? (
+                                    <div className={styles.resultMeta}>
+                                        <span>Task</span>
+                                        <strong>{modalTestSubmissionResult.taskId}</strong>
+                                    </div>
+                                )
+                                : undefined}
+
+                            {modalTestSubmissionResult.cloudWatchLogsConsoleUrl
+                                ? (
+                                    <a
+                                        className={styles.resultLink}
+                                        href={modalTestSubmissionResult.cloudWatchLogsConsoleUrl}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
+                                        Open CloudWatch logs
+                                    </a>
+                                )
+                                : undefined}
+
+                            {formatJsonPreview(modalTestSubmissionResult.metadata)
+                                ? (
+                                    <div className={styles.resultJsonSection}>
+                                        <span>Metadata</span>
+                                        <pre>{formatJsonPreview(modalTestSubmissionResult.metadata)}</pre>
+                                    </div>
+                                )
+                                : undefined}
+
+                            {formatJsonPreview(modalTestSubmissionResult.currentReview)
+                                ? (
+                                    <div className={styles.resultJsonSection}>
+                                        <span>Current Review</span>
+                                        <pre>{formatJsonPreview(modalTestSubmissionResult.currentReview)}</pre>
+                                    </div>
+                                )
+                                : undefined}
+
+                            {formatJsonPreview(modalTestSubmissionResult.impactedReviews)
+                                ? (
+                                    <div className={styles.resultJsonSection}>
+                                        <span>Impacted Reviews</span>
+                                        <pre>{formatJsonPreview(modalTestSubmissionResult.impactedReviews)}</pre>
+                                    </div>
+                                )
+                                : undefined}
+                        </div>
+                    </BaseModal>
+                )
+                : undefined}
 
             {showNewTesterModal
                 ? (
