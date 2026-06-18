@@ -1,6 +1,6 @@
 import { UserSkill } from './user-skill.model'
 
-export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE'
+export type TC_TRACKS = 'DEVELOP' | 'DESIGN' | 'DATA_SCIENCE' | 'QA'
 
 export enum NamesAndHandleAppearance {
     both = 'namesAndHandle',

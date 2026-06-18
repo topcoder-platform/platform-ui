@@ -166,6 +166,48 @@ describe('getActiveTracks', () => {
             .toEqual(['BUG_HUNT'])
     })
 
+    it('shows QA Challenge stats in the testing track', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            QA: {
+                challenges: 1,
+                mostRecentEventDate: 1781237773026,
+                mostRecentSubmission: 1781237773026,
+                subTracks: [
+                    {
+                        challenges: 1,
+                        name: 'Challenge',
+                        rank: {
+                            rating: 1490,
+                        },
+                        submissions: {
+                            submissions: 1,
+                        },
+                        wins: 1,
+                    },
+                ],
+                wins: 1,
+            },
+        } as UserStats)
+        const testingTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Testing')
+        const qaChallengeSubTrack = testingTrack?.subTracks
+            .find(track => track.name === 'Challenge')
+
+        expect(testingTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 1,
+                wins: 1,
+            }))
+        expect(qaChallengeSubTrack)
+            .toEqual(expect.objectContaining({
+                name: 'Challenge',
+                parentTrack: 'QA',
+                path: 'QA.subTracks',
+            }))
+        expect(qaChallengeSubTrack?.rank?.rating)
+            .toEqual(1490)
+    })
+
     it('keeps AI engineering stats visible when the API returns them', () => {
         const memberStats = {
             AI_ENGINEERING: {

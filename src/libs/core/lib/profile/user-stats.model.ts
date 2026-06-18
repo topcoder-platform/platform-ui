@@ -149,6 +149,13 @@ export type UserStats = {
         subTracks: Array<MemberStats>
         wins: number
     }
+    QA?: {
+        challenges: number
+        mostRecentEventDate: number
+        mostRecentSubmission: number
+        subTracks: Array<MemberStats>
+        wins: number
+    }
     AI?: MemberStatsGroup
     AI_ENGINEER?: MemberStatsGroup
     AI_ENGINEERING?: MemberStatsGroup
@@ -188,6 +195,12 @@ export type UserStatsHistory = {
         }
     }
     DEVELOP?: {
+        subTracks: Array<{
+            name: string
+            history: Array<StatsHistory>
+        }>
+    }
+    QA?: {
         subTracks: Array<{
             name: string
             history: Array<StatsHistory>

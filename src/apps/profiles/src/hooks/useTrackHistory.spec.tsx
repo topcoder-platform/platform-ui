@@ -46,4 +46,41 @@ describe('getTrackHistoryFromStats', () => {
                 }),
             ])
     })
+
+    it('reads QA subtrack history paths', () => {
+        const trackData = {
+            name: 'Challenge',
+            parentTrack: 'QA',
+            path: 'QA.subTracks',
+        } as MemberStats
+        const history = getTrackHistoryFromStats({
+            groupId: 10,
+            handle: 'testmfa6',
+            handleLower: 'testmfa6',
+            QA: {
+                subTracks: [
+                    {
+                        history: [
+                            {
+                                challengeId: 'qa-challenge',
+                                challengeName: 'QA Challenge',
+                                newRating: 1490,
+                                ratingDate: 1781237773026,
+                            },
+                        ],
+                        name: 'Challenge',
+                    },
+                ],
+            },
+            userId: 89770374,
+        } as UserStatsHistory, trackData)
+
+        expect(history)
+            .toEqual([
+                expect.objectContaining({
+                    challengeId: 'qa-challenge',
+                    newRating: 1490,
+                }),
+            ])
+    })
 })
