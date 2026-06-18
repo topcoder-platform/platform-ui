@@ -106,6 +106,14 @@ function toValidScore(value: unknown): number | undefined {
         : undefined
 }
 
+function toFiniteScore(value: unknown): number | undefined {
+    const score = Number(value)
+
+    return Number.isFinite(score)
+        ? score
+        : undefined
+}
+
 function getAverageScore(scores: Array<number | undefined>): number | undefined {
     const validScores = scores
         .filter((score): score is number => score !== undefined)
@@ -141,12 +149,14 @@ function getReviewSummationScoreTimestamp(entry: ReviewSummation): number {
  * Returns the latest valid score from matching Review API summations.
  * @param reviewSummation Review summations attached to a submission.
  * @param matcher Predicate that selects the requested Marathon Match score phase.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns Latest valid aggregate score, or `undefined` when no matching score exists.
  * Used by marathon score display so relative-score rewrites replace stale raw scores.
  */
 function getScoreFromSummation(
     reviewSummation: ReviewSummation[] | undefined,
     matcher: (entry: ReviewSummation) => boolean,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     if (!Array.isArray(reviewSummation) || !reviewSummation.length) {
         return undefined
@@ -156,7 +166,9 @@ function getScoreFromSummation(
         .map((entry, index) => ({
             entry,
             index,
-            score: toValidScore(entry.aggregateScore),
+            score: allowNegativeScore
+                ? toFiniteScore(entry.aggregateScore)
+                : toValidScore(entry.aggregateScore),
             timestamp: getReviewSummationScoreTimestamp(entry),
         }))
         .filter(item => item.score !== undefined && matcher(item.entry))
@@ -504,6 +516,7 @@ export function getSubmissionExampleScore(
     return getScoreFromSummation(
         submission.reviewSummation,
         item => getReviewSummationTestProcess(item) === 'example',
+        true,
     )
 }
 
@@ -514,15 +527,18 @@ export function getProvisionalScore(submission: ScoredSubmissionLike): number {
 /**
  * Returns only the provisional marathon score for a submission.
  * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns Provisional score, or `undefined` when provisional scoring has not produced a valid score.
  * Used by marathon submission score display to prefer latest relative summations over stale raw scores.
  */
 export function getSubmissionProvisionalScore(
     submission: ScoredSubmissionLike,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     const provisionalSummationScore = getScoreFromSummation(
         submission.reviewSummation,
         item => getReviewSummationTestProcess(item) === 'provisional',
+        allowNegativeScore,
     )
     if (provisionalSummationScore !== undefined) {
         return provisionalSummationScore
@@ -572,15 +588,18 @@ export function getFinalScore(submission: ScoredSubmissionLike): number {
 /**
  * Returns only the system marathon score for a submission.
  * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns System score, or `undefined` when system scoring has not produced a valid score.
  * Used by marathon submission score display to prefer latest relative summations over stale raw scores.
  */
 export function getSubmissionSystemScore(
     submission: ScoredSubmissionLike,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     const systemSummationScore = getScoreFromSummation(
         submission.reviewSummation,
         item => getReviewSummationTestProcess(item) === 'system',
+        allowNegativeScore,
     )
     if (systemSummationScore !== undefined) {
         return systemSummationScore

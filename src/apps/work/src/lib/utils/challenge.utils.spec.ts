@@ -76,6 +76,22 @@ describe('challenge utils', () => {
             }))
                 .toBe(15.25)
         })
+
+        it('returns failed example scorer scores', () => {
+            expect(getSubmissionExampleScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: -1,
+                        isExample: true,
+                        metadata: {
+                            testStatus: 'FAILED',
+                            testType: 'example',
+                        },
+                    },
+                ],
+            }))
+                .toBe(-1)
+        })
     })
 
     describe('getSubmissionTestProgress', () => {
@@ -192,6 +208,22 @@ describe('challenge utils', () => {
             }))
                 .toBeUndefined()
         })
+
+        it('returns failed provisional scorer scores when requested', () => {
+            expect(getSubmissionProvisionalScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: -1,
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                            testStatus: 'FAILED',
+                        },
+                    },
+                ],
+            }, true))
+                .toBe(-1)
+        })
     })
 
     describe('getSubmissionSystemScore', () => {
@@ -287,6 +319,22 @@ describe('challenge utils', () => {
                 ],
             }))
                 .toBeUndefined()
+        })
+
+        it('returns failed system scorer scores when requested', () => {
+            expect(getSubmissionSystemScore({
+                reviewSummation: [
+                    {
+                        aggregateScore: -1,
+                        isFinal: true,
+                        metadata: {
+                            testProcess: 'system',
+                            testStatus: 'FAILED',
+                        },
+                    },
+                ],
+            }, true))
+                .toBe(-1)
         })
     })
 })

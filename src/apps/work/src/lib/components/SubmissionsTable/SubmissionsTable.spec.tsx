@@ -441,4 +441,47 @@ describe('SubmissionsTable', () => {
         expect(screen.getByRole('img', { name: 'Test status: SUCCESS' }))
             .toBeTruthy()
     })
+
+    it('renders failed example validation scores for marathon submissions', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        reviewSummation: [
+                            {
+                                aggregateScore: -1,
+                                isExample: true,
+                                metadata: {
+                                    testProgress: 1,
+                                    testStatus: 'FAILED',
+                                    testType: 'example',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: '-1.00 / -' }))
+            .toBeTruthy()
+        expect(screen.getByText('Example'))
+            .toBeTruthy()
+        expect(screen.getByText('100%'))
+            .toBeTruthy()
+        expect(screen.getByRole('img', { name: 'Test status: FAILED' }))
+            .toBeTruthy()
+    })
 })
