@@ -168,7 +168,7 @@ function formatTestProcess(process?: string): string {
  * Selects the marathon score shown in the left side of the score column.
  * @param submission Submission row with review summation data.
  * @param process Current marathon test process from progress metadata.
- * @returns Example score when Example is current; otherwise the provisional score.
+ * @returns Example score when Example is current; otherwise the provisional score, including MM failure scores.
  * Used by `SubmissionsTable` for marathon score display.
  */
 function getMarathonInitialScore(
@@ -183,7 +183,7 @@ function getMarathonInitialScore(
         }
     }
 
-    return getSubmissionProvisionalScore(submission)
+    return getSubmissionProvisionalScore(submission, true)
 }
 
 function getSortIndicator(
@@ -379,7 +379,7 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                             ? getMarathonInitialScore(submission, testProgress?.process)
                             : getSubmissionInitialScore(submission)
                         const finalScoreValue = props.showMarathonMatchTestProgress
-                            ? getSubmissionSystemScore(submission)
+                            ? getSubmissionSystemScore(submission, true)
                             : getSubmissionFinalScore(submission)
                         const emptyScoreValue = props.showMarathonMatchTestProgress
                             ? '-'
