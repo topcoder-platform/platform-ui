@@ -79,4 +79,41 @@ describe('getTrackHistoryFromStats', () => {
                 }),
             ])
     })
+
+    it('reads AI Engineering challenge history from Data Science aliases', () => {
+        const trackData = {
+            name: 'AI Engineering',
+            parentTrack: 'DEVELOP',
+            path: 'DEVELOP.subTracks',
+        } as MemberStats
+        const history = getTrackHistoryFromStats({
+            DATA_SCIENCE: {
+                AI: {
+                    history: [
+                        {
+                            challengeId: 'ai-challenge',
+                            challengeName: 'AI Challenge',
+                            newRating: 840,
+                            ratingDate: 1781237773026,
+                        },
+                    ],
+                },
+            },
+            DEVELOP: {
+                subTracks: [],
+            },
+            groupId: 10,
+            handle: 'aimember',
+            handleLower: 'aimember',
+            userId: 89770399,
+        } as unknown as UserStatsHistory, trackData)
+
+        expect(history)
+            .toEqual([
+                expect.objectContaining({
+                    challengeId: 'ai-challenge',
+                    newRating: 840,
+                }),
+            ])
+    })
 })
