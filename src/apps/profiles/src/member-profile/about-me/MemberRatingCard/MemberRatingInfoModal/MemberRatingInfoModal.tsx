@@ -98,7 +98,9 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
     value: 2200,
 }]
 
-const stackedMarkerPositionThreshold = 90
+// The inline avatar and score need room to the right of the marker, so stack
+// before the marker reaches the final segment of the chart.
+const stackedMarkerPositionThreshold = 80
 
 /**
  * Formats percentile values for the rating comparison modal.
