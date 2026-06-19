@@ -98,6 +98,8 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
     value: 2200,
 }]
 
+const stackedMarkerPositionThreshold = 90
+
 /**
  * Formats percentile values for the rating comparison modal.
  *
@@ -269,6 +271,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const markerPosition: number = props.rating !== undefined
         ? getChartPosition(props.rating, distributionRanges)
         : 0
+    const shouldStackMarkerRating: boolean = markerPosition >= stackedMarkerPositionThreshold
     const percentileLabel: string = formatPercentile(props.percentile)
 
     return (
@@ -354,7 +357,11 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
 
                             {props.rating !== undefined && (
                                 <div
-                                    className={styles.memberMarker}
+                                    className={classNames(
+                                        styles.memberMarker,
+                                        shouldStackMarkerRating && styles.memberMarkerStacked,
+                                    )}
+                                    data-testid='rating-member-marker'
                                     style={{ left: `${markerPosition}%` }}
                                 >
                                     <div className={styles.markerBadge}>

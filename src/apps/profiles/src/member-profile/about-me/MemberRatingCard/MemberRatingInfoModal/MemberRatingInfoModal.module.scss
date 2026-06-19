@@ -225,6 +225,18 @@
     z-index: 1;
 }
 
+.memberMarkerStacked {
+    &::after {
+        top: $sp-14;
+    }
+
+    .markerBadge {
+        flex-direction: column;
+        gap: $sp-1;
+        transform: translateX(0);
+    }
+}
+
 .markerAvatar {
     align-items: center;
     background: $tc-white;
