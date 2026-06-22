@@ -39,6 +39,19 @@ const wideRatingDistribution = {
     },
 }
 
+const expandedTailRatingDistribution = {
+    ...ratingDistribution,
+    distribution: {
+        ratingRange0To899: 10,
+        ratingRange900To1199: 20,
+        ratingRange1200To1499: 30,
+        ratingRange1500To2199: 40,
+        ratingRange2200To2999: 5,
+        ratingRange3000To3999: 2,
+        ratingRange4000To4999: 0,
+    },
+}
+
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#616BD5'),
 }), {
@@ -117,7 +130,7 @@ describe('MemberRatingInfoModal', () => {
             .toBeInTheDocument()
     })
 
-    it('stacks the marker rating for high ratings near the right edge of the chart', () => {
+    it('stacks the marker rating for extreme ratings before the right-edge threshold', () => {
         render(
             <MemberRatingInfoModal
                 audienceLabel='developers'
@@ -125,11 +138,15 @@ describe('MemberRatingInfoModal', () => {
                 percentile={0.4}
                 profile={baseProfile}
                 rating={3664}
-                ratingDistribution={ratingDistribution}
+                ratingDistribution={expandedTailRatingDistribution}
             />,
         )
 
-        expect(screen.getByTestId('rating-member-marker'))
+        const marker = screen.getByTestId('rating-member-marker')
+
+        expect(parseFloat(marker.style.left))
+            .toBeLessThan(80)
+        expect(marker)
             .toHaveClass('memberMarkerStacked')
     })
 })
