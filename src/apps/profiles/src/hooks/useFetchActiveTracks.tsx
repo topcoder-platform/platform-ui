@@ -6,6 +6,7 @@ import {
     MemberStats,
     MemberStatsGroup,
     SRMStats,
+    StatsHistory,
     useMemberStats,
     UserStats,
 } from '~/libs/core'
@@ -57,6 +58,15 @@ export interface MemberStatsTrack {
     isCPTrack?: boolean
 }
 
+export interface SubTrackSummaryStats {
+    submissions: number
+    wins: number
+}
+
+const getFiniteNumber = (value: unknown): number | undefined => (
+    typeof value === 'number' && Number.isFinite(value) ? value : undefined
+)
+
 /**
  * Return the explicit submission count when the stats payload includes one.
  *
@@ -69,6 +79,36 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
     const submissionCount = subTrack?.submissions?.submissions ?? subTrack?.submissions
 
     return typeof submissionCount === 'number' ? submissionCount : undefined
+}
+
+/**
+ * Builds the displayed win/submission counts for a subtrack card or summary.
+ *
+ * Some unified stats rows currently include challenge/rating history while the
+ * aggregate win or submission counters are omitted or left at zero. In that
+ * case, history placements are used for wins and history/challenge count is
+ * used as the minimum visible submission count.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to summarize.
+ * @param {StatsHistory[]} trackHistory - Optional history rows for the same subtrack.
+ * @returns {SubTrackSummaryStats} Display-safe win and submission counts.
+ */
+export const getSubTrackSummaryStats = (
+    subTrack?: MemberStats,
+    trackHistory: StatsHistory[] = [],
+): SubTrackSummaryStats => {
+    const statWins = getFiniteNumber(subTrack?.wins) ?? 0
+    const historyWins = trackHistory.filter(history => history.placement === 1).length
+    const statSubmissions = getSubTrackSubmissionCount(subTrack) ?? 0
+    const historySubmissions = trackHistory.length
+    const challengeSubmissions = getFiniteNumber(subTrack?.challenges) ?? 0
+
+    return {
+        submissions: statSubmissions > 0
+            ? statSubmissions
+            : Math.max(historySubmissions, challengeSubmissions),
+        wins: statWins > 0 ? statWins : historyWins,
+    }
 }
 
 /**
@@ -162,10 +202,6 @@ const mapSubTracksByName = (
 
         return all
     }, {} as {[key: string]: MemberStats}) ?? {}
-)
-
-const getFiniteNumber = (value: unknown): number | undefined => (
-    typeof value === 'number' && Number.isFinite(value) ? value : undefined
 )
 
 /**

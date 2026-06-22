@@ -1,6 +1,11 @@
-import type { UserStats } from '~/libs/core'
+import type { MemberStats, UserStats } from '~/libs/core'
 
-import { getActiveTracks, getMemberChallengePoints, MemberStatsTrack } from './useFetchActiveTracks'
+import {
+    getActiveTracks,
+    getMemberChallengePoints,
+    getSubTrackSummaryStats,
+    MemberStatsTrack,
+} from './useFetchActiveTracks'
 
 jest.mock('~/libs/core', () => ({
     useMemberStats: jest.fn(),
@@ -367,5 +372,62 @@ describe('getActiveTracks', () => {
             ])
         expect(activeTracks.map(track => track.name))
             .not.toContain('NO_RATING')
+    })
+})
+
+describe('getSubTrackSummaryStats', () => {
+    it('falls back to challenge count when a subtrack has zero submissions', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 3,
+            submissions: {
+                submissions: 0,
+            },
+            wins: 3,
+        } as MemberStats)
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 3,
+                wins: 3,
+            })
+    })
+
+    it('falls back to history placements for AI Engineering wins and submissions', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 6,
+            name: 'AI Engineering',
+            submissions: {
+                submissions: 0,
+            },
+            wins: 0,
+        } as MemberStats, [
+            {
+                challengeId: 'ai-1',
+                challengeName: 'AI Challenge 1',
+                newRating: 840,
+                placement: 1,
+                ratingDate: 1781237773026,
+            },
+            {
+                challengeId: 'ai-2',
+                challengeName: 'AI Challenge 2',
+                newRating: 860,
+                placement: 2,
+                ratingDate: 1781237773027,
+            },
+            {
+                challengeId: 'ai-3',
+                challengeName: 'AI Challenge 3',
+                newRating: 901,
+                placement: 1,
+                ratingDate: 1781237773028,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 6,
+                wins: 2,
+            })
     })
 })
