@@ -512,7 +512,7 @@ describe('ChallengeScheduleSection component', () => {
             .toEqual(expect.objectContaining({
                 isDurationEditable: false,
                 isEndDateEditable: false,
-                isStartDateEditable: true,
+                isStartDateEditable: false,
             }))
         expect(checkpointReviewRow)
             .toEqual(expect.objectContaining({
