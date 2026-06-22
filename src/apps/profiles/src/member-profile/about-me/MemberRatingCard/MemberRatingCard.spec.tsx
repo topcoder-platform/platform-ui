@@ -6,6 +6,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import type { UserProfile, UserStats, UserStatsDistributionResponse } from '~/libs/core'
 import { useMemberStats, useStatsDistribution } from '~/libs/core'
 
+import { getPreferredRolesText } from '../../../lib'
+
 import MemberRatingCard from './MemberRatingCard'
 
 const mockTooltip = jest.fn((props: PropsWithChildren<{ disableTooltip?: boolean }>) => <>{props.children}</>)
@@ -29,7 +31,7 @@ jest.mock('../../../components', () => ({
 }))
 
 jest.mock('../../../lib', () => ({
-    getPreferredRolesText: jest.fn(() => undefined),
+    getPreferredRolesText: jest.fn(() => ''),
 }))
 
 jest.mock('./MemberRatingInfoModal', () => ({
@@ -46,6 +48,7 @@ jest.mock('./ModifyPreferredRolesModal', () => ({
 
 const mockedUseMemberStats = useMemberStats as jest.MockedFunction<typeof useMemberStats>
 const mockedUseStatsDistribution = useStatsDistribution as jest.MockedFunction<typeof useStatsDistribution>
+const mockedGetPreferredRolesText = getPreferredRolesText as jest.MockedFunction<typeof getPreferredRolesText>
 const profile = { handle: 'dave' } as UserProfile
 const ratingDistribution: UserStatsDistributionResponse = {
     createdAt: '2026-06-15T00:00:00.000Z',
@@ -86,6 +89,37 @@ describe('MemberRatingCard', () => {
             <>{props.children}</>
         ))
         mockedUseStatsDistribution.mockReturnValue(ratingDistribution)
+        mockedGetPreferredRolesText.mockReturnValue('')
+    })
+
+    it('shows preferred roles when rating data is unavailable', () => {
+        mockedUseMemberStats.mockReturnValue(undefined)
+        mockedGetPreferredRolesText.mockReturnValue('Designer\nFront-End Developer')
+
+        render(<MemberRatingCard {...defaultProps} />)
+
+        expect(screen.queryByText('Rating'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.queryByText('What is this?'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.getByText('Designer'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Front-End Developer'))
+            .toBeInTheDocument()
+    })
+
+    it('shows the preferred roles edit action for the profile owner when rating data is unavailable', () => {
+        mockedUseMemberStats.mockReturnValue(undefined)
+
+        render(<MemberRatingCard {...defaultProps} authProfile={profile} />)
+
+        expect(screen.queryByText('Rating'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeInTheDocument()
     })
 
     it('hides percentile details when the member rating is zero', () => {
