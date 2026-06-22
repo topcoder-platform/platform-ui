@@ -92,6 +92,10 @@ export function canEditPhaseStartDate(
     index: number,
     isTwoRoundDesignChallenge: boolean,
 ): boolean {
+    if (phase.actualEndDate) {
+        return false
+    }
+
     const normalizedPhaseName = normalizePhaseName(phase.name)
     const isRegistrationPhase = normalizedPhaseName === 'registration'
     const isStandardSubmissionPhase = normalizedPhaseName === 'submission'

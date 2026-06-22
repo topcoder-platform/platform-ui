@@ -30,6 +30,20 @@ describe('ChallengeScheduleSection helpers', () => {
             expect(result)
                 .toBe(true)
         })
+
+        it('does not allow editing completed submission phase start time', () => {
+            const result = canEditPhaseStartDate(
+                buildPhase({
+                    actualEndDate: '2026-04-09T12:51:00.000Z',
+                    name: 'Submission',
+                }),
+                1,
+                false,
+            )
+
+            expect(result)
+                .toBe(false)
+        })
     })
 
     describe('recalculatePhases', () => {
