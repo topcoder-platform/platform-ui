@@ -79,6 +79,9 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         () => getPreferredRolesDisplay(preferredRoles, arePreferredRolesExpanded),
         [arePreferredRolesExpanded, preferredRoles],
     )
+    const hasRating: boolean = rating !== undefined
+    const shouldRenderPreferredRoles: boolean = preferredRoles.length > 0 || canEditPreferredRoles
+    const shouldRenderCard: boolean = hasRating || shouldRenderPreferredRoles
 
     function handleInfoModalClose(): void {
         setIsInfoModalOpen(false)
@@ -142,53 +145,55 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
         )
     }
 
-    return rating !== undefined ? (
+    return shouldRenderCard ? (
         <div className={styles.container}>
-            <div className={styles.innerWrap}>
-                <button type='button' className={styles.valueWrap} onClick={handleInfoModalOpen}>
-                    <p className={styles.value} style={{ color: compactRatingColor }}>
-                        {rating}
-                    </p>
-                    <p className={styles.name}>Rating</p>
-                </button>
-                {
-                    percentileLabel ? (
-                        <Tooltip
-                            className={styles.ratingTooltip}
-                            content={(
-                                <span className={styles.tooltipContent}>
-                                    {percentileLabel}
-                                    {' '}
-                                    of
-                                    <br />
-                                    2M
-                                    {' '}
-                                    {audienceLabel.toLowerCase()}
-                                </span>
-                            )}
-                            disableTooltip={isInfoModalOpen}
-                            place='top'
-                        >
-                            <button
-                                type='button'
-                                className={classNames(styles.valueWrap, styles.percentileWrap)}
-                                onClick={handleInfoModalOpen}
+            {hasRating && (
+                <div className={styles.innerWrap}>
+                    <button type='button' className={styles.valueWrap} onClick={handleInfoModalOpen}>
+                        <p className={styles.value} style={{ color: compactRatingColor }}>
+                            {rating}
+                        </p>
+                        <p className={styles.name}>Rating</p>
+                    </button>
+                    {
+                        percentileLabel ? (
+                            <Tooltip
+                                className={styles.ratingTooltip}
+                                content={(
+                                    <span className={styles.tooltipContent}>
+                                        {percentileLabel}
+                                        {' '}
+                                        of
+                                        <br />
+                                        2M
+                                        {' '}
+                                        {audienceLabel.toLowerCase()}
+                                    </span>
+                                )}
+                                disableTooltip={isInfoModalOpen}
+                                place='top'
                             >
-                                <p
-                                    className={classNames(styles.value, styles.percentileValue)}
+                                <button
+                                    type='button'
+                                    className={classNames(styles.valueWrap, styles.percentileWrap)}
+                                    onClick={handleInfoModalOpen}
                                 >
-                                    {percentileLabel}
-                                </p>
-                                <p className={styles.name}>{audienceLabel}</p>
-                            </button>
-                        </Tooltip>
-                    ) : undefined
-                }
-                <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
-            </div>
+                                    <p
+                                        className={classNames(styles.value, styles.percentileValue)}
+                                    >
+                                        {percentileLabel}
+                                    </p>
+                                    <p className={styles.name}>{audienceLabel}</p>
+                                </button>
+                            </Tooltip>
+                        ) : undefined
+                    }
+                    <button type='button' className={styles.link} onClick={handleInfoModalOpen}>What is this?</button>
+                </div>
+            )}
 
             {
-                isInfoModalOpen && (
+                isInfoModalOpen && hasRating && (
                     <MemberRatingInfoModal
                         onClose={handleInfoModalClose}
                         percentile={visiblePercentile}
