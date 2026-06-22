@@ -115,6 +115,27 @@ describe('ChallengeScheduleSection helpers', () => {
                 .toBe(updatedStartDate)
         })
 
+        it('preserves an existing end date when the phase start is unchanged', () => {
+            const startDate = '2026-06-19T12:53:00.000Z'
+            const existingEndDate = '2026-06-24T13:52:00.000Z'
+            const phases: ChallengePhase[] = [
+                buildPhase({
+                    duration: 120 * 60,
+                    name: 'Registration',
+                    phaseId: 'registration',
+                    scheduledEndDate: existingEndDate,
+                    scheduledStartDate: startDate,
+                }),
+            ]
+
+            const result = recalculatePhases(phases, startDate)
+
+            expect(result.phases[0]?.scheduledEndDate)
+                .toBe(existingEndDate)
+            expect(result.phases[0]?.duration)
+                .toBe((120 * 60) + 59)
+        })
+
         it('aligns successor phases to a predecessor actual end date when the predecessor closes early', () => {
             const checkpointReviewActualEnd = '2026-04-09T13:14:00.000Z'
             const phases: ChallengePhase[] = [
