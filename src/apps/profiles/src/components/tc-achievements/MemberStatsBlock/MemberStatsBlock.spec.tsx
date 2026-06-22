@@ -92,4 +92,9 @@ describe('MemberStatsBlock typography styles', () => {
         expect(memberStatsBlockStyles)
             .toMatch(/\.trackName \{[\s\S]*?font-size: 16px;/)
     })
+
+    it('right-aligns track details so member stats chevrons line up', () => {
+        expect(memberStatsBlockStyles)
+            .toMatch(/\.trackDetails \{[\s\S]*?justify-content: flex-end;/)
+    })
 })
