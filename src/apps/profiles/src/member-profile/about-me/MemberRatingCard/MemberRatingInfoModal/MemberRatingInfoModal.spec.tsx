@@ -28,6 +28,17 @@ const ratingDistribution = {
     updatedBy: 'test',
 }
 
+const wideRatingDistribution = {
+    ...ratingDistribution,
+    distribution: {
+        ratingRange0To899: 10,
+        ratingRange900To1199: 20,
+        ratingRange1200To1499: 30,
+        ratingRange1500To2199: 40,
+        ratingRange2200To4499: 1,
+    },
+}
+
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#616BD5'),
 }), {
@@ -95,7 +106,7 @@ describe('MemberRatingInfoModal', () => {
                 percentile={0.4}
                 profile={baseProfile}
                 rating={3664}
-                ratingDistribution={ratingDistribution}
+                ratingDistribution={wideRatingDistribution}
             />,
         )
 
