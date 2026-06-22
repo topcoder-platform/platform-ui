@@ -4,7 +4,7 @@ import { isEmpty } from 'lodash'
 
 import { MemberStats, UserProfile } from '~/libs/core'
 
-import { useFetchSubTrackData, useTrackHistory } from '../../../hooks'
+import { getSubTrackSummaryStats, useFetchSubTrackData, useTrackHistory } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { DevelopTrackView } from '../../../components/tc-achievements/DevelopTrackView'
 import { SRMView } from '../../../components/tc-achievements/SRMView'
@@ -25,6 +25,18 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
     const subTrackResult = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
     const { trackData, ...subTrackData }: any = subTrackResult ?? {}
     const trackHistory = useTrackHistory(props.profile.handle, subTrackData as MemberStats | undefined)
+    const summaryTrackData: MemberStats = useMemo(() => {
+        const summaryStats = getSubTrackSummaryStats(subTrackData as MemberStats, trackHistory)
+
+        return {
+            ...subTrackData,
+            submissions: {
+                ...(subTrackData.submissions ?? {}),
+                submissions: summaryStats.submissions,
+            },
+            wins: summaryStats.wins,
+        } as MemberStats
+    }, [subTrackData, trackHistory])
 
     const [backRoute, prevTitle] = useMemo(() => {
         const trackName = trackData?.subTracks?.length === 1 ? '' : trackData?.name ?? ''
@@ -41,7 +53,7 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
                 title={subTrackLabelToHumanName(subTrackData.name)}
                 backAction={backRoute}
                 closeAction={statsRoute(props.profile.handle)}
-                trackData={subTrackData}
+                trackData={summaryTrackData}
             >
                 {subTrackData.name === 'SRM' ? (
                     <SRMView trackData={subTrackData} profile={props.profile} />
