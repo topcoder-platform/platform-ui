@@ -166,6 +166,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                                     {audienceLabel.toLowerCase()}
                                 </span>
                             )}
+                            disableTooltip={isInfoModalOpen}
                             place='top'
                         >
                             <button
