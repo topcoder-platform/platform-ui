@@ -101,6 +101,9 @@ const chartAxisLabels: Array<{ label: string, value: number }> = [{
 // The inline avatar and score need room to the right of the marker, so stack
 // before the marker reaches the final segment of the chart.
 const stackedMarkerPositionThreshold = 80
+// Extreme ratings can still crowd the right edge when the distribution has a
+// wider tail range, especially on compact screens.
+const stackedMarkerRatingThreshold = 3000
 
 /**
  * Formats percentile values for the rating comparison modal.
@@ -273,7 +276,10 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const markerPosition: number = props.rating !== undefined
         ? getChartPosition(props.rating, distributionRanges)
         : 0
-    const shouldStackMarkerRating: boolean = markerPosition >= stackedMarkerPositionThreshold
+    const shouldStackMarkerRating: boolean = props.rating !== undefined && (
+        markerPosition >= stackedMarkerPositionThreshold
+        || props.rating >= stackedMarkerRatingThreshold
+    )
     const percentileLabel: string = formatPercentile(props.percentile)
 
     return (
