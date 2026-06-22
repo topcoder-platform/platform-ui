@@ -1,6 +1,11 @@
 import type { UserStats } from '~/libs/core'
 
-import { getActiveTracks, getMemberChallengePoints, MemberStatsTrack } from './useFetchActiveTracks'
+import {
+    getActiveTracks,
+    getMemberChallengePoints,
+    getSubTrackDisplaySubmissionCount,
+    MemberStatsTrack,
+} from './useFetchActiveTracks'
 
 jest.mock('~/libs/core', () => ({
     useMemberStats: jest.fn(),
@@ -291,6 +296,7 @@ describe('getActiveTracks', () => {
             .toEqual(expect.objectContaining({
                 challenges: 3,
                 isActive: true,
+                submissions: 3,
                 wins: 1,
             }))
         expect(aiSubTrack)
@@ -305,6 +311,8 @@ describe('getActiveTracks', () => {
                 }),
                 wins: 1,
             }))
+        expect(getSubTrackDisplaySubmissionCount(aiSubTrack))
+            .toEqual(3)
         expect(dataScienceTrack)
             .toEqual(expect.objectContaining({
                 challenges: 3,
@@ -355,6 +363,7 @@ describe('getActiveTracks', () => {
                 isDSTrack: true,
                 percentile: 12,
                 rating: 1422,
+                submissions: 3,
                 wins: 1,
             }))
         expect(javaMySQLTrack?.subTracks)

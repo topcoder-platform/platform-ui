@@ -4,7 +4,7 @@ import { orderBy } from 'lodash'
 
 import { MemberStats, UserProfile } from '~/libs/core'
 
-import { getSubTrackSubmissionCount, useFetchTrackData } from '../../../hooks'
+import { getSubTrackDisplaySubmissionCount, useFetchTrackData } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { SubTrackSummaryCard } from '../../../components/tc-achievements/SubTrackSummaryCard'
 import { MemberProfileContextValue, useMemberProfileContext } from '../../MemberProfile.context'
@@ -47,7 +47,7 @@ const TrackView: FC<TrackViewProps> = props => {
                                     key={subTrack.name}
                                     title={subTrack.name}
                                     wins={subTrack.wins}
-                                    submissions={getSubTrackSubmissionCount(subTrack) ?? 0}
+                                    submissions={getSubTrackDisplaySubmissionCount(subTrack) ?? 0}
                                 />
                             </Link>
                         ))}

@@ -72,6 +72,29 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
 }
 
 /**
+ * Return the submission count to display in the profile stats UI.
+ *
+ * Unified Data Science and configured rating-path rows can omit explicit
+ * submission counters even though their challenge count is sourced from valid
+ * submissions. In that case, use challenge participation count so the profile
+ * does not display impossible zero-submission wins.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
+ * @returns {number | undefined} Explicit submissions, or challenge count as a fallback.
+ */
+export const getSubTrackDisplaySubmissionCount = (subTrack?: MemberStats): number | undefined => {
+    const submissionCount = getSubTrackSubmissionCount(subTrack)
+
+    if (submissionCount !== undefined) {
+        return submissionCount
+    }
+
+    return typeof subTrack?.challenges === 'number' && subTrack.challenges > 0
+        ? subTrack.challenges
+        : undefined
+}
+
+/**
  * Determine whether the subtrack should be considered active.
  *
  * Some rated rows can have zero submissions while still having challenge
@@ -81,7 +104,7 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
  * @returns {boolean} Whether the subtrack has activity worth rendering.
  */
 const isActiveSubTrack = (subTrack?: MemberStats): boolean => {
-    const submissionCount = getSubTrackSubmissionCount(subTrack)
+    const submissionCount = getSubTrackDisplaySubmissionCount(subTrack)
 
     return (submissionCount ?? 0) > 0 || (subTrack?.challenges ?? 0) > 0
 }
@@ -229,9 +252,9 @@ const buildTrackData = (trackName: string, allSubTracks: MemberStats[]): MemberS
     const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
     const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
     const submissionsCount = subTracks.reduce((sum, subTrack) => (
-        sum + (getSubTrackSubmissionCount(subTrack) ?? 0)
+        sum + (getSubTrackDisplaySubmissionCount(subTrack) ?? 0)
     ), 0)
-    const hasSubmissionCounts = subTracks.some(subTrack => getSubTrackSubmissionCount(subTrack) !== undefined)
+    const hasSubmissionCounts = subTracks.some(subTrack => getSubTrackDisplaySubmissionCount(subTrack) !== undefined)
 
     // Return aggregated track data
     return {
@@ -475,6 +498,7 @@ const buildDataScienceRatingPathTrackData = (
         percentile: getFiniteNumber(ratingPathStats.rank?.overallPercentile)
             ?? getFiniteNumber(ratingPathStats.rank?.percentile),
         rating: getFiniteNumber(ratingPathStats.rank?.rating),
+        submissions: getSubTrackDisplaySubmissionCount(subTrack),
         subTracks: [subTrack],
         wins: getFiniteNumber(ratingPathStats.wins) ?? 0,
     }
