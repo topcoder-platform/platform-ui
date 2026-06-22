@@ -149,29 +149,27 @@
 }
 
 .trackDetails {
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: end;
+    grid-template-columns: $sp-6 $sp-3 minmax(58px, max-content) $sp-4 $sp-4;
     min-width: 136px;
-
-    > svg {
-        flex: 0 0 auto;
-    }
 }
 
 .rightArrowIcon {
-    margin-left: $sp-4;
     color: rgba($tc-white, 0.9);
+    grid-column: 5;
 }
 
 .winnerIcon {
     color: #F2C900;
-    margin-right: $sp-3;
+    grid-column: 1;
 }
 
 .trackStats {
     display: flex;
     flex-direction: column;
+    grid-column: 3;
     text-align: right;
     min-width: 58px;
 
@@ -197,7 +195,7 @@
 
     background: currentColor;
     border-radius: 50%;
-    margin-right: $sp-3;
+    grid-column: 1;
 }
 
 .trackName {
@@ -238,6 +236,7 @@
     }
 
     .trackDetails {
+        grid-template-columns: $sp-4 $sp-1 minmax(42px, max-content) $sp-1 $sp-3;
         min-width: 96px;
     }
 
@@ -262,16 +261,13 @@
 
     .icon {
         @include icon-lg;
-        margin-right: $sp-1;
     }
 
     .winnerIcon {
         @include icon-lg;
-        margin-right: $sp-1;
     }
 
     .rightArrowIcon {
         @include icon-md;
-        margin-left: $sp-1;
     }
 }
