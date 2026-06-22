@@ -9,6 +9,10 @@ import type { UserProfile } from '~/libs/core'
 import { MemberChallengePointsBar } from './MemberStatsBlock'
 
 const memberStatsBlockStyles = readFileSync(`${__dirname}/MemberStatsBlock.module.scss`, 'utf8')
+const trackDetailsGridTemplatePattern = [
+    '\\.trackDetails \\{[\\s\\S]*?grid-template-columns: ',
+    '\\$sp-6 \\$sp-3 minmax\\(58px, max-content\\) \\$sp-4 \\$sp-4;',
+].join('')
 
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#000000'),
@@ -93,8 +97,18 @@ describe('MemberStatsBlock typography styles', () => {
             .toMatch(/\.trackName \{[\s\S]*?font-size: 16px;/)
     })
 
-    it('right-aligns track details so member stats chevrons line up', () => {
+    it('reserves track details columns so member stats chevrons line up', () => {
         expect(memberStatsBlockStyles)
-            .toMatch(/\.trackDetails \{[\s\S]*?justify-content: flex-end;/)
+            .toMatch(/\.trackDetails \{[\s\S]*?display: grid;/)
+        expect(memberStatsBlockStyles)
+            .toMatch(new RegExp(trackDetailsGridTemplatePattern))
+        expect(memberStatsBlockStyles)
+            .toMatch(/\.trackStats \{[\s\S]*?grid-column: 3;/)
+        expect(memberStatsBlockStyles)
+            .toMatch(/\.rightArrowIcon \{[\s\S]*?grid-column: 5;/)
+        expect(memberStatsBlockStyles)
+            .toMatch(/\.icon \{[\s\S]*?grid-column: 1;/)
+        expect(memberStatsBlockStyles)
+            .toMatch(/\.winnerIcon \{[\s\S]*?grid-column: 1;/)
     })
 })
