@@ -30,6 +30,20 @@ describe('ChallengeScheduleSection helpers', () => {
             expect(result)
                 .toBe(true)
         })
+
+        it('does not allow editing completed submission phase start time', () => {
+            const result = canEditPhaseStartDate(
+                buildPhase({
+                    actualEndDate: '2026-04-09T12:51:00.000Z',
+                    name: 'Submission',
+                }),
+                1,
+                false,
+            )
+
+            expect(result)
+                .toBe(false)
+        })
     })
 
     describe('recalculatePhases', () => {
@@ -99,6 +113,27 @@ describe('ChallengeScheduleSection helpers', () => {
                 .toBe(updatedStartDate)
             expect(result.phases[2]?.scheduledStartDate)
                 .toBe(updatedStartDate)
+        })
+
+        it('preserves an existing end date when the phase start is unchanged', () => {
+            const startDate = '2026-06-19T12:53:00.000Z'
+            const existingEndDate = '2026-06-24T13:52:00.000Z'
+            const phases: ChallengePhase[] = [
+                buildPhase({
+                    duration: 120 * 60,
+                    name: 'Registration',
+                    phaseId: 'registration',
+                    scheduledEndDate: existingEndDate,
+                    scheduledStartDate: startDate,
+                }),
+            ]
+
+            const result = recalculatePhases(phases, startDate)
+
+            expect(result.phases[0]?.scheduledEndDate)
+                .toBe(existingEndDate)
+            expect(result.phases[0]?.duration)
+                .toBe((120 * 60) + 59)
         })
 
         it('aligns successor phases to a predecessor actual end date when the predecessor closes early', () => {

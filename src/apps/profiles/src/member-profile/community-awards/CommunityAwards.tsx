@@ -1,22 +1,28 @@
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { bind } from 'lodash'
 
 import { useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
-import { Button } from '~/libs/ui'
+import { Tooltip } from '~/libs/ui'
 
 import { MemberBadgeModal } from '../../components'
 
 import styles from './CommunityAwards.module.scss'
+
+const COLLAPSED_BADGE_COUNT = 4
 
 interface CommunityAwardsProps {
     profile: UserProfile | undefined
 }
 
 const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) => {
-    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, { limit: 6 })
+    const memberBadges: UserBadgesResponse | undefined = useMemberBadges(props.profile?.userId as number, {
+        limit: 500,
+    })
 
     const [isBadgeDetailsOpen, setIsBadgeDetailsOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    const [isAwardsExpanded, setIsAwardsExpanded]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [selectedBadge, setSelectedBadge]: [UserBadge | undefined, Dispatch<SetStateAction<UserBadge | undefined>>]
@@ -27,44 +33,77 @@ const CommunityAwards: FC<CommunityAwardsProps> = (props: CommunityAwardsProps) 
         setSelectedBadge(badge)
     }, [])
 
-    return memberBadges && memberBadges.count ? (
+    useEffect(() => {
+        setIsAwardsExpanded(false)
+    }, [props.profile?.userId])
+
+    /**
+     * Toggles the awards section between the collapsed four-badge preview and
+     * the expanded list. It is used by the more/less control, takes no
+     * parameters, returns nothing, and does not raise exceptions.
+     */
+    function handleAwardsToggleClick(): void {
+        setIsAwardsExpanded(isExpanded => !isExpanded)
+    }
+
+    function handleMemberBadgeModalClose(): void {
+        setIsBadgeDetailsOpen(false)
+    }
+
+    const badges: UserBadge[] = memberBadges?.rows ?? []
+    const visibleBadges: UserBadge[] = isAwardsExpanded
+        ? badges
+        : badges.slice(0, COLLAPSED_BADGE_COUNT)
+    const additionalBadgeCount: number = Math.max((memberBadges?.count ?? badges.length) - COLLAPSED_BADGE_COUNT, 0)
+
+    return badges.length ? (
         <div className={styles.container}>
             <div className={styles.title}>
-                <Link to='badges'>
-                    <Button
-                        label='View all badges'
-                        link
-                        variant='linkblue'
-                    />
-                </Link>
+                <p className='body-main-bold'>Awards</p>
             </div>
 
             <div className={styles.badges}>
                 {
-                    memberBadges.rows.map(badge => (
-                        <div
+                    visibleBadges.map(badge => (
+                        <Tooltip
+                            content={badge.org_badge.badge_name}
                             key={badge.org_badge_id}
-                            className={styles.badgeCard}
-                            onClick={bind(onBadgeClick, this, badge)}
+                            place='top'
                         >
-                            <div className={styles.badgeImageWrap}>
+                            <button
+                                aria-label={`View ${badge.org_badge.badge_name} award details`}
+                                className={styles.badgeButton}
+                                onClick={bind(onBadgeClick, this, badge)}
+                                type='button'
+                            >
                                 <img
                                     src={badge.org_badge.badge_image_url}
                                     alt={`Topcoder community badge - ${badge.org_badge.badge_name}`}
                                     className={styles.badgeImage}
                                 />
-                            </div>
-                            <span className={styles.badgeTitle}>{badge.org_badge.badge_name}</span>
-                        </div>
+                            </button>
+                        </Tooltip>
                     ))
                 }
             </div>
+
+            {additionalBadgeCount > 0 && (
+                <button
+                    className={styles.moreBadgesButton}
+                    onClick={handleAwardsToggleClick}
+                    type='button'
+                >
+                    {isAwardsExpanded
+                        ? 'See less'
+                        : `+ ${additionalBadgeCount} more ${additionalBadgeCount === 1 ? 'badge' : 'badges'}`}
+                </button>
+            )}
 
             {
                 selectedBadge && (
                     <MemberBadgeModal
                         isBadgeDetailsOpen={isBadgeDetailsOpen}
-                        onClose={bind(setIsBadgeDetailsOpen, this, false)}
+                        onClose={handleMemberBadgeModalClose}
                         selectedBadge={selectedBadge}
                     />
                 )

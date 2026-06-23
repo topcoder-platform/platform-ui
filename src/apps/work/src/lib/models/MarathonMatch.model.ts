@@ -166,15 +166,38 @@ export interface MarathonMatchTestSubmissionInput {
 
 /**
  * Response returned after uploading one Marathon Match validation submission.
- * Used by the scorer section to show the created submission and queued ECS task.
+ * Used by the scorer section to start polling the isolated validation run.
  */
 export interface MarathonMatchTestSubmissionResponse {
     challengeId: string
     cloudWatchLogsConsoleUrl?: string
     configType: MarathonMatchConfigType
+    status: string
     submissionId: string
     taskArn: string
     taskId: string
+    testSubmissionId: string
+}
+
+/**
+ * Current status and final scorer details for an isolated validation submission run.
+ * Used by the scorer section result modal after polling completes.
+ */
+export interface MarathonMatchTestSubmissionStatusResponse extends MarathonMatchTestSubmissionResponse {
+    completedAt?: string
+    completedTests?: number
+    currentReview?: Record<string, unknown>
+    failedTests?: number
+    fileName: string
+    fileSize: number
+    impactedReviews?: Record<string, unknown>[]
+    memberId?: string
+    message?: string
+    metadata?: Record<string, unknown>
+    progress?: number
+    score?: number
+    totalTests?: number
+    updatedAt: string
 }
 
 /**

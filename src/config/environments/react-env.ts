@@ -4,14 +4,20 @@
 export function getReactEnv<T>(varName: string, defaultValue?: string | boolean | number): T {
     const hasDefaultValue: boolean = arguments.length > 1
 
-    let value = process.env[`REACT_APP_${varName}`] as unknown as T
+    const rawValue = process.env[`REACT_APP_${varName}`]
 
-    if (value === undefined && !hasDefaultValue) {
+    if (rawValue === undefined && !hasDefaultValue) {
         throw new Error(`${varName} is not defined in process.env!`)
     }
 
+    if (rawValue?.trim() === '' && hasDefaultValue) {
+        return defaultValue as T
+    }
+
+    let value = rawValue as unknown as T
+
     // convert to number
-    if (!Number.isNaN(Number(value))) {
+    if (rawValue?.trim() !== '' && !Number.isNaN(Number(value))) {
         value = Number(value as unknown) as T
     }
 

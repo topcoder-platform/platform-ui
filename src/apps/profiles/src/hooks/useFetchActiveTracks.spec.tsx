@@ -1,6 +1,12 @@
-import type { UserStats } from '~/libs/core'
+import type { MemberStats, UserStats } from '~/libs/core'
 
-import { getActiveTracks, MemberStatsTrack } from './useFetchActiveTracks'
+import {
+    getActiveTracks,
+    getMemberChallengePoints,
+    getSubTrackDisplaySubmissionCount,
+    getSubTrackSummaryStats,
+    MemberStatsTrack,
+} from './useFetchActiveTracks'
 
 jest.mock('~/libs/core', () => ({
     useMemberStats: jest.fn(),
@@ -74,6 +80,57 @@ describe('getActiveTracks', () => {
             .toEqual(['Challenge', 'Task'])
     })
 
+    it('includes Data Science Challenge stats in the Data Science track', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            DATA_SCIENCE: {
+                Challenge: {
+                    challenges: 1,
+                    rank: {
+                        percentile: 10,
+                        rating: 1499,
+                    },
+                    submissions: {
+                        submissions: 0,
+                    },
+                    wins: 1,
+                },
+                MARATHON_MATCH: {
+                    challenges: 1,
+                    rank: {
+                        percentile: 20,
+                        rating: 763,
+                    },
+                    wins: 0,
+                },
+            },
+        } as UserStats)
+        const dataScienceTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Data Science')
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+        const challengeSubTrack = dataScienceTrack?.subTracks
+            .find(track => track.name === 'Challenge')
+
+        expect(dataScienceTrack?.challenges)
+            .toEqual(2)
+        expect(dataScienceTrack?.wins)
+            .toEqual(1)
+        expect(dataScienceTrack?.rating)
+            .toEqual(1499)
+        expect(dataScienceTrack?.percentile)
+            .toEqual(10)
+        expect(dataScienceTrack?.subTracks.map(track => track.name))
+            .toEqual(['Challenge', 'MARATHON_MATCH'])
+        expect(challengeSubTrack)
+            .toEqual(expect.objectContaining({
+                name: 'Challenge',
+                parentTrack: 'DATA_SCIENCE',
+                path: 'DATA_SCIENCE',
+            }))
+        expect(developmentTrack)
+            .toBeUndefined()
+    })
+
     it('keeps legacy testing subtracks in the testing track', () => {
         const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DEVELOP: {
@@ -110,5 +167,272 @@ describe('getActiveTracks', () => {
             .toEqual(['DEVELOPMENT'])
         expect(testingTrackNames)
             .toEqual(['BUG_HUNT'])
+    })
+
+    it('shows QA Challenge stats in the testing track', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            QA: {
+                challenges: 1,
+                mostRecentEventDate: 1781237773026,
+                mostRecentSubmission: 1781237773026,
+                subTracks: [
+                    {
+                        challenges: 1,
+                        name: 'Challenge',
+                        rank: {
+                            rating: 1490,
+                        },
+                        submissions: {
+                            submissions: 1,
+                        },
+                        wins: 1,
+                    },
+                ],
+                wins: 1,
+            },
+        } as UserStats)
+        const testingTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Testing')
+        const qaChallengeSubTrack = testingTrack?.subTracks
+            .find(track => track.name === 'Challenge')
+
+        expect(testingTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 1,
+                wins: 1,
+            }))
+        expect(qaChallengeSubTrack)
+            .toEqual(expect.objectContaining({
+                name: 'Challenge',
+                parentTrack: 'QA',
+                path: 'QA.subTracks',
+            }))
+        expect(qaChallengeSubTrack?.rank?.rating)
+            .toEqual(1490)
+    })
+
+    it('shows top-level AI engineering stats under the Development track', () => {
+        const memberStats = {
+            AI_ENGINEERING: {
+                challenges: 14,
+                rank: {
+                    overallPercentile: 15,
+                    rating: 101,
+                },
+                submissions: {
+                    submissions: 100,
+                },
+            },
+            challengePoints: 2847,
+        } as UserStats
+        const activeTracks: MemberStatsTrack[] = getActiveTracks(memberStats)
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+        const aiSubTrack = developmentTrack?.subTracks
+            .find(track => track.name === 'AI Engineering')
+
+        expect(developmentTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 14,
+                isActive: true,
+                submissions: 100,
+            }))
+        expect(aiSubTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 14,
+                name: 'AI Engineering',
+                parentTrack: 'AI_ENGINEERING',
+                path: 'AI_ENGINEERING',
+                rank: expect.objectContaining({
+                    overallPercentile: 15,
+                    rating: 101,
+                }),
+                submissions: {
+                    submissions: 100,
+                },
+            }))
+        expect(activeTracks.map(track => track.name))
+            .not.toContain('AI Engineering')
+        expect(getMemberChallengePoints(memberStats))
+            .toBe(2847)
+    })
+
+    it('shows Data Science AI rating paths under Development while keeping original Data Science Challenge', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            challenges: 6,
+            DATA_SCIENCE: {
+                'AI Engineering': {
+                    challenges: 3,
+                    rank: {
+                        overallPercentile: 12,
+                        rating: 1422,
+                    },
+                    wins: 1,
+                },
+                Challenge: {
+                    challenges: 3,
+                    rank: {
+                        percentile: 18,
+                        rating: 1380,
+                    },
+                    wins: 1,
+                },
+            },
+            groupId: 1,
+            handle: 'winterflame',
+            handleLower: 'winterflame',
+            userId: 15391415,
+            wins: 2,
+        } as unknown as UserStats)
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+        const dataScienceTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Data Science')
+        const aiSubTrack = developmentTrack?.subTracks
+            .find(track => track.name === 'AI Engineering')
+        const challengeSubTrack = dataScienceTrack?.subTracks
+            .find(track => track.name === 'Challenge')
+
+        expect(developmentTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 3,
+                isActive: true,
+                submissions: 3,
+                wins: 1,
+            }))
+        expect(aiSubTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 3,
+                name: 'AI Engineering',
+                parentTrack: 'DATA_SCIENCE',
+                path: 'DATA_SCIENCE',
+                rank: expect.objectContaining({
+                    overallPercentile: 12,
+                    rating: 1422,
+                }),
+                wins: 1,
+            }))
+        expect(getSubTrackDisplaySubmissionCount(aiSubTrack))
+            .toEqual(3)
+        expect(dataScienceTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 3,
+                isActive: true,
+                rating: 1380,
+                wins: 1,
+            }))
+        expect(challengeSubTrack)
+            .toEqual(expect.objectContaining({
+                name: 'Challenge',
+                parentTrack: 'DATA_SCIENCE',
+                path: 'DATA_SCIENCE',
+            }))
+        expect(activeTracks.map(track => track.name))
+            .not.toContain('AI Engineering')
+    })
+
+    it('keeps rated custom non-AI data science paths visible as member stats tracks', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            challenges: 5,
+            DATA_SCIENCE: {
+                'Java MySQL': {
+                    challenges: 3,
+                    rank: {
+                        overallPercentile: 12,
+                        rating: 1422,
+                    },
+                    wins: 1,
+                },
+                NO_RATING: {
+                    challenges: 2,
+                    rank: {},
+                    wins: 1,
+                },
+            },
+            groupId: 1,
+            handle: 'winterflame',
+            handleLower: 'winterflame',
+            userId: 15391415,
+            wins: 2,
+        } as unknown as UserStats)
+        const javaMySQLTrack: MemberStatsTrack | undefined = activeTracks.find(track => track.name === 'Java MySQL')
+
+        expect(javaMySQLTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 3,
+                isActive: true,
+                isDSTrack: true,
+                percentile: 12,
+                rating: 1422,
+                submissions: 3,
+                wins: 1,
+            }))
+        expect(javaMySQLTrack?.subTracks)
+            .toEqual([
+                expect.objectContaining({
+                    name: 'Java MySQL',
+                    parentTrack: 'DATA_SCIENCE',
+                    path: 'DATA_SCIENCE',
+                }),
+            ])
+        expect(activeTracks.map(track => track.name))
+            .not.toContain('NO_RATING')
+    })
+})
+
+describe('getSubTrackSummaryStats', () => {
+    it('falls back to challenge count when a subtrack has zero submissions', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 3,
+            submissions: {
+                submissions: 0,
+            },
+            wins: 3,
+        } as MemberStats)
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 3,
+                wins: 3,
+            })
+    })
+
+    it('falls back to history placements for AI Engineering wins and submissions', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 6,
+            name: 'AI Engineering',
+            submissions: {
+                submissions: 0,
+            },
+            wins: 0,
+        } as MemberStats, [
+            {
+                challengeId: 'ai-1',
+                challengeName: 'AI Challenge 1',
+                newRating: 840,
+                placement: 1,
+                ratingDate: 1781237773026,
+            },
+            {
+                challengeId: 'ai-2',
+                challengeName: 'AI Challenge 2',
+                newRating: 860,
+                placement: 2,
+                ratingDate: 1781237773027,
+            },
+            {
+                challengeId: 'ai-3',
+                challengeName: 'AI Challenge 3',
+                newRating: 901,
+                placement: 1,
+                ratingDate: 1781237773028,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 6,
+                wins: 2,
+            })
     })
 })

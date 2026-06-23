@@ -220,18 +220,85 @@ export function getAvailabilityLabel(value?: string): string | undefined {
     return availabilityOptions.find(o => o.value === value)?.label
 }
 
+/**
+ * Converts stored preferred role option IDs into their human-readable labels.
+ *
+ * @param {string[]} values - Preferred role option IDs or already-readable role names.
+ * @returns {string[]} Labels that can be displayed in profile UI.
+ */
 export function getPreferredRoleLabels(values: string[] = []): string[] {
     return values
-        .map(v => preferredRoleOptions.find(o => o.value === v)?.label)
-        .filter(Boolean) as string[]
+        .map(v => preferredRoleOptions.find(o => o.value === v)?.label ?? v)
+        .filter(Boolean)
 }
 
+/**
+ * Formats role labels into a sentence-style list.
+ *
+ * @param {string[]} labels - Preferred role labels to display.
+ * @returns {string} A readable list joined with commas and "and".
+ */
 export function formatRoleList(labels: string[]): string {
     if (labels.length === 1) return labels[0]
     if (labels.length === 2) return `${labels[0]} and ${labels[1]}`
 
     return `${labels.slice(0, -1)
         .join(', ')} and ${labels[labels.length - 1]}`
+}
+
+/**
+ * Removes legacy preferred roles from open-to-work data before saving availability.
+ *
+ * @param {UserTrait} openToWork - Existing open-to-work trait data.
+ * @returns {UserTrait} Open-to-work data without nested preferred roles.
+ */
+export function getOpenToWorkWithoutPreferredRoles(openToWork: UserTrait = {}): UserTrait {
+    const nextOpenToWork = { ...openToWork }
+    delete nextOpenToWork.preferredRoles
+
+    return nextOpenToWork
+}
+
+/**
+ * Normalizes a preferred roles trait value into display text.
+ *
+ * @param {unknown} preferredRoles - Stored preferred roles from personalization traits.
+ * @returns {string} Text suitable for display in the profile role list.
+ */
+export function getPreferredRolesValueText(preferredRoles: unknown): string {
+    if (typeof preferredRoles === 'string') {
+        return preferredRoles.trim()
+    }
+
+    if (Array.isArray(preferredRoles)) {
+        return getPreferredRoleLabels(preferredRoles.map(String))
+            .join('\n')
+    }
+
+    return ''
+}
+
+/**
+ * Normalizes a preferred roles trait value into role option values.
+ *
+ * @param {unknown} preferredRoles - Stored preferred roles from personalization traits.
+ * @returns {string[]} Preferred role option IDs suitable for the role multiselect.
+ */
+export function getPreferredRoleValues(preferredRoles: unknown): string[] {
+    if (Array.isArray(preferredRoles)) {
+        return preferredRoles.map(String)
+    }
+
+    if (typeof preferredRoles === 'string') {
+        return preferredRoles
+            .split(/[\n,;\u00b7\u2022]+/)
+            .map(role => role.trim()
+                .replace(/^[-*]\s+/, ''))
+            .filter(Boolean)
+            .map(role => preferredRoleOptions.find(option => option.label === role)?.value ?? role)
+    }
+
+    return []
 }
 
 function isObjectLike(value: any): boolean {
@@ -262,6 +329,52 @@ export function getFirstProfileSelfTitle(personalizationData: UserTrait[] = []):
             typeof trait.profileSelfTitle === 'string' ? trait.profileSelfTitle.trim() : ''
         ))
         .find(Boolean)
+}
+
+/**
+ * Returns preferred roles from the new personalization field with legacy fallback support.
+ *
+ * @param {UserTrait[]} personalizationData - Personalization trait data from the member API.
+ * @returns {string} Preferred roles text for the rating card and edit modal.
+ */
+export function getPreferredRolesText(personalizationData: UserTrait[] = []): string {
+    const flattenedData = flattenPersonalizationData(personalizationData)
+    const directPreferredRolesTrait = flattenedData.find(
+        trait => Object.prototype.hasOwnProperty.call(trait, 'preferredRoles'),
+    )
+
+    if (directPreferredRolesTrait) {
+        return getPreferredRolesValueText(directPreferredRolesTrait.preferredRoles)
+    }
+
+    const legacyPreferredRoles = flattenedData.find(
+        trait => Array.isArray(trait.openToWork?.preferredRoles),
+    )?.openToWork?.preferredRoles
+
+    return getPreferredRolesValueText(legacyPreferredRoles)
+}
+
+/**
+ * Returns selected preferred role option values from the new field with legacy fallback support.
+ *
+ * @param {UserTrait[]} personalizationData - Personalization trait data from the member API.
+ * @returns {string[]} Preferred role option values for the edit multiselect.
+ */
+export function getPreferredRolesValues(personalizationData: UserTrait[] = []): string[] {
+    const flattenedData = flattenPersonalizationData(personalizationData)
+    const directPreferredRolesTrait = flattenedData.find(
+        trait => Object.prototype.hasOwnProperty.call(trait, 'preferredRoles'),
+    )
+
+    if (directPreferredRolesTrait) {
+        return getPreferredRoleValues(directPreferredRolesTrait.preferredRoles)
+    }
+
+    const legacyPreferredRoles = flattenedData.find(
+        trait => Array.isArray(trait.openToWork?.preferredRoles),
+    )?.openToWork?.preferredRoles
+
+    return getPreferredRoleValues(legacyPreferredRoles)
 }
 
 export function getPersonalizationLinks(personalizationData: UserTrait[] = []): UserTrait[] {

@@ -140,15 +140,12 @@ function resolveHandle(
  *                                 Pass false for reviewer role so author identity is hidden.
  *                                 Defaults to true.
  * @param resourceMemberIdMapping - Map of memberId → BackendResource used to resolve handles.
- * @param submissionLocked       - When true, labels the reason as "Locked Reason";
- *                                 otherwise labels it as "Unlock Reason".
  */
 function buildDecisionNotes(
     escalations?: AiReviewDecisionEscalation[],
     reason?: string | null,
     showAuthor: boolean = true,
     resourceMemberIdMapping: Record<string, BackendResource> = {},
-    submissionLocked: boolean = false,
 ): string[] {
     const parts: string[] = []
 
@@ -172,8 +169,7 @@ function buildDecisionNotes(
     })
 
     if (reason) {
-        const reasonLabel: string = submissionLocked ? 'Locked Reason' : 'Unlock Reason'
-        parts.push(`${reasonLabel}: ${reason}`)
+        parts.push(`Locked Reason: ${reason}`)
     }
 
     return parts
@@ -392,7 +388,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             currentDecision.reason,
             canSeeAuthor,
             resourceMemberIdMapping,
-            currentDecision.submissionLocked,
         )
     }, [canSeeAuthor, currentDecision, hasSubmitterRole, resourceMemberIdMapping])
 

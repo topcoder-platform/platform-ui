@@ -3,7 +3,10 @@ import {
     PHASE_DURATION_MIN_MINUTES,
 } from '../../../../../lib/constants/challenge-editor.constants'
 import { ChallengePhase } from '../../../../../lib/models'
-import { getPhaseEndDateInDate } from '../../../../../lib/utils/date.utils'
+import {
+    getPhaseDuration,
+    getPhaseEndDateInDate,
+} from '../../../../../lib/utils/date.utils'
 
 export const AI_SCREENING_PHASE_NAME = 'AI Screening'
 export const AI_REVIEW_PHASE_NAME = 'AI Review'
@@ -92,6 +95,10 @@ export function canEditPhaseStartDate(
     index: number,
     isTwoRoundDesignChallenge: boolean,
 ): boolean {
+    if (phase.actualEndDate) {
+        return false
+    }
+
     const normalizedPhaseName = normalizePhaseName(phase.name)
     const isRegistrationPhase = normalizedPhaseName === 'registration'
     const isStandardSubmissionPhase = normalizedPhaseName === 'submission'
@@ -204,8 +211,9 @@ export function recalculatePhases(
     // eslint-disable-next-line complexity
     for (let index = 0; index < phases.length; index += 1) {
         const phase = phases[index]
-        const duration = normalizeDuration(phase.duration)
+        let duration = normalizeDuration(phase.duration)
         const existingPhaseStartDate = toDate(phase.scheduledStartDate)
+        const existingPhaseEndDate = toDate(phase.scheduledEndDate)
         let phaseStartDate = shouldScheduleDates || index === 0
             ? baseStartDate
             : existingPhaseStartDate || baseStartDate
@@ -230,9 +238,21 @@ export function recalculatePhases(
             phaseStartDate = overriddenStartDate
         }
 
-        const phaseEndDate = phaseStartDate
-            ? getPhaseEndDateInDate(phaseStartDate, duration)
-            : undefined
+        const hasUnchangedStartDate = !!existingPhaseStartDate
+            && !!phaseStartDate
+            && existingPhaseStartDate.getTime() === phaseStartDate.getTime()
+        const shouldPreserveScheduledEndDate = !!existingPhaseEndDate
+            && hasUnchangedStartDate
+            && !shouldScheduleDates
+        const phaseEndDate = shouldPreserveScheduledEndDate
+            ? existingPhaseEndDate
+            : phaseStartDate
+                ? getPhaseEndDateInDate(phaseStartDate, duration)
+                : undefined
+
+        if (phaseStartDate && phaseEndDate) {
+            duration = normalizeDuration(getPhaseDuration(phaseStartDate, phaseEndDate))
+        }
 
         const nextPhase: ChallengePhase = {
             ...phase,

@@ -89,7 +89,16 @@ describe('getChallengeTypeFilterTrack', () => {
             name: 'Quality Assurance',
             track: 'QA',
         })))
-            .toBe('QUALITY_ASSURANCE')
+            .toBe('QA')
+    })
+
+    it('normalizes development aliases', () => {
+        expect(getChallengeTypeFilterTrack(buildTrack({
+            abbreviation: 'DEV',
+            name: 'Development',
+            track: 'Development',
+        })))
+            .toBe('DEVELOP')
     })
 
     it('returns an empty string when no track is selected', () => {
@@ -99,7 +108,7 @@ describe('getChallengeTypeFilterTrack', () => {
 })
 
 describe('buildChallengeTypeOptions', () => {
-    it('keeps only active launchable challenge types and sorts them by label', () => {
+    it('keeps only active configured challenge types and sorts them by label', () => {
         const options = buildChallengeTypeOptions([
             buildChallengeType({
                 abbreviation: 'TGT',
@@ -115,6 +124,21 @@ describe('buildChallengeTypeOptions', () => {
                 abbreviation: 'CH',
                 id: 'challenge-id',
                 name: 'Challenge',
+            }),
+            buildChallengeType({
+                abbreviation: 'AI',
+                id: 'ai-id',
+                name: 'AI',
+            }),
+            buildChallengeType({
+                abbreviation: 'AIE',
+                id: 'ai-engineering-id',
+                name: 'AI Engineering',
+            }),
+            buildChallengeType({
+                abbreviation: 'TEST',
+                id: 'test-id',
+                name: 'test11775112200655',
             }),
             buildChallengeType({
                 abbreviation: 'MM',
@@ -150,9 +174,24 @@ describe('buildChallengeTypeOptions', () => {
                 name: 'Marathon Match',
             }),
             buildChallengeType({
+                abbreviation: 'F2F',
+                id: 'first-2-finish-id',
+                name: 'First2Finish',
+            }),
+            buildChallengeType({
                 abbreviation: 'TSK',
                 id: 'task-id',
                 name: 'Task',
+            }),
+            buildChallengeType({
+                abbreviation: 'AI',
+                id: 'ai-id',
+                name: 'AI',
+            }),
+            buildChallengeType({
+                abbreviation: 'AIE',
+                id: 'ai-engineering-id',
+                name: 'AI Engineering',
             }),
         ], buildTrack({
             name: 'Design',
@@ -164,6 +203,10 @@ describe('buildChallengeTypeOptions', () => {
                 {
                     label: 'Challenge',
                     value: 'challenge-id',
+                },
+                {
+                    label: 'First2Finish',
+                    value: 'first-2-finish-id',
                 },
                 {
                     label: 'Task',
@@ -184,6 +227,16 @@ describe('buildChallengeTypeOptions', () => {
                 id: 'marathon-match-id',
                 name: 'Marathon Match',
             }),
+            buildChallengeType({
+                abbreviation: 'F2F',
+                id: 'first-2-finish-id',
+                name: 'First2Finish',
+            }),
+            buildChallengeType({
+                abbreviation: 'TSK',
+                id: 'task-id',
+                name: 'Task',
+            }),
         ], buildTrack({
             abbreviation: 'QA',
             name: 'Quality Assurance',
@@ -195,6 +248,92 @@ describe('buildChallengeTypeOptions', () => {
                 {
                     label: 'Challenge',
                     value: 'challenge-id',
+                },
+                {
+                    label: 'First2Finish',
+                    value: 'first-2-finish-id',
+                },
+                {
+                    label: 'Task',
+                    value: 'task-id',
+                },
+            ])
+    })
+
+    it('shows Marathon Match for Development tracks', () => {
+        const options = buildChallengeTypeOptions([
+            buildChallengeType({
+                abbreviation: 'CH',
+                id: 'challenge-id',
+                name: 'Challenge',
+            }),
+            buildChallengeType({
+                abbreviation: 'F2F',
+                id: 'first-2-finish-id',
+                name: 'First2Finish',
+            }),
+            buildChallengeType({
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                name: 'Marathon Match',
+            }),
+            buildChallengeType({
+                abbreviation: 'TSK',
+                id: 'task-id',
+                name: 'Task',
+            }),
+        ], buildTrack({
+            name: 'Development',
+            track: 'Development',
+        }))
+
+        expect(options)
+            .toEqual([
+                {
+                    label: 'Challenge',
+                    value: 'challenge-id',
+                },
+                {
+                    label: 'First2Finish',
+                    value: 'first-2-finish-id',
+                },
+                {
+                    label: 'Marathon Match',
+                    value: 'marathon-match-id',
+                },
+                {
+                    label: 'Task',
+                    value: 'task-id',
+                },
+            ])
+    })
+
+    it('shows Marathon Match for Data Science tracks', () => {
+        const options = buildChallengeTypeOptions([
+            buildChallengeType({
+                abbreviation: 'CH',
+                id: 'challenge-id',
+                name: 'Challenge',
+            }),
+            buildChallengeType({
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                name: 'Marathon Match',
+            }),
+        ], buildTrack({
+            name: 'Data Science',
+            track: 'DATA_SCIENCE',
+        }))
+
+        expect(options)
+            .toEqual([
+                {
+                    label: 'Challenge',
+                    value: 'challenge-id',
+                },
+                {
+                    label: 'Marathon Match',
+                    value: 'marathon-match-id',
                 },
             ])
     })

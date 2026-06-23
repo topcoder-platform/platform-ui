@@ -343,6 +343,75 @@
     gap: 16px;
 }
 
+.resultGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.resultItem,
+.resultMeta {
+    background: #f6f8fa;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+}
+
+.resultItem span,
+.resultMeta span,
+.resultJsonSection span {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.resultItem strong,
+.resultMeta strong {
+    color: $black-80;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.resultMessage {
+    background: #eef4ff;
+    border: 1px solid #bfd0f9;
+    border-radius: 8px;
+    color: #2f4b84;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px;
+}
+
+.resultLink {
+    color: $link-blue-dark;
+    font-weight: 600;
+}
+
+.resultJsonSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resultJsonSection pre {
+    background: #101820;
+    border-radius: 8px;
+    color: #f3f7fb;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    max-height: 300px;
+    overflow: auto;
+    padding: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .compilationErrorMeta {
     display: flex;
     flex-direction: column;

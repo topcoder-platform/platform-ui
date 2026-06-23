@@ -371,10 +371,11 @@ function getConsumedChallengeFeeAmount(
  * @param displayAmount Member-payment amount selected for display.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
  * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
- * @returns Persisted consumed challenge fee, calculated markup fee, or
+ * @returns Persisted engagement or consumed challenge fee, calculated markup fee, or
  * `undefined` when the fee cannot be derived.
- * @remarks Consumed challenge rows with an explicit member subtotal do not
- * need challenge markup hydration to show the correct fee.
+ * @remarks Engagement payment rows can expose the exact finance split.
+ * Consumed challenge rows with an explicit member subtotal do not need
+ * challenge markup hydration to show the correct fee.
  */
 function getLineItemChallengeFeeAmount(
     item: BillingAccountLineItem,
@@ -382,6 +383,10 @@ function getLineItemChallengeFeeAmount(
     billingAccountDetails: BillingAccountDetails,
     challengeDetailsById: ChallengeDetailsById | undefined,
 ): number | undefined {
+    if (item.externalType === 'ENGAGEMENT' && item.challengeFee !== undefined) {
+        return Number(item.challengeFee.toFixed(2))
+    }
+
     const consumedChallengeFeeAmount = getConsumedChallengeFeeAmount(item)
 
     if (consumedChallengeFeeAmount !== undefined) {
@@ -401,13 +406,18 @@ function getLineItemChallengeFeeAmount(
  * @param item Raw locked or consumed billing-account engagement line item.
  * @param billingAccountDetails Billing account detail payload containing markup when available.
  * @returns Member payment amount when it can be derived.
- * @remarks Engagement rows prefer API-provided member-payment amounts. When
- * only the billing-account charge is available, markup is removed once.
+ * @remarks Engagement rows prefer persisted finance payment amounts, then
+ * API-provided member-payment aliases. When only the billing-account charge
+ * is available, markup is removed once.
  */
 function getEngagementMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
 ): number | undefined {
+    if (item.paymentAmount !== undefined) {
+        return item.paymentAmount
+    }
+
     if (item.memberPaymentAmount !== undefined) {
         return item.memberPaymentAmount
     }

@@ -14,6 +14,8 @@ interface SubmissionScore {
     provisionalScore?: number
 }
 
+type MarathonMatchScoreProcess = 'example' | 'provisional' | 'system'
+
 interface ScoredSubmissionLike {
     review?: Array<{
         initialScore?: number
@@ -30,7 +32,7 @@ interface ScoredSubmissionLike {
  * Display metadata for marathon test progress columns.
  */
 export interface SubmissionTestProgressDisplay {
-    process?: 'provisional' | 'system'
+    process?: MarathonMatchScoreProcess
     progressPercent?: string
     status?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
 }
@@ -104,6 +106,14 @@ function toValidScore(value: unknown): number | undefined {
         : undefined
 }
 
+function toFiniteScore(value: unknown): number | undefined {
+    const score = Number(value)
+
+    return Number.isFinite(score)
+        ? score
+        : undefined
+}
+
 function getAverageScore(scores: Array<number | undefined>): number | undefined {
     const validScores = scores
         .filter((score): score is number => score !== undefined)
@@ -139,12 +149,14 @@ function getReviewSummationScoreTimestamp(entry: ReviewSummation): number {
  * Returns the latest valid score from matching Review API summations.
  * @param reviewSummation Review summations attached to a submission.
  * @param matcher Predicate that selects the requested Marathon Match score phase.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns Latest valid aggregate score, or `undefined` when no matching score exists.
  * Used by marathon score display so relative-score rewrites replace stale raw scores.
  */
 function getScoreFromSummation(
     reviewSummation: ReviewSummation[] | undefined,
     matcher: (entry: ReviewSummation) => boolean,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     if (!Array.isArray(reviewSummation) || !reviewSummation.length) {
         return undefined
@@ -154,7 +166,9 @@ function getScoreFromSummation(
         .map((entry, index) => ({
             entry,
             index,
-            score: toValidScore(entry.aggregateScore),
+            score: allowNegativeScore
+                ? toFiniteScore(entry.aggregateScore)
+                : toValidScore(entry.aggregateScore),
             timestamp: getReviewSummationScoreTimestamp(entry),
         }))
         .filter(item => item.score !== undefined && matcher(item.entry))
@@ -169,12 +183,12 @@ function getScoreFromSummation(
 /**
  * Resolves the marathon scoring phase represented by a review summation.
  * @param entry Review summation returned by Review API.
- * @returns `provisional`, `system`, or `undefined` when the summation is not a scored marathon phase.
+ * @returns `example`, `provisional`, `system`, or `undefined` when the summation is not a scored marathon phase.
  * Used by strict marathon score helpers so progress/example reviews do not leak into score display.
  */
 function getReviewSummationTestProcess(
     entry: ReviewSummation,
-): 'provisional' | 'system' | undefined {
+): MarathonMatchScoreProcess | undefined {
     const metadataProcess = normalizeTestProcess(
         entry.metadata?.testProcess
         ?? entry.metadata?.testType,
@@ -193,6 +207,10 @@ function getReviewSummationTestProcess(
         return 'system'
     }
 
+    if (entry.isExample === true) {
+        return 'example'
+    }
+
     if (entry.isFinal === true) {
         return 'system'
     }
@@ -201,7 +219,7 @@ function getReviewSummationTestProcess(
         return 'provisional'
     }
 
-    if (entry.isFinal === false && entry.isExample !== true) {
+    if (entry.isFinal === false) {
         return 'provisional'
     }
 
@@ -223,14 +241,18 @@ function getChallengeTypeName(type: string | ChallengeTypeRef | undefined): stri
 /**
  * Normalizes review summation metadata test process aliases for marathon display.
  * @param value Metadata process or legacy test type value from Review API.
- * @returns `provisional` or `system` when the value identifies a tracked process.
- * Used by `getSubmissionTestProgress` to avoid showing example-test metadata.
+ * @returns `example`, `provisional`, or `system` when the value identifies a tracked process.
+ * Used by `getSubmissionTestProgress` to display the active marathon validation phase.
  */
-function normalizeTestProcess(value: unknown): 'provisional' | 'system' | undefined {
+function normalizeTestProcess(value: unknown): MarathonMatchScoreProcess | undefined {
     const normalized = typeof value === 'string'
         ? value.trim()
             .toLowerCase()
         : ''
+
+    if (normalized === 'example') {
+        return 'example'
+    }
 
     if (normalized === 'system' || normalized === 'final') {
         return 'system'
@@ -278,6 +300,24 @@ function normalizeTestProgress(value: unknown): number | undefined {
     }
 
     return Math.min(Math.max(progress, 0), 1)
+}
+
+/**
+ * Assigns a stable ordering weight for marathon test processes.
+ * @param process Normalized marathon test process.
+ * @returns Numeric priority used to break ties between progress records.
+ * Used by `toSubmissionTestProgressCandidate` after timestamp and status ordering.
+ */
+function getTestProcessPriority(process: MarathonMatchScoreProcess | undefined): number {
+    if (process === 'system') {
+        return 2
+    }
+
+    if (process === 'provisional') {
+        return 1
+    }
+
+    return 0
 }
 
 /**
@@ -330,9 +370,7 @@ function toSubmissionTestProgressCandidate(
             ? 1
             : 0,
         process,
-        processPriority: process === 'system'
-            ? 1
-            : 0,
+        processPriority: getTestProcessPriority(process),
         progress,
         progressPercent: progress === undefined
             ? undefined
@@ -466,6 +504,22 @@ export function is2RoundsChallenge(challenge: Pick<Challenge, 'phases'>): boolea
     return !!challenge.phases?.find(phase => phase.name === 'Checkpoint Submission')
 }
 
+/**
+ * Returns only the example marathon score for a submission.
+ * @param submission Submission-like object containing Review API summations.
+ * @returns Example score, or `undefined` when example scoring has not produced a valid score.
+ * Used by marathon submission table display when the current validation process is Example.
+ */
+export function getSubmissionExampleScore(
+    submission: ScoredSubmissionLike,
+): number | undefined {
+    return getScoreFromSummation(
+        submission.reviewSummation,
+        item => getReviewSummationTestProcess(item) === 'example',
+        true,
+    )
+}
+
 export function getProvisionalScore(submission: ScoredSubmissionLike): number {
     return getSubmissionInitialScore(submission)
 }
@@ -473,15 +527,18 @@ export function getProvisionalScore(submission: ScoredSubmissionLike): number {
 /**
  * Returns only the provisional marathon score for a submission.
  * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns Provisional score, or `undefined` when provisional scoring has not produced a valid score.
  * Used by marathon submission score display to prefer latest relative summations over stale raw scores.
  */
 export function getSubmissionProvisionalScore(
     submission: ScoredSubmissionLike,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     const provisionalSummationScore = getScoreFromSummation(
         submission.reviewSummation,
         item => getReviewSummationTestProcess(item) === 'provisional',
+        allowNegativeScore,
     )
     if (provisionalSummationScore !== undefined) {
         return provisionalSummationScore
@@ -531,15 +588,18 @@ export function getFinalScore(submission: ScoredSubmissionLike): number {
 /**
  * Returns only the system marathon score for a submission.
  * @param submission Submission-like object containing legacy phase scores or Review API summations.
+ * @param allowNegativeScore Whether failed Marathon Match scorer scores like -1 should be retained.
  * @returns System score, or `undefined` when system scoring has not produced a valid score.
  * Used by marathon submission score display to prefer latest relative summations over stale raw scores.
  */
 export function getSubmissionSystemScore(
     submission: ScoredSubmissionLike,
+    allowNegativeScore: boolean = false,
 ): number | undefined {
     const systemSummationScore = getScoreFromSummation(
         submission.reviewSummation,
         item => getReviewSummationTestProcess(item) === 'system',
+        allowNegativeScore,
     )
     if (systemSummationScore !== undefined) {
         return systemSummationScore

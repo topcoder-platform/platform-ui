@@ -1,1 +1,1 @@
-export { default as MemberStatsBlock } from './MemberStatsBlock'
+export { default as MemberStatsBlock, MemberChallengePointsBar } from './MemberStatsBlock'

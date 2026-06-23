@@ -19,7 +19,7 @@ import {
     getUserDataForApplication,
     updateUserDataForApplication,
 } from '../../lib/services'
-import { extractTermId } from '../../lib/utils'
+import { extractTermId, resolveStandardTermsConfig } from '../../lib/utils'
 import { rootRoute } from '../../engagements.routes'
 
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
@@ -50,9 +50,14 @@ const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
     || (params.hasSubmitted && !params.isValid)
 )
 
+const STANDARD_TERMS = resolveStandardTermsConfig(
+    EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID,
+    EnvironmentConfig.TERMS_URL,
+)
+
 const TERMS_STATUS_CONFIG: TermsStatusConfig[] = [
     {
-        id: extractTermId(EnvironmentConfig.TERMS_URL) ?? '',
+        id: STANDARD_TERMS.id ?? '',
         label: 'Standard Topcoder Terms',
     },
     {

@@ -1,7 +1,79 @@
+import { EnvironmentConfig } from '../../../../../config'
+
 export const SPECIAL_CHALLENGE_TAGS: string[] = [
     'Marathon Match',
     'Rapid Development Match',
 ]
+
+export type CreateChallengeTypesByTrack = Record<string, string[]>
+
+const DEFAULT_CREATE_CHALLENGE_TYPES_BY_TRACK: CreateChallengeTypesByTrack = {
+    DATA_SCIENCE: [
+        'Challenge',
+        'First2Finish',
+        'Marathon Match',
+        'Task',
+    ],
+    DESIGN: [
+        'Challenge',
+        'First2Finish',
+        'Task',
+    ],
+    DEVELOP: [
+        'Challenge',
+        'First2Finish',
+        'Marathon Match',
+        'Task',
+    ],
+    QA: [
+        'Challenge',
+        'First2Finish',
+        'Task',
+    ],
+}
+
+/**
+ * Normalizes the configured create-challenge type allowlist for the work app.
+ *
+ * @param configValue environment config value from `WORK_CREATE_CHALLENGE_TYPES_BY_TRACK`.
+ * @returns configured track-to-type names when valid; otherwise the default work-app allowlist.
+ * @remarks Used by the create challenge type dropdown to keep hidden rating-specific types out of
+ * the launch flow while allowing deployment config to override the allowlist.
+ * @throws Does not throw.
+ */
+function parseCreateChallengeTypesByTrack(
+    configValue: unknown,
+): CreateChallengeTypesByTrack {
+    if (!configValue || Array.isArray(configValue) || typeof configValue !== 'object') {
+        return DEFAULT_CREATE_CHALLENGE_TYPES_BY_TRACK
+    }
+
+    const config = Object.entries(configValue)
+        .reduce<CreateChallengeTypesByTrack>((result, [track, challengeTypes]) => {
+            if (!Array.isArray(challengeTypes)) {
+                return result
+            }
+
+            const normalizedChallengeTypes = challengeTypes
+                .filter((challengeType): challengeType is string => (
+                    typeof challengeType === 'string' && challengeType.trim().length > 0
+                ))
+                .map(challengeType => challengeType.trim())
+
+            if (track.trim().length > 0 && normalizedChallengeTypes.length > 0) {
+                result[track.trim()] = normalizedChallengeTypes
+            }
+
+            return result
+        }, {})
+
+    return Object.keys(config).length > 0 ? config : DEFAULT_CREATE_CHALLENGE_TYPES_BY_TRACK
+}
+
+export const CREATE_CHALLENGE_TYPES_BY_TRACK = parseCreateChallengeTypesByTrack(
+    (EnvironmentConfig as unknown as Record<string, unknown>)
+        .WORK_CREATE_CHALLENGE_TYPES_BY_TRACK,
+)
 
 export const SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS: string[] = ['80000062']
 
@@ -57,6 +129,10 @@ export const CHALLENGE_TYPES_WITH_MULTIPLE_PRIZES = [
 ] as const
 
 export const DEFAULT_NDA_UUID = 'e5811a7b-43d1-407a-a064-69e5015b4900'
+
+export const DEFAULT_STANDARD_TERMS_UUID = process.env.REACT_APP_DEFAULT_STANDARD_TERMS_UUID
+    || process.env.DEFAULT_STANDARD_TERMS_UUID
+    || EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID
 
 export const ROUND_TYPES = {
     SINGLE_ROUND: 'Single round',

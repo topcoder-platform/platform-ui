@@ -187,10 +187,18 @@
     gap: $sp-4;
     align-items: end;
     max-width: 500px;
+
+    @include ltelg {
+        align-items: flex-start;
+    }
 }
 
 .openToWorkSummary {
     text-align: right;
+
+    @include ltelg {
+        text-align: left;
+    }
 }
 
 .roleText {

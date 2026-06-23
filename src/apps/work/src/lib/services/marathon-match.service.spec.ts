@@ -1,7 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrPostAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
-import { uploadMarathonMatchTestSubmission } from './marathon-match.service'
+import {
+    fetchMarathonMatchTestSubmissionStatus,
+    uploadMarathonMatchTestSubmission,
+} from './marathon-match.service'
 
 jest.mock('~/libs/core', () => ({
     xhrGetAsync: jest.fn(),
@@ -30,9 +36,11 @@ describe('marathon-match.service', () => {
             challengeId: '30000123',
             cloudWatchLogsConsoleUrl: 'https://logs.example.com/task-1',
             configType: 'PROVISIONAL',
-            submissionId: 'submission-1',
+            status: 'QUEUED',
+            submissionId: 'validation-run-1',
             taskArn: 'arn:aws:ecs:task/task-1',
             taskId: 'task-1',
+            testSubmissionId: 'validation-run-1',
         })
 
         await expect(
@@ -46,9 +54,11 @@ describe('marathon-match.service', () => {
                 challengeId: '30000123',
                 cloudWatchLogsConsoleUrl: 'https://logs.example.com/task-1',
                 configType: 'PROVISIONAL',
-                submissionId: 'submission-1',
+                status: 'QUEUED',
+                submissionId: 'validation-run-1',
                 taskArn: 'arn:aws:ecs:task/task-1',
                 taskId: 'task-1',
+                testSubmissionId: 'validation-run-1',
             })
 
         expect(mockedPostAsync)
@@ -91,5 +101,55 @@ describe('marathon-match.service', () => {
         )
             .rejects
             .toThrow('Marathon match validation upload response was invalid')
+    })
+
+    it('fetches validation submission status details', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            challengeId: '30000123',
+            cloudWatchLogsConsoleUrl: 'https://logs.example.com/task-1',
+            completedAt: '2026-06-17T01:02:03.000Z',
+            completedTests: 50,
+            configType: 'PROVISIONAL',
+            failedTests: 0,
+            fileName: 'solution.zip',
+            fileSize: 3,
+            metadata: {
+                testType: 'provisional',
+            },
+            progress: 1,
+            score: 88.5,
+            status: 'SUCCESS',
+            submissionId: 'validation-run-1',
+            taskArn: 'arn:aws:ecs:task/task-1',
+            taskId: 'task-1',
+            testSubmissionId: 'validation-run-1',
+            totalTests: 50,
+            updatedAt: '2026-06-17T01:02:03.000Z',
+        })
+
+        await expect(
+            fetchMarathonMatchTestSubmissionStatus(
+                '30000123',
+                'validation-run-1',
+            ),
+        )
+            .resolves
+            .toMatchObject({
+                challengeId: '30000123',
+                fileName: 'solution.zip',
+                metadata: {
+                    testType: 'provisional',
+                },
+                score: 88.5,
+                status: 'SUCCESS',
+                testSubmissionId: 'validation-run-1',
+            })
+
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/marathon-match/challenge/30000123/test-submission/validation-run-1',
+            )
     })
 })

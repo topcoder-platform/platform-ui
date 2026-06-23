@@ -52,3 +52,68 @@
     flex-wrap: wrap;
     gap: $sp-2;
 }
+
+.principalSkillsToggle {
+    @include resetBtnStyle;
+
+    align-self: center;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-family: $font-roboto;
+    font-size: 12px;
+    line-height: 16px;
+    padding: $sp-2 0;
+    text-align: left;
+
+    &:hover {
+        color: darken($link-blue-dark, 5);
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $link-blue-dark;
+        outline-offset: $sp-1;
+        border-radius: $sp-1;
+    }
+}
+
+.additionalSkillsWrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.additionalSkillsToggle {
+    @include resetBtnStyle;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-4;
+    width: 100%;
+    padding: 0;
+    color: $black-100;
+    cursor: pointer;
+    text-align: left;
+
+    &:focus-visible {
+        outline: 2px solid $link-blue-dark;
+        outline-offset: $sp-1;
+        border-radius: $sp-1;
+    }
+}
+
+.additionalSkillsTitle {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: $font-weight-bold;
+}
+
+.additionalSkillsIcon {
+    flex: 0 0 auto;
+    width: $sp-6;
+    height: $sp-6;
+}
+
+.additionalSkillsContent:not([hidden]) {
+    margin-top: $sp-4;
+}
