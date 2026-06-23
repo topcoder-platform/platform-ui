@@ -6,6 +6,7 @@ import {
     MemberStats,
     MemberStatsGroup,
     SRMStats,
+    StatsHistory,
     useMemberStats,
     UserStats,
 } from '~/libs/core'
@@ -57,6 +58,15 @@ export interface MemberStatsTrack {
     isCPTrack?: boolean
 }
 
+export interface SubTrackSummaryStats {
+    submissions: number
+    wins: number
+}
+
+const getFiniteNumber = (value: unknown): number | undefined => (
+    typeof value === 'number' && Number.isFinite(value) ? value : undefined
+)
+
 /**
  * Return the explicit submission count when the stats payload includes one.
  *
@@ -75,9 +85,9 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
  * Return the submission count to display in the profile stats UI.
  *
  * Unified Data Science and configured rating-path rows can omit explicit
- * submission counters even though their challenge count is sourced from valid
- * submissions. In that case, use challenge participation count so the profile
- * does not display impossible zero-submission wins.
+ * submission counters or leave them at zero even though their challenge count
+ * is sourced from valid submissions. In that case, use challenge participation
+ * count so the profile does not display impossible zero-submission wins.
  *
  * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
  * @returns {number | undefined} Explicit submissions, or challenge count as a fallback.
@@ -85,13 +95,42 @@ export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | und
 export const getSubTrackDisplaySubmissionCount = (subTrack?: MemberStats): number | undefined => {
     const submissionCount = getSubTrackSubmissionCount(subTrack)
 
-    if (submissionCount !== undefined) {
+    if (submissionCount !== undefined && submissionCount > 0) {
         return submissionCount
     }
 
-    return typeof subTrack?.challenges === 'number' && subTrack.challenges > 0
-        ? subTrack.challenges
-        : undefined
+    const challengeCount = getFiniteNumber(subTrack?.challenges)
+
+    return challengeCount !== undefined && challengeCount > 0
+        ? challengeCount
+        : submissionCount
+}
+
+/**
+ * Builds the displayed win/submission counts for a subtrack card or summary.
+ *
+ * Some unified stats rows currently include challenge/rating history while the
+ * aggregate win or submission counters are omitted or left at zero. In that
+ * case, history placements are used for wins and history/challenge count is
+ * used as the minimum visible submission count.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to summarize.
+ * @param {StatsHistory[]} trackHistory - Optional history rows for the same subtrack.
+ * @returns {SubTrackSummaryStats} Display-safe win and submission counts.
+ */
+export const getSubTrackSummaryStats = (
+    subTrack?: MemberStats,
+    trackHistory: StatsHistory[] = [],
+): SubTrackSummaryStats => {
+    const statWins = getFiniteNumber(subTrack?.wins) ?? 0
+    const historyWins = trackHistory.filter(history => history.placement === 1).length
+    const displaySubmissions = getSubTrackDisplaySubmissionCount(subTrack) ?? 0
+    const historySubmissions = trackHistory.length
+
+    return {
+        submissions: Math.max(displaySubmissions, historySubmissions),
+        wins: statWins > 0 ? statWins : historyWins,
+    }
 }
 
 /**
@@ -185,10 +224,6 @@ const mapSubTracksByName = (
 
         return all
     }, {} as {[key: string]: MemberStats}) ?? {}
-)
-
-const getFiniteNumber = (value: unknown): number | undefined => (
-    typeof value === 'number' && Number.isFinite(value) ? value : undefined
 )
 
 /**
