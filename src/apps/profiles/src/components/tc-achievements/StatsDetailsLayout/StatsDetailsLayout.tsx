@@ -5,7 +5,7 @@ import { MemberStats } from '~/libs/core'
 
 import { StatsNavHeader } from '../StatsNavHeader'
 import { StatsSummaryBlock } from '../StatsSummaryBlock'
-import { getSubTrackSubmissionCount, MemberStatsTrack } from '../../../hooks/useFetchActiveTracks'
+import { getSubTrackDisplaySubmissionCount, MemberStatsTrack } from '../../../hooks/useFetchActiveTracks'
 
 import styles from './StatsDetailsLayout.module.scss'
 
@@ -35,7 +35,7 @@ const StatsDetailsLayout: FC<StatsDetailsLayoutProps> = props => (
                 challenges={props.trackData.challenges}
                 wins={props.trackData.wins}
                 submissions={
-                    getSubTrackSubmissionCount(props.trackData as MemberStats)
+                    getSubTrackDisplaySubmissionCount(props.trackData as MemberStats)
                     ?? (typeof props.trackData.submissions === 'number' ? props.trackData.submissions : undefined)
                 }
                 ranking={(props.trackData as MemberStats).rank?.rank}

@@ -3,6 +3,7 @@ import type { MemberStats, UserStats } from '~/libs/core'
 import {
     getActiveTracks,
     getMemberChallengePoints,
+    getSubTrackDisplaySubmissionCount,
     getSubTrackSummaryStats,
     MemberStatsTrack,
 } from './useFetchActiveTracks'
@@ -296,6 +297,7 @@ describe('getActiveTracks', () => {
             .toEqual(expect.objectContaining({
                 challenges: 3,
                 isActive: true,
+                submissions: 3,
                 wins: 1,
             }))
         expect(aiSubTrack)
@@ -310,6 +312,8 @@ describe('getActiveTracks', () => {
                 }),
                 wins: 1,
             }))
+        expect(getSubTrackDisplaySubmissionCount(aiSubTrack))
+            .toEqual(3)
         expect(dataScienceTrack)
             .toEqual(expect.objectContaining({
                 challenges: 3,
@@ -360,6 +364,7 @@ describe('getActiveTracks', () => {
                 isDSTrack: true,
                 percentile: 12,
                 rating: 1422,
+                submissions: 3,
                 wins: 1,
             }))
         expect(javaMySQLTrack?.subTracks)
