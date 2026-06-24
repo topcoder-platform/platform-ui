@@ -123,6 +123,11 @@ describe('calculateTopPercentileFromDistribution', () => {
             .toBeCloseTo(55)
     })
 
+    it('returns the top known member percentage when the rating is above the highest range', () => {
+        expect(calculateTopPercentileFromDistribution(distribution, 4051))
+            .toBeCloseTo(0.1)
+    })
+
     it('returns undefined when the rating or distribution cannot be used', () => {
         expect(calculateTopPercentileFromDistribution(distribution, undefined))
             .toBeUndefined()
