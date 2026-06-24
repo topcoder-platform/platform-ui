@@ -89,6 +89,10 @@ export function getPaymentAmount(payment: AssignmentPayment): number | undefined
         return toNumber(payment.amount)
     }
 
+    if (payment.paymentAmount !== undefined) {
+        return toNumber(payment.paymentAmount)
+    }
+
     const firstDetail = getFirstPaymentDetail(payment)
 
     if (firstDetail) {
@@ -114,8 +118,8 @@ export function getPaymentAmount(payment: AssignmentPayment): number | undefined
  * Resolves the persisted challenge fee associated with a payment.
  *
  * Engagement payments store the manager-entered payment amount separately from
- * the billing-account fee. When finance returns the fee explicitly, this
- * helper uses that field. For older payloads it falls back to a positive
+ * the billing-account fee. When finance or reports return the fee explicitly,
+ * this helper uses that field. For older payloads it falls back to a positive
  * `totalAmount - grossAmount` delta when present.
  *
  * @param payment payment record returned by the finance API.
@@ -126,7 +130,7 @@ export function getPaymentChallengeFee(
     payment: AssignmentPayment,
 ): number | undefined {
     const firstDetail = getFirstPaymentDetail(payment)
-    const persistedChallengeFee = toNumber(firstDetail?.challengeFee)
+    const persistedChallengeFee = toNumber(payment.challengeFee ?? firstDetail?.challengeFee)
 
     if (persistedChallengeFee !== undefined && persistedChallengeFee >= 0) {
         return Number(persistedChallengeFee.toFixed(2))
@@ -195,7 +199,9 @@ export function getPaymentHoursWorked(payment: AssignmentPayment): string {
  * @throws This helper does not raise exceptions.
  */
 export function getPaymentBillingAccountId(payment: AssignmentPayment): string {
-    return toOptionalDisplayString(getFirstPaymentDetail(payment)?.billingAccount) || ''
+    return toOptionalDisplayString(
+        payment.billingAccountId ?? getFirstPaymentDetail(payment)?.billingAccount,
+    ) || ''
 }
 
 /**

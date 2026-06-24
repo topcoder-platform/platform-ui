@@ -16,6 +16,7 @@ import {
 import { rootRoute } from '../../../config/routes.config'
 import { useFetchEngagements } from '../../hooks/useFetchEngagements'
 import type {
+    AssignmentPayment,
     Challenge,
     Engagement,
 } from '../../models'
@@ -25,7 +26,12 @@ import {
     combineBillingAccountLineItems,
 } from '../../services/billing-accounts.service'
 import { fetchChallenge } from '../../services/challenges.service'
-import { calculatePaymentChallengeFee } from '../../utils/payment.utils'
+import { fetchAssignmentPaymentSplits } from '../../services/payments.service'
+import {
+    calculatePaymentChallengeFee,
+    getPaymentAmount,
+    getPaymentChallengeFee,
+} from '../../utils/payment.utils'
 import {
     calculateMemberPaymentAmount,
     getCopilotMemberPaymentsBudgetInfo,
@@ -36,10 +42,16 @@ import styles from './BillingAccountLineItemsModal.module.scss'
 type SortField = 'amount' | 'status' | 'date'
 type SortOrder = 'asc' | 'desc'
 type ChallengeDetailsById = Map<string, Challenge>
+type AssignmentPaymentsById = Map<string, AssignmentPayment[]>
 
 interface BillingAccountModalLineItem extends BillingAccountLineItem {
     challengeFeeAmount?: number
     displayAmount?: number
+}
+
+interface EngagementPaymentSplit {
+    challengeFee?: number
+    paymentAmount: number
 }
 
 const ENGAGEMENT_ASSIGNMENT_FILTERS = {
@@ -47,6 +59,8 @@ const ENGAGEMENT_ASSIGNMENT_FILTERS = {
 }
 
 const EMPTY_CHALLENGE_DETAILS_BY_ID: ChallengeDetailsById = new Map<string, Challenge>()
+const EMPTY_ASSIGNMENT_PAYMENTS_BY_ID: AssignmentPaymentsById = new Map<string, AssignmentPayment[]>()
+const CURRENCY_AMOUNT_TOLERANCE = 0.01
 
 const EXTERNAL_TYPE_LABELS: Record<BillingAccountLineItem['externalType'], string> = {
     CHALLENGE: 'Challenge',
@@ -156,6 +170,125 @@ function normalizeRouteId(value: unknown): string | undefined {
 }
 
 /**
+ * Rounds payment split values to cents for display and row matching.
+ *
+ * @param amount Raw amount from billing or finance data.
+ * @returns Currency amount rounded to two decimal places.
+ * @remarks Billing-account rows are stored at ledger precision, while the
+ * modal displays cents and only needs cent-level comparisons.
+ */
+function roundCurrencyAmount(amount: number): number {
+    return Number(amount.toFixed(2))
+}
+
+/**
+ * Compares two currency amounts at display precision.
+ *
+ * @param firstAmount First amount to compare.
+ * @param secondAmount Second amount to compare.
+ * @returns `true` when the amounts match within one cent.
+ */
+function currencyAmountsMatch(firstAmount: number, secondAmount: number): boolean {
+    return Math.abs(roundCurrencyAmount(firstAmount) - roundCurrencyAmount(secondAmount))
+        <= CURRENCY_AMOUNT_TOLERANCE
+}
+
+/**
+ * Resolves billing-account ids carried by one finance payment.
+ *
+ * @param payment Finance payment row.
+ * @returns Unique billing-account ids from top-level and detail fields.
+ */
+function getPaymentBillingAccountIds(payment: AssignmentPayment): string[] {
+    return Array.from(new Set([
+        normalizeRouteId(payment.billingAccountId),
+        ...(payment.details || []).map(detail => normalizeRouteId(detail.billingAccount)),
+    ].filter((billingAccountId): billingAccountId is string => !!billingAccountId)))
+}
+
+/**
+ * Filters assignment payments to the billing account currently being displayed.
+ *
+ * @param payments Payments returned for one engagement assignment.
+ * @param billingAccountId Billing account id from the detail modal.
+ * @returns Payments with a matching billing-account id, or all payments when
+ * finance did not expose any billing-account id fields.
+ */
+function filterPaymentsForBillingAccount(
+    payments: AssignmentPayment[],
+    billingAccountId: unknown,
+): AssignmentPayment[] {
+    const normalizedBillingAccountId = normalizeRouteId(billingAccountId)
+
+    if (!normalizedBillingAccountId) {
+        return payments
+    }
+
+    const paymentsWithBillingAccount = payments.filter(payment => (
+        getPaymentBillingAccountIds(payment).length > 0
+    ))
+
+    if (paymentsWithBillingAccount.length === 0) {
+        return payments
+    }
+
+    return paymentsWithBillingAccount.filter(payment => (
+        getPaymentBillingAccountIds(payment)
+            .includes(normalizedBillingAccountId)
+    ))
+}
+
+/**
+ * Converts a finance payment into the member-payment and fee values used by the modal.
+ *
+ * @param payment Finance payment row.
+ * @returns Payment split when a member-payment amount is available.
+ */
+function getFinancePaymentSplit(payment: AssignmentPayment): EngagementPaymentSplit | undefined {
+    const paymentAmount = getPaymentAmount(payment)
+
+    if (paymentAmount === undefined) {
+        return undefined
+    }
+
+    const challengeFee = getPaymentChallengeFee(payment)
+
+    return {
+        challengeFee: challengeFee === undefined
+            ? undefined
+            : roundCurrencyAmount(challengeFee),
+        paymentAmount: roundCurrencyAmount(paymentAmount),
+    }
+}
+
+/**
+ * Adds finance payment splits together for aggregate billing-account rows.
+ *
+ * @param splits Payment splits from finance for one assignment.
+ * @returns Aggregate split, or `undefined` when no split exists.
+ */
+function getAggregatePaymentSplit(
+    splits: EngagementPaymentSplit[],
+): EngagementPaymentSplit | undefined {
+    if (splits.length === 0) {
+        return undefined
+    }
+
+    return {
+        challengeFee: splits.some(split => split.challengeFee === undefined)
+            ? undefined
+            : roundCurrencyAmount(splits.reduce(
+                (total, split) => total + (split.challengeFee || 0),
+                0,
+            )),
+        paymentAmount: roundCurrencyAmount(splits.reduce(
+            (total, split) => total + split.paymentAmount,
+            0,
+        )),
+    }
+}
+
+/**
  * Builds an absolute work-app path with the configured root route prefix.
  *
  * @param path Path below the work-app root. It must start with `/`.
@@ -241,6 +374,28 @@ function getChallengeLineItemIds(items: BillingAccountLineItem[]): string[] {
 }
 
 /**
+ * Collects consumed engagement assignment ids that may need finance split hydration.
+ *
+ * @param items Normalized billing-account line items.
+ * @returns Unique assignment ids from engagement consumed rows.
+ * @remarks Locked engagement rows do not correspond to completed finance
+ * payments, and rows that already carry the persisted split do not need
+ * additional finance lookups.
+ */
+function getEngagementPaymentAssignmentIds(items: BillingAccountLineItem[]): string[] {
+    return Array.from(new Set(
+        items
+            .filter(item => (
+                item.externalType === 'ENGAGEMENT'
+                && item.status === 'consumed'
+                && (item.paymentAmount === undefined || item.challengeFee === undefined)
+            ))
+            .map(item => normalizeRouteId(item.externalId))
+            .filter((id): id is string => !!id),
+    ))
+}
+
+/**
  * Fetches challenge details for billing-account rows without failing the whole modal.
  *
  * @param challengeIds Challenge ids referenced by billing-account line items.
@@ -264,6 +419,30 @@ async function fetchChallengeDetailsById(
     return new Map(
         entries.filter((entry): entry is readonly [string, Challenge] => !!entry),
     )
+}
+
+/**
+ * Fetches raw finance payments for engagement assignment ids.
+ *
+ * @param assignmentIds Engagement assignment ids referenced by consumed line items.
+ * @returns Map keyed by assignment id with finance payment rows.
+ * @remarks Individual assignment failures are ignored so billing-account
+ * details still render with existing fallback values.
+ */
+async function fetchAssignmentPaymentsById(
+    assignmentIds: string[],
+): Promise<AssignmentPaymentsById> {
+    const entries = await Promise.all(assignmentIds.map(async assignmentId => {
+        try {
+            const payments = await fetchAssignmentPaymentSplits(assignmentId)
+
+            return [assignmentId, payments] as const
+        } catch {
+            return [assignmentId, [] as AssignmentPayment[]] as const
+        }
+    }))
+
+    return new Map(entries)
 }
 
 /**
@@ -365,10 +544,90 @@ function getConsumedChallengeFeeAmount(
 }
 
 /**
+ * Resolves an exact finance split for one consumed engagement line item.
+ *
+ * @param item Billing-account engagement row.
+ * @param billingAccountDetails Parent billing account details.
+ * @param assignmentPaymentsById Finance payments keyed by assignment id.
+ * @returns Exact payment split when finance payments can be matched to the row.
+ * @remarks Some billing-account rows store only the combined ledger charge.
+ * Finance keeps the original member payment and fee, so those values are used
+ * before trusting API-provided markup-derived member-payment fallbacks.
+ */
+function getEngagementFinancePaymentSplit(
+    item: BillingAccountLineItem,
+    billingAccountDetails: BillingAccountDetails,
+    assignmentPaymentsById: AssignmentPaymentsById | undefined,
+): EngagementPaymentSplit | undefined {
+    if (item.externalType !== 'ENGAGEMENT' || item.status !== 'consumed') {
+        return undefined
+    }
+
+    const assignmentId = normalizeRouteId(item.externalId)
+    const assignmentPayments = assignmentId
+        ? assignmentPaymentsById?.get(assignmentId)
+        : undefined
+
+    if (!assignmentPayments?.length) {
+        return undefined
+    }
+
+    const financeSplits = filterPaymentsForBillingAccount(
+        assignmentPayments,
+        billingAccountDetails.id,
+    )
+        .map(getFinancePaymentSplit)
+        .filter((split): split is EngagementPaymentSplit => !!split)
+
+    if (financeSplits.length === 0) {
+        return undefined
+    }
+
+    const matchingPaymentSplits = financeSplits.filter(split => (
+        split.challengeFee !== undefined
+        && currencyAmountsMatch(split.paymentAmount + split.challengeFee, item.amount)
+    ))
+
+    if (matchingPaymentSplits.length === 1) {
+        return matchingPaymentSplits[0]
+    }
+
+    const aggregateSplit = getAggregatePaymentSplit(financeSplits)
+
+    if (
+        aggregateSplit
+        && aggregateSplit.challengeFee !== undefined
+        && currencyAmountsMatch(
+            aggregateSplit.paymentAmount + aggregateSplit.challengeFee,
+            item.amount,
+        )
+    ) {
+        return aggregateSplit
+    }
+
+    if (
+        aggregateSplit
+        && aggregateSplit.paymentAmount <= item.amount
+        && (
+            financeSplits.length === 1
+            || matchingPaymentSplits.length === 0
+        )
+    ) {
+        return {
+            challengeFee: roundCurrencyAmount(item.amount - aggregateSplit.paymentAmount),
+            paymentAmount: aggregateSplit.paymentAmount,
+        }
+    }
+
+    return undefined
+}
+
+/**
  * Resolves the row challenge fee amount for callers allowed to see markup.
  *
  * @param item Raw locked or consumed billing-account line item.
  * @param displayAmount Member-payment amount selected for display.
+ * @param engagementPaymentSplit Exact finance payment split for engagement rows, when available.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
  * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
  * @returns Persisted engagement or consumed challenge fee, calculated markup fee, or
@@ -380,11 +639,16 @@ function getConsumedChallengeFeeAmount(
 function getLineItemChallengeFeeAmount(
     item: BillingAccountLineItem,
     displayAmount: number | undefined,
+    engagementPaymentSplit: EngagementPaymentSplit | undefined,
     billingAccountDetails: BillingAccountDetails,
     challengeDetailsById: ChallengeDetailsById | undefined,
 ): number | undefined {
     if (item.externalType === 'ENGAGEMENT' && item.challengeFee !== undefined) {
         return Number(item.challengeFee.toFixed(2))
+    }
+
+    if (engagementPaymentSplit?.challengeFee !== undefined) {
+        return engagementPaymentSplit.challengeFee
     }
 
     const consumedChallengeFeeAmount = getConsumedChallengeFeeAmount(item)
@@ -405,6 +669,7 @@ function getLineItemChallengeFeeAmount(
  *
  * @param item Raw locked or consumed billing-account engagement line item.
  * @param billingAccountDetails Billing account detail payload containing markup when available.
+ * @param engagementPaymentSplit Exact finance payment split for engagement rows, when available.
  * @returns Member payment amount when it can be derived.
  * @remarks Engagement rows prefer persisted finance payment amounts, then
  * API-provided member-payment aliases. When only the billing-account charge
@@ -413,9 +678,14 @@ function getLineItemChallengeFeeAmount(
 function getEngagementMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
+    engagementPaymentSplit: EngagementPaymentSplit | undefined,
 ): number | undefined {
     if (item.paymentAmount !== undefined) {
         return item.paymentAmount
+    }
+
+    if (engagementPaymentSplit?.paymentAmount !== undefined) {
+        return engagementPaymentSplit.paymentAmount
     }
 
     if (item.memberPaymentAmount !== undefined) {
@@ -440,10 +710,11 @@ function getLineItemMemberPaymentAmount(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
     challengeDetailsById: ChallengeDetailsById | undefined,
+    engagementPaymentSplit: EngagementPaymentSplit | undefined,
 ): number | undefined {
     return item.externalType === 'CHALLENGE'
         ? getChallengeMemberPaymentAmount(item, billingAccountDetails, challengeDetailsById)
-        : getEngagementMemberPaymentAmount(item, billingAccountDetails)
+        : getEngagementMemberPaymentAmount(item, billingAccountDetails, engagementPaymentSplit)
 }
 
 /**
@@ -452,6 +723,7 @@ function getLineItemMemberPaymentAmount(
  * @param item Raw locked or consumed billing-account line item.
  * @param billingAccountDetails Billing account detail payload containing hidden markup when available.
  * @param challengeDetailsById Hydrated challenge details, or `undefined` while loading.
+ * @param assignmentPaymentsById Finance payments keyed by engagement assignment id.
  * @param showChallengeFee Whether the caller can see billing challenge fees.
  * @returns A line item with `displayAmount` set to the visible member-payment
  * amount and, for non-copilots, `challengeFeeAmount` set to the billing markup fee.
@@ -461,17 +733,25 @@ function getDisplayLineItem(
     item: BillingAccountLineItem,
     billingAccountDetails: BillingAccountDetails,
     challengeDetailsById: ChallengeDetailsById | undefined,
+    assignmentPaymentsById: AssignmentPaymentsById | undefined,
     showChallengeFee: boolean,
 ): BillingAccountModalLineItem {
+    const engagementPaymentSplit = getEngagementFinancePaymentSplit(
+        item,
+        billingAccountDetails,
+        assignmentPaymentsById,
+    )
     const displayAmount = getLineItemMemberPaymentAmount(
         item,
         billingAccountDetails,
         challengeDetailsById,
+        engagementPaymentSplit,
     )
     const challengeFeeAmount = showChallengeFee
         ? getLineItemChallengeFeeAmount(
             item,
             displayAmount,
+            engagementPaymentSplit,
             billingAccountDetails,
             challengeDetailsById,
         )
@@ -562,6 +842,10 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
         () => getChallengeLineItemIds(rawLineItems),
         [rawLineItems],
     )
+    const engagementPaymentAssignmentIds = useMemo(
+        () => getEngagementPaymentAssignmentIds(rawLineItems),
+        [rawLineItems],
+    )
     const challengeDetailsResult = useSWR<ChallengeDetailsById>(
         challengeLineItemIds.length > 0
             ? ['work/billing-account-line-item-challenges', challengeLineItemIds.join(',')]
@@ -575,6 +859,23 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
     const challengeDetailsById = challengeLineItemIds.length > 0
         ? challengeDetailsResult.data
         : EMPTY_CHALLENGE_DETAILS_BY_ID
+    const assignmentPaymentsResult = useSWR<AssignmentPaymentsById>(
+        engagementPaymentAssignmentIds.length > 0
+            ? [
+                'work/billing-account-line-item-engagement-payments',
+                props.billingAccountDetails.id,
+                engagementPaymentAssignmentIds.join(','),
+            ]
+            : undefined,
+        () => fetchAssignmentPaymentsById(engagementPaymentAssignmentIds),
+        {
+            errorRetryCount: 2,
+            shouldRetryOnError: true,
+        },
+    )
+    const assignmentPaymentsById = engagementPaymentAssignmentIds.length > 0
+        ? assignmentPaymentsResult.data
+        : EMPTY_ASSIGNMENT_PAYMENTS_BY_ID
 
     const lineItems = useMemo<BillingAccountModalLineItem[]>(
         () => rawLineItems
@@ -582,9 +883,11 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
                 item,
                 props.billingAccountDetails,
                 challengeDetailsById,
+                assignmentPaymentsById,
                 showChallengeFeeColumn,
             )),
         [
+            assignmentPaymentsById,
             challengeDetailsById,
             props.billingAccountDetails,
             rawLineItems,
