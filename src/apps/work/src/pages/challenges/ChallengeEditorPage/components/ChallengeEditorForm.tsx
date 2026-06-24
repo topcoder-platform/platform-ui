@@ -286,6 +286,8 @@ const DISABLED_AI_WORKFLOW_FOR_CHALLENGE_ACTION_MESSAGE
 const DISABLED_AI_TEMPLATE_FOR_CHALLENGE_ACTION_MESSAGE
     = 'The saved AI review template was disabled. '
     + 'Update the AI template selection before saving or launching this challenge.'
+const ACTIVE_PHASE_SHORTENING_NOT_SAVED_MESSAGE
+    = 'Active phase shortening cannot be saved. Other challenge changes were saved.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
@@ -1389,6 +1391,115 @@ function getSaveSuccessMessage(
     return isSaveAsDraft
         ? 'Challenge saved as draft successfully'
         : 'Challenge saved successfully'
+}
+
+/**
+ * Returns whether the saved challenge should be refetched before the form baseline is reset.
+ *
+ * @param formData form state that was just submitted to challenge-api.
+ * @returns `true` when an active challenge uses the scheduling API and has schedule phases.
+ */
+function shouldVerifyPersistedScheduleAfterSave(
+    formData: ChallengeEditorFormData,
+): boolean {
+    return normalizeStatus(formData.status) === CHALLENGE_STATUS.ACTIVE
+        && formData.legacy?.useSchedulingAPI !== false
+        && Array.isArray(formData.phases)
+        && formData.phases.length > 0
+}
+
+/**
+ * Converts a phase date value to milliseconds for stable comparisons.
+ *
+ * @param value phase date value from form or API state.
+ * @returns the timestamp in milliseconds, or `undefined` when invalid.
+ */
+function getPhaseDateTime(value: Date | string | undefined): number | undefined {
+    if (!value) {
+        return undefined
+    }
+
+    const parsedDate = value instanceof Date
+        ? value
+        : new Date(value)
+
+    return Number.isNaN(parsedDate.getTime())
+        ? undefined
+        : parsedDate.getTime()
+}
+
+/**
+ * Resolves a stable phase identity for comparing submitted and persisted schedules.
+ *
+ * @param phase challenge phase from form or API state.
+ * @returns phase id token when available.
+ */
+function getPhaseIdentity(phase: ChallengePhase | undefined): string | undefined {
+    return normalizeTextValue(phase?.id)
+        || normalizeTextValue(phase?.phaseId)
+        || undefined
+}
+
+/**
+ * Returns whether a phase should be treated as the currently open phase.
+ *
+ * @param phase challenge phase from form or API state.
+ * @returns `true` when the phase is explicitly open.
+ */
+function isOpenPhase(phase: ChallengePhase | undefined): boolean {
+    return phase?.isOpen === true
+        || normalizeTextValue(phase?.status)
+            .toUpperCase() === 'OPEN'
+}
+
+/**
+ * Detects an active phase end date that the API did not shorten.
+ *
+ * @param submittedPhases schedule phases submitted with the save request.
+ * @param persistedPhases schedule phases fetched after the save completed.
+ * @returns `true` when an open phase still ends later in persisted data than in submitted data.
+ */
+function hasRejectedActivePhaseShortening(
+    submittedPhases: ChallengeEditorFormData['phases'],
+    persistedPhases: ChallengeEditorFormData['phases'],
+): boolean {
+    if (!Array.isArray(submittedPhases) || !Array.isArray(persistedPhases)) {
+        return false
+    }
+
+    const persistedPhasesByIdentity = new Map<string, ChallengePhase>()
+    persistedPhases.forEach(phase => {
+        const phaseIdentity = getPhaseIdentity(phase)
+        if (phaseIdentity) {
+            persistedPhasesByIdentity.set(phaseIdentity, phase)
+        }
+    })
+
+    return submittedPhases.some((submittedPhase, index) => {
+        const phaseIdentity = getPhaseIdentity(submittedPhase)
+        const persistedPhase = phaseIdentity
+            ? persistedPhasesByIdentity.get(phaseIdentity)
+            : persistedPhases[index]
+
+        if (!persistedPhase) {
+            return false
+        }
+
+        if (
+            (!isOpenPhase(submittedPhase) && !isOpenPhase(persistedPhase))
+            || submittedPhase.actualEndDate
+            || persistedPhase.actualEndDate
+        ) {
+            return false
+        }
+
+        const submittedEndTime = getPhaseDateTime(submittedPhase.scheduledEndDate)
+        const persistedEndTime = getPhaseDateTime(persistedPhase.scheduledEndDate)
+
+        return submittedEndTime !== undefined
+            && persistedEndTime !== undefined
+            && submittedEndTime < persistedEndTime
+    })
 }
 
 function getApprovalStatusText(approvalStatus: string | undefined): string {
@@ -2948,10 +3059,27 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
+                const shouldVerifyPersistedSchedule
+                    = shouldVerifyPersistedScheduleAfterSave(formDataWithProjectBilling)
+                let savedChallengeSnapshot = savedChallenge
+
+                if (shouldVerifyPersistedSchedule) {
+                    try {
+                        savedChallengeSnapshot = await fetchChallenge(currentChallengeId)
+                    } catch {
+                        savedChallengeSnapshot = savedChallenge
+                    }
+                }
+
                 const persistedFormData = applyProjectBillingToChallengeFormData(
-                    transformChallengeToFormData(savedChallenge),
+                    transformChallengeToFormData(savedChallengeSnapshot),
                     resolvedProjectBillingAccount,
                 )
+                const wasActivePhaseShorteningRejected = shouldVerifyPersistedSchedule
+                    && hasRejectedActivePhaseShortening(
+                        formDataWithProjectBilling.phases,
+                        persistedFormData.phases,
+                    )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     await hydratePersistedSavedFormData(
@@ -2984,7 +3112,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
-                    showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
+                    if (wasActivePhaseShorteningRejected) {
+                        showErrorToast(ACTIVE_PHASE_SHORTENING_NOT_SAVED_MESSAGE)
+                    } else {
+                        showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
+                    }
                 }
 
                 const postSaveNavigationPath = resolvePostSaveNavigationPath({
