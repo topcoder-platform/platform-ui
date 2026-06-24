@@ -64,6 +64,34 @@ let mockMaximumSubmissionsDeferDirtyValues: boolean[] = []
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
 }))
+jest.mock('../../../../lib/components', () => ({
+    ConfirmationModal: (props: {
+        cancelText?: string
+        children?: React.ReactNode
+        confirmDisabled?: boolean
+        confirmText?: string
+        message: string
+        onCancel: () => void
+        onConfirm: () => void
+        title: string
+    }) => (
+        <div aria-modal='true' role='dialog'>
+            <h4>{props.title}</h4>
+            <p>{props.message}</p>
+            {props.children}
+            <button onClick={props.onCancel} type='button'>
+                {props.cancelText || 'Cancel'}
+            </button>
+            <button
+                disabled={props.confirmDisabled}
+                onClick={props.onConfirm}
+                type='button'
+            >
+                {props.confirmText || 'Confirm'}
+            </button>
+        </div>
+    ),
+}))
 jest.mock('../../../../lib/hooks', () => ({
     useAutosave: jest.fn(),
     useFetchChallengeTracks: jest.fn(),
@@ -90,6 +118,19 @@ jest.mock('../../../../lib/services', () => ({
     searchProfilesByUserIds: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
+    checkCanEditProjectDetails: (
+        userRoles?: string[],
+        userId?: number,
+        project?: {
+            members?: Array<{
+                role?: string
+                userId?: number
+            }>
+        },
+    ): boolean => (userRoles || []).includes('manager')
+        && (project?.members || []).some(member => (
+            member.userId === userId && member.role === 'manager'
+        )),
     formatLastSaved: () => '',
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
@@ -216,6 +257,23 @@ jest.mock('~/config', () => ({
         TC_FINANCE_API: 'https://example.com/finance',
         TOPCODER_URL: 'https://example.com/topcoder',
     },
+}), {
+    virtual: true,
+})
+jest.mock('~/libs/core', () => ({
+    xhrCreateInstance: jest.fn(() => ({
+        defaults: {
+            headers: {
+                common: {},
+            },
+        },
+    })),
+    xhrDeleteAsync: jest.fn(),
+    xhrGetAsync: jest.fn(),
+    xhrGetPaginatedAsync: jest.fn(),
+    xhrPatchAsync: jest.fn(),
+    xhrPostAsync: jest.fn(),
+    xhrPutAsync: jest.fn(),
 }), {
     virtual: true,
 })
@@ -673,6 +731,9 @@ const LocationDisplay = (): JSX.Element => {
 
     return <div data-testid='location-display'>{location.pathname}</div>
 }
+
+const activePhaseShorteningRejectionTestName = 'restores the persisted schedule when active phase shortening '
+    + 'is rejected after saving other edits'
 
 describe('ChallengeEditorForm', () => {
     const copilotContextValue: WorkAppContextModel = {
@@ -3115,6 +3176,66 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
         })
+    })
+
+    it(activePhaseShorteningRejectionTestName, async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [{
+                duration: 1440,
+                isOpen: true,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-19T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+            startDate: '2026-04-11T04:58:51.000Z',
+            status: 'ACTIVE',
+        } as Challenge
+        const rejectedShortenedSchedule = {
+            ...activeChallenge,
+            name: 'Active challenge updated',
+            phases: [{
+                ...activeChallenge.phases?.[0],
+                duration: 1440,
+                scheduledEndDate: '2026-04-18T04:58:51.000Z',
+            }],
+        } as Challenge
+
+        mockedPatchChallenge.mockResolvedValue(rejectedShortenedSchedule)
+        mockedFetchChallenge.mockResolvedValue(activeChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedFetchChallenge)
+                .toHaveBeenCalledWith('12345')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-19T04:58:51.000Z')
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
+        expect(mockedShowSuccessToast)
+            .not.toHaveBeenCalledWith('Challenge saved successfully')
     })
 
     it('blocks saving when an assigned AI workflow has been disabled', async () => {
