@@ -108,6 +108,8 @@ export interface AssignmentPayment {
         hoursWorked?: number | string
         remarks?: string
     }
+    billingAccountId?: number | string
+    challengeFee?: number | string
     createdBy?: string
     createdByHandle?: string
     createdAt?: string
@@ -124,6 +126,7 @@ export interface AssignmentPayment {
     hoursWorked?: number | string
     id?: number | string
     paymentId?: number | string
+    paymentAmount?: number | string
     status?: string
     title?: string
     updatedAt?: string

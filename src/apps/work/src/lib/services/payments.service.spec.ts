@@ -7,6 +7,7 @@ import {
     fetchBillingAccountById,
 } from './billing-accounts.service'
 import {
+    fetchAssignmentPaymentSplits,
     fetchAssignmentPayments,
 } from './payments.service'
 import {
@@ -85,6 +86,47 @@ describe('fetchAssignmentPayments', () => {
                         },
                     ],
                     id: 'payment-1',
+                },
+            ])
+    })
+})
+
+describe('fetchAssignmentPaymentSplits', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('returns raw payment rows without profile or billing-account hydration', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            data: [
+                {
+                    billingAccountId: '80001063',
+                    challengeFee: '420.66',
+                    paymentAmount: '342.00',
+                    paymentId: 'payment-5245',
+                },
+            ],
+        })
+
+        const result = await fetchAssignmentPaymentSplits('assignment / 5245')
+
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/finance/winnings/by-external-id/assignment%20%2F%205245',
+            )
+        expect(fetchBillingAccountById)
+            .not.toHaveBeenCalled()
+        expect(searchProfilesByUserIds)
+            .not.toHaveBeenCalled()
+        expect(result)
+            .toEqual([
+                {
+                    billingAccountId: '80001063',
+                    challengeFee: '420.66',
+                    paymentAmount: '342.00',
+                    paymentId: 'payment-5245',
                 },
             ])
     })

@@ -4,6 +4,7 @@ import type {
 } from '../models'
 import {
     calculatePaymentChallengeFee,
+    getPaymentAmount,
     getPaymentBillingAccountId,
     getPaymentBillingAccountName,
     getPaymentChallengeFee,
@@ -30,6 +31,21 @@ describe('payment.utils', () => {
 
         expect(getPaymentChallengeFee(payment))
             .toBe(72)
+    })
+
+    it('reads top-level payment split fields from report-shaped payloads', () => {
+        const payment: AssignmentPayment = {
+            billingAccountId: '80004466',
+            challengeFee: '420.66',
+            paymentAmount: '342.00',
+        }
+
+        expect(getPaymentAmount(payment))
+            .toBe(342)
+        expect(getPaymentChallengeFee(payment))
+            .toBe(420.66)
+        expect(getPaymentBillingAccountId(payment))
+            .toBe('80004466')
     })
 
     it('falls back to the total-versus-gross delta for older payment payloads', () => {

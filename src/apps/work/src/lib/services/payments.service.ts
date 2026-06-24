@@ -301,6 +301,37 @@ export async function fetchAssignmentPayments(
     }
 }
 
+/**
+ * Fetches raw finance payments for an engagement assignment.
+ *
+ * @param assignmentId Engagement assignment id stored as the finance external id.
+ * @returns Normalized payment rows without creator or billing-account name hydration.
+ * @remarks Billing-account line-item reconciliation only needs payment amounts
+ * and fees, so this avoids the extra profile and billing-account lookups used
+ * by the full payment history modal.
+ * @throws Error when the finance request fails.
+ */
+export async function fetchAssignmentPaymentSplits(
+    assignmentId: number | string,
+): Promise<AssignmentPayment[]> {
+    const normalizedAssignmentId = String(assignmentId)
+        .trim()
+
+    if (!normalizedAssignmentId) {
+        return []
+    }
+
+    try {
+        const response = await xhrGetAsync<unknown>(
+            `${TC_FINANCE_API_URL}/winnings/by-external-id/${encodeURIComponent(normalizedAssignmentId)}`,
+        )
+
+        return normalizePaymentsResponse(response)
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch assignment payment splits')
+    }
+}
+
 export async function createPayment(
     paymentData: Record<string, unknown>,
 ): Promise<AssignmentPayment> {
