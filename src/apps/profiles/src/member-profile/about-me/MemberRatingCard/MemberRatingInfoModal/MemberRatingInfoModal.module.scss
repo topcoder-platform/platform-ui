@@ -206,7 +206,7 @@
     z-index: 2;
 
     &::after {
-        background: #F2C900;
+        background: currentColor;
         bottom: 0;
         content: '';
         display: block;

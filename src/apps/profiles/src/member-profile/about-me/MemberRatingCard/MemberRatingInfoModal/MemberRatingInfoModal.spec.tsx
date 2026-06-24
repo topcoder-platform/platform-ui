@@ -4,6 +4,7 @@ import type { PropsWithChildren } from 'react'
 import { render, screen, within } from '@testing-library/react'
 
 import type { UserProfile } from '~/libs/core'
+import { getRatingColor } from '~/libs/core'
 
 import MemberRatingInfoModal from './MemberRatingInfoModal'
 
@@ -53,7 +54,7 @@ const expandedTailRatingDistribution = {
 }
 
 jest.mock('~/libs/core', () => ({
-    getRatingColor: jest.fn(() => '#616BD5'),
+    getRatingColor: jest.fn(),
 }), {
     virtual: true,
 })
@@ -79,7 +80,13 @@ jest.mock('../../../../lib', () => ({
         .toFixed(digits),
 }))
 
+const mockedGetRatingColor = getRatingColor as jest.MockedFunction<typeof getRatingColor>
+
 describe('MemberRatingInfoModal', () => {
+    beforeEach(() => {
+        mockedGetRatingColor.mockReturnValue('#616BD5')
+    })
+
     it('renders the position summary without the pyramid graphic', () => {
         render(
             <MemberRatingInfoModal
@@ -144,6 +151,8 @@ describe('MemberRatingInfoModal', () => {
 
         const marker = screen.getByTestId('rating-member-marker')
 
+        expect(marker)
+            .toHaveStyle('color: #616BD5')
         expect(parseFloat(marker.style.left))
             .toBeLessThan(80)
         expect(marker)
