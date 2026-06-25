@@ -81,6 +81,7 @@ describe('ProjectListTabs', () => {
         ['/projects/200/engagements', 'Engagements'],
         ['/projects/200/users', 'Users'],
         ['/projects/200/assets', 'Assets Library'],
+        ['/projects/200/showcase', 'Showcase'],
     ])('marks the matching tab active for %s', (pathname: string, activeLabel: string) => {
         renderProjectListTabs(pathname)
 
