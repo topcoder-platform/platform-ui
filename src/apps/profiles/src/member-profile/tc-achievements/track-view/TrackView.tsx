@@ -7,6 +7,7 @@ import { MemberStats, UserProfile, UserStatsHistory, useStatsHistory } from '~/l
 import {
     getSubTrackSummaryStats,
     getTrackHistoryFromStats,
+    getTrackSummaryStats,
     SubTrackSummaryStats,
     useFetchTrackData,
 } from '../../../hooks'
@@ -48,11 +49,24 @@ const TrackView: FC<TrackViewProps> = props => {
         ],
         ['desc', 'desc', 'desc'],
     ), [subTrackStats])
-    const displayTrackData = useMemo(() => (trackData ? {
-        ...trackData,
-        submissions: sumBy(subTrackStats, subTrack => subTrack[1].submissions),
-        wins: sumBy(subTrackStats, subTrack => subTrack[1].wins),
-    } : undefined), [subTrackStats, trackData])
+    const displayTrackData = useMemo(() => {
+        if (!trackData) {
+            return undefined
+        }
+
+        if (trackData.name === 'Development') {
+            return {
+                ...trackData,
+                ...getTrackSummaryStats(trackData.subTracks, statsHistory),
+            }
+        }
+
+        return {
+            ...trackData,
+            submissions: sumBy(subTrackStats, subTrack => subTrack[1].submissions),
+            wins: sumBy(subTrackStats, subTrack => subTrack[1].wins),
+        }
+    }, [statsHistory, subTrackStats, trackData])
 
     return !displayTrackData ? props.renderDefault() : (
         <div className={styles.wrap}>

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { filter, find, get, orderBy } from 'lodash'
+import { filter, find, get, orderBy, sumBy } from 'lodash'
 
 import {
     DataScienceRatingPathStats,
@@ -9,9 +9,13 @@ import {
     StatsHistory,
     useMemberStats,
     UserStats,
+    UserStatsHistory,
+    useStatsHistory,
 } from '~/libs/core'
 
 import { calcProportionalAverage } from '../lib/math.utils'
+
+import { getTrackHistoryFromStats } from './useTrackHistory'
 
 const testingSubTrackNames = new Set([
     'BUG_HUNT',
@@ -61,6 +65,10 @@ export interface MemberStatsTrack {
 export interface SubTrackSummaryStats {
     submissions: number
     wins: number
+}
+
+export interface TrackSummaryStats extends SubTrackSummaryStats {
+    challenges: number
 }
 
 const getFiniteNumber = (value: unknown): number | undefined => (
@@ -161,6 +169,113 @@ const isActiveSubTrack = (subTrack?: MemberStats): boolean => {
 const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
     !!subTrack?.name && testingSubTrackNames.has(subTrack.name)
 )
+
+const getSubTrackDisplayChallengeCount = (subTrack?: MemberStats): number => (
+    getFiniteNumber(subTrack?.challenges) ?? 0
+)
+
+const getHistoryChallengeKey = (history: StatsHistory): string => [
+    history.challengeId,
+    history.challengeName,
+    history.ratingDate ?? history.date,
+].map(value => String(value ?? ''))
+    .join('::')
+
+interface SubTrackHistorySummary {
+    history: StatsHistory[]
+    stats: SubTrackSummaryStats
+    subTrack: MemberStats
+}
+
+const getSubTrackHistorySummaries = (
+    subTracks: MemberStats[],
+    statsHistory?: UserStatsHistory,
+): SubTrackHistorySummary[] => (
+    subTracks.map(subTrack => {
+        const history = statsHistory ? getTrackHistoryFromStats(statsHistory, subTrack) : []
+
+        return {
+            history,
+            stats: getSubTrackSummaryStats(subTrack, history),
+            subTrack,
+        }
+    })
+)
+
+const getFallbackTrackSummaryStats = (summaries: SubTrackHistorySummary[]): TrackSummaryStats => ({
+    challenges: sumBy(summaries, summary => getSubTrackDisplayChallengeCount(summary.subTrack)),
+    submissions: sumBy(summaries, summary => summary.stats.submissions),
+    wins: sumBy(summaries, summary => summary.stats.wins),
+})
+
+/**
+ * Builds parent track totals from subtracks, de-duplicating by challenge history when available.
+ *
+ * Development can show the same AI challenge under both `Challenge` and
+ * `AI Engineering`. When history rows are available, duplicate challenge ids are
+ * counted once for the parent totals while each child card keeps its own stats.
+ *
+ * @param {MemberStats[]} subTracks - Active subtracks included in the parent track.
+ * @param {UserStatsHistory | undefined} statsHistory - Optional stats-history payload for the same member.
+ * @returns {TrackSummaryStats} Parent challenge, win, and submission totals for display.
+ */
+export const getTrackSummaryStats = (
+    subTracks: MemberStats[],
+    statsHistory?: UserStatsHistory,
+): TrackSummaryStats => {
+    const summaries = getSubTrackHistorySummaries(subTracks, statsHistory)
+
+    if (!statsHistory) {
+        return getFallbackTrackSummaryStats(summaries)
+    }
+
+    const historySummaries = summaries.filter(summary => summary.history.length > 0)
+
+    if (historySummaries.length === 0) {
+        return getFallbackTrackSummaryStats(summaries)
+    }
+
+    const uniqueHistoryByChallenge = new Map<string, StatsHistory>()
+    let hasDuplicateHistory = false
+
+    historySummaries.forEach(summary => {
+        summary.history.forEach(history => {
+            const key = getHistoryChallengeKey(history)
+            const existingHistory = uniqueHistoryByChallenge.get(key)
+
+            if (existingHistory) {
+                hasDuplicateHistory = true
+            }
+
+            if (!existingHistory || existingHistory.placement !== 1) {
+                uniqueHistoryByChallenge.set(key, history)
+            }
+        })
+    })
+
+    const uniqueHistory = Array.from(uniqueHistoryByChallenge.values())
+    const noHistorySummaryStats = getFallbackTrackSummaryStats(
+        summaries.filter(summary => summary.history.length === 0),
+    )
+    const historyChallengeExtras = sumBy(historySummaries, summary => Math.max(
+        0,
+        getSubTrackDisplayChallengeCount(summary.subTrack) - summary.history.length,
+    ))
+    const historySubmissionExtras = sumBy(historySummaries, summary => Math.max(
+        0,
+        summary.stats.submissions - summary.history.length,
+    ))
+    const uniqueHistoryWins = uniqueHistory.filter(history => history.placement === 1).length
+    const historyStatsWins = hasDuplicateHistory
+        ? Math.max(...historySummaries.map(summary => summary.stats.wins))
+        : sumBy(historySummaries, summary => summary.stats.wins)
+
+    return {
+        challenges: uniqueHistory.length + historyChallengeExtras + noHistorySummaryStats.challenges,
+        submissions: uniqueHistory.length + historySubmissionExtras + noHistorySummaryStats.submissions,
+        wins: (uniqueHistoryWins > 0 ? uniqueHistoryWins : historyStatsWins) + noHistorySummaryStats.wins,
+    }
+}
 
 /**
  * Pick the Data Science subtrack rating used by the summary card.
@@ -279,27 +394,27 @@ export const getMemberChallengePoints = (memberStats?: UserStats): number | unde
  *
  * @param {string} trackName - The name of the track.
  * @param {MemberStats[]} subTracks - List of subtracks within the main track.
+ * @param {UserStatsHistory | undefined} statsHistory - Optional history used to de-duplicate parent totals.
  * @returns {MemberStatsTrack} - Aggregated data for the track.
  */
-const buildTrackData = (trackName: string, allSubTracks: MemberStats[]): MemberStatsTrack => {
+const buildTrackData = (
+    trackName: string,
+    allSubTracks: MemberStats[],
+    statsHistory?: UserStatsHistory,
+): MemberStatsTrack => {
     const subTracks = allSubTracks.filter(isActiveSubTrack)
-    // Calculate total wins, challenges, and submissions for the track
-    const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
-    const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
-    const submissionsCount = subTracks.reduce((sum, subTrack) => (
-        sum + (getSubTrackDisplaySubmissionCount(subTrack) ?? 0)
-    ), 0)
+    const summaryStats = getTrackSummaryStats(subTracks, statsHistory)
     const hasSubmissionCounts = subTracks.some(subTrack => getSubTrackDisplaySubmissionCount(subTrack) !== undefined)
 
     // Return aggregated track data
     return {
-        challenges: challengesCount,
+        challenges: summaryStats.challenges,
         isActive: subTracks.length > 0,
         name: trackName,
         order: 1,
-        submissions: hasSubmissionCounts ? submissionsCount : undefined,
+        submissions: hasSubmissionCounts ? summaryStats.submissions : undefined,
         subTracks,
-        wins: totalWins,
+        wins: summaryStats.wins,
     }
 }
 
@@ -574,7 +689,10 @@ const getDataScienceRatingPathTrackData = (memberStats?: UserStats): MemberStats
  * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
  * @returns {MemberStatsTrack[]} - List of active tracks for the user.
  */
-export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => {
+export const getActiveTracks = (
+    memberStats?: UserStats,
+    statsHistory?: UserStatsHistory,
+): MemberStatsTrack[] => {
     // Create mappings for data science subtracks
     const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = {
         // Map Challenge subtrack
@@ -641,6 +759,7 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
                     : [aiEngineeringDevelopmentSubTrack]),
             ]
                 .filter(subTrack => !isTestingSubTrack(subTrack)),
+            statsHistory,
         )
     )
 
@@ -710,8 +829,9 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
  */
 export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => {
     const memberStats: UserStats | undefined = useMemberStats(userHandle)
+    const statsHistory: UserStatsHistory | undefined = useStatsHistory(userHandle)
 
-    return useMemo(() => getActiveTracks(memberStats), [memberStats])
+    return useMemo(() => getActiveTracks(memberStats, statsHistory), [memberStats, statsHistory])
 }
 
 /**
