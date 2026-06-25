@@ -36,6 +36,7 @@ import type {
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
+import classNames from 'classnames'
 
 interface SelectOption {
     label: string
@@ -65,6 +66,20 @@ function getStatusLabel(status: string): string {
             return `${firstCharacter.toUpperCase()}${segment.slice(1)}`
         })
         .join(' ')
+}
+
+function getStatusPillClass(status: string): string {
+    const normalizedStatus = status.toLowerCase()
+
+    if (normalizedStatus === 'published') {
+        return styles.statusGreen
+    }
+
+    if (normalizedStatus === 'archived') {
+        return styles.statusRed
+    }
+
+    return styles.statusGray
 }
 
 function getSortIndicator(
@@ -420,7 +435,7 @@ export const ProjectShowcasePage: FC = () => {
                                 </th>
                                 <th>Status</th>
                                 <th>Created Date</th>
-                                <th>Creator User ID</th>
+                                <th>Creator</th>
                                 <th>
                                     <button
                                         type='button'
@@ -464,10 +479,14 @@ export const ProjectShowcasePage: FC = () => {
 
                             {!isLoading && filteredPosts.map(post => (
                                 <tr key={post.id}>
-                                    <td>{post.title || '—'}</td>
-                                    <td>{getStatusLabel(post.status)}</td>
+                                            <td>{post.title || '—'}</td>
+                                    <td>
+                                        <span className={classNames(styles.statusPill, getStatusPillClass(post.status))}>
+                                            {getStatusLabel(post.status)}
+                                        </span>
+                                    </td>
                                     <td>{formatDate(post.createdAt)}</td>
-                                    <td>{post.createdById ?? '—'}</td>
+                                    <td>{post.createdByHandle || '—'}</td>
                                     <td>
                                         {post.industries
                                             .map(item => item.name)

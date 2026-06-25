@@ -101,6 +101,35 @@
     font-size: 13px;
 }
 
+.statusPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    border-radius: 999px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: capitalize;
+    white-space: nowrap;
+    &.statusGreen {
+        background: rgba(33, 163, 79, 0.12);
+        color: #1d7f48;
+    }
+
+    &.statusRed {
+        background: rgba(211, 47, 47, 0.13);
+        color: #9f1f1f;
+    }
+
+    &.statusGray {
+        background: rgba(84, 95, 113, 0.1);
+        color: #7c7e81;
+    }
+}
+
+
 .loadingRow,
 .emptyRow {
     text-align: center;

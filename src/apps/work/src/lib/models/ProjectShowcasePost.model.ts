@@ -13,6 +13,7 @@ export interface ProjectShowcasePost {
     status: string
     createdAt: string
     createdById: number
+    createdByHandle?: string
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]
 }

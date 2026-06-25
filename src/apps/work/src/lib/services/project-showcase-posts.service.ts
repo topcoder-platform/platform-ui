@@ -10,9 +10,11 @@ import {
 import type {
     FetchProjectShowcasePostsParams,
     FetchProjectShowcasePostsResponse,
+    ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostIndustry,
 } from '../models'
+import { fetchMembersByUserIds } from './members.service'
 
 function normalizeError(error: unknown, fallbackMessage: string): Error {
     const typedError = error as {
@@ -85,6 +87,55 @@ export async function fetchProjectShowcasePosts(
             buildProjectShowcasePostsUrl(params),
         )
 
+        const posts = (response.data || []).map((post: any) => ({
+            categories: Array.isArray(post.categories)
+                ? post.categories.map((category: any) => ({
+                    id: String(category.id),
+                    name: String(category.name || ''),
+                }))
+                : [],
+            createdAt: String(post.createdAt || ''),
+            createdByHandle: post.createdByHandle !== undefined && post.createdByHandle !== null
+                ? String(post.createdByHandle)
+                : undefined,
+            createdById: Number(post.createdById || 0),
+            id: String(post.id),
+            industries: Array.isArray(post.industries)
+                ? post.industries.map((industry: any) => ({
+                    id: String(industry.id),
+                    name: String(industry.name || ''),
+                }))
+                : [],
+            status: String(post.status || ''),
+            title: String(post.title || ''),
+        }))
+
+        const creatorUserIds: string[] = Array.from(new Set<string>(
+            posts
+                .map((post: ProjectShowcasePost) => String(post.createdById))
+                .filter((userId: string) => userId && userId !== '0'),
+        ))
+
+        if (creatorUserIds.length) {
+            const members = await fetchMembersByUserIds(creatorUserIds, 'userId,handle')
+            const handleByUserId = new Map<string, string>()
+
+            members.forEach(member => {
+                if (member.userId && member.handle) {
+                    handleByUserId.set(member.userId, member.handle)
+                }
+            })
+
+            posts.forEach((post: ProjectShowcasePost) => {
+                if (!post.createdByHandle) {
+                    const handle = handleByUserId.get(String(post.createdById))
+                    if (handle) {
+                        post.createdByHandle = handle
+                    }
+                }
+            })
+        }
+
         return {
             metadata: {
                 page: response.page || 0,
@@ -92,25 +143,7 @@ export async function fetchProjectShowcasePosts(
                 total: response.total || 0,
                 totalPages: response.totalPages || 0,
             },
-            posts: (response.data || []).map((post: any) => ({
-                categories: Array.isArray(post.categories)
-                    ? post.categories.map((category: any) => ({
-                        id: String(category.id),
-                        name: String(category.name || ''),
-                    }))
-                    : [],
-                createdAt: String(post.createdAt || ''),
-                createdById: Number(post.createdById || 0),
-                id: String(post.id),
-                industries: Array.isArray(post.industries)
-                    ? post.industries.map((industry: any) => ({
-                        id: String(industry.id),
-                        name: String(industry.name || ''),
-                    }))
-                    : [],
-                status: String(post.status || ''),
-                title: String(post.title || ''),
-            })),
+            posts,
         }
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch showcase posts')
