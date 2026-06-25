@@ -1,9 +1,3 @@
-import { PageWrapper } from '~/apps/review/src/lib'
-import {
-    Button,
-    IconOutline,
-    LoadingSpinner,
-} from '~/libs/ui'
 import {
     ChangeEvent,
     FC,
@@ -14,7 +8,12 @@ import {
     useState,
 } from 'react'
 import { useParams } from 'react-router-dom'
-import Select, { SingleValue } from 'react-select'
+import { SingleValue } from 'react-select'
+import classNames from 'classnames'
+
+import { PageWrapper } from '~/apps/review/src/lib'
+import { LoadingSpinner } from '~/libs/ui'
+
 import {
     ErrorMessage,
     Pagination,
@@ -26,7 +25,6 @@ import {
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
 } from '../../../lib/hooks'
-
 import type {
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
@@ -36,7 +34,6 @@ import type {
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
-import classNames from 'classnames'
 
 interface SelectOption {
     label: string
@@ -479,9 +476,12 @@ export const ProjectShowcasePage: FC = () => {
 
                             {!isLoading && filteredPosts.map(post => (
                                 <tr key={post.id}>
-                                            <td>{post.title || '—'}</td>
+                                    <td>{post.title || '—'}</td>
                                     <td>
-                                        <span className={classNames(styles.statusPill, getStatusPillClass(post.status))}>
+                                        <span className={
+                                            classNames(styles.statusPill, getStatusPillClass(post.status))
+                                        }
+                                        >
                                             {getStatusLabel(post.status)}
                                         </span>
                                     </td>

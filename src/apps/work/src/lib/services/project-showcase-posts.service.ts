@@ -14,6 +14,7 @@ import type {
     ProjectShowcasePostCategory,
     ProjectShowcasePostIndustry,
 } from '../models'
+
 import { fetchMembersByUserIds } from './members.service'
 
 function normalizeError(error: unknown, fallbackMessage: string): Error {

@@ -37,22 +37,6 @@ const STATUS_OPTIONS: SelectOption[] = [
 ]
 
 export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: ProjectsShowcaseFilterProps) => {
-    const {
-        categoryOptions,
-        selectedCategory,
-        selectedIndustry,
-        selectedStatus,
-        industryOptions,
-        isCategoriesLoading,
-        isIndustriesLoading,
-        keywordInput,
-        onCategoryChange,
-        onIndustryChange,
-        onResetFilters,
-        onSearchInputChange,
-        onStatusChange,
-    } = props
-
     const statusOptions = useMemo<SelectOption[]>(() => STATUS_OPTIONS, [])
 
     return (
@@ -65,10 +49,10 @@ export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: P
                         id='work-showcase-search'
                         aria-label='Search showcase posts'
                         className={styles.searchInput}
-                        onChange={onSearchInputChange}
+                        onChange={props.onSearchInputChange}
                         placeholder='Search posts'
                         type='text'
-                        value={keywordInput}
+                        value={props.keywordInput}
                     />
                 </div>
             </div>
@@ -81,8 +65,8 @@ export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: P
                     classNamePrefix='select'
                     isClearable
                     options={statusOptions}
-                    value={selectedStatus}
-                    onChange={onStatusChange}
+                    value={props.selectedStatus}
+                    onChange={props.onStatusChange}
                 />
             </div>
 
@@ -93,10 +77,10 @@ export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: P
                     className='react-select-container'
                     classNamePrefix='select'
                     isClearable
-                    options={industryOptions}
-                    value={selectedIndustry}
-                    onChange={onIndustryChange}
-                    isLoading={isIndustriesLoading}
+                    options={props.industryOptions}
+                    value={props.selectedIndustry}
+                    onChange={props.onIndustryChange}
+                    isLoading={props.isIndustriesLoading}
                 />
             </div>
 
@@ -107,10 +91,10 @@ export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: P
                     className='react-select-container'
                     classNamePrefix='select'
                     isClearable
-                    options={categoryOptions}
-                    value={selectedCategory}
-                    onChange={onCategoryChange}
-                    isLoading={isCategoriesLoading}
+                    options={props.categoryOptions}
+                    value={props.selectedCategory}
+                    onChange={props.onCategoryChange}
+                    isLoading={props.isCategoriesLoading}
                 />
             </div>
 
@@ -119,7 +103,7 @@ export const ProjectsShowcaseFilter: FC<ProjectsShowcaseFilterProps> = (props: P
                     secondary
                     size='lg'
                     label='Clear Filters'
-                    onClick={onResetFilters}
+                    onClick={props.onResetFilters}
                 />
             </div>
         </div>
