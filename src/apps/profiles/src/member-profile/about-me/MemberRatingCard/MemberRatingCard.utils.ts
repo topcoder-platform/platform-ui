@@ -214,7 +214,9 @@ const getDistributionRanges = (
  *
  * The distribution only gives bucket counts, so when a rating falls inside a
  * bucket this assumes members are evenly distributed across that bucket and
- * counts the proportional share at or above the member rating.
+ * counts the proportional share at or above the member rating. Ratings above
+ * the final bucket are treated as the top known member so the card still shows
+ * the best visible percentile instead of hiding the badge.
  *
  * @param {UserStatsDistributionResponse['distribution'] | undefined} distribution - Raw rating distribution buckets.
  * @param {number | undefined} memberRating - The visible member rating in the same track/subtrack.
@@ -252,6 +254,10 @@ export const calculateTopPercentileFromDistribution = (
 
         return total + (range.value * (ratingAndAboveSize / rangeSize))
     }, 0)
+
+    if (membersAtOrAboveRating <= 0 && rating > ranges[ranges.length - 1].end) {
+        return 100 / totalMembers
+    }
 
     if (membersAtOrAboveRating <= 0) {
         return undefined

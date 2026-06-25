@@ -181,6 +181,31 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
     })
 
+    it('shows top one percent when the member rating is above the highest distribution range', () => {
+        mockedUseMemberStats.mockReturnValue({
+            DATA_SCIENCE: {
+                MARATHON_MATCH: {
+                    mostRecentEventDate: 1000,
+                    rank: {
+                        rating: 4051,
+                    },
+                },
+            },
+            maxRating: {
+                rating: 4051,
+            },
+        } as unknown as UserStats)
+
+        render(<MemberRatingCard {...defaultProps} />)
+
+        expect(screen.getByText('4051'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Top 1%'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Data Scientists'))
+            .toBeInTheDocument()
+    })
+
     it('disables the percentile tooltip while the rating modal is open', () => {
         mockedUseMemberStats.mockReturnValue({
             DATA_SCIENCE: {
