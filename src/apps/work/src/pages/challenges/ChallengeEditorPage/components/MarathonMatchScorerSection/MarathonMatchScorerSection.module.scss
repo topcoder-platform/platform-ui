@@ -149,13 +149,15 @@
 }
 
 .fieldGroup,
-.checkboxField {
+.checkboxField,
+.radioField {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.fieldGroup span {
+.fieldGroup span,
+.radioField legend {
     color: $black-80;
     font-size: 13px;
     font-weight: 600;
@@ -220,6 +222,35 @@
 .checkboxField span {
     color: $black-80;
     font-size: 14px;
+}
+
+.radioField {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.radioOptions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-height: 42px;
+}
+
+.radioOption {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.radioOption input {
+    accent-color: #137d60;
+    cursor: pointer;
+    margin: 0;
 }
 
 .fieldError {

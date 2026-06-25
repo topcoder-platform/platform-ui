@@ -18,6 +18,7 @@ import {
     MarathonMatchConfigType,
     MarathonMatchDefaults,
     MarathonMatchPhaseConfig,
+    MarathonMatchScoreDirection,
     MarathonMatchTester,
     MarathonMatchTesterSummary,
     MarathonMatchTestSubmissionResponse,
@@ -76,6 +77,19 @@ const PHASE_DEFAULTS = {
         startSeed: 1651246628,
     },
 } as const
+const SCORE_DIRECTION_OPTIONS: Array<{
+    label: string
+    value: MarathonMatchScoreDirection
+}> = [
+    {
+        label: 'Maximize',
+        value: 'MAXIMIZE',
+    },
+    {
+        label: 'Minimize',
+        value: 'MINIMIZE',
+    },
+]
 
 type PhaseDraftKey = keyof typeof PHASE_LABELS
 
@@ -1091,6 +1105,22 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         [updateDraft],
     )
 
+    /**
+     * Updates the scorer draft with the selected score direction.
+     * @param event Radio change event carrying the selected marathon match score direction.
+     * @returns void
+     * Used by the Score Direction radios before persisting the scorer config payload.
+     */
+    const handleScoreDirectionChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>): void => {
+            updateDraft(currentDraft => ({
+                ...currentDraft,
+                scoreDirection: event.target.value as MarathonMatchScoreDirection,
+            }))
+        },
+        [updateDraft],
+    )
+
     const handleNumericFieldChange = useCallback(
         (field: 'compileTimeout' | 'testTimeout') => (
             event: ChangeEvent<HTMLInputElement>,
@@ -1998,6 +2028,29 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         />
                         <span>Relative Scoring</span>
                     </label>
+
+                    <fieldset className={styles.radioField}>
+                        <legend>Score Direction</legend>
+                        <div className={styles.radioOptions}>
+                            {SCORE_DIRECTION_OPTIONS.map(option => (
+                                <label
+                                    className={styles.radioOption}
+                                    key={option.value}
+                                >
+                                    <input
+                                        checked={
+                                            (draft.scoreDirection || DEFAULT_SCORE_DIRECTION) === option.value
+                                        }
+                                        name='marathon-match-score-direction'
+                                        onChange={handleScoreDirectionChange}
+                                        type='radio'
+                                        value={option.value}
+                                    />
+                                    <span>{option.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </fieldset>
 
                     <label className={styles.fieldGroup}>
                         <span>Review Scorecard ID</span>
