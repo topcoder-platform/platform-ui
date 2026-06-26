@@ -43,11 +43,13 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
     const engagementsPath = `/projects/${props.projectId}/engagements`
     const usersPath = `/projects/${props.projectId}/users`
     const assetsPath = `/projects/${props.projectId}/assets`
+    const showcasePath = `/projects/${props.projectId}/showcase`
 
     const isChallengesActive = isTabActive(pathname, challengesPath)
     const isEngagementsActive = isTabActive(pathname, engagementsPath)
     const isUsersActive = isTabActive(pathname, usersPath)
     const isAssetsActive = isTabActive(pathname, assetsPath)
+    const isShowcaseActive = isTabActive(pathname, showcasePath)
     const canViewEngagements = canViewAllEngagements(userRoles)
     const usersLinkState = isUsersActive
         ? undefined
@@ -83,6 +85,12 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
                 to={assetsPath}
             >
                 Assets Library
+            </Link>
+            <Link
+                className={classNames(styles.tabLink, isShowcaseActive ? styles.active : undefined)}
+                to={showcasePath}
+            >
+                Showcase
             </Link>
         </div>
     )

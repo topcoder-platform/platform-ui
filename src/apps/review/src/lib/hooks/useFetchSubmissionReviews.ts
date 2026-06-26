@@ -799,29 +799,6 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
             const listRequest: Promise<
                 BackendReviewItem | BackendAppealResponse
             >[] = []
-            if (updatedResponse) {
-                listRequest.push(
-                    new Promise<BackendReviewItem>((resolve, reject) => {
-                        updateReviewItem(reviewItem.id, {
-                            finalAnswer: updatedResponse,
-                            initialAnswer: reviewItem.initialAnswer ?? '',
-                            scorecardQuestionId: reviewItem.scorecardQuestionId,
-                        })
-                            .then(rs => {
-                                setUpdatedReviewInfo(previousReviewInfo => applyAppealResponseScoreUpdate(
-                                    previousReviewInfo ?? reviewInfo,
-                                    reviewItem.id,
-                                    updatedResponse,
-                                    scorecardInfo,
-                                ))
-
-                                resolve(rs)
-                            })
-                            .catch(reject)
-                    }),
-                )
-            }
-
             listRequest.push(
                 new Promise<BackendAppealResponse>((resolve, reject) => {
                     const updateData = {
@@ -854,6 +831,29 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                         .catch(reject)
                 }),
             )
+
+            if (updatedResponse) {
+                listRequest.push(
+                    new Promise<BackendReviewItem>((resolve, reject) => {
+                        updateReviewItem(reviewItem.id, {
+                            finalAnswer: updatedResponse,
+                            initialAnswer: reviewItem.initialAnswer ?? '',
+                            scorecardQuestionId: reviewItem.scorecardQuestionId,
+                        })
+                            .then(rs => {
+                                setUpdatedReviewInfo(previousReviewInfo => applyAppealResponseScoreUpdate(
+                                    previousReviewInfo ?? reviewInfo,
+                                    reviewItem.id,
+                                    updatedResponse,
+                                    scorecardInfo,
+                                ))
+
+                                resolve(rs)
+                            })
+                            .catch(reject)
+                    }),
+                )
+            }
 
             setIsSavingAppealResponse(true)
             Promise.all(listRequest)
