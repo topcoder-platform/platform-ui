@@ -37,9 +37,18 @@ describe('engagement terms utils', () => {
             })
     })
 
-    it('prefers the configured DocuSign template for NDA terms', () => {
+    it('prefers the Terms API DocuSign template for NDA terms', () => {
         expect(resolveDocuSignTemplateId({
-            docusignTemplateId: 'old-template-id',
+            agreeabilityType: 'DocuSignable',
+            docusignTemplateId: 'terms-api-template-id',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }, NEW_NDA_TEMPLATE_ID))
+            .toBe('terms-api-template-id')
+    })
+
+    it('falls back to the configured DocuSign template for DocuSign-backed NDA terms', () => {
+        expect(resolveDocuSignTemplateId({
+            agreeabilityType: 'Docusign-template',
             title: 'Topcoder Member Non-Disclosure Agreement v3.0',
         }, NEW_NDA_TEMPLATE_ID))
             .toBe(NEW_NDA_TEMPLATE_ID)
@@ -51,5 +60,13 @@ describe('engagement terms utils', () => {
             title: 'Assignment Terms',
         }, NEW_NDA_TEMPLATE_ID))
             .toBe('assignment-template-id')
+    })
+
+    it('does not use the configured DocuSign template for electronically agreeable NDA terms', () => {
+        expect(resolveDocuSignTemplateId({
+            agreeabilityType: 'Electronically-agreeable',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }, NEW_NDA_TEMPLATE_ID))
+            .toBeUndefined()
     })
 })
