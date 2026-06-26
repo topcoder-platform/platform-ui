@@ -44,11 +44,6 @@
     width: 100%;
 }
 
-.actions {
-    display: flex;
-    justify-content: flex-start;
-}
-
 .errorBanner {
     max-width: 100%;
 }
@@ -127,6 +122,46 @@
         background: rgba(84, 95, 113, 0.1);
         color: #7c7e81;
     }
+}
+
+.rowActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.actionButton {
+    color: $link-blue-dark;
+    font-size: 12px;
+    font-weight: 700;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+        outline: none;
+    }
+}
+
+.actionDelete {
+    color: #9f1f1f;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalFooter {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 
