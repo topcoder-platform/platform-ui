@@ -4,10 +4,12 @@ export type ResolvedTermsConfig = {
 }
 
 type TermsTemplateDetails = {
+    agreeabilityType?: string
     docusignTemplateId?: string | number
     title?: string
 }
 
+const DOCUSIGN_AGREEABILITY_PATTERN = /docusign/i
 const NDA_TITLE_PATTERN = /\bnda\b|non[-\s]?disclosure/i
 
 /**
@@ -117,18 +119,30 @@ export const isNdaTerm = (term?: TermsTemplateDetails): boolean => (
  * Resolves the DocuSign template id for a terms record.
  *
  * @param term - Terms API details or search result payload.
- * @param configuredNdaTemplateId - Preferred DocuSign template id for NDA terms.
- * @returns The configured NDA template id for NDA terms, otherwise the Terms API template id.
+ * @param configuredNdaTemplateId - Fallback DocuSign template id for DocuSign-backed
+ * NDA terms missing one from the API.
+ * @returns The Terms API DocuSign template id, or the configured fallback for DocuSign-backed NDA terms.
  */
 export const resolveDocuSignTemplateId = (
     term?: TermsTemplateDetails,
     configuredNdaTemplateId?: string,
 ): string | number | undefined => {
-    const normalizedConfiguredNdaTemplateId = configuredNdaTemplateId?.trim()
+    const termTemplateId = typeof term?.docusignTemplateId === 'string'
+        ? term.docusignTemplateId.trim()
+        : term?.docusignTemplateId
 
-    if (normalizedConfiguredNdaTemplateId && isNdaTerm(term)) {
+    if (termTemplateId) {
+        return termTemplateId
+    }
+
+    const normalizedConfiguredNdaTemplateId = configuredNdaTemplateId?.trim()
+    const isDocuSignBackedTerm = DOCUSIGN_AGREEABILITY_PATTERN.test(
+        term?.agreeabilityType ?? '',
+    )
+
+    if (normalizedConfiguredNdaTemplateId && isNdaTerm(term) && isDocuSignBackedTerm) {
         return normalizedConfiguredNdaTemplateId
     }
 
-    return term?.docusignTemplateId
+    return undefined
 }
