@@ -6,12 +6,11 @@ import {
     IconOutline,
 } from '~/libs/ui'
 
+import { FormSelectOption } from '../form'
+
 import styles from './ProjectsShowcaseFilter.module.scss'
 
-interface SelectOption {
-    label: string
-    value: string
-}
+type SelectOption = FormSelectOption
 
 interface ProjectsShowcaseFilterProps {
     keywordInput: string

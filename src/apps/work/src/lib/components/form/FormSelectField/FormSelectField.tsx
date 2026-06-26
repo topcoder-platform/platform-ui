@@ -168,6 +168,20 @@ export const FormSelectField: FC<FormSelectFieldProps> = (props: FormSelectField
         ? props.fromFieldValue(field.value, options)
         : defaultFromFieldValue(field.value, options, isMulti)
 
+    const selectStyles = useMemo(
+        () => ({
+            menu: (provided: Record<string, unknown>) => ({
+                ...provided,
+                zIndex: 9999,
+            }),
+            menuPortal: (provided: Record<string, unknown>) => ({
+                ...provided,
+                zIndex: 9999,
+            }),
+        }),
+        [],
+    )
+
     const handleSelectChange = useCallback(
         (selectedValue: SelectValue): void => {
             const normalizedValue = props.toFieldValue
@@ -198,6 +212,7 @@ export const FormSelectField: FC<FormSelectFieldProps> = (props: FormSelectField
                 isMulti={isMulti}
                 loadOptions={props.loadOptions}
                 menuPortalTarget={menuPortalTarget}
+                styles={selectStyles}
                 onBlur={field.onBlur}
                 onChange={handleSelectChange}
                 options={options}

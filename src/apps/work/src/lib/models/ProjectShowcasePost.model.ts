@@ -10,7 +10,10 @@ export interface ProjectShowcasePostTaxonomyItem {
 export interface ProjectShowcasePost {
     id: string
     title: string
+    content?: string
     status: string
+    projectId?: string
+    challengeIds?: string[]
     createdAt: string
     createdById: number
     createdByHandle?: string
