@@ -1,6 +1,8 @@
 import {
     xhrGetAsync,
     xhrGetPaginatedAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
 } from '~/libs/core'
 
 import {
@@ -13,6 +15,7 @@ import type {
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostIndustry,
+    ProjectShowcasePostTaxonomyItem,
 } from '../models'
 
 import { fetchMembersByUserIds } from './members.service'
@@ -151,6 +154,136 @@ export async function fetchProjectShowcasePosts(
     }
 }
 
+function normalizeTaxonomyArray(value: unknown): ProjectShowcasePostTaxonomyItem[] {
+    if (!Array.isArray(value)) {
+        return []
+    }
+
+    return value.map((item: any) => ({
+        id: String(item?.id || ''),
+        name: String(item?.name || ''),
+    }))
+}
+
+function normalizeString(value: unknown): string {
+    return value !== undefined && value !== null
+        ? String(value)
+        : ''
+}
+
+function normalizeStringOrUndefined(value: unknown): string | undefined {
+    return value !== undefined && value !== null
+        ? String(value)
+        : undefined
+}
+
+function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | undefined {
+    if (typeof value !== 'object' || value === null) {
+        return undefined
+    }
+
+    const post = value as Record<string, unknown>
+
+    return {
+        categories: normalizeTaxonomyArray(post.categories),
+        challengeIds: Array.isArray(post.challengeIds)
+            ? post.challengeIds.map((item: any) => String(item))
+            : [],
+        content: normalizeStringOrUndefined(post.content),
+        createdAt: normalizeString(post.createdAt),
+        createdByHandle: normalizeStringOrUndefined(post.createdByHandle),
+        createdById: Number(post.createdById || 0),
+        id: normalizeString(post.id),
+        industries: normalizeTaxonomyArray(post.industries),
+        projectId: normalizeStringOrUndefined(post.projectId),
+        status: normalizeString(post.status),
+        title: normalizeString(post.title),
+    }
+}
+
+export async function fetchProjectShowcasePost(
+    projectId: string,
+    postId: string,
+): Promise<ProjectShowcasePost> {
+    try {
+        const response = await xhrGetAsync<unknown>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/posts/${encodeURIComponent(postId)}`,
+        )
+
+        const normalized = normalizeProjectShowcasePost(response)
+        if (!normalized) {
+            throw new Error('Failed to normalize showcase post')
+        }
+
+        return normalized
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch showcase post')
+    }
+}
+
+export async function createProjectShowcasePost(
+    projectId: string,
+    payload: {
+        title: string
+        content: string
+        industryIds: string[]
+        categoryIds: string[]
+        challengeIds?: string[]
+    },
+): Promise<ProjectShowcasePost> {
+    try {
+        const response = await xhrPostAsync<typeof payload, unknown>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/posts`,
+            payload,
+        )
+
+        const normalized = normalizeProjectShowcasePost(response)
+        if (!normalized) {
+            throw new Error('Failed to normalize showcase post')
+        }
+
+        return normalized
+    } catch (error) {
+        throw normalizeError(error, 'Failed to create showcase post')
+    }
+}
+
+export async function updateProjectShowcasePost(
+    projectId: string,
+    postId: string,
+    payload: {
+        title?: string
+        content?: string
+        industryIds?: string[]
+        categoryIds?: string[]
+        challengeIds?: string[]
+        status?: string
+    },
+): Promise<ProjectShowcasePost> {
+    try {
+        const response = await xhrPatchAsync<typeof payload, unknown>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/posts/${encodeURIComponent(postId)}`,
+            payload,
+        )
+
+        const normalized = normalizeProjectShowcasePost(response)
+        if (!normalized) {
+            throw new Error('Failed to normalize showcase post')
+        }
+
+        return normalized
+    } catch (error) {
+        throw normalizeError(error, 'Failed to update showcase post')
+    }
+}
+
+export async function archiveProjectShowcasePost(
+    projectId: string,
+    postId: string,
+): Promise<ProjectShowcasePost> {
+    return updateProjectShowcasePost(projectId, postId, { status: 'ARCHIVED' })
+}
+
 function normalizeTaxonomyItem(value: unknown): ProjectShowcasePostCategory | undefined {
     if (typeof value !== 'object' || value === null) {
         return undefined
@@ -170,6 +303,46 @@ function normalizeTaxonomyItem(value: unknown): ProjectShowcasePostCategory | un
     }
 
     return { id, name: trimmedName }
+}
+
+export async function createProjectShowcasePostIndustry(
+    name: string,
+): Promise<ProjectShowcasePostIndustry> {
+    try {
+        const response = await xhrPostAsync<{ name: string }, unknown>(
+            `${PROJECTS_API_URL}/posts/industries`,
+            { name },
+        )
+
+        const normalized = normalizeTaxonomyItem(response)
+        if (!normalized) {
+            throw new Error('Failed to normalize showcase post industry')
+        }
+
+        return normalized
+    } catch (error) {
+        throw normalizeError(error, 'Failed to create showcase post industry')
+    }
+}
+
+export async function createProjectShowcasePostCategory(
+    name: string,
+): Promise<ProjectShowcasePostCategory> {
+    try {
+        const response = await xhrPostAsync<{ name: string }, unknown>(
+            `${PROJECTS_API_URL}/posts/categories`,
+            { name },
+        )
+
+        const normalized = normalizeTaxonomyItem(response)
+        if (!normalized) {
+            throw new Error('Failed to normalize showcase post category')
+        }
+
+        return normalized
+    } catch (error) {
+        throw normalizeError(error, 'Failed to create showcase post category')
+    }
 }
 
 function sortTaxonomyItems<T extends ProjectShowcasePostCategory>(items: T[]): T[] {

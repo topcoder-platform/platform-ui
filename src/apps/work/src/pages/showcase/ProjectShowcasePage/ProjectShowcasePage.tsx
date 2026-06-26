@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import {
     ChangeEvent,
     FC,
@@ -9,10 +10,11 @@ import {
 } from 'react'
 import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
+import { FormProvider, useForm, UseFormReturn } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
-import { LoadingSpinner } from '~/libs/ui'
+import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
 import {
     ErrorMessage,
@@ -21,10 +23,27 @@ import {
     ProjectsShowcaseFilter,
 } from '../../../lib/components'
 import {
+    archiveProjectShowcasePost,
+    createProjectShowcasePost,
+    createProjectShowcasePostCategory,
+    createProjectShowcasePostIndustry,
+    fetchChallenge,
+    fetchChallenges,
+    fetchProjectShowcasePost,
+    updateProjectShowcasePost,
+} from '../../../lib/services'
+import {
     useFetchProjectShowcasePostCategories,
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
 } from '../../../lib/hooks'
+import {
+    FormMarkdownEditor,
+    FormSelectField,
+    FormSelectOption,
+    FormTextField,
+} from '../../../lib/components/form'
+import { showErrorToast, showSuccessToast } from '../../../lib/utils/toast.utils'
 import type {
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
@@ -35,10 +54,7 @@ import type {
 
 import styles from './ProjectShowcasePage.module.scss'
 
-interface SelectOption {
-    label: string
-    value: string
-}
+type SelectOption = FormSelectOption
 
 const DEFAULT_FILTERS: ProjectShowcasePostFilters = {
     categoryId: undefined,
@@ -117,6 +133,74 @@ function normalizeTaxonomyOption(item: ProjectShowcasePostCategory | ProjectShow
         label: item.name,
         value: item.id,
     }
+}
+
+interface ProjectShowcasePostFormData {
+    title: string
+    content: string
+    industryIds: string[]
+    categoryIds: string[]
+    challengeId?: string
+}
+
+function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormData {
+    return {
+        categoryIds: post?.categories.map(item => item.id) || [],
+        challengeId: post?.challengeIds?.[0] || undefined,
+        content: post?.content || '',
+        industryIds: post?.industries.map(item => item.id) || [],
+        title: post?.title || '',
+    }
+}
+
+async function loadProjectChallenges(
+    projectId: string,
+    inputValue: string,
+): Promise<FormSelectOption[]> {
+    const response = await fetchChallenges(
+        { name: inputValue, projectId },
+        { page: 1, perPage: 20 },
+    )
+
+    return response.data.map(challenge => ({
+        label: challenge.name,
+        value: challenge.id,
+    }))
+}
+
+async function resolveTaxonomyIds<
+    T extends ProjectShowcasePostCategory | ProjectShowcasePostIndustry,
+>(
+    selectedIds: string[],
+    options: SelectOption[],
+    createEntity: (name: string) => Promise<T>,
+): Promise<string[]> {
+    const existingIds = new Set(options.map(option => option.value)
+        .filter(Boolean))
+    const createdNames: string[] = []
+    const createdNameSet = new Set<string>()
+    const resolvedIds: string[] = []
+
+    for (const selectedId of selectedIds) {
+        const trimmedId = selectedId.trim()
+        if (trimmedId) {
+            if (existingIds.has(trimmedId)) {
+                resolvedIds.push(trimmedId)
+            } else if (!createdNameSet.has(trimmedId)) {
+                createdNameSet.add(trimmedId)
+                createdNames.push(trimmedId)
+            }
+        }
+    }
+
+    const createdItems = await Promise.all(
+        createdNames.map(name => createEntity(name)),
+    )
+
+    return [
+        ...resolvedIds,
+        ...createdItems.map(item => item.id),
+    ]
 }
 
 function createTaxonomyOptions(
@@ -353,6 +437,178 @@ export const ProjectShowcasePage: FC = () => {
     const handleSortByIndustry = useCallback(() => handleSort('industry'), [handleSort])
     const handleSortByCategory = useCallback(() => handleSort('category'), [handleSort])
 
+    const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false)
+    const [manageMode, setManageMode] = useState<'create' | 'edit'>('create')
+    const [selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined)
+    const [isLoadingPostDetails, setIsLoadingPostDetails] = useState<boolean>(false)
+    const [selectedChallengeOption, setSelectedChallengeOption] = useState<FormSelectOption | undefined>(undefined)
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [formError, setFormError] = useState<string | undefined>(undefined)
+    const [isPublishing, setIsPublishing] = useState<boolean>(false)
+    const [isUnpublishing, setIsUnpublishing] = useState<boolean>(false)
+    const [isRestoring, setIsRestoring] = useState<boolean>(false)
+    const confirmation = useConfirmationModal()
+
+    const handleOpenCreateModal = useCallback(() => {
+        setManageMode('create')
+        setIsManageModalOpen(true)
+    }, [])
+
+    const handleEditPost = useCallback((postId: string) => {
+        setManageMode('edit')
+        setSelectedPostId(postId)
+        setIsManageModalOpen(true)
+    }, [])
+
+    const handlePublishPost = useCallback(async (post: ProjectShowcasePost) => {
+        if (!projectId) {
+            return
+        }
+
+        const confirmed = await confirmation.confirm({
+            content: (
+                <p>
+                    Are you sure you want to publish the post
+                    {' '}
+                    <strong>{post.title}</strong>
+                    ?
+                </p>
+            ),
+            title: 'Publish Post',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        setIsPublishing(true)
+
+        try {
+            await updateProjectShowcasePost(projectId, post.id, {
+                status: 'PUBLISHED',
+            })
+            await postsResult.mutate()
+            showSuccessToast('Post published successfully')
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to publish post.')
+        } finally {
+            setIsPublishing(false)
+        }
+    }, [confirmation, postsResult, projectId])
+
+    const handleUnpublishPost = useCallback(async (post: ProjectShowcasePost) => {
+        if (!projectId) {
+            return
+        }
+
+        const confirmed = await confirmation.confirm({
+            content: (
+                <p>
+                    Are you sure you want to unpublish the post
+                    {' '}
+                    <strong>{post.title}</strong>
+                    ?
+                </p>
+            ),
+            title: 'Unpublish Post',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        setIsUnpublishing(true)
+
+        try {
+            await updateProjectShowcasePost(projectId, post.id, {
+                status: 'DRAFT',
+            })
+            await postsResult.mutate()
+            showSuccessToast('Post unpublished successfully')
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to unpublish post.')
+        } finally {
+            setIsUnpublishing(false)
+        }
+    }, [confirmation, postsResult, projectId])
+
+    const handleRestorePost = useCallback(async (post: ProjectShowcasePost) => {
+        if (!projectId) {
+            return
+        }
+
+        const confirmed = await confirmation.confirm({
+            content: (
+                <p>
+                    Are you sure you want to restore the archived post
+                    {' '}
+                    <strong>{post.title}</strong>
+                    ?
+                </p>
+            ),
+            title: 'Restore Post',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        setIsRestoring(true)
+
+        try {
+            await updateProjectShowcasePost(projectId, post.id, {
+                status: 'DRAFT',
+            })
+            await postsResult.mutate()
+            showSuccessToast('Post restored successfully')
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to restore post.')
+        } finally {
+            setIsRestoring(false)
+        }
+    }, [confirmation, postsResult, projectId])
+
+    const handleArchivePost = useCallback(async (post: ProjectShowcasePost) => {
+        if (!projectId) {
+            return
+        }
+
+        const confirmed = await confirmation.confirm({
+            content: (
+                <p>
+                    Are you sure you want to archive the post
+                    {' '}
+                    <strong>{post.title}</strong>
+                    ?
+                </p>
+            ),
+            title: 'Archive Post',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        try {
+            await archiveProjectShowcasePost(projectId, post.id)
+            await postsResult.mutate()
+            showSuccessToast('Post archived successfully')
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to archive post.')
+        }
+    }, [confirmation, postsResult, projectId])
+
+    const formMethods = useForm<ProjectShowcasePostFormData>({
+        defaultValues: mapPostToFormData(),
+        mode: 'all',
+    })
+
+    const {
+        handleSubmit,
+        reset,
+        setError,
+    }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
+
     const handleResetFilters = useCallback(() => {
         setFilters({
             categoryId: undefined,
@@ -378,16 +634,85 @@ export const ProjectShowcasePage: FC = () => {
             .catch(() => undefined)
     }, [categoriesResult, industriesResult, postsResult])
 
+    const formChallengeOptions = useMemo<FormSelectOption[]>((): FormSelectOption[] => (
+        selectedChallengeOption ? [selectedChallengeOption] : []
+    ), [selectedChallengeOption])
+
+    const pageWrapperActions = useMemo(() => (
+        <Button
+            label='Create Post'
+            onClick={handleOpenCreateModal}
+            primary
+            size='md'
+        />
+    ), [handleOpenCreateModal])
+
+    useEffect(() => {
+        if (!isManageModalOpen) {
+            return
+        }
+
+        if (manageMode === 'create') {
+            reset(mapPostToFormData())
+            setSelectedChallengeOption(undefined)
+            setFormError(undefined)
+            setSelectedPostId(undefined)
+            return
+        }
+
+        if (!selectedPostId || !projectId) {
+            return
+        }
+
+        setIsLoadingPostDetails(true)
+        fetchProjectShowcasePost(projectId, selectedPostId)
+            .then(post => {
+                setSelectedPostId(post.id)
+                reset(mapPostToFormData(post))
+                setFormError(undefined)
+
+                const challengeId = post.challengeIds?.[0]
+                if (challengeId) {
+                    fetchChallenge(challengeId)
+                        .then(challenge => {
+                            setSelectedChallengeOption({
+                                label: challenge.name,
+                                value: challenge.id,
+                            })
+                        })
+                        .catch(() => {
+                            setSelectedChallengeOption(undefined)
+                        })
+                } else {
+                    setSelectedChallengeOption(undefined)
+                }
+            })
+            .catch(err => {
+                setFormError(err instanceof Error ? err.message : 'Unable to load post details.')
+            })
+            .finally(() => {
+                setIsLoadingPostDetails(false)
+            })
+    }, [fetchChallenge, fetchProjectShowcasePost, isManageModalOpen, manageMode, projectId, reset, selectedPostId])
+
     if (!hasProjectId) {
         return (
-            <PageWrapper pageTitle='Showcase' breadCrumb={[]}>
+            <PageWrapper
+                pageTitle='Showcase'
+                breadCrumb={[]}
+                rightHeader={pageWrapperActions}
+            >
                 <ErrorMessage message='Project id is required.' />
             </PageWrapper>
         )
     }
 
     return (
-        <PageWrapper pageTitle='Showcase' breadCrumb={[]}>
+        <PageWrapper
+            pageTitle='Showcase'
+            breadCrumb={[]}
+            rightHeader={pageWrapperActions}
+        >
             <ProjectListTabs projectId={projectId as string} />
             <div className={styles.container}>
                 <ProjectsShowcaseFilter
@@ -455,12 +780,13 @@ export const ProjectShowcasePage: FC = () => {
                                         {getSortIndicator(sortBy, sortOrder, 'category')}
                                     </button>
                                 </th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading && filteredPosts.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className={styles.loadingRow}>
+                                    <td colSpan={7} className={styles.loadingRow}>
                                         <LoadingSpinner inline />
                                     </td>
                                 </tr>
@@ -468,7 +794,7 @@ export const ProjectShowcasePage: FC = () => {
 
                             {!isLoading && filteredPosts.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className={styles.emptyRow}>
+                                    <td colSpan={7} className={styles.emptyRow}>
                                         No showcase posts found.
                                     </td>
                                 </tr>
@@ -497,6 +823,55 @@ export const ProjectShowcasePage: FC = () => {
                                             .map(item => item.name)
                                             .join(', ') || '—'}
                                     </td>
+                                    <td className={styles.rowActions}>
+                                        {post.status !== 'ARCHIVED' && (
+                                            <button
+                                                type='button'
+                                                className={styles.actionButton}
+                                                onClick={function onClick() { handleEditPost(post.id) }}
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
+                                        {post.status === 'DRAFT' && (
+                                            <button
+                                                type='button'
+                                                className={styles.actionButton}
+                                                disabled={isPublishing}
+                                                onClick={function onClick() { handlePublishPost(post) }}
+                                            >
+                                                Publish
+                                            </button>
+                                        )}
+                                        {post.status === 'PUBLISHED' && (
+                                            <button
+                                                type='button'
+                                                className={styles.actionButton}
+                                                disabled={isUnpublishing}
+                                                onClick={function onClick() { handleUnpublishPost(post) }}
+                                            >
+                                                Unpublish
+                                            </button>
+                                        )}
+                                        {post.status === 'ARCHIVED' ? (
+                                            <button
+                                                type='button'
+                                                className={styles.actionButton}
+                                                disabled={isRestoring}
+                                                onClick={function onClick() { handleRestorePost(post) }}
+                                            >
+                                                Restore
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type='button'
+                                                className={classNames(styles.actionButton, styles.actionDelete)}
+                                                onClick={function onClick() { handleArchivePost(post) }}
+                                            >
+                                                Archive
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -514,6 +889,193 @@ export const ProjectShowcasePage: FC = () => {
                     />
                 )}
             </div>
+
+            <BaseModal
+                open={isManageModalOpen}
+                title={manageMode === 'create' ? 'Create Post' : 'Edit Post'}
+                onClose={function onClose() {
+                    setIsManageModalOpen(false)
+                    setFormError(undefined)
+                }}
+                size='body'
+            >
+                <FormProvider {...formMethods}>
+                    <form
+                        className={styles.modalForm}
+                        onSubmit={handleSubmit(async data => {
+                            if (!projectId) {
+                                return
+                            }
+
+                            setFormError(undefined)
+                            setIsSaving(true)
+
+                            if (!data.title.trim()) {
+                                setError('title', { message: 'Title is required.', type: 'required' })
+                            }
+
+                            if (!data.content.trim()) {
+                                setError('content', { message: 'Content is required.', type: 'required' })
+                            }
+
+                            if (!data.industryIds.length) {
+                                setError('industryIds', { message: 'Select at least one industry.', type: 'required' })
+                            }
+
+                            if (!data.categoryIds.length) {
+                                setError('categoryIds', { message: 'Select at least one category.', type: 'required' })
+                            }
+
+                            if (
+                                !data.title.trim()
+                                || !data.content.trim()
+                                || !data.industryIds.length
+                                || !data.categoryIds.length
+                            ) {
+                                setIsSaving(false)
+                                return
+                            }
+
+                            try {
+                                const resolvedIndustryIds = await resolveTaxonomyIds(
+                                    data.industryIds,
+                                    industryOptions,
+                                    createProjectShowcasePostIndustry,
+                                )
+                                const resolvedCategoryIds = await resolveTaxonomyIds(
+                                    data.categoryIds,
+                                    categoryOptions,
+                                    createProjectShowcasePostCategory,
+                                )
+
+                                if (manageMode === 'create') {
+                                    await createProjectShowcasePost(projectId, {
+                                        categoryIds: resolvedCategoryIds,
+                                        challengeIds: data.challengeId ? [data.challengeId] : [],
+                                        content: data.content.trim(),
+                                        industryIds: resolvedIndustryIds,
+                                        title: data.title.trim(),
+                                    })
+                                    setIsManageModalOpen(false)
+                                    await Promise.all([
+                                        postsResult.mutate(),
+                                        industriesResult.mutate(),
+                                        categoriesResult.mutate(),
+                                    ])
+                                    showSuccessToast('Post created successfully')
+                                } else if (selectedPostId) {
+                                    await updateProjectShowcasePost(projectId, selectedPostId, {
+                                        categoryIds: resolvedCategoryIds,
+                                        challengeIds: data.challengeId ? [data.challengeId] : [],
+                                        content: data.content.trim(),
+                                        industryIds: resolvedIndustryIds,
+                                        title: data.title.trim(),
+                                    })
+                                    setIsManageModalOpen(false)
+                                    await Promise.all([
+                                        postsResult.mutate(),
+                                        industriesResult.mutate(),
+                                        categoriesResult.mutate(),
+                                    ])
+                                    showSuccessToast('Post updated successfully')
+                                }
+                            } catch (err) {
+                                const message = err instanceof Error
+                                    ? err.message
+                                    : 'Unable to save post.'
+                                setFormError(message)
+                            } finally {
+                                setIsSaving(false)
+                            }
+                        })}
+                    >
+                        <div className={styles.modalBody}>
+                            {formError && (
+                                <div className={styles.modalError}>
+                                    <ErrorMessage message={formError} />
+                                </div>
+                            )}
+
+                            <div className={styles.modalField}>
+                                <FormTextField
+                                    label='Title'
+                                    name='title'
+                                    placeholder='Enter title for the post'
+                                    required
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormMarkdownEditor
+                                    label='Content'
+                                    name='content'
+                                    required
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormSelectField
+                                    label='Industries'
+                                    name='industryIds'
+                                    options={industryOptions}
+                                    isMulti
+                                    isCreatable
+                                    isClearable
+                                    required
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormSelectField
+                                    label='Categories'
+                                    name='categoryIds'
+                                    options={categoryOptions}
+                                    isMulti
+                                    isCreatable
+                                    isClearable
+                                    required
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormSelectField
+                                    label='Challenge'
+                                    name='challengeId'
+                                    isAsync
+                                    isClearable
+                                    loadOptions={function loadOptions(inputValue: string) {
+                                        return loadProjectChallenges(projectId ?? '', inputValue)
+                                    }}
+                                    options={formChallengeOptions}
+                                    placeholder='Select a challenge'
+                                />
+                            </div>
+                        </div>
+
+                        <footer className={styles.modalFooter}>
+                            <Button
+                                label='Cancel'
+                                onClick={function onClick() {
+                                    setIsManageModalOpen(false)
+                                    setFormError(undefined)
+                                }}
+                                secondary
+                                size='lg'
+                                type='button'
+                            />
+                            <Button
+                                label={manageMode === 'create' ? 'Create' : 'Save'}
+                                primary
+                                size='lg'
+                                type='submit'
+                                disabled={isSaving || isLoadingPostDetails}
+                            />
+                        </footer>
+                    </form>
+                </FormProvider>
+            </BaseModal>
+
+            {confirmation.modal}
         </PageWrapper>
     )
 }
