@@ -9,6 +9,7 @@ import { useFetchEngagements } from '../../hooks/useFetchEngagements'
 import type { Challenge } from '../../models'
 import type { BillingAccountDetails } from '../../services'
 import { fetchChallenge } from '../../services/challenges.service'
+import { fetchAssignmentPaymentSplits } from '../../services/payments.service'
 
 import BillingAccountLineItemsModal from './BillingAccountLineItemsModal'
 
@@ -22,6 +23,10 @@ jest.mock('../../hooks/useFetchEngagements', () => ({
 
 jest.mock('../../services/challenges.service', () => ({
     fetchChallenge: jest.fn(),
+}))
+
+jest.mock('../../services/payments.service', () => ({
+    fetchAssignmentPaymentSplits: jest.fn(),
 }))
 
 jest.mock('~/config', () => ({
@@ -64,6 +69,9 @@ jest.mock('~/libs/ui', () => ({
 
 const mockedUseFetchEngagements = useFetchEngagements as jest.MockedFunction<typeof useFetchEngagements>
 const mockedFetchChallenge = fetchChallenge as jest.MockedFunction<typeof fetchChallenge>
+const mockedFetchAssignmentPaymentSplits = fetchAssignmentPaymentSplits as jest.MockedFunction<
+    typeof fetchAssignmentPaymentSplits
+>
 let challengeMarkupById: Map<string, number>
 
 const baseBillingAccountDetails: BillingAccountDetails = {
@@ -104,6 +112,8 @@ describe('BillingAccountLineItemsModal', () => {
             name: `Challenge ${challengeId}`,
             status: 'ACTIVE',
         }))
+        mockedFetchAssignmentPaymentSplits.mockReset()
+        mockedFetchAssignmentPaymentSplits.mockResolvedValue([])
         mockedUseFetchEngagements.mockReset()
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [],
@@ -404,6 +414,47 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
         expect(screen.queryByText('$9.24'))
             .toBeNull()
+    })
+
+    it('uses finance engagement payment splits before API-derived member-payment fallbacks', async () => {
+        mockedFetchAssignmentPaymentSplits.mockResolvedValue([
+            {
+                billingAccountId: '80001063',
+                challengeFee: '420.66',
+                paymentAmount: '342.00',
+                paymentId: 'd2223b35-10fc-410e-b3f5-6d6ac482caef',
+            },
+        ])
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '762.66',
+                    date: '2026-06-02T13:10:48.235Z',
+                    externalId: 'assignment-5245',
+                    externalName: 'Eng BA',
+                    externalType: 'ENGAGEMENT',
+                    memberPaymentAmount: '753.42',
+                },
+            ],
+            consumedBudget: 762.66,
+            markup: 0.01226408,
+            totalBudgetRemaining: 237.34,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$342.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$420.66'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$753.42'))
+            .toBeNull()
+        expect(screen.queryByText('$9.24'))
+            .toBeNull()
+        expect(mockedFetchAssignmentPaymentSplits)
+            .toHaveBeenCalledWith('assignment-5245')
     })
 
     it('builds engagement links from assignment-backed billing rows for copilot views', () => {

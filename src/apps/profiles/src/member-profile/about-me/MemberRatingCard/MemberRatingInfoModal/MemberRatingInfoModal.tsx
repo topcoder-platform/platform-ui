@@ -265,6 +265,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const displayName: string = getMemberDisplayName(props.profile)
     const titleDisplayName: string = displayName
         .toUpperCase()
+    const ratingColor: string = getRatingColor(props.rating)
     const selectedRatingTier: RatingTier = getRatingTier(props.rating)
     const distributionRanges: RatingDistributionRange[] = useMemo(() => (
         getDistributionRanges(props.ratingDistribution?.distribution)
@@ -311,7 +312,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                 <div className={styles.summaryPanel}>
                     <div className={styles.summaryMetric}>
                         <span className={styles.summaryLabel}>Overall Rating</span>
-                        <span className={styles.ratingValue} style={{ color: getRatingColor(props.rating) }}>
+                        <span className={styles.ratingValue} style={{ color: ratingColor }}>
                             {props.rating ?? '--'}
                         </span>
                         <span className={styles.summaryMeta}>{getRatingTierName(props.rating)}</span>
@@ -370,7 +371,10 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                                         shouldStackMarkerRating && styles.memberMarkerStacked,
                                     )}
                                     data-testid='rating-member-marker'
-                                    style={{ left: `${markerPosition}%` }}
+                                    style={{
+                                        color: ratingColor,
+                                        left: `${markerPosition}%`,
+                                    }}
                                 >
                                     <div className={styles.markerBadge}>
                                         <span className={styles.markerAvatar}>
@@ -382,10 +386,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                                                 </span>
                                             )}
                                         </span>
-                                        <span
-                                            className={styles.markerRating}
-                                            style={{ color: getRatingColor(props.rating) }}
-                                        >
+                                        <span className={styles.markerRating}>
                                             {props.rating}
                                         </span>
                                     </div>

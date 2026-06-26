@@ -1,4 +1,4 @@
-import type { MemberStats, UserStats } from '~/libs/core'
+import type { MemberStats, UserStats, UserStatsHistory } from '~/libs/core'
 
 import {
     getActiveTracks,
@@ -10,6 +10,7 @@ import {
 
 jest.mock('~/libs/core', () => ({
     useMemberStats: jest.fn(),
+    useStatsHistory: jest.fn(),
 }), {
     virtual: true,
 })
@@ -329,6 +330,107 @@ describe('getActiveTracks', () => {
             }))
         expect(activeTracks.map(track => track.name))
             .not.toContain('AI Engineering')
+    })
+
+    it('deduplicates Development totals when AI Engineering and Challenge share challenge history', () => {
+        const sharedChallengeHistory = [
+            {
+                challengeId: 'sales-app-dev-ai-expo',
+                challengeName: 'Sales App dev AI expo',
+                newRating: 1200,
+                placement: 1,
+                ratingDate: 1781237773026,
+            },
+            {
+                challengeId: 'sales-app-dev-ai',
+                challengeName: 'Sales App dev AI',
+                newRating: 1200,
+                placement: 1,
+                ratingDate: 1781237773027,
+            },
+        ]
+        const statsHistory = {
+            DATA_SCIENCE: {
+                'AI Engineering': {
+                    history: [
+                        {
+                            challengeId: 'dev-mm-with-ai',
+                            challengeName: 'Dev MM with AI',
+                            newRating: 1200,
+                            placement: 1,
+                            ratingDate: 1781237773021,
+                        },
+                        {
+                            challengeId: 'ds-mm-with-ai-exponential-league',
+                            challengeName: 'DS MM with AI Exponential League',
+                            newRating: 1200,
+                            placement: 1,
+                            ratingDate: 1781237773022,
+                        },
+                        {
+                            challengeId: 'ds-with-ai-exponential-league',
+                            challengeName: 'DS with AI Exponential League',
+                            newRating: 1200,
+                            placement: 1,
+                            ratingDate: 1781237773023,
+                        },
+                        {
+                            challengeId: 'sales-app-ds-ai',
+                            challengeName: 'Sales App DS AI',
+                            newRating: 1200,
+                            placement: 1,
+                            ratingDate: 1781237773024,
+                        },
+                        ...sharedChallengeHistory,
+                    ],
+                },
+            },
+            DEVELOP: {
+                subTracks: [
+                    {
+                        history: sharedChallengeHistory,
+                        name: 'Challenge',
+                    },
+                ],
+            },
+        } as unknown as UserStatsHistory
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            DATA_SCIENCE: {
+                'AI Engineering': {
+                    challenges: 6,
+                    rank: {
+                        rating: 1200,
+                    },
+                    submissions: {
+                        submissions: 6,
+                    },
+                    wins: 6,
+                },
+            },
+            DEVELOP: {
+                subTracks: [
+                    {
+                        challenges: 2,
+                        name: 'Challenge',
+                        submissions: {
+                            submissions: 2,
+                        },
+                        wins: 2,
+                    },
+                ],
+            },
+        } as unknown as UserStats, statsHistory)
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+
+        expect(developmentTrack)
+            .toEqual(expect.objectContaining({
+                challenges: 6,
+                submissions: 6,
+                wins: 6,
+            }))
+        expect(developmentTrack?.subTracks.map(track => track.name))
+            .toEqual(['Challenge', 'AI Engineering'])
     })
 
     it('keeps rated custom non-AI data science paths visible as member stats tracks', () => {
