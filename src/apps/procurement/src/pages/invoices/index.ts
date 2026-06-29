@@ -1,0 +1,1 @@
+export { ProcurementInvoicesPage } from './ProcurementInvoicesPage'
