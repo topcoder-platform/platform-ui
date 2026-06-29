@@ -140,13 +140,13 @@ interface ProjectShowcasePostFormData {
     content: string
     industryIds: string[]
     categoryIds: string[]
-    challengeId?: string
+    challengeIds: string[]
 }
 
 function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormData {
     return {
         categoryIds: post?.categories.map(item => item.id) || [],
-        challengeId: post?.challengeIds?.[0] || undefined,
+        challengeIds: post?.challengeIds || [],
         content: post?.content || '',
         industryIds: post?.industries.map(item => item.id) || [],
         title: post?.title || '',
@@ -441,7 +441,7 @@ export const ProjectShowcasePage: FC = () => {
     const [manageMode, setManageMode] = useState<'create' | 'edit'>('create')
     const [selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined)
     const [isLoadingPostDetails, setIsLoadingPostDetails] = useState<boolean>(false)
-    const [selectedChallengeOption, setSelectedChallengeOption] = useState<FormSelectOption | undefined>(undefined)
+    const [selectedChallengeOptions, setSelectedChallengeOptions] = useState<FormSelectOption[]>([])
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [formError, setFormError] = useState<string | undefined>(undefined)
     const [isPublishing, setIsPublishing] = useState<boolean>(false)
@@ -607,6 +607,7 @@ export const ProjectShowcasePage: FC = () => {
         handleSubmit,
         reset,
         setError,
+        setValue,
     }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
 
     const handleResetFilters = useCallback(() => {
@@ -635,8 +636,53 @@ export const ProjectShowcasePage: FC = () => {
     }, [categoriesResult, industriesResult, postsResult])
 
     const formChallengeOptions = useMemo<FormSelectOption[]>((): FormSelectOption[] => (
-        selectedChallengeOption ? [selectedChallengeOption] : []
-    ), [selectedChallengeOption])
+        selectedChallengeOptions
+    ), [selectedChallengeOptions])
+
+    const mapChallengeFromFieldValue = useCallback(
+        (value: unknown): FormSelectOption[] => {
+            if (!Array.isArray(value)) {
+                return []
+            }
+
+            return value
+                .map(item => {
+                    if (typeof item === 'string') {
+                        return selectedChallengeOptions.find(option => option.value === item) || {
+                            label: item,
+                            value: item,
+                        }
+                    }
+
+                    if (typeof item === 'object' && item && 'value' in item) {
+                        return item as FormSelectOption
+                    }
+
+                    return undefined
+                })
+                .filter((option): option is FormSelectOption => !!option)
+        },
+        [selectedChallengeOptions],
+    )
+
+    const mapChallengeToFieldValue = useCallback(
+        (selected: unknown): string[] => {
+            if (!selected) {
+                setSelectedChallengeOptions([])
+                return []
+            }
+
+            const selectedOptions = Array.isArray(selected)
+                ? selected as FormSelectOption[]
+                : typeof selected === 'object' && selected && 'value' in selected
+                    ? [selected as FormSelectOption]
+                    : []
+
+            setSelectedChallengeOptions(selectedOptions)
+            return selectedOptions.map(option => option.value)
+        },
+        [],
+    )
 
     const pageWrapperActions = useMemo(() => (
         <Button
@@ -650,7 +696,7 @@ export const ProjectShowcasePage: FC = () => {
     useEffect(() => {
         if (!isManageModalOpen) {
             reset(mapPostToFormData())
-            setSelectedChallengeOption(undefined)
+            setSelectedChallengeOptions([])
             setFormError(undefined)
             setSelectedPostId(undefined)
             return
@@ -658,7 +704,7 @@ export const ProjectShowcasePage: FC = () => {
 
         if (manageMode === 'create') {
             reset(mapPostToFormData())
-            setSelectedChallengeOption(undefined)
+            setSelectedChallengeOptions([])
             setFormError(undefined)
             setSelectedPostId(undefined)
             return
@@ -675,20 +721,24 @@ export const ProjectShowcasePage: FC = () => {
                 reset(mapPostToFormData(post))
                 setFormError(undefined)
 
-                const challengeId = post.challengeIds?.[0]
-                if (challengeId) {
-                    fetchChallenge(challengeId)
-                        .then(challenge => {
-                            setSelectedChallengeOption({
+                const challengeIds = post.challengeIds || []
+                if (challengeIds.length) {
+                    Promise.all(challengeIds.map(challengeId => fetchChallenge(challengeId)))
+                        .then(challenges => {
+                            const challengeOptions = challenges.map(challenge => ({
                                 label: challenge.name,
                                 value: challenge.id,
-                            })
+                            }))
+
+                            setSelectedChallengeOptions(challengeOptions)
+                            setValue('challengeIds', challengeIds)
                         })
                         .catch(() => {
-                            setSelectedChallengeOption(undefined)
+                            setSelectedChallengeOptions([])
                         })
                 } else {
-                    setSelectedChallengeOption(undefined)
+                    setSelectedChallengeOptions([])
+                    setValue('challengeIds', [])
                 }
             })
             .catch(err => {
@@ -956,7 +1006,7 @@ export const ProjectShowcasePage: FC = () => {
                                 if (manageMode === 'create') {
                                     await createProjectShowcasePost(projectId, {
                                         categoryIds: resolvedCategoryIds,
-                                        challengeIds: data.challengeId ? [data.challengeId] : [],
+                                        challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
                                         title: data.title.trim(),
@@ -971,7 +1021,7 @@ export const ProjectShowcasePage: FC = () => {
                                 } else if (selectedPostId) {
                                     await updateProjectShowcasePost(projectId, selectedPostId, {
                                         categoryIds: resolvedCategoryIds,
-                                        challengeIds: data.challengeId ? [data.challengeId] : [],
+                                        challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
                                         title: data.title.trim(),
@@ -1045,9 +1095,12 @@ export const ProjectShowcasePage: FC = () => {
                             <div className={styles.modalField}>
                                 <FormSelectField
                                     label='Challenge'
-                                    name='challengeId'
+                                    name='challengeIds'
                                     isAsync
+                                    isMulti
                                     isClearable
+                                    fromFieldValue={mapChallengeFromFieldValue}
+                                    toFieldValue={mapChallengeToFieldValue}
                                     loadOptions={function loadOptions(inputValue: string) {
                                         return loadProjectChallenges(projectId ?? '', inputValue)
                                     }}
