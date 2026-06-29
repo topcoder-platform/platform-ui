@@ -205,10 +205,10 @@ async function resolveTaxonomyIds<
 
 function createTaxonomyOptions(
     items: Array<ProjectShowcasePostCategory | ProjectShowcasePostIndustry>,
-    defaultLabel: string,
+    defaultLabel?: string,
 ): SelectOption[] {
     return [
-        { label: defaultLabel, value: '' },
+        ...(defaultLabel ? [{ label: defaultLabel, value: '' }] : []),
         ...items.map(normalizeTaxonomyOption),
     ]
 }
@@ -352,12 +352,12 @@ export const ProjectShowcasePage: FC = () => {
     }, [keywordInput])
 
     const industryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(industriesResult.items, 'All industries'),
+        () => createTaxonomyOptions(industriesResult.items),
         [industriesResult.items],
     )
 
     const categoryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(categoriesResult.items, 'All categories'),
+        () => createTaxonomyOptions(categoriesResult.items),
         [categoriesResult.items],
     )
 
@@ -649,6 +649,10 @@ export const ProjectShowcasePage: FC = () => {
 
     useEffect(() => {
         if (!isManageModalOpen) {
+            reset(mapPostToFormData())
+            setSelectedChallengeOption(undefined)
+            setFormError(undefined)
+            setSelectedPostId(undefined)
             return
         }
 
@@ -894,6 +898,7 @@ export const ProjectShowcasePage: FC = () => {
                 open={isManageModalOpen}
                 title={manageMode === 'create' ? 'Create Post' : 'Edit Post'}
                 onClose={function onClose() {
+                    setSelectedPostId(undefined)
                     setIsManageModalOpen(false)
                     setFormError(undefined)
                 }}
