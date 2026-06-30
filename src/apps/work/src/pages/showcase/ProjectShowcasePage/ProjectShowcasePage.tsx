@@ -87,7 +87,7 @@ const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.mov',
     '.avi',
 ]
-const SHOWCASE_MEDIA_FILE_PICKER_CONTAINER = 'topcoder-dev-showcase-media'
+const SHOWCASE_MEDIA_FILE_PICKER_CONTAINER = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
 
 function getStatusLabel(status: string): string {
     return status
@@ -667,7 +667,7 @@ export const ProjectShowcasePage: FC = () => {
                 setValue('media', [
                     ...existingMedia,
                     ...uploadedMedia,
-                ])
+                ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES))
             },
             onFileUploadFinished: file => {
                 if (!file || !file.url) {
@@ -1223,7 +1223,7 @@ export const ProjectShowcasePage: FC = () => {
                                                 {item.type.startsWith('image/') ? (
                                                     <img
                                                         src={item.url}
-                                                        alt={item.type}
+                                                        alt={`Post media preview ${index + 1}`}
                                                         className={styles.mediaPreview}
                                                     />
                                                 ) : (
@@ -1244,6 +1244,7 @@ export const ProjectShowcasePage: FC = () => {
                                                         type='button'
                                                         className={styles.mediaRemoveButton}
                                                         onClick={function onClick() { handleRemoveMedia(index) }}
+                                                        aria-label={`Remove media ${index + 1}`}
                                                     >
                                                         Remove
                                                     </button>
