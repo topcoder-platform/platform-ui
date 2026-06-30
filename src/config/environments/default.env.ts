@@ -163,9 +163,7 @@ export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
 export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 export const REPORTS_API = `${API.V6}/reports`
-export const PROCUREMENT_API = ENV === 'dev'
-    ? 'http://localhost:3000/v6/procurement'
-    : `${API.V6}/procurement`
+export const PROCUREMENT_API = `${API.V6}/procurement`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
