@@ -165,6 +165,87 @@
     gap: 8px;
 }
 
+.mediaSectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.mediaSectionLabel {
+    display: inline-flex;
+    font-weight: 700;
+}
+
+.mediaList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mediaItem {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    align-items: center;
+    background: #f9fafb;
+}
+
+.mediaPreview {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.mediaPreviewPlaceholder {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #e9ecef;
+    color: $black-60;
+    font-size: 11px;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 8px;
+}
+
+.mediaDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mediaLink {
+    color: $link-blue-dark;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.mediaRemoveButton {
+    border: 0;
+    background: transparent;
+    color: $red-120;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    text-decoration: underline;
+    align-self: flex-start;
+}
+
+.mediaEmpty {
+    color: $black-60;
+    font-size: 13px;
+    padding: 12px 0;
+}
 
 .loadingRow,
 .emptyRow {
