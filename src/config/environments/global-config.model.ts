@@ -116,4 +116,5 @@ export interface GlobalConfig {
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string
+    FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER: string
 }

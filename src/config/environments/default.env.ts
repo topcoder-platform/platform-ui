@@ -329,3 +329,6 @@ export const FILESTACK = {
 }
 
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
+
+export const FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
+    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER', 'topcoder-dev-showcase-media')

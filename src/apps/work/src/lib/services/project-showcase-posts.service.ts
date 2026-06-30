@@ -15,6 +15,7 @@ import type {
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostIndustry,
+    ProjectShowcasePostMedia,
     ProjectShowcasePostTaxonomyItem,
 } from '../models'
 
@@ -110,6 +111,14 @@ export async function fetchProjectShowcasePosts(
                     name: String(industry.name || ''),
                 }))
                 : [],
+            media: Array.isArray(post.media)
+                ? post.media.map((mediaItem: any) => ({
+                    id: String(mediaItem.id || ''),
+                    type: String(mediaItem.type || ''),
+                    url: String(mediaItem.url || ''),
+                }))
+                    .filter((item: any) => item.url)
+                : [],
             status: String(post.status || ''),
             title: String(post.title || ''),
         }))
@@ -177,6 +186,24 @@ function normalizeStringOrUndefined(value: unknown): string | undefined {
         : undefined
 }
 
+function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcasePostMedia[] {
+    if (!Array.isArray(value)) {
+        return []
+    }
+
+    return value
+        .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+        .map(item => {
+            const url = normalizeStringOrUndefined(item.url)
+            return {
+                id: normalizeString(item.id),
+                type: normalizeString(item.type),
+                url: url || '',
+            }
+        })
+        .filter(item => item.url)
+}
+
 function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | undefined {
     if (typeof value !== 'object' || value === null) {
         return undefined
@@ -195,6 +222,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
         createdById: Number(post.createdById || 0),
         id: normalizeString(post.id),
         industries: normalizeTaxonomyArray(post.industries),
+        media: normalizeProjectShowcasePostMediaArray(post.media),
         projectId: normalizeStringOrUndefined(post.projectId),
         status: normalizeString(post.status),
         title: normalizeString(post.title),
@@ -229,6 +257,7 @@ export async function createProjectShowcasePost(
         industryIds: string[]
         categoryIds: string[]
         challengeIds?: string[]
+        media?: Array<{ type: string; url: string }>
     },
 ): Promise<ProjectShowcasePost> {
     try {
@@ -257,6 +286,7 @@ export async function updateProjectShowcasePost(
         industryIds?: string[]
         categoryIds?: string[]
         challengeIds?: string[]
+        media?: Array<{ type: string; url: string }>
         status?: string
     },
 ): Promise<ProjectShowcasePost> {

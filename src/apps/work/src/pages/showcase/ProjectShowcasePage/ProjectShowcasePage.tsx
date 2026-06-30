@@ -8,12 +8,14 @@ import {
     useRef,
     useState,
 } from 'react'
+import { init, type PickerOptions } from 'filestack-js'
+import { FormProvider, useForm, UseFormReturn } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
-import { FormProvider, useForm, UseFormReturn } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
+import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
 import {
@@ -69,6 +71,23 @@ const STATUS_OPTIONS: SelectOption[] = [
     { label: 'Published', value: 'PUBLISHED' },
     { label: 'Archived', value: 'ARCHIVED' },
 ]
+
+const SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES = ['local_file_system']
+const SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES = 4
+const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
+    '.bmp',
+    '.gif',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.pdf',
+    '.svg',
+    '.webm',
+    '.mp4',
+    '.mov',
+    '.avi',
+]
+const SHOWCASE_MEDIA_FILE_PICKER_CONTAINER = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
 
 function getStatusLabel(status: string): string {
     return status
@@ -141,6 +160,10 @@ interface ProjectShowcasePostFormData {
     industryIds: string[]
     categoryIds: string[]
     challengeIds: string[]
+    media: Array<{
+        type: string
+        url: string
+    }>
 }
 
 function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormData {
@@ -149,6 +172,7 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
         challengeIds: post?.challengeIds || [],
         content: post?.content || '',
         industryIds: post?.industries.map(item => item.id) || [],
+        media: post?.media || [],
         title: post?.title || '',
     }
 }
@@ -447,6 +471,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isPublishing, setIsPublishing] = useState<boolean>(false)
     const [isUnpublishing, setIsUnpublishing] = useState<boolean>(false)
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
+    const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const confirmation = useConfirmationModal()
 
     const handleOpenCreateModal = useCallback(() => {
@@ -604,11 +629,89 @@ export const ProjectShowcasePage: FC = () => {
     })
 
     const {
+        getValues,
         handleSubmit,
         reset,
         setError,
         setValue,
+        watch,
     }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
+
+    const media = watch('media') || []
+
+    const handleOpenMediaPicker = useCallback(() => {
+        if (!projectId) {
+            return
+        }
+
+        const apiKey = EnvironmentConfig.FILESTACK.API_KEY
+        if (!apiKey) {
+            showErrorToast('Media uploads are not configured for this environment.')
+            return
+        }
+
+        const uploadedMedia: Array<{ type: string; url: string }> = []
+        const mediaStorePath = `project-showcase/${projectId}/`
+
+        const pickerOptions: PickerOptions = {
+            accept: SHOWCASE_MEDIA_FILE_PICKER_ACCEPT,
+            fromSources: SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES,
+            maxFiles: SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES,
+            onClose: () => {
+                setIsOpeningMediaPicker(false)
+                if (!uploadedMedia.length) {
+                    return
+                }
+
+                const existingMedia = getValues('media') || []
+                setValue('media', [
+                    ...existingMedia,
+                    ...uploadedMedia,
+                ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES))
+            },
+            onFileUploadFinished: file => {
+                if (!file || !file.url) {
+                    return
+                }
+
+                uploadedMedia.push({
+                    type: String(file.mimetype || 'application/octet-stream'),
+                    url: String(file.url),
+                })
+            },
+            storeTo: {
+                container: SHOWCASE_MEDIA_FILE_PICKER_CONTAINER,
+                location: 's3',
+                path: mediaStorePath,
+                region: EnvironmentConfig.FILESTACK.REGION,
+            },
+            uploadInBackground: false,
+        }
+
+        const client = init(apiKey, {
+            cname: EnvironmentConfig.FILESTACK.CNAME,
+            security: EnvironmentConfig.FILESTACK.SECURITY
+                ? {
+                    policy: EnvironmentConfig.FILESTACK.SECURITY.POLICY,
+                    signature: EnvironmentConfig.FILESTACK.SECURITY.SIGNATURE,
+                }
+                : undefined,
+        })
+
+        try {
+            setIsOpeningMediaPicker(true)
+            client.picker(pickerOptions)
+                .open()
+        } catch (uploadError) {
+            setIsOpeningMediaPicker(false)
+            showErrorToast(uploadError instanceof Error ? uploadError.message : 'Failed to open media picker.')
+        }
+    }, [getValues, projectId, setValue])
+
+    const handleRemoveMedia = useCallback((index: number) => {
+        const currentMedia = getValues('media') || []
+        setValue('media', currentMedia.filter((_, itemIndex) => itemIndex !== index))
+    }, [getValues, setValue])
 
     const handleResetFilters = useCallback(() => {
         setFilters({
@@ -747,7 +850,14 @@ export const ProjectShowcasePage: FC = () => {
             .finally(() => {
                 setIsLoadingPostDetails(false)
             })
-    }, [fetchChallenge, fetchProjectShowcasePost, isManageModalOpen, manageMode, projectId, reset, selectedPostId])
+    }, [
+        isManageModalOpen,
+        manageMode,
+        projectId,
+        reset,
+        selectedPostId,
+        setValue,
+    ])
 
     if (!hasProjectId) {
         return (
@@ -1009,6 +1119,7 @@ export const ProjectShowcasePage: FC = () => {
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
+                                        media: data.media,
                                         title: data.title.trim(),
                                     })
                                     setIsManageModalOpen(false)
@@ -1024,6 +1135,7 @@ export const ProjectShowcasePage: FC = () => {
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
+                                        media: data.media,
                                         title: data.title.trim(),
                                     })
                                     setIsManageModalOpen(false)
@@ -1090,6 +1202,59 @@ export const ProjectShowcasePage: FC = () => {
                                     isClearable
                                     required
                                 />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <div className={styles.mediaSectionHeader}>
+                                    <span className={styles.mediaSectionLabel}>Post media</span>
+                                    <Button
+                                        label={isOpeningMediaPicker ? 'Uploading…' : 'Add media'}
+                                        onClick={handleOpenMediaPicker}
+                                        size='sm'
+                                        type='button'
+                                        disabled={isOpeningMediaPicker}
+                                    />
+                                </div>
+
+                                {media.length > 0 ? (
+                                    <div className={styles.mediaList}>
+                                        {media.map((item, index) => (
+                                            <div key={`${item.url}`} className={styles.mediaItem}>
+                                                {item.type.startsWith('image/') ? (
+                                                    <img
+                                                        src={item.url}
+                                                        alt={`Post media preview ${index + 1}`}
+                                                        className={styles.mediaPreview}
+                                                    />
+                                                ) : (
+                                                    <div className={styles.mediaPreviewPlaceholder}>
+                                                        {item.type || 'FILE'}
+                                                    </div>
+                                                )}
+                                                <div className={styles.mediaDetails}>
+                                                    <a
+                                                        href={item.url}
+                                                        target='_blank'
+                                                        rel='noreferrer noopener'
+                                                        className={styles.mediaLink}
+                                                    >
+                                                        {item.url}
+                                                    </a>
+                                                    <button
+                                                        type='button'
+                                                        className={styles.mediaRemoveButton}
+                                                        onClick={function onClick() { handleRemoveMedia(index) }}
+                                                        aria-label={`Remove media ${index + 1}`}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className={styles.mediaEmpty}>No media added yet.</div>
+                                )}
                             </div>
 
                             <div className={styles.modalField}>

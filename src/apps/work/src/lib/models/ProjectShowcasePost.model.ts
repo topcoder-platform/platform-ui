@@ -7,6 +7,12 @@ export interface ProjectShowcasePostTaxonomyItem {
     name: string
 }
 
+export interface ProjectShowcasePostMedia {
+    id: string
+    type: string
+    url: string
+}
+
 export interface ProjectShowcasePost {
     id: string
     title: string
@@ -19,6 +25,7 @@ export interface ProjectShowcasePost {
     createdByHandle?: string
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]
+    media?: ProjectShowcasePostMedia[]
 }
 
 export interface ProjectShowcasePostFilters {
