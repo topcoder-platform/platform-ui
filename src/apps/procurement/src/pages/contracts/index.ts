@@ -1,0 +1,1 @@
+export { ProcurementContractsPage } from './ProcurementContractsPage'
