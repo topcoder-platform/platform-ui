@@ -670,7 +670,10 @@ export const ProjectShowcasePage: FC = () => {
 
         const currentMedia = getValues('media') || []
         if (currentMedia.length >= SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
-            setMediaLimitWarning(`Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached. Remove a file to add more.`)
+            setMediaLimitWarning(
+                `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
+                Remove a file to add more.`,
+            )
             return
         }
 
@@ -704,7 +707,8 @@ export const ProjectShowcasePage: FC = () => {
 
                 if (totalMediaCount > SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
                     setMediaLimitWarning(
-                        `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached. Extra files were not added.`,
+                        `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
+                        Extra files were not added.`,
                     )
                 }
             },
@@ -1290,7 +1294,10 @@ export const ProjectShowcasePage: FC = () => {
                                                     />
                                                 ) : (
                                                     <div className={styles.mediaPreviewPlaceholder}>
-                                                        {item.type?.split('/').join(' ') || 'FILE'}
+                                                        {
+                                                            item.type?.split('/')
+                                                                .join(' ') || 'FILE'
+                                                        }
                                                     </div>
                                                 )}
                                                 <div className={styles.mediaDetails}>
