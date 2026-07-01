@@ -9,6 +9,8 @@ import {
     UserChallengePointsSummary,
     UserProfile,
     UserStats,
+    UserStatsHistory,
+    useStatsHistory,
 } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
@@ -247,7 +249,8 @@ const MemberStatsBlock: FC<MemberStatsBlockProps> = props => {
     const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
 
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
-    const activeTracks = useMemo(() => getActiveTracks(memberStats), [memberStats])
+    const statsHistory: UserStatsHistory | undefined = useStatsHistory(props.profile.handle)
+    const activeTracks = useMemo(() => getActiveTracks(memberStats, statsHistory), [memberStats, statsHistory])
     const displayTracks = useMemo(() => sortTracksForDisplay(activeTracks), [activeTracks])
 
     const getTrackRoute = useCallback((trackName: string, subTracks?: MemberStats[]): string => {

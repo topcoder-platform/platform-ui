@@ -537,4 +537,60 @@ describe('getSubTrackSummaryStats', () => {
                 wins: 2,
             })
     })
+
+    it('uses placement history when aggregate wins are stale and nonzero', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 5,
+            name: 'AI Engineering',
+            submissions: {
+                submissions: 5,
+            },
+            wins: 2,
+        } as MemberStats, [
+            {
+                challengeId: 'ai-1',
+                challengeName: 'AI Challenge 1',
+                newRating: 840,
+                placement: 2,
+                ratingDate: 1781237773026,
+            },
+            {
+                challengeId: 'ai-2',
+                challengeName: 'AI Challenge 2',
+                newRating: 860,
+                placement: 5,
+                ratingDate: 1781237773027,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 5,
+                wins: 0,
+            })
+    })
+
+    it('keeps aggregate wins when history rows have no placement data', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 2,
+            name: 'Challenge',
+            submissions: {
+                submissions: 2,
+            },
+            wins: 2,
+        } as MemberStats, [
+            {
+                challengeId: 'dev-1',
+                challengeName: 'Development Challenge 1',
+                newRating: 840,
+                ratingDate: 1781237773026,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 2,
+                wins: 2,
+            })
+    })
 })
