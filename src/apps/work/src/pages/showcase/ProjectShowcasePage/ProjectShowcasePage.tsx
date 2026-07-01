@@ -21,7 +21,7 @@ import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/
 import {
     ErrorMessage,
     Pagination,
-    ProjectListTabs,
+    ProjectPageWrapper,
     ProjectsShowcaseFilter,
 } from '../../../lib/components'
 import {
@@ -35,6 +35,7 @@ import {
     updateProjectShowcasePost,
 } from '../../../lib/services'
 import {
+    useFetchProject,
     useFetchProjectShowcasePostCategories,
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
@@ -52,9 +53,11 @@ import type {
     ProjectShowcasePostCategory,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
+    WorkAppContextModel,
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
+import { WorkAppContext } from '../../../lib'
 
 type SelectOption = FormSelectOption
 
@@ -473,6 +476,27 @@ export const ProjectShowcasePage: FC = () => {
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const confirmation = useConfirmationModal()
+    const projectResult = useFetchProject(projectId || undefined)
+    // const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
+    // const currentUserId = workAppContext.loginUserInfo?.userId === undefined
+    //     || workAppContext.loginUserInfo?.userId === null
+    //     ? undefined
+    //     : String(workAppContext.loginUserInfo.userId)
+    // const currentUserHandle = toOptionalString(workAppContext.loginUserInfo?.handle)
+
+    // const canManageProject = !!projectResult.project
+    //     && checkCanManageProject(
+    //         workAppContext.userRoles,
+    //         workAppContext.loginUserInfo?.userId,
+    //         projectResult.project,
+    //     )
+    // const canEditProjectDetails = !!projectResult.project
+    //     && checkCanEditProjectDetails(
+    //         workAppContext.userRoles,
+    //         workAppContext.loginUserInfo?.userId,
+    //         projectResult.project,
+    //     )
+    const projectName = projectResult.project?.name
 
     const handleOpenCreateModal = useCallback(() => {
         setManageMode('create')
@@ -861,23 +885,24 @@ export const ProjectShowcasePage: FC = () => {
 
     if (!hasProjectId) {
         return (
-            <PageWrapper
+            <ProjectPageWrapper
                 pageTitle='Showcase'
                 breadCrumb={[]}
                 rightHeader={pageWrapperActions}
+                projectId={projectId as string}
             >
                 <ErrorMessage message='Project id is required.' />
-            </PageWrapper>
+            </ProjectPageWrapper>
         )
     }
 
     return (
-        <PageWrapper
+        <ProjectPageWrapper
             pageTitle='Showcase'
             breadCrumb={[]}
-            rightHeader={pageWrapperActions}
+            headerActions={pageWrapperActions}
+            projectId={projectId as string}
         >
-            <ProjectListTabs projectId={projectId as string} />
             <div className={styles.container}>
                 <ProjectsShowcaseFilter
                     keywordInput={keywordInput}
@@ -1299,7 +1324,7 @@ export const ProjectShowcasePage: FC = () => {
             </BaseModal>
 
             {confirmation.modal}
-        </PageWrapper>
+        </ProjectPageWrapper>
     )
 }
 
