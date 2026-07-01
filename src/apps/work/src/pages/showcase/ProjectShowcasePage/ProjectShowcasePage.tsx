@@ -659,6 +659,20 @@ export const ProjectShowcasePage: FC = () => {
         }
     }, [confirmation, postsResult, projectId])
 
+    const formMethods = useForm<ProjectShowcasePostFormData>({
+        defaultValues: mapPostToFormData(),
+        mode: 'all',
+    })
+
+    const {
+        getValues,
+        handleSubmit,
+        reset,
+        setError,
+        setValue,
+        watch,
+    }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
+
     const updatePostInCache = useCallback(
         async (updatedPost: ProjectShowcasePost) => {
             await postsResult.mutate(currentData => {
@@ -701,20 +715,6 @@ export const ProjectShowcasePage: FC = () => {
         },
         [projectId, selectedPostId, updatePostInCache],
     )
-
-    const formMethods = useForm<ProjectShowcasePostFormData>({
-        defaultValues: mapPostToFormData(),
-        mode: 'all',
-    })
-
-    const {
-        getValues,
-        handleSubmit,
-        reset,
-        setError,
-        setValue,
-        watch,
-    }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
 
     const media = watch('media') || []
 
