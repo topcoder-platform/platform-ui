@@ -1,0 +1,59 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.sectionTitle {
+    margin: 0;
+    color: $black-80;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectTitleActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectEditLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-60;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        border-color: #2a62d5;
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+.projectEditIcon {
+    width: 16px;
+    height: 16px;
+}

@@ -3,6 +3,7 @@ import {
     ChangeEvent,
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -14,16 +15,18 @@ import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { PageWrapper } from '~/apps/review/src/lib'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
 import {
     ErrorMessage,
     Pagination,
-    ProjectListTabs,
+    ProjectPageWrapper,
     ProjectsShowcaseFilter,
 } from '../../../lib/components'
+import {
+    WorkAppContext,
+} from '../../../lib/contexts'
 import {
     archiveProjectShowcasePost,
     createProjectShowcasePost,
@@ -52,6 +55,7 @@ import type {
     ProjectShowcasePostCategory,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
+    WorkAppContextModel,
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
@@ -64,6 +68,8 @@ const DEFAULT_FILTERS: ProjectShowcasePostFilters = {
     keyword: undefined,
     status: undefined,
 }
+
+const DEFAULT_PER_PAGE = 10
 
 const STATUS_OPTIONS: SelectOption[] = [
     { label: 'All statuses', value: '' },
@@ -329,7 +335,7 @@ export const ProjectShowcasePage: FC = () => {
     const [filters, setFilters] = useState<ProjectShowcasePostFilters>(DEFAULT_FILTERS)
     const [keywordInput, setKeywordInput] = useState<string>('')
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(10)
+    const [perPage, setPerPage] = useState<number>(DEFAULT_PER_PAGE)
     const [sortBy, setSortBy] = useState<string>('updatedAt')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
@@ -376,12 +382,12 @@ export const ProjectShowcasePage: FC = () => {
     }, [keywordInput])
 
     const industryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(industriesResult.items),
+        () => createTaxonomyOptions(industriesResult.items, 'All Industries'),
         [industriesResult.items],
     )
 
     const categoryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(categoriesResult.items),
+        () => createTaxonomyOptions(categoriesResult.items, 'All Categories'),
         [categoriesResult.items],
     )
 
@@ -392,6 +398,17 @@ export const ProjectShowcasePage: FC = () => {
     const filteredPosts = useMemo(
         () => sortProjectShowcasePosts(postsResult.posts, sortBy, sortOrder),
         [postsResult.posts, sortBy, sortOrder],
+    )
+
+    const {
+        isAdmin: isAdminUser,
+        isCopilot,
+        isManager,
+    }: WorkAppContextModel = useContext(WorkAppContext)
+
+    const canManageProjectShowcasePosts = useMemo(
+        () => isAdminUser || isCopilot || isManager,
+        [isAdminUser, isCopilot, isManager],
     )
 
     const hasProjectId = Boolean(projectId)
@@ -473,6 +490,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const confirmation = useConfirmationModal()
+    // const projectResult = useFetchProject(projectId || undefined)
 
     const handleOpenCreateModal = useCallback(() => {
         setManageMode('create')
@@ -724,6 +742,7 @@ export const ProjectShowcasePage: FC = () => {
         setPage(1)
         setSortBy('updatedAt')
         setSortOrder('desc')
+        setPerPage(DEFAULT_PER_PAGE)
     }, [])
 
     const handleRetry = useCallback(() => {
@@ -787,14 +806,20 @@ export const ProjectShowcasePage: FC = () => {
         [],
     )
 
-    const pageWrapperActions = useMemo(() => (
-        <Button
-            label='Create Post'
-            onClick={handleOpenCreateModal}
-            primary
-            size='md'
-        />
-    ), [handleOpenCreateModal])
+    const pageWrapperActions = useMemo(() => {
+        if (!canManageProjectShowcasePosts) {
+            return <></>
+        }
+
+        return (
+            <Button
+                label='Create Post'
+                onClick={handleOpenCreateModal}
+                primary
+                size='md'
+            />
+        )
+    }, [canManageProjectShowcasePosts, handleOpenCreateModal])
 
     useEffect(() => {
         if (!isManageModalOpen) {
@@ -861,23 +886,24 @@ export const ProjectShowcasePage: FC = () => {
 
     if (!hasProjectId) {
         return (
-            <PageWrapper
+            <ProjectPageWrapper
                 pageTitle='Showcase'
                 breadCrumb={[]}
                 rightHeader={pageWrapperActions}
+                projectId={projectId as string}
             >
                 <ErrorMessage message='Project id is required.' />
-            </PageWrapper>
+            </ProjectPageWrapper>
         )
     }
 
     return (
-        <PageWrapper
+        <ProjectPageWrapper
             pageTitle='Showcase'
             breadCrumb={[]}
-            rightHeader={pageWrapperActions}
+            headerActions={pageWrapperActions}
+            projectId={projectId as string}
         >
-            <ProjectListTabs projectId={projectId as string} />
             <div className={styles.container}>
                 <ProjectsShowcaseFilter
                     keywordInput={keywordInput}
@@ -944,7 +970,9 @@ export const ProjectShowcasePage: FC = () => {
                                         {getSortIndicator(sortBy, sortOrder, 'category')}
                                     </button>
                                 </th>
-                                <th>Actions</th>
+                                <th>
+                                    {canManageProjectShowcasePosts ? 'Actions' : ''}
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -988,52 +1016,56 @@ export const ProjectShowcasePage: FC = () => {
                                             .join(', ') || '—'}
                                     </td>
                                     <td className={styles.rowActions}>
-                                        {post.status !== 'ARCHIVED' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                onClick={function onClick() { handleEditPost(post.id) }}
-                                            >
-                                                Edit
-                                            </button>
-                                        )}
-                                        {post.status === 'DRAFT' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isPublishing}
-                                                onClick={function onClick() { handlePublishPost(post) }}
-                                            >
-                                                Publish
-                                            </button>
-                                        )}
-                                        {post.status === 'PUBLISHED' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isUnpublishing}
-                                                onClick={function onClick() { handleUnpublishPost(post) }}
-                                            >
-                                                Unpublish
-                                            </button>
-                                        )}
-                                        {post.status === 'ARCHIVED' ? (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isRestoring}
-                                                onClick={function onClick() { handleRestorePost(post) }}
-                                            >
-                                                Restore
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type='button'
-                                                className={classNames(styles.actionButton, styles.actionDelete)}
-                                                onClick={function onClick() { handleArchivePost(post) }}
-                                            >
-                                                Archive
-                                            </button>
+                                        {canManageProjectShowcasePosts && (
+                                            <>
+                                                {post.status !== 'ARCHIVED' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        onClick={function onClick() { handleEditPost(post.id) }}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                )}
+                                                {post.status === 'DRAFT' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isPublishing}
+                                                        onClick={function onClick() { handlePublishPost(post) }}
+                                                    >
+                                                        Publish
+                                                    </button>
+                                                )}
+                                                {post.status === 'PUBLISHED' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isUnpublishing}
+                                                        onClick={function onClick() { handleUnpublishPost(post) }}
+                                                    >
+                                                        Unpublish
+                                                    </button>
+                                                )}
+                                                {(post.status === 'ARCHIVED' ? (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isRestoring}
+                                                        onClick={function onClick() { handleRestorePost(post) }}
+                                                    >
+                                                        Restore
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type='button'
+                                                        className={classNames(styles.actionButton, styles.actionDelete)}
+                                                        onClick={function onClick() { handleArchivePost(post) }}
+                                                    >
+                                                        Archive
+                                                    </button>
+                                                ))}
+                                            </>
                                         )}
                                     </td>
                                 </tr>
@@ -1184,9 +1216,9 @@ export const ProjectShowcasePage: FC = () => {
                                 <FormSelectField
                                     label='Industries'
                                     name='industryIds'
-                                    options={industryOptions}
+                                    options={industryOptions.slice(1)}
                                     isMulti
-                                    isCreatable
+                                    isCreatable={isAdminUser}
                                     isClearable
                                     required
                                 />
@@ -1196,9 +1228,9 @@ export const ProjectShowcasePage: FC = () => {
                                 <FormSelectField
                                     label='Categories'
                                     name='categoryIds'
-                                    options={categoryOptions}
+                                    options={categoryOptions.slice(1)}
                                     isMulti
-                                    isCreatable
+                                    isCreatable={isAdminUser}
                                     isClearable
                                     required
                                 />
@@ -1299,7 +1331,7 @@ export const ProjectShowcasePage: FC = () => {
             </BaseModal>
 
             {confirmation.modal}
-        </PageWrapper>
+        </ProjectPageWrapper>
     )
 }
 

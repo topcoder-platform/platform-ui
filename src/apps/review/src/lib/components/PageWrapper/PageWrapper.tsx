@@ -14,7 +14,7 @@ import { IconArrowLeft, IconExternalLink } from '../../assets/icons'
 
 import styles from './PageWrapper.module.scss'
 
-interface Props {
+export interface PageWrapperProps {
     className?: string
     pageTitle: string
     backUrl?: string
@@ -25,7 +25,7 @@ interface Props {
     breadCrumb: BreadCrumbData[]
 }
 
-export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
+export const PageWrapper: FC<PropsWithChildren<PageWrapperProps>> = props => (
     <div className={classNames(styles.container, props.className)}>
         {props.breadCrumb.length > 0 && (
             <BreadCrumb list={props.breadCrumb} />

@@ -48,6 +48,12 @@
     max-width: 100%;
 }
 
+.loadingRow,
+.emptyRow {
+    text-align: center;
+    padding: 24px 0;
+}
+
 .tableWrap {
     border: 1px solid $black-10;
     border-radius: 8px;
@@ -245,12 +251,6 @@
     color: $black-60;
     font-size: 13px;
     padding: 12px 0;
-}
-
-.loadingRow,
-.emptyRow {
-    text-align: center;
-    padding: 24px 0;
 }
 
 @media (max-width: 1100px) {
