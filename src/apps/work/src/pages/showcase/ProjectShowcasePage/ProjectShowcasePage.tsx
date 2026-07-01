@@ -55,6 +55,7 @@ import type {
     ProjectShowcasePostCategory,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
+    WorkAppContextModel,
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
@@ -403,7 +404,7 @@ export const ProjectShowcasePage: FC = () => {
         isAdmin: isAdminUser,
         isCopilot,
         isManager,
-    } = useContext(WorkAppContext)
+    }: WorkAppContextModel = useContext(WorkAppContext)
 
     const canManageProjectShowcasePosts = useMemo(
         () => isAdminUser || isCopilot || isManager,
@@ -807,7 +808,7 @@ export const ProjectShowcasePage: FC = () => {
 
     const pageWrapperActions = useMemo(() => {
         if (!canManageProjectShowcasePosts) {
-            return null
+            return <></>
         }
 
         return (
