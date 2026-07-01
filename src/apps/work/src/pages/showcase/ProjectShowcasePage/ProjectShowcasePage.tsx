@@ -1260,7 +1260,7 @@ export const ProjectShowcasePage: FC = () => {
                                                     />
                                                 ) : (
                                                     <div className={styles.mediaPreviewPlaceholder}>
-                                                        {item.type || 'FILE'}
+                                                        {item.type?.split('/').join(' ') || 'FILE'}
                                                     </div>
                                                 )}
                                                 <div className={styles.mediaDetails}>
