@@ -38,6 +38,7 @@ import {
     updateProjectShowcasePost,
 } from '../../../lib/services'
 import {
+    useFetchProject,
     useFetchProjectShowcasePostCategories,
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
@@ -49,6 +50,7 @@ import {
     FormTextField,
 } from '../../../lib/components/form'
 import { showErrorToast, showSuccessToast } from '../../../lib/utils/toast.utils'
+import { checkCanManageProject } from '../../../lib/utils/permissions.utils'
 import type {
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
@@ -343,6 +345,7 @@ export const ProjectShowcasePage: FC = () => {
 
     const isFirstDebouncedRender = useRef<boolean>(true)
 
+    const projectResult = useFetchProject(projectId || undefined)
     const industriesResult = useFetchProjectShowcasePostIndustries()
     const categoriesResult = useFetchProjectShowcasePostCategories()
 
@@ -404,13 +407,13 @@ export const ProjectShowcasePage: FC = () => {
 
     const {
         isAdmin: isAdminUser,
-        isCopilot,
-        isManager,
+        loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const canManageProjectShowcasePosts = useMemo(
-        () => isAdminUser || isCopilot || isManager,
-        [isAdminUser, isCopilot, isManager],
+        () => checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
+        [loginUserInfo?.userId, projectResult.project, userRoles],
     )
 
     const hasProjectId = Boolean(projectId)
