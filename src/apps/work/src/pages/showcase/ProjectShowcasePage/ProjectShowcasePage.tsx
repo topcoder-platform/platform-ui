@@ -95,6 +95,17 @@ const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.avi',
 ]
 const SHOWCASE_MEDIA_FILE_PICKER_CONTAINER = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
+const SHOWCASE_MEDIA_FILE_PICKER_CDN_URL = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_CDN_URL
+
+function resolveShowcaseMediaUrl(file: { key?: unknown; url?: unknown }): string {
+    const storageKey = typeof file.key === 'string' && file.key.trim()
+
+    if (storageKey) {
+        return `${SHOWCASE_MEDIA_FILE_PICKER_CDN_URL.replace(/\/$/, '')}/${encodeURI(storageKey)}`
+    }
+
+    return typeof file.url === 'string' ? file.url : ''
+}
 
 function getStatusLabel(status: string): string {
     return status
@@ -713,13 +724,18 @@ export const ProjectShowcasePage: FC = () => {
                 }
             },
             onFileUploadFinished: file => {
-                if (!file || !file.url) {
+                if (!file) {
+                    return
+                }
+
+                const mediaUrl = resolveShowcaseMediaUrl(file)
+                if (!mediaUrl) {
                     return
                 }
 
                 uploadedMedia.push({
                     type: String(file.mimetype || 'application/octet-stream'),
-                    url: String(file.url),
+                    url: mediaUrl,
                 })
             },
             storeTo: {

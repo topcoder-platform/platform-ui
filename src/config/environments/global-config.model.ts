@@ -117,4 +117,5 @@ export interface GlobalConfig {
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string
     FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER: string
+    FILESTACK_SHOWCASE_MEDIA_CDN_URL: string
 }
