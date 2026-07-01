@@ -3,6 +3,7 @@ import {
     ChangeEvent,
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -23,6 +24,9 @@ import {
     ProjectPageWrapper,
     ProjectsShowcaseFilter,
 } from '../../../lib/components'
+import {
+    WorkAppContext,
+} from '../../../lib/contexts'
 import {
     archiveProjectShowcasePost,
     createProjectShowcasePost,
@@ -393,6 +397,17 @@ export const ProjectShowcasePage: FC = () => {
     const filteredPosts = useMemo(
         () => sortProjectShowcasePosts(postsResult.posts, sortBy, sortOrder),
         [postsResult.posts, sortBy, sortOrder],
+    )
+
+    const {
+        isAdmin: isAdminUser,
+        isCopilot,
+        isManager,
+    } = useContext(WorkAppContext)
+
+    const canManageProjectShowcasePosts = useMemo(
+        () => isAdminUser || isCopilot || isManager,
+        [isAdminUser, isCopilot, isManager],
     )
 
     const hasProjectId = Boolean(projectId)
@@ -790,14 +805,20 @@ export const ProjectShowcasePage: FC = () => {
         [],
     )
 
-    const pageWrapperActions = useMemo(() => (
-        <Button
-            label='Create Post'
-            onClick={handleOpenCreateModal}
-            primary
-            size='md'
-        />
-    ), [handleOpenCreateModal])
+    const pageWrapperActions = useMemo(() => {
+        if (!canManageProjectShowcasePosts) {
+            return null
+        }
+
+        return (
+            <Button
+                label='Create Post'
+                onClick={handleOpenCreateModal}
+                primary
+                size='md'
+            />
+        )
+    }, [canManageProjectShowcasePosts, handleOpenCreateModal])
 
     useEffect(() => {
         if (!isManageModalOpen) {
@@ -948,7 +969,9 @@ export const ProjectShowcasePage: FC = () => {
                                         {getSortIndicator(sortBy, sortOrder, 'category')}
                                     </button>
                                 </th>
-                                <th>Actions</th>
+                                <th>
+                                    {canManageProjectShowcasePosts ? 'Actions' : ''}
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -992,52 +1015,56 @@ export const ProjectShowcasePage: FC = () => {
                                             .join(', ') || '—'}
                                     </td>
                                     <td className={styles.rowActions}>
-                                        {post.status !== 'ARCHIVED' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                onClick={function onClick() { handleEditPost(post.id) }}
-                                            >
-                                                Edit
-                                            </button>
-                                        )}
-                                        {post.status === 'DRAFT' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isPublishing}
-                                                onClick={function onClick() { handlePublishPost(post) }}
-                                            >
-                                                Publish
-                                            </button>
-                                        )}
-                                        {post.status === 'PUBLISHED' && (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isUnpublishing}
-                                                onClick={function onClick() { handleUnpublishPost(post) }}
-                                            >
-                                                Unpublish
-                                            </button>
-                                        )}
-                                        {post.status === 'ARCHIVED' ? (
-                                            <button
-                                                type='button'
-                                                className={styles.actionButton}
-                                                disabled={isRestoring}
-                                                onClick={function onClick() { handleRestorePost(post) }}
-                                            >
-                                                Restore
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type='button'
-                                                className={classNames(styles.actionButton, styles.actionDelete)}
-                                                onClick={function onClick() { handleArchivePost(post) }}
-                                            >
-                                                Archive
-                                            </button>
+                                        {canManageProjectShowcasePosts && (
+                                            <>
+                                                {post.status !== 'ARCHIVED' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        onClick={function onClick() { handleEditPost(post.id) }}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                )}
+                                                {post.status === 'DRAFT' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isPublishing}
+                                                        onClick={function onClick() { handlePublishPost(post) }}
+                                                    >
+                                                        Publish
+                                                    </button>
+                                                )}
+                                                {post.status === 'PUBLISHED' && (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isUnpublishing}
+                                                        onClick={function onClick() { handleUnpublishPost(post) }}
+                                                    >
+                                                        Unpublish
+                                                    </button>
+                                                )}
+                                                {(post.status === 'ARCHIVED' ? (
+                                                    <button
+                                                        type='button'
+                                                        className={styles.actionButton}
+                                                        disabled={isRestoring}
+                                                        onClick={function onClick() { handleRestorePost(post) }}
+                                                    >
+                                                        Restore
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type='button'
+                                                        className={classNames(styles.actionButton, styles.actionDelete)}
+                                                        onClick={function onClick() { handleArchivePost(post) }}
+                                                    >
+                                                        Archive
+                                                    </button>
+                                                ))}
+                                            </>
                                         )}
                                     </td>
                                 </tr>
@@ -1190,7 +1217,7 @@ export const ProjectShowcasePage: FC = () => {
                                     name='industryIds'
                                     options={industryOptions.slice(1)}
                                     isMulti
-                                    isCreatable
+                                    isCreatable={isAdminUser}
                                     isClearable
                                     required
                                 />
@@ -1202,7 +1229,7 @@ export const ProjectShowcasePage: FC = () => {
                                     name='categoryIds'
                                     options={categoryOptions.slice(1)}
                                     isMulti
-                                    isCreatable
+                                    isCreatable={isAdminUser}
                                     isClearable
                                     required
                                 />
