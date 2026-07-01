@@ -71,9 +71,11 @@
     padding: 12px 10px;
     text-align: left;
     vertical-align: middle;
+}
 
-    .loadingRow,
-    .emptyRow {
+.table td {
+    &.loadingRow,
+    &.emptyRow {
         text-align: center;
         padding: 24px 0;
     }
