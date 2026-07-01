@@ -219,6 +219,7 @@
     background: #e9ecef;
     color: $black-60;
     font-size: 11px;
+    line-height: 14px;
     text-transform: uppercase;
     text-align: center;
     padding: 8px;
@@ -251,6 +252,16 @@
     color: $black-60;
     font-size: 13px;
     padding: 12px 0;
+}
+
+.mediaWarning {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: $orange-25;
+    color: $orange-140;
+    font-size: 13px;
+    line-height: 18px;
 }
 
 @media (max-width: 1100px) {

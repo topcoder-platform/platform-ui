@@ -38,6 +38,7 @@ import {
     updateProjectShowcasePost,
 } from '../../../lib/services'
 import {
+    useFetchProject,
     useFetchProjectShowcasePostCategories,
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
@@ -49,6 +50,7 @@ import {
     FormTextField,
 } from '../../../lib/components/form'
 import { showErrorToast, showSuccessToast } from '../../../lib/utils/toast.utils'
+import { checkCanManageProject } from '../../../lib/utils/permissions.utils'
 import type {
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
@@ -79,7 +81,7 @@ const STATUS_OPTIONS: SelectOption[] = [
 ]
 
 const SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES = ['local_file_system']
-const SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES = 4
+const SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES = 10
 const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.bmp',
     '.gif',
@@ -87,7 +89,6 @@ const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.jpeg',
     '.png',
     '.pdf',
-    '.svg',
     '.webm',
     '.mp4',
     '.mov',
@@ -178,7 +179,10 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
         challengeIds: post?.challengeIds || [],
         content: post?.content || '',
         industryIds: post?.industries.map(item => item.id) || [],
-        media: post?.media || [],
+        media: post?.media?.map(item => ({
+            type: item.type,
+            url: item.url,
+        })) || [],
         title: post?.title || '',
     }
 }
@@ -341,6 +345,7 @@ export const ProjectShowcasePage: FC = () => {
 
     const isFirstDebouncedRender = useRef<boolean>(true)
 
+    const projectResult = useFetchProject(projectId || undefined)
     const industriesResult = useFetchProjectShowcasePostIndustries()
     const categoriesResult = useFetchProjectShowcasePostCategories()
 
@@ -402,13 +407,13 @@ export const ProjectShowcasePage: FC = () => {
 
     const {
         isAdmin: isAdminUser,
-        isCopilot,
-        isManager,
+        loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const canManageProjectShowcasePosts = useMemo(
-        () => isAdminUser || isCopilot || isManager,
-        [isAdminUser, isCopilot, isManager],
+        () => checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
+        [loginUserInfo?.userId, projectResult.project, userRoles],
     )
 
     const hasProjectId = Boolean(projectId)
@@ -489,6 +494,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isUnpublishing, setIsUnpublishing] = useState<boolean>(false)
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
+    const [mediaLimitWarning, setMediaLimitWarning] = useState<string | undefined>(undefined)
     const confirmation = useConfirmationModal()
     // const projectResult = useFetchProject(projectId || undefined)
 
@@ -662,6 +668,17 @@ export const ProjectShowcasePage: FC = () => {
             return
         }
 
+        const currentMedia = getValues('media') || []
+        if (currentMedia.length >= SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
+            setMediaLimitWarning(
+                `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
+                Remove a file to add more.`,
+            )
+            return
+        }
+
+        setMediaLimitWarning(undefined)
+
         const apiKey = EnvironmentConfig.FILESTACK.API_KEY
         if (!apiKey) {
             showErrorToast('Media uploads are not configured for this environment.')
@@ -682,10 +699,18 @@ export const ProjectShowcasePage: FC = () => {
                 }
 
                 const existingMedia = getValues('media') || []
+                const totalMediaCount = existingMedia.length + uploadedMedia.length
                 setValue('media', [
                     ...existingMedia,
                     ...uploadedMedia,
                 ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES))
+
+                if (totalMediaCount > SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
+                    setMediaLimitWarning(
+                        `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
+                        Extra files were not added.`,
+                    )
+                }
             },
             onFileUploadFinished: file => {
                 if (!file || !file.url) {
@@ -729,7 +754,16 @@ export const ProjectShowcasePage: FC = () => {
     const handleRemoveMedia = useCallback((index: number) => {
         const currentMedia = getValues('media') || []
         setValue('media', currentMedia.filter((_, itemIndex) => itemIndex !== index))
-    }, [getValues, setValue])
+        if (mediaLimitWarning) {
+            setMediaLimitWarning(undefined)
+        }
+    }, [getValues, mediaLimitWarning, setValue])
+
+    useEffect(() => {
+        if (media.length < SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES && mediaLimitWarning) {
+            setMediaLimitWarning(undefined)
+        }
+    }, [media.length, mediaLimitWarning])
 
     const handleResetFilters = useCallback(() => {
         setFilters({
@@ -1240,7 +1274,7 @@ export const ProjectShowcasePage: FC = () => {
                                 <div className={styles.mediaSectionHeader}>
                                     <span className={styles.mediaSectionLabel}>Post media</span>
                                     <Button
-                                        label={isOpeningMediaPicker ? 'Uploading…' : 'Add media'}
+                                        label='Add media'
                                         onClick={handleOpenMediaPicker}
                                         size='sm'
                                         type='button'
@@ -1260,7 +1294,10 @@ export const ProjectShowcasePage: FC = () => {
                                                     />
                                                 ) : (
                                                     <div className={styles.mediaPreviewPlaceholder}>
-                                                        {item.type || 'FILE'}
+                                                        {
+                                                            item.type?.split('/')
+                                                                .join(' ') || 'FILE'
+                                                        }
                                                     </div>
                                                 )}
                                                 <div className={styles.mediaDetails}>
@@ -1286,6 +1323,11 @@ export const ProjectShowcasePage: FC = () => {
                                     </div>
                                 ) : (
                                     <div className={styles.mediaEmpty}>No media added yet.</div>
+                                )}
+                                {mediaLimitWarning && (
+                                    <div className={styles.mediaWarning} role='alert'>
+                                        {mediaLimitWarning}
+                                    </div>
                                 )}
                             </div>
 
