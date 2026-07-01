@@ -505,6 +505,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isUnpublishing, setIsUnpublishing] = useState<boolean>(false)
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
+    const [isAutoSavingMedia, setIsAutoSavingMedia] = useState<boolean>(false)
     const [mediaLimitWarning, setMediaLimitWarning] = useState<string | undefined>(undefined)
     const confirmation = useConfirmationModal()
     // const projectResult = useFetchProject(projectId || undefined)
@@ -658,6 +659,49 @@ export const ProjectShowcasePage: FC = () => {
         }
     }, [confirmation, postsResult, projectId])
 
+    const updatePostInCache = useCallback(
+        async (updatedPost: ProjectShowcasePost) => {
+            await postsResult.mutate(currentData => {
+                if (!currentData) {
+                    return currentData
+                }
+
+                return {
+                    ...currentData,
+                    posts: currentData.posts.map(post => (
+                        post.id === updatedPost.id ? updatedPost : post
+                    )),
+                }
+            }, false)
+        },
+        [postsResult],
+    )
+
+    const saveUploadedMedia = useCallback(
+        async (updatedMedia: Array<{ type: string; url: string }>) => {
+            if (!projectId || !selectedPostId) {
+                return
+            }
+
+            setIsAutoSavingMedia(true)
+            try {
+                const updatedPost = await updateProjectShowcasePost(projectId, selectedPostId, {
+                    media: updatedMedia,
+                })
+                await updatePostInCache(updatedPost)
+                setValue('media', (updatedPost.media ?? []).map(m => ({
+                    type: m.type,
+                    url: m.url,
+                })))
+            } catch (err) {
+                showErrorToast(err instanceof Error ? err.message : 'Unable to save uploaded media.')
+            } finally {
+                setIsAutoSavingMedia(false)
+            }
+        },
+        [projectId, selectedPostId, updatePostInCache],
+    )
+
     const formMethods = useForm<ProjectShowcasePostFormData>({
         defaultValues: mapPostToFormData(),
         mode: 'all',
@@ -711,10 +755,16 @@ export const ProjectShowcasePage: FC = () => {
 
                 const existingMedia = getValues('media') || []
                 const totalMediaCount = existingMedia.length + uploadedMedia.length
-                setValue('media', [
+                const newMedia = [
                     ...existingMedia,
                     ...uploadedMedia,
-                ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES))
+                ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES)
+
+                setValue('media', newMedia)
+
+                if (manageMode === 'edit' && selectedPostId) {
+                    saveUploadedMedia(newMedia)
+                }
 
                 if (totalMediaCount > SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
                     setMediaLimitWarning(
@@ -765,7 +815,7 @@ export const ProjectShowcasePage: FC = () => {
             setIsOpeningMediaPicker(false)
             showErrorToast(uploadError instanceof Error ? uploadError.message : 'Failed to open media picker.')
         }
-    }, [getValues, projectId, setValue])
+    }, [getValues, projectId, setValue, manageMode, selectedPostId, saveUploadedMedia])
 
     const handleRemoveMedia = useCallback((index: number) => {
         const currentMedia = getValues('media') || []
@@ -1217,7 +1267,10 @@ export const ProjectShowcasePage: FC = () => {
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
-                                        media: data.media,
+                                        media: data.media.map(m => ({
+                                            ...m,
+                                            url: m.url?.replace(/\?.*$/, ''),
+                                        })),
                                         title: data.title.trim(),
                                     })
                                     setIsManageModalOpen(false)
@@ -1294,7 +1347,7 @@ export const ProjectShowcasePage: FC = () => {
                                         onClick={handleOpenMediaPicker}
                                         size='sm'
                                         type='button'
-                                        disabled={isOpeningMediaPicker}
+                                        disabled={isOpeningMediaPicker || isAutoSavingMedia}
                                     />
                                 </div>
 
