@@ -14,7 +14,6 @@ import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { PageWrapper } from '~/apps/review/src/lib'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
@@ -35,7 +34,6 @@ import {
     updateProjectShowcasePost,
 } from '../../../lib/services'
 import {
-    useFetchProject,
     useFetchProjectShowcasePostCategories,
     useFetchProjectShowcasePostIndustries,
     useFetchProjectShowcasePosts,
@@ -53,11 +51,9 @@ import type {
     ProjectShowcasePostCategory,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
-    WorkAppContextModel,
 } from '../../../lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
-import { WorkAppContext } from '../../../lib'
 
 type SelectOption = FormSelectOption
 
@@ -67,6 +63,8 @@ const DEFAULT_FILTERS: ProjectShowcasePostFilters = {
     keyword: undefined,
     status: undefined,
 }
+
+const DEFAULT_PER_PAGE = 10
 
 const STATUS_OPTIONS: SelectOption[] = [
     { label: 'All statuses', value: '' },
@@ -332,7 +330,7 @@ export const ProjectShowcasePage: FC = () => {
     const [filters, setFilters] = useState<ProjectShowcasePostFilters>(DEFAULT_FILTERS)
     const [keywordInput, setKeywordInput] = useState<string>('')
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(10)
+    const [perPage, setPerPage] = useState<number>(DEFAULT_PER_PAGE)
     const [sortBy, setSortBy] = useState<string>('updatedAt')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
@@ -379,12 +377,12 @@ export const ProjectShowcasePage: FC = () => {
     }, [keywordInput])
 
     const industryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(industriesResult.items),
+        () => createTaxonomyOptions(industriesResult.items, 'All Industries'),
         [industriesResult.items],
     )
 
     const categoryOptions = useMemo<SelectOption[]>(
-        () => createTaxonomyOptions(categoriesResult.items),
+        () => createTaxonomyOptions(categoriesResult.items, 'All Categories'),
         [categoriesResult.items],
     )
 
@@ -476,27 +474,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isRestoring, setIsRestoring] = useState<boolean>(false)
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const confirmation = useConfirmationModal()
-    const projectResult = useFetchProject(projectId || undefined)
-    // const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
-    // const currentUserId = workAppContext.loginUserInfo?.userId === undefined
-    //     || workAppContext.loginUserInfo?.userId === null
-    //     ? undefined
-    //     : String(workAppContext.loginUserInfo.userId)
-    // const currentUserHandle = toOptionalString(workAppContext.loginUserInfo?.handle)
-
-    // const canManageProject = !!projectResult.project
-    //     && checkCanManageProject(
-    //         workAppContext.userRoles,
-    //         workAppContext.loginUserInfo?.userId,
-    //         projectResult.project,
-    //     )
-    // const canEditProjectDetails = !!projectResult.project
-    //     && checkCanEditProjectDetails(
-    //         workAppContext.userRoles,
-    //         workAppContext.loginUserInfo?.userId,
-    //         projectResult.project,
-    //     )
-    const projectName = projectResult.project?.name
+    // const projectResult = useFetchProject(projectId || undefined)
 
     const handleOpenCreateModal = useCallback(() => {
         setManageMode('create')
@@ -748,6 +726,7 @@ export const ProjectShowcasePage: FC = () => {
         setPage(1)
         setSortBy('updatedAt')
         setSortOrder('desc')
+        setPerPage(DEFAULT_PER_PAGE)
     }, [])
 
     const handleRetry = useCallback(() => {
@@ -1209,7 +1188,7 @@ export const ProjectShowcasePage: FC = () => {
                                 <FormSelectField
                                     label='Industries'
                                     name='industryIds'
-                                    options={industryOptions}
+                                    options={industryOptions.slice(1)}
                                     isMulti
                                     isCreatable
                                     isClearable
@@ -1221,7 +1200,7 @@ export const ProjectShowcasePage: FC = () => {
                                 <FormSelectField
                                     label='Categories'
                                     name='categoryIds'
-                                    options={categoryOptions}
+                                    options={categoryOptions.slice(1)}
                                     isMulti
                                     isCreatable
                                     isClearable

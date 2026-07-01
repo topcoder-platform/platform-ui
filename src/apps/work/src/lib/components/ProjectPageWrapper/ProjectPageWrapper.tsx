@@ -1,15 +1,15 @@
-import { FC, PropsWithChildren, ReactNode, useContext } from "react";
-import { Link } from "react-router-dom";
+import { FC, PropsWithChildren, ReactNode, useContext } from 'react'
+import { Link } from 'react-router-dom'
 
-import { IconOutline } from "~/libs/ui";
-import { PageWrapper, PageWrapperProps } from "~/apps/review/src/lib";
+import { IconOutline } from '~/libs/ui'
+import { PageWrapper, PageWrapperProps } from '~/apps/review/src/lib'
 
-import { useFetchProject } from "../../hooks";
-import { ProjectListTabs } from "../ProjectListTabs";
-import { ProjectBillingAccountExpiredNotice } from "../ProjectBillingAccountExpiredNotice";
-import { WorkAppContextModel } from "../../models";
-import { WorkAppContext } from "../../contexts";
-import { checkCanEditProjectDetails, checkCanManageProject } from "../../utils";
+import { useFetchProject } from '../../hooks'
+import { ProjectListTabs } from '../ProjectListTabs'
+import { ProjectBillingAccountExpiredNotice } from '../ProjectBillingAccountExpiredNotice'
+import { WorkAppContextModel } from '../../models'
+import { WorkAppContext } from '../../contexts'
+import { checkCanEditProjectDetails, checkCanManageProject } from '../../utils'
 
 import styles from './ProjectPageWrapper.module.scss'
 
@@ -32,7 +32,7 @@ export const ProjectPageWrapper: FC<PropsWithChildren<ProjectPageWrapperProps>> 
                 workAppContext.loginUserInfo?.userId,
                 projectResult.project,
             )
-        const canEditProjectDetails = !!projectResult.project
+    const canEditProjectDetails = !!projectResult.project
             && checkCanEditProjectDetails(
                 workAppContext.userRoles,
                 workAppContext.loginUserInfo?.userId,
@@ -102,5 +102,5 @@ export const ProjectPageWrapper: FC<PropsWithChildren<ProjectPageWrapperProps>> 
 
             {props.children}
         </PageWrapper>
-    );
-};
+    )
+}
