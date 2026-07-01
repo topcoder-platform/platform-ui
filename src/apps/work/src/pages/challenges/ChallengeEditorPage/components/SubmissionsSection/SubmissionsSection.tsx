@@ -57,6 +57,7 @@ interface FilterState {
     handle: string
     minScore: string
     startDate: string
+    submissionId: string
 }
 
 interface SubmissionsSectionProps {
@@ -330,12 +331,43 @@ function matchesFilterHandle(submission: Submission, handleFilter: string): bool
         .includes(normalizedHandleFilter)
 }
 
+/**
+ * Checks whether a submission matches the submission ID filter.
+ * @param submission Submission row being evaluated.
+ * @param submissionIdFilter Case-insensitive partial submission ID entered by the user.
+ * @returns True when the filter is empty or matches the submission's current or legacy ID.
+ * Used by `matchesFilters` before the submissions table is paginated.
+ */
+function matchesFilterSubmissionId(
+    submission: Submission,
+    submissionIdFilter: string,
+): boolean {
+    if (!submissionIdFilter) {
+        return true
+    }
+
+    const normalizedSubmissionIdFilter = normalizeValue(submissionIdFilter)
+        .toLowerCase()
+
+    return [
+        submission.id,
+        submission.legacySubmissionId,
+    ]
+        .some(submissionId => normalizeValue(submissionId)
+            .toLowerCase()
+            .includes(normalizedSubmissionIdFilter))
+}
+
 function matchesFilters(
     submission: Submission,
     filters: FilterState,
     useMarathonMatchScores: boolean,
 ): boolean {
     if (!matchesFilterHandle(submission, filters.handle)) {
+        return false
+    }
+
+    if (!matchesFilterSubmissionId(submission, filters.submissionId)) {
         return false
     }
 
@@ -361,6 +393,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         handle: '',
         minScore: '',
         startDate: '',
+        submissionId: '',
     })
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
@@ -639,6 +672,19 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         placeholder='Filter by handle'
                         type='text'
                         value={filters.handle}
+                    />
+                </label>
+
+                <label className={styles.filterLabel} htmlFor='submission-id-filter'>
+                    Submission ID
+                    <input
+                        className={styles.filterInput}
+                        id='submission-id-filter'
+                        name='submissionId'
+                        onChange={handleFilterChange}
+                        placeholder='Filter by submission ID'
+                        type='text'
+                        value={filters.submissionId}
                     />
                 </label>
 
