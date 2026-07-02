@@ -17,6 +17,7 @@ const mockUseDownloadAllSubmissions = jest.fn()
 const mockUseDownloadSubmission = jest.fn()
 const mockUseFetchSubmissions = jest.fn()
 const mockFetchMembersByUserIds = jest.fn()
+const mockIsMarathonMatchChallenge = jest.fn()
 
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
@@ -95,7 +96,23 @@ jest.mock('../../../../../lib/utils', () => ({
     getSubmissionInitialScore: (): number => 0,
     getSubmissionProvisionalScore: (): number => 0,
     getSubmissionSystemScore: (): number => 0,
-    isMarathonMatchChallenge: (): boolean => false,
+    getSubmissionTestProgress: (
+        submission: {
+            reviewSummation?: Array<{
+                metadata?: {
+                    testProcess?: string
+                    testType?: string
+                }
+            }>
+        },
+    ): { process?: string } => {
+        const metadata = submission.reviewSummation?.[0]?.metadata
+
+        return {
+            process: metadata?.testProcess ?? metadata?.testType,
+        }
+    },
+    isMarathonMatchChallenge: (...args: unknown[]): unknown => mockIsMarathonMatchChallenge(...args),
     showErrorToast: jest.fn(),
 }))
 
@@ -105,7 +122,7 @@ jest.mock('./SubmissionsSection.module.scss', () => new Proxy({}, {
 
 const baseChallenge: Challenge = {
     id: 'challenge-1',
-    name: 'Challenge',
+    name: 'Marathon Match',
     status: 'ACTIVE',
 }
 
@@ -114,25 +131,46 @@ const submissions: Submission[] = [
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T10:00:00.000Z',
         createdBy: 'member-1',
-        id: 'alpha-submission',
+        id: 'alpha-system-submission',
         memberHandle: 'alpha',
+        reviewSummation: [
+            {
+                metadata: {
+                    testProcess: 'system',
+                },
+            },
+        ],
         type: 'SUBMISSION',
     },
     {
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T11:00:00.000Z',
         createdBy: 'member-2',
-        id: 'bravo-submission',
+        id: 'bravo-provisional-submission',
         memberHandle: 'bravo',
+        reviewSummation: [
+            {
+                metadata: {
+                    testProcess: 'provisional',
+                },
+            },
+        ],
         type: 'SUBMISSION',
     },
     {
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T12:00:00.000Z',
         createdBy: 'member-3',
-        id: 'charlie-submission',
+        id: 'charlie-example-submission',
         legacySubmissionId: 'legacy-charlie-id',
         memberHandle: 'charlie',
+        reviewSummation: [
+            {
+                metadata: {
+                    testType: 'example',
+                },
+            },
+        ],
         type: 'SUBMISSION',
     },
 ]
@@ -141,6 +179,7 @@ describe('SubmissionsSection', () => {
     beforeEach(() => {
         jest.clearAllMocks()
 
+        mockIsMarathonMatchChallenge.mockReturnValue(true)
         mockUseDownloadAllSubmissions.mockReturnValue({
             downloadAll: jest.fn(),
             isDownloading: false,
@@ -175,11 +214,11 @@ describe('SubmissionsSection', () => {
             },
         })
 
-        expect(screen.getByText('bravo-submission'))
+        expect(screen.getByText('bravo-provisional-submission'))
             .toBeTruthy()
-        expect(screen.queryByText('alpha-submission'))
+        expect(screen.queryByText('alpha-system-submission'))
             .toBeNull()
-        expect(screen.queryByText('charlie-submission'))
+        expect(screen.queryByText('charlie-example-submission'))
             .toBeNull()
         expect(screen.getByTestId('pagination-total').textContent)
             .toBe('1')
@@ -190,11 +229,48 @@ describe('SubmissionsSection', () => {
             },
         })
 
-        expect(screen.getByText('charlie-submission'))
+        expect(screen.getByText('charlie-example-submission'))
             .toBeTruthy()
-        expect(screen.queryByText('alpha-submission'))
+        expect(screen.queryByText('alpha-system-submission'))
             .toBeNull()
-        expect(screen.queryByText('bravo-submission'))
+        expect(screen.queryByText('bravo-provisional-submission'))
+            .toBeNull()
+    })
+
+    it('filters marathon submissions by test type', () => {
+        render(
+            <SubmissionsSection
+                challenge={baseChallenge}
+                challengeId='challenge-1'
+            />,
+        )
+
+        fireEvent.change(screen.getByLabelText('Test type'), {
+            target: {
+                value: 'system',
+            },
+        })
+
+        expect(screen.getByText('alpha-system-submission'))
+            .toBeTruthy()
+        expect(screen.queryByText('bravo-provisional-submission'))
+            .toBeNull()
+        expect(screen.queryByText('charlie-example-submission'))
+            .toBeNull()
+        expect(screen.getByTestId('pagination-total').textContent)
+            .toBe('1')
+
+        fireEvent.change(screen.getByLabelText('Test type'), {
+            target: {
+                value: 'example',
+            },
+        })
+
+        expect(screen.getByText('charlie-example-submission'))
+            .toBeTruthy()
+        expect(screen.queryByText('alpha-system-submission'))
+            .toBeNull()
+        expect(screen.queryByText('bravo-provisional-submission'))
             .toBeNull()
     })
 })
