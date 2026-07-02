@@ -457,6 +457,60 @@ describe('BillingAccountLineItemsModal', () => {
             .toHaveBeenCalledWith('assignment-5245')
     })
 
+    it('matches repeated engagement payment splits by payment date before deriving markup', async () => {
+        mockedFetchAssignmentPaymentSplits.mockResolvedValue([
+            {
+                createdAt: '2026-06-01T17:07:17.000Z',
+                details: [
+                    {
+                        billingAccount: '80001063',
+                        totalAmount: 544.99,
+                    },
+                ],
+                paymentId: 'june-1-payment',
+            },
+            {
+                createdAt: '2026-06-15T22:58:18.000Z',
+                details: [
+                    {
+                        billingAccount: '80001063',
+                        totalAmount: 544.99,
+                    },
+                ],
+                paymentId: 'june-15-payment',
+            },
+        ])
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '931.93',
+                    date: '2026-06-15T22:58:20.000Z',
+                    externalId: 'assignment-5507',
+                    externalName: 'Wipro - UHG - Power BI resources',
+                    externalType: 'ENGAGEMENT',
+                },
+            ],
+            consumedBudget: 931.93,
+            markup: 0.7125,
+            totalBudgetRemaining: 68.07,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$544.99'))
+                .toBeTruthy()
+            expect(screen.getByText('$386.94'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$544.19'))
+            .toBeNull()
+        expect(screen.queryByText('$387.74'))
+            .toBeNull()
+        expect(mockedFetchAssignmentPaymentSplits)
+            .toHaveBeenCalledWith('assignment-5507')
+    })
+
     it('builds engagement links from assignment-backed billing rows for copilot views', () => {
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [

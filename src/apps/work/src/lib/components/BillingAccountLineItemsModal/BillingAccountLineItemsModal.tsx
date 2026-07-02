@@ -51,6 +51,7 @@ interface BillingAccountModalLineItem extends BillingAccountLineItem {
 
 interface EngagementPaymentSplit {
     challengeFee?: number
+    date?: string
     paymentAmount: number
 }
 
@@ -252,13 +253,33 @@ function getFinancePaymentSplit(payment: AssignmentPayment): EngagementPaymentSp
     }
 
     const challengeFee = getPaymentChallengeFee(payment)
+    const paymentDate = getFinancePaymentDate(payment)
 
     return {
         challengeFee: challengeFee === undefined
             ? undefined
             : roundCurrencyAmount(challengeFee),
+        ...(paymentDate ? { date: paymentDate } : {}),
         paymentAmount: roundCurrencyAmount(paymentAmount),
     }
+}
+
+/**
+ * Resolves the finance payment date used to match one billing ledger row.
+ *
+ * @param payment Finance payment row.
+ * @returns UTC date string at day precision, or `undefined` when no payment date is available.
+ * @remarks Engagement assignments can have repeated payments with the same
+ * amount. Matching by date lets the modal use the persisted payment amount for
+ * the specific consumed row instead of falling back to current billing markup.
+ */
+function getFinancePaymentDate(payment: AssignmentPayment): string | undefined {
+    const paymentDate = normalizeRouteId(payment.createdAt)
+        || normalizeRouteId(payment.updatedAt)
+
+    return paymentDate
+        ? formatDate(paymentDate)
+        : undefined
 }
 
 /**
@@ -286,6 +307,103 @@ function getAggregatePaymentSplit(
             0,
         )),
     }
+}
+
+/**
+ * Finds the single finance split whose payment date matches a billing row.
+ *
+ * @param item Billing-account engagement row.
+ * @param splits Finance payment splits for the row assignment and billing account.
+ * @returns Date-matched split with an inferred fee when needed, or `undefined`
+ * when the date is ambiguous or incompatible with the billing amount.
+ * @remarks This is used before aggregate matching because repeated assignment
+ * payments can share an external id and amount while representing different
+ * ledger rows.
+ */
+function getDateMatchedPaymentSplit(
+    item: BillingAccountLineItem,
+    splits: EngagementPaymentSplit[],
+): EngagementPaymentSplit | undefined {
+    const lineItemDate = formatDate(item.date)
+    const dateMatchedSplits = splits.filter(split => split.date === lineItemDate)
+
+    if (dateMatchedSplits.length !== 1) {
+        return undefined
+    }
+
+    const [dateMatchedSplit] = dateMatchedSplits
+
+    if (dateMatchedSplit.paymentAmount > item.amount) {
+        return undefined
+    }
+
+    if (
+        dateMatchedSplit.challengeFee !== undefined
+        && !currencyAmountsMatch(
+            dateMatchedSplit.paymentAmount + dateMatchedSplit.challengeFee,
+            item.amount,
+        )
+    ) {
+        return undefined
+    }
+
+    return {
+        ...dateMatchedSplit,
+        challengeFee: dateMatchedSplit.challengeFee
+            ?? roundCurrencyAmount(item.amount - dateMatchedSplit.paymentAmount),
+    }
+}
+
+/**
+ * Matches finance splits to a billing row by exact amount or safe aggregate fallback.
+ *
+ * @param item Billing-account engagement row.
+ * @param splits Finance payment splits for the row assignment and billing account.
+ * @returns Matching split when the finance values reconcile to the billing row.
+ * @remarks Used after date matching so existing single-payment and aggregate
+ * reconciliation behavior remains unchanged.
+ */
+function getAmountMatchedPaymentSplit(
+    item: BillingAccountLineItem,
+    splits: EngagementPaymentSplit[],
+): EngagementPaymentSplit | undefined {
+    const matchingPaymentSplits = splits.filter(split => (
+        split.challengeFee !== undefined
+        && currencyAmountsMatch(split.paymentAmount + split.challengeFee, item.amount)
+    ))
+
+    if (matchingPaymentSplits.length === 1) {
+        return matchingPaymentSplits[0]
+    }
+
+    const aggregateSplit = getAggregatePaymentSplit(splits)
+
+    if (
+        aggregateSplit
+        && aggregateSplit.challengeFee !== undefined
+        && currencyAmountsMatch(
+            aggregateSplit.paymentAmount + aggregateSplit.challengeFee,
+            item.amount,
+        )
+    ) {
+        return aggregateSplit
+    }
+
+    if (
+        aggregateSplit
+        && aggregateSplit.paymentAmount <= item.amount
+        && (
+            splits.length === 1
+            || matchingPaymentSplits.length === 0
+        )
+    ) {
+        return {
+            challengeFee: roundCurrencyAmount(item.amount - aggregateSplit.paymentAmount),
+            paymentAmount: aggregateSplit.paymentAmount,
+        }
+    }
+
+    return undefined
 }
 
 /**
@@ -583,43 +701,13 @@ function getEngagementFinancePaymentSplit(
         return undefined
     }
 
-    const matchingPaymentSplits = financeSplits.filter(split => (
-        split.challengeFee !== undefined
-        && currencyAmountsMatch(split.paymentAmount + split.challengeFee, item.amount)
-    ))
+    const dateMatchedPaymentSplit = getDateMatchedPaymentSplit(item, financeSplits)
 
-    if (matchingPaymentSplits.length === 1) {
-        return matchingPaymentSplits[0]
+    if (dateMatchedPaymentSplit) {
+        return dateMatchedPaymentSplit
     }
 
-    const aggregateSplit = getAggregatePaymentSplit(financeSplits)
-
-    if (
-        aggregateSplit
-        && aggregateSplit.challengeFee !== undefined
-        && currencyAmountsMatch(
-            aggregateSplit.paymentAmount + aggregateSplit.challengeFee,
-            item.amount,
-        )
-    ) {
-        return aggregateSplit
-    }
-
-    if (
-        aggregateSplit
-        && aggregateSplit.paymentAmount <= item.amount
-        && (
-            financeSplits.length === 1
-            || matchingPaymentSplits.length === 0
-        )
-    ) {
-        return {
-            challengeFee: roundCurrencyAmount(item.amount - aggregateSplit.paymentAmount),
-            paymentAmount: aggregateSplit.paymentAmount,
-        }
-    }
-
-    return undefined
+    return getAmountMatchedPaymentSplit(item, financeSplits)
 }
 
 /**
