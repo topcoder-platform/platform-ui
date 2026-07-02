@@ -131,8 +131,8 @@ const submissions: Submission[] = [
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T10:00:00.000Z',
         createdBy: 'member-1',
-        id: 'system-submission',
-        memberHandle: 'system-user',
+        id: 'alpha-system-submission',
+        memberHandle: 'alpha',
         reviewSummation: [
             {
                 metadata: {
@@ -146,8 +146,8 @@ const submissions: Submission[] = [
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T11:00:00.000Z',
         createdBy: 'member-2',
-        id: 'provisional-submission',
-        memberHandle: 'provisional-user',
+        id: 'bravo-provisional-submission',
+        memberHandle: 'bravo',
         reviewSummation: [
             {
                 metadata: {
@@ -161,8 +161,9 @@ const submissions: Submission[] = [
         challengeId: 'challenge-1',
         createdAt: '2026-07-01T12:00:00.000Z',
         createdBy: 'member-3',
-        id: 'example-submission',
-        memberHandle: 'example-user',
+        id: 'charlie-example-submission',
+        legacySubmissionId: 'legacy-charlie-id',
+        memberHandle: 'charlie',
         reviewSummation: [
             {
                 metadata: {
@@ -199,6 +200,43 @@ describe('SubmissionsSection', () => {
         mockFetchMembersByUserIds.mockResolvedValue([])
     })
 
+    it('filters submissions by current or legacy submission ID', () => {
+        render(
+            <SubmissionsSection
+                challenge={baseChallenge}
+                challengeId='challenge-1'
+            />,
+        )
+
+        fireEvent.change(screen.getByLabelText('Submission ID'), {
+            target: {
+                value: 'BRAVO',
+            },
+        })
+
+        expect(screen.getByText('bravo-provisional-submission'))
+            .toBeTruthy()
+        expect(screen.queryByText('alpha-system-submission'))
+            .toBeNull()
+        expect(screen.queryByText('charlie-example-submission'))
+            .toBeNull()
+        expect(screen.getByTestId('pagination-total').textContent)
+            .toBe('1')
+
+        fireEvent.change(screen.getByLabelText('Submission ID'), {
+            target: {
+                value: 'legacy-charlie',
+            },
+        })
+
+        expect(screen.getByText('charlie-example-submission'))
+            .toBeTruthy()
+        expect(screen.queryByText('alpha-system-submission'))
+            .toBeNull()
+        expect(screen.queryByText('bravo-provisional-submission'))
+            .toBeNull()
+    })
+
     it('filters marathon submissions by test type', () => {
         render(
             <SubmissionsSection
@@ -213,11 +251,11 @@ describe('SubmissionsSection', () => {
             },
         })
 
-        expect(screen.getByText('system-submission'))
+        expect(screen.getByText('alpha-system-submission'))
             .toBeTruthy()
-        expect(screen.queryByText('provisional-submission'))
+        expect(screen.queryByText('bravo-provisional-submission'))
             .toBeNull()
-        expect(screen.queryByText('example-submission'))
+        expect(screen.queryByText('charlie-example-submission'))
             .toBeNull()
         expect(screen.getByTestId('pagination-total').textContent)
             .toBe('1')
@@ -228,11 +266,11 @@ describe('SubmissionsSection', () => {
             },
         })
 
-        expect(screen.getByText('example-submission'))
+        expect(screen.getByText('charlie-example-submission'))
             .toBeTruthy()
-        expect(screen.queryByText('system-submission'))
+        expect(screen.queryByText('alpha-system-submission'))
             .toBeNull()
-        expect(screen.queryByText('provisional-submission'))
+        expect(screen.queryByText('bravo-provisional-submission'))
             .toBeNull()
     })
 })
