@@ -203,8 +203,9 @@ function createQuery(
         query.set('projectId', String(filters.projectId))
     }
 
-    if (filters.status && filters.status !== 'all') {
-        query.set('status', toEngagementStatusApi(filters.status))
+    const statuses = normalizeStatusFilters(filters.status)
+    if (statuses.length === 1) {
+        query.set('status', toEngagementStatusApi(statuses[0]))
     }
 
     if (filters.title) {
@@ -260,6 +261,26 @@ function createQuery(
     }
 
     return query.toString()
+}
+
+/**
+ * Normalizes engagement status filters before API requests are built.
+ *
+ * The work UI can hold one or more selected status labels, while the current
+ * engagements API only accepts one status per request. This helper trims empty
+ * entries and removes legacy `all` sentinels before request fan-out.
+ *
+ * @param status single status value or selected status labels from the list filter.
+ * @returns non-empty status labels that should be applied to API requests.
+ */
+function normalizeStatusFilters(status?: string | string[]): string[] {
+    const statuses = Array.isArray(status) ? status : [status]
+    const normalizedStatuses = statuses
+        .map(value => String(value || '')
+            .trim())
+        .filter(value => !!value && value.toLowerCase() !== 'all')
+
+    return Array.from(new Set(normalizedStatuses))
 }
 
 function serializeEngagementPayload(data: EngagementUpsertData): Record<string, unknown> {
@@ -606,9 +627,41 @@ export async function fetchEngagements(
         }
     }
 
+    const normalizedStatuses = normalizeStatusFilters(filters.status)
+
+    if (normalizedStatuses.length > 1) {
+        const responses = await Promise.all(
+            normalizedStatuses.map(status => fetchEngagements({
+                ...filters,
+                projectIds: normalizedProjectIds,
+                status,
+            }, params)),
+        )
+        const data = responses.flatMap(response => response.data)
+        const total = responses.reduce(
+            (sum, response) => sum + (response.metadata.total || response.data.length),
+            0,
+        )
+        const totalPages = Math.max(
+            0,
+            ...responses.map(response => response.metadata.totalPages || 0),
+        )
+
+        return {
+            data,
+            metadata: {
+                page: params.page || 1,
+                perPage: params.perPage || responses[0]?.metadata.perPage || 0,
+                total,
+                totalPages,
+            },
+        }
+    }
+
     const query = createQuery({
         ...filters,
         projectIds: normalizedProjectIds,
+        status: normalizedStatuses[0],
     }, params)
     const url = query
         ? `${ENGAGEMENTS_API_URL}?${query}`

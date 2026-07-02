@@ -104,13 +104,20 @@ jest.mock('../../../lib/components', () => ({
         </div>
     ),
     EngagementsFilter: function MockEngagementsFilter(props: {
-        filters: { title?: string }
-        onFiltersChange: (nextFilters: { title?: string }) => void
+        filters: { status?: string[]; title?: string }
+        onFiltersChange: (nextFilters: { status?: string[]; title?: string }) => void
     }) {
         function handleApplyTitleFilter(): void {
             props.onFiltersChange({
                 ...props.filters,
                 title: 'test pro',
+            })
+        }
+
+        function handleApplyStatusFilter(): void {
+            props.onFiltersChange({
+                ...props.filters,
+                status: ['Open', 'Active'],
             })
         }
 
@@ -121,6 +128,12 @@ jest.mock('../../../lib/components', () => ({
                     onClick={handleApplyTitleFilter}
                 >
                     Apply title filter
+                </button>
+                <button
+                    type='button'
+                    onClick={handleApplyStatusFilter}
+                >
+                    Apply status filter
                 </button>
             </div>
         )
@@ -445,6 +458,29 @@ describe('EngagementsListPage', () => {
                         sortBy: 'createdAt',
                         sortOrder: 'desc',
                         status: undefined,
+                    },
+                    {
+                        enabled: true,
+                    },
+                )
+        })
+    })
+
+    it('passes selected engagement statuses to engagement fetch requests', async () => {
+        renderPage('/engagements', '/engagements')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply status filter' }))
+
+        await waitFor(() => {
+            expect(mockedUseFetchEngagements)
+                .toHaveBeenLastCalledWith(
+                    undefined,
+                    {
+                        includePrivate: true,
+                        projectId: undefined,
+                        sortBy: 'createdAt',
+                        sortOrder: 'desc',
+                        status: ['Open', 'Active'],
                     },
                     {
                         enabled: true,

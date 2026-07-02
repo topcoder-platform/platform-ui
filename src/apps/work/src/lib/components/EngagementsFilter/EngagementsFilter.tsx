@@ -6,7 +6,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import Select, { SingleValue } from 'react-select'
+import Select, { MultiValue, SingleValue } from 'react-select'
 
 import {
     IconOutline,
@@ -27,7 +27,7 @@ export interface EngagementsListFilters {
     projectName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
-    status?: string
+    status?: string[]
     title?: string
     visibility?: 'private' | 'public'
 }
@@ -54,16 +54,34 @@ const VISIBILITY_OPTIONS: SelectOption[] = [
 ]
 
 function getStatusOptions(): SelectOption[] {
-    return [
-        {
-            label: 'All',
-            value: 'all',
-        },
-        ...ENGAGEMENT_STATUSES.map(status => ({
-            label: status,
-            value: status,
-        })),
-    ]
+    return ENGAGEMENT_STATUSES.map(status => ({
+        label: status,
+        value: status,
+    }))
+}
+
+/**
+ * Resolves the selected status options for the engagement status filter.
+ *
+ * The ticket default treats an empty filter value as all engagement statuses
+ * selected, so clearing the multi-select returns the control to the default
+ * unfiltered state.
+ *
+ * @param statusOptions available engagement status select options.
+ * @param selectedStatuses selected status labels stored in the page filters.
+ * @returns selected status options, or every status option for the default state.
+ */
+function getSelectedStatusOptions(
+    statusOptions: SelectOption[],
+    selectedStatuses?: string[],
+): SelectOption[] {
+    if (!selectedStatuses?.length) {
+        return statusOptions
+    }
+
+    const selectedStatusValues = new Set(selectedStatuses)
+
+    return statusOptions.filter(option => selectedStatusValues.has(option.value))
 }
 
 export const EngagementsFilter: FC<EngagementsFilterProps> = (props: EngagementsFilterProps) => {
@@ -114,8 +132,8 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
 
     const statusOptions = useMemo<SelectOption[]>(() => getStatusOptions(), [])
 
-    const selectedStatus = useMemo(
-        () => statusOptions.find(option => option.value === (filters.status || 'all')),
+    const selectedStatus = useMemo<SelectOption[]>(
+        () => getSelectedStatusOptions(statusOptions, filters.status),
         [filters.status, statusOptions],
     )
 
@@ -132,12 +150,16 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         setProjectNameInput(event.target.value)
     }
 
-    function handleStatusChange(nextOption: SingleValue<SelectOption>): void {
+    function handleStatusChange(nextOptions: MultiValue<SelectOption>): void {
+        const selectedStatuses = Array.from(nextOptions || [])
+            .map(option => option.value)
+            .filter(Boolean)
+
         onFiltersChange({
             ...filters,
-            status: nextOption?.value === 'all'
+            status: selectedStatuses.length === 0 || selectedStatuses.length === statusOptions.length
                 ? undefined
-                : nextOption?.value,
+                : selectedStatuses,
         })
     }
 
@@ -188,20 +210,22 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
 
             <div className={styles.filterField}>
                 <label htmlFor='work-engagements-status'>Engagement Status</label>
-                <Select
+                <Select<SelectOption, true>
                     inputId='work-engagements-status'
                     className='react-select-container'
                     classNamePrefix='select'
                     options={statusOptions}
                     value={selectedStatus}
                     onChange={handleStatusChange}
-                    isClearable={false}
+                    closeMenuOnSelect={false}
+                    isClearable
+                    isMulti
                 />
             </div>
 
             <div className={styles.filterField}>
                 <label htmlFor='work-engagements-visibility'>Visibility</label>
-                <Select
+                <Select<SelectOption, false>
                     inputId='work-engagements-visibility'
                     className='react-select-container'
                     classNamePrefix='select'
