@@ -113,20 +113,24 @@ export interface AssignmentPayment {
     createdBy?: string
     createdByHandle?: string
     createdAt?: string
+    datePaid?: string
     description?: string
     details?: Array<{
         amount?: number
         billingAccount?: number | string
         billingAccountName?: string
         challengeFee?: number | string
+        datePaid?: string
         grossAmount?: number
         hoursWorked?: number | string
+        releaseDate?: string
         totalAmount?: number
     }>
     hoursWorked?: number | string
     id?: number | string
     paymentId?: number | string
     paymentAmount?: number | string
+    releaseDate?: string
     status?: string
     title?: string
     updatedAt?: string
