@@ -379,8 +379,8 @@ function getChallengeLineItemIds(items: BillingAccountLineItem[]): string[] {
  * @param items Normalized billing-account line items.
  * @returns Unique assignment ids from engagement consumed rows.
  * @remarks Locked engagement rows do not correspond to completed finance
- * payments, and rows that already carry the persisted split do not need
- * additional finance lookups.
+ * payments. Consumed rows always hydrate from finance so exact payment splits
+ * can override stale or markup-derived billing-account aliases.
  */
 function getEngagementPaymentAssignmentIds(items: BillingAccountLineItem[]): string[] {
     return Array.from(new Set(
@@ -388,7 +388,6 @@ function getEngagementPaymentAssignmentIds(items: BillingAccountLineItem[]): str
             .filter(item => (
                 item.externalType === 'ENGAGEMENT'
                 && item.status === 'consumed'
-                && (item.paymentAmount === undefined || item.challengeFee === undefined)
             ))
             .map(item => normalizeRouteId(item.externalId))
             .filter((id): id is string => !!id),
@@ -643,12 +642,12 @@ function getLineItemChallengeFeeAmount(
     billingAccountDetails: BillingAccountDetails,
     challengeDetailsById: ChallengeDetailsById | undefined,
 ): number | undefined {
-    if (item.externalType === 'ENGAGEMENT' && item.challengeFee !== undefined) {
-        return Number(item.challengeFee.toFixed(2))
-    }
-
     if (engagementPaymentSplit?.challengeFee !== undefined) {
         return engagementPaymentSplit.challengeFee
+    }
+
+    if (item.externalType === 'ENGAGEMENT' && item.challengeFee !== undefined) {
+        return Number(item.challengeFee.toFixed(2))
     }
 
     const consumedChallengeFeeAmount = getConsumedChallengeFeeAmount(item)
@@ -680,12 +679,12 @@ function getEngagementMemberPaymentAmount(
     billingAccountDetails: BillingAccountDetails,
     engagementPaymentSplit: EngagementPaymentSplit | undefined,
 ): number | undefined {
-    if (item.paymentAmount !== undefined) {
-        return item.paymentAmount
-    }
-
     if (engagementPaymentSplit?.paymentAmount !== undefined) {
         return engagementPaymentSplit.paymentAmount
+    }
+
+    if (item.paymentAmount !== undefined) {
+        return item.paymentAmount
     }
 
     if (item.memberPaymentAmount !== undefined) {
