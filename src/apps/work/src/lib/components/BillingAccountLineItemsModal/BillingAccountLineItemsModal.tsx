@@ -54,6 +54,16 @@ interface EngagementPaymentSplit {
     paymentAmount: number
 }
 
+interface EngagementPaymentSplitMatch {
+    payment: AssignmentPayment
+    split: EngagementPaymentSplit
+}
+
+interface EngagementPaymentSplitMatchResult {
+    matchCount: number
+    split?: EngagementPaymentSplit
+}
+
 const ENGAGEMENT_ASSIGNMENT_FILTERS = {
     includePrivate: true,
 }
@@ -98,6 +108,83 @@ function formatDate(dateString: string): string {
     const day = String(date.getUTCDate())
         .padStart(2, '0')
     return `${year}-${month}-${day}`
+}
+
+/**
+ * Normalizes timestamp-like values to a UTC date key.
+ *
+ * @param value Raw timestamp or date value from billing-account or finance data.
+ * @returns `YYYY-MM-DD` date key, or `undefined` when the value is blank or invalid.
+ * @remarks Used only to disambiguate repeated engagement payments with the
+ * same ledger amount.
+ */
+function getDateKey(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalizedValue = value instanceof Date
+        ? value
+        : String(value)
+            .trim()
+
+    if (!normalizedValue) {
+        return undefined
+    }
+
+    const isoDateMatch = String(normalizedValue)
+        .match(/^(\d{4}-\d{2}-\d{2})/)
+
+    if (isoDateMatch) {
+        return isoDateMatch[1]
+    }
+
+    const date = new Date(normalizedValue)
+
+    if (Number.isNaN(date.getTime())) {
+        return undefined
+    }
+
+    return date.toISOString()
+        .slice(0, 10)
+}
+
+/**
+ * Collects date keys carried by a finance payment.
+ *
+ * @param payment Finance payment row.
+ * @returns Unique date keys from payment-level and detail-level timestamps.
+ * @remarks Finance responses have varied over time, so both top-level and
+ * detail-level date fields are considered when matching billing-account rows.
+ */
+function getPaymentDateKeys(payment: AssignmentPayment): string[] {
+    return Array.from(new Set([
+        getDateKey(payment.createdAt),
+        getDateKey(payment.updatedAt),
+        getDateKey(payment.datePaid),
+        getDateKey(payment.releaseDate),
+        ...(payment.details || []).flatMap(detail => [
+            getDateKey(detail.datePaid),
+            getDateKey(detail.releaseDate),
+        ]),
+    ].filter((dateKey): dateKey is string => !!dateKey)))
+}
+
+/**
+ * Checks whether a finance payment date matches a billing-account line item.
+ *
+ * @param payment Finance payment row.
+ * @param item Billing-account line item being reconciled.
+ * @returns `true` when both records carry the same UTC date.
+ */
+function paymentDateMatchesLineItem(
+    payment: AssignmentPayment,
+    item: BillingAccountLineItem,
+): boolean {
+    const lineItemDateKey = getDateKey(item.date)
+
+    return !!lineItemDateKey && getPaymentDateKeys(payment)
+        .includes(lineItemDateKey)
 }
 
 /**
@@ -252,13 +339,33 @@ function getFinancePaymentSplit(payment: AssignmentPayment): EngagementPaymentSp
     }
 
     const challengeFee = getPaymentChallengeFee(payment)
+    const paymentDate = getFinancePaymentDate(payment)
 
     return {
         challengeFee: challengeFee === undefined
             ? undefined
             : roundCurrencyAmount(challengeFee),
+        ...(paymentDate ? { date: paymentDate } : {}),
         paymentAmount: roundCurrencyAmount(paymentAmount),
     }
+}
+
+/**
+ * Resolves the finance payment date used to match one billing ledger row.
+ *
+ * @param payment Finance payment row.
+ * @returns UTC date string at day precision, or `undefined` when no payment date is available.
+ * @remarks Engagement assignments can have repeated payments with the same
+ * amount. Matching by date lets the modal use the persisted payment amount for
+ * the specific consumed row instead of falling back to current billing markup.
+ */
+function getFinancePaymentDate(payment: AssignmentPayment): string | undefined {
+    const paymentDate = normalizeRouteId(payment.createdAt)
+        || normalizeRouteId(payment.updatedAt)
+
+    return paymentDate
+        ? formatDate(paymentDate)
+        : undefined
 }
 
 /**
@@ -572,24 +679,26 @@ function getEngagementFinancePaymentSplit(
         return undefined
     }
 
-    const financeSplits = filterPaymentsForBillingAccount(
+    const financeSplitMatches = filterPaymentsForBillingAccount(
         assignmentPayments,
         billingAccountDetails.id,
     )
-        .map(getFinancePaymentSplit)
-        .filter((split): split is EngagementPaymentSplit => !!split)
+        .map(getFinancePaymentSplitMatch)
+        .filter((match): match is EngagementPaymentSplitMatch => !!match)
+
+    const financeSplits = financeSplitMatches.map(match => match.split)
 
     if (financeSplits.length === 0) {
         return undefined
     }
 
-    const matchingPaymentSplits = financeSplits.filter(split => (
-        split.challengeFee !== undefined
-        && currencyAmountsMatch(split.paymentAmount + split.challengeFee, item.amount)
-    ))
+    const matchingPaymentSplitResult = getLineItemMatchingPaymentSplit(
+        item,
+        financeSplitMatches,
+    )
 
-    if (matchingPaymentSplits.length === 1) {
-        return matchingPaymentSplits[0]
+    if (matchingPaymentSplitResult.split) {
+        return matchingPaymentSplitResult.split
     }
 
     const aggregateSplit = getAggregatePaymentSplit(financeSplits)
@@ -610,7 +719,7 @@ function getEngagementFinancePaymentSplit(
         && aggregateSplit.paymentAmount <= item.amount
         && (
             financeSplits.length === 1
-            || matchingPaymentSplits.length === 0
+            || matchingPaymentSplitResult.matchCount === 0
         )
     ) {
         return {
