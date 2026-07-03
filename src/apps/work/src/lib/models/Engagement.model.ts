@@ -96,7 +96,7 @@ export interface EngagementFilters {
     projectIds?: Array<number | string>
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
-    status?: string
+    status?: string | string[]
     timezones?: string[]
     title?: string
 }
