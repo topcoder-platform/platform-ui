@@ -423,8 +423,8 @@ export const ProjectShowcasePage: FC = () => {
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const canManageProjectShowcasePosts = useMemo(
-        () => hasManagerRole(userRoles) ||
-            checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
+        () => hasManagerRole(userRoles)
+            || checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
         [loginUserInfo?.userId, projectResult.project, userRoles],
     )
 
