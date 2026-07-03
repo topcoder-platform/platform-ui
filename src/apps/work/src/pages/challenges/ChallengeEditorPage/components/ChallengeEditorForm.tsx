@@ -16,6 +16,7 @@ import {
 } from 'react-router-dom'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { EnvironmentConfig } from '~/config'
 import { Button } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../lib/components'
@@ -44,6 +45,7 @@ import {
     useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
+    useFetchTerms,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import {
@@ -54,6 +56,7 @@ import {
     Resource,
     ResourceRole,
     Reviewer,
+    Term,
 } from '../../../../lib/models'
 import {
     challengeEditorSchema,
@@ -314,6 +317,7 @@ const REVIEWER_REQUIRED_PHASE_KEYS = new Set(
     REVIEWER_REQUIRED_PHASES
         .map(phaseName => normalizeReviewerPhaseName(phaseName)),
 )
+const TERMS_NOT_AGREED_ERROR_TOKEN = 'not yet agreed to the following terms'
 const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
     DESIGN_WORK_TYPES
         .map(workType => [
@@ -446,6 +450,148 @@ function normalizeTextValue(value: unknown): string {
     }
 
     return value.trim()
+}
+
+/**
+ * Normalizes challenge term form values into term ids.
+ *
+ * The challenge editor usually stores terms as string ids, but persisted challenge payloads may
+ * also contain term-like objects while data is being hydrated. This helper keeps save-error link
+ * resolution tolerant of either shape.
+ *
+ * @param value Raw `terms` form value from the challenge editor.
+ * @returns A de-duplicated list of normalized term ids.
+ * @throws Does not throw.
+ */
+function normalizeSelectedTermIds(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return []
+    }
+
+    const selectedTermIds = value
+        .map(term => {
+            if (typeof term === 'string') {
+                return normalizeTextValue(term)
+            }
+
+            if (typeof term === 'object' && term) {
+                const termId = (term as Partial<Term>).id
+
+                return termId === undefined || termId === null
+                    ? ''
+                    : normalizeTextValue(String(termId))
+            }
+
+            return ''
+        })
+        .filter(Boolean)
+
+    return Array.from(new Set(selectedTermIds))
+}
+
+/**
+ * Builds the public Topcoder terms detail URL for a term id.
+ *
+ * The target URL uses the configured Topcoder host so generated links point to the active
+ * environment while preserving the community terms-detail route expected by members.
+ *
+ * @param termId Terms API identifier to include in the detail URL.
+ * @returns The public terms detail URL.
+ * @throws Does not throw.
+ */
+function getTermDetailUrl(termId: string): string {
+    const topcoderUrl = EnvironmentConfig.TOPCODER_URL.replace(/\/$/, '')
+
+    return `${topcoderUrl}/challenges/terms/detail/${encodeURIComponent(termId)}`
+}
+
+/**
+ * Finds selected challenge terms referenced by a save error.
+ *
+ * API errors for member assignment failures currently include only the human-readable term title.
+ * The editor cross-references that title with the selected challenge terms so it can render the
+ * corresponding terms-detail link beside the existing message.
+ *
+ * @param errorMessage Save error message returned by the API.
+ * @param selectedTermIds Term ids currently selected in the editor.
+ * @param terms Terms catalog fetched from terms-api.
+ * @returns Selected terms whose title appears in the error message.
+ * @throws Does not throw.
+ */
+function getTermsForSaveError(
+    errorMessage: string | undefined,
+    selectedTermIds: string[],
+    terms: Term[],
+): Term[] {
+    const normalizedErrorMessage = normalizeTextValue(errorMessage)
+    if (
+        !normalizedErrorMessage
+        || !normalizedErrorMessage
+            .toLowerCase()
+            .includes(TERMS_NOT_AGREED_ERROR_TOKEN)
+        || selectedTermIds.length === 0
+    ) {
+        return []
+    }
+
+    const selectedTermIdSet = new Set(selectedTermIds)
+    const normalizedErrorMessageLower = normalizedErrorMessage.toLowerCase()
+
+    return terms
+        .filter(term => (
+            selectedTermIdSet.has(term.id)
+            && normalizedErrorMessageLower.includes(term.title.toLowerCase())
+        ))
+}
+
+/**
+ * Renders a save error with optional terms-detail links.
+ *
+ * This keeps the two challenge-editor footers aligned while preserving the original error message
+ * text and adding copyable links only for matched terms errors.
+ *
+ * @param errorMessage Save error message to render.
+ * @param linkedTerms Terms that should be linked after the message.
+ * @returns The save-error element, or `undefined` when no message is available.
+ * @throws Does not throw.
+ */
+function renderSaveError(
+    errorMessage: string | undefined,
+    linkedTerms: Term[],
+): JSX.Element | undefined {
+    if (!errorMessage) {
+        return undefined
+    }
+
+    return (
+        <span className={styles.errorText}>
+            {errorMessage}
+            {linkedTerms.length > 0
+                ? (
+                    <>
+                        {' '}
+                        <span className={styles.termsErrorLinks}>
+                            Terms link:
+                            {' '}
+                            {linkedTerms.map((term, index) => (
+                                <span key={term.id}>
+                                    {index > 0 ? ', ' : undefined}
+                                    <a
+                                        className={styles.termsErrorLink}
+                                        href={getTermDetailUrl(term.id)}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
+                                        {term.title}
+                                    </a>
+                                </span>
+                            ))}
+                        </span>
+                    </>
+                )
+                : undefined}
+        </span>
+    )
 }
 
 /**
@@ -1704,6 +1850,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const values = watch()
     const challengeTracks = useFetchChallengeTracks().tracks
     const challengeTypes = useFetchChallengeTypes().challengeTypes
+    const terms = useFetchTerms().terms
     const timelineTemplates = useFetchTimelineTemplates().timelineTemplates
     const challengeResourcesResult = useFetchResources(currentChallengeId)
     const resourceRolesResult = useFetchResourceRoles()
@@ -3392,12 +3539,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 await saveChallenge(formData, {
                     redirectToViewOnSuccess: true,
                 })
-            } catch (error) {
-                if (isHandledLaunchBlockError(error)) {
-                    return
-                }
-
-                throw error
+            } catch {
+                // saveChallenge already updates the visible error state for manual submissions.
             }
         },
         [
@@ -3419,6 +3562,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const statusText = useMemo(
         () => getStatusText(isSaving ? 'saving' : saveStatus),
         [isSaving, saveStatus],
+    )
+    const selectedTermIds = useMemo(
+        () => normalizeSelectedTermIds(values.terms),
+        [values.terms],
+    )
+    const linkedSaveErrorTerms = useMemo(
+        () => getTermsForSaveError(saveError, selectedTermIds, terms),
+        [
+            saveError,
+            selectedTermIds,
+            terms,
+        ],
     )
     const submitButtonLabel = useMemo(
         () => getSubmitButtonLabel(normalizedChallengeStatus),
@@ -3569,9 +3724,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     {saveValidationError
                         ? <span className={styles.errorText}>{saveValidationError}</span>
                         : undefined}
-                    {saveError
-                        ? <span className={styles.errorText}>{saveError}</span>
-                        : undefined}
+                    {renderSaveError(saveError, linkedSaveErrorTerms)}
                     {isScorerBlockingChallengeActions
                         ? (
                             <span className={styles.warningText}>
@@ -3661,9 +3814,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     {saveValidationError
                                         ? <span className={styles.errorText}>{saveValidationError}</span>
                                         : undefined}
-                                    {saveError
-                                        ? <span className={styles.errorText}>{saveError}</span>
-                                        : undefined}
+                                    {renderSaveError(saveError, linkedSaveErrorTerms)}
                                 </div>
 
                                 <div className={styles.actions}>

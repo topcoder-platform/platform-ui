@@ -211,6 +211,18 @@
     font-size: 12px;
 }
 
+.termsErrorLinks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0 4px;
+}
+
+.termsErrorLink {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
 .warningText {
     color: #7c5b1b;
     font-size: 12px;
