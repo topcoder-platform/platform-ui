@@ -506,6 +506,30 @@ function getTermDetailUrl(termId: string): string {
 }
 
 /**
+ * Extracts the term titles named by the Resource API missing-terms save error.
+ *
+ * Resource API returns missing term titles in a bracketed, comma-delimited list. Parsing that
+ * list lets the editor link exact missing terms without also linking selected terms whose titles
+ * are substrings of another missing term.
+ *
+ * @param errorMessage Save error message returned by the API.
+ * @returns Normalized term titles named in the missing-terms error.
+ * @throws Does not throw.
+ */
+function extractMissingTermTitlesFromSaveError(errorMessage: string): string[] {
+    const termsListMatch = errorMessage.match(/\[([^\]]+)\]/)
+
+    if (!termsListMatch) {
+        return []
+    }
+
+    return termsListMatch[1]
+        .split(',')
+        .map(normalizeTextValue)
+        .filter(Boolean)
+}
+
+/**
  * Finds selected challenge terms referenced by a save error.
  *
  * API errors for member assignment failures currently include only the human-readable term title.
@@ -536,6 +560,19 @@ function getTermsForSaveError(
 
     const selectedTermIdSet = new Set(selectedTermIds)
     const normalizedErrorMessageLower = normalizedErrorMessage.toLowerCase()
+    const missingTermTitles = new Set(
+        extractMissingTermTitlesFromSaveError(normalizedErrorMessage)
+            .map(title => title.toLowerCase()),
+    )
+    const exactMatchedTerms = terms
+        .filter(term => (
+            selectedTermIdSet.has(term.id)
+            && missingTermTitles.has(term.title.toLowerCase())
+        ))
+
+    if (exactMatchedTerms.length > 0) {
+        return exactMatchedTerms
+    }
 
     return terms
         .filter(term => (

@@ -1337,6 +1337,9 @@ describe('ChallengeEditorForm', () => {
             isError: false,
             isLoading: false,
             terms: [{
+                id: 'standard-terms',
+                title: 'Standard Terms',
+            }, {
                 id: 'standard-terms-2026',
                 title: 'Standard Terms 2026',
             }],
@@ -1348,7 +1351,10 @@ describe('ChallengeEditorForm', () => {
                 <ChallengeEditorForm
                     challenge={{
                         ...validDraftChallenge,
-                        terms: ['standard-terms-2026'],
+                        terms: [
+                            'standard-terms',
+                            'standard-terms-2026',
+                        ],
                     }}
                 />
             </MemoryRouter>,
@@ -1364,6 +1370,9 @@ describe('ChallengeEditorForm', () => {
                 'href',
                 'https://example.com/topcoder/challenges/terms/detail/standard-terms-2026',
             )
+        expect(screen.queryByRole('link', { name: 'Standard Terms' }))
+            .not
+            .toBeInTheDocument()
     })
 
     it('preserves project billing markup when fetched draft data resets the form', async () => {
