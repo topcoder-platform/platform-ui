@@ -76,8 +76,9 @@ jest.mock('../../../../lib/components/form', () => {
 
 jest.mock('../../../../lib/utils', () => ({
     formatAssignmentCurrency: (value?: string): string => (value ? `$${value}` : ''),
-    getAssignmentStandardHoursPerWeek: (detail: { standardHoursPerWeek?: string }): string => (
-        detail.standardHoursPerWeek || ''
+    getAssignmentPaymentCycle: (): string => 'Weekly',
+    getAssignmentStandardHoursPerDay: (detail: { standardHoursPerDay?: string }): string => (
+        detail.standardHoursPerDay || ''
     ),
 }))
 
@@ -110,6 +111,7 @@ const defaultAssignmentDetails = {
     memberHandle: 'assigned_member',
     otherRemarks: 'active notes',
     ratePerHour: '20',
+    standardHoursPerDay: '8',
     standardHoursPerWeek: '40',
     startDate: '2026-05-01T00:00:00.000Z',
 }

@@ -260,7 +260,6 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                                                         setActiveAssignmentIndex(index)
                                                                     }}
                                                                     placeholder='Search user handle'
-                                                                    required
                                                                     valueField='handle'
                                                                 />
                                                             )}
