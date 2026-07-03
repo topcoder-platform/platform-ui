@@ -39,6 +39,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `prizeSets`: placement prizes are required unless `funChallenge` is `true`.
 - `assignedMemberId`: optional while drafting, but required before launching a `Task` challenge so the active task is scoped to its assignee instead of becoming publicly registrable.
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
+- `submissionType`: optional editor-only radio value, either `zip` or `url`, persisted to challenge metadata as `submission_type`.
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 - `reviewer`: optional for task challenges.
@@ -89,6 +90,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Payment Creator`: read-only `Prizes & Billing` summary value that shows the challenge creator handle. If the challenge `createdBy` value is a numeric user id, the editor resolves it through the member profile API so later viewers see the original creator handle instead of the raw id.
 - `ReviewTypeField`: task-only reviewer controls; enforces internal review type, allows searching any community reviewer handle, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag. Only the checkbox control toggles the value so nearby text clicks do not change it accidentally.
+- `Submission type`: advanced-option radio that writes `submission_type=zip` or `submission_type=url` challenge metadata. Missing metadata defaults to URL for Wipro/Topgear groups and zip for normal Topcoder challenges.
 - Saved selector values may come from legacy challenge fields or challenge resources. The editor restores task `assignedMemberId`, `copilot`, and task `reviewer` from matching resource assignments first, falls back to role-name matches when resource rows are missing role ids, and then falls back to legacy challenge payload shapes.
 - Task-only assignee and reviewer handling follows the resolved challenge type whenever type metadata is present. Persisted task flags are only a fallback for incomplete legacy payloads that omit the type identity entirely.
 

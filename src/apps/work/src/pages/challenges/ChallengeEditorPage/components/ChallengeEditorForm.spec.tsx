@@ -699,6 +699,9 @@ jest.mock('./StockArtsField', () => ({
 jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
+jest.mock('./SubmissionTypeField', () => ({
+    SubmissionTypeField: () => <>Submission Type Field</>,
+}))
 jest.mock('./TermsField', () => ({
     TermsField: jest.fn(() => <></>),
 }))

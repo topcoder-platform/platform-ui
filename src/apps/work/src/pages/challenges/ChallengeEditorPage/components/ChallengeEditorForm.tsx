@@ -184,6 +184,9 @@ import {
     SubmissionVisibilityField,
 } from './SubmissionVisibilityField'
 import {
+    SubmissionTypeField,
+} from './SubmissionTypeField'
+import {
     TermsField,
 } from './TermsField'
 import {
@@ -4032,6 +4035,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             )
                                             : undefined}
                                         <GroupsField />
+                                        <SubmissionTypeField />
                                         <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
                                         <NDAField />
                                         <FormCheckboxField

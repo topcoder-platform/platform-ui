@@ -48,6 +48,7 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     reviewer?: string
     roundType?: RoundType
     skills: ChallengeSkill[]
+    submissionType?: 'url' | 'zip'
     tags: string[]
     terms?: string[]
     workType?: string
