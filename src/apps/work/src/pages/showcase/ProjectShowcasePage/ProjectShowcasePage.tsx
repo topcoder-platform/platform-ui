@@ -50,7 +50,7 @@ import {
     FormTextField,
 } from '../../../lib/components/form'
 import { showErrorToast, showSuccessToast } from '../../../lib/utils/toast.utils'
-import { checkCanManageProject } from '../../../lib/utils/permissions.utils'
+import { checkCanManageProject, hasManagerRole } from '../../../lib/utils/permissions.utils'
 import type {
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
@@ -423,7 +423,8 @@ export const ProjectShowcasePage: FC = () => {
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const canManageProjectShowcasePosts = useMemo(
-        () => checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
+        () => hasManagerRole(userRoles) ||
+            checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project),
         [loginUserInfo?.userId, projectResult.project, userRoles],
     )
 
