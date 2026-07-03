@@ -94,6 +94,21 @@ describe('engagementEditorSchema', () => {
         })
     })
 
+    it('accepts private engagements with registered blank member slots', async () => {
+        await expect(engagementEditorSchema.validate({
+            ...createValidFormValues(),
+            assignedMemberHandles: [undefined, undefined] as unknown as string[],
+            assignmentDetails: [],
+            isPrivate: true,
+            requiredMemberCount: 2,
+        }, {
+            abortEarly: false,
+        })).resolves.toMatchObject({
+            assignedMemberHandles: ['', ''],
+            isPrivate: true,
+        })
+    })
+
     it('accepts private engagements with complete assignment details for assigned members', async () => {
         await expect(engagementEditorSchema.validate({
             ...createValidFormValues(),

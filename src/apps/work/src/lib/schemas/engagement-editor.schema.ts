@@ -35,6 +35,22 @@ function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown
 }
 
 /**
+ * Converts registered empty member autocomplete slots into blank strings so
+ * optional private-assignment slots do not fail Yup's defined array-item check.
+ *
+ * @param value cast schema value for a member handle.
+ * @param originalValue raw form value from react-hook-form.
+ * @returns blank string for nullish slots, otherwise the cast schema value.
+ */
+function emptyMemberHandleToString(value: unknown, originalValue: unknown): unknown {
+    if (originalValue === undefined || originalValue === null) {
+        return ''
+    }
+
+    return value
+}
+
+/**
  * Normalizes a member handle from the form so private-assignment validation
  * consistently compares trimmed values.
  *
@@ -135,6 +151,8 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
     assignedMemberHandles: yup
         .array()
         .of(yup.string()
+            .transform(emptyMemberHandleToString)
+            .default('')
             .defined())
         .optional(),
     assignmentDetails: yup

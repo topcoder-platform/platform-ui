@@ -351,6 +351,25 @@ function getFinancePaymentSplit(payment: AssignmentPayment): EngagementPaymentSp
 }
 
 /**
+ * Converts a finance payment into a candidate billing-account row match.
+ *
+ * @param payment Finance payment row.
+ * @returns Payment and split pair when the finance amount can be read.
+ */
+function getFinancePaymentSplitMatch(
+    payment: AssignmentPayment,
+): EngagementPaymentSplitMatch | undefined {
+    const split = getFinancePaymentSplit(payment)
+
+    return split
+        ? {
+            payment,
+            split,
+        }
+        : undefined
+}
+
+/**
  * Resolves the finance payment date used to match one billing ledger row.
  *
  * @param payment Finance payment row.
@@ -392,6 +411,41 @@ function getAggregatePaymentSplit(
             (total, split) => total + split.paymentAmount,
             0,
         )),
+    }
+}
+
+/**
+ * Resolves a single finance split that exactly matches a billing-account row.
+ *
+ * @param item Billing-account engagement row.
+ * @param matches Finance payment candidates for the row assignment.
+ * @returns Matching split plus the number of amount matches considered.
+ * @remarks Date matching disambiguates repeated assignment payments that have
+ * the same amount but represent different consumed ledger rows.
+ */
+function getLineItemMatchingPaymentSplit(
+    item: BillingAccountLineItem,
+    matches: EngagementPaymentSplitMatch[],
+): EngagementPaymentSplitMatchResult {
+    const amountMatches = matches.filter(match => (
+        match.split.challengeFee !== undefined
+        && currencyAmountsMatch(
+            match.split.paymentAmount + match.split.challengeFee,
+            item.amount,
+        )
+    ))
+    const dateMatches = amountMatches.filter(match => (
+        paymentDateMatchesLineItem(match.payment, item)
+    ))
+    const selectedMatches = dateMatches.length > 0
+        ? dateMatches
+        : amountMatches
+
+    return {
+        matchCount: amountMatches.length,
+        split: selectedMatches.length === 1
+            ? selectedMatches[0].split
+            : undefined,
     }
 }
 
