@@ -66,7 +66,9 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
  *
  * @param value Raw markup value from the billing-account API.
  * @returns A non-negative decimal markup, or `undefined` when unavailable.
- * @remarks Whole percentage values such as `15` are normalized to `0.15`.
+ * @remarks Billing-account APIs store markup as the direct multiplier used by
+ * finance and billing-account ledger math. Values greater than `1` are valid
+ * and must not be converted to percentage form.
  */
 function normalizeBillingMarkup(value: unknown): number | undefined {
     const normalizedValue = normalizeOptionalNumber(value)
@@ -75,9 +77,7 @@ function normalizeBillingMarkup(value: unknown): number | undefined {
         return undefined
     }
 
-    return normalizedValue > 1
-        ? normalizedValue / 100
-        : normalizedValue
+    return normalizedValue
 }
 
 /**
