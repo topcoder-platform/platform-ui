@@ -835,7 +835,7 @@ function normalizePhaseDurationMinutes(duration: unknown): number {
         return maxMinutesDuration
     }
 
-    return Math.max(1, Math.trunc(parsedDuration))
+    return Math.max(1, Math.ceil(parsedDuration))
 }
 
 function normalizePhasesForForm(phases: unknown): ChallengePhase[] {
