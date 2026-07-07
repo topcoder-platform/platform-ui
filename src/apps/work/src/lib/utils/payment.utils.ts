@@ -56,8 +56,9 @@ function getFirstPaymentDetail(
 /**
  * Normalizes billing markup into a decimal multiplier for payment fee math.
  *
- * Stored markup can arrive as either a decimal fraction like `0.15` or a
- * whole percentage like `15`. Missing or invalid inputs return `undefined`.
+ * Stored markup is the direct multiplier used by finance and billing-account
+ * ledger math. Values greater than `1` are valid and must not be converted to
+ * percentage form. Missing or invalid inputs return `undefined`.
  *
  * @param billingMarkup raw billing markup from project billing-account data.
  * @returns normalized decimal markup, or `undefined` when unavailable.
@@ -69,9 +70,7 @@ function normalizeBillingMarkup(billingMarkup: unknown): number | undefined {
         return undefined
     }
 
-    return parsedMarkup > 1
-        ? parsedMarkup / 100
-        : parsedMarkup
+    return parsedMarkup
 }
 
 export function formatCurrency(value: unknown): string {

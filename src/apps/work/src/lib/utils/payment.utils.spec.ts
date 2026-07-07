@@ -11,11 +11,11 @@ import {
 } from './payment.utils'
 
 describe('payment.utils', () => {
-    it('calculates payment fees from decimal or whole-number markup values', () => {
+    it('calculates payment fees from billing-account markup multipliers', () => {
         expect(calculatePaymentChallengeFee(480, 0.15))
             .toBe(72)
-        expect(calculatePaymentChallengeFee(480, 15))
-            .toBe(72)
+        expect(calculatePaymentChallengeFee(570, 1.2259))
+            .toBe(698.76)
     })
 
     it('reads the persisted payment challenge fee when finance returns it explicitly', () => {
