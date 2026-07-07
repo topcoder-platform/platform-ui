@@ -79,6 +79,63 @@ function normalizeIdentifier(value: unknown): string | undefined {
 }
 
 /**
+ * Collect submission identifiers that can refer to the same visible row.
+ *
+ * @param submission - Candidate iterative-review row from review data.
+ * @returns Normalized row, legacy, and review submission ids for matching.
+ * Used by F2F limiting because URL submissions can be keyed by legacy ids.
+ */
+function collectSubmissionCandidateIds(submission: SubmissionInfo): Set<string> {
+    return new Set(
+        [
+            submission.id,
+            submission.legacySubmissionId,
+            submission.review?.submissionId,
+        ]
+            .map(id => normalizeIdentifier(id))
+            .filter((id): id is string => Boolean(id)),
+    )
+}
+
+/**
+ * Rank duplicate iterative-review rows for the same submission.
+ *
+ * @param submission - Candidate row built from a submission/reviewer pair.
+ * @param currentResourceIds - Resource ids assigned to the logged-in reviewer.
+ * @returns Numeric priority; larger values win during duplicate collapse.
+ * Used so reviewers see their own pending action when URL/F2F rows share ids.
+ */
+export function getIterativeReviewSubmissionPriority(
+    submission: SubmissionInfo,
+    currentResourceIds: Set<string> = new Set<string>(),
+): number {
+    const review = submission.review
+    if (!review) {
+        return 0
+    }
+
+    const hasReviewId = Boolean(review.id)
+    const status = (review.status ?? '').toUpperCase()
+    const resourcePriority = review.resourceId && currentResourceIds.has(review.resourceId)
+        ? 10
+        : 0
+
+    if (hasReviewId && (status === 'COMPLETED' || status === 'SUBMITTED')) {
+        return 4 + resourcePriority
+    }
+
+    if (hasReviewId && review.reviewProgress) {
+        return 3 + resourcePriority
+    }
+
+    if (hasReviewId) {
+        return 2 + resourcePriority
+    }
+
+    return 1
+}
+
+/**
  * Parse sortable date inputs from submission and review payloads.
  *
  * @param value - Raw date-like value supplied by the UI model.
@@ -376,11 +433,9 @@ export function limitFirst2FinishIterativeRows(
     }
 
     const matchingRows = rows.filter(submission => {
-        const submissionId = normalizeIdentifier(submission.id)
-        const reviewSubmissionId = normalizeIdentifier(submission.review?.submissionId)
-
-        return (submissionId ? submissionIds.has(submissionId) : false)
-            || (reviewSubmissionId ? submissionIds.has(reviewSubmissionId) : false)
+        const candidateIds = collectSubmissionCandidateIds(submission)
+        return Array.from(candidateIds)
+            .some(submissionId => submissionIds.has(submissionId))
     })
 
     if (matchingRows.length) {
