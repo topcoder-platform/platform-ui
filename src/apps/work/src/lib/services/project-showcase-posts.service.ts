@@ -48,6 +48,24 @@ function buildProjectShowcasePostsSortValue(
     return `${normalizedSortBy} ${safeSortOrder}`
 }
 
+function appendArrayQueryParam(query: URLSearchParams, name: string, value: string | undefined): void {
+    if (!value) {
+        return
+    }
+
+    const normalized = value.trim()
+    if (!normalized) {
+        return
+    }
+
+    const values = normalized
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
+
+    values.forEach(item => query.append(name, item))
+}
+
 function buildProjectShowcasePostsUrl(
     params: FetchProjectShowcasePostsParams,
 ): string {
@@ -66,13 +84,8 @@ function buildProjectShowcasePostsUrl(
         query.set('status', params.status.trim())
     }
 
-    if (params.industryId?.trim()) {
-        query.set('industryId', params.industryId.trim())
-    }
-
-    if (params.categoryId?.trim()) {
-        query.set('categoryId', params.categoryId.trim())
-    }
+    appendArrayQueryParam(query, 'industryId', params.industryId)
+    appendArrayQueryParam(query, 'categoryId', params.categoryId)
 
     if (params.sortBy?.trim() && params.sortOrder) {
         query.set(
@@ -81,7 +94,11 @@ function buildProjectShowcasePostsUrl(
         )
     }
 
-    return `${PROJECTS_API_URL}/${encodeURIComponent(params.projectId)}/posts?${query.toString()}`
+    const urlBase = params.projectId?.trim()
+        ? `${PROJECTS_API_URL}/${encodeURIComponent(params.projectId)}/posts`
+        : `${PROJECTS_API_URL}/posts`
+
+    return `${urlBase}?${query.toString()}`
 }
 
 export async function fetchProjectShowcasePosts(

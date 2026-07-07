@@ -58,6 +58,7 @@ export function useFetchProjectShowcasePosts(
             shouldRetryOnError: true,
         },
     )
+console.log('here2', data?.posts);
 
     return {
         error,
