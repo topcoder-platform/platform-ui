@@ -3,14 +3,15 @@ export interface TruncatedBio {
     text: string
 }
 
-export const PROFILE_BIO_TRUNCATION_LENGTH = 206
+export const PROFILE_BIO_TRUNCATION_LENGTH = 195
 
 /**
  * Returns profile bio text for the collapsed AboutMe view.
  *
- * Used by the member profile page to match the Figma bio preview length while
- * preserving full words when possible. The returned text includes the trailing
- * three-dot suffix only when the bio exceeds the configured limit.
+ * Used by the member profile page to keep the collapsed left-column bio
+ * preview compact while preserving full words when possible. The returned text
+ * includes the trailing three-dot suffix only when the bio exceeds the
+ * configured limit.
  *
  * @param {string | undefined} bio - The full profile bio from the member profile API.
  * @param {number} maxLength - Maximum visible characters before the suffix is added.
