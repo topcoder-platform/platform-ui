@@ -163,6 +163,7 @@ export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
 export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 export const REPORTS_API = `${API.V6}/reports`
+export const PROCUREMENT_API = `${API.V6}/procurement`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
@@ -326,3 +327,9 @@ export const FILESTACK = {
 }
 
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
+
+export const FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
+    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER', 'topcoder-dev-showcase-media')
+
+export const FILESTACK_SHOWCASE_MEDIA_CDN_URL
+    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_CDN_URL', 'https://showcase-media.topcoder-dev.com')

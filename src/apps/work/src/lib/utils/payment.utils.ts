@@ -85,12 +85,12 @@ export function formatCurrency(value: unknown): string {
 }
 
 export function getPaymentAmount(payment: AssignmentPayment): number | undefined {
-    if (payment.amount !== undefined) {
-        return toNumber(payment.amount)
-    }
-
     if (payment.paymentAmount !== undefined) {
         return toNumber(payment.paymentAmount)
+    }
+
+    if (payment.amount !== undefined) {
+        return toNumber(payment.amount)
     }
 
     const firstDetail = getFirstPaymentDetail(payment)

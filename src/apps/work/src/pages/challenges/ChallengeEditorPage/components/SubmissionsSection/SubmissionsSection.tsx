@@ -36,6 +36,7 @@ import {
     getSubmissionInitialScore,
     getSubmissionProvisionalScore,
     getSubmissionSystemScore,
+    getSubmissionTestProgress,
     isMarathonMatchChallenge,
     showErrorToast,
 } from '../../../../../lib/utils'
@@ -57,6 +58,8 @@ interface FilterState {
     handle: string
     minScore: string
     startDate: string
+    submissionId: string
+    testType: string
 }
 
 interface SubmissionsSectionProps {
@@ -330,6 +333,64 @@ function matchesFilterHandle(submission: Submission, handleFilter: string): bool
         .includes(normalizedHandleFilter)
 }
 
+/**
+ * Checks whether a submission matches the submission ID filter.
+ * @param submission Submission row being evaluated.
+ * @param submissionIdFilter Case-insensitive partial submission ID entered by the user.
+ * @returns True when the filter is empty or matches the submission's current or legacy ID.
+ * Used by `matchesFilters` before the submissions table is sorted and paginated.
+ */
+function matchesFilterSubmissionId(
+    submission: Submission,
+    submissionIdFilter: string,
+): boolean {
+    if (!submissionIdFilter) {
+        return true
+    }
+
+    const normalizedSubmissionIdFilter = normalizeValue(submissionIdFilter)
+        .toLowerCase()
+
+    return [
+        submission.id,
+        submission.legacySubmissionId,
+    ]
+        .some(submissionId => normalizeValue(submissionId)
+            .toLowerCase()
+            .includes(normalizedSubmissionIdFilter))
+}
+
+/**
+ * Checks whether a submission matches the selected marathon test type.
+ * @param submission Submission row being evaluated.
+ * @param testTypeFilter Selected normalized test type filter value.
+ * @param useMarathonMatchScores Whether the current challenge is a Marathon Match.
+ * @returns True when the filter is empty, the challenge is not Marathon Match, or the current test type matches.
+ * Used by `matchesFilters` before the submissions table is sorted and paginated.
+ */
+function matchesFilterTestType(
+    submission: Submission,
+    testTypeFilter: string,
+    useMarathonMatchScores: boolean,
+): boolean {
+    if (!testTypeFilter || !useMarathonMatchScores) {
+        return true
+    }
+
+    const normalizedTestTypeFilter = normalizeValue(testTypeFilter)
+        .toLowerCase()
+
+    return getSubmissionTestProgress(submission).process === normalizedTestTypeFilter
+}
+
+/**
+ * Checks whether a submission satisfies all active submissions list filters.
+ * @param submission Submission row being evaluated.
+ * @param filters Current filter values from the submissions form.
+ * @param useMarathonMatchScores Whether the current challenge is a Marathon Match.
+ * @returns True when the submission should remain visible in the table.
+ * Used before sorting and paginating the submissions list.
+ */
 function matchesFilters(
     submission: Submission,
     filters: FilterState,
@@ -339,7 +400,15 @@ function matchesFilters(
         return false
     }
 
+    if (!matchesFilterSubmissionId(submission, filters.submissionId)) {
+        return false
+    }
+
     if (!matchesFilterDateRange(submission, filters.startDate, filters.endDate)) {
+        return false
+    }
+
+    if (!matchesFilterTestType(submission, filters.testType, useMarathonMatchScores)) {
         return false
     }
 
@@ -361,6 +430,8 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         handle: '',
         minScore: '',
         startDate: '',
+        submissionId: '',
+        testType: '',
     })
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
@@ -584,7 +655,9 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         setPerPage(nextPerPage)
     }, [])
 
-    const handleFilterChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    const handleFilterChange = useCallback((
+        event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    ): void => {
         const fieldName: string = event.target.name
         const fieldValue: string = event.target.value
 
@@ -641,6 +714,39 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         value={filters.handle}
                     />
                 </label>
+
+                <label className={styles.filterLabel} htmlFor='submission-id-filter'>
+                    Submission ID
+                    <input
+                        className={styles.filterInput}
+                        id='submission-id-filter'
+                        name='submissionId'
+                        onChange={handleFilterChange}
+                        placeholder='Filter by submission ID'
+                        type='text'
+                        value={filters.submissionId}
+                    />
+                </label>
+
+                {isMarathonMatch
+                    ? (
+                        <label className={styles.filterLabel} htmlFor='submission-test-type-filter'>
+                            Test type
+                            <select
+                                className={styles.filterInput}
+                                id='submission-test-type-filter'
+                                name='testType'
+                                onChange={handleFilterChange}
+                                value={filters.testType}
+                            >
+                                <option value=''>All</option>
+                                <option value='system'>System</option>
+                                <option value='provisional'>Provisional</option>
+                                <option value='example'>Example</option>
+                            </select>
+                        </label>
+                    )
+                    : undefined}
 
                 <label className={styles.filterLabel} htmlFor='submission-start-date-filter'>
                     From

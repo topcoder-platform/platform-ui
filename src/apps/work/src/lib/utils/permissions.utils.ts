@@ -78,23 +78,23 @@ function getTokenRoles(token: string): string[] {
     return roles
 }
 
-function hasRole(userRoles: string[], allowedRoles: readonly string[]): boolean {
+export function hasRole(userRoles: string[], allowedRoles: readonly string[]): boolean {
     return userRoles.some(role => allowedRoles.includes(normalizeValue(role)))
 }
 
-function hasAdminRole(userRoles: string[]): boolean {
+export function hasAdminRole(userRoles: string[]): boolean {
     return hasRole(userRoles, ADMIN_ROLES)
 }
 
-function hasManagerRole(userRoles: string[]): boolean {
+export function hasManagerRole(userRoles: string[]): boolean {
     return hasRole(userRoles, MANAGER_ROLES)
 }
 
-function hasTaskManagerRole(userRoles: string[]): boolean {
+export function hasTaskManagerRole(userRoles: string[]): boolean {
     return hasRole(userRoles, TASK_MANAGER_ROLES)
 }
 
-function hasCopilotRole(userRoles: string[]): boolean {
+export function hasCopilotRole(userRoles: string[]): boolean {
     return hasRole(userRoles, COPILOT_ROLES)
 }
 

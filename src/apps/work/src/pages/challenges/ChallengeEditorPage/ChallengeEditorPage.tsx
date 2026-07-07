@@ -43,6 +43,10 @@ import type {
     UseFetchChallengeResult,
     UseFetchProjectResult,
 } from '../../../lib/hooks'
+import type {
+    Resource,
+    ResourceRole,
+} from '../../../lib/models'
 import {
     deleteChallenge,
     patchChallenge,
@@ -168,6 +172,11 @@ interface ChallengeProjectAccessState {
     isLoading: boolean
 }
 
+interface ChallengeResourceAccessState {
+    canRead: boolean
+    canWrite: boolean
+}
+
 /**
  * Normalizes a project identifier from route, challenge, or created challenge data.
  *
@@ -183,6 +192,64 @@ function normalizeProjectId(projectId: number | string | undefined): string | un
         .trim()
 
     return normalizedProjectId || undefined
+}
+
+/**
+ * Normalizes a user identifier for challenge resource membership comparisons.
+ *
+ * @param userId user id from auth context or a resource API payload.
+ * @returns trimmed user id text when present; otherwise an empty string.
+ * @throws Does not throw.
+ */
+function normalizeUserId(userId: number | string | undefined): string {
+    if (userId === undefined || userId === null) {
+        return ''
+    }
+
+    return String(userId)
+        .trim()
+}
+
+/**
+ * Resolves challenge-level read and write access from the current user's resource roles.
+ *
+ * @param resources resources assigned on the challenge.
+ * @param resourceRoles resource role metadata, including read and write flags.
+ * @param userId current user id from the work app context.
+ * @returns read/write access flags granted by active challenge resource roles.
+ * @throws Does not throw.
+ */
+function resolveChallengeResourceAccess(
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+    userId: number | string | undefined,
+): ChallengeResourceAccessState {
+    const normalizedUserId = normalizeUserId(userId)
+
+    if (!normalizedUserId) {
+        return {
+            canRead: false,
+            canWrite: false,
+        }
+    }
+
+    const userResourceRoleIds = new Set(resources
+        .filter(resource => normalizeUserId(resource.memberId) === normalizedUserId)
+        .map(resource => resource.roleId))
+
+    return resourceRoles.reduce<ChallengeResourceAccessState>((accessState, resourceRole) => {
+        if (!userResourceRoleIds.has(resourceRole.id) || resourceRole.isActive === false) {
+            return accessState
+        }
+
+        return {
+            canRead: accessState.canRead || resourceRole.fullReadAccess === true,
+            canWrite: accessState.canWrite || resourceRole.fullWriteAccess === true,
+        }
+    }, {
+        canRead: false,
+        canWrite: false,
+    })
 }
 
 /**
@@ -1085,21 +1152,7 @@ export const ChallengeEditorPage: FC = () => {
     const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false)
     const workAppContext = useContext(WorkAppContext)
     const routeProjectResult: UseFetchProjectResult = useFetchProject(routeProjectId)
-    const canFetchProjectRouteChallenge = !routeProjectId
-        || (
-            !routeProjectResult.isLoading
-            && !routeProjectResult.error
-            && checkProjectAccess(
-                workAppContext.userRoles,
-                workAppContext.loginUserInfo?.userId,
-                routeProjectResult.project,
-            )
-        )
-    const challengeResult: UseFetchChallengeResult = useFetchChallenge(
-        canFetchProjectRouteChallenge
-            ? challengeId
-            : undefined,
-    )
+    const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
     const [
         challengeStatus,
         handleChallengeStatusChange,
@@ -1329,7 +1382,7 @@ export const ChallengeEditorPage: FC = () => {
     const hasChallengeProjectMismatch = !!routeProjectId
         && !!challengeProjectId
         && routeProjectId !== challengeProjectId
-    const projectAccessState = resolveChallengeProjectAccess({
+    const baseProjectAccessState = resolveChallengeProjectAccess({
         hasChallengeProjectMismatch,
         isProjectLoading: projectAccessResult.isLoading,
         project: projectAccessResult.project,
@@ -1338,6 +1391,44 @@ export const ChallengeEditorPage: FC = () => {
         userId: workAppContext.loginUserInfo?.userId,
         userRoles: workAppContext.userRoles,
     })
+    const shouldResolveChallengeResourceAccess = isExistingChallenge
+        && baseProjectAccessState.isDenied
+        && !hasChallengeProjectMismatch
+        && !!challengeId
+    const shouldFetchChallengeResources = shouldResolveChallengeResourceAccess
+        && !!challengeResult.challenge
+    const resourcesResult = useFetchResources(
+        shouldFetchChallengeResources
+            ? challengeId
+            : undefined,
+    )
+    const resourceRolesResult = useFetchResourceRoles()
+    const challengeResourceAccess = resolveChallengeResourceAccess(
+        resourcesResult.resources,
+        resourceRolesResult.resourceRoles,
+        workAppContext.loginUserInfo?.userId,
+    )
+    const hasChallengeResourceRouteAccess = isViewMode
+        ? challengeResourceAccess.canRead
+        : challengeResourceAccess.canWrite
+    const isChallengeResourceAccessLoading = shouldResolveChallengeResourceAccess
+        && (
+            challengeResult.isLoading
+            || (
+                !!challengeResult.challenge
+                && (
+                    resourcesResult.isLoading
+                    || resourceRolesResult.isLoading
+                )
+            )
+        )
+    const projectAccessState = {
+        isDenied: baseProjectAccessState.isDenied
+            && !hasChallengeResourceRouteAccess
+            && !isChallengeResourceAccessLoading,
+        isLoading: baseProjectAccessState.isLoading
+            || isChallengeResourceAccessLoading,
+    }
     const canRenderChallengeDetails = !projectAccessState.isDenied && !projectAccessState.isLoading
     const pageTitle = getChallengeEditorPageTitle(
         challengeId,
@@ -1355,6 +1446,7 @@ export const ChallengeEditorPage: FC = () => {
         && canRenderChallengeDetails
         && isViewMode
         && !!editChallengePath
+        && (!baseProjectAccessState.isDenied || challengeResourceAccess.canWrite)
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
         canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,

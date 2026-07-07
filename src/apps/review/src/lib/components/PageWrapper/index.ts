@@ -1,1 +1,1 @@
-export { default as PageWrapper } from './PageWrapper'
+export { default as PageWrapper, type PageWrapperProps } from './PageWrapper'

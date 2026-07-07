@@ -48,6 +48,16 @@ describe('payment.utils', () => {
             .toBe('80004466')
     })
 
+    it('prefers explicit paymentAmount over generic amount when both are present', () => {
+        const payment: AssignmentPayment = {
+            amount: 762.66,
+            paymentAmount: '342.00',
+        }
+
+        expect(getPaymentAmount(payment))
+            .toBe(342)
+    })
+
     it('falls back to the total-versus-gross delta for older payment payloads', () => {
         const payment: AssignmentPayment = {
             details: [

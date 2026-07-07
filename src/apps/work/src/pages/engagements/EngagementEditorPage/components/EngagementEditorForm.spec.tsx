@@ -619,6 +619,111 @@ describe('EngagementEditorForm', () => {
             }))
     })
 
+    it('saves a private engagement with only terminal assignments without member assignment payload', async () => {
+        const user = userEvent.setup()
+        const completedAssignment = {
+            agreementRate: '800',
+            durationMonths: 3,
+            endDate: '2026-05-31T00:00:00.000Z',
+            engagementId: 'engagement-completed',
+            id: 'assignment-completed',
+            memberHandle: 'completed_member',
+            memberId: '111',
+            ratePerHour: '20',
+            standardHoursPerWeek: 40,
+            startDate: '2026-05-01T00:00:00.000Z',
+            status: 'COMPLETED',
+            termsAccepted: true,
+        }
+
+        mockedUpdateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: [],
+            assignments: [completedAssignment],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Completed engagement description',
+            durationWeeks: 4,
+            id: 'engagement-completed',
+            isPrivate: true,
+            projectId: '123',
+            requiredMemberCount: 2,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'Closed',
+            timezones: ['America/New_York'],
+            title: 'Completed private engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: ['completed_member'],
+                        assignments: [completedAssignment],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'Completed engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-completed',
+                        isPrivate: true,
+                        projectId: '123',
+                        requiredMemberCount: 2,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Closed',
+                        timezones: ['America/New_York'],
+                        title: 'Completed private engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedUpdateEngagement)
+                .toHaveBeenCalled()
+        })
+
+        const payload = mockedUpdateEngagement.mock.calls[0][1] as {
+            assignedMemberHandles?: string[]
+            assignmentDetails?: Array<{ memberHandle: string }>
+            requiredMemberCount?: number
+            status?: string
+        }
+
+        expect(payload.status)
+            .toBe('Closed')
+        expect(payload.requiredMemberCount)
+            .toBe(2)
+        expect(payload)
+            .not
+            .toHaveProperty('assignedMemberHandles')
+        expect(payload)
+            .not
+            .toHaveProperty('assignmentDetails')
+    })
+
     it('redirects to the saved parent project engagements list after creating an engagement', async () => {
         const user = userEvent.setup()
 

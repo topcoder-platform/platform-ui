@@ -432,7 +432,7 @@ describe('BillingAccountLineItemsModal', () => {
                 {
                     amount: '762.66',
                     date: '2026-06-02T13:10:48.235Z',
-                    externalId: 'assignment-5245',
+                    externalId: 'assignment-5245-finance',
                     externalName: 'Eng BA',
                     externalType: 'ENGAGEMENT',
                     memberPaymentAmount: '753.42',
@@ -454,7 +454,110 @@ describe('BillingAccountLineItemsModal', () => {
         expect(screen.queryByText('$9.24'))
             .toBeNull()
         expect(mockedFetchAssignmentPaymentSplits)
-            .toHaveBeenCalledWith('assignment-5245')
+            .toHaveBeenCalledWith('assignment-5245-finance')
+    })
+
+    it('uses matching finance engagement payment splits before stale billing-account split fields', async () => {
+        mockedFetchAssignmentPaymentSplits.mockResolvedValue([
+            {
+                amount: 762.66,
+                billingAccountId: '80001063',
+                challengeFee: '420.66',
+                paymentAmount: '342.00',
+                paymentId: 'd2223b35-10fc-410e-b3f5-6d6ac482caef',
+            },
+        ])
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '762.66',
+                    challengeFee: '9.24',
+                    date: '2026-06-02T13:10:48.235Z',
+                    externalId: 'assignment-5245-stale',
+                    externalName: 'Eng BA',
+                    externalType: 'ENGAGEMENT',
+                    memberPaymentAmount: '753.42',
+                    paymentAmount: '753.42',
+                },
+            ],
+            consumedBudget: 762.66,
+            markup: 0.01226408,
+            totalBudgetRemaining: 237.34,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$342.00'))
+                .toBeTruthy()
+            expect(screen.getByText('$420.66'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$753.42'))
+            .toBeNull()
+        expect(screen.queryByText('$9.24'))
+            .toBeNull()
+        expect(mockedFetchAssignmentPaymentSplits)
+            .toHaveBeenCalledWith('assignment-5245-stale')
+    })
+
+    it('uses the line item date to disambiguate repeated finance splits', async () => {
+        mockedFetchAssignmentPaymentSplits.mockResolvedValue([
+            {
+                billingAccountId: '80001063',
+                challengeFee: '386.94',
+                createdAt: '2026-06-01T07:37:17.049Z',
+                details: [
+                    {
+                        billingAccount: '80001063',
+                        totalAmount: 544.99,
+                    },
+                ],
+                paymentId: 'be710af2-a4ab-44ed-b414-32b1c82415bd',
+            },
+            {
+                billingAccountId: '80001063',
+                challengeFee: '386.94',
+                createdAt: '2026-06-15T13:28:18.662Z',
+                details: [
+                    {
+                        billingAccount: '80001063',
+                        totalAmount: 544.99,
+                    },
+                ],
+                paymentId: '8fbb836d-3d6b-4e19-a4cc-871e0e1bc12d',
+            },
+        ])
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '931.93',
+                    date: '2026-06-15T13:28:18.662Z',
+                    externalId: 'assignment-repeated',
+                    externalName: 'Repeated Engagement',
+                    externalType: 'ENGAGEMENT',
+                    memberPaymentAmount: '544.19',
+                },
+            ],
+            consumedBudget: 931.93,
+            markup: 0.7125,
+            totalBudgetRemaining: 68.07,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('$544.99'))
+                .toBeTruthy()
+            expect(screen.getByText('$386.94'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByText('$544.19'))
+            .toBeNull()
+        expect(screen.queryByText('$387.74'))
+            .toBeNull()
+        expect(mockedFetchAssignmentPaymentSplits)
+            .toHaveBeenCalledWith('assignment-repeated')
     })
 
     it('builds engagement links from assignment-backed billing rows for copilot views', () => {

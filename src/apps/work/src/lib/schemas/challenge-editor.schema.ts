@@ -480,6 +480,12 @@ export const challengeAdvancedOptionsSchema = yup.object({
         ])
         .default(ROUND_TYPES.SINGLE_ROUND)
         .required('Round type is required'),
+    submissionType: yup.string()
+        .oneOf([
+            'url',
+            'zip',
+        ])
+        .optional(),
     terms: yup.array()
         .of(yup.string()
             .required())

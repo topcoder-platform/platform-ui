@@ -28,6 +28,7 @@ export * from './payments.service'
 export * from './marathon-match.service'
 export * from './project-member-invites.service'
 export * from './projects.service'
+export * from './project-showcase-posts.service'
 export type {
     ProjectSummary,
 } from './projects.service'

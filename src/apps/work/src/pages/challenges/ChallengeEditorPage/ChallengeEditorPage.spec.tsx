@@ -22,6 +22,7 @@ import {
     useFetchResources,
     type UseFetchChallengeResult,
 } from '../../../lib/hooks'
+import type { WorkAppContextModel } from '../../../lib/models'
 import { deleteChallenge } from '../../../lib/services'
 import {
     checkProjectAccess,
@@ -34,15 +35,7 @@ import {
 
 import { ChallengeEditorPage } from './ChallengeEditorPage'
 
-var mockWorkAppContext: Context<{
-    isAdmin: boolean
-    isAnonymous: boolean
-    isCopilot: boolean
-    isManager: boolean
-    isReadOnly: boolean
-    loginUserInfo: undefined
-    userRoles: string[]
-}>
+var mockWorkAppContext: Context<WorkAppContextModel>
 
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
@@ -142,15 +135,7 @@ jest.mock('../../../lib/constants', () => ({
 jest.mock('../../../lib/contexts', () => {
     const React = require('react') as typeof import('react')
 
-    mockWorkAppContext = React.createContext<{
-        isAdmin: boolean
-        isAnonymous: boolean
-        isCopilot: boolean
-        isManager: boolean
-        isReadOnly: boolean
-        loginUserInfo: undefined
-        userRoles: string[]
-    }>({
+    mockWorkAppContext = React.createContext<WorkAppContextModel>({
         isAdmin: false,
         isAnonymous: false,
         isCopilot: false,
@@ -288,7 +273,11 @@ function renderPageElement(route: string, path: string): JSX.Element {
             isCopilot: false,
             isManager: true,
             isReadOnly: false,
-            loginUserInfo: undefined,
+            loginUserInfo: {
+                handle: 'current-user',
+                roles: ['manager'],
+                userId: 12345,
+            },
             userRoles: ['manager'],
         }}
         >
@@ -345,6 +334,7 @@ describe('ChallengeEditorPage', () => {
         })
         mockedCheckProjectAccess.mockReturnValue(true)
         mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
             resourceRoles: [],
         })
         mockedUseFetchResources.mockReturnValue({
@@ -552,7 +542,108 @@ describe('ChallengeEditorPage', () => {
             .toBe(false)
     })
 
-    it('blocks project-scoped challenge views when project access is denied', async () => {
+    it('allows project-scoped challenge views when the user has challenge resource read access', async () => {
+        mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    userId: 99999,
+                }],
+                name: 'Restricted Project',
+                status: 'active',
+            },
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [{
+                fullReadAccess: true,
+                fullWriteAccess: false,
+                id: 'problem-tester-role',
+                isActive: true,
+                name: 'Problem Tester',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            resources: [{
+                challengeId: '456',
+                memberId: '12345',
+                roleId: 'problem-tester-role',
+            }],
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(mockedUseFetchChallenge)
+            .toHaveBeenCalledWith('456')
+        expect(screen.queryByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+    })
+
+    it(
+        'shows edit action for project-scoped challenge views when the challenge resource grants write access',
+        async () => {
+            mockedCheckProjectAccess.mockReturnValue(false)
+            mockedUseFetchProject.mockReturnValue({
+                error: undefined,
+                isLoading: false,
+                project: {
+                    id: '123',
+                    members: [{
+                        userId: 99999,
+                    }],
+                    name: 'Restricted Project',
+                    status: 'active',
+                },
+            })
+            mockedUseFetchResourceRoles.mockReturnValue({
+                isLoading: false,
+                resourceRoles: [{
+                    fullReadAccess: true,
+                    fullWriteAccess: true,
+                    id: 'problem-writer-role',
+                    isActive: true,
+                    name: 'Problem Writer',
+                }],
+            })
+            mockedUseFetchResources.mockReturnValue({
+                isLoading: false,
+                resources: [{
+                    challengeId: '456',
+                    memberId: '12345',
+                    roleId: 'problem-writer-role',
+                }],
+            })
+
+            renderPage(
+                '/projects/123/challenges/456/view',
+                '/projects/:projectId/challenges/:challengeId/view',
+            )
+
+            await waitFor(() => {
+                expect(screen.getByText('Challenge View Form'))
+                    .toBeTruthy()
+            })
+
+            expect(screen.getByRole('button', { name: 'Edit' }))
+                .toBeTruthy()
+        },
+    )
+
+    it('blocks project-scoped challenge views when project and challenge resource access are denied', async () => {
         mockedCheckProjectAccess.mockReturnValue(false)
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
@@ -578,7 +669,7 @@ describe('ChallengeEditorPage', () => {
         })
 
         expect(mockedUseFetchChallenge)
-            .toHaveBeenCalledWith(undefined)
+            .toHaveBeenCalledWith('456')
         expect(screen.queryByText('Challenge View Form'))
             .toBeNull()
         expect(screen.queryByRole('heading', { name: 'View Edit test' }))

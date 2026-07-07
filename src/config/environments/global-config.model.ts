@@ -36,6 +36,7 @@ export interface GlobalConfig {
     TC_AI_API: string,
     MARATHON_MATCH_API?: string,
     REPORTS_API: string,
+    PROCUREMENT_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
@@ -115,4 +116,6 @@ export interface GlobalConfig {
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string
+    FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER: string
+    FILESTACK_SHOWCASE_MEDIA_CDN_URL: string
 }

@@ -46,3 +46,6 @@ export const FILESTACK = {
     CONTAINER: getReactEnv<string>('FILESTACK_CONTAINER', 'topcoder-submissions'),
     PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'review-app'),
 }
+
+export const FILESTACK_SHOWCASE_MEDIA_CDN_URL
+    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_CDN_URL', 'https://showcase-media.topcoder.com')

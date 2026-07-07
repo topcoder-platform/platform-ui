@@ -55,6 +55,7 @@ function createAssignmentDetails(
         durationMonths: '3',
         memberHandle,
         ratePerHour: '75',
+        standardHoursPerDay: '8',
         standardHoursPerWeek: '40',
         startDate: '2026-04-15T00:00:00.000Z',
     }
@@ -78,28 +79,43 @@ describe('engagementEditorSchema', () => {
             )
     })
 
-    it('rejects private engagements when not all required member slots are assigned', async () => {
-        const validationMessages = await getValidationMessages({
+    it('accepts private engagements without assigned members', async () => {
+        await expect(engagementEditorSchema.validate({
             ...createValidFormValues(),
-            assignedMemberHandles: ['testaws1'],
-            assignmentDetails: [createAssignmentDetails('testaws1')],
+            assignedMemberHandles: [],
+            assignmentDetails: [],
             isPrivate: true,
             requiredMemberCount: 2,
+        }, {
+            abortEarly: false,
+        })).resolves.toMatchObject({
+            assignedMemberHandles: [],
+            isPrivate: true,
         })
-
-        expect(validationMessages)
-            .toContain(
-                'All 2 member assignments are required for private engagements',
-            )
     })
 
-    it('accepts private engagements with complete assignment details for each required member', async () => {
+    it('accepts private engagements with registered blank member slots', async () => {
+        await expect(engagementEditorSchema.validate({
+            ...createValidFormValues(),
+            assignedMemberHandles: [undefined, undefined] as unknown as string[],
+            assignmentDetails: [],
+            isPrivate: true,
+            requiredMemberCount: 2,
+        }, {
+            abortEarly: false,
+        })).resolves.toMatchObject({
+            assignedMemberHandles: ['', ''],
+            isPrivate: true,
+        })
+    })
+
+    it('accepts private engagements with complete assignment details for assigned members', async () => {
         await expect(engagementEditorSchema.validate({
             ...createValidFormValues(),
             assignedMemberHandles: ['testaws1'],
             assignmentDetails: [createAssignmentDetails('testaws1')],
             isPrivate: true,
-            requiredMemberCount: 1,
+            requiredMemberCount: 2,
         }, {
             abortEarly: false,
         })).resolves.toMatchObject({

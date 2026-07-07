@@ -21,6 +21,7 @@ import {
     useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
+    useFetchTerms,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import {
@@ -100,6 +101,7 @@ jest.mock('../../../../lib/hooks', () => ({
     useFetchProjectBillingAccount: jest.fn(),
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
+    useFetchTerms: jest.fn(),
     useFetchTimelineTemplates: jest.fn(),
 }))
 jest.mock('../../../../lib/services', () => ({
@@ -697,6 +699,9 @@ jest.mock('./StockArtsField', () => ({
 jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
+jest.mock('./SubmissionTypeField', () => ({
+    SubmissionTypeField: () => <>Submission Type Field</>,
+}))
 jest.mock('./TermsField', () => ({
     TermsField: jest.fn(() => <></>),
 }))
@@ -708,6 +713,7 @@ const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedUseFetchTerms = useFetchTerms as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
@@ -853,6 +859,12 @@ describe('ChallengeEditorForm', () => {
             mutate: jest.fn(),
             resources: [],
         }))
+        mockedUseFetchTerms.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            terms: [],
+        })
         mockedUseFetchTimelineTemplates.mockReturnValue({
             timelineTemplates: [],
         })
@@ -1317,6 +1329,44 @@ describe('ChallengeEditorForm', () => {
             .toEqual(expect.objectContaining({
                 shouldDefaultStandardTerm: true,
             }))
+    })
+
+    it('renders selected terms as links when a member has not agreed to required terms', async () => {
+        const user = userEvent.setup()
+        const termsError = 'The user has not yet agreed to the following terms: [Standard Terms 2026]'
+
+        mockedUseFetchTerms.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            terms: [{
+                id: 'standard-terms-2026',
+                title: 'Standard Terms 2026',
+            }],
+        })
+        mockedPatchChallenge.mockRejectedValueOnce(new Error(termsError))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        terms: ['standard-terms-2026'],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        expect(await screen.findByText(/The user has not yet agreed to the following terms/))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Standard Terms 2026' }))
+            .toHaveAttribute(
+                'href',
+                'https://example.com/topcoder/challenges/terms/detail/standard-terms-2026',
+            )
     })
 
     it('preserves project billing markup when fetched draft data resets the form', async () => {

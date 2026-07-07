@@ -1,0 +1,132 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.summaryCard {
+    min-height: 112px;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+
+    strong {
+        display: block;
+        margin-top: 10px;
+        color: #111827;
+        font-size: 28px;
+        line-height: 1.1;
+    }
+}
+
+.cardLabel {
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.cardMeta {
+    display: block;
+    margin-top: 8px;
+    color: #0f766e;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.tableGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.panel {
+    min-width: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.panelHeader {
+    padding: 16px 18px;
+    border-bottom: 1px solid #e5e7eb;
+
+    h2 {
+        margin: 0;
+        color: #111827;
+        font-size: 18px;
+        font-weight: 800;
+    }
+}
+
+.tableWrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #1f2937;
+    font-size: 14px;
+
+    th,
+    td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    th {
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    td span {
+        display: block;
+        margin-top: 4px;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+.state {
+    padding: 24px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 15px;
+}
+
+@media (max-width: 1100px) {
+    .summaryGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tableGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .summaryGrid {
+        grid-template-columns: 1fr;
+    }
+}

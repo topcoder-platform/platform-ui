@@ -35,6 +35,22 @@ function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown
 }
 
 /**
+ * Converts registered empty member autocomplete slots into blank strings so
+ * optional private-assignment slots do not fail Yup's defined array-item check.
+ *
+ * @param value cast schema value for a member handle.
+ * @param originalValue raw form value from react-hook-form.
+ * @returns blank string for nullish slots, otherwise the cast schema value.
+ */
+function emptyMemberHandleToString(value: unknown, originalValue: unknown): unknown {
+    if (originalValue === undefined || originalValue === null) {
+        return ''
+    }
+
+    return value
+}
+
+/**
  * Normalizes a member handle from the form so private-assignment validation
  * consistently compares trimmed values.
  *
@@ -135,46 +151,10 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
     assignedMemberHandles: yup
         .array()
         .of(yup.string()
-            .required())
-        .when('isPrivate', {
-            is: true,
-            otherwise: schema => schema.optional(),
-            then: schema => schema.test(
-                'private-assignment-count',
-                'Assign to Member is required',
-                function validateAssignedMembers(value: unknown[] | undefined) {
-                    const requiredMemberCount = toPositiveInteger(this.parent.requiredMemberCount)
-                    const normalizedHandles = Array.isArray(value)
-                        ? value.map(normalizeHandle)
-                        : []
-
-                    if (requiredMemberCount === undefined) {
-                        if (normalizedHandles.some(Boolean)) {
-                            return true
-                        }
-
-                        return this.createError({
-                            message: 'Assign to Member is required',
-                        })
-                    }
-
-                    const requiredHandles = normalizedHandles.slice(0, requiredMemberCount)
-
-                    if (
-                        requiredHandles.length === requiredMemberCount
-                        && requiredHandles.every(Boolean)
-                    ) {
-                        return true
-                    }
-
-                    return this.createError({
-                        message: requiredMemberCount === 1
-                            ? 'Assign to Member is required'
-                            : `All ${requiredMemberCount} member assignments are required for private engagements`,
-                    })
-                },
-            ),
-        }),
+            .transform(emptyMemberHandleToString)
+            .default('')
+            .defined())
+        .optional(),
     assignmentDetails: yup
         .array()
         .optional()
@@ -185,14 +165,24 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
                 'private-assignment-details',
                 'Assignment details are required for the assigned member.',
                 function validateAssignmentDetails(value: EngagementEditorSchemaAssignmentDetails[] | undefined) {
-                    const normalizedHandles = Array.isArray(this.parent.assignedMemberHandles)
+                    const normalizedHandles: string[] = Array.isArray(this.parent.assignedMemberHandles)
                         ? this.parent.assignedMemberHandles.map(normalizeHandle)
                         : []
                     const requiredMemberCount = toPositiveInteger(this.parent.requiredMemberCount)
-                        || normalizedHandles.filter(Boolean).length
-                    const requiredHandles = normalizedHandles.slice(0, requiredMemberCount)
+                    const visibleHandles: string[] = requiredMemberCount === undefined
+                        ? normalizedHandles
+                        : normalizedHandles.slice(0, requiredMemberCount)
+                    const assignedHandleEntries: Array<{
+                        index: number
+                        memberHandle: string
+                    }> = visibleHandles
+                        .map((memberHandle: string, index: number) => ({
+                            index,
+                            memberHandle,
+                        }))
+                        .filter(entry => Boolean(entry.memberHandle))
 
-                    if (!requiredHandles.length || !requiredHandles.every(Boolean)) {
+                    if (assignedHandleEntries.length < 1) {
                         return true
                     }
 
@@ -200,8 +190,8 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
                         ? value
                         : []
 
-                    const hasCompleteDetails = requiredHandles.every((memberHandle: string, index: number) => (
-                        hasCompleteAssignmentDetails(assignmentDetails[index], memberHandle)
+                    const hasCompleteDetails = assignedHandleEntries.every(entry => (
+                        hasCompleteAssignmentDetails(assignmentDetails[entry.index], entry.memberHandle)
                     ))
 
                     if (hasCompleteDetails) {
@@ -209,9 +199,11 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
                     }
 
                     return this.createError({
-                        message: requiredMemberCount === 1
+                        message: assignedHandleEntries.length === 1
                             ? 'Assignment details are required for the assigned member.'
-                            : `Assignment details are required for all ${requiredMemberCount} assigned members.`,
+                            : `Assignment details are required for all ${
+                                assignedHandleEntries.length
+                            } assigned members.`,
                     })
                 },
             ),

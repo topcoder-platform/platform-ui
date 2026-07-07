@@ -30,6 +30,7 @@ import {
     projectCreateRouteId,
     projectEditRouteId,
     projectInvitationsRouteId,
+    projectShowcaseRouteId,
     projectsRouteId,
     roleErrorRoute,
     roleErrorRouteId,
@@ -76,6 +77,10 @@ const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
 
 const ProjectAssetsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/assets/ProjectAssetsPage'),
+)
+
+const ProjectShowcasePage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/showcase/ProjectShowcasePage'),
 )
 
 const EngagementsListPage: LazyLoadedComponent = lazyLoad(
@@ -248,6 +253,17 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: projectAssetsRouteId,
                 route: '/projects/:projectId/assets',
                 title: 'Project Assets',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Showcase'>
+                        <ProjectShowcasePage />
+                    </ProjectRouteAccessGuard>
+                ),
+                id: projectShowcaseRouteId,
+                route: '/projects/:projectId/showcase',
+                title: 'Showcase',
             },
             {
                 authRequired: true,
