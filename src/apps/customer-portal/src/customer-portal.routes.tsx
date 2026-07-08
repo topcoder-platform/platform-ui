@@ -14,6 +14,7 @@ import {
     rootRoute,
     talentSearchRouteId,
 } from './config/routes.config'
+import { customerPortalFlexiTalentRoutes } from './pages/flexi-talent/flexi-talent.routes'
 import { customerPortalTalentSearchRoutes } from './pages/talent-search/talent-search.routes'
 
 const CustomerPortalApp: LazyLoadedComponent = lazyLoad(() => import('./CustomerPortalApp'))
@@ -31,6 +32,7 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
                 route: '',
             },
             ...customerPortalTalentSearchRoutes,
+            ...customerPortalFlexiTalentRoutes,
         ],
         domain: AppSubdomain.customer,
         element: <CustomerPortalApp />,
