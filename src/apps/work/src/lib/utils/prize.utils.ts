@@ -170,8 +170,10 @@ export function calculateChallengeTotal(
 /**
  * Normalizes billing markup into a decimal multiplier.
  *
- * Stored markup can arrive as either a decimal fraction like `0.15` or a whole
- * percentage like `15`. Missing or invalid inputs return `undefined`.
+ * Stored markup is the direct multiplier used by challenge billing and
+ * billing-account ledger math. Values greater than `1` are valid and must not
+ * be converted to percentage form. Missing or invalid inputs return
+ * `undefined`.
  *
  * @param billingMarkup raw billing markup from challenge billing data.
  * @returns normalized decimal markup, or `undefined` when unavailable.
@@ -182,9 +184,7 @@ function normalizeBillingMarkup(billingMarkup: unknown): number | undefined {
             return undefined
         }
 
-        return billingMarkup > 1
-            ? billingMarkup / 100
-            : billingMarkup
+        return billingMarkup
     }
 
     if (typeof billingMarkup !== 'string') {
@@ -201,9 +201,7 @@ function normalizeBillingMarkup(billingMarkup: unknown): number | undefined {
         return undefined
     }
 
-    return normalizedMarkup > 1
-        ? normalizedMarkup / 100
-        : normalizedMarkup
+    return normalizedMarkup
 }
 
 /**
