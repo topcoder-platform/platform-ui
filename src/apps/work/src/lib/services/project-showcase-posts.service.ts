@@ -116,6 +116,7 @@ export async function fetchProjectShowcasePosts(
                     name: String(category.name || ''),
                 }))
                 : [],
+            content: String(post.content || ''),
             createdAt: String(post.createdAt || ''),
             createdByHandle: post.createdByHandle !== undefined && post.createdByHandle !== null
                 ? String(post.createdByHandle)

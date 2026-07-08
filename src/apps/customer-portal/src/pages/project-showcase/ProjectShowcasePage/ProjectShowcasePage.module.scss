@@ -31,58 +31,11 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.card {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.cardHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.cardHeader h3 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.cardDate {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.cardBody {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.taxonomy {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.cardFooter {
-  display: flex;
-  justify-content: space-between;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
 
 .loadMoreWrapper {
   display: flex;
@@ -90,11 +43,25 @@
 }
 
 .emptyState {
-  padding: 32px;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  text-align: center;
-  color: #6b7280;
+    min-height: 470px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: $sp-6;
+    margin-top: 20vh;
+    text-align: center;
+    color: $black-100;
+
+    h4 {
+        margin: 0 0 $sp-2;
+        color: $black-100;
+    }
+
+    p {
+        margin: 0 0 $sp-1;
+        max-width: 500px;
+    }
 }
 
 .loadingRow {

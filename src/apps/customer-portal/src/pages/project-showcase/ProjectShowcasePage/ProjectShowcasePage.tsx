@@ -14,6 +14,7 @@ import type {
 
 import styles from './ProjectShowcasePage.module.scss'
 import classNames from 'classnames'
+import { ProjectShowcaseCard } from '../ProjectShowcaseCard'
 
 const PAGE_SIZE = 12
 
@@ -87,6 +88,13 @@ const ProjectShowcasePage: FC = () => {
 
     const handleSortOrderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSortOrder(event.target.value as 'asc' | 'desc')
+    }, [])
+
+    const handleClearFilters = useCallback(() => {
+        setKeyword('')
+        setSelectedIndustries([])
+        setSelectedCategories([])
+        setPage(1)
     }, [])
 
     const handleLoadMore = useCallback(async () => {
@@ -194,6 +202,7 @@ const ProjectShowcasePage: FC = () => {
                         onChange={handleIndustriesChange}
                         placeholder='All Industries'
                         className={styles.input}
+                        openMenuOnClick
                     />
                     <InputMultiselect
                         name='category'
@@ -203,7 +212,17 @@ const ProjectShowcasePage: FC = () => {
                         onChange={handleCategoriesChange}
                         placeholder='All Categories'
                         className={styles.input}
+                        openMenuOnClick
                     />
+
+                    <div>
+                        <Button
+                            size='lg'
+                            label='Clear filters'
+                            secondary
+                            onClick={handleClearFilters}
+                        />
+                    </div>
                 </>
             )}
         >
@@ -242,25 +261,7 @@ const ProjectShowcasePage: FC = () => {
                     {postsResult.posts.length > 0 && (
                         <div className={styles.grid}>
                             {postsResult.posts.map(post => (
-                                <article key={post.id} className={styles.card}>
-                                    <div className={styles.cardHeader}>
-                                        <h3>{post.title || 'Untitled'}</h3>
-                                        <span className={styles.cardDate}>{new Date(post.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className={styles.cardBody}>
-                                        <div className={styles.taxonomy}>
-                                            <strong>Industry:</strong>
-                                            <span>{post.industries.map(item => item.name).join(', ') || '—'}</span>
-                                        </div>
-                                        <div className={styles.taxonomy}>
-                                            <strong>Category:</strong>
-                                            <span>{post.categories.map(item => item.name).join(', ') || '—'}</span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.cardFooter}>
-                                        <span>{post.createdByHandle || 'Unknown author'}</span>
-                                    </div>
-                                </article>
+                                <ProjectShowcaseCard post={post} key={post.id} />
                             ))}
                         </div>
                     )}
