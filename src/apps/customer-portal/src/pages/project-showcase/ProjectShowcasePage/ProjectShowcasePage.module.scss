@@ -1,7 +1,9 @@
+@import '@libs/ui/styles/includes';
+
 .pageContainer {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .filters {
@@ -13,16 +15,6 @@
 .searchInput {
   display: flex;
   flex-direction: column;
-}
-
-.searchField {
-  margin-top: 8px;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 8px;
-  border: 1px solid #d9d9d9;
-  font-size: 1rem;
 }
 
 .filterRow {
@@ -97,13 +89,99 @@
   justify-content: center;
 }
 
-.loadingRow,
 .emptyState {
   padding: 32px;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   text-align: center;
   color: #6b7280;
+}
+
+.loadingRow {
+  border-radius: 16px;
+  text-align: center;
+  color: #6b7280;
+  position: relative;
+}
+
+.sidebarTitle {
+    color: $black-100;
+    font-feature-settings: 'liga' off, 'clig' off;
+
+    font-family: $font-roboto;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px; /* 150% */
+
+    padding: $sp-4 0;
+
+    + hr {
+        border: 0 none;
+        margin-top: -8px;
+        border-bottom: $black-20 1px solid;
+        margin-bottom: 18px;
+    }
+
+    &.filterTitle {
+        padding-top: 24px;
+        padding-bottom: 8px;
+
+        ~ :global(.input-wrapper) {
+            margin-bottom: 8px;
+        }
+    }
+}
+
+.input {
+    margin: 0;
+}
+
+.searchInputWrapper {
+  position: relative;
+  width: 100%;
+
+  :global(.input-el) {
+    margin-bottom: 0;
+  }
+}
+
+.searchIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $turq-160;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.topbarContainer {
+    display: flex;
+    align-items: center;
+    color: $tc-white;
+}
+
+.resultsMeta {
+    strong {
+        font-weight: 700;
+    }
+}
+
+.sorting {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-left: auto;
+
+    :global(.input-el) {
+        margin: 0;
+    }
+}
+
+.sortSelect {
+    min-width: 180px;
 }
 
 @media (max-width: 1080px) {

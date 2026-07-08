@@ -2,6 +2,7 @@ import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
 import {
+    showcaseSearchRouteId,
     talentSearchRouteId,
 } from '~/apps/customer-portal/src/config/routes.config'
 
@@ -11,6 +12,9 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnpri
         ...(!isUnprivilegedUser ? [{
             id: talentSearchRouteId,
             title: 'Talent Search',
+        }, {
+            id: showcaseSearchRouteId,
+            title: 'Showcase',
         }] : []),
     ]
 

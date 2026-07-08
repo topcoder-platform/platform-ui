@@ -1,7 +1,7 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSWRConfig } from 'swr'
 
-import { Button, InputMultiselect, InputMultiselectOption, LoadingSpinner } from '~/libs/ui'
+import { Button, IconOutline, InputMultiselect, InputMultiselectOption, InputSelect, InputText, LoadingSpinner } from '~/libs/ui'
 import { PageWrapper } from '../../../lib/components'
 import { useFetchProjectShowcasePostCategories, useFetchProjectShowcasePostIndustries, useFetchProjectShowcasePosts } from '~/apps/work/src/lib/hooks'
 import { fetchProjectShowcasePosts } from '~/apps/work/src/lib/services'
@@ -13,8 +13,14 @@ import type {
 } from '~/apps/work/src/lib/models'
 
 import styles from './ProjectShowcasePage.module.scss'
+import classNames from 'classnames'
 
 const PAGE_SIZE = 12
+
+const sortOptions = [
+    { label: 'Newest', value: 'desc' },
+    { label: 'Oldest', value: 'asc' },
+]
 
 function normalizeTaxonomyOption(item: ProjectShowcasePostCategory | ProjectShowcasePostIndustry) {
     return { label: item.name, value: item.id }
@@ -29,7 +35,7 @@ const ProjectShowcasePage: FC = () => {
     const [selectedIndustries, setSelectedIndustries] = useState<InputMultiselectOption[]>([])
     const [selectedCategories, setSelectedCategories] = useState<InputMultiselectOption[]>([])
     const [page, setPage] = useState(1)
-    const [sortBy, setSortBy] = useState('createdAt')
+    const sortBy = 'createdAt'
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
     const industriesResult = useFetchProjectShowcasePostIndustries()
@@ -44,7 +50,7 @@ const ProjectShowcasePage: FC = () => {
         categoryId: selectedCategories.map(option => String(option.value || '')).filter(Boolean).join(','),
         sortBy,
         sortOrder,
-    }), [keyword, selectedIndustries, selectedCategories, page, sortBy, sortOrder])
+    }), [keyword, selectedIndustries, selectedCategories, page, sortOrder])
 
     const postsResult = useFetchProjectShowcasePosts(filters)
     const { mutate } = useSWRConfig()
@@ -63,7 +69,7 @@ const ProjectShowcasePage: FC = () => {
 
     useEffect(() => {
         setPage(1)
-    }, [keyword, selectedIndustries, selectedCategories])
+    }, [keyword, selectedIndustries, selectedCategories, sortOrder])
 
     const handleKeywordChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setKeyword(event.target.value)
@@ -77,6 +83,10 @@ const ProjectShowcasePage: FC = () => {
     const handleCategoriesChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value as unknown
         setSelectedCategories(Array.isArray(value) ? value as InputMultiselectOption[] : [])
+    }, [])
+
+    const handleSortOrderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setSortOrder(event.target.value as 'asc' | 'desc')
     }, [])
 
     const handleLoadMore = useCallback(async () => {
@@ -104,10 +114,6 @@ const ProjectShowcasePage: FC = () => {
             posts: [...postsResult.posts, ...response.posts],
         }, false)
     }, [filters, loadMoreDisabled, mutate, page, postsResult.posts])
-
-    useEffect(() => {
-      console.log('here', postsResult.posts)
-    }, [postsResult.posts]);
 
     const content = useMemo(() => {
         if (!postsResult.posts.length && !postsResult.isLoading) {
@@ -154,55 +160,127 @@ const ProjectShowcasePage: FC = () => {
 
     return (
         <PageWrapper
-            pageTitle='Showcase'
+            pageTitle=''
             backUrl=''
             breadCrumb={[]}
-        >
-            <div className={styles.pageContainer}>
-                <section className={styles.filters}>
-                    <div className={styles.searchInput}>
-                        <label htmlFor='showcase-search'>Search showcases</label>
-                        <input
-                            id='showcase-search'
-                            type='text'
+            introText='Loading customer stories...'
+            sidebar={(
+                <>
+                    <div className={styles.sidebarTitle}>
+                        Search Showcases
+                    </div>
+                    <hr />
+
+                    <div className={styles.searchInputWrapper}>
+                        <InputText
+                            classNameWrapper={styles.searchInput}
+                            label={' '}
+                            placeholder='Search by project or description'
+                            name='jobDescription'
                             value={keyword}
                             onChange={handleKeywordChange}
-                            placeholder='Search by keyword'
-                            className={styles.searchField}
+                            type='text'
                         />
+                        <IconOutline.SearchIcon className={classNames('icon-lg', styles.searchIcon)} />
+                    </div>
+                    <div className={classNames(styles.sidebarTitle, styles.filterTitle)}>
+                        Filter
+                    </div>
+                    <InputMultiselect
+                        name='industry'
+                        label='Industry'
+                        options={industryOptions}
+                        value={selectedIndustries}
+                        onChange={handleIndustriesChange}
+                        placeholder='All Industries'
+                        className={styles.input}
+                    />
+                    <InputMultiselect
+                        name='category'
+                        label='Category'
+                        options={categoryOptions}
+                        value={selectedCategories}
+                        onChange={handleCategoriesChange}
+                        placeholder='All Categories'
+                        className={styles.input}
+                    />
+                </>
+            )}
+        >
+            <div className={styles.pageContainer}>
+                <div className={styles.topbarContainer}>
+                    <div className={styles.resultsMeta}>
+                        {postsResult.posts.length > 0 && !postsResult.isLoading && (
+                            <span>
+                                <strong>{postsResult.metadata.total} total</strong>
+                                {' '}
+                                <span>showcases</span>
+                            </span>
+                        )}
                     </div>
 
-                    <div className={styles.filterRow}>
-                        <InputMultiselect
-                            name='industry'
-                            label='Industry'
-                            options={industryOptions}
-                            value={selectedIndustries}
-                            onChange={handleIndustriesChange}
-                            placeholder='All Industries'
+                    <label className={styles.sorting}>
+                        <span>Sort by:</span>
+                        <InputSelect
+                            name='sortOrder'
+                            options={sortOptions}
+                            value={sortOrder}
+                            onChange={handleSortOrderChange}
+                            placeholder='Sort by'
+                            classNameWrapper={styles.sortSelect}
                         />
-                        <InputMultiselect
-                            name='category'
-                            label='Category'
-                            options={categoryOptions}
-                            value={selectedCategories}
-                            onChange={handleCategoriesChange}
-                            placeholder='All Categories'
-                        />
-                    </div>
-                </section>
+                    </label>
+                </div>
 
                 <section className={styles.results}>
-                    {content}
+                    {!postsResult.posts.length && !postsResult.isLoading && (
+                        <div className={styles.emptyState}>
+                            No showcase posts match your search.
+                        </div>
+                    )}
 
-                    <div className={styles.loadMoreWrapper}>
-                        <Button
-                            label='Load more'
-                            onClick={handleLoadMore}
-                            disabled={postsResult.isLoading || loadMoreDisabled}
-                            secondary
-                        />
-                    </div>
+                    {postsResult.posts.length > 0 && (
+                        <div className={styles.grid}>
+                            {postsResult.posts.map(post => (
+                                <article key={post.id} className={styles.card}>
+                                    <div className={styles.cardHeader}>
+                                        <h3>{post.title || 'Untitled'}</h3>
+                                        <span className={styles.cardDate}>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className={styles.cardBody}>
+                                        <div className={styles.taxonomy}>
+                                            <strong>Industry:</strong>
+                                            <span>{post.industries.map(item => item.name).join(', ') || '—'}</span>
+                                        </div>
+                                        <div className={styles.taxonomy}>
+                                            <strong>Category:</strong>
+                                            <span>{post.categories.map(item => item.name).join(', ') || '—'}</span>
+                                        </div>
+                                    </div>
+                                    <div className={styles.cardFooter}>
+                                        <span>{post.createdByHandle || 'Unknown author'}</span>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+
+                    {postsResult.isLoading && (
+                        <div className={styles.loadingRow}>
+                            <LoadingSpinner inline />
+                        </div>
+                    )}
+
+                    {!loadMoreDisabled && postsResult.posts.length > 0 && (
+                        <div className={styles.loadMoreWrapper}>
+                            <Button
+                                label='Load more'
+                                onClick={handleLoadMore}
+                                disabled={postsResult.isLoading || loadMoreDisabled}
+                                secondary
+                            />
+                        </div>
+                    )}
                 </section>
             </div>
         </PageWrapper>

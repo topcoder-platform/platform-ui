@@ -394,234 +394,211 @@ export const TalentSearchPage: FC = () => {
             pageTitle=''
             className={classNames(styles.container)}
             breadCrumb={[]}
+            sidebar={[
+                <>
+                    <InputTextarea
+                        classNameWrapper={styles.jobDescriptionField}
+                        label='Job Description'
+                        name='jobDescription'
+                        value={jobDescription}
+                        rows={6}
+                        onChange={(event: FocusEvent<HTMLTextAreaElement>) => {
+                            setJobDescription(event.target.value)
+                        }}
+                    />
+                    <div className={styles.aiActions}>
+                        <Button
+                            secondary
+                            disabled={isExtractingSkills}
+                            onClick={() => {
+                                searchGenerationRef.current += 1
+                                setJobDescription('')
+                                setErrorMessage('')
+                                setLastSearchedDescription('')
+                            }}
+                        >
+                            Clear
+                        </Button>
+                        <Button
+                            primary
+                            disabled={isAiExtractButtonDisabled}
+                            onClick={handleAiSearch}
+                        >
+                            {isExtractingSkills ? 'Analyzing...' : 'AI Skill Extract'}
+                        </Button>
+                    </div>
+                    {errorMessage && (
+                        <p className={styles.errorMessage}>{errorMessage}</p>
+                    )}
+                </>,
+                <>
+                    <div className={styles.filterBlock}>
+                        <InputMultiselect
+                            className={styles.skillsMultiselect}
+                            label='Skills'
+                            name='skills'
+                            placeholder=''
+                            loading={skillOptionsLoading}
+                            onFetchOptions={loadSkillOptions}
+                            value={selectedSkills}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const value = (event.target.value || []) as InputMultiselectOption[]
+                                setSelectedSkills(value)
+                                if (value.length === 0) {
+                                    setLastSearchedDescription('')
+                                }
+                            }}
+                        />
+                    </div>
+                    <div className={styles.filterBlock}>
+                        <InputMultiselect
+                            label='Country'
+                            name='country'
+                            options={countryFilterOptions}
+                            onFetchOptions={loadCountryOptions}
+                            value={selectedCountries}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const value = (event.target.value || []) as InputMultiselectOption[]
+                                setSelectedCountries(value)
+                            }}
+                            placeholder='Select country'
+                        />
+                    </div>
+                    <div className={styles.filterBlock}>
+                        <InputMultiselect
+                            label='Preferred role'
+                            name='preferredRole'
+                            openMenuOnClick
+                            options={preferredRoleOptions}
+                            onFetchOptions={loadPreferredRoleOptions}
+                            value={selectedPreferredRoles}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const value = (event.target.value || []) as InputMultiselectOption[]
+                                setSelectedPreferredRoles(value)
+                            }}
+                            placeholder='Select preferred roles'
+                        />
+                    </div>
+                    <label className={styles.checkboxRow}>
+                        <input
+                            type='checkbox'
+                            checked={onlyOpenToWork}
+                            className={styles.checkboxInput}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setOnlyOpenToWork(event.target.checked)
+                            }}
+                        />
+                        <span className={styles.toggleControl} />
+                        <span>Open to work</span>
+                    </label>
+                    <label className={styles.checkboxRow}>
+                        <input
+                            type='checkbox'
+                            checked={onlyActive}
+                            className={styles.checkboxInput}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setOnlyActive(event.target.checked)
+                            }}
+                        />
+                        <span className={styles.toggleControl} />
+                        <span className={styles.checkboxLabelWithInfo}>
+                            <span>Active members</span>
+                            <Tooltip
+                                content={(
+                                    'This member has participated in a challenge, task, '
+                                    + 'or engagement in the past 3 months.'
+                                )}
+                                place='top'
+                            >
+                                <button
+                                    type='button'
+                                    className={styles.infoIconButton}
+                                    aria-label='Only active members info'
+                                >
+                                    <IconOutline.InformationCircleIcon />
+                                </button>
+                            </Tooltip>
+                        </span>
+                    </label>
+                    <label className={styles.checkboxRow}>
+                        <input
+                            type='checkbox'
+                            checked={onlyProfileComplete}
+                            className={styles.checkboxInput}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setOnlyProfileComplete(event.target.checked)
+                            }}
+                        />
+                        <span className={styles.toggleControl} />
+                        <span>100% Profile complete</span>
+                    </label>
+                    <div className={styles.clearFiltersWrap}>
+                        <Button secondary onClick={clearAllFilters}>
+                            Clear Filters
+                        </Button>
+                        <Button
+                            primary
+                            disabled={
+                                isSearchingMembers
+                                || currentSearchSignature === lastAppliedSearchSignature
+                            }
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </Button>
+                    </div>
+                </>
+            ]}
+            introText='Paste a job description to AI-extract skills, or enter skills manually to find talents'
+            shouldShowIntroState={shouldShowIntroState}
         >
-            <div className={styles.pageArea}>
-                <div className={styles.pageHero} />
-                <div className={styles.pageBody}>
-                    <aside className={styles.sidebar}>
-                        <section className={styles.panel}>
-                            <InputTextarea
-                                classNameWrapper={styles.jobDescriptionField}
-                                label='Job Description'
-                                name='jobDescription'
-                                value={jobDescription}
-                                rows={6}
-                                onChange={(event: FocusEvent<HTMLTextAreaElement>) => {
-                                    setJobDescription(event.target.value)
-                                }}
-                            />
-                            <div className={styles.aiActions}>
+            <div className={styles.resultsContent}>
+                {!isSearchingMembers && (
+                    <div className={styles.resultsTop}>
+                        <p className={styles.foundText}>
+                            We have found&nbsp;
+                            <span className={styles.foundTextCount}>
+                                {`${foundMembersCount} members`}
+                            </span>
+                            &nbsp;that match your search.
+                        </p>
+                    </div>
+                )}
+                {isSearchingMembers && (
+                    <div className={styles.emptyState}>
+                        <h4>Searching talent...</h4>
+                    </div>
+                )}
+                {!isSearchingMembers && displayedResults.length === 0 && (
+                    <div className={styles.emptyState}>
+                        <h4>No matching talent found</h4>
+                        <p>Try changing filters or using a different job description.</p>
+                    </div>
+                )}
+                {!isSearchingMembers && displayedResults.length > 0 && (
+                    <>
+                        <div className={styles.cardsGrid}>
+                            {displayedResultsWithCountryName.map(talent => (
+                                <TalentResultCard
+                                    key={talent.id}
+                                    talent={talent}
+                                    showSkillMatch={showSkillMatchOnCards}
+                                />
+                            ))}
+                        </div>
+                        {hasMoreResults && (
+                            <div className={styles.loadMoreWrap}>
                                 <Button
                                     secondary
-                                    disabled={isExtractingSkills}
-                                    onClick={() => {
-                                        searchGenerationRef.current += 1
-                                        setJobDescription('')
-                                        setErrorMessage('')
-                                        setLastSearchedDescription('')
-                                    }}
+                                    disabled={isLoadingMore}
+                                    onClick={handleLoadMore}
                                 >
-                                    Clear
+                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
                                 </Button>
-                                <Button
-                                    primary
-                                    disabled={isAiExtractButtonDisabled}
-                                    onClick={handleAiSearch}
-                                >
-                                    {isExtractingSkills ? 'Analyzing...' : 'AI Skill Extract'}
-                                </Button>
-                            </div>
-                            {errorMessage && (
-                                <p className={styles.errorMessage}>{errorMessage}</p>
-                            )}
-                        </section>
-
-                        <section className={styles.panel}>
-                            <div className={styles.filterBlock}>
-                                <InputMultiselect
-                                    className={styles.skillsMultiselect}
-                                    label='Skills'
-                                    name='skills'
-                                    placeholder=''
-                                    loading={skillOptionsLoading}
-                                    onFetchOptions={loadSkillOptions}
-                                    value={selectedSkills}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        const value = (event.target.value || []) as InputMultiselectOption[]
-                                        setSelectedSkills(value)
-                                        if (value.length === 0) {
-                                            setLastSearchedDescription('')
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <div className={styles.filterBlock}>
-                                <InputMultiselect
-                                    label='Country'
-                                    name='country'
-                                    options={countryFilterOptions}
-                                    onFetchOptions={loadCountryOptions}
-                                    value={selectedCountries}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        const value = (event.target.value || []) as InputMultiselectOption[]
-                                        setSelectedCountries(value)
-                                    }}
-                                    placeholder='Select country'
-                                />
-                            </div>
-                            <div className={styles.filterBlock}>
-                                <InputMultiselect
-                                    label='Preferred role'
-                                    name='preferredRole'
-                                    openMenuOnClick
-                                    options={preferredRoleOptions}
-                                    onFetchOptions={loadPreferredRoleOptions}
-                                    value={selectedPreferredRoles}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        const value = (event.target.value || []) as InputMultiselectOption[]
-                                        setSelectedPreferredRoles(value)
-                                    }}
-                                    placeholder='Select preferred roles'
-                                />
-                            </div>
-                            <label className={styles.checkboxRow}>
-                                <input
-                                    type='checkbox'
-                                    checked={onlyOpenToWork}
-                                    className={styles.checkboxInput}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setOnlyOpenToWork(event.target.checked)
-                                    }}
-                                />
-                                <span className={styles.toggleControl} />
-                                <span>Open to work</span>
-                            </label>
-                            <label className={styles.checkboxRow}>
-                                <input
-                                    type='checkbox'
-                                    checked={onlyActive}
-                                    className={styles.checkboxInput}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setOnlyActive(event.target.checked)
-                                    }}
-                                />
-                                <span className={styles.toggleControl} />
-                                <span className={styles.checkboxLabelWithInfo}>
-                                    <span>Active members</span>
-                                    <Tooltip
-                                        content={(
-                                            'This member has participated in a challenge, task, '
-                                            + 'or engagement in the past 3 months.'
-                                        )}
-                                        place='top'
-                                    >
-                                        <button
-                                            type='button'
-                                            className={styles.infoIconButton}
-                                            aria-label='Only active members info'
-                                        >
-                                            <IconOutline.InformationCircleIcon />
-                                        </button>
-                                    </Tooltip>
-                                </span>
-                            </label>
-                            <label className={styles.checkboxRow}>
-                                <input
-                                    type='checkbox'
-                                    checked={onlyProfileComplete}
-                                    className={styles.checkboxInput}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setOnlyProfileComplete(event.target.checked)
-                                    }}
-                                />
-                                <span className={styles.toggleControl} />
-                                <span>100% Profile complete</span>
-                            </label>
-                            <div className={styles.clearFiltersWrap}>
-                                <Button secondary onClick={clearAllFilters}>
-                                    Clear Filters
-                                </Button>
-                                <Button
-                                    primary
-                                    disabled={
-                                        isSearchingMembers
-                                        || currentSearchSignature === lastAppliedSearchSignature
-                                    }
-                                    onClick={handleSearch}
-                                >
-                                    Search
-                                </Button>
-                            </div>
-                        </section>
-                    </aside>
-
-                    <section
-                        className={classNames(
-                            styles.resultsPanel,
-                            shouldShowIntroState && styles.resultsPanelEmpty,
-                        )}
-                    >
-                        {shouldShowIntroState && (
-                            <div className={styles.emptyState}>
-                                <p className={styles.emptyStateDescription}>
-                                    Paste a job description to AI-extract skills, or enter skills manually
-                                    to find talents
-                                </p>
                             </div>
                         )}
-
-                        {!shouldShowIntroState && (
-                            <div className={styles.resultsContent}>
-                                {!isSearchingMembers && (
-                                    <div className={styles.resultsTop}>
-                                        <p className={styles.foundText}>
-                                            We have found&nbsp;
-                                            <span className={styles.foundTextCount}>
-                                                {`${foundMembersCount} members`}
-                                            </span>
-                                            &nbsp;that match your search.
-                                        </p>
-                                    </div>
-                                )}
-                                {isSearchingMembers && (
-                                    <div className={styles.emptyState}>
-                                        <h4>Searching talent...</h4>
-                                    </div>
-                                )}
-                                {!isSearchingMembers && displayedResults.length === 0 && (
-                                    <div className={styles.emptyState}>
-                                        <h4>No matching talent found</h4>
-                                        <p>Try changing filters or using a different job description.</p>
-                                    </div>
-                                )}
-                                {!isSearchingMembers && displayedResults.length > 0 && (
-                                    <>
-                                        <div className={styles.cardsGrid}>
-                                            {displayedResultsWithCountryName.map(talent => (
-                                                <TalentResultCard
-                                                    key={talent.id}
-                                                    talent={talent}
-                                                    showSkillMatch={showSkillMatchOnCards}
-                                                />
-                                            ))}
-                                        </div>
-                                        {hasMoreResults && (
-                                            <div className={styles.loadMoreWrap}>
-                                                <Button
-                                                    secondary
-                                                    disabled={isLoadingMore}
-                                                    onClick={handleLoadMore}
-                                                >
-                                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </section>
-                </div>
+                    </>
+                )}
             </div>
         </PageWrapper>
     )

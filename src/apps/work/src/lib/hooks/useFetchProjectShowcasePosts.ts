@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -45,6 +45,8 @@ export function useFetchProjectShowcasePosts(
         [requestParams],
     )
 
+    const [previousResponse, setPreviousResponse] = useState<FetchProjectShowcasePostsResponse | undefined>(undefined)
+
     const {
         data,
         error,
@@ -58,20 +60,27 @@ export function useFetchProjectShowcasePosts(
             shouldRetryOnError: true,
         },
     )
-console.log('here2', data?.posts);
+
+    useEffect(() => {
+        if (data) {
+            setPreviousResponse(data)
+        }
+    }, [data])
+
+    const response = data ?? previousResponse
 
     return {
         error,
         isLoading: !data && !error,
         isValidating,
-        metadata: data?.metadata ?? {
+        metadata: response?.metadata ?? {
             page: requestParams.page || 1,
             perPage: requestParams.perPage || 10,
             total: 0,
             totalPages: 0,
         },
         mutate,
-        posts: data?.posts || [],
+        posts: response?.posts || [],
     }
 }
 
