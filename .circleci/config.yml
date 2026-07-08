@@ -228,7 +228,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - ai-ratings
+                              - flexi-talent
                       tags:
                           only: /^dev-.*/
 
