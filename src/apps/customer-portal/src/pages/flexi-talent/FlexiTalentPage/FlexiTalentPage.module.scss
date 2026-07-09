@@ -139,11 +139,22 @@
     }
 
     strong {
-        color: $black-100;
         font-size: 22px;
         font-weight: 700;
         line-height: 28px;
     }
+}
+
+.bucketCountTotal {
+    color: $blue-110;
+}
+
+.bucketCountPositive {
+    color: $green-1;
+}
+
+.bucketCountMuted {
+    color: $black-80;
 }
 
 .bucketButtonActive {
@@ -241,17 +252,37 @@
     font-weight: 600;
     line-height: 18px;
     padding: 7px 12px;
+}
 
-    span {
-        color: $black-60;
-        font-size: 12px;
-        font-weight: 500;
+.sortDirectionIndicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: $black-60;
+
+    svg {
+        width: 16px;
+        height: 16px;
     }
 }
 
 .sortButtonActive {
     border-color: $turq-160;
     color: $black-100;
+}
+
+.visuallyHidden {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    clip: rect(0 0 0 0);
+    padding: 0;
+    white-space: nowrap;
 }
 
 .listMeta {
@@ -508,6 +539,98 @@
         line-height: 21px;
         margin: 0;
         overflow-wrap: anywhere;
+    }
+}
+
+.descriptionRichText {
+    color: $black-80;
+    font-size: 14px;
+    line-height: 21px;
+    overflow-wrap: anywhere;
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
+    p,
+    ul,
+    ol,
+    blockquote,
+    table,
+    pre {
+        margin: 0 0 8px;
+    }
+
+    ul,
+    ol {
+        padding-left: 20px;
+    }
+
+    li {
+        margin-bottom: 4px;
+    }
+
+    a {
+        color: $turq-160;
+        font-weight: 700;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: $black-100;
+        font-size: 15px;
+        line-height: 21px;
+        margin: 0 0 8px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        border: 1px solid $black-20;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+}
+
+.descriptionRichTextCollapsed {
+    overflow: hidden;
+    max-height: 147px;
+}
+
+.descriptionToggleButton {
+    align-self: flex-start;
+    min-height: 28px;
+    border: 0;
+    background: transparent;
+    color: $turq-160;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    padding: 2px 0;
+
+    &:hover {
+        text-decoration: underline;
     }
 }
 

@@ -13,6 +13,7 @@ import { debounce } from 'lodash'
 import classNames from 'classnames'
 
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
+import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -31,6 +32,8 @@ import styles from '../../FlexiTalentPage/FlexiTalentPage.module.scss'
 
 const ENGAGEMENTS_PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 300
+const DESCRIPTION_COLLAPSED_HEIGHT_PX = 147
+const DESCRIPTION_OVERFLOW_TOLERANCE_PX = 1
 
 type DetailState = 'loading' | 'empty' | 'error' | 'ready'
 
@@ -127,6 +130,26 @@ function formatMemberCount(
     return `${assignedMemberCount} of ${requiredMemberCount} assigned`
 }
 
+/**
+ * Converts engagement description source into sanitized HTML for detail rail rendering.
+ *
+ * @param description Mixed markdown and HTML description text returned by engagements-api-v6.
+ * @returns Sanitized HTML, or an empty string when the source has no renderable safe content.
+ */
+function renderEngagementDescriptionHtml(description?: string | null): string {
+    return renderRichTextToHtml(description || '')
+}
+
+/**
+ * Checks whether the rendered description is taller than the default collapsed region.
+ *
+ * @param element Rendered rich-text description container.
+ * @returns True when the container needs a See More / See Less toggle.
+ */
+function isDescriptionOverflowingCollapsedHeight(element: HTMLDivElement): boolean {
+    return element.scrollHeight > DESCRIPTION_COLLAPSED_HEIGHT_PX + DESCRIPTION_OVERFLOW_TOLERANCE_PX
+}
+
 function getErrorMessage(fallback: string): string {
     return fallback
 }
@@ -151,6 +174,7 @@ export const EngagementsView: FC = () => {
     const summaryGenerationRef = useRef<number>(0)
     const listGenerationRef = useRef<number>(0)
     const detailGenerationRef = useRef<number>(0)
+    const descriptionContentRef = useRef<HTMLDivElement>(null)
 
     const [summaryData, setSummaryData] = useState<FlexiEngagementSummaryResponse>()
     const [isSummaryLoading, setIsSummaryLoading] = useState<boolean>(true)
@@ -173,6 +197,8 @@ export const EngagementsView: FC = () => {
     const [detailData, setDetailData] = useState<FlexiEngagementDetail>()
     const [detailState, setDetailState] = useState<DetailState>('loading')
     const [detailErrorMessage, setDetailErrorMessage] = useState<string>('')
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false)
+    const [isDescriptionCollapsible, setIsDescriptionCollapsible] = useState<boolean>(false)
 
     const debouncedApplySearch = useMemo(
         () => debounce((nextSearchText: string): void => {
@@ -186,20 +212,33 @@ export const EngagementsView: FC = () => {
     const summaryBuckets = useMemo(() => [
         {
             count: summaryData?.total,
+            countClassName: styles.bucketCountTotal,
             id: 'total' as FlexiEngagementBucket,
             label: 'Total Engagements',
         },
         {
             count: summaryData?.active,
+            countClassName: styles.bucketCountPositive,
             id: 'active' as FlexiEngagementBucket,
             label: 'Active',
         },
         {
             count: summaryData?.closed,
+            countClassName: styles.bucketCountMuted,
             id: 'closed' as FlexiEngagementBucket,
             label: 'Closed',
         },
     ], [summaryData])
+
+    const sanitizedDescriptionHtml = useMemo(
+        () => renderEngagementDescriptionHtml(detailData?.description),
+        [detailData?.description],
+    )
+
+    const resetDescriptionState = useCallback((): void => {
+        setIsDescriptionExpanded(false)
+        setIsDescriptionCollapsible(false)
+    }, [])
 
     /**
      * Loads bucket counts once for the left rail, independent of list filters.
@@ -239,7 +278,8 @@ export const EngagementsView: FC = () => {
         setDetailData(undefined)
         setDetailErrorMessage('')
         setDetailState('loading')
-    }, [])
+        resetDescriptionState()
+    }, [resetDescriptionState])
 
     /**
      * Loads detail for a selected engagement row.
@@ -255,6 +295,7 @@ export const EngagementsView: FC = () => {
         setDetailData(undefined)
         setDetailErrorMessage('')
         setDetailState('loading')
+        resetDescriptionState()
 
         try {
             const response = await getFlexiEngagementDetail(row.engagementId)
@@ -262,6 +303,7 @@ export const EngagementsView: FC = () => {
                 return
             }
 
+            resetDescriptionState()
             setDetailData(response)
             setDetailState('ready')
         } catch {
@@ -272,7 +314,7 @@ export const EngagementsView: FC = () => {
             setDetailErrorMessage(getErrorMessage('Could not load engagement details.'))
             setDetailState('error')
         }
-    }, [])
+    }, [resetDescriptionState])
 
     /**
      * Refreshes the current engagement list and auto-selects the first returned row.
@@ -370,6 +412,35 @@ export const EngagementsView: FC = () => {
         detailGenerationRef.current += 1
     }, [debouncedApplySearch])
 
+    useEffect(() => {
+        if (detailState !== 'ready' || !sanitizedDescriptionHtml) {
+            setIsDescriptionCollapsible(false)
+            return undefined
+        }
+
+        const measureDescription = (): void => {
+            const descriptionElement = descriptionContentRef.current
+            setIsDescriptionCollapsible(
+                descriptionElement
+                    ? isDescriptionOverflowingCollapsedHeight(descriptionElement)
+                    : false,
+            )
+        }
+
+        if (typeof window === 'undefined') {
+            measureDescription()
+            return undefined
+        }
+
+        const animationFrame = window.requestAnimationFrame(measureDescription)
+        window.addEventListener('resize', measureDescription)
+
+        return () => {
+            window.cancelAnimationFrame(animationFrame)
+            window.removeEventListener('resize', measureDescription)
+        }
+    }, [detailState, sanitizedDescriptionHtml])
+
     const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         const nextSearchText = event.target.value || ''
         prepareRightRailRefresh()
@@ -421,6 +492,10 @@ export const EngagementsView: FC = () => {
             .catch(() => undefined)
     }, [fetchSelectedEngagementDetail])
 
+    const handleDescriptionToggle = useCallback((): void => {
+        setIsDescriptionExpanded(currentValue => !currentValue)
+    }, [])
+
     const renderSummaryCount = useCallback((count: number | undefined): string => {
         if (isSummaryLoading) {
             return '--'
@@ -458,7 +533,7 @@ export const EngagementsView: FC = () => {
                             type='button'
                         >
                             <span>{bucket.label}</span>
-                            <strong>{renderSummaryCount(bucket.count)}</strong>
+                            <strong className={bucket.countClassName}>{renderSummaryCount(bucket.count)}</strong>
                         </button>
                     ))}
                 </div>
@@ -499,7 +574,18 @@ export const EngagementsView: FC = () => {
                     >
                         Name
                         {sortBy === 'name' && (
-                            <span>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+                            <>
+                                <span className={styles.sortDirectionIndicator} aria-hidden='true'>
+                                    {sortOrder === 'asc' ? (
+                                        <IconOutline.ArrowUpIcon />
+                                    ) : (
+                                        <IconOutline.ArrowDownIcon />
+                                    )}
+                                </span>
+                                <span className={styles.visuallyHidden}>
+                                    {sortOrder === 'asc' ? 'sorted ascending' : 'sorted descending'}
+                                </span>
+                            </>
                         )}
                     </button>
                     <button
@@ -509,7 +595,18 @@ export const EngagementsView: FC = () => {
                     >
                         Members
                         {sortBy === 'memberCount' && (
-                            <span>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+                            <>
+                                <span className={styles.sortDirectionIndicator} aria-hidden='true'>
+                                    {sortOrder === 'asc' ? (
+                                        <IconOutline.ArrowUpIcon />
+                                    ) : (
+                                        <IconOutline.ArrowDownIcon />
+                                    )}
+                                </span>
+                                <span className={styles.visuallyHidden}>
+                                    {sortOrder === 'asc' ? 'sorted ascending' : 'sorted descending'}
+                                </span>
+                            </>
                         )}
                     </button>
                 </div>
@@ -618,7 +715,30 @@ export const EngagementsView: FC = () => {
 
                         <div className={styles.detailSection}>
                             <h4>Description</h4>
-                            <p>{detailData.description || 'No description provided.'}</p>
+                            {sanitizedDescriptionHtml ? (
+                                <>
+                                    <div
+                                        className={classNames(
+                                            styles.descriptionRichText,
+                                            !isDescriptionExpanded && styles.descriptionRichTextCollapsed,
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
+                                        ref={descriptionContentRef}
+                                    />
+                                    {isDescriptionCollapsible && (
+                                        <button
+                                            aria-expanded={isDescriptionExpanded}
+                                            className={styles.descriptionToggleButton}
+                                            onClick={handleDescriptionToggle}
+                                            type='button'
+                                        >
+                                            {isDescriptionExpanded ? 'See Less' : 'See More'}
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <p>No description provided.</p>
+                            )}
                         </div>
 
                         <div className={styles.detailSection}>
