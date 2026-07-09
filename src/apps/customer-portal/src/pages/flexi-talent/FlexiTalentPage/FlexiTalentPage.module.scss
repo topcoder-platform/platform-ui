@@ -542,6 +542,10 @@
     }
 }
 
+.descriptionFrame {
+    position: relative;
+}
+
 .descriptionRichText {
     color: $black-80;
     font-size: 14px;
@@ -614,7 +618,7 @@
 
 .descriptionRichTextCollapsed {
     overflow: hidden;
-    max-height: 147px;
+    max-height: 126px;
 }
 
 .descriptionToggleButton {
@@ -627,10 +631,32 @@
     font-size: 13px;
     font-weight: 700;
     line-height: 18px;
+    margin-top: 4px;
     padding: 2px 0;
 
     &:hover {
         text-decoration: underline;
+    }
+}
+
+.descriptionToggleButtonCollapsed {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    min-height: 21px;
+    background: $tc-white;
+    line-height: 21px;
+    margin-top: 0;
+    padding: 0 0 0 28px;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 100%;
+        bottom: 0;
+        width: 28px;
+        background: linear-gradient(90deg, rgba($tc-white, 0), $tc-white);
     }
 }
 
@@ -665,6 +691,11 @@
             height: 14px;
         }
     }
+}
+
+.detailHeaderWorkLinks {
+    border-bottom: 0;
+    padding-bottom: 0;
 }
 
 .assignmentRow {

@@ -32,7 +32,7 @@ import styles from '../../FlexiTalentPage/FlexiTalentPage.module.scss'
 
 const ENGAGEMENTS_PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 300
-const DESCRIPTION_COLLAPSED_HEIGHT_PX = 147
+const DESCRIPTION_COLLAPSED_HEIGHT_PX = 126
 const DESCRIPTION_OVERFLOW_TOLERANCE_PX = 1
 
 type DetailState = 'loading' | 'empty' | 'error' | 'ready'
@@ -141,7 +141,17 @@ function renderEngagementDescriptionHtml(description?: string | null): string {
 }
 
 /**
- * Checks whether the rendered description is taller than the default collapsed region.
+ * Checks whether engagement detail includes any Work Manager links.
+ *
+ * @param workLinks Normalized Work Manager links from the engagement detail service.
+ * @returns Whether any Work Manager URL is available.
+ */
+function hasWorkLinks(workLinks: FlexiEngagementDetail['workLinks']): boolean {
+    return Boolean(workLinks.projectUrl || workLinks.engagementUrl || workLinks.assigneeDetailsUrl)
+}
+
+/**
+ * Checks whether the rendered description is taller than the six-line collapsed region.
  *
  * @param element Rendered rich-text description container.
  * @returns True when the container needs a See More / See Less toggle.
@@ -707,6 +717,32 @@ export const EngagementsView: FC = () => {
                         <div className={styles.detailHeader}>
                             <span className={styles.statusPill}>{formatStatusLabel(detailData.status)}</span>
                             <h3>{detailData.engagementTitle}</h3>
+                            {hasWorkLinks(detailData.workLinks) && (
+                                <div className={classNames(styles.workLinks, styles.detailHeaderWorkLinks)}>
+                                    {detailData.workLinks.projectUrl && (
+                                        <a href={detailData.workLinks.projectUrl} rel='noreferrer' target='_blank'>
+                                            Project
+                                            <IconOutline.ExternalLinkIcon />
+                                        </a>
+                                    )}
+                                    {detailData.workLinks.engagementUrl && (
+                                        <a href={detailData.workLinks.engagementUrl} rel='noreferrer' target='_blank'>
+                                            Engagement
+                                            <IconOutline.ExternalLinkIcon />
+                                        </a>
+                                    )}
+                                    {detailData.workLinks.assigneeDetailsUrl && (
+                                        <a
+                                            href={detailData.workLinks.assigneeDetailsUrl}
+                                            rel='noreferrer'
+                                            target='_blank'
+                                        >
+                                            Assignee Details
+                                            <IconOutline.ExternalLinkIcon />
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                             <p>{detailData.projectName || 'Project name unavailable'}</p>
                             <span className={styles.detailCapacity}>
                                 {formatMemberCount(detailData.assignedMemberCount, detailData.requiredMemberCount)}
@@ -716,7 +752,7 @@ export const EngagementsView: FC = () => {
                         <div className={styles.detailSection}>
                             <h4>Description</h4>
                             {sanitizedDescriptionHtml ? (
-                                <>
+                                <div className={styles.descriptionFrame}>
                                     <div
                                         className={classNames(
                                             styles.descriptionRichText,
@@ -728,14 +764,17 @@ export const EngagementsView: FC = () => {
                                     {isDescriptionCollapsible && (
                                         <button
                                             aria-expanded={isDescriptionExpanded}
-                                            className={styles.descriptionToggleButton}
+                                            className={classNames(
+                                                styles.descriptionToggleButton,
+                                                !isDescriptionExpanded && styles.descriptionToggleButtonCollapsed,
+                                            )}
                                             onClick={handleDescriptionToggle}
                                             type='button'
                                         >
                                             {isDescriptionExpanded ? 'See Less' : 'See More'}
                                         </button>
                                     )}
-                                </>
+                                </div>
                             ) : (
                                 <p>No description provided.</p>
                             )}
@@ -751,27 +790,6 @@ export const EngagementsView: FC = () => {
                                 </div>
                             ) : (
                                 <p>No skills listed.</p>
-                            )}
-                        </div>
-
-                        <div className={styles.workLinks}>
-                            {detailData.workLinks.projectUrl && (
-                                <a href={detailData.workLinks.projectUrl} rel='noreferrer' target='_blank'>
-                                    Project
-                                    <IconOutline.ExternalLinkIcon />
-                                </a>
-                            )}
-                            {detailData.workLinks.engagementUrl && (
-                                <a href={detailData.workLinks.engagementUrl} rel='noreferrer' target='_blank'>
-                                    Engagement
-                                    <IconOutline.ExternalLinkIcon />
-                                </a>
-                            )}
-                            {detailData.workLinks.assigneeDetailsUrl && (
-                                <a href={detailData.workLinks.assigneeDetailsUrl} rel='noreferrer' target='_blank'>
-                                    Assignee Details
-                                    <IconOutline.ExternalLinkIcon />
-                                </a>
                             )}
                         </div>
 
