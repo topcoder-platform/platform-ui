@@ -22,6 +22,7 @@ interface TestHarnessProps {
     challengeFee?: number
     defaultPrizeSets: PrizeSet[]
     markup?: number
+    reviewers?: ChallengeEditorFormData['reviewers']
 }
 
 const UpdatePrizeSetsButton: FC = () => {
@@ -76,7 +77,7 @@ const TestHarness: FC<TestHarnessProps> = props => {
             description: 'Public specification',
             name: 'Challenge fee test',
             prizeSets: props.defaultPrizeSets,
-            reviewers: [
+            reviewers: props.reviewers ?? [
                 {
                     baseCoefficient: 0.15,
                     incrementalCoefficient: 0,
@@ -133,7 +134,7 @@ describe('ChallengeFeeField', () => {
             .toBeTruthy()
     })
 
-    it('normalizes whole-number markup percentages from persisted billing data', () => {
+    it('calculates challenge fee from markup multipliers greater than one', () => {
         render(
             <TestHarness
                 defaultPrizeSets={[
@@ -141,17 +142,40 @@ describe('ChallengeFeeField', () => {
                         prizes: [
                             {
                                 type: 'USD',
-                                value: 100,
+                                value: 150,
+                            },
+                            {
+                                type: 'USD',
+                                value: 75,
                             },
                         ],
                         type: 'PLACEMENT',
                     },
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                        ],
+                        type: 'COPILOT',
+                    },
                 ]}
-                markup={15}
+                markup={1.2229}
+                reviewers={[
+                    {
+                        baseCoefficient: 0.13,
+                        incrementalCoefficient: 0.05,
+                        isMemberReview: true,
+                        memberReviewerCount: 2,
+                        phaseId: 'review-phase',
+                        scorecardId: 'scorecard-id',
+                    },
+                ]}
             />,
         )
 
-        expect(screen.getByText('$17.25'))
+        expect(screen.getByText('$481.82'))
             .toBeTruthy()
     })
 

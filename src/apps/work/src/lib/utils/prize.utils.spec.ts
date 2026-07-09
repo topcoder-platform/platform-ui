@@ -79,11 +79,11 @@ describe('prize utils challenge total', () => {
             .toBe(100)
     })
 
-    it('calculates challenge fee from decimal or whole-number markup values', () => {
+    it('calculates challenge fee from billing-account markup multipliers', () => {
         expect(calculateChallengeFee(1560, 0.33))
             .toBeCloseTo(514.8, 2)
-        expect(calculateChallengeFee(1560, 33))
-            .toBeCloseTo(514.8, 2)
+        expect(calculateChallengeFee(394, 1.2229))
+            .toBeCloseTo(481.82, 2)
     })
 
     it('formats usd currency values with two decimal places', () => {

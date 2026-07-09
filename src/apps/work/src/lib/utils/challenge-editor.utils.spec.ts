@@ -242,6 +242,26 @@ describe('challenge-editor utils submission count mapping', () => {
 })
 
 describe('challenge-editor utils schedule mapping', () => {
+    it('rounds API phase durations with leftover seconds up to a whole minute', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Immediate challenge',
+            phases: [{
+                duration: 1295994,
+                isOpen: true,
+                name: 'Submission',
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-07-10T05:26:25.000Z',
+                scheduledStartDate: '2026-06-25T05:26:30.201Z',
+            }],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.phases?.[0]?.duration)
+            .toBe(21600)
+    })
+
     it('serializes scheduled phase end dates to the API payload', () => {
         const formData: Record<string, unknown> = {
             description: 'Public specification',

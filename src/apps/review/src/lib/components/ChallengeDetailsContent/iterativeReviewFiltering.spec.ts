@@ -6,6 +6,7 @@ import {
 
 import {
     filterIterativeReviewRows,
+    getIterativeReviewSubmissionPriority,
     limitFirst2FinishIterativeRows,
 } from './iterativeReviewFiltering'
 
@@ -308,6 +309,32 @@ describe('filterIterativeReviewRows', () => {
         expect(results[0].id)
             .toBe('synthetic-row-1')
     })
+
+    it('keeps a URL submission row when the F2F limiter matches its legacy submission id', () => {
+        const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+        const urlSubmissionRow = {
+            ...createSubmission(iterativeReviewer.id),
+            id: 'url-submission-row',
+            isFileSubmission: false,
+            legacySubmissionId: 'canonical-submission-id',
+        }
+        const otherRow = {
+            ...createSubmission('other-reviewer'),
+            id: 'other-submission-row',
+            legacySubmissionId: 'other-canonical-id',
+        }
+
+        const results = limitFirst2FinishIterativeRows(
+            [otherRow, urlSubmissionRow],
+            ['canonical-submission-id'],
+            { forceSingleRow: true },
+        )
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].id)
+            .toBe('url-submission-row')
+    })
 })
 
 describe('limitFirst2FinishIterativeRows', () => {
@@ -346,5 +373,33 @@ describe('limitFirst2FinishIterativeRows', () => {
             .toHaveLength(1)
         expect(results[0].id)
             .toBe('submission-earlier')
+    })
+})
+
+describe('getIterativeReviewSubmissionPriority', () => {
+    it('prefers the logged-in reviewer row when duplicate F2F rows share a submission id', () => {
+        const currentReviewerResourceIds = new Set(['current-reviewer-resource'])
+        const currentReviewerRow = createSubmission('current-reviewer-resource')
+        const otherReviewerCompletedRow = createSubmission('other-reviewer-resource')
+        currentReviewerRow.review!.id = 'review-current'
+        otherReviewerCompletedRow.review!.id = 'review-other'
+        otherReviewerCompletedRow.review!.status = 'COMPLETED'
+
+        expect(getIterativeReviewSubmissionPriority(currentReviewerRow, currentReviewerResourceIds))
+            .toBeGreaterThan(
+                getIterativeReviewSubmissionPriority(otherReviewerCompletedRow, currentReviewerResourceIds),
+            )
+    })
+
+    it('keeps the completed-review preference when no row belongs to the logged-in reviewer', () => {
+        const currentReviewerResourceIds = new Set(['current-reviewer-resource'])
+        const pendingRow = createSubmission('pending-reviewer-resource')
+        const completedRow = createSubmission('completed-reviewer-resource')
+        pendingRow.review!.id = 'review-pending'
+        completedRow.review!.id = 'review-completed'
+        completedRow.review!.status = 'COMPLETED'
+
+        expect(getIterativeReviewSubmissionPriority(completedRow, currentReviewerResourceIds))
+            .toBeGreaterThan(getIterativeReviewSubmissionPriority(pendingRow, currentReviewerResourceIds))
     })
 })

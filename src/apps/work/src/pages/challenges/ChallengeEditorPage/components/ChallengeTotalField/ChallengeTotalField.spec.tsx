@@ -99,6 +99,51 @@ describe('ChallengeTotalField', () => {
             .toBeTruthy()
     })
 
+    it('calculates challenge totals from markup multipliers greater than one', () => {
+        render(
+            <TestHarness
+                markup={1.2229}
+                prizeSets={[
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 150,
+                            },
+                            {
+                                type: 'USD',
+                                value: 75,
+                            },
+                        ],
+                        type: 'PLACEMENT',
+                    },
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                        ],
+                        type: 'COPILOT',
+                    },
+                ]}
+                reviewers={[
+                    {
+                        baseCoefficient: 0.13,
+                        incrementalCoefficient: 0.05,
+                        isMemberReview: true,
+                        memberReviewerCount: 2,
+                        phaseId: 'review-phase',
+                        scorecardId: 'scorecard-id',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByText('$875.82'))
+            .toBeTruthy()
+    })
+
     it('falls back to the persisted challenge fee when markup is unavailable', () => {
         render(
             <TestHarness
