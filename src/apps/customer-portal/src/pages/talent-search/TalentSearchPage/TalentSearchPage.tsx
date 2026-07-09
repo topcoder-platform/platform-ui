@@ -547,7 +547,7 @@ export const TalentSearchPage: FC = () => {
                             Search
                         </Button>
                     </div>
-                </>
+                </>,
             ]}
             introText='Paste a job description to AI-extract skills, or enter skills manually to find talents'
             shouldShowIntroState={shouldShowIntroState}

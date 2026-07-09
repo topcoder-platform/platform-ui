@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 /**
  * Page Wrapper.
  */
@@ -28,7 +29,9 @@ interface Props {
 }
 
 export const PageWrapper: FC<PropsWithChildren<Props>> = props => {
-    const sidebarPanels: ReactNode[] = useMemo(() => props.sidebar && !Array.isArray(props.sidebar) ? [props.sidebar] : props.sidebar as ReactNode[], [props.sidebar])
+    const sidebarPanels: ReactNode[] = useMemo(() => (
+        props.sidebar && !Array.isArray(props.sidebar) ? [props.sidebar] : props.sidebar as ReactNode[]
+    ), [props.sidebar])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -82,22 +85,22 @@ export const PageWrapper: FC<PropsWithChildren<Props>> = props => {
                         ))}
                     </aside>
                     <section
-                            className={classNames(
-                                styles.resultsPanel,
-                                props.shouldShowIntroState && styles.resultsPanelEmpty,
-                            )}
-                        >
-                            {props.shouldShowIntroState && (
-                                <div className={styles.emptyState}>
-                                    <p className={styles.emptyStateDescription}>
-                                        {props.introText}
-                                    </p>
-                                </div>
-                            )}
+                        className={classNames(
+                            styles.resultsPanel,
+                            props.shouldShowIntroState && styles.resultsPanelEmpty,
+                        )}
+                    >
+                        {props.shouldShowIntroState && (
+                            <div className={styles.emptyState}>
+                                <p className={styles.emptyStateDescription}>
+                                    {props.introText}
+                                </p>
+                            </div>
+                        )}
 
-                            {!props.shouldShowIntroState && (
-                                <div className={styles.resultsContent}>{props.children}</div>
-                            )}
+                        {!props.shouldShowIntroState && (
+                            <div className={styles.resultsContent}>{props.children}</div>
+                        )}
                     </section>
                 </div>
             </div>

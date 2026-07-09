@@ -1,20 +1,32 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSWRConfig } from 'swr'
+import type { FullConfiguration } from 'swr/dist/types'
+import classNames from 'classnames'
 
-import { Button, IconOutline, InputMultiselect, InputMultiselectOption, InputSelect, InputText, LoadingSpinner } from '~/libs/ui'
-import { PageWrapper } from '../../../lib/components'
-import { useFetchProjectShowcasePostCategories, useFetchProjectShowcasePostIndustries, useFetchProjectShowcasePosts } from '~/apps/work/src/lib/hooks'
-import { fetchProjectShowcasePosts } from '~/apps/work/src/lib/services'
-import type {
+import {
+    Button,
+    IconOutline,
+    InputMultiselect,
+    InputMultiselectOption,
+    InputSelect,
+    InputText,
+    LoadingSpinner,
+} from '~/libs/ui'
+import {
+    fetchProjectShowcasePosts,
     FetchProjectShowcasePostsParams,
-    ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostIndustry,
-} from '~/apps/work/src/lib/models'
+    useFetchProjectShowcasePostCategories,
+    useFetchProjectShowcasePostIndustries,
+    useFetchProjectShowcasePosts,
+    UseFetchProjectShowcasePostsResult,
+} from '~/apps/work/src/lib'
+
+import { PageWrapper } from '../../../lib/components'
+import { ProjectShowcaseCard } from '../ProjectShowcaseCard'
 
 import styles from './ProjectShowcasePage.module.scss'
-import classNames from 'classnames'
-import { ProjectShowcaseCard } from '../ProjectShowcaseCard'
 
 const PAGE_SIZE = 12
 
@@ -23,11 +35,16 @@ const sortOptions = [
     { label: 'Oldest', value: 'asc' },
 ]
 
-function normalizeTaxonomyOption(item: ProjectShowcasePostCategory | ProjectShowcasePostIndustry) {
+function normalizeTaxonomyOption(
+    item: ProjectShowcasePostCategory | ProjectShowcasePostIndustry,
+): {label: string; value: string} {
     return { label: item.name, value: item.id }
 }
 
-function createTaxonomyOptions(items: Array<ProjectShowcasePostCategory | ProjectShowcasePostIndustry>) {
+function createTaxonomyOptions(items: Array<ProjectShowcasePostCategory | ProjectShowcasePostIndustry>): {
+    label: string;
+    value: string;
+}[] {
     return items.map(normalizeTaxonomyOption)
 }
 
@@ -42,19 +59,23 @@ const ProjectShowcasePage: FC = () => {
     const industriesResult = useFetchProjectShowcasePostIndustries()
     const categoriesResult = useFetchProjectShowcasePostCategories()
 
-    const filters = useMemo<FetchProjectShowcasePostsParams>(() => ({
-        projectId: '',
+    const filters: FetchProjectShowcasePostsParams = useMemo<FetchProjectShowcasePostsParams>(() => ({
+        categoryId: selectedCategories.map(option => String(option.value || ''))
+            .filter(Boolean)
+            .join(','),
+        industryId: selectedIndustries.map(option => String(option.value || ''))
+            .filter(Boolean)
+            .join(','),
+        keyword: keyword.trim() || undefined,
         page,
         perPage: PAGE_SIZE,
-        keyword: keyword.trim() || undefined,
-        industryId: selectedIndustries.map(option => String(option.value || '')).filter(Boolean).join(','),
-        categoryId: selectedCategories.map(option => String(option.value || '')).filter(Boolean).join(','),
+        projectId: '',
         sortBy,
         sortOrder,
     }), [keyword, selectedIndustries, selectedCategories, page, sortOrder])
 
-    const postsResult = useFetchProjectShowcasePosts(filters)
-    const { mutate } = useSWRConfig()
+    const postsResult: UseFetchProjectShowcasePostsResult = useFetchProjectShowcasePosts(filters)
+    const { mutate }: FullConfiguration = useSWRConfig()
 
     const industryOptions = useMemo(
         () => createTaxonomyOptions(industriesResult.items),
@@ -123,49 +144,6 @@ const ProjectShowcasePage: FC = () => {
         }, false)
     }, [filters, loadMoreDisabled, mutate, page, postsResult.posts])
 
-    const content = useMemo(() => {
-        if (!postsResult.posts.length && !postsResult.isLoading) {
-            return (
-                <div className={styles.emptyState}>
-                    No showcase posts match your search.
-                </div>
-            )
-        }
-
-        return (
-            <>
-                <div className={styles.grid}>
-                    {postsResult.posts.map(post => (
-                        <article key={post.id} className={styles.card}>
-                            <div className={styles.cardHeader}>
-                                <h3>{post.title || 'Untitled'}</h3>
-                                <span className={styles.cardDate}>{new Date(post.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <div className={styles.cardBody}>
-                                <div className={styles.taxonomy}>
-                                    <strong>Industry:</strong>
-                                    <span>{post.industries.map(item => item.name).join(', ') || '—'}</span>
-                                </div>
-                                <div className={styles.taxonomy}>
-                                    <strong>Category:</strong>
-                                    <span>{post.categories.map(item => item.name).join(', ') || '—'}</span>
-                                </div>
-                            </div>
-                            <div className={styles.cardFooter}>
-                                <span>{post.createdByHandle || 'Unknown author'}</span>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-                {postsResult.isLoading && (
-                    <div className={styles.loadingRow}>
-                        <LoadingSpinner inline />
-                    </div>
-                )}
-            </>
-        )
-    }, [postsResult.isLoading, postsResult.posts])
-
     return (
         <PageWrapper
             pageTitle=''
@@ -231,7 +209,11 @@ const ProjectShowcasePage: FC = () => {
                     <div className={styles.resultsMeta}>
                         {postsResult.posts.length > 0 && !postsResult.isLoading && (
                             <span>
-                                <strong>{postsResult.metadata.total} total</strong>
+                                <strong>
+                                    {postsResult.metadata.total}
+                                    {' '}
+                                    total
+                                </strong>
                                 {' '}
                                 <span>showcases</span>
                             </span>
