@@ -13,6 +13,7 @@ import { debounce } from 'lodash'
 import classNames from 'classnames'
 
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
+import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -354,16 +355,19 @@ export const MembersView: FC<MembersViewProps> = props => {
     const summaryBuckets = useMemo(() => [
         {
             count: summaryData?.totalUniqueMembers,
+            countClassName: styles.bucketCountTotal,
             id: 'total' as FlexiMemberBucket,
             label: 'Total Unique Members',
         },
         {
             count: summaryData?.assignedMembers,
+            countClassName: styles.bucketCountPositive,
             id: 'assigned' as FlexiMemberBucket,
             label: 'Assigned',
         },
         {
             count: summaryData?.completedMembers,
+            countClassName: styles.bucketCountMuted,
             id: 'completed' as FlexiMemberBucket,
             label: 'Completed',
         },
@@ -620,6 +624,10 @@ export const MembersView: FC<MembersViewProps> = props => {
     const selectedDetailTitle = selectedMemberRow
         ? selectedMemberRow.handle
         : 'Selected member'
+    const sanitizedDescriptionHtml = useMemo(
+        () => renderRichTextToHtml(detailData?.description || ''),
+        [detailData?.description],
+    )
     const listTotalLabel = isEffectiveListLoading ? '--' : String(listData.total)
     const listPageLabel = isEffectiveListLoading ? '--' : String(listData.page)
     const listTotalPagesLabel = isEffectiveListLoading ? '--' : String(listData.totalPages)
@@ -648,7 +656,7 @@ export const MembersView: FC<MembersViewProps> = props => {
                             type='button'
                         >
                             <span>{bucket.label}</span>
-                            <strong>{renderSummaryCount(bucket.count)}</strong>
+                            <strong className={bucket.countClassName}>{renderSummaryCount(bucket.count)}</strong>
                         </button>
                     ))}
                 </div>
@@ -689,7 +697,18 @@ export const MembersView: FC<MembersViewProps> = props => {
                     >
                         Handle
                         {sortBy === 'handle' && (
-                            <span>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+                            <>
+                                <span className={styles.sortDirectionIndicator} aria-hidden='true'>
+                                    {sortOrder === 'asc' ? (
+                                        <IconOutline.ArrowUpIcon />
+                                    ) : (
+                                        <IconOutline.ArrowDownIcon />
+                                    )}
+                                </span>
+                                <span className={styles.visuallyHidden}>
+                                    {sortOrder === 'asc' ? 'sorted ascending' : 'sorted descending'}
+                                </span>
+                            </>
                         )}
                     </button>
                     <button
@@ -699,7 +718,18 @@ export const MembersView: FC<MembersViewProps> = props => {
                     >
                         Time
                         {sortBy === 'time' && (
-                            <span>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+                            <>
+                                <span className={styles.sortDirectionIndicator} aria-hidden='true'>
+                                    {sortOrder === 'asc' ? (
+                                        <IconOutline.ArrowUpIcon />
+                                    ) : (
+                                        <IconOutline.ArrowDownIcon />
+                                    )}
+                                </span>
+                                <span className={styles.visuallyHidden}>
+                                    {sortOrder === 'asc' ? 'sorted ascending' : 'sorted descending'}
+                                </span>
+                            </>
                         )}
                     </button>
                 </div>
@@ -880,7 +910,14 @@ export const MembersView: FC<MembersViewProps> = props => {
 
                         <div className={styles.detailSection}>
                             <h4>Description</h4>
-                            <p>{detailData.description || 'No description provided.'}</p>
+                            {sanitizedDescriptionHtml ? (
+                                <div
+                                    className={styles.descriptionRichText}
+                                    dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
+                                />
+                            ) : (
+                                <p>No description provided.</p>
+                            )}
                         </div>
 
                         <div className={styles.detailSection}>
