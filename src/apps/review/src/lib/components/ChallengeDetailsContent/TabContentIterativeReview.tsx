@@ -28,6 +28,7 @@ import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 import {
     filterIterativeReviewRows,
+    getIterativeReviewSubmissionPriority,
     limitFirst2FinishIterativeRows,
 } from './iterativeReviewFiltering'
 
@@ -42,30 +43,6 @@ interface Props {
     columnLabel?: string
     phaseIdFilter?: string
     aiReviewers?: { aiWorkflowId: string }[]
-}
-
-const getSubmissionPriority = (submission: SubmissionInfo): number => {
-    const review = submission.review
-    if (!review) {
-        return 0
-    }
-
-    const hasReviewId = Boolean(review.id)
-    const status = (review.status ?? '').toUpperCase()
-
-    if (hasReviewId && (status === 'COMPLETED' || status === 'SUBMITTED')) {
-        return 4
-    }
-
-    if (hasReviewId && review.reviewProgress) {
-        return 3
-    }
-
-    if (hasReviewId) {
-        return 2
-    }
-
-    return 1
 }
 
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
@@ -86,6 +63,10 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
 
     const myMemberIds = useMemo<Set<string>>(
         () => new Set((myResources ?? []).map(resource => resource.memberId)),
+        [myResources],
+    )
+    const myResourceIds = useMemo<Set<string>>(
+        () => new Set((myResources ?? []).map(resource => resource.id)),
         [myResources],
     )
 
@@ -183,13 +164,16 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
                 return
             }
 
-            if (getSubmissionPriority(submission) > getSubmissionPriority(existing)) {
+            if (
+                getIterativeReviewSubmissionPriority(submission, myResourceIds)
+                > getIterativeReviewSubmissionPriority(existing, myResourceIds)
+            ) {
                 map.set(submission.id, submission)
             }
         })
 
         return Array.from(map.values())
-    }, [filteredRows])
+    }, [filteredRows, myResourceIds])
     const first2FinishReviewRows = useMemo<SubmissionInfo[]>(
         () => {
             if (isPostMortemPhase || !isFirst2FinishChallenge) {

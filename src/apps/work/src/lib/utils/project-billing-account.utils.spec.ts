@@ -109,6 +109,10 @@ describe('project-billing-account challenge gating helpers', () => {
             .toBe(100.20)
         expect(calculateMemberPaymentsRemaining(250, 0.25))
             .toBe(200)
+        expect(calculateMemberPaymentAmount(1268.76, 1.2259))
+            .toBe(570)
+        expect(calculateMemberPaymentsRemaining(2225.90, 1.2259))
+            .toBe(1000)
         expect(getCopilotMemberPaymentsBudgetInfo({
             budget: 1000,
             consumedBudget: 500,

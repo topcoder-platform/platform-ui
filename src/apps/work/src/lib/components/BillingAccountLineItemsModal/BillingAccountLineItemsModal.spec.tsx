@@ -416,6 +416,33 @@ describe('BillingAccountLineItemsModal', () => {
             .toBeNull()
     })
 
+    it('derives engagement member payments from markup multipliers greater than one', () => {
+        renderModal({
+            ...baseBillingAccountDetails,
+            consumedAmounts: [
+                {
+                    amount: '1268.76',
+                    date: '2026-06-02T13:10:48.235Z',
+                    externalId: 'assignment-12259-markup',
+                    externalName: 'High Markup Engagement',
+                    externalType: 'ENGAGEMENT',
+                },
+            ],
+            consumedBudget: 1268.76,
+            markup: 1.2259,
+            totalBudgetRemaining: 0,
+        })
+
+        expect(screen.getByText('$570.00'))
+            .toBeTruthy()
+        expect(screen.getByText('$698.76'))
+            .toBeTruthy()
+        expect(screen.queryByText('$1,253.40'))
+            .toBeNull()
+        expect(screen.queryByText('$15.36'))
+            .toBeNull()
+    })
+
     it('uses finance engagement payment splits before API-derived member-payment fallbacks', async () => {
         mockedFetchAssignmentPaymentSplits.mockResolvedValue([
             {

@@ -2,6 +2,7 @@ import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
 import {
+    flexiTalentRouteId,
     showcaseSearchRouteId,
     talentSearchRouteId,
 } from '~/apps/customer-portal/src/config/routes.config'
@@ -15,6 +16,9 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnpri
         }, {
             id: showcaseSearchRouteId,
             title: 'Showcase',
+        }, {
+            id: flexiTalentRouteId,
+            title: 'Flexi-Talent',
         }] : []),
     ]
 

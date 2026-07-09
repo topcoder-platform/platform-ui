@@ -14,6 +14,7 @@ import {
     rootRoute,
     talentSearchRouteId,
 } from './config/routes.config'
+import { customerPortalFlexiTalentRoutes } from './pages/flexi-talent/flexi-talent.routes'
 import { customerPortalTalentSearchRoutes } from './pages/talent-search/talent-search.routes'
 import { customerPortalProjectShowcaseRoutes } from './pages/project-showcase/project-showcase.routes'
 
@@ -33,6 +34,7 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
             },
             ...customerPortalTalentSearchRoutes,
             ...customerPortalProjectShowcaseRoutes,
+            ...customerPortalFlexiTalentRoutes,
         ],
         domain: AppSubdomain.customer,
         element: <CustomerPortalApp />,
