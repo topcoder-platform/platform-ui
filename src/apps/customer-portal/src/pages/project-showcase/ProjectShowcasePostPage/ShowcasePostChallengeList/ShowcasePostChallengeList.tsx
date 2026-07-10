@@ -1,12 +1,13 @@
+/* eslint-disable complexity */
 import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
-import { Challenge } from '~/apps/work/src/lib/models'
 import { IconOutline, LinkButton } from '~/libs/ui'
-import { useFetchChallenges } from '~/apps/customer-portal/src/lib'
+import { UseFetchChallenges, useFetchChallenges } from '~/apps/customer-portal/src/lib'
+
+import { getTrackName, toClassName } from '../../utils'
 
 import styles from './ShowcasePostChallengeList.module.scss'
-import { getTrackName, toClassName } from '../../utils'
 
 interface ShowcasePostChallengeListProps {
     challengeIds?: string[]
@@ -19,7 +20,7 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
         data: challenges = [],
         error,
         isValidating,
-    } = useFetchChallenges(challengeIds)
+    }: UseFetchChallenges = useFetchChallenges(challengeIds)
 
     const hasChallenges = challenges.length > 0
 
@@ -41,15 +42,21 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
                                 <span className={styles.itemTitle}>{challenge.name}</span>
                             </div>
                             <div className={styles.toRight}>
-                                {(typeof challenge.numOfRegistrants === 'number' ||
-                                    typeof challenge.numOfSubmissions === 'number') && (
+                                {(typeof challenge.numOfRegistrants === 'number'
+                                    || typeof challenge.numOfSubmissions === 'number') && (
                                     <div className={styles.itemStats}>
                                         {typeof challenge.numOfRegistrants === 'number' && (
-                                            <span>{challenge.numOfRegistrants} registrants</span>
+                                            <span>
+                                                {challenge.numOfRegistrants}
+                                                {' '}
+                                                registrants
+                                            </span>
                                         )}
                                         {typeof challenge.numOfSubmissions === 'number' && (
                                             <span className={styles.statSeparator}>
-                                                {challenge.numOfSubmissions} submissions
+                                                {challenge.numOfSubmissions}
+                                                {' '}
+                                                submissions
                                             </span>
                                         )}
                                     </div>
@@ -57,11 +64,11 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
 
                                 <div className={styles.action}>
                                     <LinkButton
-                                        size="lg"
-                                        label="View"
+                                        size='lg'
+                                        label='View'
                                         iconToRight
                                         icon={IconOutline.ArrowRightIcon}
-                                        to=""
+                                        to=''
                                     />
                                 </div>
                             </div>

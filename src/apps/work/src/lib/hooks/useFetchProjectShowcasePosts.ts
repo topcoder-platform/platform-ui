@@ -10,7 +10,6 @@ import {
 import type {
     FetchProjectShowcasePostsParams,
     FetchProjectShowcasePostsResponse,
-    ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostDetails,
     ProjectShowcasePostIndustry,
@@ -120,12 +119,12 @@ export function useFetchProjectShowcasePost(
     )
 
     return {
-        post: error ? undefined : data,
         error,
         isError: !!error,
         isLoading: !!postId && !data && !error,
         isValidating,
         mutate,
+        post: error ? undefined : data,
     }
 }
 

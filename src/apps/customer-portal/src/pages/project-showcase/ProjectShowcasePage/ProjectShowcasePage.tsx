@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSWRConfig } from 'swr'
 import type { FullConfiguration } from 'swr/dist/types'

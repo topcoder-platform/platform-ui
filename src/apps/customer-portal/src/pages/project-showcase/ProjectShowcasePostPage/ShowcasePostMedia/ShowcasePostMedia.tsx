@@ -1,15 +1,15 @@
 import { FC, useMemo } from 'react'
 
 import { IconFile } from '~/apps/customer-portal/src/lib/assets'
-import styles from './ShowcasePostMedia.module.scss'
 import { ProjectShowcasePostMedia } from '~/apps/work/src/lib'
-import { IconOutline } from '~/libs/ui'
+
+import styles from './ShowcasePostMedia.module.scss'
 
 interface ShowcasePostMediaProps {
     assets: ProjectShowcasePostMedia[] | undefined
 }
 
-const IMAGE_EXTENSIONS_ARRAY = ['.bmp', '.gif', '.jpg', '.jpeg', '.png'];
+const IMAGE_EXTENSIONS_ARRAY = ['.bmp', '.gif', '.jpg', '.jpeg', '.png']
 const IMAGE_EXTENSIONS = new Set(IMAGE_EXTENSIONS_ARRAY)
 const VIDEO_EXTENSIONS_ARRAY = ['.webm', '.mp4', '.mov', '.avi']
 const VIDEO_EXTENSIONS = new Set(VIDEO_EXTENSIONS_ARRAY)
@@ -22,15 +22,15 @@ const ALLOWED_EXTENSIONS = new Set([
 ])
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
+    'application/pdf': '.pdf',
     'image/bmp': '.bmp',
     'image/gif': '.gif',
     'image/jpeg': '.jpeg',
     'image/jpg': '.jpg',
     'image/png': '.png',
-    'application/pdf': '.pdf',
-    'video/webm': '.webm',
     'video/mp4': '.mp4',
     'video/quicktime': '.mov',
+    'video/webm': '.webm',
     'video/x-msvideo': '.avi',
 }
 
@@ -39,7 +39,8 @@ function getFileExtension(value: string | undefined): string | undefined {
         return undefined
     }
 
-    const normalized = value.trim().toLowerCase()
+    const normalized = value.trim()
+        .toLowerCase()
     if (!normalized) {
         return undefined
     }
@@ -76,7 +77,8 @@ function getPlaceholderLabel(extension: string, asset: ProjectShowcasePostMedia)
     }
 
     if (extension) {
-        return extension.replace('.', '').toUpperCase()
+        return extension.replace('.', '')
+            .toUpperCase()
     }
 
     return asset.type || 'File'
@@ -96,7 +98,7 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
     const visibleAssets = useMemo(() => props.assets?.slice(0, 4) || [], [props.assets])
 
     if (!props.assets) {
-        return null
+        return <></>
     }
 
     return (
