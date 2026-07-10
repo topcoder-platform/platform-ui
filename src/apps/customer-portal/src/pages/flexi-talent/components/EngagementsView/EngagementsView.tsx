@@ -549,7 +549,7 @@ export const EngagementsView: FC = () => {
                 </div>
 
                 <p className={styles.summaryNote}>
-                    Total includes On Hold engagements. Active is the default bucket.
+                    Total includes only Active and Closed engagements. Active is the default bucket.
                 </p>
             </aside>
 
