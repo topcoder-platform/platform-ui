@@ -372,6 +372,68 @@ describe('ChallengeScheduleSection component', () => {
             .toBeChecked()
     })
 
+    it('seeds blank schedule rows from the current date so their dates are editable', async () => {
+        render(
+            <TestHarness
+                metadata={[{
+                    name: 'challengeStartMode',
+                    value: 'scheduled',
+                }]}
+                phases={[
+                    {
+                        duration: 120,
+                        id: 'phase-1',
+                        name: 'Registration',
+                        phaseId: 'registration-phase',
+                    },
+                    {
+                        duration: 60,
+                        id: 'phase-2',
+                        name: 'Submission',
+                        phaseId: 'submission-phase',
+                    },
+                ]}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('start-date-value'))
+                .toHaveTextContent('2026-03-31T12:34:00.000Z')
+        })
+
+        const renderedPhaseRows = mockPhaseEditorRow.mock.calls
+            .map(([props]) => props as {
+                endDate?: string
+                isEndDateEditable?: boolean
+                isStartDateEditable?: boolean
+                phase?: {
+                    name?: string
+                }
+                startDate?: string
+            })
+        const registrationRow = [...renderedPhaseRows]
+            .reverse()
+            .find(props => props.phase?.name === 'Registration')
+        const submissionRow = [...renderedPhaseRows]
+            .reverse()
+            .find(props => props.phase?.name === 'Submission')
+
+        expect(registrationRow)
+            .toEqual(expect.objectContaining({
+                endDate: '2026-03-31T14:34:00.000Z',
+                isEndDateEditable: true,
+                isStartDateEditable: true,
+                startDate: '2026-03-31T12:34:00.000Z',
+            }))
+        expect(submissionRow)
+            .toEqual(expect.objectContaining({
+                endDate: '2026-03-31T13:34:00.000Z',
+                isEndDateEditable: true,
+                isStartDateEditable: true,
+                startDate: '2026-03-31T12:34:00.000Z',
+            }))
+    })
+
     it('restores immediate mode from saved metadata even when a start date exists', () => {
         render(
             <TestHarness
