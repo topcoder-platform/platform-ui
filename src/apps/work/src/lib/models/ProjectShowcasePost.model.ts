@@ -36,7 +36,7 @@ export interface ProjectShowcasePostFilters {
 }
 
 export interface FetchProjectShowcasePostsParams extends ProjectShowcasePostFilters {
-    projectId: string
+    projectId?: string
     page?: number
     perPage?: number
     sortBy?: string

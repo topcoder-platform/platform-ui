@@ -3,9 +3,12 @@
 .selected {
     display: flex;
     align-items: center;
-    margin-top: $sp-1;
     cursor: pointer;
     color: $black-100;
+
+    * + & {
+        margin-top: $sp-1;
+    }
 
     &-icon {
         margin-left: auto;

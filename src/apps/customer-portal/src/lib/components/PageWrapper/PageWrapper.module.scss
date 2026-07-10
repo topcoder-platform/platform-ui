@@ -5,6 +5,18 @@
     flex-direction: column;
 }
 
+:global([class*='ContentLayout-module_content-outer']) {
+    margin: 0 auto 0 !important;
+}
+
+:global([class*='ContentLayout-module_content__']) {
+    padding-bottom: 0 !important;
+}
+
+:global([class*='BreadCrumb-module_breadcrumb']) {
+    display: none;
+}
+
 .blockHeader {
     display: flex;
     align-items: center;
@@ -38,4 +50,130 @@
 .blockExternalLink {
     margin-left: $sp-2;
     margin-bottom: 6px;
+}
+
+.pageArea {
+    position: relative;
+    @include substractPagePaddings;
+    background: $black-5;
+}
+
+.pageHero {
+    width: 100%;
+    height: 280px;
+    background-image: url('../../../lib/assets/talent-search-header.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.pageBody {
+    display: grid;
+    grid-template-columns: 443px 1fr;
+    gap: 24px;
+    margin-top: -232px;
+    padding: $sp-2 $sp-8 $sp-10 $sp-8;
+    position: relative;
+    z-index: 1;
+    font-family: $font-roboto;
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+        margin-top: -232px;
+        padding: $sp-3 $sp-3 0;
+    }
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    @include ltemd {
+        margin-left: 0;
+        position: relative;
+        z-index: 2;
+    }
+}
+
+.panel {
+    background: $tc-white;
+    border: 0;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.sidebar .panel + .panel {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: 0;
+    padding-top: 14px;
+}
+
+.panelTitle {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.resultsPanel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    min-height: 620px;
+}
+
+.resultsPanelEmpty {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+
+.emptyState {
+    min-height: 470px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: $sp-6;
+    margin-top: 20vh;
+    text-align: center;
+    color: $black-60;
+
+    h4 {
+        margin: 0 0 $sp-2;
+        color: $black-100;
+    }
+
+    p {
+        margin: 0 0 $sp-1;
+        max-width: 500px;
+    }
+}
+
+.emptyStateTitle {
+    color: $black-100;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+    margin: 0 0 $sp-2;
+}
+
+.emptyStateDescription {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    margin: 0;
 }

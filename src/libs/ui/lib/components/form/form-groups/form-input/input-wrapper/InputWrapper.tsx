@@ -82,7 +82,7 @@ const InputWrapper = forwardRef<HTMLDivElement, InputWrapperProps>((props: Input
                     role='presentation'
                 >
                     {
-                        props.type !== 'checkbox' && (
+                        props.type !== 'checkbox' && (props.label || props.hint) && (
                             <div className={styles['label-and-hint']}>
                                 <div>
                                     {props.label}

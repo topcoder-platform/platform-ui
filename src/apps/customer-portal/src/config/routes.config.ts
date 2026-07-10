@@ -9,4 +9,5 @@ export const rootRoute: string
         : `/${AppSubdomain.customer}`
 
 export const talentSearchRouteId = 'talent-search'
+export const showcaseSearchRouteId = 'showcase'
 export const flexiTalentRouteId = 'flexi-talent'

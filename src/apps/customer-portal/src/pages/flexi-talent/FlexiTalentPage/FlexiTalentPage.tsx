@@ -1,7 +1,6 @@
 import { FC, useCallback, useState } from 'react'
 import classNames from 'classnames'
 
-import { PageWrapper } from '../../../lib'
 import { EngagementsView } from '../components/EngagementsView'
 import { MembersView } from '../components/MembersView'
 
@@ -57,12 +56,15 @@ export const FlexiTalentPage: FC = () => {
     )
 
     return (
-        <PageWrapper
-            breadCrumb={[]}
-            className={styles.container}
-            pageTitle='Flexi-Talent'
-            rightHeader={rightHeader}
-        >
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <div className={styles.headerTitle}>
+                    <h3 className={styles.titleText}>Flexi-Talent</h3>
+                </div>
+                {rightHeader}
+                {/* <div className={styles.headerRight}>
+                </div> */}
+            </div>
             <p className={styles.subtitle}>
                 Monitor Flexi-Talent engagement coverage, assignment status, and Work links in one place.
             </p>
@@ -86,7 +88,7 @@ export const FlexiTalentPage: FC = () => {
                     <MembersView isActive={activeInnerView === 'members'} />
                 </section>
             </div>
-        </PageWrapper>
+        </div>
     )
 }
 
