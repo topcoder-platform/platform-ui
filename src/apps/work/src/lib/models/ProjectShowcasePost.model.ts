@@ -13,6 +13,20 @@ export interface ProjectShowcasePostMedia {
     url: string
 }
 
+export interface ProjectShowcasePostChallengeMetadataSkill {
+    id: string
+    name: string
+}
+
+export interface ProjectShowcasePostChallengeMetadataItem {
+    challengeId: string
+    numOfSubmissions: number
+    numOfRegistrants: number
+    skills: ProjectShowcasePostChallengeMetadataSkill[]
+    track: string
+    countries: string[]
+}
+
 export interface ProjectShowcasePost {
     id: string
     title: string
@@ -26,6 +40,11 @@ export interface ProjectShowcasePost {
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]
     media?: ProjectShowcasePostMedia[]
+}
+
+export interface ProjectShowcasePostDetails extends ProjectShowcasePost {
+    projectTitle: string
+    challengeMetadata: ProjectShowcasePostChallengeMetadataItem[]
 }
 
 export interface ProjectShowcasePostFilters {

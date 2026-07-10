@@ -14,6 +14,7 @@ import type {
     FetchProjectShowcasePostsResponse,
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
+    ProjectShowcasePostDetails,
     ProjectShowcasePostIndustry,
     ProjectShowcasePostMedia,
     ProjectShowcasePostTaxonomyItem,
@@ -137,6 +138,7 @@ export async function fetchProjectShowcasePosts(
                 }))
                     .filter((item: any) => item.url)
                 : [],
+            projectId: String(post.projectId || ''),
             status: String(post.status || ''),
             title: String(post.title || ''),
         }))
@@ -222,7 +224,7 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .filter(item => item.url)
 }
 
-function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | undefined {
+function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePostDetails | undefined {
     if (typeof value !== 'object' || value === null) {
         return undefined
     }
@@ -234,6 +236,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
         challengeIds: Array.isArray(post.challengeIds)
             ? post.challengeIds.map((item: any) => String(item))
             : [],
+        challengeMetadata: (post.challengeMetadata || []) as ProjectShowcasePostDetails['challengeMetadata'],
         content: normalizeStringOrUndefined(post.content),
         createdAt: normalizeString(post.createdAt),
         createdByHandle: normalizeStringOrUndefined(post.createdByHandle),
@@ -242,6 +245,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
         industries: normalizeTaxonomyArray(post.industries),
         media: normalizeProjectShowcasePostMediaArray(post.media),
         projectId: normalizeStringOrUndefined(post.projectId),
+        projectTitle: String(post.projectTitle || ''),
         status: normalizeString(post.status),
         title: normalizeString(post.title),
     }
@@ -250,7 +254,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
 export async function fetchProjectShowcasePost(
     projectId: string,
     postId: string,
-): Promise<ProjectShowcasePost> {
+): Promise<ProjectShowcasePostDetails> {
     try {
         const response = await xhrGetAsync<unknown>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/posts/${encodeURIComponent(postId)}`,

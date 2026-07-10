@@ -7,10 +7,15 @@ const ProjectShowcasePage: LazyLoadedComponent = lazyLoad(
     'ProjectShowcasePage',
 )
 
+const ProjectShowcasePostPage: LazyLoadedComponent = lazyLoad(
+    () => import('./ProjectShowcasePostPage'),
+    'ProjectShowcasePostPage',
+)
+
 export const showcaseRootRoute = `${rootRoute}/${showcaseSearchRouteId}`
 
-export const getPostRoute = (postId: string): string => (
-    `${showcaseRootRoute}/${postId}`
+export const getPostRoute = (projectId: string, postId: string): string => (
+    `${showcaseRootRoute}/${projectId}/post/${postId}`
 )
 
 export const customerPortalProjectShowcaseRoutes = [
@@ -29,6 +34,12 @@ export const customerPortalProjectShowcaseRoutes = [
                 element: <ProjectShowcasePage />,
                 id: 'project-showcase-page',
                 route: '',
+            },
+            {
+                authRequired: true,
+                element: <ProjectShowcasePostPage />,
+                id: 'project-showcase-post-page',
+                route: ':projectId/post/:postId',
             },
         ]),
         id: 'project-showcase',
