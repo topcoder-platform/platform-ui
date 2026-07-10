@@ -34,6 +34,7 @@ const ENGAGEMENTS_PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 300
 const DESCRIPTION_COLLAPSED_HEIGHT_PX = 126
 const DESCRIPTION_OVERFLOW_TOLERANCE_PX = 1
+const CURRENT_ASSIGNMENT_STATUSES = new Set(['assigned', 'selected'])
 
 type DetailState = 'loading' | 'empty' | 'error' | 'ready'
 
@@ -87,7 +88,18 @@ function formatStatusLabel(status?: string): string {
 }
 
 /**
- * Formats backend timing fields without hiding overdue or negative values.
+ * Detects whether an assignment row is still active in the engagement.
+ *
+ * @param status Raw assignment status returned by engagements-api-v6.
+ * @returns True when the row represents current assignment work that should show time-left metadata.
+ */
+function isCurrentAssignmentStatus(status?: string): boolean {
+    return CURRENT_ASSIGNMENT_STATUSES.has(String(status || '')
+        .toLowerCase())
+}
+
+/**
+ * Formats backend timing fields for current assignments without hiding overdue or negative values.
  *
  * @param assignment Assignment row returned by the detail endpoint.
  * @returns Human-readable timing text for the assignment row.
@@ -549,7 +561,7 @@ export const EngagementsView: FC = () => {
                 </div>
 
                 <p className={styles.summaryNote}>
-                    Total includes On Hold engagements. Active is the default bucket.
+                    Total includes only Active and Closed engagements. Active is the default bucket.
                 </p>
             </aside>
 
@@ -806,16 +818,18 @@ export const EngagementsView: FC = () => {
                                                 </span>
                                             </div>
                                             <dl className={styles.assignmentMeta}>
-                                                <div>
-                                                    <dt>Time Left</dt>
-                                                    <dd
-                                                        className={
-                                                            assignment.isOverdue ? styles.overdueText : undefined
-                                                        }
-                                                    >
-                                                        {formatTimeLeft(assignment)}
-                                                    </dd>
-                                                </div>
+                                                {isCurrentAssignmentStatus(assignment.status) && (
+                                                    <div>
+                                                        <dt>Time Left</dt>
+                                                        <dd
+                                                            className={
+                                                                assignment.isOverdue ? styles.overdueText : undefined
+                                                            }
+                                                        >
+                                                            {formatTimeLeft(assignment)}
+                                                        </dd>
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <dt>Duration</dt>
                                                     <dd>{assignment.durationLabel || 'Not set'}</dd>

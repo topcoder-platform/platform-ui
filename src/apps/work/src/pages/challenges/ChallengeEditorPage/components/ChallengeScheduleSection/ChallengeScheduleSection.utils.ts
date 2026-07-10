@@ -214,7 +214,7 @@ export function recalculatePhases(
         let duration = normalizeDuration(phase.duration)
         const existingPhaseStartDate = toDate(phase.scheduledStartDate)
         const existingPhaseEndDate = toDate(phase.scheduledEndDate)
-        let phaseStartDate = shouldScheduleDates || index === 0
+        let phaseStartDate = shouldScheduleDates || (index === 0 && !!baseStartDate)
             ? baseStartDate
             : existingPhaseStartDate || baseStartDate
 
