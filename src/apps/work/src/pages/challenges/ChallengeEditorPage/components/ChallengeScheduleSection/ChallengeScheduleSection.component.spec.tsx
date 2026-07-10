@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
+import { useEffect } from 'react'
 import {
     act,
     render,
@@ -204,6 +205,7 @@ jest.mock('../TimelineVisualization', () => ({
 
 interface TestHarnessProps {
     disabled?: boolean
+    hydratedPhases?: ChallengeEditorFormData['phases']
     metadata?: ChallengeEditorFormData['metadata']
     phases?: ChallengeEditorFormData['phases']
     startDate?: ChallengeEditorFormData['startDate']
@@ -246,6 +248,29 @@ const StartDateModeValue = (): JSX.Element => {
     )
 }
 
+const HydratedPhases = (props: {
+    phases?: ChallengeEditorFormData['phases']
+}): JSX.Element => {
+    const formContext = useFormContext<ChallengeEditorFormData>()
+    const setValue = formContext.setValue
+
+    useEffect(() => {
+        if (!props.phases) {
+            return
+        }
+
+        setValue('phases', props.phases, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        props.phases,
+        setValue,
+    ])
+
+    return <></>
+}
+
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
@@ -264,6 +289,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     return (
         <FormProvider {...formMethods}>
             <ChallengeScheduleSection disabled={props.disabled} />
+            <HydratedPhases phases={props.hydratedPhases} />
             <StartDateValue />
             <StartDateModeValue />
         </FormProvider>
@@ -722,6 +748,99 @@ describe('ChallengeScheduleSection component', () => {
 
         expect(reviewRow?.minEndDate?.toISOString())
             .toBe('2026-04-02T12:34:00.000Z')
+    })
+
+    it('does not keep stale default dates as the minimum when shorter active schedules hydrate', async () => {
+        mockUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'development-track',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            }],
+        })
+
+        const defaultPhase = {
+            duration: 7200,
+            id: 'phase-1',
+            isOpen: true,
+            name: 'Review',
+            phaseId: 'review-phase',
+            scheduledEndDate: '2026-04-04T12:34:00.000Z',
+            scheduledStartDate: '2026-03-30T12:34:00.000Z',
+        }
+        const defaultPhases: ChallengeEditorFormData['phases'] = [defaultPhase]
+        const persistedPhases: ChallengeEditorFormData['phases'] = [{
+            ...defaultPhase,
+            duration: 4320,
+            scheduledEndDate: '2026-04-02T12:34:00.000Z',
+        }]
+        const renderResult = render(
+            <TestHarness
+                phases={defaultPhases}
+                startDate='2026-03-30T12:34:00.000Z'
+                status='ACTIVE'
+                trackId='development-track'
+            />,
+        )
+
+        renderResult.rerender(
+            <TestHarness
+                hydratedPhases={persistedPhases}
+                phases={defaultPhases}
+                startDate='2026-03-30T12:34:00.000Z'
+                status='ACTIVE'
+                trackId='development-track'
+            />,
+        )
+
+        let hydratedReviewRow: {
+            index: number
+            minEndDate?: Date
+            onEndDateChange: (index: number, date: Date | null) => void
+            phase?: {
+                name?: string
+            }
+        } | undefined
+
+        await waitFor(() => {
+            hydratedReviewRow = [...mockPhaseEditorRow.mock.calls]
+                .map(([props]) => props as {
+                    index: number
+                    minEndDate?: Date
+                    onEndDateChange: (index: number, date: Date | null) => void
+                    phase?: {
+                        name?: string
+                    }
+                })
+                .reverse()
+                .find(props => props.phase?.name === 'Review')
+
+            expect(hydratedReviewRow?.minEndDate?.toISOString())
+                .toBe('2026-04-02T12:34:00.000Z')
+        })
+
+        const reviewRowToUpdate = hydratedReviewRow as NonNullable<typeof hydratedReviewRow>
+        act(() => {
+            reviewRowToUpdate.onEndDateChange(
+                reviewRowToUpdate.index,
+                new Date('2026-04-03T12:34:00.000Z'),
+            )
+        })
+
+        await waitFor(() => {
+            const updatedReviewRow = [...mockPhaseEditorRow.mock.calls]
+                .map(([props]) => props as {
+                    minEndDate?: Date
+                    phase?: {
+                        name?: string
+                    }
+                })
+                .reverse()
+                .find(props => props.phase?.name === 'Review')
+
+            expect(updatedReviewRow?.minEndDate?.toISOString())
+                .toBe('2026-04-02T12:34:00.000Z')
+        })
     })
 
     it('keeps the active non-Design end-date minimum at the persisted end date after extending', async () => {
