@@ -105,10 +105,11 @@
     font-weight: 500;
     line-height: 10px;
 
-    background: $black-5;
-    color: $black-80;
-
     font-family: $font-roboto;
+
+    background: $tc-white;
+    color: #161616;
+    border: 1px solid #a8a8a8;
 }
 
 .contentSection {

@@ -8,6 +8,7 @@ import { UseFetchChallenges, useFetchChallenges } from '~/apps/customer-portal/s
 import { getTrackName, toClassName } from '../../utils'
 
 import styles from './ShowcasePostChallengeList.module.scss'
+import { EnvironmentConfig } from '~/config'
 
 interface ShowcasePostChallengeListProps {
     challengeIds?: string[]
@@ -64,11 +65,13 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
 
                                 <div className={styles.action}>
                                     <LinkButton
+                                        to={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${challenge.id}`}
                                         size='lg'
                                         label='View'
                                         iconToRight
                                         icon={IconOutline.ArrowRightIcon}
-                                        to=''
+                                        target="_blank"
+                                        rel="noreferrer, noopener"
                                     />
                                 </div>
                             </div>
