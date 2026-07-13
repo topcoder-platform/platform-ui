@@ -70,6 +70,7 @@ const ProjectShowcasePage: FC = () => {
         industryId: selectedIndustries.map(option => String(option.value || ''))
             .filter(Boolean)
             .join(','),
+        status: 'PUBLISHED',
         keyword: keyword.trim() || undefined,
         page,
         perPage: PAGE_SIZE,
