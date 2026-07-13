@@ -216,10 +216,10 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .map(item => {
             const url = normalizeStringOrUndefined(item.url)
             return {
+                alt: normalizeStringOrUndefined(item.alt),
                 id: normalizeString(item.id),
                 type: normalizeString(item.type),
                 url: url || '',
-                alt: normalizeStringOrUndefined(item.alt),
             }
         })
         .filter(item => item.url)

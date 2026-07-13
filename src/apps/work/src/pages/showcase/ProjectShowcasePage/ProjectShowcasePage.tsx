@@ -784,8 +784,8 @@ export const ProjectShowcasePage: FC = () => {
                     return
                 }
 
-                const altText =
-                    typeof file.alt === 'string' && file.alt.trim()
+                const altText
+                    = typeof file.alt === 'string' && file.alt.trim()
                         ? file.alt.trim()
                         : undefined
 

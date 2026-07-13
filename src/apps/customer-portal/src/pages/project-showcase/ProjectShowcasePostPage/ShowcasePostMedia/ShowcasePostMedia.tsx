@@ -75,7 +75,10 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
                                     )}
                                 </button>
                                 {(index === visibleAssets.length - 1) && (restAssetCount > 0) && (
-                                    <div className={styles.remainingCount}>+{restAssetCount+1}</div>
+                                    <div className={styles.remainingCount}>
+                                        +
+                                        {restAssetCount + 1}
+                                    </div>
                                 )}
                             </li>
                         )
