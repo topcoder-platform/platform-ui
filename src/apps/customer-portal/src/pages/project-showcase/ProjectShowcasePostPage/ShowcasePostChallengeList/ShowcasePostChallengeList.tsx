@@ -46,18 +46,18 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
                                 {(typeof challenge.numOfRegistrants === 'number'
                                     || typeof challenge.numOfSubmissions === 'number') && (
                                     <div className={styles.itemStats}>
-                                        {typeof challenge.numOfRegistrants === 'number' && (
-                                            <span>
-                                                {challenge.numOfRegistrants}
-                                                {' '}
-                                                registrants
-                                            </span>
-                                        )}
                                         {typeof challenge.numOfSubmissions === 'number' && (
-                                            <span className={styles.statSeparator}>
+                                            <span>
                                                 {challenge.numOfSubmissions}
                                                 {' '}
                                                 submissions
+                                            </span>
+                                        )}
+                                        {typeof challenge.numOfRegistrants === 'number' && (
+                                            <span className={styles.statSeparator}>
+                                                {challenge.numOfRegistrants}
+                                                {' '}
+                                                registrants
                                             </span>
                                         )}
                                     </div>
