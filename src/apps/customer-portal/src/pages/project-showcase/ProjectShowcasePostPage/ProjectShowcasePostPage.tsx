@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash'
 import { FC, useMemo } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
@@ -25,7 +26,7 @@ const ProjectShowcasePostPage: FC = () => {
     const projectUrl = `${window.location.origin}${buildProjectUrl(routeParams.projectId as string)}`
 
     const skills = useMemo(
-        () => post?.challengeMetadata?.flatMap(entry => entry.skills) ?? [],
+        () => uniqBy(post?.challengeMetadata?.flatMap(entry => entry.skills), 'id') ?? [],
         [post?.challengeMetadata],
     )
     const registrantsCount = useMemo(
