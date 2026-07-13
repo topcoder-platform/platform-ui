@@ -3,8 +3,9 @@ import { Params, useParams } from 'react-router-dom'
 
 import { IconOutline, LinkButton, PageTitle } from '~/libs/ui'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
+import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 import {
-    buildProjectLandingPath,
+    buildProjectUrl,
     useFetchProjectShowcasePost,
     UseFetchProjectShowcasePostResult,
 } from '~/apps/work/src/lib'
@@ -21,7 +22,7 @@ const ProjectShowcasePostPage: FC = () => {
         = useFetchProjectShowcasePost(routeParams.projectId, routeParams.postId)
     const industries = useMemo(() => post?.industries.map(ind => ind.name)
         .join(', '), [post?.industries])
-    const projectUrl = buildProjectLandingPath({ id: routeParams.projectId as string })
+    const projectUrl = `${window.location.origin}${buildProjectUrl(routeParams.projectId as string)}`
 
     const skills = useMemo(
         () => post?.challengeMetadata?.flatMap(entry => entry.skills) ?? [],
@@ -44,14 +45,14 @@ const ProjectShowcasePostPage: FC = () => {
 
     return (
         <div className={styles.wrap}>
-            <PageTitle>t</PageTitle>
+            <PageTitle>{post?.title ?? ''}</PageTitle>
             <div className={styles.hero} />
             <div className={styles.contentContainer}>
                 <div className={styles.contentHeader}>
                     <div className={styles.topActions}>
                         <div className={styles.tags}>
                             {post?.categories.map(category => (
-                                <span className={styles.tag}>{category.name}</span>
+                                <span key={category.id} className={styles.tag}>{category.name}</span>
                             ))}
                         </div>
                         <div className={styles.btns}>
@@ -60,7 +61,7 @@ const ProjectShowcasePostPage: FC = () => {
                                 icon={IconOutline.ArrowLeftIcon}
                                 iconToLeft
                                 label='Back to showcases'
-                                size='md'
+                                size='lg'
                             />
                         </div>
                     </div>
@@ -76,7 +77,7 @@ const ProjectShowcasePostPage: FC = () => {
                             <IconOutline.CalendarIcon className='icon-lg' />
                             <span>Published</span>
                             <span>
-                                {post?.createdAt}
+                                {textFormatDateLocaleShortString(new Date(post?.publishedAt ?? post?.createdAt ?? 0))}
                             </span>
                         </div>
                     </div>
@@ -84,6 +85,7 @@ const ProjectShowcasePostPage: FC = () => {
                 <div className={styles.contentBodyWrap}>
                     <div className={styles.contentBody}>
                         <div
+                            className={styles.htmlContent}
                             dangerouslySetInnerHTML={{
                                 __html: renderRichTextToHtml(post?.content || ''),
                             }}
@@ -128,7 +130,7 @@ const ProjectShowcasePostPage: FC = () => {
                                 </a>
                             </div>
                             <span className={styles.url}>
-                                projects url
+                                {projectUrl}
                             </span>
                         </div>
                         <div className={styles.panel}>

@@ -216,6 +216,7 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .map(item => {
             const url = normalizeStringOrUndefined(item.url)
             return {
+                alt: normalizeStringOrUndefined(item.alt),
                 id: normalizeString(item.id),
                 type: normalizeString(item.type),
                 url: url || '',
@@ -308,7 +309,7 @@ export async function updateProjectShowcasePost(
         industryIds?: string[]
         categoryIds?: string[]
         challengeIds?: string[]
-        media?: Array<{ type: string; url: string }>
+        media?: Array<{ type: string; url: string; alt?: string }>
         status?: string
     },
 ): Promise<ProjectShowcasePost> {

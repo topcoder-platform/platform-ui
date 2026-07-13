@@ -10,7 +10,7 @@
     flex-wrap: wrap;
     gap: 16px;
     width: 100%;
-    justify-content: space-between;
+    // justify-content: space-between;
 }
 
 .mediaItem {
@@ -23,6 +23,42 @@
     border-radius: 4px;
 
     overflow: hidden;
+
+    position: relative;
+
+    .remainingCount {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 1;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #FFF;
+        font-family: Roboto;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 24px; /* 150% */
+        letter-spacing: 0.128px;
+        text-transform: uppercase;
+
+        background: #333;
+
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(#333, 0.95);
+        }
+
+        &:active {
+            background: rgba(#333, 0.975);
+        }
+    }
 }
 
 .mediaButton {
@@ -54,12 +90,11 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 140px;
-    padding: 1rem;
-    border: 1px solid var(--neutral-300);
+    height: 100%;
+    border: 1px solid $black-10;
     border-radius: 0.5rem;
-    background-color: var(--neutral-100);
-    color: var(--neutral-700);
+    background-color: $black-5;
+    color: $black-100;
     text-align: center;
 }
 
