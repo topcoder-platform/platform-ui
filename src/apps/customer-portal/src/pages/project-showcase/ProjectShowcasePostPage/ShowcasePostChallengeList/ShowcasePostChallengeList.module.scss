@@ -1,0 +1,107 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+}
+
+.message {
+    margin-bottom: 12px;
+    color: var(--ui-text-secondary, #6b7280);
+}
+
+.list {
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.itemContent {
+}
+
+.itemTitle {
+    display: block;
+    color: $black-100;
+    font-feature-settings: 'liga' off, 'clig' off;
+
+    /* TC-Type/Desktop/Body/Body-Main-Medium */
+    font-family: Roboto;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px; /* 150% */
+
+    margin-top: 8px;
+}
+
+.itemMeta {
+    display: block;
+    padding: 3px 4px;
+    border-radius: 2px;
+
+    font-feature-settings: 'liga' off, 'clig' off;
+
+    /* TC-Type/Desktop/Subtitles/Label */
+    font-family: Roboto;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 10px; /* 90.909% */
+
+    background: $black-5;
+    color: $black-80;
+    width: max-content;
+
+    &:global(.development) {
+        color: #35AC35;
+        background: #D8FDD8;
+    }
+    &:global(.qa), &:global(.quality_assurance) {
+        color: $red-120;
+        background: $red-25;
+    }
+    &:global(.design) {
+        color: $blue-120;
+        background: $blue-15;
+    }
+    &:global(.data_science) {
+        background-color: #FFE3CF;
+        color: #F46500;
+    }
+}
+
+.itemStats {
+    display: flex;
+    flex-wrap: wrap;
+    color: $black-80;
+    min-width: 220px;
+
+    span {
+        font-feature-settings: 'liga' off, 'clig' off;
+
+        /* TC-Type/Desktop/Body/Body-Small */
+        font-family: Roboto;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 22px; /* 157.143% */
+    }
+}
+
+.statSeparator::before {
+    content: '·';
+    display: inline-block;
+    margin: 0 8px;
+    color: var(--ui-text-secondary, #6b7280);
+}
+
+.toRight {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}

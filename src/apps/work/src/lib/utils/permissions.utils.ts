@@ -484,7 +484,7 @@ function shouldReplaceProjectInviteMatch(
  */
 export function checkIsUserInvitedToProject(
     token: string,
-    project: Project,
+    project: Pick<Project, 'id'|'invites'>,
 ): ProjectInvite | undefined {
     const tokenData = getTokenData(token)
     const invites = Array.isArray(project.invites)

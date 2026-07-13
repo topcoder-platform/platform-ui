@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSWRConfig } from 'swr'
 import type { FullConfiguration } from 'swr/dist/types'
@@ -55,6 +56,9 @@ const ProjectShowcasePage: FC = () => {
     const [page, setPage] = useState(1)
     const sortBy = 'createdAt'
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+    const hasFiltersApplied = useMemo(() => (
+        !!keyword.trim() || selectedIndustries.length > 0 || selectedCategories.length > 0
+    ), [keyword, selectedIndustries, selectedCategories])
 
     const industriesResult = useFetchProjectShowcasePostIndustries()
     const categoriesResult = useFetchProjectShowcasePostCategories()
@@ -159,6 +163,7 @@ const ProjectShowcasePage: FC = () => {
 
                     <div className={styles.searchInputWrapper}>
                         <InputText
+                            forceUpdateValue
                             classNameWrapper={styles.searchInput}
                             label={' '}
                             placeholder='Search by project or description'
@@ -209,13 +214,20 @@ const ProjectShowcasePage: FC = () => {
                     <div className={styles.resultsMeta}>
                         {postsResult.posts.length > 0 && !postsResult.isLoading && (
                             <span>
+                                {hasFiltersApplied ? 'We have found' : ''}
+                                {' '}
                                 <strong>
                                     {postsResult.metadata.total}
                                     {' '}
-                                    total
+                                    {!hasFiltersApplied && 'total'}
+                                    {hasFiltersApplied && (
+                                        postsResult.metadata.total === 1 ? 'showcase' : 'showcases'
+                                    )}
                                 </strong>
                                 {' '}
-                                <span>showcases</span>
+                                <span>
+                                    {hasFiltersApplied ? 'that match your search.' : 'showcases'}
+                                </span>
                             </span>
                         )}
                     </div>
@@ -257,7 +269,7 @@ const ProjectShowcasePage: FC = () => {
                     {!loadMoreDisabled && postsResult.posts.length > 0 && (
                         <div className={styles.loadMoreWrapper}>
                             <Button
-                                label='Load more'
+                                label='Load more showcases'
                                 onClick={handleLoadMore}
                                 disabled={postsResult.isLoading || loadMoreDisabled}
                                 secondary

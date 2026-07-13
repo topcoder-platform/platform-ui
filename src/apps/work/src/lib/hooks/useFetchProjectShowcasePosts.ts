@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
+    fetchProjectShowcasePost,
     fetchProjectShowcasePostCategories,
     fetchProjectShowcasePostIndustries,
     fetchProjectShowcasePosts,
@@ -10,6 +11,7 @@ import type {
     FetchProjectShowcasePostsParams,
     FetchProjectShowcasePostsResponse,
     ProjectShowcasePostCategory,
+    ProjectShowcasePostDetails,
     ProjectShowcasePostIndustry,
 } from '../models'
 
@@ -20,6 +22,15 @@ export interface UseFetchProjectShowcasePostsResult {
     isValidating: boolean
     error: Error | undefined
     mutate: SWRResponse<FetchProjectShowcasePostsResponse, Error>['mutate']
+}
+
+export interface UseFetchProjectShowcasePostResult {
+    post: ProjectShowcasePostDetails | undefined
+    error: Error | undefined
+    isError: boolean
+    isLoading: boolean
+    isValidating: boolean
+    mutate: SWRResponse<ProjectShowcasePostDetails, Error>['mutate']
 }
 
 export function useFetchProjectShowcasePosts(
@@ -81,6 +92,39 @@ export function useFetchProjectShowcasePosts(
         },
         mutate,
         posts: response?.posts || [],
+    }
+}
+
+export function useFetchProjectShowcasePost(
+    projectId: string | undefined,
+    postId: string | undefined,
+): UseFetchProjectShowcasePostResult {
+    const swrKey = projectId && postId
+        ? ['work/project-showcase-post', projectId, postId]
+        : undefined
+
+    const {
+        data,
+        error,
+        isValidating,
+        mutate,
+    }: SWRResponse<ProjectShowcasePostDetails, Error> = useSWR<ProjectShowcasePostDetails, Error>(
+        swrKey,
+        () => fetchProjectShowcasePost(projectId as string, postId as string),
+        {
+            dedupingInterval: 0,
+            errorRetryCount: 2,
+            shouldRetryOnError: true,
+        },
+    )
+
+    return {
+        error,
+        isError: !!error,
+        isLoading: !!postId && !data && !error,
+        isValidating,
+        mutate,
+        post: error ? undefined : data,
     }
 }
 

@@ -31,6 +31,23 @@
         color: $black-80;
 
         font-family: $font-roboto;
+
+        &:global(.development) {
+            color: #35AC35;
+            background: #D8FDD8;
+        }
+        &:global(.qa), &:global(.quality_assurance) {
+            color: $red-120;
+            background: $red-25;
+        }
+        &:global(.design) {
+            color: $blue-120;
+            background: $blue-15;
+        }
+        &:global(.data_science) {
+            background-color: #FFE3CF;
+            color: #F46500;
+        }
     }
 }
 
@@ -43,13 +60,17 @@
     line-height: 28px; /* 127.273% */
     text-transform: none;
 
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    height: 100%;
-    max-height: calc(28px * 2);
+    // display: -webkit-box;
+    // -webkit-line-clamp: 3;
+    // -webkit-box-orient: vertical;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // height: 100%;
+    // max-height: calc(28px * 2);
+}
+
+.button {
+    margin-top: auto;
 }
 
 .cardBody {

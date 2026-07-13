@@ -1,0 +1,288 @@
+@import '@libs/ui/styles/includes';
+
+
+.hero {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 280px;
+    background-image: url('../../../lib/assets/talent-search-header.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: -1;
+}
+
+.contentContainer {
+    padding: $sp-16;
+    border-radius: $sp-4;
+    background: $tc-white;
+    box-shadow: 0 8px 24px 0 rgba(144, 144, 144, 0.15);
+
+    margin-top: $sp-12;
+}
+
+.contentHeader {
+    border-bottom: 1px solid #E8E8E8;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+
+    .topActions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .title {
+        color: $black-100;
+        font-feature-settings: 'liga' off, 'clig' off;
+
+        font-family: "Barlow Condensed";
+        font-size: 34px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: 32px; /* 94.118% */
+        text-transform: uppercase;
+
+        margin-top: 8px;
+    }
+
+    .subTitle {
+        margin-top: $sp-4;
+
+        display: flex;
+        align-items: center;
+        gap: $sp-4;
+        flex-wrap: wrap;
+
+        > * + *:before {
+            content: "";
+            border-radius: 50%;
+            background: $black-80;
+            width: 12px;
+            height: 22px;
+            height: 3px;
+            background: url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 1.36035C0 0.963867 0.125326 0.638021 0.375977 0.382812C0.631185 0.127604 0.968424 0 1.3877 0C1.80241 0 2.13965 0.125326 2.39941 0.375977C2.65918 0.62207 2.78906 0.957031 2.78906 1.38086V1.63379C2.78906 2.03027 2.66374 2.35384 2.41309 2.60449C2.16243 2.85514 1.82292 2.98047 1.39453 2.98047C0.970703 2.98047 0.631185 2.85514 0.375977 2.60449C0.125326 2.34928 0 2.02116 0 1.62012V1.36035Z" fill="%23555555"/></svg>') center no-repeat;
+        }
+
+        &Item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            color: $turq-160;
+
+            span {
+                color: $black-100;
+                font-feature-settings: 'liga' off, 'clig' off;
+
+                font-family: Roboto;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 500;
+                line-height: 22px; /* 157.143% */
+            }
+        }
+    }
+}
+
+.tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px $sp-1;
+    border-radius: 2px;
+
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 10px;
+
+    background: $black-5;
+    color: $black-80;
+
+    font-family: $font-roboto;
+}
+
+.contentSection {
+
+}
+
+.sectionTitle {
+    color: $black-100;
+    font-feature-settings: 'liga' off, 'clig' off;
+
+    /* TC-Type/Desktop/Titles 2: Products & Apps/H4 */
+    font-family: Barlow;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 22px; /* 122.222% */
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.contentBodyWrap {
+    display: flex;
+    gap: $sp-12;
+    align-items: flex-start;
+}
+
+.contentBody {
+    flex: 1;
+
+    > * + * {
+        margin-top: 32px;
+    }
+}
+
+.contentBodySidebar {
+    width: 400px;
+    max-width: 40%;
+
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+
+    .panel {
+        border-radius: 8px;
+        border: 1px solid $black-20;
+        display: flex;
+        padding: $sp-4;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $sp-2;
+        align-self: stretch;
+
+        &Title {
+            color: $black-100;
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* TC-Type/Desktop/Subtitles/Overline */
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 16px; /* 133.333% */
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        a {
+            display: flex;
+            gap: 8px;
+
+            color: #0D61BF;
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* TC-Type/Desktop/Body/Body-Small-Medium */
+            font-family: Roboto;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 22px; /* 157.143% */
+        }
+
+        p {
+            color: $black-100;
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* TC-Type/Desktop/Body/Body-Small */
+            font-family: Roboto;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 22px; /* 157.143% */
+
+            strong {
+                font-weight: 700;
+            }
+        }
+
+        .url {
+            color: #888;
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+    }
+}
+
+.statsList {
+    display: flex;
+    list-style: none;
+    align-items: flex-start;
+    gap: 10px;
+    align-self: stretch;
+    width: 100%;
+
+    li {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        color: $black-100;
+
+        strong {
+            font-feature-settings: 'liga' off, 'clig' off;
+
+            /* TC-Type/Desktop/Titles 1: Corporate & Marketing/H4 */
+            font-family: "Barlow Condensed";
+            font-size: 32px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 34px; /* 106.25% */
+            text-transform: uppercase;
+        }
+
+        span {
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+    }
+}
+
+.skillsList {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+
+    width: 100%;
+
+    li {
+        display: flex;
+        padding: 6px 12px;
+        align-items: center;
+        gap: 4px;
+
+        flex: 0;
+        white-space: nowrap;
+
+        border-radius: 24px;
+        border: 1px solid $black-20;
+        background: $tc-white;
+
+        color: var(--Dark-grey, #333);
+        font-feature-settings: 'liga' off, 'clig' off;
+        font-family: Roboto;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        letter-spacing: -0.2px;
+    }
+}
