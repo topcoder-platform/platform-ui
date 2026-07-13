@@ -2,6 +2,7 @@
 import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { IconOutline, LinkButton } from '~/libs/ui'
 import { UseFetchChallenges, useFetchChallenges } from '~/apps/customer-portal/src/lib'
 
@@ -64,11 +65,13 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
 
                                 <div className={styles.action}>
                                     <LinkButton
+                                        to={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${challenge.id}`}
                                         size='lg'
                                         label='View'
                                         iconToRight
                                         icon={IconOutline.ArrowRightIcon}
-                                        to=''
+                                        target='_blank'
+                                        rel='noreferrer, noopener'
                                     />
                                 </div>
                             </div>

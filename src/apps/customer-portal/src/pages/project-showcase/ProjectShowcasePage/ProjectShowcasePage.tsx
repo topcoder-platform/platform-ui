@@ -76,6 +76,7 @@ const ProjectShowcasePage: FC = () => {
         projectId: '',
         sortBy,
         sortOrder,
+        status: 'PUBLISHED',
     }), [keyword, selectedIndustries, selectedCategories, page, sortOrder])
 
     const postsResult: UseFetchProjectShowcasePostsResult = useFetchProjectShowcasePosts(filters)
