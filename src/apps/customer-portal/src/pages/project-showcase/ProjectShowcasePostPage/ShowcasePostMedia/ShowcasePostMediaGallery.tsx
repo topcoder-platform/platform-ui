@@ -103,7 +103,6 @@ const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = (props) => {
     const handleNext = useCallback(() => {
         setCurrentIndex(prevIndex => (prevIndex + 1) % props.assets.length)
     }, [props.assets.length])
-
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent): void => {
             if (event.key === 'Escape') {

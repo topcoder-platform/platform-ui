@@ -126,6 +126,15 @@
     height: 160px;
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    user-select: none;
+
+    @include scrollbar;
+
+    &:active {
+        cursor: grabbing;
+    }
 
     .mediaItem {
         display: flex;
