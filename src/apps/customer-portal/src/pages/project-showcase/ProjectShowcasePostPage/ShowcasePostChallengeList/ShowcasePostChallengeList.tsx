@@ -2,13 +2,13 @@
 import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { IconOutline, LinkButton } from '~/libs/ui'
 import { UseFetchChallenges, useFetchChallenges } from '~/apps/customer-portal/src/lib'
 
 import { getTrackName, toClassName } from '../../utils'
 
 import styles from './ShowcasePostChallengeList.module.scss'
-import { EnvironmentConfig } from '~/config'
 
 interface ShowcasePostChallengeListProps {
     challengeIds?: string[]
@@ -70,8 +70,8 @@ const ShowcasePostChallengeList: FC<ShowcasePostChallengeListProps> = props => {
                                         label='View'
                                         iconToRight
                                         icon={IconOutline.ArrowRightIcon}
-                                        target="_blank"
-                                        rel="noreferrer, noopener"
+                                        target='_blank'
+                                        rel='noreferrer, noopener'
                                     />
                                 </div>
                             </div>

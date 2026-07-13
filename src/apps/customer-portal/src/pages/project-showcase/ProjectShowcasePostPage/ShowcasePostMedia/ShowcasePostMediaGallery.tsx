@@ -1,11 +1,11 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react'
+import { FC, MouseEvent, useCallback, useEffect, useRef, useState } from 'react'
+import classNames from 'classnames'
 
 import { IconFile } from '~/apps/customer-portal/src/lib/assets'
 import { Button, IconOutline } from '~/libs/ui'
 import { ProjectShowcasePostMedia } from '~/apps/work/src/lib'
 
 import styles from './ShowcasePostMediaGallery.module.scss'
-import classNames from 'classnames'
 
 interface ShowcasePostMediaGalleryProps {
     assets: ProjectShowcasePostMedia[]
@@ -18,7 +18,8 @@ export function getFileExtension(value: string | undefined): string | undefined 
         return undefined
     }
 
-    const normalized = value.trim().toLowerCase()
+    const normalized = value.trim()
+        .toLowerCase()
     if (!normalized) {
         return undefined
     }
@@ -71,7 +72,8 @@ export function getPlaceholderLabel(extension: string, asset: ProjectShowcasePos
     }
 
     if (extension) {
-        return extension.replace('.', '').toUpperCase()
+        return extension.replace('.', '')
+            .toUpperCase()
     }
 
     return asset.type || 'File'
@@ -87,7 +89,7 @@ export function getMediaAlt(asset: ProjectShowcasePostMedia): string {
     return `Project showcase attachment (${getPlaceholderLabel(extension, asset)})`
 }
 
-const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = (props) => {
+const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = props => {
     const thumbsContainerRef = useRef<HTMLUListElement>(null)
     const [currentIndex, setCurrentIndex] = useState(props.startingIndex)
     const mediaAsset = props.assets[currentIndex]
@@ -134,15 +136,15 @@ const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = (props) => {
     }, [handleNext, handlePrevious, props.onClose])
 
     useEffect(() => {
-      if (!thumbsContainerRef.current) {
-        return
-      }
+        if (!thumbsContainerRef.current) {
+            return
+        }
 
-      thumbsContainerRef.current.children[currentIndex].scrollIntoView();
-    }, [currentIndex]);
+        thumbsContainerRef.current.children[currentIndex].scrollIntoView()
+    }, [currentIndex])
 
     if (!mediaAsset) {
-        return null
+        return <></>
     }
 
     return (
@@ -152,7 +154,14 @@ const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = (props) => {
             aria-modal='true'
             onClick={props.onClose}
         >
-            <div className={styles.mainFrame} onClick={event => event.stopPropagation()}>
+            <div
+                className={styles.mainFrame}
+                onClick={
+                    function onClick(event: MouseEvent<HTMLDivElement>) {
+                        event.stopPropagation()
+                    }
+                }
+            >
                 <div className={styles.mainContent}>
                     <button
                         type='button'
@@ -208,32 +217,32 @@ const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = (props) => {
                     </div>
 
                     <ul className={styles.galleryThumbnails} ref={thumbsContainerRef}>
-                        {props.assets.map((mediaAsset, index) => {
-                            const extension = getAssetExtension(mediaAsset)
+                        {props.assets.map((thumbAsset, index) => {
+                            const extension = getAssetExtension(thumbAsset)
                             const isImage = isImageAsset(extension)
 
                             return (
                                 <li
-                                    key={mediaAsset.id}
+                                    key={thumbAsset.id}
                                     className={classNames(styles.mediaItem, currentIndex === index && styles.active)}
                                     onClick={function setCurrent() { setCurrentIndex(index) }}
                                 >
                                     {isImage && (
                                         <img
                                             className={styles.mediaImage}
-                                            src={mediaAsset.url}
-                                            alt={getMediaAlt(mediaAsset)}
+                                            src={thumbAsset.url}
+                                            alt={getMediaAlt(thumbAsset)}
                                         />
                                     )}
                                     {!isImage && (
                                         <div
                                             className={styles.placeholder}
-                                            aria-label={getMediaAlt(mediaAsset)}
-                                            title={mediaAsset.url}
+                                            aria-label={getMediaAlt(thumbAsset)}
+                                            title={thumbAsset.url}
                                         >
                                             <IconFile className={styles.placeholderIcon} />
                                             <span className={styles.placeholderLabel}>
-                                                {getPlaceholderLabel(extension, mediaAsset)}
+                                                {getPlaceholderLabel(extension, thumbAsset)}
                                             </span>
                                         </div>
                                     )}

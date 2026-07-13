@@ -16,18 +16,18 @@ interface ShowcasePostMediaProps {
 }
 
 const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
-    const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
+    const [galleryIndex, setGalleryIndex] = useState<number | undefined>(undefined)
 
     const visibleAssets = useMemo(() => props.assets?.slice(0, 4) || [], [props.assets])
     const galleryAssets = useMemo(() => props.assets || [], [props.assets])
-    const isGalleryOpen = galleryIndex !== null
+    const isGalleryOpen = galleryIndex !== undefined
 
     const handleOpenGallery = useCallback((index: number) => {
         setGalleryIndex(index)
     }, [])
 
     const handleCloseGallery = useCallback(() => {
-        setGalleryIndex(null)
+        setGalleryIndex(undefined)
     }, [])
 
     if (!props.assets || props.assets.length === 0) {
@@ -47,7 +47,7 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
                                 <button
                                     type='button'
                                     className={styles.mediaButton}
-                                    onClick={() => handleOpenGallery(index)}
+                                    onClick={function onClick() { handleOpenGallery(index) }}
                                     aria-label={`Open gallery item ${index + 1}`}
                                 >
                                     {isImage && (
