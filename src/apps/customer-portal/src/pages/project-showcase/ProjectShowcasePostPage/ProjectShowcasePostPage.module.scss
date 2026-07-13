@@ -66,17 +66,17 @@
 
         display: flex;
         align-items: center;
-        gap: $sp-4;
         flex-wrap: wrap;
 
         > * + *:before {
             content: "";
             border-radius: 50%;
             background: $black-80;
-            width: 12px;
-            height: 22px;
+            width: 3px;
             height: 3px;
             background: url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 1.36035C0 0.963867 0.125326 0.638021 0.375977 0.382812C0.631185 0.127604 0.968424 0 1.3877 0C1.80241 0 2.13965 0.125326 2.39941 0.375977C2.65918 0.62207 2.78906 0.957031 2.78906 1.38086V1.63379C2.78906 2.03027 2.66374 2.35384 2.41309 2.60449C2.16243 2.85514 1.82292 2.98047 1.39453 2.98047C0.970703 2.98047 0.631185 2.85514 0.375977 2.60449C0.125326 2.34928 0 2.02116 0 1.62012V1.36035Z" fill="%23555555"/></svg>') center no-repeat;
+            margin-left: 16px;
+            margin-right: 12px;
         }
 
         &Item {
@@ -410,5 +410,99 @@
         font-weight: 500;
         line-height: normal;
         letter-spacing: -0.2px;
+    }
+}
+
+@media (max-width: 900px) {
+    .contentContainer {
+        padding: $sp-12;
+    }
+
+    .contentHeader {
+        .topActions {
+            gap: $sp-3;
+        }
+
+        .title {
+            font-size: 28px;
+            line-height: 36px;
+        }
+
+        .subTitle {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+
+            > * + *:before {
+                display: none;
+            }
+        }
+
+        .subTitleItem {
+            gap: 6px;
+        }
+    }
+
+    .contentBodyWrap {
+        flex-direction: column;
+        gap: $sp-8;
+    }
+
+    .contentBody {
+        order: 1;
+        width: 100%;
+    }
+
+    .contentBodySidebar {
+        width: 100%;
+        max-width: 100%;
+        order: 0;
+    }
+
+    .panel {
+        padding: $sp-3;
+    }
+
+    .statsList {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .skillsList {
+        gap: 6px;
+    }
+
+    .skillsList li {
+        white-space: normal;
+        flex: 1;
+    }
+}
+
+@media (max-width: 560px) {
+    .contentContainer {
+        padding: $sp-6;
+    }
+
+    .contentHeader {
+        .title {
+            font-size: 22px;
+            line-height: 28px;
+        }
+
+        .subTitleItem span {
+            font-size: 13px;
+        }
+    }
+
+    .btns {
+        width: 100%;
+
+        :global(.btn-size-lg) {
+            display: none;
+        }
+    }
+
+    .panel {
+        padding: $sp-3;
     }
 }
