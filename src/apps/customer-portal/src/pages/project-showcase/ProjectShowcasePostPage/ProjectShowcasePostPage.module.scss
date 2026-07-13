@@ -35,6 +35,12 @@
         flex-wrap: wrap;
     }
 
+    .btns {
+        :global(.btn-size-lg) {
+            font-size: 16px;
+        }
+    }
+
     .tags {
         display: flex;
         gap: 8px;
@@ -105,11 +111,130 @@
     font-weight: 500;
     line-height: 10px;
 
-    font-family: $font-roboto;
+    font-family: "Nunito Sans", sans-serif;
 
     background: $tc-white;
     color: #161616;
     border: 1px solid #a8a8a8;
+}
+
+.htmlContent {
+    color: $black-80;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Roboto;
+    font-size: 14px;
+    line-height: 22px;
+    overflow-wrap: anywhere;
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
+    p,
+    ul,
+    ol,
+    blockquote,
+    table,
+    pre {
+        margin: 0 0 16px;
+    }
+
+    ul,
+    ol {
+        padding-left: 20px;
+    }
+
+    ul {
+        list-style: disc;
+    }
+
+    li {
+        margin-bottom: 8px;
+    }
+
+    a {
+        color: $turq-160;
+        font-weight: 700;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: $black-100;
+        margin: 0 0 16px;
+        font-weight: 700;
+    }
+
+    h1 {
+        font-size: 28px;
+        line-height: 36px;
+    }
+
+    h2 {
+        font-size: 24px;
+        line-height: 32px;
+    }
+
+    h3 {
+        font-size: 20px;
+        line-height: 28px;
+    }
+
+    h4,
+    h5,
+    h6 {
+        font-size: 16px;
+        line-height: 24px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        border: 1px solid $black-20;
+        padding: 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    pre {
+        background: $black-10;
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    code {
+        background: $black-10;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    blockquote {
+        border-left: 4px solid $black-20;
+        color: $black-80;
+        padding-left: 16px;
+        margin: 0;
+    }
 }
 
 .contentSection {

@@ -11,6 +11,7 @@ export interface ProjectShowcasePostMedia {
     id: string
     type: string
     url: string
+    alt?: string
 }
 
 export interface ProjectShowcasePostChallengeMetadataSkill {
@@ -37,6 +38,8 @@ export interface ProjectShowcasePost {
     createdAt: string
     createdById: number
     createdByHandle?: string
+    publishedAt?: number
+    publishedBy?: string
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]
     media?: ProjectShowcasePostMedia[]

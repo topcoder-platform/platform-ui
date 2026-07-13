@@ -19,6 +19,7 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
     const [galleryIndex, setGalleryIndex] = useState<number | undefined>(undefined)
 
     const visibleAssets = useMemo(() => props.assets?.slice(0, 4) || [], [props.assets])
+    const restAssetCount = Math.max(0, (props.assets?.length ?? 0) - 4)
     const galleryAssets = useMemo(() => props.assets || [], [props.assets])
     const isGalleryOpen = galleryIndex !== undefined
 
@@ -43,11 +44,14 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
                         const isImage = isImageAsset(extension)
 
                         return (
-                            <li key={mediaAsset.id} className={styles.mediaItem}>
+                            <li
+                                key={mediaAsset.id}
+                                className={styles.mediaItem}
+                                onClick={function onClick() { handleOpenGallery(index) }}
+                            >
                                 <button
                                     type='button'
                                     className={styles.mediaButton}
-                                    onClick={function onClick() { handleOpenGallery(index) }}
                                     aria-label={`Open gallery item ${index + 1}`}
                                 >
                                     {isImage && (
@@ -70,6 +74,9 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
                                         </div>
                                     )}
                                 </button>
+                                {(index === visibleAssets.length - 1) && (restAssetCount > 0) && (
+                                    <div className={styles.remainingCount}>+{restAssetCount+1}</div>
+                                )}
                             </li>
                         )
                     })}

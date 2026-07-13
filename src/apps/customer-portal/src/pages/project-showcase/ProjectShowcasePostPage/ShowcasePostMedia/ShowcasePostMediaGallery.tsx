@@ -80,6 +80,10 @@ export function getPlaceholderLabel(extension: string, asset: ProjectShowcasePos
 }
 
 export function getMediaAlt(asset: ProjectShowcasePostMedia): string {
+    if (asset.alt) {
+        return asset.alt;
+    }
+
     const extension = getAssetExtension(asset)
 
     if (isImageAsset(extension)) {

@@ -219,6 +219,7 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
                 id: normalizeString(item.id),
                 type: normalizeString(item.type),
                 url: url || '',
+                alt: normalizeStringOrUndefined(item.alt),
             }
         })
         .filter(item => item.url)
@@ -308,7 +309,7 @@ export async function updateProjectShowcasePost(
         industryIds?: string[]
         categoryIds?: string[]
         challengeIds?: string[]
-        media?: Array<{ type: string; url: string }>
+        media?: Array<{ type: string; url: string; alt?: string }>
         status?: string
     },
 ): Promise<ProjectShowcasePost> {
