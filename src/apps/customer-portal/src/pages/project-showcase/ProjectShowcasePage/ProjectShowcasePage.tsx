@@ -70,13 +70,13 @@ const ProjectShowcasePage: FC = () => {
         industryId: selectedIndustries.map(option => String(option.value || ''))
             .filter(Boolean)
             .join(','),
-        status: 'PUBLISHED',
         keyword: keyword.trim() || undefined,
         page,
         perPage: PAGE_SIZE,
         projectId: '',
         sortBy,
         sortOrder,
+        status: 'PUBLISHED',
     }), [keyword, selectedIndustries, selectedCategories, page, sortOrder])
 
     const postsResult: UseFetchProjectShowcasePostsResult = useFetchProjectShowcasePosts(filters)
