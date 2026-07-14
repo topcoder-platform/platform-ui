@@ -50,7 +50,7 @@ jest.mock('../../../../lib', () => ({
 }))
 
 jest.mock('../MemberHistoryModal', () => ({
-    MemberHistoryModal: () => null,
+    MemberHistoryModal: () => undefined,
 }))
 
 describe('MembersView', () => {
