@@ -122,6 +122,26 @@ function getLatestDate(dates: Array<Date | undefined>): Date | undefined {
 }
 
 /**
+ * Returns the earliest valid date from a candidate list.
+ *
+ * @param dates candidate date values.
+ * @returns the earliest date, or `undefined` when no valid date is provided.
+ */
+function getEarliestDate(dates: Array<Date | undefined>): Date | undefined {
+    return dates.reduce<Date | undefined>((earliestDate, date) => {
+        if (!date) {
+            return earliestDate
+        }
+
+        if (!earliestDate || date.getTime() < earliestDate.getTime()) {
+            return date
+        }
+
+        return earliestDate
+    }, undefined)
+}
+
+/**
  * Returns the earliest valid scheduled phase start from the current schedule.
  *
  * @param phases phase rows currently stored in the challenge form.
@@ -163,8 +183,10 @@ function getMinimumPhaseEndDate(
     isActiveChallenge: boolean,
 ): Date | undefined {
     if ((phase.isOpen || isActiveChallenge) && !phase.actualEndDate) {
-        const currentEndDate = toDate(persistedScheduledEndDate)
-            || toDate(phase.scheduledEndDate)
+        const currentEndDate = getEarliestDate([
+            toDate(persistedScheduledEndDate),
+            toDate(phase.scheduledEndDate),
+        ])
 
         return getLatestDate(
             isDesignTrackChallenge
@@ -359,12 +381,18 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     useEffect(() => {
         phases.forEach((phase, index) => {
             const phaseKey = getPhaseKey(phase, index)
-            if (initialPhaseEndDatesRef.current.has(phaseKey)) {
-                return
-            }
-
             const scheduledEndDate = toDate(phase.scheduledEndDate)
-            if (scheduledEndDate) {
+            const initialScheduledEndDate = toDate(
+                initialPhaseEndDatesRef.current.get(phaseKey),
+            )
+
+            if (
+                scheduledEndDate
+                && (
+                    !initialScheduledEndDate
+                    || scheduledEndDate.getTime() < initialScheduledEndDate.getTime()
+                )
+            ) {
                 initialPhaseEndDatesRef.current.set(phaseKey, scheduledEndDate.toISOString())
             }
         })
