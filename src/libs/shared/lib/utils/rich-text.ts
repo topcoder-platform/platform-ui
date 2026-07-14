@@ -23,6 +23,7 @@ const RICH_TEXT_ALLOWED_TAGS = [
     'blockquote',
     'br',
     'code',
+    'del',
     'div',
     'em',
     'h1',

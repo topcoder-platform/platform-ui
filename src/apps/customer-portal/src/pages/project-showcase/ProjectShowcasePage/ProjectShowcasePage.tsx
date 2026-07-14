@@ -54,7 +54,7 @@ const ProjectShowcasePage: FC = () => {
     const [selectedIndustries, setSelectedIndustries] = useState<InputMultiselectOption[]>([])
     const [selectedCategories, setSelectedCategories] = useState<InputMultiselectOption[]>([])
     const [page, setPage] = useState(1)
-    const sortBy = 'createdAt'
+    const sortBy = 'publishedAt'
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const hasFiltersApplied = useMemo(() => (
         !!keyword.trim() || selectedIndustries.length > 0 || selectedCategories.length > 0
@@ -136,7 +136,7 @@ const ProjectShowcasePage: FC = () => {
             'work/project-showcase-posts',
             filters.projectId || '',
             filters.keyword || '',
-            '',
+            'PUBLISHED',
             filters.industryId || '',
             filters.categoryId || '',
             String(nextPage),

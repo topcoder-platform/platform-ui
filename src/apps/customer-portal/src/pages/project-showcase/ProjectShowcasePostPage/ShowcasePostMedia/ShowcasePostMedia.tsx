@@ -53,6 +53,7 @@ const ShowcasePostMedia: FC<ShowcasePostMediaProps> = props => {
                                     type='button'
                                     className={styles.mediaButton}
                                     aria-label={`Open gallery item ${index + 1}`}
+                                    title={mediaAsset.alt}
                                 >
                                     {isImage && (
                                         <img

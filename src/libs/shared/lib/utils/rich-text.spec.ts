@@ -43,4 +43,11 @@ describe('rich-text utils', () => {
         expect(rendered)
             .toContain('rel="noopener noreferrer"')
     })
+
+    it('supports markdown strikethrough markup', () => {
+        const rendered = renderRichTextToHtml('~~deleted~~')
+
+        expect(rendered)
+            .toContain('<del>deleted</del>')
+    })
 })
