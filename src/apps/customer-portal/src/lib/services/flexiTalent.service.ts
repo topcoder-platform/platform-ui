@@ -282,7 +282,7 @@ function buildFlexiEngagementWorkLinks(
     }
 
     if (normalizedEngagementId) {
-        links.engagementUrl = `${baseUrl}/projects/${normalizedProjectId}/engagements/${normalizedEngagementId}/view`
+        links.engagementUrl = `${baseUrl}/projects/${normalizedProjectId}/engagements/${normalizedEngagementId}`
         links.assigneeDetailsUrl
             = `${baseUrl}/projects/${normalizedProjectId}/engagements/${normalizedEngagementId}/assignments`
     }
