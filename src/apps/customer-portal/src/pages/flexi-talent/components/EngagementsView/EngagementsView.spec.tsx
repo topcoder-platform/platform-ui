@@ -3,8 +3,10 @@ import '@testing-library/jest-dom'
 
 import React from 'react'
 import {
+    fireEvent,
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import {
@@ -147,5 +149,50 @@ describe('EngagementsView', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByText('38 days overdue'))
             .not.toBeInTheDocument()
+    })
+
+    it('refreshes engagement bucket counts whenever the list refreshes', async () => {
+        mockGetFlexiEngagementSummary
+            .mockResolvedValueOnce({
+                active: 1,
+                closed: 0,
+                total: 1,
+            })
+            .mockResolvedValueOnce({
+                active: 2,
+                closed: 0,
+                total: 2,
+            })
+        mockGetFlexiEngagementList
+            .mockResolvedValueOnce({
+                data: [],
+                page: 1,
+                perPage: 10,
+                total: 1,
+                totalPages: 1,
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                page: 1,
+                perPage: 10,
+                total: 2,
+                totalPages: 1,
+            })
+
+        render(<EngagementsView />)
+
+        expect(await screen.findByRole('button', { name: 'Active 1' }))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: /Name/ }))
+
+        await waitFor(() => {
+            expect(mockGetFlexiEngagementSummary)
+                .toHaveBeenCalledTimes(2)
+        })
+        expect(await screen.findByRole('button', { name: 'Active 2' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('2 engagements'))
+            .toBeInTheDocument()
     })
 })

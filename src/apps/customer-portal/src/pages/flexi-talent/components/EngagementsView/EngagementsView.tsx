@@ -263,7 +263,9 @@ export const EngagementsView: FC = () => {
     }, [])
 
     /**
-     * Loads bucket counts once for the left rail, independent of list filters.
+     * Loads bucket counts for the left rail whenever the engagement list refreshes.
+     * The endpoint remains independent of list filters, but refreshing both data
+     * sources together keeps their displayed totals current and consistent.
      *
      * @returns A promise that resolves after summary state is updated.
      */
@@ -420,12 +422,9 @@ export const EngagementsView: FC = () => {
     useEffect(() => {
         fetchEngagementSummary()
             .catch(() => undefined)
-    }, [fetchEngagementSummary])
-
-    useEffect(() => {
         refreshEngagementList()
             .catch(() => undefined)
-    }, [refreshEngagementList])
+    }, [fetchEngagementSummary, refreshEngagementList])
 
     useEffect(() => () => {
         debouncedApplySearch.cancel()
@@ -530,6 +529,9 @@ export const EngagementsView: FC = () => {
     const selectedDetailTitle = selectedEngagementRow
         ? selectedEngagementRow.engagementTitle
         : 'Selected engagement'
+    const listTotalLabel = isListLoading ? '--' : String(listData.total)
+    const listPageLabel = isListLoading ? '--' : String(listData.page)
+    const listTotalPagesLabel = isListLoading ? '--' : String(listData.totalPages)
 
     return (
         <div className={styles.engagementGrid}>
@@ -635,14 +637,14 @@ export const EngagementsView: FC = () => {
 
                 <div className={styles.listMeta}>
                     <span>
-                        {listData.total}
+                        {listTotalLabel}
                         {' engagements'}
                     </span>
                     <span>
                         {'Page '}
-                        {listData.page}
+                        {listPageLabel}
                         {' of '}
-                        {listData.totalPages}
+                        {listTotalPagesLabel}
                     </span>
                 </div>
 

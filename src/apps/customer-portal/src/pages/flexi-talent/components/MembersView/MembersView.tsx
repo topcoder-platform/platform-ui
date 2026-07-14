@@ -374,7 +374,9 @@ export const MembersView: FC<MembersViewProps> = props => {
     ], [summaryData])
 
     /**
-     * Loads member bucket counts once for the left rail, independent of list filters.
+     * Loads member bucket counts for the left rail whenever the member list refreshes.
+     * The endpoint remains independent of list filters, but refreshing both data
+     * sources together keeps their displayed totals current and consistent.
      *
      * @returns A promise that resolves after summary state is updated.
      */
@@ -533,16 +535,9 @@ export const MembersView: FC<MembersViewProps> = props => {
 
         fetchMemberSummary()
             .catch(() => undefined)
-    }, [fetchMemberSummary, hasActivated])
-
-    useEffect(() => {
-        if (!hasActivated) {
-            return
-        }
-
         refreshMemberList()
             .catch(() => undefined)
-    }, [hasActivated, refreshMemberList])
+    }, [fetchMemberSummary, hasActivated, refreshMemberList])
 
     useEffect(() => () => {
         debouncedApplySearch.cancel()
