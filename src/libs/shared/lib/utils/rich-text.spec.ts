@@ -38,7 +38,9 @@ describe('rich-text utils', () => {
     it('renders links with target blank and noopener noreferrer rel', () => {
         const rendered = renderRichTextToHtml('[Visit example](https://example.com)')
 
-        expect(rendered).toContain('target="_blank"')
-        expect(rendered).toContain('rel="noopener noreferrer"')
+        expect(rendered)
+            .toContain('target="_blank"')
+        expect(rendered)
+            .toContain('rel="noopener noreferrer"')
     })
 })
