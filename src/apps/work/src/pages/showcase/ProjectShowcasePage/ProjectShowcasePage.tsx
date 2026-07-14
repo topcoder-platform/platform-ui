@@ -181,6 +181,7 @@ interface ProjectShowcasePostFormData {
     media: Array<{
         type: string
         url: string
+        alt?: string
     }>
 }
 
@@ -193,6 +194,7 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
         media: post?.media?.map(item => ({
             type: item.type,
             url: item.url,
+            alt: item.alt,
         })) || [],
         title: post?.title || '',
     }
@@ -693,7 +695,7 @@ export const ProjectShowcasePage: FC = () => {
     )
 
     const saveUploadedMedia = useCallback(
-        async (updatedMedia: Array<{ type: string; url: string }>) => {
+        async (updatedMedia: Array<{ type: string; url: string; alt?: string }>) => {
             if (!projectId || !selectedPostId) {
                 return
             }
@@ -707,6 +709,7 @@ export const ProjectShowcasePage: FC = () => {
                 setValue('media', (updatedPost.media ?? []).map(m => ({
                     type: m.type,
                     url: m.url,
+                    alt: m.alt,
                 })))
             } catch (err) {
                 showErrorToast(err instanceof Error ? err.message : 'Unable to save uploaded media.')
