@@ -57,6 +57,7 @@ export interface GlobalConfig {
         ACCOUNT_SETTINGS: string
         UNIVERSAL_NAV: string
         CHALLENGES_PAGE: string
+        WORK_APP: string
     }
     TERMS_URL?: string
     NDA_TERMS_URL?: string

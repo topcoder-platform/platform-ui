@@ -108,23 +108,28 @@
     border-radius: 2px;
 
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 10px;
 
     font-family: "Nunito Sans", sans-serif;
 
     background: $tc-white;
-    color: #161616;
+    color: #0A0A0A;
     border: 1px solid #a8a8a8;
 }
 
 .htmlContent {
-    color: $black-80;
+    all: revert-layer;
+    color: $black-100;
     font-feature-settings: 'liga' off, 'clig' off;
     font-family: Roboto;
-    font-size: 14px;
-    line-height: 22px;
+    font-size: 16px;
+    line-height: 24px;
     overflow-wrap: anywhere;
+
+    * {
+        all: revert-layer;
+    }
 
     > :first-child {
         margin-top: 0;
@@ -157,7 +162,7 @@
     }
 
     a {
-        color: $turq-160;
+        color: $link-blue-dark;
         font-weight: 700;
         text-decoration: none;
 
@@ -175,6 +180,7 @@
         color: $black-100;
         margin: 0 0 16px;
         font-weight: 700;
+        text-transform: uppercase;
     }
 
     h1 {
@@ -188,8 +194,8 @@
     }
 
     h3 {
-        font-size: 20px;
-        line-height: 28px;
+        font-size: 18px;
+        line-height: 22px;
     }
 
     h4,
