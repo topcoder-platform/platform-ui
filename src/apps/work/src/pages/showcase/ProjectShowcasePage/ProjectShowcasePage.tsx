@@ -192,9 +192,9 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
         content: post?.content || '',
         industryIds: post?.industries.map(item => item.id) || [],
         media: post?.media?.map(item => ({
+            alt: item.alt,
             type: item.type,
             url: item.url,
-            alt: item.alt,
         })) || [],
         title: post?.title || '',
     }
@@ -707,9 +707,9 @@ export const ProjectShowcasePage: FC = () => {
                 })
                 await updatePostInCache(updatedPost)
                 setValue('media', (updatedPost.media ?? []).map(m => ({
+                    alt: m.alt,
                     type: m.type,
                     url: m.url,
-                    alt: m.alt,
                 })))
             } catch (err) {
                 showErrorToast(err instanceof Error ? err.message : 'Unable to save uploaded media.')
