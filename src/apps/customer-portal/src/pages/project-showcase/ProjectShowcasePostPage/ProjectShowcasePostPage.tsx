@@ -6,16 +6,17 @@ import { IconOutline, LinkButton, PageTitle } from '~/libs/ui'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 import {
-    buildProjectUrl,
     useFetchProjectShowcasePost,
     UseFetchProjectShowcasePostResult,
 } from '~/apps/work/src/lib'
+import { EnvironmentConfig } from '~/config'
 
 import { showcaseRootRoute } from '../project-showcase.routes'
 
 import { ShowcasePostMedia } from './ShowcasePostMedia'
 import { ShowcasePostChallengeList } from './ShowcasePostChallengeList'
 import styles from './ProjectShowcasePostPage.module.scss'
+import { projectsRouteId } from '~/apps/work/src/config/routes.config'
 
 const ProjectShowcasePostPage: FC = () => {
     const routeParams: Params<string> = useParams()
@@ -23,7 +24,7 @@ const ProjectShowcasePostPage: FC = () => {
         = useFetchProjectShowcasePost(routeParams.projectId, routeParams.postId)
     const industries = useMemo(() => post?.industries.map(ind => ind.name)
         .join(', '), [post?.industries])
-    const projectUrl = `${window.location.origin}${buildProjectUrl(routeParams.projectId as string)}`
+    const projectUrl = `${EnvironmentConfig.URLS.WORK_APP}/${projectsRouteId}/${encodeURIComponent(routeParams.projectId as string)}`
 
     const skills = useMemo(
         () => uniqBy(post?.challengeMetadata?.flatMap(entry => entry.skills), 'id') ?? [],
