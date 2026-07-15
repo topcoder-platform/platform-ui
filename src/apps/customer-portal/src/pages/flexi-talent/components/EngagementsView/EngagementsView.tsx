@@ -34,6 +34,7 @@ const ENGAGEMENTS_PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 300
 const DESCRIPTION_COLLAPSED_HEIGHT_PX = 126
 const DESCRIPTION_OVERFLOW_TOLERANCE_PX = 1
+const CURRENT_ASSIGNMENT_STATUSES = new Set(['assigned', 'selected'])
 
 type DetailState = 'loading' | 'empty' | 'error' | 'ready'
 
@@ -87,7 +88,18 @@ function formatStatusLabel(status?: string): string {
 }
 
 /**
- * Formats backend timing fields without hiding overdue or negative values.
+ * Detects whether an assignment row is still active in the engagement.
+ *
+ * @param status Raw assignment status returned by engagements-api-v6.
+ * @returns True when the row represents current assignment work that should show time-left metadata.
+ */
+function isCurrentAssignmentStatus(status?: string): boolean {
+    return CURRENT_ASSIGNMENT_STATUSES.has(String(status || '')
+        .toLowerCase())
+}
+
+/**
+ * Formats backend timing fields for current assignments without hiding overdue or negative values.
  *
  * @param assignment Assignment row returned by the detail endpoint.
  * @returns Human-readable timing text for the assignment row.
@@ -251,7 +263,9 @@ export const EngagementsView: FC = () => {
     }, [])
 
     /**
-     * Loads bucket counts once for the left rail, independent of list filters.
+     * Loads bucket counts for the left rail whenever the engagement list refreshes.
+     * The endpoint remains independent of list filters, but refreshing both data
+     * sources together keeps their displayed totals current and consistent.
      *
      * @returns A promise that resolves after summary state is updated.
      */
@@ -408,12 +422,9 @@ export const EngagementsView: FC = () => {
     useEffect(() => {
         fetchEngagementSummary()
             .catch(() => undefined)
-    }, [fetchEngagementSummary])
-
-    useEffect(() => {
         refreshEngagementList()
             .catch(() => undefined)
-    }, [refreshEngagementList])
+    }, [fetchEngagementSummary, refreshEngagementList])
 
     useEffect(() => () => {
         debouncedApplySearch.cancel()
@@ -518,6 +529,9 @@ export const EngagementsView: FC = () => {
     const selectedDetailTitle = selectedEngagementRow
         ? selectedEngagementRow.engagementTitle
         : 'Selected engagement'
+    const listTotalLabel = isListLoading ? '--' : String(listData.total)
+    const listPageLabel = isListLoading ? '--' : String(listData.page)
+    const listTotalPagesLabel = isListLoading ? '--' : String(listData.totalPages)
 
     return (
         <div className={styles.engagementGrid}>
@@ -549,7 +563,7 @@ export const EngagementsView: FC = () => {
                 </div>
 
                 <p className={styles.summaryNote}>
-                    Total includes On Hold engagements. Active is the default bucket.
+                    Total includes only Active and Closed engagements. Active is the default bucket.
                 </p>
             </aside>
 
@@ -623,14 +637,14 @@ export const EngagementsView: FC = () => {
 
                 <div className={styles.listMeta}>
                     <span>
-                        {listData.total}
+                        {listTotalLabel}
                         {' engagements'}
                     </span>
                     <span>
                         {'Page '}
-                        {listData.page}
+                        {listPageLabel}
                         {' of '}
-                        {listData.totalPages}
+                        {listTotalPagesLabel}
                     </span>
                 </div>
 
@@ -806,16 +820,18 @@ export const EngagementsView: FC = () => {
                                                 </span>
                                             </div>
                                             <dl className={styles.assignmentMeta}>
-                                                <div>
-                                                    <dt>Time Left</dt>
-                                                    <dd
-                                                        className={
-                                                            assignment.isOverdue ? styles.overdueText : undefined
-                                                        }
-                                                    >
-                                                        {formatTimeLeft(assignment)}
-                                                    </dd>
-                                                </div>
+                                                {isCurrentAssignmentStatus(assignment.status) && (
+                                                    <div>
+                                                        <dt>Time Left</dt>
+                                                        <dd
+                                                            className={
+                                                                assignment.isOverdue ? styles.overdueText : undefined
+                                                            }
+                                                        >
+                                                            {formatTimeLeft(assignment)}
+                                                        </dd>
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <dt>Duration</dt>
                                                     <dd>{assignment.durationLabel || 'Not set'}</dd>

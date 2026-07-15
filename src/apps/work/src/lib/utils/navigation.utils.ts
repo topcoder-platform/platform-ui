@@ -113,7 +113,10 @@ export function buildProjectChallengesPath(projectId: string | number): string {
  * @param accessToken The current user's access token used to match invite ownership.
  * @returns The relative route for the project landing page.
  */
-export function buildProjectLandingPath(project: Project, accessToken: string = ''): string {
+export function buildProjectLandingPath(
+    project: Pick<Project, 'id'|'isInvited'|'invites'>,
+    accessToken: string = '',
+): string {
     const projectId = encodeURIComponent(String(project.id))
     const invite = checkIsUserInvitedToProject(accessToken, project)
     const normalizedInviteStatus = invite?.status

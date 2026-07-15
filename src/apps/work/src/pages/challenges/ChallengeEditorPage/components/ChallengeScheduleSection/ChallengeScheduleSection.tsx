@@ -122,6 +122,48 @@ function getLatestDate(dates: Array<Date | undefined>): Date | undefined {
 }
 
 /**
+ * Returns the earliest valid date from a candidate list.
+ *
+ * @param dates candidate date values.
+ * @returns the earliest date, or `undefined` when no valid date is provided.
+ */
+function getEarliestDate(dates: Array<Date | undefined>): Date | undefined {
+    return dates.reduce<Date | undefined>((earliestDate, date) => {
+        if (!date) {
+            return earliestDate
+        }
+
+        if (!earliestDate || date.getTime() < earliestDate.getTime()) {
+            return date
+        }
+
+        return earliestDate
+    }, undefined)
+}
+
+/**
+ * Returns the earliest valid scheduled phase start from the current schedule.
+ *
+ * @param phases phase rows currently stored in the challenge form.
+ * @returns earliest scheduled phase start date, or `undefined` when none exist.
+ */
+function getEarliestPhaseStartDate(phases: ChallengePhase[]): Date | undefined {
+    return phases.reduce<Date | undefined>((earliestDate, phase) => {
+        const phaseStartDate = toDate(phase.scheduledStartDate)
+
+        if (!phaseStartDate) {
+            return earliestDate
+        }
+
+        if (!earliestDate || phaseStartDate.getTime() < earliestDate.getTime()) {
+            return phaseStartDate
+        }
+
+        return earliestDate
+    }, undefined)
+}
+
+/**
  * Resolves the minimum allowed phase end date for schedule edits.
  *
  * @param phase phase currently being edited.
@@ -141,8 +183,10 @@ function getMinimumPhaseEndDate(
     isActiveChallenge: boolean,
 ): Date | undefined {
     if ((phase.isOpen || isActiveChallenge) && !phase.actualEndDate) {
-        const currentEndDate = toDate(persistedScheduledEndDate)
-            || toDate(phase.scheduledEndDate)
+        const currentEndDate = getEarliestDate([
+            toDate(persistedScheduledEndDate),
+            toDate(phase.scheduledEndDate),
+        ])
 
         return getLatestDate(
             isDesignTrackChallenge
@@ -337,12 +381,18 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     useEffect(() => {
         phases.forEach((phase, index) => {
             const phaseKey = getPhaseKey(phase, index)
-            if (initialPhaseEndDatesRef.current.has(phaseKey)) {
-                return
-            }
-
             const scheduledEndDate = toDate(phase.scheduledEndDate)
-            if (scheduledEndDate) {
+            const initialScheduledEndDate = toDate(
+                initialPhaseEndDatesRef.current.get(phaseKey),
+            )
+
+            if (
+                scheduledEndDate
+                && (
+                    !initialScheduledEndDate
+                    || scheduledEndDate.getTime() < initialScheduledEndDate.getTime()
+                )
+            ) {
                 initialPhaseEndDatesRef.current.set(phaseKey, scheduledEndDate.toISOString())
             }
         })
@@ -438,7 +488,46 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             return
         }
 
-        const recalculationResult = recalculatePhases(phases, startDate, {
+        const parsedStartDate = toDate(startDate)
+        const earliestPhaseStartDate = getEarliestPhaseStartDate(phases)
+        const seededStartDate = parsedStartDate
+            || earliestPhaseStartDate
+            || minScheduleDate
+        const recalculationStartDate = parsedStartDate
+            || (
+                earliestPhaseStartDate
+                    ? undefined
+                    : seededStartDate
+            )
+        const persistedStartDateMode = getMetadataValue(
+            metadata,
+            START_DATE_MODE_METADATA_NAME,
+        )
+
+        if (!parsedStartDate) {
+            lastInternalStartDateValueRef.current = seededStartDate.getTime()
+            setValue('startDate', seededStartDate, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+
+            if (persistedStartDateMode !== startDateMode) {
+                setValue(
+                    'metadata',
+                    setMetadataValue(
+                        metadata,
+                        START_DATE_MODE_METADATA_NAME,
+                        startDateMode,
+                    ),
+                    {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    },
+                )
+            }
+        }
+
+        const recalculationResult = recalculatePhases(phases, recalculationStartDate, {
             phaseStartOverrides: phaseStartOverridesRef.current,
         })
         const error = recalculationResult.error
@@ -452,7 +541,14 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         setCalculationError(error)
 
         initializedRef.current = true
-    }, [phases, setValue, startDate])
+    }, [
+        metadata,
+        minScheduleDate,
+        phases,
+        setValue,
+        startDate,
+        startDateMode,
+    ])
 
     const handleStartDateChange = useCallback(
         (
@@ -709,6 +805,14 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 return
             }
 
+            if (!toDate(startDate)) {
+                handleStartDateChange(
+                    new Date(),
+                    START_DATE_MODE.SCHEDULED,
+                )
+                return
+            }
+
             setStartDateMode(START_DATE_MODE.SCHEDULED)
             setValue(
                 'metadata',
@@ -723,7 +827,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 },
             )
         },
-        [handleStartDateChange, metadata, setValue],
+        [handleStartDateChange, metadata, setValue, startDate],
     )
     const handleSetScheduledStartDateMode = useCallback(
         (): void => {

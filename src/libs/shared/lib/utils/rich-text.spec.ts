@@ -34,4 +34,20 @@ describe('rich-text utils', () => {
         expect(plainText)
             .toContain('- Second')
     })
+
+    it('renders links with target blank and noopener noreferrer rel', () => {
+        const rendered = renderRichTextToHtml('[Visit example](https://example.com)')
+
+        expect(rendered)
+            .toContain('target="_blank"')
+        expect(rendered)
+            .toContain('rel="noopener noreferrer"')
+    })
+
+    it('supports markdown strikethrough markup', () => {
+        const rendered = renderRichTextToHtml('~~deleted~~')
+
+        expect(rendered)
+            .toContain('<del>deleted</del>')
+    })
 })

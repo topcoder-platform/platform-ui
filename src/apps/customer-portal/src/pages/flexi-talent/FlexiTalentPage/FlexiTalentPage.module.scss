@@ -18,6 +18,22 @@
     display: none;
 }
 
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    .titleText {
+        color: $black-100;
+        font-family: Inter, sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 36px;
+        text-transform: none;
+    }
+}
+
 .subtitle {
     color: $black-80;
     font-size: 15px;

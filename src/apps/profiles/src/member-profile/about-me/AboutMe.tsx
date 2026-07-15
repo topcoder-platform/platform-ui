@@ -1,4 +1,14 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
@@ -11,7 +21,7 @@ import { canSeePhones, getFirstProfileSelfTitle } from '../../lib/helpers'
 import { CommunityAwards } from '../community-awards'
 import { Phones } from '../phones'
 
-import { getTruncatedBio, TruncatedBio } from './AboutMe.utils'
+import { isBioOverflowing } from './AboutMe.utils'
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
 import MemberRatingCard from './MemberRatingCard/MemberRatingCard'
 import styles from './AboutMe.module.scss'
@@ -40,13 +50,11 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
         [memberPersonalizationTraits],
     )
 
-    const truncatedBio: TruncatedBio = useMemo(
-        () => getTruncatedBio(props.profile.description),
-        [props.profile.description],
-    )
-
     const [isBioExpanded, setIsBioExpanded]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
+    const [isBioTruncated, setIsBioTruncated]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+    const bioRef = useRef<HTMLParagraphElement>(null)
 
     const hasEmptyDescription = useMemo(() => (
         props.profile && !props.profile.description
@@ -62,6 +70,41 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
     useEffect(() => {
         setIsBioExpanded(false)
     }, [props.profile.description])
+
+    /**
+     * Re-evaluates whether the collapsed bio has content hidden by its line clamp.
+     * Used after rendering and whenever the bio element is resized.
+     *
+     * @returns {void} Updates the bio truncation state when the collapsed element is available.
+     * @throws This callback does not raise exceptions.
+     */
+    const updateBioTruncation = useCallback((): void => {
+        if (!bioRef.current || isBioExpanded) {
+            return
+        }
+
+        setIsBioTruncated(isBioOverflowing(bioRef.current))
+    }, [isBioExpanded])
+
+    useLayoutEffect(() => {
+        updateBioTruncation()
+
+        if (!bioRef.current || isBioExpanded) {
+            return undefined
+        }
+
+        const resizeObserver = typeof ResizeObserver === 'undefined'
+            ? undefined
+            : new ResizeObserver(updateBioTruncation)
+
+        resizeObserver?.observe(bioRef.current)
+        window.addEventListener('resize', updateBioTruncation)
+
+        return () => {
+            resizeObserver?.disconnect()
+            window.removeEventListener('resize', updateBioTruncation)
+        }
+    }, [isBioExpanded, props.profile.description, updateBioTruncation])
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
@@ -134,8 +177,13 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             )}
             {!hasEmptyDescription && (
                 <div className={styles.bioWrap}>
-                    <p>{isBioExpanded ? props.profile.description : truncatedBio.text}</p>
-                    {truncatedBio.isTruncated && (
+                    <p
+                        className={classNames(!isBioExpanded && styles.bioCollapsed)}
+                        ref={bioRef}
+                    >
+                        {props.profile.description}
+                    </p>
+                    {isBioTruncated && (
                         <button
                             className={styles.bioToggle}
                             onClick={handleBioToggleClick}

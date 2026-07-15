@@ -13,10 +13,6 @@
 }
 
 .externalLabelDatePicker {
-    :global(.input-el > label > div:first-child) {
-        display: none;
-    }
-
     :global(.input-el) {
         align-items: center;
         border-color: $black-20;

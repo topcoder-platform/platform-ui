@@ -25,6 +25,10 @@
     }
 }
 
+.bioCollapsed {
+    @include text-clamp(5);
+}
+
 .bioToggle {
     appearance: none;
     background: transparent;

@@ -1,0 +1,118 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background-color: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: $sp-6;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: $black-100;
+}
+
+.tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .tag {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px $sp-1;
+        border-radius: 2px;
+
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 10px;
+
+        background: $tc-white;
+        color: #0A0A0A;
+        border: 1px solid #a8a8a8;
+
+        font-family: "Nunito Sans", sans-serif;
+
+        // &:global(.development) {
+        //     color: #35AC35;
+        //     background: #D8FDD8;
+        // }
+        // &:global(.qa), &:global(.quality_assurance) {
+        //     color: $red-120;
+        //     background: $red-25;
+        // }
+        // &:global(.design) {
+        //     color: $blue-120;
+        //     background: $blue-15;
+        // }
+        // &:global(.data_science) {
+        //     background-color: #FFE3CF;
+        //     color: #F46500;
+        // }
+    }
+}
+
+.title {
+    color: $black-100;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 28px; /* 127.273% */
+    text-transform: none;
+
+    // display: -webkit-box;
+    // -webkit-line-clamp: 3;
+    // -webkit-box-orient: vertical;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // height: 100%;
+    // max-height: calc(28px * 2);
+}
+
+.button {
+    margin-top: auto;
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.taxonomy {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+
+    .industryIcon {
+        color: $turq-160;
+    }
+}
+
+.content {
+    font-feature-settings: 'liga' off, 'clig' off;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 100%;
+    max-height: calc(22px * 3);
+
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px; /* 157.143% */
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  color: #6b7280;
+  font-size: 0.9rem;
+}

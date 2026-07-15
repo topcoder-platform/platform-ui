@@ -14,6 +14,7 @@ import type {
     FetchProjectShowcasePostsResponse,
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
+    ProjectShowcasePostDetails,
     ProjectShowcasePostIndustry,
     ProjectShowcasePostMedia,
     ProjectShowcasePostTaxonomyItem,
@@ -48,6 +49,24 @@ function buildProjectShowcasePostsSortValue(
     return `${normalizedSortBy} ${safeSortOrder}`
 }
 
+function appendArrayQueryParam(query: URLSearchParams, name: string, value: string | undefined): void {
+    if (!value) {
+        return
+    }
+
+    const normalized = value.trim()
+    if (!normalized) {
+        return
+    }
+
+    const values = normalized
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
+
+    values.forEach(item => query.append(name, item))
+}
+
 function buildProjectShowcasePostsUrl(
     params: FetchProjectShowcasePostsParams,
 ): string {
@@ -66,13 +85,8 @@ function buildProjectShowcasePostsUrl(
         query.set('status', params.status.trim())
     }
 
-    if (params.industryId?.trim()) {
-        query.set('industryId', params.industryId.trim())
-    }
-
-    if (params.categoryId?.trim()) {
-        query.set('categoryId', params.categoryId.trim())
-    }
+    appendArrayQueryParam(query, 'industryId', params.industryId)
+    appendArrayQueryParam(query, 'categoryId', params.categoryId)
 
     if (params.sortBy?.trim() && params.sortOrder) {
         query.set(
@@ -81,7 +95,11 @@ function buildProjectShowcasePostsUrl(
         )
     }
 
-    return `${PROJECTS_API_URL}/${encodeURIComponent(params.projectId)}/posts?${query.toString()}`
+    const urlBase = params.projectId?.trim()
+        ? `${PROJECTS_API_URL}/${encodeURIComponent(params.projectId)}/posts`
+        : `${PROJECTS_API_URL}/posts`
+
+    return `${urlBase}?${query.toString()}`
 }
 
 export async function fetchProjectShowcasePosts(
@@ -99,6 +117,7 @@ export async function fetchProjectShowcasePosts(
                     name: String(category.name || ''),
                 }))
                 : [],
+            content: String(post.content || ''),
             createdAt: String(post.createdAt || ''),
             createdByHandle: post.createdByHandle !== undefined && post.createdByHandle !== null
                 ? String(post.createdByHandle)
@@ -119,6 +138,7 @@ export async function fetchProjectShowcasePosts(
                 }))
                     .filter((item: any) => item.url)
                 : [],
+            projectId: String(post.projectId || ''),
             status: String(post.status || ''),
             title: String(post.title || ''),
         }))
@@ -196,6 +216,7 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .map(item => {
             const url = normalizeStringOrUndefined(item.url)
             return {
+                alt: normalizeStringOrUndefined(item.alt),
                 id: normalizeString(item.id),
                 type: normalizeString(item.type),
                 url: url || '',
@@ -204,7 +225,7 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .filter(item => item.url)
 }
 
-function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | undefined {
+function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePostDetails | undefined {
     if (typeof value !== 'object' || value === null) {
         return undefined
     }
@@ -216,6 +237,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
         challengeIds: Array.isArray(post.challengeIds)
             ? post.challengeIds.map((item: any) => String(item))
             : [],
+        challengeMetadata: (post.challengeMetadata || []) as ProjectShowcasePostDetails['challengeMetadata'],
         content: normalizeStringOrUndefined(post.content),
         createdAt: normalizeString(post.createdAt),
         createdByHandle: normalizeStringOrUndefined(post.createdByHandle),
@@ -224,6 +246,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
         industries: normalizeTaxonomyArray(post.industries),
         media: normalizeProjectShowcasePostMediaArray(post.media),
         projectId: normalizeStringOrUndefined(post.projectId),
+        projectTitle: String(post.projectTitle || ''),
         status: normalizeString(post.status),
         title: normalizeString(post.title),
     }
@@ -232,7 +255,7 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePost | und
 export async function fetchProjectShowcasePost(
     projectId: string,
     postId: string,
-): Promise<ProjectShowcasePost> {
+): Promise<ProjectShowcasePostDetails> {
     try {
         const response = await xhrGetAsync<unknown>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/posts/${encodeURIComponent(postId)}`,
@@ -286,7 +309,7 @@ export async function updateProjectShowcasePost(
         industryIds?: string[]
         categoryIds?: string[]
         challengeIds?: string[]
-        media?: Array<{ type: string; url: string }>
+        media?: Array<{ type: string; url: string; alt?: string }>
         status?: string
     },
 ): Promise<ProjectShowcasePost> {

@@ -181,6 +181,7 @@ interface ProjectShowcasePostFormData {
     media: Array<{
         type: string
         url: string
+        alt?: string
     }>
 }
 
@@ -191,6 +192,7 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
         content: post?.content || '',
         industryIds: post?.industries.map(item => item.id) || [],
         media: post?.media?.map(item => ({
+            alt: item.alt,
             type: item.type,
             url: item.url,
         })) || [],
@@ -693,7 +695,7 @@ export const ProjectShowcasePage: FC = () => {
     )
 
     const saveUploadedMedia = useCallback(
-        async (updatedMedia: Array<{ type: string; url: string }>) => {
+        async (updatedMedia: Array<{ type: string; url: string; alt?: string }>) => {
             if (!projectId || !selectedPostId) {
                 return
             }
@@ -705,6 +707,7 @@ export const ProjectShowcasePage: FC = () => {
                 })
                 await updatePostInCache(updatedPost)
                 setValue('media', (updatedPost.media ?? []).map(m => ({
+                    alt: m.alt,
                     type: m.type,
                     url: m.url,
                 })))
@@ -741,7 +744,7 @@ export const ProjectShowcasePage: FC = () => {
             return
         }
 
-        const uploadedMedia: Array<{ type: string; url: string }> = []
+        const uploadedMedia: Array<{ type: string; url: string; alt?: string }> = []
         const mediaStorePath = `project-showcase/${projectId}/`
 
         const pickerOptions: PickerOptions = {
@@ -784,9 +787,15 @@ export const ProjectShowcasePage: FC = () => {
                     return
                 }
 
+                const altText
+                    = typeof file.alt === 'string' && file.alt.trim()
+                        ? file.alt.trim()
+                        : undefined
+
                 uploadedMedia.push({
                     type: String(file.mimetype || 'application/octet-stream'),
                     url: mediaUrl,
+                    ...(altText ? { alt: altText } : {}),
                 })
             },
             storeTo: {

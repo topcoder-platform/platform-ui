@@ -146,8 +146,6 @@ export const ProjectInvitationsPage: FC = () => {
         (): ProjectInvite | undefined => invitationById
             || checkIsUserInvitedToProject(accessToken, project || {
                 id: projectId,
-                name: '',
-                status: 'active',
             }),
         [accessToken, invitationById, project, projectId],
     )

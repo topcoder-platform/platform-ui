@@ -23,6 +23,7 @@ const RICH_TEXT_ALLOWED_TAGS = [
     'blockquote',
     'br',
     'code',
+    'del',
     'div',
     'em',
     'h1',
@@ -72,6 +73,34 @@ export function sanitizeRichTextSource(value: string): string {
     return String(DOMPurify.sanitize(normalizedValue, RICH_TEXT_SANITIZE_OPTIONS as any))
 }
 
+function enforceLinkTargetBlank(html: string): string {
+    return html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+        let updatedAttrs = attrs
+
+        if (/target\s*=\s*/i.test(updatedAttrs)) {
+            updatedAttrs = updatedAttrs.replace(/target\s*=\s*(['"]?)[^'"\s>]*\1/i, 'target="_blank"')
+        } else {
+            updatedAttrs += ' target="_blank"'
+        }
+
+        if (/rel\s*=\s*/i.test(updatedAttrs)) {
+            updatedAttrs = updatedAttrs
+                .replace(/rel\s*=\s*(['"])(.*?)\1/i, (_match: string, quote: string, value: string) => {
+                    const relValues = value.split(/\s+/)
+                        .filter(Boolean)
+                    const required = ['noopener', 'noreferrer']
+                    const finalRel = Array.from(new Set([...relValues, ...required]))
+                        .join(' ')
+                    return `rel=${quote}${finalRel}${quote}`
+                })
+        } else {
+            updatedAttrs += ' rel="noopener noreferrer"'
+        }
+
+        return `<a${updatedAttrs}>`
+    })
+}
+
 /**
  * Converts markdown or HTML content into sanitized HTML suitable for rich text editors and
  * rendered detail views.
@@ -91,7 +120,9 @@ export function renderRichTextToHtml(value: string): string {
         gfm: true,
     }) as string
 
-    return String(DOMPurify.sanitize(renderedHtml, RICH_TEXT_SANITIZE_OPTIONS as any))
+    const sanitizedRenderedHtml = String(DOMPurify.sanitize(renderedHtml, RICH_TEXT_SANITIZE_OPTIONS as any))
+
+    return enforceLinkTargetBlank(sanitizedRenderedHtml)
         .trim()
 }
 

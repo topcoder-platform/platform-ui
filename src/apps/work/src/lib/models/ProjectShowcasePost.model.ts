@@ -11,6 +11,21 @@ export interface ProjectShowcasePostMedia {
     id: string
     type: string
     url: string
+    alt?: string
+}
+
+export interface ProjectShowcasePostChallengeMetadataSkill {
+    id: string
+    name: string
+}
+
+export interface ProjectShowcasePostChallengeMetadataItem {
+    challengeId: string
+    numOfSubmissions: number
+    numOfRegistrants: number
+    skills: ProjectShowcasePostChallengeMetadataSkill[]
+    track: string
+    countries: string[]
 }
 
 export interface ProjectShowcasePost {
@@ -23,9 +38,16 @@ export interface ProjectShowcasePost {
     createdAt: string
     createdById: number
     createdByHandle?: string
+    publishedAt?: number
+    publishedBy?: string
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]
     media?: ProjectShowcasePostMedia[]
+}
+
+export interface ProjectShowcasePostDetails extends ProjectShowcasePost {
+    projectTitle: string
+    challengeMetadata: ProjectShowcasePostChallengeMetadataItem[]
 }
 
 export interface ProjectShowcasePostFilters {
@@ -36,7 +58,7 @@ export interface ProjectShowcasePostFilters {
 }
 
 export interface FetchProjectShowcasePostsParams extends ProjectShowcasePostFilters {
-    projectId: string
+    projectId?: string
     page?: number
     perPage?: number
     sortBy?: string
