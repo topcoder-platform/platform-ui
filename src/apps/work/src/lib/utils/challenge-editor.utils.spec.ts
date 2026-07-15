@@ -293,6 +293,75 @@ describe('challenge-editor utils schedule mapping', () => {
                 scheduledStartDate: '2026-04-09T15:05:00.000Z',
             }])
     })
+
+    it('persists a legacy non-task schedule when its saved scheduling flag is false', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            legacy: {
+                isTask: false,
+                useSchedulingAPI: false,
+            },
+            name: 'Legacy scheduled challenge',
+            phases: [{
+                duration: 7200,
+                id: 'challenge-phase-1',
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-07-25T04:21:00.737Z',
+                scheduledStartDate: '2026-07-20T04:21:00.737Z',
+            }],
+            skills: [],
+            startDate: '2026-07-20T04:21:00.737Z',
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.legacy?.useSchedulingAPI)
+            .toBe(true)
+        expect(result.startDate)
+            .toBe('2026-07-20T04:21:00.737Z')
+        expect(result.phases)
+            .toEqual([expect.objectContaining({
+                id: 'challenge-phase-1',
+                scheduledEndDate: '2026-07-25T04:21:00.737Z',
+                scheduledStartDate: '2026-07-20T04:21:00.737Z',
+            })])
+    })
+
+    it('does not enable scheduling for a task with a legacy disabled flag', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Task specification',
+            legacy: {
+                isTask: true,
+                useSchedulingAPI: false,
+            },
+            name: 'Legacy task',
+            phases: [{
+                duration: 60,
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-07-20T05:21:00.737Z',
+                scheduledStartDate: '2026-07-20T04:21:00.737Z',
+            }],
+            skills: [],
+            startDate: '2026-07-20T04:21:00.737Z',
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'task-type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.legacy?.useSchedulingAPI)
+            .toBe(false)
+        expect(result)
+            .not
+            .toHaveProperty('startDate')
+        expect(result)
+            .not
+            .toHaveProperty('phases')
+    })
 })
 
 describe('challenge-editor utils task reviewer mapping', () => {
