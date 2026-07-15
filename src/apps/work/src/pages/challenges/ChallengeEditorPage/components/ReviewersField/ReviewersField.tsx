@@ -22,11 +22,7 @@ import {
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
-import {
-    fetchAiReviewConfigByChallenge,
-    fetchChallenge,
-    patchChallenge,
-} from '../../../../../lib/services'
+import * as services from '../../../../../lib/services'
 
 import {
     isAiReviewer,
@@ -34,10 +30,12 @@ import {
 } from './reviewers-field.utils'
 import AiReviewTab, { AiReviewConfigSaveController } from './AiReviewTab'
 import HumanReviewTab from './HumanReviewTab'
+import { ReviewContextTab } from './ReviewContextTab'
 import ReviewConfigurationSummary from './ReviewConfigurationSummary'
 import styles from './ReviewersField.module.scss'
 
-type ReviewTab = 'ai' | 'human'
+const REVIEW_TAB = ['ai', 'human', 'context'] as const
+type ReviewTab = typeof REVIEW_TAB[number]
 
 interface ReviewersFieldProps {
     isReadOnly?: boolean
@@ -62,6 +60,11 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
+    const contextTabRef = useRef<HTMLDivElement>(null)
+
+    const fetchAiReviewConfigByChallenge = services.fetchAiReviewConfigByChallenge ?? (async () => undefined)
+    const patchChallenge = services.patchChallenge ?? (async () => undefined)
+    const fetchChallenge = services.fetchChallenge ?? (async () => ({} as any))
 
     const reviewers = useWatch({
         control: formContext.control,
@@ -180,30 +183,43 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
 
         if (tab === 'human') {
             humanTabRef.current?.focus()
-
             return
         }
 
-        aiTabRef.current?.focus()
+        if (tab === 'ai') {
+            aiTabRef.current?.focus()
+            return
+        }
+
+        contextTabRef.current?.focus()
     }, [handleTabChange])
     const getTabKeyDownHandler = useCallback(
         (tab: ReviewTab) => (event: KeyboardEvent<HTMLDivElement>): void => {
-            const tabToFocusByKey: Partial<Record<string, ReviewTab>> = {
-                ArrowLeft: tab === 'ai'
-                    ? 'human'
-                    : 'ai',
-                ArrowRight: tab === 'human'
-                    ? 'ai'
-                    : 'human',
-                End: 'ai',
-                Home: 'human',
-            }
-            const nextTab = tabToFocusByKey[event.key]
+            const tabOrder: ReviewTab[] = ['human', 'ai', 'context']
+            const currentIndex = tabOrder.indexOf(tab)
+            const nextTab = (() => {
+                if (event.key === 'ArrowLeft') {
+                    return tabOrder[(currentIndex + tabOrder.length - 1) % tabOrder.length]
+                }
+
+                if (event.key === 'ArrowRight') {
+                    return tabOrder[(currentIndex + 1) % tabOrder.length]
+                }
+
+                if (event.key === 'Home') {
+                    return tabOrder[0]
+                }
+
+                if (event.key === 'End') {
+                    return tabOrder[tabOrder.length - 1]
+                }
+
+                return undefined
+            })()
 
             if (nextTab) {
                 event.preventDefault()
                 focusTab(nextTab)
-
                 return
             }
 
@@ -346,6 +362,26 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                             >
                                 {aiReviewLabel}
                             </div>
+                            <div
+                                aria-controls='reviewers-context-panel'
+                                aria-selected={activeTab === 'context'}
+                                className={classNames(
+                                    styles.tabButton,
+                                    activeTab === 'context'
+                                        ? styles.activeTab
+                                        : undefined,
+                                )}
+                                id='reviewers-context-tab'
+                                onClick={function onClick() {
+                                    handleTabChange('context')
+                                }}
+                                onKeyDown={getTabKeyDownHandler('context')}
+                                ref={contextTabRef}
+                                role='tab'
+                                tabIndex={activeTab === 'context' ? 0 : -1}
+                            >
+                                Review Context
+                            </div>
                         </div>
 
                         <fieldset className={styles.tabPanels}>
@@ -392,6 +428,24 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                     reviewers={reviewerRows}
                                     trackId={trackId}
                                     typeId={typeId}
+                                />
+                            </div>
+                            <div
+                                aria-labelledby='reviewers-context-tab'
+                                className={classNames(
+                                    styles.tabPanel,
+                                    activeTab !== 'context'
+                                        ? styles.tabPanelHidden
+                                        : undefined,
+                                )}
+                                hidden={activeTab !== 'context'}
+                                id='reviewers-context-panel'
+                                role='tabpanel'
+                            >
+                                <ReviewContextTab
+                                    challengeId={challengeId}
+                                    challengeName={formContext.getValues('name')}
+                                    challengeDescription={formContext.getValues('description')}
                                 />
                             </div>
                         </fieldset>

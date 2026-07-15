@@ -145,6 +145,10 @@ export const TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID = process.env.REACT_APP_TC_AI_S
     || process.env.TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID
     || 'skillExtractionWorkflow'
 
+export const TC_AI_CONTEXT_WORKFLOW_ID = process.env.REACT_APP_TC_AI_CONTEXT_WORKFLOW_ID
+    || process.env.TC_AI_CONTEXT_WORKFLOW_ID
+    || 'challengeContextWorkflow'
+
 export const TC_AI_AUTOWRITE_WORKFLOW_ID = process.env.REACT_APP_TC_AI_AUTOWRITE_WORKFLOW_ID
     || process.env.TC_AI_AUTOWRITE_WORKFLOW_ID
     || 'jdAutowriteWorkflow'

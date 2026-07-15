@@ -10,11 +10,19 @@ import {
 } from 'react-hook-form'
 
 import {
+    Challenge,
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
-import { patchChallenge } from '../../../../../lib/services'
 
+jest.mock('../../../../../lib/services', () => ({
+    __esModule: true,
+    patchChallenge: jest.fn(),
+    fetchAiReviewConfigByChallenge: jest.fn().mockResolvedValue(undefined),
+    fetchChallenge: jest.fn().mockResolvedValue({ reviewers: [] }),
+}))
+
+import * as services from '../../../../../lib/services'
 import { ReviewersField } from './ReviewersField'
 
 jest.mock('./HumanReviewTab', () => ({
@@ -72,11 +80,14 @@ jest.mock('./ReviewConfigurationSummary', () => ({
     __esModule: true,
     default: () => <div data-testid='review-summary'>Review summary</div>,
 }))
-jest.mock('../../../../../lib/services', () => ({
-    patchChallenge: jest.fn(),
+jest.mock('./ReviewContextTab', () => ({
+    __esModule: true,
+    default: () => <div data-testid='review-context-tab'>Review context content</div>,
 }))
 
-const mockedPatchChallenge = patchChallenge as jest.Mock
+const mockedFetchAiReviewConfigByChallenge = jest.spyOn(services, 'fetchAiReviewConfigByChallenge').mockResolvedValue(undefined)
+const mockedFetchChallenge = jest.spyOn(services, 'fetchChallenge').mockResolvedValue({ reviewers: [] } as any)
+const mockedPatchChallenge = jest.spyOn(services, 'patchChallenge').mockResolvedValue({} as any)
 
 interface TestHarnessProps {
     isReadOnly?: boolean
@@ -107,7 +118,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 describe('ReviewersField', () => {
     beforeEach(() => {
         jest.clearAllMocks()
-        mockedPatchChallenge.mockResolvedValue({})
+        mockedPatchChallenge.mockResolvedValue({} as Challenge)
     })
 
     it('uses tab labels with reviewer counts and toggles between human and AI content', async () => {
@@ -270,7 +281,7 @@ describe('ReviewersField', () => {
         await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
 
         expect(screen.getByText(
-            'Manual review configuration is required when AI Review mode is AI GATING.',
+            'Manual review configuration is required.',
         ))
             .toBeInTheDocument()
     })
