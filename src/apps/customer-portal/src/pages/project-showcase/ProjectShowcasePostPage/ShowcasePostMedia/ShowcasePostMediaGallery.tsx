@@ -230,6 +230,7 @@ const ShowcasePostMediaGallery: FC<ShowcasePostMediaGalleryProps> = props => {
                                     key={thumbAsset.id}
                                     className={classNames(styles.mediaItem, currentIndex === index && styles.active)}
                                     onClick={function setCurrent() { setCurrentIndex(index) }}
+                                    title={thumbAsset.alt}
                                 >
                                     {isImage && (
                                         <img

@@ -210,6 +210,7 @@ export const URLS = {
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
     USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
+    WORK_APP: `https://work.${TC_DOMAIN}`,
 }
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>(

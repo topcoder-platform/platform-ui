@@ -108,23 +108,28 @@
     border-radius: 2px;
 
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 10px;
 
     font-family: "Nunito Sans", sans-serif;
 
     background: $tc-white;
-    color: #161616;
+    color: #0A0A0A;
     border: 1px solid #a8a8a8;
 }
 
 .htmlContent {
-    color: $black-80;
+    all: revert-layer;
+    color: $black-100;
     font-feature-settings: 'liga' off, 'clig' off;
     font-family: Roboto;
-    font-size: 14px;
-    line-height: 22px;
+    font-size: 16px;
+    line-height: 24px;
     overflow-wrap: anywhere;
+
+    * {
+        all: revert-layer;
+    }
 
     > :first-child {
         margin-top: 0;
@@ -157,12 +162,33 @@
     }
 
     a {
-        color: $turq-160;
+        color: $link-blue-dark;
         font-weight: 700;
         text-decoration: none;
 
         &:hover {
             text-decoration: underline;
+        }
+
+        &[target] {
+            &::after {
+                content: "";
+                -webkit-mask-size: "cover";
+                mask-size: "cover";
+                -webkit-mask-image: url(../../../lib/assets/external-link.svg);
+                mask-image: url(../../../lib/assets/external-link.svg);
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+                -webkit-mask-position: center;
+                mask-position: center;
+                -webkit-mask-size: 12px 12px;
+                mask-size: 12px 12px;
+                width: 12px;
+                height: 12px;
+                display: inline-block;
+                background-color: currentColor;
+                margin-left: $sp-1;
+            }
         }
     }
 
@@ -174,7 +200,9 @@
     h6 {
         color: $black-100;
         margin: 0 0 16px;
-        font-weight: 700;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-family: $font-barlow;
     }
 
     h1 {
@@ -188,8 +216,8 @@
     }
 
     h3 {
-        font-size: 20px;
-        line-height: 28px;
+        font-size: 18px;
+        line-height: 22px;
     }
 
     h4,
