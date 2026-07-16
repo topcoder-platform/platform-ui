@@ -224,6 +224,10 @@ export const TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const NDA_TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
+export const DEFAULT_NDA_UUID = getReactEnv<string>(
+    'DEFAULT_NDA_UUID',
+    'e5811a7b-43d1-407a-a064-69e5015b4900',
+)
 export const DEFAULT_STANDARD_TERMS_UUID = '0a507fb7-3fe0-402b-b121-1a24af4a9cf1'
 export const NDA_DOCUSIGN_TEMPLATE_ID = '400b989d-1c75-4889-b6f6-421e1f924709'
 
