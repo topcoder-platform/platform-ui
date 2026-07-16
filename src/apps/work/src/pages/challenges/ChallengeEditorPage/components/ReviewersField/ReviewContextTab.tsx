@@ -231,6 +231,7 @@ export const ReviewContextTab: FC<ReviewContextTabProps> = (
         try {
             const generatedContext = await generateChallengeReviewContext(
                 challengeId || '',
+                challengeName || '',
                 challengeDescription || '',
             )
 

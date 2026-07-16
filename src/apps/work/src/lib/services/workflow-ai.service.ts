@@ -305,10 +305,11 @@ function buildContextWorkflowInput(
 
 export async function generateChallengeReviewContext(
     challengeId: string,
+    challengeName: string,
     challengeDescription: string,
     workflowId?: string,
 ): Promise<Record<string, unknown>> {
-    const normalizedChallengeName = ''
+    const normalizedChallengeName = challengeName.trim()
     const normalizedChallengeDescription = challengeDescription.trim()
     const inputText = buildContextWorkflowInput(normalizedChallengeName, normalizedChallengeDescription)
     const normalizedWorkflowId = String(
