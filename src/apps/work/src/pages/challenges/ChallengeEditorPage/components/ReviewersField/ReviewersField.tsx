@@ -58,6 +58,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
     const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>()
     const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
+    const [reviewContextRequirementCount, setReviewContextRequirementCount] = useState<number | undefined>(undefined)
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
     const contextTabRef = useRef<HTMLDivElement>(null)
@@ -149,6 +150,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     )
     const humanReviewLabel = `Human Review (${humanReviewersCount})`
     const aiReviewLabel = `AI Review (${aiReviewersCount})`
+    const reviewContextLabel = reviewContextRequirementCount
+        ? `Review Context (${reviewContextRequirementCount})`
+        : 'Review Context'
     const aiGatingManualReviewError = useMemo(
         () => (aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
@@ -380,7 +384,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 role='tab'
                                 tabIndex={activeTab === 'context' ? 0 : -1}
                             >
-                                Review Context
+                                {reviewContextLabel}
                             </div>
                         </div>
 
@@ -444,8 +448,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                             >
                                 <ReviewContextTab
                                     challengeId={challengeId}
-                                    challengeName={formContext.getValues('name')}
                                     challengeDescription={formContext.getValues('description')}
+                                    hasSubmissions={hasSubmissions}
+                                    onRequirementCountChange={setReviewContextRequirementCount}
                                 />
                             </div>
                         </fieldset>

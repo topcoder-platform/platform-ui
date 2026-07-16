@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { createChallengeReviewContext, generateChallengeReviewContext, showErrorToast, showSuccessToast, useFetchChallengeReviewContext } from '~/apps/work/src/lib'
 
@@ -8,8 +8,9 @@ import ReviewContextEditor from './ReviewContextEditor'
 
 interface ReviewContextTabProps {
     challengeId?: string
-    challengeName?: string
     challengeDescription?: string
+    hasSubmissions?: boolean
+    onRequirementCountChange?: (count: number | undefined) => void
 }
 
 const ReviewContextTab: FC<ReviewContextTabProps> = props => {
@@ -19,6 +20,12 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const { isLoading, context, error: fetchError, mutate: refetchContext } = useFetchChallengeReviewContext(props.challengeId)
     const hasContext = !!context?.id
     const hasLoadedContext = !isLoading
+    const requirementCount = context?.context?.requirements?.length
+    const isLocked = props.hasSubmissions === true
+
+    useEffect(() => {
+        props.onRequirementCountChange?.(requirementCount)
+    }, [props.onRequirementCountChange, requirementCount])
 
     const descriptionText = useMemo(() => {
         if (!props.challengeId) {
@@ -52,7 +59,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
         try {
             const generatedContext = await generateChallengeReviewContext(props.challengeId || '')
 
-            const response = await createChallengeReviewContext({
+            await createChallengeReviewContext({
                 challengeId: props.challengeId,
                 context: generatedContext,
                 status: 'AI_GENERATED',
@@ -70,7 +77,15 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
         } finally {
             setIsSaving(false)
         }
-    }, [props.challengeId])
+    }, [props.challengeId, refetchContext])
+
+    if (isLoading) {
+        return (
+            <div className={styles.wrap}>
+                <div className={styles.reviewContextLoading}>Loading review context...</div>
+            </div>
+        )
+    }
 
     return (
         <div className={styles.wrap}>
@@ -82,12 +97,31 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                         Define the evaluation criteria for AI-powered requirements review.
                     </p>
                     <p>{descriptionText}</p>
-                    <Button
-                        disabled={isSaving}
-                        label={isSaving ? 'Generating context...' : 'Generate Challenge Review Context'}
-                        onClick={handleGenerateClick}
-                        size='lg'
-                    />
+                    {isLocked ? (
+                        <div className={styles.errorText}>
+                            Review context is locked because this challenge already has submissions.
+                        </div>
+                    ) : (
+                        <>
+                            <Button
+                                disabled={isSaving}
+                                label={isSaving ? 'Generating context...' : 'Generate Challenge Review Context'}
+                                onClick={handleGenerateClick}
+                                size='lg'
+                            />
+                            {saveError && (
+                                <div className={styles.errorText}>
+                                    <p>{saveError}</p>
+                                    <Button
+                                        label='Retry'
+                                        onClick={handleGenerateClick}
+                                        secondary
+                                        size='sm'
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
             {hasContext && context && (
@@ -95,6 +129,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                     challengeId={props.challengeId ?? ''}
                     reviewContext={context}
                     onContextSaved={refetchContext}
+                    isLocked={props.hasSubmissions === true}
                 />
             )}
         </div>
