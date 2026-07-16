@@ -12,6 +12,7 @@ import {
     TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID,
 } from '../constants'
 import {
+    ChallengeReviewContextData,
     Skill,
 } from '../models'
 
@@ -179,8 +180,7 @@ async function pollWorkflowRunResult(
     let runStatus: WorkflowRunStatusResponse
     try {
         runStatus = await fetchWorkflowRunStatus(workflowId, runId)
-    } catch (e) {
-        console.error('Failed to fetch run status!', e)
+    } catch {
         runStatus = {}
     }
 
@@ -246,7 +246,7 @@ export async function extractSkillsFromText(
     }
 }
 
-function parseWorkflowResultToObject(value: unknown): Record<string, unknown> {
+function parseWorkflowResultToObject(value: unknown): ChallengeReviewContextData {
     if (typeof value === 'string') {
         const trimmed = value.trim()
 
@@ -261,7 +261,7 @@ function parseWorkflowResultToObject(value: unknown): Record<string, unknown> {
                 throw new Error('Workflow result JSON must be an object')
             }
 
-            return parsed
+            return parsed as ChallengeReviewContextData
         } catch {
             throw new Error('Workflow result was not valid JSON')
         }
@@ -281,37 +281,13 @@ function parseWorkflowResultToObject(value: unknown): Record<string, unknown> {
     const preferredContext = [candidateContext, candidateResult, candidateOutput, candidateData]
         .find(item => item && typeof item === 'object' && !Array.isArray(item)) as Record<string, unknown> | undefined
 
-    return preferredContext || resultObject
-}
-
-function buildContextWorkflowInput(
-    challengeName?: string,
-    challengeDescription?: string,
-): string {
-    const normalizedName = challengeName?.trim() || 'Unknown challenge name'
-    const normalizedDescription = challengeDescription?.trim() || 'No challenge description provided.'
-
-    return [
-        'Generate a review context object for the challenge below.',
-        'The result should be a JSON object containing review criteria for AI-enabled review.',
-        'Include fields such as summary, description, requirements, constraints,',
-        'and any additional context needed to evaluate submissions.',
-        '',
-        `Challenge name: ${normalizedName}`,
-        'Challenge description:',
-        normalizedDescription,
-    ].join('\n')
+    return (preferredContext || resultObject) as ChallengeReviewContextData
 }
 
 export async function generateChallengeReviewContext(
     challengeId: string,
-    challengeName: string,
-    challengeDescription: string,
     workflowId?: string,
-): Promise<Record<string, unknown>> {
-    const normalizedChallengeName = challengeName.trim()
-    const normalizedChallengeDescription = challengeDescription.trim()
-    const inputText = buildContextWorkflowInput(normalizedChallengeName, normalizedChallengeDescription)
+): Promise<ChallengeReviewContextData> {
     const normalizedWorkflowId = String(
         workflowId || TC_AI_CONTEXT_WORKFLOW_ID,
     )
@@ -329,7 +305,6 @@ export async function generateChallengeReviewContext(
             runId,
             {
                 challengeId,
-                jobDescription: inputText,
             },
         )
 

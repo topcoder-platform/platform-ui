@@ -7,6 +7,7 @@ import { EnvironmentConfig } from '~/config'
 
 import {
     ChallengeReviewContext,
+    ChallengeReviewContextData,
     ChallengeReviewContextStatus,
 } from '../models'
 
@@ -17,7 +18,8 @@ function normalizeText(value: unknown): string | undefined {
         return undefined
     }
 
-    const normalizedValue = String(value).trim()
+    const normalizedValue = String(value)
+        .trim()
 
     return normalizedValue || undefined
 }
@@ -46,7 +48,7 @@ function normalizeChallengeReviewContext(
     const challengeId = normalizeText(typedInput.challengeId)
     const status = normalizeReviewContextStatus(typedInput.status)
     const context = typeof typedInput.context === 'object' && typedInput.context
-        ? typedInput.context as Record<string, unknown>
+        ? typedInput.context as ChallengeReviewContextData
         : undefined
 
     if (!id || !challengeId || !status || !context) {
@@ -54,18 +56,18 @@ function normalizeChallengeReviewContext(
     }
 
     return {
-        id,
         challengeId,
         context,
-        status,
         createdAt: normalizeText(typedInput.createdAt),
         createdBy: typeof typedInput.createdBy === 'string'
             ? typedInput.createdBy
-            : null,
+            : undefined,
+        id,
+        status,
         updatedAt: normalizeText(typedInput.updatedAt),
         updatedBy: typeof typedInput.updatedBy === 'string'
             ? typedInput.updatedBy
-            : null,
+            : undefined,
     }
 }
 

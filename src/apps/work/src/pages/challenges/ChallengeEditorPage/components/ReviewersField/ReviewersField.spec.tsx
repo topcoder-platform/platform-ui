@@ -82,7 +82,7 @@ jest.mock('./ReviewConfigurationSummary', () => ({
 }))
 jest.mock('./ReviewContextTab', () => ({
     __esModule: true,
-    default: () => <div data-testid='review-context-tab'>Review context content</div>,
+    ReviewContextTab: () => <div data-testid='review-context-tab'>Review context content</div>,
 }))
 
 const mockedFetchAiReviewConfigByChallenge = jest.spyOn(services, 'fetchAiReviewConfigByChallenge').mockResolvedValue(undefined)
