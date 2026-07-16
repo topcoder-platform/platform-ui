@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-autofocus */
+
 import { ChangeEvent, FC, KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
@@ -45,7 +47,7 @@ const PRIORITY_OPTIONS: {
     { label: 'Low', value: 'low' },
 ]
 
-function createUniqueId(prefix = 'NEW'): string {
+function createUniqueId(prefix: string = 'NEW'): string {
     return `${prefix}_${Math.random()
         .toString(36)
         .slice(2, 8)}`
@@ -431,10 +433,12 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                 {!props.isLocked && (
                                     <Button
                                         label='Remove'
-                                        onClick={() => setPendingRemoveRequirement({
-                                            id: requirement.id,
-                                            title: requirement.title,
-                                        })}
+                                        onClick={function (): void {
+                                            setPendingRemoveRequirement({
+                                                id: requirement.id,
+                                                title: requirement.title,
+                                            })
+                                        }}
                                         secondary
                                         size='sm'
                                         variant='danger'
@@ -449,11 +453,13 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                     type='text'
                                     value={requirement.title}
                                     disabled={props.isLocked}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => handleRequirementFieldChange(
-                                        requirement.id,
-                                        'title',
-                                        event.target.value,
-                                    )}
+                                    onChange={function (event: ChangeEvent<HTMLInputElement>): void {
+                                        handleRequirementFieldChange(
+                                            requirement.id,
+                                            'title',
+                                            event.target.value,
+                                        )
+                                    }}
                                     error={requirementErrors?.title}
                                     dirty
                                     placeholder='Code Quality Standards'
@@ -467,11 +473,13 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                     options={PRIORITY_OPTIONS}
                                     value={requirement.priority}
                                     disabled={props.isLocked}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => handleRequirementFieldChange(
-                                        requirement.id,
-                                        'priority',
-                                        event.target.value,
-                                    )}
+                                    onChange={function (event: ChangeEvent<HTMLInputElement>): void {
+                                        handleRequirementFieldChange(
+                                            requirement.id,
+                                            'priority',
+                                            event.target.value,
+                                        )
+                                    }}
                                     error={requirementErrors?.priority}
                                     placeholder='Select priority'
                                 />
@@ -483,11 +491,13 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                     name={`requirement-${requirement.id}-description`}
                                     value={requirement.description}
                                     disabled={props.isLocked}
-                                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => handleRequirementFieldChange(
-                                        requirement.id,
-                                        'description',
-                                        event.target.value,
-                                    )}
+                                    onChange={function (event: ChangeEvent<HTMLTextAreaElement>): void {
+                                        handleRequirementFieldChange(
+                                            requirement.id,
+                                            'description',
+                                            event.target.value,
+                                        )
+                                    }}
                                     rows={5}
                                     error={requirementErrors?.description}
                                     placeholder='Describe the requirement in detail.'
@@ -500,7 +510,9 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                     {!props.isLocked && (
                                         <Button
                                             label='+ Add Constraint'
-                                            onClick={() => handleAddConstraintDraft(requirement.id)}
+                                            onClick={function (): void {
+                                                handleAddConstraintDraft(requirement.id)
+                                            }}
                                             secondary
                                             size='sm'
                                         />
@@ -524,10 +536,12 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                             {!props.isLocked && (
                                                 <Button
                                                     label='🗑️'
-                                                    onClick={() => setPendingRemoveConstraint({
-                                                        constraintId: constraint.id,
-                                                        requirementId: requirement.id,
-                                                    })}
+                                                    onClick={function (): void {
+                                                        setPendingRemoveConstraint({
+                                                            constraintId: constraint.id,
+                                                            requirementId: requirement.id,
+                                                        })
+                                                    }}
                                                     secondary
                                                     size='sm'
                                                     variant='danger'
@@ -550,11 +564,15 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                                 )}
                                                 placeholder='Enter a new constraint'
                                                 value={draftText}
-                                                onChange={(event: ChangeEvent<HTMLInputElement>) => setConstraintDrafts(prev => ({
-                                                    ...prev,
-                                                    [requirement.id]: event.target.value,
-                                                }))}
-                                                onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => handleConstraintDraftKeyDown(requirement.id, event)}
+                                                onChange={function (event: ChangeEvent<HTMLInputElement>): void {
+                                                    setConstraintDrafts(prev => ({
+                                                        ...prev,
+                                                        [requirement.id]: event.target.value,
+                                                    }))
+                                                }}
+                                                onKeyDown={function (event: KeyboardEvent<HTMLInputElement>): void {
+                                                    handleConstraintDraftKeyDown(requirement.id, event)
+                                                }}
                                                 autoFocus
                                             />
                                             <div className={styles.constraintDraftHint}>
@@ -583,8 +601,12 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
             {pendingRemoveRequirement && (
                 <ConfirmationModal
                     title={`Remove requirement '${pendingRemoveRequirement.title || 'Untitled'}'?`}
-                    message={`Remove requirement '${pendingRemoveRequirement.title || 'Untitled'}'? This cannot be undone.`}
-                    onCancel={() => setPendingRemoveRequirement(undefined)}
+                    message={
+                        `Remove requirement '${pendingRemoveRequirement.title || 'Untitled'}'? This cannot be undone.`
+                    }
+                    onCancel={function (): void {
+                        setPendingRemoveRequirement(undefined)
+                    }}
                     onConfirm={handleRemoveRequirement}
                     confirmButtonDanger
                     confirmText='Remove'
@@ -595,7 +617,9 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                 <ConfirmationModal
                     title='Remove constraint'
                     message='Remove this constraint?'
-                    onCancel={() => setPendingRemoveConstraint(undefined)}
+                    onCancel={function (): void {
+                        setPendingRemoveConstraint(undefined)
+                    }}
                     onConfirm={handleRemoveConstraint}
                     confirmButtonDanger
                     confirmText='Remove'
