@@ -1,4 +1,5 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
+import { pick } from 'lodash'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/base16/tomorrow-night.css'
 
@@ -8,33 +9,34 @@ import { showErrorToast, showSuccessToast } from '~/apps/work/src/lib'
 import { ChallengeReviewContextData } from '~/apps/work/src/lib/models'
 
 import styles from './ReviewContextRawEditor.module.scss'
-import { pick } from 'lodash'
 
 interface ReviewContextRawEditorProps {
     context: ChallengeReviewContextData
 }
 
-const ReviewContextRawEditor: FC<ReviewContextRawEditorProps> = ({ context }) => {
+const ReviewContextRawEditor: FC<ReviewContextRawEditorProps> = props => {
     const [isExpanded, setIsExpanded] = useState(false)
 
-    const jsonText = useMemo(() => JSON.stringify(pick(context, ['challengeId', 'requirements']), null, 2), [context])
+    const jsonText = useMemo(() => (
+        JSON.stringify(pick(props.context, ['challengeId', 'requirements']), undefined, 2)
+    ), [props.context])
 
     const highlightedJson = useMemo(() => (
         hljs.highlightAuto(jsonText, ['json']).value
     ), [jsonText])
 
-    const toggleExpanded = (): void => {
+    const toggleExpanded = useCallback((): void => {
         setIsExpanded(prev => !prev)
-    }
+    }, [])
 
-    const handleCopyJson = async (): Promise<void> => {
+    const handleCopyJson = useCallback(async (): Promise<void> => {
         try {
             await copyTextToClipboard(jsonText)
             showSuccessToast('Raw context JSON copied to clipboard.')
         } catch {
             showErrorToast('Failed to copy raw context JSON.')
         }
-    }
+    }, [])
 
     return (
         <div className={styles.wrap}>

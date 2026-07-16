@@ -15,15 +15,17 @@ import {
     Reviewer,
 } from '../../../../../lib/models'
 
-jest.mock('../../../../../lib/services', () => ({
-    __esModule: true,
-    patchChallenge: jest.fn(),
-    fetchAiReviewConfigByChallenge: jest.fn().mockResolvedValue(undefined),
-    fetchChallenge: jest.fn().mockResolvedValue({ reviewers: [] }),
-}))
-
 import * as services from '../../../../../lib/services'
 import { ReviewersField } from './ReviewersField'
+
+jest.mock('../../../../../lib/services', () => ({
+    __esModule: true,
+    fetchAiReviewConfigByChallenge: jest.fn()
+        .mockResolvedValue(undefined),
+    fetchChallenge: jest.fn()
+        .mockResolvedValue({ reviewers: [] }),
+    patchChallenge: jest.fn(),
+}))
 
 jest.mock('./HumanReviewTab', () => ({
     __esModule: true,
@@ -85,9 +87,8 @@ jest.mock('./ReviewContextTab', () => ({
     ReviewContextTab: () => <div data-testid='review-context-tab'>Review context content</div>,
 }))
 
-const mockedFetchAiReviewConfigByChallenge = jest.spyOn(services, 'fetchAiReviewConfigByChallenge').mockResolvedValue(undefined)
-const mockedFetchChallenge = jest.spyOn(services, 'fetchChallenge').mockResolvedValue({ reviewers: [] } as any)
-const mockedPatchChallenge = jest.spyOn(services, 'patchChallenge').mockResolvedValue({} as any)
+const mockedPatchChallenge = jest.spyOn(services, 'patchChallenge')
+    .mockResolvedValue({} as any)
 
 interface TestHarnessProps {
     isReadOnly?: boolean

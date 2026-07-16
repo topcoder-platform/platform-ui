@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { render, screen } from '@testing-library/react'
-import { ReactNode } from 'react'
+
+import ReviewContextTab from './ReviewContextTab'
 
 const mockUseFetchChallengeReviewContext = jest.fn()
 
@@ -22,8 +23,6 @@ jest.mock('./ReviewContextEditor', () => ({
     ),
 }))
 
-import ReviewContextTab from './ReviewContextTab'
-
 describe('ReviewContextTab', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -34,22 +33,22 @@ describe('ReviewContextTab', () => {
 
         mockUseFetchChallengeReviewContext.mockReturnValue({
             context: {
-                id: 'context-1',
                 challengeId: 'challenge-1',
-                status: 'AI_GENERATED',
                 context: {
                     requirements: [
                         {
-                            id: 'req-1',
-                            title: 'Code quality',
-                            priority: 'medium',
-                            description: 'Ensure code is clean and maintainable.',
                             constraints: [
                                 { id: 'const-1', text: 'No hard-coded values.' },
                             ],
+                            description: 'Ensure code is clean and maintainable.',
+                            id: 'req-1',
+                            priority: 'medium',
+                            title: 'Code quality',
                         },
                     ],
                 },
+                id: 'context-1',
+                status: 'AI_GENERATED',
             },
             error: undefined,
             isError: false,
@@ -65,28 +64,29 @@ describe('ReviewContextTab', () => {
             />,
         )
 
-        expect(onRequirementCountChange).toHaveBeenCalledWith(1)
+        expect(onRequirementCountChange)
+            .toHaveBeenCalledWith(1)
     })
 
     it('passes isLocked true to the editor when submissions exist', () => {
         mockUseFetchChallengeReviewContext.mockReturnValue({
             context: {
-                id: 'context-1',
                 challengeId: 'challenge-1',
-                status: 'AI_GENERATED',
                 context: {
                     requirements: [
                         {
-                            id: 'req-1',
-                            title: 'Code quality',
-                            priority: 'medium',
-                            description: 'Ensure code is clean and maintainable.',
                             constraints: [
                                 { id: 'const-1', text: 'No hard-coded values.' },
                             ],
+                            description: 'Ensure code is clean and maintainable.',
+                            id: 'req-1',
+                            priority: 'medium',
+                            title: 'Code quality',
                         },
                     ],
                 },
+                id: 'context-1',
+                status: 'AI_GENERATED',
             },
             error: undefined,
             isError: false,
@@ -102,6 +102,7 @@ describe('ReviewContextTab', () => {
             />,
         )
 
-        expect(screen.getByTestId('review-context-editor').dataset.isLocked).toBe('true')
+        expect(screen.getByTestId('review-context-editor').dataset.isLocked)
+            .toBe('true')
     })
 })

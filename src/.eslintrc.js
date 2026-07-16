@@ -97,10 +97,6 @@ module.exports = {
           'error',
           'as-needed',
         ],
-        complexity: [
-          'error',
-          14,
-        ],
         'import/extensions': 'off',
         'import/no-named-default': 'off',
         'import/prefer-default-export': 'off',

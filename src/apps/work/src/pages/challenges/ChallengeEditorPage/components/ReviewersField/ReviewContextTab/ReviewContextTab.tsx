@@ -1,10 +1,17 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { createChallengeReviewContext, generateChallengeReviewContext, showErrorToast, showSuccessToast, useFetchChallengeReviewContext } from '~/apps/work/src/lib'
-
-import styles from './ReviewContextTab.module.scss'
+import {
+    createChallengeReviewContext,
+    generateChallengeReviewContext,
+    showErrorToast,
+    showSuccessToast,
+    useFetchChallengeReviewContext,
+    UseFetchChallengeReviewContextResult,
+} from '~/apps/work/src/lib'
 import { Button } from '~/libs/ui'
+
 import ReviewContextEditor from './ReviewContextEditor'
+import styles from './ReviewContextTab.module.scss'
 
 interface ReviewContextTabProps {
     challengeId?: string
@@ -17,7 +24,12 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const [isSaving, setIsSaving] = useState(false)
     const [saveError, setSaveError] = useState<string | undefined>()
 
-    const { isLoading, context, error: fetchError, mutate: refetchContext } = useFetchChallengeReviewContext(props.challengeId)
+    const {
+        isLoading,
+        context,
+        error: fetchError,
+        mutate: refetchContext,
+    }: UseFetchChallengeReviewContextResult = useFetchChallengeReviewContext(props.challengeId)
     const hasContext = !!context?.id
     const hasLoadedContext = !isLoading
     const requirementCount = context?.context?.requirements?.length

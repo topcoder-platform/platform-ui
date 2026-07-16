@@ -16,21 +16,21 @@ import {
 } from 'react-hook-form'
 import classNames from 'classnames'
 
+import * as services from '../../../../../lib/services'
 import {
     AiReviewConfig,
     AiReviewMode,
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
-import * as services from '../../../../../lib/services'
 
 import {
     isAiReviewer,
     syncAiConfigReviewers,
 } from './reviewers-field.utils'
+import { ReviewContextTab } from './ReviewContextTab'
 import AiReviewTab, { AiReviewConfigSaveController } from './AiReviewTab'
 import HumanReviewTab from './HumanReviewTab'
-import { ReviewContextTab } from './ReviewContextTab'
 import ReviewConfigurationSummary from './ReviewConfigurationSummary'
 import styles from './ReviewersField.module.scss'
 
