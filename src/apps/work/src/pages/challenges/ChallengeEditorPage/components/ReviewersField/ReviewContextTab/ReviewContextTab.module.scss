@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.reviewContextLoading,
+.reviewContextEmptySection {
+    color: #555;
+    font-size: 14px;
+}
+
+.reviewContextEmptyState {
+    align-items: center;
+    background: #f7f9fc;
+    border: 1px dashed #cbd4e7;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+}
+
+.reviewContextEmptyIcon {
+    font-size: 40px;
+}
