@@ -165,17 +165,9 @@ const rawTermsApiUrl = process.env.REACT_APP_TERMS_API_URL
 
 export const TERMS_API_URL = normalizeApiUrlForEnvironment(rawTermsApiUrl)
 
-const DEFAULT_NDA_UUID_FROM_CONFIG = (EnvironmentConfig as unknown as Record<string, unknown>)
-    .DEFAULT_NDA_UUID
-
 export const DEFAULT_NDA_UUID = process.env.REACT_APP_DEFAULT_NDA_UUID
     || process.env.DEFAULT_NDA_UUID
-    || (
-        typeof DEFAULT_NDA_UUID_FROM_CONFIG === 'string'
-            ? DEFAULT_NDA_UUID_FROM_CONFIG
-            : undefined
-    )
-    || '21193'
+    || EnvironmentConfig.DEFAULT_NDA_UUID
 
 function normalizeApiUrlForEnvironment(url: string): string {
     const normalizedUrl = url.replace(/\/$/, '')
