@@ -14,6 +14,7 @@ import {
 } from '~/apps/work/src/lib/models'
 
 import styles from './ReviewContextEditor.module.scss'
+import ReviewContextRawEditor from './ReviewContextRawEditor'
 
 interface ReviewContextEditorProps {
     challengeId: string
@@ -497,7 +498,7 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = ({
                                 />
                             </div>
 
-                            <div className={styles.constraintsSection}>
+                                            <div className={styles.constraintsSection}>
                                 <div className={styles.constraintsHeader}>
                                     <div>CONSTRAINTS</div>
                                     <Button
@@ -580,6 +581,8 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = ({
                     )
                 })}
             </div>
+
+            <ReviewContextRawEditor context={context} />
 
             {pendingRemoveRequirement && (
                 <ConfirmationModal

@@ -1,0 +1,42 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    border: 1px solid #dfe4ee;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    background: #f4f6fb;
+    border-bottom: 1px solid #dfe4ee;
+}
+
+.toggle {
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: #1f2937;
+    display: flex;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 10px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.toggleIcon {
+    display: inline-flex;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.content {
+    overflow: auto;
+    padding: 16px;
+}
