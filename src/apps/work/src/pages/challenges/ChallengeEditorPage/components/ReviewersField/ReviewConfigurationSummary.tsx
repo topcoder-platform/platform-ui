@@ -1127,7 +1127,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                             <h5 className={styles.cardTitle}>
                                 Review Context Requirements
                                 {' '}
-                                ({reviewContextRequirements.length})
+                                (
+                                {reviewContextRequirements.length}
+                                )
                             </h5>
                         </div>
                         <div className={styles.cardBody}>
@@ -1181,7 +1183,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                                     {isExpanded ? '▼' : '▶'}
                                                                 </span>
                                                                 <span className={styles.requirementId}>
-                                                                    [{requirement.id}]
+                                                                    [
+                                                                    {requirement.id}
+                                                                    ]
                                                                 </span>
                                                                 <span className={classNames(
                                                                     styles.priorityBadge,
@@ -1213,7 +1217,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                                                         key={constraint.id}
                                                                                     >
                                                                                         <span className={styles.constraintId}>
-                                                                                            [{constraint.id}]
+                                                                                            [
+                                                                                            {constraint.id}
+                                                                                            ]
                                                                                         </span>
                                                                                         <span className={styles.constraintText}>
                                                                                             {constraint.text}

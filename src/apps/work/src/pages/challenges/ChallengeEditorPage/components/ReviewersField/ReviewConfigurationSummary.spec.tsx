@@ -168,38 +168,38 @@ describe('ReviewConfigurationSummary', () => {
     it('renders review context requirements when review context is available', async () => {
         mockedUseFetchChallengeReviewContext.mockReturnValue({
             context: {
-                id: 'review-context-1',
                 challengeId: 'challenge-1',
-                status: 'AI_GENERATED',
                 context: {
-                    title: 'Review context title',
-                    prizes: [],
-                    skills: [],
-                    timeline: {
-                        endDate: '2026-12-31',
-                        startDate: '2026-01-01',
-                        totalDurationDays: 365,
-                        registrationEndDate: '2025-12-31',
-                        registrationStartDate: '2025-01-01',
-                    },
-                    tech_stack: [],
                     challengeId: 'challenge-1',
+                    descriptionRaw: '',
+                    prizes: [],
                     requirements: [
                         {
-                            id: 'REQ_01',
-                            title: 'Code Quality Standards',
-                            priority: 'high',
-                            description: 'All submissions must follow established coding standards.',
                             constraints: [
                                 {
                                     id: 'CONSTR_01_1',
                                     text: 'Must pass ESLint with zero errors',
                                 },
                             ],
+                            description: 'All submissions must follow established coding standards.',
+                            id: 'REQ_01',
+                            priority: 'high',
+                            title: 'Code Quality Standards',
                         },
                     ],
-                    descriptionRaw: '',
+                    skills: [],
+                    tech_stack: [],
+                    timeline: {
+                        endDate: '2026-12-31',
+                        registrationEndDate: '2025-12-31',
+                        registrationStartDate: '2025-01-01',
+                        startDate: '2026-01-01',
+                        totalDurationDays: 365,
+                    },
+                    title: 'Review context title',
                 },
+                id: 'review-context-1',
+                status: 'AI_GENERATED',
             },
             error: undefined,
             isError: false,
@@ -230,25 +230,25 @@ describe('ReviewConfigurationSummary', () => {
     it('shows empty state when review context has no requirements', async () => {
         mockedUseFetchChallengeReviewContext.mockReturnValue({
             context: {
-                id: 'review-context-2',
                 challengeId: 'challenge-1',
-                status: 'AI_GENERATED',
                 context: {
-                    title: 'Review context title',
+                    challengeId: 'challenge-1',
+                    descriptionRaw: '',
                     prizes: [],
+                    requirements: [],
                     skills: [],
+                    tech_stack: [],
                     timeline: {
                         endDate: '2026-12-31',
-                        startDate: '2026-01-01',
-                        totalDurationDays: 365,
                         registrationEndDate: '2025-12-31',
                         registrationStartDate: '2025-01-01',
+                        startDate: '2026-01-01',
+                        totalDurationDays: 365,
                     },
-                    tech_stack: [],
-                    challengeId: 'challenge-1',
-                    requirements: [],
-                    descriptionRaw: '',
+                    title: 'Review context title',
                 },
+                id: 'review-context-2',
+                status: 'AI_GENERATED',
             },
             error: undefined,
             isError: false,
@@ -269,7 +269,8 @@ describe('ReviewConfigurationSummary', () => {
     })
 
     it('shows retry button when review context API fails', async () => {
-        const mockedMutate = jest.fn().mockResolvedValue(undefined)
+        const mockedMutate = jest.fn()
+            .mockResolvedValue(undefined)
         mockedUseFetchChallengeReviewContext.mockReturnValue({
             context: undefined,
             error: 'Failed to load review context.',
@@ -292,7 +293,8 @@ describe('ReviewConfigurationSummary', () => {
         const retryButton = screen.getByRole('button', { name: 'Retry' })
         fireEvent.click(retryButton)
 
-        expect(mockedMutate).toHaveBeenCalled()
+        expect(mockedMutate)
+            .toHaveBeenCalled()
     })
 
     it('loads referenced human-review scorecard names from later scorecard catalog pages', async () => {
