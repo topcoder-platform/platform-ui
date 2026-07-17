@@ -128,7 +128,9 @@ export const CHALLENGE_TYPES_WITH_MULTIPLE_PRIZES = [
     },
 ] as const
 
-export const DEFAULT_NDA_UUID = 'e5811a7b-43d1-407a-a064-69e5015b4900'
+export const DEFAULT_NDA_UUID = process.env.REACT_APP_DEFAULT_NDA_UUID
+    || process.env.DEFAULT_NDA_UUID
+    || EnvironmentConfig.DEFAULT_NDA_UUID
 
 export const DEFAULT_STANDARD_TERMS_UUID = process.env.REACT_APP_DEFAULT_STANDARD_TERMS_UUID
     || process.env.DEFAULT_STANDARD_TERMS_UUID

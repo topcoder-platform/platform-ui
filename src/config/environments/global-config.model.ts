@@ -61,6 +61,7 @@ export interface GlobalConfig {
     }
     TERMS_URL?: string
     NDA_TERMS_URL?: string
+    DEFAULT_NDA_UUID: string
     DEFAULT_STANDARD_TERMS_UUID?: string
     NDA_DOCUSIGN_TEMPLATE_ID?: string
     MEMBER_VERIFY_LOOKER: number

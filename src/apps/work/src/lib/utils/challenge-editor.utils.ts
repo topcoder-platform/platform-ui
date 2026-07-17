@@ -1071,7 +1071,11 @@ export function transformFormDataToChallenge(
             id: skill.id,
             name: skill.name,
         }))
+    const hasEditableSchedule = formData.legacy?.isTask !== true
+        && Array.isArray(formData.phases)
+        && formData.phases.length > 0
     const isSchedulingEnabled = isSchedulingApiEnabled(formData.legacy?.useSchedulingAPI)
+        || hasEditableSchedule
     const metadataWithoutMilestone = normalizeMetadataEntries(formData.metadata)
         .filter(metadataEntry => !MILESTONE_METADATA_KEYS.includes(metadataEntry.name))
     const milestoneMetadata = buildMilestoneMetadata(formData.milestoneConfiguration)
