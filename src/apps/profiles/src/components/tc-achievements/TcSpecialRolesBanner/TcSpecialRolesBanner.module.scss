@@ -1,35 +1,155 @@
 @import '@libs/ui/styles/includes';
 
 .rolesSection {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: $sp-4;
-    background-image: linear-gradient(to right, #652385, #8C384C);
-    color: $tc-white;
-    border-radius: 8px;
-    margin: $sp-4 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: $sp-4;
+    margin-top: $sp-4;
+    container-type: inline-size;
+}
 
-    @include ltesm {
-        margin-bottom: 0;
-        flex-direction: column;
-        align-items: flex-start;
+.roleCard {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-4;
+    min-height: 66px;
+    padding: $sp-3 $sp-4;
+    border-radius: 10px;
+    color: $tc-white;
+    overflow: visible;
+
+    &.reviewer {
+        background: linear-gradient(155deg, #065D6E 0%, #3E3B91 100%);
+    }
+
+    &.copilot {
+        background: linear-gradient(90deg, #652385 0%, #8C384C 100%);
     }
 }
 
-.rolesWrap {
-    display: flex;
-    align-items: center;
+.cardLink {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: inherit;
+
+    &:focus-visible {
+        outline: 2px solid $tc-white;
+        outline-offset: -4px;
+    }
+
+    &:hover {
+        background: rgba($tc-white, 0.08);
+    }
 }
 
-.link {
-    font-size: 14px;
-    line-height: 14px;
-    font-weight: $font-weight-medium;
+.roleHeading {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: $sp-2;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    white-space: nowrap;
+
+    > span {
+        font-weight: $font-weight-medium;
+    }
+
+    > strong {
+        font-weight: $font-weight-normal;
+    }
+}
+
+.infoButton {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    padding: 1px;
+    color: rgba($tc-white, 0.8);
+    border-radius: 50%;
+
+    &:focus-visible {
+        outline: 2px solid $tc-white;
+        outline-offset: 1px;
+    }
+}
+
+.roleCount {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: $sp-2;
     font-family: $font-roboto;
 
-    @include ltesm {
-        margin-top: $sp-2;
+    > strong {
+        font-family: $font-barlow-condensed;
+        font-size: 24px;
+        font-weight: $font-weight-medium;
+        line-height: 28px;
+    }
+
+    > span {
+        color: rgba($tc-white, 0.88);
+        font-size: 12px;
+        font-weight: $font-weight-medium;
+        line-height: 10px;
+    }
+}
+
+.chevron {
+    width: 18px;
+    height: 18px;
+    margin-left: $sp-2;
+    color: rgba($tc-white, 0.9);
+}
+
+.roleTooltip {
+    --rt-opacity: 1;
+
+    max-width: 250px !important;
+    padding: $sp-3 !important;
+    border-radius: 4px !important;
+    background: $black-100 !important;
+    color: $tc-white !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
+    opacity: 1 !important;
+
+    :global(.react-tooltip-arrow) {
+        background-color: $black-100 !important;
+    }
+}
+
+@container (max-width: 420px) {
+    .roleCard {
+        min-height: 58px;
+        gap: $sp-2;
+        padding: $sp-3;
+    }
+
+    .roleHeading {
+        gap: $sp-1;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .roleCount {
+        gap: $sp-1;
+
+        > strong {
+            font-size: 22px;
+            line-height: 26px;
+        }
+    }
+
+    .chevron {
+        margin-left: 0;
     }
 }

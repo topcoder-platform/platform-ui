@@ -1,4 +1,4 @@
-import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, MemberSpecialRole, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
 const ProfilesApp: LazyLoadedComponent = lazyLoad(() => import('./ProfilesApp'))
@@ -24,6 +24,19 @@ export const getUserProfileStatsRoute = (
     subTrack?: string,
 ): string => (
     `${getUserProfileRoute(userHandle)}${track ? `/stats/${track}` : ''}${!(track && subTrack) ? '' : `/${subTrack}`}`
+)
+
+/**
+ * Builds the profile route for a member's copilot or reviewer challenge details.
+ *
+ * This function does not throw.
+ *
+ * @param {string} userHandle - Member handle shown on the profile.
+ * @param {MemberSpecialRole} role - Special role whose challenge history should be displayed.
+ * @returns {string} Profile-relative route for the requested special role.
+ */
+export const getUserProfileRoleRoute = (userHandle: string, role: MemberSpecialRole): string => (
+    `${getUserProfileRoute(userHandle)}/stats/roles/${role}`
 )
 
 export const profilesRoutes: ReadonlyArray<PlatformRoute> = [

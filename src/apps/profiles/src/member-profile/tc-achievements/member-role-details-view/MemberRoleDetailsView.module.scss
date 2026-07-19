@@ -1,0 +1,200 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    container-type: inline-size;
+
+    > h2 {
+        margin-top: $sp-4;
+        color: $black-80;
+        font-family: $font-roboto;
+        font-size: 20px;
+        font-weight: $font-weight-medium;
+        line-height: 24px;
+    }
+
+    > hr {
+        margin: $sp-4 0 $sp-6;
+        border: 0;
+        border-top: 1px solid $black-10;
+    }
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.backLink,
+.closeLink {
+    display: inline-flex;
+    align-items: center;
+    color: $link-blue-dark;
+    font-family: $font-roboto;
+    font-size: 14px;
+    font-weight: $font-weight-medium;
+    line-height: 20px;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.backLink > svg {
+    width: 18px;
+    height: 18px;
+}
+
+.closeLink {
+    color: $turq-160;
+
+    > svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.statsSection {
+    min-height: 102px;
+    margin-bottom: $sp-6;
+    padding: $sp-4;
+    border-radius: 12px;
+    background: $black-5;
+
+    > h3 {
+        margin-bottom: $sp-3;
+        color: $black-80;
+        font-family: $font-roboto;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        line-height: 20px;
+    }
+}
+
+.metrics {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $sp-3 $sp-12;
+}
+
+.metric {
+    display: flex;
+    align-items: baseline;
+    gap: $sp-2;
+    color: $black-80;
+    font-family: $font-roboto;
+
+    > strong {
+        color: $turq-160;
+        font-family: $font-barlow-condensed;
+        font-size: 28px;
+        font-weight: $font-weight-medium;
+        line-height: 32px;
+    }
+
+    > span {
+        font-size: 14px;
+        line-height: 20px;
+    }
+}
+
+.challengeList {
+    max-height: 258px;
+    padding-right: $sp-3;
+    overflow-y: auto;
+    scrollbar-color: $black-20 transparent;
+    scrollbar-width: thin;
+}
+
+.challengeGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $sp-4;
+}
+
+.challengeCard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: $sp-2;
+    min-height: 70px;
+    padding: $sp-3 $sp-2 $sp-3 $sp-4;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-100;
+    font-family: $font-roboto;
+    font-size: 14px;
+    font-weight: $font-weight-medium;
+    line-height: 20px;
+
+    &:hover {
+        border-color: $turq-120;
+        box-shadow: 0 1px 4px rgba($tc-black, 0.12);
+    }
+
+    > span {
+        display: -webkit-box;
+        min-width: 0;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    > svg {
+        width: 18px;
+        height: 18px;
+        color: $black-60;
+    }
+}
+
+.pagination {
+    margin-top: $sp-3;
+}
+
+.message {
+    display: flex;
+    min-height: 120px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: $sp-3;
+    color: $black-60;
+    text-align: center;
+
+    > button {
+        color: $link-blue-dark;
+        font-weight: $font-weight-bold;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+@container (max-width: 700px) {
+    .challengeGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container (max-width: 480px) {
+    .metrics {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: $sp-2;
+    }
+
+    .challengeList {
+        max-height: 360px;
+    }
+
+    .challengeGrid {
+        grid-template-columns: 1fr;
+        gap: $sp-2;
+    }
+
+    .challengeCard {
+        min-height: 58px;
+    }
+}

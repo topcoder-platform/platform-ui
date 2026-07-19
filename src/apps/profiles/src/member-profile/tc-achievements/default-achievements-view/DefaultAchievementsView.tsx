@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 
-import { UserProfile, UserStats } from '~/libs/core'
+import { MemberRoleStats, UserProfile, UserStats } from '~/libs/core'
 
 import { MemberChallengePointsBar, MemberStatsBlock } from '../../../components/tc-achievements/MemberStatsBlock'
 import { TcSpecialRolesBanner } from '../../../components/tc-achievements/TcSpecialRolesBanner'
@@ -11,6 +11,7 @@ import styles from './DefaultAchievementsView.module.scss'
 
 interface DefaultAchievementsViewProps {
     memberStats: UserStats | undefined
+    roleStats?: MemberRoleStats
     profile: UserProfile
     tcoWins: number
     tcoQualifications: number
@@ -28,6 +29,8 @@ const DefaultAchievementsView: FC<DefaultAchievementsViewProps> = props => {
 
             <MemberChallengePointsBar profile={props.profile} memberStats={props.memberStats} />
 
+            <TcSpecialRolesBanner profile={props.profile} roleStats={props.roleStats} />
+
             {(hasTcoBanner || hasMemberStats) && (
                 <div className={styles.achievementsWrap}>
                     {hasTcoBanner && (
@@ -41,7 +44,6 @@ const DefaultAchievementsView: FC<DefaultAchievementsViewProps> = props => {
                 </div>
             )}
 
-            <TcSpecialRolesBanner memberStats={props.memberStats} />
         </>
     )
 }
