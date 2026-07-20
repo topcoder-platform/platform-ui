@@ -28,6 +28,7 @@ import {
     canOpenReviewUi,
     getReviewUiChallengeUrl,
 } from './reviewUiLink'
+import { getChallengeSubTrackSuffix } from './challengeTypeTrack'
 import styles from './ChallengeList.module.scss'
 
 export interface ChallengeListProps {
@@ -323,10 +324,7 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                             {typeName}
                             <br />
                             {trackName}
-                            {' '}
-                            {challenge.legacy.subTrack
-                                ? ` / ${challenge.legacy.subTrack}`
-                                : ''}
+                            {getChallengeSubTrackSuffix(challenge.legacy)}
                         </div>
                     )
                 },

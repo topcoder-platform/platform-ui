@@ -2,6 +2,24 @@ import {
     canOpenReviewUi,
     getReviewUiChallengeUrl,
 } from './reviewUiLink'
+import { getChallengeSubTrackSuffix } from './challengeTypeTrack'
+
+describe('getChallengeSubTrackSuffix', () => {
+    it('returns an empty suffix when legacy data is missing', () => {
+        expect(getChallengeSubTrackSuffix(undefined))
+            .toBe('')
+    })
+
+    it('returns an empty suffix when the legacy sub-track is missing', () => {
+        expect(getChallengeSubTrackSuffix({}))
+            .toBe('')
+    })
+
+    it('formats a legacy sub-track', () => {
+        expect(getChallengeSubTrackSuffix({ subTrack: 'DEVELOP' }))
+            .toBe(' / DEVELOP')
+    })
+})
 
 describe('ChallengeList review UI helpers', () => {
     describe('canOpenReviewUi', () => {
