@@ -1,0 +1,256 @@
+@import '@libs/ui/styles/includes';
+
+.metricGrid {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    margin: $sp-5 0;
+}
+
+.filters {
+    align-items: end;
+    background: #f7f8f8;
+    border-bottom: 1px solid #d7dadd;
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    padding: $sp-4 $sp-5;
+
+    label {
+        color: #444a4f;
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+        font-weight: 700;
+        gap: 4px;
+    }
+
+    input,
+    select {
+        background: #fff;
+        border: 1px solid #a9afb4;
+        border-radius: 4px;
+        box-sizing: border-box;
+        color: #24272a;
+        font: inherit;
+        font-size: 14px;
+        min-height: 38px;
+        padding: 8px 10px;
+        width: 100%;
+    }
+}
+
+.checkboxLabel {
+    align-items: center !important;
+    flex-direction: row !important;
+    min-height: 38px;
+
+    input {
+        min-height: auto;
+        width: auto;
+    }
+}
+
+.primaryText {
+    color: #24272a;
+    display: block;
+    font-weight: 700;
+}
+
+.secondaryText,
+.reason,
+.sourceLabel {
+    color: #5d6368;
+    display: block;
+    font-size: 12px;
+    line-height: 17px;
+    margin-top: 3px;
+}
+
+.criticalReason {
+    color: #8c1520;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 17px;
+    margin-top: $sp-2;
+}
+
+.warningReason {
+    color: #704d00;
+}
+
+.counts {
+    white-space: nowrap;
+}
+
+.inlineActions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
+.linkButton,
+.disclosureButton,
+.loadMoreButton {
+    background: #fff;
+    border: 1px solid #087d8b;
+    border-radius: 4px;
+    color: #087d8b;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 10px;
+}
+
+.taskInventory,
+.detailPanel {
+    background: #f8fafb;
+    border: 1px solid #d7dadd;
+    border-radius: 5px;
+    margin: $sp-2 0;
+    padding: $sp-4;
+
+    h3 {
+        font-size: 16px;
+        margin: 0 0 $sp-3;
+    }
+}
+
+.detailGrid {
+    display: grid;
+    gap: $sp-3 $sp-6;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: $sp-3 0;
+
+    dt {
+        color: #5d6368;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    dd {
+        margin: 3px 0 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.coverage {
+    align-items: center;
+    background: #eef8f9;
+    border: 1px solid #98cdd2;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-5;
+    margin: $sp-4 0;
+    padding: $sp-3 $sp-4;
+}
+
+.coverageIncomplete {
+    background: #fff8e5;
+    border-color: #e4b84b;
+}
+
+.method {
+    background: #e7f5f6;
+    border-radius: 3px;
+    color: #086a75;
+    display: inline-block;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: $sp-2;
+    padding: 2px 5px;
+}
+
+.routeTemplate,
+.requestId {
+    font-family: monospace;
+    overflow-wrap: anywhere;
+}
+
+.sendgridIntro,
+.storageExplanation {
+    background: #eef8f9;
+    border-left: 4px solid #087d8b;
+    line-height: 22px;
+    margin: $sp-4 0;
+    padding: $sp-3 $sp-4;
+}
+
+.activityDisclosure {
+    padding: $sp-5;
+}
+
+.activityHeader {
+    align-items: center;
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+
+    h2 {
+        font-size: 18px;
+        margin: 0;
+    }
+}
+
+.messageList,
+.eventList {
+    list-style: none;
+    margin: $sp-4 0 0;
+    padding: 0;
+
+    li {
+        border-top: 1px solid #e3e5e6;
+        display: grid;
+        gap: $sp-3;
+        grid-template-columns: minmax(155px, 0.7fr) minmax(130px, 0.7fr) minmax(200px, 1.6fr);
+        padding: $sp-3 0;
+    }
+}
+
+.statusValue {
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.logicalUnknown {
+    color: #704d00;
+    font-weight: 700;
+}
+
+.engineMessage {
+    border-left: 4px solid #b47700;
+    padding-left: $sp-3 !important;
+}
+
+.loadMoreWrap {
+    display: flex;
+    justify-content: center;
+    padding: $sp-4;
+}
+
+@include ltemd {
+    .filters {
+        grid-template-columns: 1fr;
+        padding: $sp-4;
+    }
+
+    .messageList li,
+    .eventList li {
+        display: block;
+
+        > * {
+            display: block;
+            margin: 3px 0;
+        }
+    }
+
+    .activityHeader {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

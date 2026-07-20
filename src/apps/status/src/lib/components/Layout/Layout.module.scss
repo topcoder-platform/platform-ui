@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.main {
+    box-sizing: border-box;
+    color: var(--Primary);
+    font-family: $font-roboto;
+    min-height: 60vh;
+    padding: $sp-4 0 $sp-10;
+    width: 100%;
+
+    @include ltemd {
+        padding-top: $sp-2;
+    }
+}
+
+.contentLayoutOuter {
+    margin: $sp-6 auto !important;
+}
+
+.contentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
+}

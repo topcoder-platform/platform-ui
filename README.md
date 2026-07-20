@@ -556,6 +556,7 @@ The following summarizes the various [apps](#adding-a-new-platform-ui-applicatio
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
 - [Self Service](#self-service)
+- [Status](#status)
 
 ## Platform App
 
@@ -599,3 +600,13 @@ Application that allows customers to submit/start challenges self-service.
 
 [Work README TBD](./src/apps/self-service/README.md)
 [Work Routes](./src/apps/self-service/src/self-service.routes.tsx)
+
+## Status
+
+Administrator-only operational visibility for ECS services and tasks, API
+traffic and failures, SendGrid acceptance/activity, and the Topcoder services
+RDS instance. The app is read-only and loads only the active tab or expanded
+diagnostic section.
+
+[Status README](./src/apps/status/README.md)
+[Status Routes](./src/apps/status/src/status-app.routes.tsx)
