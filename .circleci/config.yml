@@ -228,7 +228,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - flexi-talent
+                              - copilot_reviewer
                       tags:
                           only: /^dev-.*/
 

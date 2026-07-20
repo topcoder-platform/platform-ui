@@ -1,5 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 
+import { MemberSpecialRole } from '../../member-role-stats.model'
+
 export function profile(handle: string): string {
     return `${EnvironmentConfig.API.V6}/members/${handle}`
 }
@@ -26,6 +28,38 @@ export function learnBaseURL(): string {
 
 export function memberStatsDistroURL(): string {
     return `${EnvironmentConfig.API.V6}/members/stats/distribution`
+}
+
+/**
+ * Builds the member API endpoint for copilot and reviewer summary statistics.
+ *
+ * This function does not throw.
+ *
+ * @param {string} handle - Member handle whose role statistics should be loaded.
+ * @returns {string} Absolute member role statistics endpoint.
+ */
+export function memberRoleStatsURL(handle: string): string {
+    return `${profile(handle)}/stats/roles`
+}
+
+/**
+ * Builds the paginated member API endpoint for challenges associated with a special role.
+ *
+ * This function does not throw.
+ *
+ * @param {string} handle - Member handle whose role challenges should be loaded.
+ * @param {MemberSpecialRole} role - Copilot or reviewer role to query.
+ * @param {number} page - One-based page number.
+ * @param {number} perPage - Number of challenges to request per page.
+ * @returns {string} Absolute role challenge endpoint including pagination parameters.
+ */
+export function memberRoleChallengesURL(
+    handle: string,
+    role: MemberSpecialRole,
+    page: number,
+    perPage: number,
+): string {
+    return `${memberRoleStatsURL(handle)}/${role}/challenges?page=${page}&perPage=${perPage}`
 }
 
 export function memberModifyURL(): string {

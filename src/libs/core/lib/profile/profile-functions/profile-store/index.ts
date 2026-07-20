@@ -11,6 +11,8 @@ export {
     gamificationAPIBaseURL,
     learnBaseURL,
     memberStatsDistroURL,
+    memberRoleChallengesURL,
+    memberRoleStatsURL,
     memberEmailPreferencesURL,
     userSkillsUrl,
 } from './profile-endpoint.config'
