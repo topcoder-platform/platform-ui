@@ -90,7 +90,7 @@
 
     > strong {
         font-family: $font-barlow-condensed;
-        font-size: 24px;
+        font-size: 26px;
         font-weight: $font-weight-medium;
         line-height: 28px;
     }
@@ -142,11 +142,6 @@
 
     .roleCount {
         gap: $sp-1;
-
-        > strong {
-            font-size: 22px;
-            line-height: 26px;
-        }
     }
 
     .chevron {
