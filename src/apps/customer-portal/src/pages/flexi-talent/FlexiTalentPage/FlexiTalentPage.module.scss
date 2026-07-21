@@ -416,6 +416,13 @@
     color: $black-80;
 }
 
+.detailCapacity {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
 .memberTimePill {
     display: inline-flex;
     align-items: center;

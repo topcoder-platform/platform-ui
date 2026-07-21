@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, sort-keys */
 import '@testing-library/jest-dom'
 
+import { readFileSync } from 'fs'
 import React from 'react'
 import {
     fireEvent,
@@ -20,6 +21,18 @@ import { MembersView } from './MembersView'
 const mockGetFlexiMemberSummary = getFlexiMemberSummary as jest.Mock
 const mockGetFlexiMemberList = getFlexiMemberList as jest.Mock
 const mockGetFlexiMemberDetail = getFlexiMemberDetail as jest.Mock
+const flexiTalentPageStyles = readFileSync(
+    `${__dirname}/../../FlexiTalentPage/FlexiTalentPage.module.scss`,
+    'utf8',
+)
+const detailCapacityWrappingPattern = [
+    '[.]detailCapacity \\{',
+    '[^}]*box-sizing: border-box;',
+    '[^}]*max-width: 100%;',
+    '[^}]*overflow-wrap: anywhere;',
+    '[^}]*white-space: normal;',
+    '[^}]*\\}',
+].join('')
 
 jest.mock('~/apps/admin/src/lib/components/common/Pagination', () => ({
     Pagination: () => <div>pagination</div>,
@@ -52,6 +65,13 @@ jest.mock('../../../../lib', () => ({
 jest.mock('../MemberHistoryModal', () => ({
     MemberHistoryModal: () => undefined,
 }))
+
+describe('MembersView styles', () => {
+    it('allows long assignment labels to wrap within the member detail card', () => {
+        expect(flexiTalentPageStyles)
+            .toMatch(new RegExp(detailCapacityWrappingPattern))
+    })
+})
 
 describe('MembersView', () => {
     beforeEach(() => {
