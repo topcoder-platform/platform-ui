@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
+import { readFileSync } from 'fs'
 import type { PropsWithChildren, ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -34,6 +35,16 @@ jest.mock('../../../lib', () => ({
 }))
 
 const profile = { handle: 'Tester' } as UserProfile
+const tcSpecialRolesBannerStyles = readFileSync(`${__dirname}/TcSpecialRolesBanner.module.scss`, 'utf8')
+
+describe('TcSpecialRolesBanner styles', () => {
+    it('uses the approved role challenge count size at every breakpoint', () => {
+        expect(tcSpecialRolesBannerStyles)
+            .toMatch(/\.roleCount \{[\s\S]*?> strong \{[\s\S]*?font-size: 26px;/)
+        expect(tcSpecialRolesBannerStyles).not
+            .toMatch(/font-size: 22px;/)
+    })
+})
 
 /**
  * Renders role summary cards inside the router required by their detail links.

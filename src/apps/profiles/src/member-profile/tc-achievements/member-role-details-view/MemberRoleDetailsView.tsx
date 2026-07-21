@@ -261,7 +261,12 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
             </section>
 
             {!data && !error && (
-                <LoadingSpinner inline message={`Loading ${roleTitle.toLowerCase()} challenges...`} />
+                <div className={styles.loadingState}>
+                    <LoadingSpinner
+                        inline
+                        message={`Loading ${roleTitle.toLowerCase()} challenges...`}
+                    />
+                </div>
             )}
 
             {error && (
