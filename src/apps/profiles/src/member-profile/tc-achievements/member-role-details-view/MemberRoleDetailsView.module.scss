@@ -10,6 +10,7 @@
         font-size: 20px;
         font-weight: $font-weight-medium;
         line-height: 24px;
+        text-transform: none;
     }
 
     > hr {
@@ -45,6 +46,10 @@
     height: 18px;
 }
 
+.backLink {
+    line-height: 22px;
+}
+
 .closeLink {
     color: $turq-160;
 
@@ -65,9 +70,10 @@
         margin-bottom: $sp-3;
         color: $black-80;
         font-family: $font-roboto;
-        font-size: 14px;
-        font-weight: $font-weight-bold;
-        line-height: 20px;
+        font-size: 16px;
+        font-weight: $font-weight-medium;
+        line-height: 24px;
+        text-transform: none;
     }
 }
 
@@ -88,9 +94,9 @@
     > strong {
         color: $turq-160;
         font-family: $font-barlow-condensed;
-        font-size: 28px;
+        font-size: 32px;
         font-weight: $font-weight-medium;
-        line-height: 32px;
+        line-height: 34px;
     }
 
     > span {
@@ -150,6 +156,12 @@
 
 .pagination {
     margin-top: $sp-3;
+}
+
+.loadingState {
+    height: 120px;
+    overflow: hidden;
+    border-radius: $sp-2;
 }
 
 .message {
