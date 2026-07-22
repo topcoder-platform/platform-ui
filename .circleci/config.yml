@@ -228,7 +228,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - copilot_reviewer
+                              - status_app
                       tags:
                           only: /^dev-.*/
 
