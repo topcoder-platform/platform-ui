@@ -113,11 +113,15 @@ function mapWinners(
         return undefined
     }
 
-    // Only expose contest submissions in the winners list
-    const contestWinners = winners.filter(winner => isContestSubmissionType(
-        winner.type,
-        { defaultToContest: true },
-    ))
+    // Only expose final-placement winners. Older records used contest-submission aliases or no type.
+    const contestWinners = winners.filter(winner => {
+        const normalizedType = winner.type?.trim()
+            .toUpperCase()
+
+        return !normalizedType
+            || normalizedType === 'PLACEMENT'
+            || isContestSubmissionType(winner.type)
+    })
 
     return contestWinners.map(winner => ({
         handle: winner.handle,

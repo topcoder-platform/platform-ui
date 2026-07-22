@@ -5,6 +5,9 @@ export interface BackendProjectResult {
     challengeId: string
     userId: string
     paymentId: null | string
+    /**
+     * Canonical final-placement submission UUID selected by the Review API.
+     */
     submissionId: string
     oldRating?: number
     newRating: number

@@ -58,6 +58,28 @@ const buildChallengeInfo = (
 })
 
 describe('convertBackendChallengeInfo winners mapping', () => {
+    it('keeps canonical placement winners', () => {
+        const result = convertBackendChallengeInfo(buildChallengeInfo([
+            {
+                handle: 'winnerHandle',
+                placement: 1,
+                type: 'PLACEMENT',
+                userId: 1234,
+            },
+        ]))
+
+        expect(result?.winners)
+            .toEqual([
+                {
+                    handle: 'winnerHandle',
+                    maxRating: undefined,
+                    placement: 1,
+                    type: 'PLACEMENT',
+                    userId: 1234,
+                },
+            ])
+    })
+
     it('keeps contest winners when legacy winner type uses spaces', () => {
         const result = convertBackendChallengeInfo(buildChallengeInfo([
             {
@@ -80,8 +102,35 @@ describe('convertBackendChallengeInfo winners mapping', () => {
             ])
     })
 
-    it('filters out checkpoint winners', () => {
+    it('keeps untyped legacy placement winners', () => {
         const result = convertBackendChallengeInfo(buildChallengeInfo([
+            {
+                handle: 'legacyWinner',
+                placement: 2,
+                userId: 5678,
+            },
+        ]))
+
+        expect(result?.winners)
+            .toEqual([
+                {
+                    handle: 'legacyWinner',
+                    maxRating: undefined,
+                    placement: 2,
+                    type: undefined,
+                    userId: 5678,
+                },
+            ])
+    })
+
+    it('filters out canonical and legacy checkpoint winners', () => {
+        const result = convertBackendChallengeInfo(buildChallengeInfo([
+            {
+                handle: 'canonicalCheckpointHandle',
+                placement: 1,
+                type: 'CHECKPOINT',
+                userId: 8888,
+            },
             {
                 handle: 'checkpointHandle',
                 placement: 1,

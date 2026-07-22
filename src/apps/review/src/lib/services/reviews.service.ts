@@ -298,7 +298,8 @@ export const downloadSubmissionFile = async (
  * @param page current page
  * @param perPage number of item per page
  * @param challengeId challenge id
- * @returns resolves to the array of project results
+ * @returns resolves to converted project results and the API page count
+ * @throws rejects when the Review API request fails
  */
 export const fetchProjectResults = async (
     page: number,
@@ -337,6 +338,52 @@ export const fetchProjectResults = async (
         data: data.map(convertBackendProjectResultToProjectResult),
         totalPages: results.meta.totalPages,
     }
+}
+
+/**
+ * Fetch every canonical project-result page for a challenge.
+ *
+ * Results are globally ordered by final placement after pagination. Rows retain the canonical
+ * submission id supplied by the Review API for use by Winners-tab downloads.
+ *
+ * @param challengeId challenge UUID used to filter project results.
+ * @param perPage requested API page size; invalid values fall back to 100.
+ * @returns all converted project results ordered by placement.
+ * @throws rejects when any Review API page request fails.
+ */
+export const fetchAllProjectResults = async (
+    challengeId: string,
+    perPage = 100,
+): Promise<ProjectResult[]> => {
+    if (!challengeId) {
+        return []
+    }
+
+    const safePerPage = Number.isFinite(perPage) && perPage > 0 ? perPage : 100
+    const firstPage = await fetchProjectResults(1, safePerPage, challengeId)
+    const combined = [...firstPage.data]
+    const totalPages = Math.max(firstPage.totalPages ?? 1, 1)
+
+    const fetchRemainingPages = async (
+        page: number,
+        currentTotal: number,
+    ): Promise<void> => {
+        if (page > currentTotal) {
+            return
+        }
+
+        const nextPage = await fetchProjectResults(page, safePerPage, challengeId)
+        combined.push(...nextPage.data)
+        const nextTotal = Number.isFinite(nextPage.totalPages)
+            ? Math.max(nextPage.totalPages, currentTotal)
+            : currentTotal
+
+        await fetchRemainingPages(page + 1, nextTotal)
+    }
+
+    await fetchRemainingPages(2, totalPages)
+
+    return orderBy(combined, ['placement'], ['asc'])
 }
 
 /**

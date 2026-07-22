@@ -11,6 +11,9 @@ import { BackendResource } from './BackendResource.model'
  */
 export interface ProjectResult {
     challengeId: string
+    /**
+     * Canonical winning submission UUID supplied by the Review API project-result row.
+     */
     submissionId: string
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend

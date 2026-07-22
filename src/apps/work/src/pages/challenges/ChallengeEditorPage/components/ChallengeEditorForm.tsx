@@ -165,6 +165,9 @@ import {
     RateChallengeField,
 } from './RateChallengeField'
 import {
+    RegisteredMemberDownloadField,
+} from './RegisteredMemberDownloadField'
+import {
     ReviewCostField,
 } from './ReviewCostField'
 import {
@@ -4036,6 +4039,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             : undefined}
                                         <GroupsField />
                                         <SubmissionTypeField />
+                                        <RegisteredMemberDownloadField />
                                         <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
                                         <NDAField />
                                         <FormCheckboxField

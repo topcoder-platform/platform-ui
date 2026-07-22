@@ -699,6 +699,9 @@ jest.mock('./StockArtsField', () => ({
 jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
+jest.mock('./RegisteredMemberDownloadField', () => ({
+    RegisteredMemberDownloadField: () => <>Registered Member Download Field</>,
+}))
 jest.mock('./SubmissionTypeField', () => ({
     SubmissionTypeField: () => <>Submission Type Field</>,
 }))
@@ -944,6 +947,20 @@ describe('ChallengeEditorForm', () => {
                 .queryByText('Copilot Field'),
         )
             .toBeNull()
+    })
+
+    it('renders the registered-member download setting for existing challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(advancedOptionsSection)
+            .toHaveTextContent('Registered Member Download Field')
     })
 
     it('renders billing metadata inside prizes and billing when project billing is available', async () => {
@@ -1955,6 +1972,8 @@ describe('ChallengeEditorForm', () => {
 
         const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
             .closest('section')
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
 
         expect(submissionSettingsSection)
             .toHaveTextContent('Final Deliverables Field')
@@ -1964,6 +1983,10 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+        expect(submissionSettingsSection)
+            .not.toHaveTextContent('Registered Member Download Field')
+        expect(advancedOptionsSection)
+            .toHaveTextContent('Registered Member Download Field')
     })
 
     it('keeps submission-limit normalization pristine until initial resource hydration finishes', async () => {
