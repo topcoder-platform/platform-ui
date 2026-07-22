@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/typedef, import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { FC, ReactNode } from 'react'
 
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { SWRConfig } from 'swr'
 
 import { xhrGetAsync } from '../../xhr'
@@ -16,12 +16,7 @@ jest.mock('../profile-functions', () => ({
     memberRoleChallengesURL: (
         handle: string,
         role: string,
-        page: number,
-        perPage: number,
-    ): string => (
-        `https://api.example.com/members/${handle}/stats/roles/${role}`
-        + `/challenges?page=${page}&perPage=${perPage}`
-    ),
+    ): string => `https://api.example.com/members/${handle}/stats/roles/${role}/challenges`,
     memberRoleStatsURL: (handle: string): string => `https://api.example.com/members/${handle}/stats/roles`,
 }))
 
@@ -31,6 +26,7 @@ const TestSwrConfig: FC<{ children: ReactNode }> = props => (
     <SWRConfig
         value={{
             dedupingInterval: 0,
+            fetcher: (url: string) => xhrGetAsync(url),
             provider: () => new Map(),
             shouldRetryOnError: false,
         }}
@@ -44,39 +40,24 @@ describe('useMemberRoleChallenges', () => {
         mockedXhrGetAsync.mockReset()
     })
 
-    it('loads and combines API pages as the list requests more', async () => {
-        mockedXhrGetAsync
-            .mockResolvedValueOnce({
-                challenges: [{ id: 'challenge-1', name: 'Newest challenge' }],
-                fulfillment: {
-                    cancelled: 1,
-                    completed: 2,
-                    rate: 66.67,
-                    total: 3,
-                },
-                page: 1,
-                perPage: 100,
-                role: 'copilot',
-                total: 3,
-                totalPages: 3,
-                trackCounts: { DEVELOPMENT: 3 },
-            } as never)
-            .mockResolvedValueOnce({
-                challenges: [{ id: 'challenge-2', name: 'Middle challenge' }],
-                page: 2,
-                perPage: 100,
-                role: 'copilot',
-                total: 3,
-                totalPages: 3,
-            } as never)
-            .mockResolvedValueOnce({
-                challenges: [{ id: 'challenge-3', name: 'Oldest challenge' }],
-                page: 3,
-                perPage: 100,
-                role: 'copilot',
-                total: 3,
-                totalPages: 3,
-            } as never)
+    it('loads the complete challenge history in one unpaginated request', async () => {
+        const challenges = Array.from({ length: 101 }, (_value, index) => ({
+            id: `challenge-${index + 1}`,
+            name: `Challenge ${index + 1}`,
+        }))
+
+        mockedXhrGetAsync.mockResolvedValueOnce({
+            challenges,
+            fulfillment: {
+                cancelled: 1,
+                completed: 100,
+                rate: 99.01,
+                total: 101,
+            },
+            role: 'copilot',
+            total: 101,
+            trackCounts: { DEVELOPMENT: 101 },
+        } as never)
 
         const { result } = renderHook(
             () => useMemberRoleChallenges('tester', 'copilot'),
@@ -84,52 +65,14 @@ describe('useMemberRoleChallenges', () => {
         )
 
         await waitFor(() => expect(result.current.data?.challenges)
-            .toHaveLength(1))
+            .toHaveLength(101))
 
         expect(mockedXhrGetAsync)
             .toHaveBeenCalledTimes(1)
-        expect(result.current.hasMore)
-            .toBe(true)
-
-        act(() => result.current.loadMore())
-
-        await waitFor(() => expect(result.current.data?.challenges)
-            .toHaveLength(2))
         expect(mockedXhrGetAsync)
-            .toHaveBeenCalledTimes(2)
-
-        act(() => result.current.loadMore())
-
-        await waitFor(() => expect(result.current.data?.challenges)
-            .toHaveLength(3))
-        expect(result.current.hasMore)
-            .toBe(false)
-
-        const requestedUrls: string[] = mockedXhrGetAsync.mock.calls.map(call => call[0])
-
-        expect(requestedUrls)
-            .toEqual([
-                expect.stringContaining('/members/tester/stats/roles/copilot/challenges?page=1&perPage=100'),
-                expect.stringContaining('/members/tester/stats/roles/copilot/challenges?page=2&perPage=100'),
-                expect.stringContaining('/members/tester/stats/roles/copilot/challenges?page=3&perPage=100'),
-            ])
-        expect(result.current.data)
-            .toEqual({
-                challenges: [
-                    { id: 'challenge-1', name: 'Newest challenge' },
-                    { id: 'challenge-2', name: 'Middle challenge' },
-                    { id: 'challenge-3', name: 'Oldest challenge' },
-                ],
-                fulfillment: {
-                    cancelled: 1,
-                    completed: 2,
-                    rate: 66.67,
-                    total: 3,
-                },
-                role: 'copilot',
-                total: 3,
-                trackCounts: { DEVELOPMENT: 3 },
-            })
+            .toHaveBeenCalledWith('https://api.example.com/members/tester/stats/roles/copilot/challenges')
+        expect(result.current.data?.challenges[100])
+            .toEqual({ id: 'challenge-101', name: 'Challenge 101' })
     })
 
     it('does not request challenges until both handle and role are available', () => {
@@ -140,53 +83,5 @@ describe('useMemberRoleChallenges', () => {
 
         expect(mockedXhrGetAsync)
             .not.toHaveBeenCalled()
-    })
-
-    it('keeps loaded challenges available when a later page fails', async () => {
-        const loadError = new Error('Failed to load the next page')
-
-        mockedXhrGetAsync
-            .mockResolvedValueOnce({
-                challenges: [{ id: 'challenge-1', name: 'Loaded challenge' }],
-                page: 1,
-                perPage: 100,
-                role: 'reviewer',
-                total: 2,
-                totalPages: 2,
-            } as never)
-            .mockRejectedValueOnce(loadError)
-
-        const { result } = renderHook(
-            () => useMemberRoleChallenges('tester', 'reviewer'),
-            { wrapper: TestSwrConfig },
-        )
-
-        await waitFor(() => expect(result.current.data?.challenges)
-            .toHaveLength(1))
-
-        act(() => result.current.loadMore())
-
-        await waitFor(() => expect(result.current.error)
-            .toBe(loadError))
-        expect(result.current.data?.challenges)
-            .toEqual([{ id: 'challenge-1', name: 'Loaded challenge' }])
-
-        mockedXhrGetAsync.mockResolvedValueOnce({
-            challenges: [{ id: 'challenge-2', name: 'Retried challenge' }],
-            page: 2,
-            perPage: 100,
-            role: 'reviewer',
-            total: 2,
-            totalPages: 2,
-        } as never)
-
-        await act(async () => {
-            await result.current.mutate()
-        })
-
-        await waitFor(() => expect(result.current.data?.challenges)
-            .toHaveLength(2))
-        expect(result.current.error)
-            .toBeUndefined()
     })
 })

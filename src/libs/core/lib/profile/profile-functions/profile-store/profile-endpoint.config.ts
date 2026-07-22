@@ -43,23 +43,19 @@ export function memberRoleStatsURL(handle: string): string {
 }
 
 /**
- * Builds the paginated member API endpoint for challenges associated with a special role.
+ * Builds the member API endpoint for all challenges associated with a special role.
  *
  * This function does not throw.
  *
  * @param {string} handle - Member handle whose role challenges should be loaded.
  * @param {MemberSpecialRole} role - Copilot or reviewer role to query.
- * @param {number} page - One-based page number.
- * @param {number} perPage - Number of challenges to request per page.
- * @returns {string} Absolute role challenge endpoint including pagination parameters.
+ * @returns {string} Absolute role challenge endpoint.
  */
 export function memberRoleChallengesURL(
     handle: string,
     role: MemberSpecialRole,
-    page: number,
-    perPage: number,
 ): string {
-    return `${memberRoleStatsURL(handle)}/${role}/challenges?page=${page}&perPage=${perPage}`
+    return `${memberRoleStatsURL(handle)}/${role}/challenges`
 }
 
 export function memberModifyURL(): string {

@@ -1,15 +1,14 @@
 import {
     FC,
-    UIEvent,
     useMemo,
 } from 'react'
 import { Link, Navigate, Params, useParams } from 'react-router-dom'
+import { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import {
     MemberRoleChallenge,
     MemberRoleChallenges,
-    MemberRoleChallengesResponse,
     MemberRoleTrack,
     MemberSpecialRole,
     useMemberRoleChallenges,
@@ -84,9 +83,9 @@ const formatFulfillmentRate = (rate: number): string => `${fulfillmentRateFormat
     .format(rate)}%`
 
 /**
- * Builds the Figma summary-strip metrics for a role challenge page.
+ * Builds the Figma summary-strip metrics for a role challenge list.
  *
- * Copilot tracks with zero challenges are intentionally omitted. Reviewer pages
+ * Copilot tracks with zero challenges are intentionally omitted. Reviewer views
  * show only the deduplicated challenge total.
  *
  * This function does not throw.
@@ -163,9 +162,8 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
         data,
         error,
         isValidating,
-        loadMore,
         mutate,
-    }: MemberRoleChallengesResponse = useMemberRoleChallenges(
+    }: SWRResponse<MemberRoleChallenges, Error> = useMemberRoleChallenges(
         props.profile.handle,
         role,
     )
@@ -183,23 +181,6 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
     function handleRetry(): void {
         mutate()
             .catch(() => undefined)
-    }
-
-    /**
-     * Loads another API page when the challenge viewport reaches its bottom edge.
-     *
-     * @param {UIEvent<HTMLDivElement>} event - Scroll event from the challenge list.
-     * @returns {void} This event handler may request another page and does not return a value.
-     */
-    function handleChallengeListScroll(event: UIEvent<HTMLDivElement>): void {
-        const challengeList = event.currentTarget
-        const distanceFromBottom = challengeList.scrollHeight
-            - challengeList.scrollTop
-            - challengeList.clientHeight
-
-        if (distanceFromBottom <= 24) {
-            loadMore()
-        }
     }
 
     if (!role) {
@@ -266,7 +247,6 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
                     aria-busy={isValidating}
                     aria-label={`${roleTitle} challenges`}
                     className={styles.challengeList}
-                    onScroll={handleChallengeListScroll}
                     role='region'
                 >
                     <div className={styles.challengeGrid}>
@@ -274,12 +254,6 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
                             <RoleChallengeCard challenge={challenge} key={challenge.id} />
                         ))}
                     </div>
-                    {error && (
-                        <div className={styles.loadMoreError} role='alert'>
-                            <span>{`We couldn't load more ${roleTitle.toLowerCase()} challenges.`}</span>
-                            <button onClick={handleRetry} type='button'>Try again</button>
-                        </div>
-                    )}
                 </div>
             )}
         </div>

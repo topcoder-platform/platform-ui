@@ -60,12 +60,3 @@ export interface MemberRoleChallenges {
     total: number
     trackCounts?: Partial<Record<MemberRoleTrack, number>>
 }
-
-/**
- * One API page of challenges for a member special role.
- */
-export interface MemberRoleChallengesPage extends MemberRoleChallenges {
-    page: number
-    perPage: number
-    totalPages: number
-}

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import { readFileSync } from 'fs'
-import { fireEvent, render, RenderResult, screen } from '@testing-library/react'
+import { render, RenderResult, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import type {
@@ -95,9 +95,7 @@ function createHookResponse(data: MemberRoleChallenges): ReturnType<typeof useMe
     return {
         data,
         error: undefined,
-        hasMore: false,
         isValidating: false,
-        loadMore: jest.fn(),
         mutate: jest.fn(),
     }
 }
@@ -186,9 +184,7 @@ describe('MemberRoleDetailsView', () => {
         mockedUseMemberRoleChallenges.mockReturnValue({
             data: undefined,
             error: undefined,
-            hasMore: false,
             isValidating: true,
-            loadMore: jest.fn(),
             mutate: jest.fn(),
         })
 
@@ -203,8 +199,8 @@ describe('MemberRoleDetailsView', () => {
         role => {
             mockedUseMemberRoleChallenges.mockReturnValue(createHookResponse({
                 challenges: [
-                    { id: 'challenge-1', name: 'Challenge from the first API page' },
-                    { id: 'challenge-101', name: 'Challenge from a later API page' },
+                    { id: 'challenge-1', name: 'Newest challenge' },
+                    { id: 'challenge-101', name: 'Challenge beyond the old limit' },
                 ],
                 role,
                 total: 101,
@@ -214,39 +210,13 @@ describe('MemberRoleDetailsView', () => {
 
             expect(mockedUseMemberRoleChallenges)
                 .toHaveBeenCalledWith('tester', role)
-            expect(screen.getByText('Challenge from the first API page'))
+            expect(screen.getByText('Newest challenge'))
                 .toBeInTheDocument()
-            expect(screen.getByText('Challenge from a later API page'))
+            expect(screen.getByText('Challenge beyond the old limit'))
                 .toBeInTheDocument()
             expect(screen.queryByRole('button'))
                 .not.toBeInTheDocument()
         },
     )
 
-    it('loads more challenges when the scrollable list reaches the bottom', () => {
-        const hookResponse = createHookResponse({
-            challenges: [{ id: 'challenge-1', name: 'First challenge page' }],
-            role: 'reviewer',
-            total: 101,
-        })
-
-        mockedUseMemberRoleChallenges.mockReturnValue({
-            ...hookResponse,
-            hasMore: true,
-        })
-
-        renderRole('reviewer')
-
-        const challengeList = screen.getByRole('region', { name: 'Reviewer challenges' })
-
-        Object.defineProperties(challengeList, {
-            clientHeight: { configurable: true, value: 100 },
-            scrollHeight: { configurable: true, value: 300 },
-            scrollTop: { configurable: true, value: 180 },
-        })
-        fireEvent.scroll(challengeList)
-
-        expect(hookResponse.loadMore)
-            .toHaveBeenCalledTimes(1)
-    })
 })
