@@ -154,8 +154,26 @@
     }
 }
 
-.pagination {
+.loadMoreError {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-3;
     margin-top: $sp-3;
+    color: $black-60;
+    font-family: $font-roboto;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+
+    > button {
+        color: $link-blue-dark;
+        font-weight: $font-weight-bold;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
 }
 
 .loadingState {

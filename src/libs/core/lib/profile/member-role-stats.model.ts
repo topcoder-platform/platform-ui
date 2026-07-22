@@ -51,15 +51,21 @@ export interface MemberRoleChallenge {
 }
 
 /**
- * One newest-first page of challenges for a member special role.
+ * Newest-first challenges and aggregate statistics for a member special role.
  */
-export interface MemberRoleChallengesPage {
+export interface MemberRoleChallenges {
     challenges: MemberRoleChallenge[]
     fulfillment?: MemberRoleFulfillment
-    page: number
-    perPage: number
     role: MemberSpecialRole
     total: number
-    totalPages: number
     trackCounts?: Partial<Record<MemberRoleTrack, number>>
+}
+
+/**
+ * One API page of challenges for a member special role.
+ */
+export interface MemberRoleChallengesPage extends MemberRoleChallenges {
+    page: number
+    perPage: number
+    totalPages: number
 }

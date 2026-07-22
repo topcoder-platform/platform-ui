@@ -1,19 +1,15 @@
 import {
     FC,
-    RefObject,
-    useEffect,
+    UIEvent,
     useMemo,
-    useRef,
-    useState,
 } from 'react'
 import { Link, Navigate, Params, useParams } from 'react-router-dom'
-import { SWRResponse } from 'swr'
 
-import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 import { EnvironmentConfig } from '~/config'
 import {
     MemberRoleChallenge,
-    MemberRoleChallengesPage,
+    MemberRoleChallenges,
+    MemberRoleChallengesResponse,
     MemberRoleTrack,
     MemberSpecialRole,
     useMemberRoleChallenges,
@@ -24,8 +20,6 @@ import { IconOutline, LoadingSpinner } from '~/libs/ui'
 import { getUserProfileRoute } from '../../../profiles.routes'
 
 import styles from './MemberRoleDetailsView.module.scss'
-
-const ROLE_CHALLENGES_PER_PAGE = 100
 
 interface MemberRoleDetailsViewProps {
     profile: UserProfile
@@ -98,12 +92,12 @@ const formatFulfillmentRate = (rate: number): string => `${fulfillmentRateFormat
  * This function does not throw.
  *
  * @param {MemberSpecialRole} role - Role displayed by the detail page.
- * @param {MemberRoleChallengesPage | undefined} data - Loaded API page and aggregate statistics.
+ * @param {MemberRoleChallenges | undefined} data - Loaded challenges and aggregate statistics.
  * @returns {RoleMetric[]} Ordered display metrics.
  */
 const getRoleMetrics = (
     role: MemberSpecialRole,
-    data?: MemberRoleChallengesPage,
+    data?: MemberRoleChallenges,
 ): RoleMetric[] => {
     if (!data) {
         return []
@@ -155,10 +149,7 @@ const RoleChallengeCard: FC<{ challenge: MemberRoleChallenge }> = props => (
 )
 
 /**
- * Displays a newest-first, API-paginated copilot or reviewer challenge history.
- *
- * The current page contains at most 100 challenge cards. Page changes scroll the
- * card viewport to the top while aggregate stats continue to describe all role challenges.
+ * Displays a newest-first copilot or reviewer challenge history in a scrollable viewport.
  *
  * Request failures are rendered in the panel instead of thrown by this component.
  *
@@ -168,50 +159,23 @@ const RoleChallengeCard: FC<{ challenge: MemberRoleChallenge }> = props => (
 const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
     const routeParams: Readonly<Params<string>> = useParams()
     const role = parseRole(routeParams.roleType)
-    const [page, setPage] = useState<number>(1)
-    const challengeListRef: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
     const {
         data,
         error,
         isValidating,
+        loadMore,
         mutate,
-    }: SWRResponse<MemberRoleChallengesPage, Error> = useMemberRoleChallenges(
+    }: MemberRoleChallengesResponse = useMemberRoleChallenges(
         props.profile.handle,
         role,
-        page,
-        ROLE_CHALLENGES_PER_PAGE,
     )
     const roleTitle = role ? getRoleTitle(role) : ''
     const metrics = useMemo(() => (
         role ? getRoleMetrics(role, data) : []
     ), [data, role])
 
-    useEffect(() => {
-        setPage(1)
-    }, [props.profile.handle, role])
-
-    useEffect(() => {
-        if (data?.totalPages && page > data.totalPages) {
-            setPage(data.totalPages)
-        }
-    }, [data?.totalPages, page])
-
     /**
-     * Selects another API page and resets the scrollable challenge grid to its first row.
-     *
-     * @param {number} nextPage - One-based role challenge page selected in Pagination.
-     * @returns {void} This event handler updates local state and does not return a value.
-     * This function does not throw.
-     */
-    function handlePageChange(nextPage: number): void {
-        setPage(nextPage)
-        if (challengeListRef.current) {
-            challengeListRef.current.scrollTop = 0
-        }
-    }
-
-    /**
-     * Revalidates the current role challenge page after a request failure.
+     * Revalidates the role challenge list after a request failure.
      *
      * @returns {void} This click handler starts SWR revalidation and does not return a value.
      * Request failures remain in SWR's error state and are not thrown synchronously.
@@ -219,6 +183,23 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
     function handleRetry(): void {
         mutate()
             .catch(() => undefined)
+    }
+
+    /**
+     * Loads another API page when the challenge viewport reaches its bottom edge.
+     *
+     * @param {UIEvent<HTMLDivElement>} event - Scroll event from the challenge list.
+     * @returns {void} This event handler may request another page and does not return a value.
+     */
+    function handleChallengeListScroll(event: UIEvent<HTMLDivElement>): void {
+        const challengeList = event.currentTarget
+        const distanceFromBottom = challengeList.scrollHeight
+            - challengeList.scrollTop
+            - challengeList.clientHeight
+
+        if (distanceFromBottom <= 24) {
+            loadMore()
+        }
     }
 
     if (!role) {
@@ -269,7 +250,7 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
                 </div>
             )}
 
-            {error && (
+            {error && !data && (
                 <div className={styles.message} role='alert'>
                     <p>{`We couldn't load ${roleTitle.toLowerCase()} challenges.`}</p>
                     <button onClick={handleRetry} type='button'>Try again</button>
@@ -281,25 +262,25 @@ const MemberRoleDetailsView: FC<MemberRoleDetailsViewProps> = props => {
             )}
 
             {data && data.challenges.length > 0 && (
-                <>
-                    <div className={styles.challengeList} ref={challengeListRef}>
-                        <div className={styles.challengeGrid}>
-                            {data.challenges.map(challenge => (
-                                <RoleChallengeCard challenge={challenge} key={challenge.id} />
-                            ))}
-                        </div>
+                <div
+                    aria-busy={isValidating}
+                    aria-label={`${roleTitle} challenges`}
+                    className={styles.challengeList}
+                    onScroll={handleChallengeListScroll}
+                    role='region'
+                >
+                    <div className={styles.challengeGrid}>
+                        {data.challenges.map(challenge => (
+                            <RoleChallengeCard challenge={challenge} key={challenge.id} />
+                        ))}
                     </div>
-                    {data.totalPages > 1 && (
-                        <div className={styles.pagination}>
-                            <Pagination
-                                disabled={isValidating}
-                                onPageChange={handlePageChange}
-                                page={page}
-                                totalPages={data.totalPages}
-                            />
+                    {error && (
+                        <div className={styles.loadMoreError} role='alert'>
+                            <span>{`We couldn't load more ${roleTitle.toLowerCase()} challenges.`}</span>
+                            <button onClick={handleRetry} type='button'>Try again</button>
                         </div>
                     )}
-                </>
+                </div>
             )}
         </div>
     )

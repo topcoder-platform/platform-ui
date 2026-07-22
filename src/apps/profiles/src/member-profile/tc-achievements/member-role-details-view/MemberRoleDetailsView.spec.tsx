@@ -5,7 +5,7 @@ import { fireEvent, render, RenderResult, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import type {
-    MemberRoleChallengesPage,
+    MemberRoleChallenges,
     MemberSpecialRole,
     UserProfile,
 } from '~/libs/core'
@@ -36,25 +36,6 @@ jest.mock('~/libs/ui', () => ({
         XIcon: (): JSX.Element => <svg />,
     },
     LoadingSpinner: (): JSX.Element => <div>Loading</div>,
-}), {
-    virtual: true,
-})
-
-jest.mock('~/apps/admin/src/lib/components/common/Pagination', () => ({
-    Pagination: function Pagination(props: {
-        onPageChange: (page: number) => void
-        page: number
-    }): JSX.Element {
-        function handlePageChange(): void {
-            props.onPageChange(2)
-        }
-
-        return (
-            <button onClick={handlePageChange} type='button'>
-                {`Page ${props.page}; go to page 2`}
-            </button>
-        )
-    },
 }), {
     virtual: true,
 })
@@ -93,6 +74,13 @@ describe('MemberRoleDetailsView styles', () => {
         expect(memberRoleDetailsStyles)
             .toMatch(/\.loadingState \{[\s\S]*?height: 120px;[\s\S]*?overflow: hidden;/)
     })
+
+    it('keeps long challenge lists in a bounded scrollable viewport', () => {
+        expect(memberRoleDetailsStyles)
+            .toMatch(/\.challengeList \{[\s\S]*?max-height: 258px;[\s\S]*?overflow-y: auto;/)
+        expect(memberRoleDetailsStyles)
+            .not.toMatch(/\.pagination \{/)
+    })
 })
 
 /**
@@ -100,14 +88,16 @@ describe('MemberRoleDetailsView styles', () => {
  *
  * This test helper does not throw.
  *
- * @param {MemberRoleChallengesPage} data - Loaded member role challenge page.
+ * @param {MemberRoleChallenges} data - Loaded member role challenges.
  * @returns {ReturnType<typeof useMemberRoleChallenges>} Hook response consumed by the component.
  */
-function createHookResponse(data: MemberRoleChallengesPage): ReturnType<typeof useMemberRoleChallenges> {
+function createHookResponse(data: MemberRoleChallenges): ReturnType<typeof useMemberRoleChallenges> {
     return {
         data,
         error: undefined,
+        hasMore: false,
         isValidating: false,
+        loadMore: jest.fn(),
         mutate: jest.fn(),
     }
 }
@@ -151,11 +141,8 @@ describe('MemberRoleDetailsView', () => {
                 rate: 88.95,
                 total: 100,
             },
-            page: 1,
-            perPage: 100,
             role: 'copilot',
             total: 90,
-            totalPages: 1,
             trackCounts: {
                 DATA_SCIENCE: 0,
                 DESIGN: 0,
@@ -181,11 +168,8 @@ describe('MemberRoleDetailsView', () => {
     it('shows the deduplicated reviewer challenge count', () => {
         mockedUseMemberRoleChallenges.mockReturnValue(createHookResponse({
             challenges: [{ id: 'review-1', name: 'Reviewed challenge' }],
-            page: 1,
-            perPage: 100,
             role: 'reviewer',
             total: 9,
-            totalPages: 1,
         }))
 
         renderRole('reviewer')
@@ -202,7 +186,9 @@ describe('MemberRoleDetailsView', () => {
         mockedUseMemberRoleChallenges.mockReturnValue({
             data: undefined,
             error: undefined,
+            hasMore: false,
             isValidating: true,
+            loadMore: jest.fn(),
             mutate: jest.fn(),
         })
 
@@ -212,64 +198,55 @@ describe('MemberRoleDetailsView', () => {
             .toHaveClass('loadingState')
     })
 
-    it('requests fixed 100-item pages and loads the selected next page', () => {
-        mockedUseMemberRoleChallenges.mockImplementation((handle, role, page, perPage) => (
-            createHookResponse({
-                challenges: [{ id: `challenge-${page}`, name: `Challenge page ${page}` }],
-                page,
-                perPage: perPage ?? 100,
-                role: role as MemberSpecialRole,
-                total: 150,
-                totalPages: 2,
-            })
-        ))
+    it.each<MemberSpecialRole>(['copilot', 'reviewer'])(
+        'shows the complete %s challenge list without pagination controls',
+        role => {
+            mockedUseMemberRoleChallenges.mockReturnValue(createHookResponse({
+                challenges: [
+                    { id: 'challenge-1', name: 'Challenge from the first API page' },
+                    { id: 'challenge-101', name: 'Challenge from a later API page' },
+                ],
+                role,
+                total: 101,
+            }))
+
+            renderRole(role)
+
+            expect(mockedUseMemberRoleChallenges)
+                .toHaveBeenCalledWith('tester', role)
+            expect(screen.getByText('Challenge from the first API page'))
+                .toBeInTheDocument()
+            expect(screen.getByText('Challenge from a later API page'))
+                .toBeInTheDocument()
+            expect(screen.queryByRole('button'))
+                .not.toBeInTheDocument()
+        },
+    )
+
+    it('loads more challenges when the scrollable list reaches the bottom', () => {
+        const hookResponse = createHookResponse({
+            challenges: [{ id: 'challenge-1', name: 'First challenge page' }],
+            role: 'reviewer',
+            total: 101,
+        })
+
+        mockedUseMemberRoleChallenges.mockReturnValue({
+            ...hookResponse,
+            hasMore: true,
+        })
 
         renderRole('reviewer')
 
-        expect(mockedUseMemberRoleChallenges)
-            .toHaveBeenCalledWith('tester', 'reviewer', 1, 100)
+        const challengeList = screen.getByRole('region', { name: 'Reviewer challenges' })
 
-        fireEvent.click(screen.getByRole('button', { name: /go to page 2/i }))
+        Object.defineProperties(challengeList, {
+            clientHeight: { configurable: true, value: 100 },
+            scrollHeight: { configurable: true, value: 300 },
+            scrollTop: { configurable: true, value: 180 },
+        })
+        fireEvent.scroll(challengeList)
 
-        expect(mockedUseMemberRoleChallenges)
-            .toHaveBeenLastCalledWith('tester', 'reviewer', 2, 100)
-        expect(screen.getByText('Challenge page 2'))
-            .toBeInTheDocument()
-    })
-
-    it('resets to the first page when the profile handle changes on the same role route', () => {
-        mockedUseMemberRoleChallenges.mockImplementation((handle, role, page, perPage) => (
-            createHookResponse({
-                challenges: [{ id: `challenge-${handle}-${page}`, name: `Challenge page ${page}` }],
-                page,
-                perPage: perPage ?? 100,
-                role: role as MemberSpecialRole,
-                total: 150,
-                totalPages: 2,
-            })
-        ))
-        const renderResult = renderRole('reviewer')
-
-        fireEvent.click(screen.getByRole('button', { name: /go to page 2/i }))
-        expect(mockedUseMemberRoleChallenges)
-            .toHaveBeenLastCalledWith('tester', 'reviewer', 2, 100)
-
-        renderResult.rerender(
-            <MemoryRouter initialEntries={['/tester/stats/roles/reviewer']}>
-                <Routes>
-                    <Route
-                        path='/tester/stats/roles/:roleType'
-                        element={(
-                            <MemberRoleDetailsView
-                                profile={{ handle: 'another-member' } as UserProfile}
-                            />
-                        )}
-                    />
-                </Routes>
-            </MemoryRouter>,
-        )
-
-        expect(mockedUseMemberRoleChallenges)
-            .toHaveBeenLastCalledWith('another-member', 'reviewer', 1, 100)
+        expect(hookResponse.loadMore)
+            .toHaveBeenCalledTimes(1)
     })
 })
