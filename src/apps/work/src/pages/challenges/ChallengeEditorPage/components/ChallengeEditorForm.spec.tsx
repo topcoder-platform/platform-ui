@@ -372,7 +372,7 @@ jest.mock('./ChallengeScheduleSection', () => ({
                 index === 0
                     ? {
                         ...phase,
-                        duration: 1440,
+                        duration: 10080,
                         phaseId: phase?.phaseId || 'submission-phase-id',
                         scheduledEndDate: '2026-04-18T04:58:51.000Z',
                         scheduledStartDate: phase?.scheduledStartDate || '2026-04-11T04:58:51.000Z',
@@ -3260,7 +3260,7 @@ describe('ChallengeEditorForm', () => {
                 useSchedulingAPI: true,
             },
             phases: [{
-                duration: 1440,
+                duration: 691200,
                 isOpen: true,
                 name: 'Submission',
                 phaseId: 'submission-phase-id',
@@ -3275,7 +3275,7 @@ describe('ChallengeEditorForm', () => {
             name: 'Active challenge updated',
             phases: [{
                 ...activeChallenge.phases?.[0],
-                duration: 1440,
+                duration: 604800,
                 scheduledEndDate: '2026-04-18T04:58:51.000Z',
             }],
         } as Challenge
@@ -3309,6 +3309,66 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
         expect(mockedShowSuccessToast)
             .not.toHaveBeenCalledWith('Challenge saved successfully')
+    })
+
+    it('accepts an immediate phase window shifted later with its duration unchanged', async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [{
+                duration: 172800,
+                isOpen: true,
+                name: 'Registration',
+                phaseId: 'registration-phase-id',
+                scheduledEndDate: '2026-07-10T09:35:02.870Z',
+                scheduledStartDate: '2026-07-08T09:35:02.870Z',
+            }],
+            startDate: '2026-07-08T09:35:02.870Z',
+            status: 'ACTIVE',
+        } as Challenge
+        const persistedImmediateSchedule = {
+            ...activeChallenge,
+            name: 'Active challenge updated',
+            phases: [{
+                ...activeChallenge.phases?.[0],
+                actualStartDate: '2026-07-08T09:35:08.037Z',
+                scheduledEndDate: '2026-07-10T09:35:08.037Z',
+                scheduledStartDate: '2026-07-08T09:35:08.037Z',
+            }],
+        } as Challenge
+
+        mockedPatchChallenge.mockResolvedValue(persistedImmediateSchedule)
+        mockedFetchChallenge.mockResolvedValue(persistedImmediateSchedule)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedFetchChallenge)
+                .toHaveBeenCalledWith('12345')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-07-10T09:35:08.037Z')
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge saved successfully')
     })
 
     it('blocks saving when an assigned AI workflow has been disabled', async () => {
