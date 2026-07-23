@@ -30,7 +30,7 @@ export type DashboardDefinition = {
 
 export const dashboardDefinitions: Record<DashboardSlug, DashboardDefinition> = {
     'challenge-participation': {
-        chartType: 'bar',
+        chartType: 'column',
         index: 3,
         series: [
             {
@@ -50,7 +50,7 @@ export const dashboardDefinitions: Record<DashboardSlug, DashboardDefinition> = 
         title: 'Challenge Registrants vs Submitters',
     },
     'members-paid': {
-        chartType: 'bar',
+        chartType: 'column',
         index: 2,
         series: [
             {

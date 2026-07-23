@@ -416,7 +416,7 @@ export const fetchDashboards = (
 )
 
 /**
- * Fetches one dashboard drill-down for the requested six-month UTC range.
+ * Fetches one dashboard drill-down for the requested UTC range.
  *
  * The generic slug maps the result to its exact dashboard response type.
  *

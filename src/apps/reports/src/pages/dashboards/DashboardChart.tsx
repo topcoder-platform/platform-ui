@@ -39,8 +39,8 @@ function getSeriesValue(month: DashboardMonth, key: string): number {
  * Renders the configured Highcharts visualization for a dashboard dataset.
  *
  * @param props Dashboard slug, monthly data, and compact-card presentation flag.
- * @returns A stacked column, stacked bar, or grouped bar chart with an
- * accessible monthly data table.
+ * @returns A stacked or grouped column chart with month categories along the
+ * bottom axis and an accessible monthly data table.
  * @throws Does not throw. Invalid or absent point values are rendered as zero.
  */
 export const DashboardChart: FC<DashboardChartProps> = props => {

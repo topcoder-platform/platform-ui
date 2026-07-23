@@ -1,6 +1,8 @@
 import {
+    ChangeEvent,
     ComponentType,
     FC,
+    FormEvent,
     SVGProps,
     useCallback,
     useEffect,
@@ -40,10 +42,15 @@ import {
 } from './dashboard.config'
 import {
     buildDashboardCsvFileName,
+    buildDashboardRangeFromMonths,
+    DashboardRange,
     formatDashboardMonth,
     formatDashboardRangeLabel,
     formatPercentage,
     getDashboardRange,
+    getDashboardRangeMonthCount,
+    getDashboardRangeMonths,
+    shiftDashboardRange,
 } from './dashboard.utils'
 import styles from './Dashboards.module.scss'
 
@@ -58,6 +65,8 @@ type DashboardMetric = {
 type DashboardDetailContentProps = {
     dashboard: DashboardSlug
 }
+
+type DashboardRangeMode = 'custom' | 'six-months'
 
 /**
  * Formats an all-time metric as a locale-aware integer.
@@ -80,6 +89,46 @@ function formatMetricInteger(value: number): string {
  */
 function formatPeakMonth(value: string | null): string {
     return value ? formatDashboardMonth(value) : '—'
+}
+
+/**
+ * Formats the selected dashboard period size for the date-range indicator.
+ *
+ * @param monthCount Positive number of calendar months in the applied range.
+ * @returns A grammatically correct label such as `1 month selected`.
+ * @throws Does not throw.
+ */
+function formatSelectedMonthCount(monthCount: number): string {
+    return `${monthCount} ${monthCount === 1 ? 'month' : 'months'} selected`
+}
+
+/**
+ * Builds a custom dashboard range that does not extend beyond available months.
+ *
+ * @param startMonth Inclusive custom start month in `YYYY-MM` format.
+ * @param endMonth Inclusive custom end month in `YYYY-MM` format.
+ * @param latestRange Latest available half-open UTC dashboard range.
+ * @param latestEndMonth Latest available inclusive month in `YYYY-MM` format.
+ * @returns Validated custom range ready for data and CSV requests.
+ * @throws RangeError when the month selection is invalid or extends into the future.
+ */
+function buildAvailableDashboardRange(
+    startMonth: string,
+    endMonth: string,
+    latestRange: DashboardRange,
+    latestEndMonth: string,
+): DashboardRange {
+    const customRange = buildDashboardRangeFromMonths(startMonth, endMonth)
+
+    if (customRange.endDate > latestRange.endDate) {
+        throw new RangeError(
+            `End month cannot be later than ${
+                formatDashboardMonth(`${latestEndMonth}-01`)
+            }.`,
+        )
+    }
+
+    return customRange
 }
 
 /**
@@ -211,17 +260,38 @@ function buildDashboardMetrics(response: DashboardResponse): DashboardMetric[] {
  */
 const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
     const definition = dashboardDefinitions[props.dashboard]
-    const [periodOffset, setPeriodOffset] = useState<number>(0)
     const rangeReferenceDate = useMemo(() => new Date(), [])
-    const range = useMemo(
-        () => getDashboardRange(periodOffset, rangeReferenceDate),
-        [periodOffset, rangeReferenceDate],
+    const latestRange = useMemo(
+        () => getDashboardRange(0, rangeReferenceDate),
+        [rangeReferenceDate],
     )
+    const latestMonthSelection = useMemo(
+        () => getDashboardRangeMonths(latestRange),
+        [latestRange],
+    )
+    const [range, setRange] = useState<DashboardRange>(latestRange)
+    const [rangeMode, setRangeMode] = useState<DashboardRangeMode>('six-months')
+    const [customStartMonth, setCustomStartMonth] = useState<string>(
+        latestMonthSelection.startMonth,
+    )
+    const [customEndMonth, setCustomEndMonth] = useState<string>(
+        latestMonthSelection.endMonth,
+    )
+    const [rangeErrorMessage, setRangeErrorMessage] = useState<string>()
     const [response, setResponse] = useState<DashboardResponse>()
     const [errorMessage, setErrorMessage] = useState<string>()
     const [isDownloading, setIsDownloading] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [refreshKey, setRefreshKey] = useState<number>(0)
+    const rangeMonthCount = useMemo(
+        () => getDashboardRangeMonthCount(range),
+        [range],
+    )
+    const nextRange = useMemo(
+        () => shiftDashboardRange(range, 1),
+        [range],
+    )
+    const canNavigateNext = nextRange.endDate <= latestRange.endDate
 
     useEffect(() => {
         let isActive = true
@@ -256,13 +326,143 @@ const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
         }
     }, [props.dashboard, range, refreshKey])
 
-    const handlePreviousPeriod = useCallback(() => {
-        setPeriodOffset(current => current - 1)
+    /**
+     * Applies a month-aligned range and mirrors it into the custom input draft.
+     *
+     * @param nextSelectedRange Half-open UTC range to display and export.
+     * @returns Nothing.
+     * @throws Propagates invalid month-boundary errors from the range utility.
+     */
+    const applySelectedRange = useCallback((
+        nextSelectedRange: DashboardRange,
+    ): void => {
+        const monthSelection = getDashboardRangeMonths(nextSelectedRange)
+
+        setRange(nextSelectedRange)
+        setCustomStartMonth(monthSelection.startMonth)
+        setCustomEndMonth(monthSelection.endMonth)
     }, [])
 
+    /**
+     * Moves the report backward by its currently selected month count.
+     *
+     * @returns Nothing.
+     * @throws Does not throw for the validated applied range.
+     */
+    const handlePreviousPeriod = useCallback((): void => {
+        setRangeErrorMessage(undefined)
+        applySelectedRange(shiftDashboardRange(range, -1))
+    }, [applySelectedRange, range])
+
+    /**
+     * Moves the report forward by its selected month count when fully available.
+     *
+     * @returns Nothing.
+     * @throws Does not throw for the validated applied range.
+     */
     const handleNextPeriod = useCallback(() => {
-        setPeriodOffset(current => Math.min(current + 1, 0))
+        if (!canNavigateNext) {
+            return
+        }
+
+        setRangeErrorMessage(undefined)
+        applySelectedRange(nextRange)
+    }, [
+        applySelectedRange,
+        canNavigateNext,
+        nextRange,
+    ])
+
+    /**
+     * Changes between the six-month view and editable custom month controls.
+     *
+     * Returning to the six-month view immediately restores the latest range;
+     * entering custom mode keeps the currently displayed range as the draft.
+     *
+     * @param event Native range-mode selection event.
+     * @returns Nothing.
+     * @throws Does not throw.
+     */
+    const handleRangeModeChange = useCallback((
+        event: ChangeEvent<HTMLSelectElement>,
+    ): void => {
+        const nextMode = event.target.value as DashboardRangeMode
+
+        setRangeMode(nextMode)
+        setRangeErrorMessage(undefined)
+
+        if (nextMode === 'six-months') {
+            applySelectedRange(latestRange)
+        }
+    }, [
+        applySelectedRange,
+        latestRange,
+    ])
+
+    /**
+     * Updates the unapplied custom start-month draft.
+     *
+     * @param event Native month input change event.
+     * @returns Nothing.
+     * @throws Does not throw.
+     */
+    const handleCustomStartMonthChange = useCallback((
+        event: ChangeEvent<HTMLInputElement>,
+    ): void => {
+        setCustomStartMonth(event.target.value)
+        setRangeErrorMessage(undefined)
     }, [])
+
+    /**
+     * Updates the unapplied custom end-month draft.
+     *
+     * @param event Native month input change event.
+     * @returns Nothing.
+     * @throws Does not throw.
+     */
+    const handleCustomEndMonthChange = useCallback((
+        event: ChangeEvent<HTMLInputElement>,
+    ): void => {
+        setCustomEndMonth(event.target.value)
+        setRangeErrorMessage(undefined)
+    }, [])
+
+    /**
+     * Validates and applies the inclusive custom month selection.
+     *
+     * @param event Custom date-range form submission event.
+     * @returns Nothing.
+     * @throws Does not throw. Validation failures are rendered beside the inputs.
+     */
+    const handleApplyCustomRange = useCallback((
+        event: FormEvent<HTMLFormElement>,
+    ): void => {
+        event.preventDefault()
+
+        try {
+            const customRange = buildAvailableDashboardRange(
+                customStartMonth,
+                customEndMonth,
+                latestRange,
+                latestMonthSelection.endMonth,
+            )
+
+            setRangeErrorMessage(undefined)
+            applySelectedRange(customRange)
+        } catch (error) {
+            setRangeErrorMessage(
+                error instanceof Error && error.message
+                    ? error.message
+                    : 'Choose a valid dashboard month range.',
+            )
+        }
+    }, [
+        applySelectedRange,
+        customEndMonth,
+        customStartMonth,
+        latestMonthSelection.endMonth,
+        latestRange.endDate,
+    ])
 
     const handleRetry = useCallback(() => {
         setRefreshKey(current => current + 1)
@@ -310,37 +510,7 @@ const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
                         <p>{definition.subtitle}</p>
                     </div>
 
-                    <div className={styles.periodControls}>
-                        <Button
-                            icon={IconOutline.ChevronLeftIcon}
-                            iconToLeft
-                            onClick={handlePreviousPeriod}
-                            secondary
-                        >
-                            Previous 6 Months
-                        </Button>
-
-                        <div className={styles.periodIndicator}>
-                            <div>
-                                <strong>{formatDashboardRangeLabel(range)}</strong>
-                                <span>
-                                    {periodOffset === 0
-                                        ? 'Showing latest 6 months'
-                                        : 'Showing previous 6-month period'}
-                                </span>
-                            </div>
-                            <IconOutline.CalendarIcon aria-hidden='true' />
-                        </div>
-
-                        <Button
-                            disabled={periodOffset === 0}
-                            icon={IconOutline.ChevronRightIcon}
-                            onClick={handleNextPeriod}
-                            secondary
-                        >
-                            Next 6 Months
-                        </Button>
-
+                    <div className={styles.detailActions}>
                         <Button
                             disabled={isDownloading || isLoading || !response}
                             icon={IconOutline.DownloadIcon}
@@ -352,6 +522,117 @@ const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
                         </Button>
                     </div>
                 </header>
+
+                <section
+                    aria-label='Dashboard date range'
+                    className={styles.rangePanel}
+                >
+                    <form
+                        className={styles.rangeForm}
+                        noValidate
+                        onSubmit={handleApplyCustomRange}
+                    >
+                        <label
+                            className={styles.rangeModeField}
+                            htmlFor='dashboard-range-mode'
+                        >
+                            <span>Date Range</span>
+                            <select
+                                id='dashboard-range-mode'
+                                onChange={handleRangeModeChange}
+                                value={rangeMode}
+                            >
+                                <option value='six-months'>6 Months</option>
+                                <option value='custom'>Custom Range</option>
+                            </select>
+                        </label>
+
+                        {rangeMode === 'custom' && (
+                            <>
+                                <label className={styles.monthField}>
+                                    <span className={styles.screenReaderOnly}>
+                                        Start month
+                                    </span>
+                                    <input
+                                        aria-describedby={
+                                            rangeErrorMessage
+                                                ? 'dashboard-range-error'
+                                                : undefined
+                                        }
+                                        aria-invalid={!!rangeErrorMessage}
+                                        max={latestMonthSelection.endMonth}
+                                        onChange={handleCustomStartMonthChange}
+                                        type='month'
+                                        value={customStartMonth}
+                                    />
+                                </label>
+                                <span className={styles.rangeSeparator}>to</span>
+                                <label className={styles.monthField}>
+                                    <span className={styles.screenReaderOnly}>
+                                        End month
+                                    </span>
+                                    <input
+                                        aria-describedby={
+                                            rangeErrorMessage
+                                                ? 'dashboard-range-error'
+                                                : undefined
+                                        }
+                                        aria-invalid={!!rangeErrorMessage}
+                                        max={latestMonthSelection.endMonth}
+                                        onChange={handleCustomEndMonthChange}
+                                        type='month'
+                                        value={customEndMonth}
+                                    />
+                                </label>
+                                <Button
+                                    disabled={isLoading}
+                                    secondary
+                                    type='submit'
+                                >
+                                    Apply
+                                </Button>
+                            </>
+                        )}
+
+                        {rangeErrorMessage && (
+                            <span
+                                className={styles.rangeInputError}
+                                id='dashboard-range-error'
+                                role='alert'
+                            >
+                                {rangeErrorMessage}
+                            </span>
+                        )}
+                    </form>
+
+                    <div className={styles.periodNavigation}>
+                        <Button
+                            icon={IconOutline.ChevronLeftIcon}
+                            iconToLeft
+                            onClick={handlePreviousPeriod}
+                            secondary
+                        >
+                            Previous Period
+                        </Button>
+
+                        <div className={styles.periodIndicator}>
+                            <div>
+                                <strong>{formatDashboardRangeLabel(range)}</strong>
+                                <span>{formatSelectedMonthCount(rangeMonthCount)}</span>
+                            </div>
+                            <IconOutline.CalendarIcon aria-hidden='true' />
+                        </div>
+
+                        <Button
+                            disabled={!canNavigateNext}
+                            icon={IconOutline.ChevronRightIcon}
+                            onClick={handleNextPeriod}
+                            secondary
+                        >
+                            Next Period
+                        </Button>
+                    </div>
+                </section>
 
                 {errorMessage && !response && (
                     <section className={styles.errorState} role='alert'>
