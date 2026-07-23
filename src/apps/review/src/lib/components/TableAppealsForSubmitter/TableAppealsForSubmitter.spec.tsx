@@ -153,7 +153,7 @@ const challengeInfo = {
     type: {
         name: 'Challenge',
     },
-} as ChallengeInfo
+} as unknown as ChallengeInfo
 const challengeContext = {
     challengeInfo,
     myResources: [
@@ -163,7 +163,7 @@ const challengeContext = {
         },
     ],
     reviewers: [],
-} as ChallengeDetailContextModel
+} as unknown as ChallengeDetailContextModel
 
 describe('TableAppealsForSubmitter ownership boundary', () => {
     beforeEach(() => {

@@ -117,7 +117,7 @@ const challengeInfo = {
     type: {
         name: 'Challenge',
     },
-} as ChallengeInfo
+} as unknown as ChallengeInfo
 const challengeContext = {
     challengeInfo,
     challengeSubmissions: [],
@@ -131,7 +131,7 @@ const challengeContext = {
     resourceMemberIdMapping: {},
     resources: [],
     reviewers: [],
-} as ChallengeDetailContextModel
+} as unknown as ChallengeDetailContextModel
 const commonProps = {
     downloadSubmission: jest.fn(),
     isActiveChallenge: false,
