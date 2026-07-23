@@ -1581,6 +1581,22 @@ function getPhaseDateTime(value: Date | string | undefined): number | undefined 
 }
 
 /**
+ * Resolves the canonical phase duration used by the schedule form.
+ *
+ * @param phase challenge phase containing a duration value.
+ * @returns the positive finite duration, or `undefined` when it is unavailable.
+ */
+function getPhaseDurationValue(
+    phase: ChallengePhase | undefined,
+): number | undefined {
+    const duration = Number(phase?.duration)
+
+    return Number.isFinite(duration) && duration > 0
+        ? duration
+        : undefined
+}
+
+/**
  * Resolves a stable phase identity for comparing submitted and persisted schedules.
  *
  * @param phase challenge phase from form or API state.
@@ -1605,11 +1621,11 @@ function isOpenPhase(phase: ChallengePhase | undefined): boolean {
 }
 
 /**
- * Detects an active phase end date that the API did not shorten.
+ * Detects an active phase schedule that the API did not shorten.
  *
  * @param submittedPhases schedule phases submitted with the save request.
  * @param persistedPhases schedule phases fetched after the save completed.
- * @returns `true` when an open phase still ends later in persisted data than in submitted data.
+ * @returns `true` when an open phase remains longer in persisted data than in submitted data.
  */
 function hasRejectedActivePhaseShortening(
     submittedPhases: ChallengeEditorFormData['phases'],
@@ -1641,6 +1657,23 @@ function hasRejectedActivePhaseShortening(
             (!isOpenPhase(submittedPhase) && !isOpenPhase(persistedPhase))
             || submittedPhase.actualEndDate
             || persistedPhase.actualEndDate
+        ) {
+            return false
+        }
+
+        const submittedDuration = getPhaseDurationValue(submittedPhase)
+        const persistedDuration = getPhaseDurationValue(persistedPhase)
+
+        if (submittedDuration !== undefined && persistedDuration !== undefined) {
+            return submittedDuration < persistedDuration
+        }
+
+        const submittedStartTime = getPhaseDateTime(submittedPhase.scheduledStartDate)
+        const persistedStartTime = getPhaseDateTime(persistedPhase.scheduledStartDate)
+        if (
+            submittedStartTime === undefined
+            || persistedStartTime === undefined
+            || submittedStartTime !== persistedStartTime
         ) {
             return false
         }
