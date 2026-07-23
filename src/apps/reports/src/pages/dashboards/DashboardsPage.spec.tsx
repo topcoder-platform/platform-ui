@@ -88,7 +88,7 @@ const dashboardResponse: DashboardsResponse = {
         dashboard: 'members-paid',
         endDate: '2026-08-01T00:00:00.000Z',
         months: [{
-            contest: 30,
+            challenge: 30,
             engagement: 10,
             month: '2026-07-01',
             taas: 12,
@@ -96,7 +96,7 @@ const dashboardResponse: DashboardsResponse = {
         }],
         startDate: '2026-02-01T00:00:00.000Z',
         summary: {
-            contestUniqueMembers: 300,
+            challengeUniqueMembers: 300,
             engagementUniqueMembers: 100,
             peakMonth: '2026-07-01',
             peakMonthUniqueMembers: 70,

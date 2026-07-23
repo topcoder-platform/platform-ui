@@ -39,6 +39,7 @@ import type {
 import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
+    filterSubmissionRowsByOwnership,
     isAppealsPhase,
     isAppealsResponsePhase,
     partitionSubmissionHistory,
@@ -92,7 +93,6 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
-        shouldRestrictSubmitterToOwnSubmission,
     }: UseSubmissionDownloadAccessResult = downloadAccess
 
     const {
@@ -118,6 +118,38 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
 
     const challengeType: ChallengeInfo['type'] | undefined = challengeInfo?.type
     const challengeTrack: ChallengeInfo['track'] | undefined = challengeInfo?.track
+    const ownedSubmissionIds = useMemo<Set<string>>(
+        () => {
+            const ids = new Set<string>()
+            const submissions = [
+                ...(challengeInfo?.submissions ?? []),
+                ...datas,
+            ]
+
+            submissions.forEach(submission => {
+                const memberId = `${submission.memberId ?? ''}`.trim()
+                const submissionId = `${submission.id ?? ''}`.trim()
+                if (
+                    memberId.length
+                    && submissionId.length
+                    && ownedMemberIds.has(memberId)
+                ) {
+                    ids.add(submissionId)
+                }
+            })
+
+            return ids
+        },
+        [challengeInfo?.submissions, datas, ownedMemberIds],
+    )
+    const ownedDatas = useMemo<SubmissionInfo[]>(
+        () => filterSubmissionRowsByOwnership(
+            datas,
+            ownedMemberIds,
+            ownedSubmissionIds,
+        ),
+        [datas, ownedMemberIds, ownedSubmissionIds],
+    )
 
     const hasAppealsPhase = useMemo<boolean>(() => {
         const phases = challengeInfo?.phases ?? []
@@ -155,21 +187,25 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
 
     const submissionTypes = useMemo<Set<string>>(
         () => new Set<string>(
-            datas
+            ownedDatas
                 .map(submission => submission.type)
                 .filter((type): type is string => Boolean(type)),
         ),
-        [datas],
+        [ownedDatas],
     )
 
     const filteredAll = useMemo<SubmissionInfo[]>(
         () => {
-            const allSubmissions = challengeInfo?.submissions ?? []
+            const allSubmissions = filterSubmissionRowsByOwnership(
+                challengeInfo?.submissions ?? [],
+                ownedMemberIds,
+                ownedSubmissionIds,
+            )
             const typedFiltered = allSubmissions.filter(
                 submission => submission.type && submissionTypes.has(submission.type),
             )
             const fallbackIds = new Set(
-                datas
+                ownedDatas
                     .map(submission => submission.id)
                     .filter((id): id is string => Boolean(id)),
             )
@@ -179,12 +215,18 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
 
             return submissionTypes.size ? typedFiltered : filtered
         },
-        [challengeInfo?.submissions, datas, submissionTypes],
+        [
+            challengeInfo?.submissions,
+            ownedDatas,
+            ownedMemberIds,
+            ownedSubmissionIds,
+            submissionTypes,
+        ],
     )
 
     const submissionHistory = useMemo<SubmissionHistoryPartition>(
-        () => partitionSubmissionHistory(datas, filteredAll),
-        [datas, filteredAll],
+        () => partitionSubmissionHistory(ownedDatas, filteredAll),
+        [filteredAll, ownedDatas],
     )
 
     const restrictToLatest = useMemo<boolean>(
@@ -196,7 +238,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
         () => {
             const sourceSubmissions = restrictToLatest
                 ? submissionHistory.latestSubmissions
-                : datas
+                : ownedDatas
 
             if (!filteredAll.length) {
                 return sourceSubmissions
@@ -226,7 +268,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
                 }
             })
         },
-        [datas, filteredAll, restrictToLatest, submissionHistory],
+        [filteredAll, ownedDatas, restrictToLatest, submissionHistory],
     )
 
     const aggregatedRows = useMemo<AggregatedSubmissionReviews[]>(
@@ -270,7 +312,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
         isSubmissionDownloadRestrictedForMember,
         ownedMemberIds,
         restrictionMessage,
-        shouldRestrictSubmitterToOwnSubmission,
+        shouldRestrictSubmitterToOwnSubmission: true,
     }), [
         downloadSubmission,
         getRestrictionMessageForMember,
@@ -279,16 +321,20 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
         isSubmissionDownloadRestrictedForMember,
         ownedMemberIds,
         restrictionMessage,
-        shouldRestrictSubmitterToOwnSubmission,
     ])
 
     const isOwned = useCallback<(
         submission: SubmissionRow) => boolean
         >(
-        (submission: SubmissionRow) => (
-            submission.memberId ? ownedMemberIds.has(submission.memberId) : false
-        ),
-        [ownedMemberIds],
+        (submission: SubmissionRow) => {
+            const memberId = `${submission.memberId ?? ''}`.trim()
+            if (memberId.length) {
+                return ownedMemberIds.has(memberId)
+            }
+
+            return ownedSubmissionIds.has(`${submission.id ?? ''}`.trim())
+        },
+        [ownedMemberIds, ownedSubmissionIds],
         )
 
     const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
@@ -332,7 +378,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
                 const isOwnedSubmission = isOwned(submission)
                 const scoreConfig: ScoreVisibilityConfig = {
                     canDisplayScores,
-                    canViewScorecard: isChallengeCompleted || isOwnedSubmission,
+                    canViewScorecard: isOwnedSubmission,
                     isAppealsTab: true,
                 }
 
@@ -362,7 +408,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
                 const isOwnedSubmission = isOwned(submission)
                 const scoreConfig: ScoreVisibilityConfig = {
                     canDisplayScores,
-                    canViewScorecard: isChallengeCompleted || isOwnedSubmission,
+                    canViewScorecard: isOwnedSubmission,
                     isAppealsTab: true,
                 }
 
@@ -380,7 +426,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (prop
                     const isOwnedSubmission = isOwned(submission)
                     const scoreConfig: ScoreVisibilityConfig = {
                         canDisplayScores,
-                        canViewScorecard: isChallengeCompleted || isOwnedSubmission,
+                        canViewScorecard: isOwnedSubmission,
                         isAppealsTab: true,
                     }
 

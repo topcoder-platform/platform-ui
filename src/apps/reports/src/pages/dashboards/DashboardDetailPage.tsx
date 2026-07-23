@@ -116,10 +116,10 @@ function buildDashboardMetrics(response: DashboardResponse): DashboardMetric[] {
                 },
                 {
                     icon: IconOutline.GiftIcon,
-                    label: 'Contest Members',
+                    label: 'Challenge Members',
                     meta: 'All time',
                     tone: 'purple',
-                    value: formatMetricInteger(response.summary.contestUniqueMembers),
+                    value: formatMetricInteger(response.summary.challengeUniqueMembers),
                 },
                 {
                     icon: IconOutline.CashIcon,

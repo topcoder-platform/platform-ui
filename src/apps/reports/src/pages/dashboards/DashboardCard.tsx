@@ -42,10 +42,6 @@ export const DashboardCard: FC<DashboardCardProps> = props => {
                     </h2>
                     <p>{definition.subtitle}</p>
                 </div>
-                <IconOutline.InformationCircleIcon
-                    aria-label={`${definition.title} information`}
-                    className={styles.cardInfoIcon}
-                />
             </header>
 
             <div className={styles.cardChart}>

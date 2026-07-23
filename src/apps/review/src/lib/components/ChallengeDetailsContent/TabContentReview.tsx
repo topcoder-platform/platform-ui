@@ -24,7 +24,11 @@ import {
     ReviewResult,
     SubmissionInfo,
 } from '../../models'
-import { hasIsLatestFlag, isMarathonMatchChallenge } from '../../utils'
+import {
+    filterSubmissionRowsByOwnership,
+    hasIsLatestFlag,
+    isMarathonMatchChallenge,
+} from '../../utils'
 import { TableAppeals } from '../TableAppeals'
 import { TableAppealsForSubmitter } from '../TableAppealsForSubmitter'
 import { TableAppealsResponse } from '../TableAppealsResponse'
@@ -748,6 +752,21 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [resolvedSubmitterReviews],
     )
+    const submitterAppealRows = useMemo(
+        () => (isSubmitterView
+            ? filterSubmissionRowsByOwnership(
+                filteredSubmitterReviews,
+                myOwnedMemberIds,
+                myOwnedSubmissionIds,
+            )
+            : filteredSubmitterReviews),
+        [
+            filteredSubmitterReviews,
+            isSubmitterView,
+            myOwnedMemberIds,
+            myOwnedSubmissionIds,
+        ],
+    )
     const reviewerRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
             ? sortSubmissionsByReviewScoreDesc(filteredReviews, useAggregateReviewScore)
@@ -774,7 +793,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
     if (selectedTab === 'Appeals Response') {
         const appealsResponseDatas = isSubmitterView
-            ? filteredSubmitterReviews
+            ? submitterAppealRows
             : resolvedReviewsWithSubmitter
         return (
             <TableAppealsResponse
@@ -796,7 +815,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     if (selectedTab === 'Appeals') {
         return isSubmitterView ? (
             <TableAppealsForSubmitter
-                datas={filteredSubmitterReviews}
+                datas={submitterAppealRows}
                 aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}

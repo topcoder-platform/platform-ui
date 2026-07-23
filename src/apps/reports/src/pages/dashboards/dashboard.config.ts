@@ -65,8 +65,8 @@ export const dashboardDefinitions: Record<DashboardSlug, DashboardDefinition> = 
             },
             {
                 color: '#6c5ce7',
-                key: 'contest',
-                label: 'Contest',
+                key: 'challenge',
+                label: 'Challenge',
             },
             {
                 color: '#ff8a00',
@@ -76,7 +76,7 @@ export const dashboardDefinitions: Record<DashboardSlug, DashboardDefinition> = 
         ],
         slug: 'members-paid',
         stacked: true,
-        subtitle: 'Split by payment type (TaaS, Task, Contest, Engagement)',
+        subtitle: 'Split by payment type (TaaS, Task, Challenge, Engagement)',
         title: 'Unique Members Paid per Month',
     },
     'new-signups': {
