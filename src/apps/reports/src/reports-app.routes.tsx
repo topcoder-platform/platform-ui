@@ -13,6 +13,8 @@ import {
 import {
     billingAccountsPageRouteId,
     bulkMemberLookupRouteId,
+    dashboardDetailRoute,
+    dashboardsPageRouteId,
     reportsPageRouteId,
     rootRoute,
     talentPageRouteId,
@@ -22,6 +24,14 @@ const ReportsApp: LazyLoadedComponent = lazyLoad(() => import('./ReportsApp'))
 const ReportsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/reports/ReportsPage'),
     'ReportsPage',
+)
+const DashboardsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/dashboards/DashboardsPage'),
+    'DashboardsPage',
+)
+const DashboardDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/dashboards/DashboardDetailPage'),
+    'DashboardDetailPage',
 )
 const BillingAccountsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/reports/BillingAccountsPage'),
@@ -51,6 +61,16 @@ export const reportsRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <ReportsPage />,
                 route: reportsPageRouteId,
+            },
+            {
+                authRequired: true,
+                element: <DashboardsPage />,
+                route: dashboardsPageRouteId,
+            },
+            {
+                authRequired: true,
+                element: <DashboardDetailPage />,
+                route: dashboardDetailRoute,
             },
             {
                 authRequired: true,

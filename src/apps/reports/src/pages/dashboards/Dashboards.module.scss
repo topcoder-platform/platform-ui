@@ -1,0 +1,549 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: #111b46;
+}
+
+.pageHeader,
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+
+    h1 {
+        margin: 0 0 5px;
+        color: #111b46;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 36px;
+    }
+
+    p {
+        margin: 0;
+        color: #5a6488;
+        font-size: 14px;
+        line-height: 22px;
+    }
+}
+
+.headerActions,
+.detailActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboardGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.dashboardCard {
+    display: flex;
+    min-width: 0;
+    min-height: 420px;
+    flex-direction: column;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(18, 24, 40, 0.05);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px 0;
+
+    h2 {
+        margin: 0 0 4px;
+        color: #111b46;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 22px;
+    }
+
+    p {
+        margin: 0;
+        color: #111b46;
+        font-size: 12px;
+        line-height: 18px;
+    }
+}
+
+.cardChart {
+    display: flex;
+    min-height: 292px;
+    flex: 1;
+    align-items: center;
+    padding: 2px 12px 8px;
+}
+
+.chartFigure {
+    width: 100%;
+    margin: 0;
+}
+
+.screenReaderOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.emptyChart {
+    display: grid;
+    width: 100%;
+    min-height: 250px;
+    place-items: center;
+    border-radius: 6px;
+    background: #f7f9fc;
+    color: #5a6488;
+    font-size: 14px;
+    text-align: center;
+}
+
+.cardFooter {
+    margin: 0 20px;
+    padding: 14px 0 16px;
+    border-top: 1px solid #dce1eb;
+    text-align: center;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: #0f62fe;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.backLink {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 6px;
+    color: #0f62fe;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.detailHeader {
+    align-items: center;
+}
+
+.detailHeading {
+    min-width: 260px;
+}
+
+.rangePanel {
+    display: flex;
+    min-height: 76px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 14px 16px;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #f8f9fb;
+}
+
+.rangeForm,
+.periodNavigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.rangeForm {
+    min-width: 0;
+}
+
+.rangeModeField {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #111b46;
+    font-size: 13px;
+    font-weight: 700;
+
+    select {
+        min-width: 138px;
+    }
+}
+
+.rangeModeField select,
+.monthField input {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #bfc8da;
+    border-radius: 6px;
+    outline: none;
+    background: #fff;
+    color: #111b46;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    &:focus {
+        border-color: #0f62fe;
+        box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.15);
+    }
+}
+
+.monthField input {
+    width: 154px;
+}
+
+.rangeSeparator {
+    color: #34406b;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.rangeInputError {
+    width: 100%;
+    color: #c62828;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.periodNavigation {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+}
+
+.periodIndicator {
+    display: flex;
+    min-width: 172px;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
+    color: #111b46;
+    text-align: left;
+
+    div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    strong {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 20px;
+        white-space: nowrap;
+    }
+
+    span {
+        color: #5a6488;
+        font-size: 12px;
+        line-height: 18px;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        color: #34406b;
+    }
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 350px);
+    align-items: stretch;
+    gap: 28px;
+}
+
+.detailChart,
+.metricsPanel {
+    min-width: 0;
+    border: 1px solid #e1e5ed;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(18, 24, 40, 0.04);
+}
+
+.detailChart {
+    min-height: 500px;
+    padding: 12px 14px;
+}
+
+.metricsPanel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 18px;
+}
+
+.metricRow {
+    display: flex;
+    min-height: 92px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 2px;
+    border-bottom: 1px solid #e1e5ed;
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.metricIcon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: #e8f0ff;
+    color: #0f62fe;
+
+    &[data-tone='green'] {
+        background: #eaf6e6;
+        color: #269b4b;
+    }
+
+    &[data-tone='orange'] {
+        background: #fff1df;
+        color: #d96b00;
+    }
+
+    &[data-tone='purple'] {
+        background: #f1eaff;
+        color: #7b3fe4;
+    }
+
+    &[data-tone='slate'] {
+        background: #f0f1f4;
+        color: #3f485a;
+    }
+
+    svg {
+        width: 25px;
+        height: 25px;
+    }
+}
+
+.metricContent {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    color: #111b46;
+
+    > span {
+        font-size: 12px;
+        line-height: 17px;
+    }
+
+    strong {
+        overflow: hidden;
+        font-size: 22px;
+        line-height: 27px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    small {
+        color: #5a6488;
+        font-size: 11px;
+        line-height: 16px;
+    }
+}
+
+.dataNote {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    border: 1px solid #e1e5ed;
+    border-radius: 6px;
+    background: #f8f9fb;
+    color: #5a6488;
+    font-size: 12px;
+
+    svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        color: #34406b;
+    }
+}
+
+.errorState {
+    display: flex;
+    min-height: 220px;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 16px;
+    padding: 42px 24px;
+    border: 1px solid #f0c8c8;
+    border-radius: 8px;
+    background: #fff8f8;
+    color: #111b46;
+    text-align: left;
+
+    > svg {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
+        color: #d32f2f;
+    }
+
+    h2 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        line-height: 24px;
+    }
+
+    p {
+        margin: 0 0 16px;
+        color: #5a6488;
+    }
+}
+
+@media (max-width: 1180px) {
+    .dashboardGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .detailHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .detailActions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .rangePanel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .periodNavigation {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 860px) {
+    .pageHeader {
+        flex-direction: column;
+    }
+
+    .headerActions {
+        justify-content: flex-start;
+    }
+
+    .dashboardGrid,
+    .detailGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .metricsPanel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0 18px;
+    }
+
+    .metricRow:nth-child(odd) {
+        border-right: 1px solid #e1e5ed;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboardGrid,
+    .metricsPanel {
+        grid-template-columns: 1fr;
+    }
+
+    .pageHeader,
+    .detailHeader {
+        h1 {
+            font-size: 24px;
+            line-height: 32px;
+        }
+    }
+
+    .headerActions,
+    .detailActions,
+    .rangeForm,
+    .periodNavigation {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+
+        > * {
+            width: 100%;
+        }
+    }
+
+    .rangePanel {
+        padding: 14px;
+    }
+
+    .rangeModeField {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .rangeModeField select,
+    .monthField input {
+        width: 100%;
+    }
+
+    .rangeSeparator {
+        text-align: center;
+    }
+
+    .periodIndicator {
+        justify-content: flex-start;
+        padding: 8px 2px;
+    }
+
+    .detailChart {
+        padding: 4px;
+    }
+
+    .metricRow:nth-child(odd) {
+        border-right: 0;
+    }
+}

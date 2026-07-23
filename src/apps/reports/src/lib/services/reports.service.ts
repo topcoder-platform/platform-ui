@@ -3,6 +3,8 @@ import type { AxiosInstance } from 'axios'
 import { EnvironmentConfig } from '~/config'
 import { xhrCreateInstance, xhrGetAsync } from '~/libs/core/lib/xhr'
 
+import { dashboardRouteSlugs } from '../../config/routes.config'
+
 export type ReportParameter = {
     name: string
     type: 'string' | 'string[]' | 'number' | 'number[]' | 'boolean' | 'date' | 'enum' | 'enum[]'
@@ -27,6 +29,105 @@ export type ReportGroup = {
 }
 
 export type ReportsIndexResponse = Record<string, ReportGroup>
+
+export type DashboardSlug = typeof dashboardRouteSlugs[keyof typeof dashboardRouteSlugs]
+
+/**
+ * Optional UTC date boundaries accepted by dashboard endpoints.
+ *
+ * `endDate` is exclusive. Both values use `YYYY-MM-DD`.
+ */
+export interface DashboardQuery {
+    endDate?: string
+    startDate?: string
+}
+
+/**
+ * UTC date range returned with dashboard data.
+ *
+ * `endDate` is exclusive. The API returns both values as ISO-8601 timestamps.
+ */
+export interface DashboardRange {
+    endDate: string
+    startDate: string
+}
+
+export interface NewSignupsMonth {
+    activated: number
+    month: string
+    notActivated: number
+}
+
+export interface NewSignupsSummary {
+    activatedMembers: number
+    activationRate: number
+    notActivatedMembers: number
+    peakMonth: string | null
+    peakMonthSignups: number
+    totalSignups: number
+}
+
+export interface NewSignupsDashboard extends DashboardRange {
+    dashboard: 'new-signups'
+    months: NewSignupsMonth[]
+    summary: NewSignupsSummary
+}
+
+export interface MembersPaidMonth {
+    challenge: number
+    engagement: number
+    month: string
+    taas: number
+    task: number
+}
+
+export interface MembersPaidSummary {
+    challengeUniqueMembers: number
+    engagementUniqueMembers: number
+    peakMonth: string | null
+    peakMonthUniqueMembers: number
+    taasUniqueMembers: number
+    taskUniqueMembers: number
+    totalUniqueMembers: number
+}
+
+export interface MembersPaidDashboard extends DashboardRange {
+    dashboard: 'members-paid'
+    months: MembersPaidMonth[]
+    summary: MembersPaidSummary
+}
+
+export interface ChallengeParticipationMonth {
+    month: string
+    registrants: number
+    submitters: number
+}
+
+export interface ChallengeParticipationSummary {
+    peakMonth: string | null
+    peakMonthRegistrants: number
+    submissionRate: number
+    totalUniqueRegistrants: number
+    totalUniqueSubmitters: number
+}
+
+export interface ChallengeParticipationDashboard extends DashboardRange {
+    dashboard: 'challenge-participation'
+    months: ChallengeParticipationMonth[]
+    summary: ChallengeParticipationSummary
+}
+
+export interface DashboardsResponse {
+    challengeParticipation: ChallengeParticipationDashboard
+    membersPaid: MembersPaidDashboard
+    newSignups: NewSignupsDashboard
+}
+
+export interface DashboardResponseBySlug {
+    'challenge-participation': ChallengeParticipationDashboard
+    'members-paid': MembersPaidDashboard
+    'new-signups': NewSignupsDashboard
+}
 
 export type BillingAccountDetail = {
     name: string
@@ -145,6 +246,46 @@ export const buildOpenToWorkTalentPath = (
     return queryString ? `${basePath}?${queryString}` : basePath
 }
 
+/**
+ * Builds a reports-api dashboard path for aggregate/detail JSON and CSV requests.
+ *
+ * The Reports pages use this helper as the shared cache/download key so the
+ * selected dashboard and UTC reporting range cannot diverge between formats.
+ *
+ * @param query Optional inclusive start and exclusive end dates in `YYYY-MM-DD`.
+ * @param slug Optional dashboard detail slug. Omit it for aggregate endpoints.
+ * @param exportCsv Whether to target the matching `/export` endpoint.
+ * @returns A path relative to `/reports`, including encoded query parameters.
+ * @throws Does not throw.
+ */
+export const buildDashboardPath = (
+    query?: DashboardQuery,
+    slug?: DashboardSlug,
+    exportCsv: boolean = false,
+): string => {
+    const params = new URLSearchParams()
+    const startDate = query?.startDate?.trim()
+    const endDate = query?.endDate?.trim()
+
+    if (startDate) {
+        params.append('startDate', startDate)
+    }
+
+    if (endDate) {
+        params.append('endDate', endDate)
+    }
+
+    const pathSegments: string[] = [
+        '/dashboard',
+        ...(slug ? [encodeURIComponent(slug)] : []),
+        ...(exportCsv ? ['export'] : []),
+    ]
+    const path = pathSegments.join('/')
+    const queryString = params.toString()
+
+    return queryString ? `${path}?${queryString}` : path
+}
+
 export const fetchReportsIndex = async (): Promise<ReportsIndexResponse> => (
     xhrGetAsync<ReportsIndexResponse>(`${EnvironmentConfig.API.V6}/reports/directory`)
 )
@@ -259,6 +400,64 @@ export const fetchReportJson = async <T>(path: string): Promise<T> => {
 
 export const downloadReportAsCsv = (path: string): Promise<Blob> => (
     downloadReportBlob(path, 'text/csv')
+)
+
+/**
+ * Fetches all dashboard cards for the requested six-month UTC range.
+ *
+ * @param query Optional inclusive start and exclusive end date filters.
+ * @returns Aggregate dashboard data used by the Dashboards landing page.
+ * @throws Propagates authenticated reports-api request failures.
+ */
+export const fetchDashboards = (
+    query: DashboardQuery = {},
+): Promise<DashboardsResponse> => (
+    fetchReportJson<DashboardsResponse>(buildDashboardPath(query))
+)
+
+/**
+ * Fetches one dashboard drill-down for the requested UTC range.
+ *
+ * The generic slug maps the result to its exact dashboard response type.
+ *
+ * @param slug Dashboard route slug selected by the detail page.
+ * @param query Optional inclusive start and exclusive end date filters.
+ * @returns Typed detail dashboard data for the selected slug.
+ * @throws Propagates authenticated reports-api request failures.
+ */
+export function fetchDashboard<TSlug extends DashboardSlug>(
+    slug: TSlug,
+    query: DashboardQuery = {},
+): Promise<DashboardResponseBySlug[TSlug]> {
+    return fetchReportJson<DashboardResponseBySlug[TSlug]>(buildDashboardPath(query, slug))
+}
+
+/**
+ * Downloads a CSV containing all dashboards for the requested UTC range.
+ *
+ * @param query Optional inclusive start and exclusive end date filters.
+ * @returns CSV response as a browser-downloadable blob.
+ * @throws Propagates authenticated reports-api request failures.
+ */
+export const downloadDashboardsCsv = (
+    query: DashboardQuery = {},
+): Promise<Blob> => (
+    downloadReportAsCsv(buildDashboardPath(query, undefined, true))
+)
+
+/**
+ * Downloads the selected dashboard's CSV for the requested UTC range.
+ *
+ * @param slug Dashboard route slug selected by the detail page.
+ * @param query Optional inclusive start and exclusive end date filters.
+ * @returns CSV response as a browser-downloadable blob.
+ * @throws Propagates authenticated reports-api request failures.
+ */
+export const downloadDashboardCsv = (
+    slug: DashboardSlug,
+    query: DashboardQuery = {},
+): Promise<Blob> => (
+    downloadReportAsCsv(buildDashboardPath(query, slug, true))
 )
 
 /**
