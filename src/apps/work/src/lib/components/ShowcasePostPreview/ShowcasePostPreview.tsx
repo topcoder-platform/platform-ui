@@ -42,6 +42,26 @@ function isImageMedia(type: string, url: string): boolean {
         || value.includes('image/')
 }
 
+/**
+ * Allows only http(s) URLs for media src/href to block javascript: and other XSS vectors.
+ */
+function getSafeHttpUrl(value: string | undefined): string | undefined {
+    if (!value) {
+        return undefined
+    }
+
+    try {
+        const parsed = new URL(value)
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            return parsed.toString()
+        }
+    } catch {
+        return undefined
+    }
+
+    return undefined
+}
+
 const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
     const data: ShowcasePostPreviewData = props.data
     const industries: string = useMemo(
@@ -49,6 +69,7 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
             .join(', '),
         [data.industries],
     )
+    const projectUrl: string | undefined = getSafeHttpUrl(data.projectUrl)
 
     return (
         <div className={styles.wrap}>
@@ -91,11 +112,22 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                             <ul className={styles.mediaList}>
                                 {data.media.map((item, index) => {
                                     const key: string = `${item.url}-${index}`
+                                    const safeUrl: string | undefined = getSafeHttpUrl(item.url)
+                                    if (!safeUrl) {
+                                        return (
+                                            <li key={key} className={styles.mediaItem}>
+                                                <span className={styles.mediaLink}>
+                                                    {item.alt || item.type || 'Unavailable file'}
+                                                </span>
+                                            </li>
+                                        )
+                                    }
+
                                     if (isImageMedia(item.type, item.url)) {
                                         return (
                                             <li key={key} className={styles.mediaItem}>
                                                 <img
-                                                    src={item.url}
+                                                    src={safeUrl}
                                                     alt={item.alt || `Media ${index + 1}`}
                                                     className={styles.mediaImage}
                                                 />
@@ -106,7 +138,7 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                     return (
                                         <li key={key} className={styles.mediaItem}>
                                             <a
-                                                href={item.url}
+                                                href={safeUrl}
                                                 target='_blank'
                                                 rel='noopener noreferrer'
                                                 className={styles.mediaLink}
@@ -127,8 +159,10 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                         {data.challenges.length > 0 ? (
                             <ul className={styles.challengeList}>
                                 {data.challenges.map(challenge => {
-                                    const challengeUrl: string = challenge.url
-                                        || `${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${challenge.id}`
+                                    const challengeUrl: string | undefined = getSafeHttpUrl(
+                                        challenge.url
+                                            || `${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${challenge.id}`,
+                                    )
 
                                     return (
                                         <li key={challenge.id} className={styles.challengeItem}>
@@ -138,14 +172,20 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                                         {challenge.track}
                                                     </span>
                                                 )}
-                                                <a
-                                                    href={challengeUrl}
-                                                    target='_blank'
-                                                    rel='noopener noreferrer'
-                                                    className={styles.challengeTitle}
-                                                >
-                                                    {challenge.name}
-                                                </a>
+                                                {challengeUrl ? (
+                                                    <a
+                                                        href={challengeUrl}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className={styles.challengeTitle}
+                                                    >
+                                                        {challenge.name}
+                                                    </a>
+                                                ) : (
+                                                    <span className={styles.challengeTitle}>
+                                                        {challenge.name}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className={styles.challengeMeta}>
                                                 {(typeof challenge.numOfSubmissions === 'number'
@@ -167,15 +207,17 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                                         )}
                                                     </div>
                                                 )}
-                                                <a
-                                                    href={challengeUrl}
-                                                    target='_blank'
-                                                    rel='noopener noreferrer'
-                                                    className={styles.challengeViewLink}
-                                                >
-                                                    View
-                                                    <IconOutline.ArrowRightIcon className='icon-sm' />
-                                                </a>
+                                                {challengeUrl && (
+                                                    <a
+                                                        href={challengeUrl}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className={styles.challengeViewLink}
+                                                    >
+                                                        View
+                                                        <IconOutline.ArrowRightIcon className='icon-sm' />
+                                                    </a>
+                                                )}
                                             </div>
                                         </li>
                                     )
@@ -190,17 +232,17 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                 <aside className={styles.sidebar}>
                     <div className={styles.panel}>
                         <h5 className={styles.panelTitle}>Project</h5>
-                        {data.projectUrl ? (
+                        {projectUrl ? (
                             <>
                                 <a
-                                    href={data.projectUrl}
+                                    href={projectUrl}
                                     target='_blank'
                                     rel='noopener noreferrer'
                                     className={styles.projectLink}
                                 >
                                     <span>{data.projectTitle || 'Project'}</span>
                                 </a>
-                                <span className={styles.projectUrl}>{data.projectUrl}</span>
+                                <span className={styles.projectUrl}>{projectUrl}</span>
                             </>
                         ) : (
                             <p className={styles.projectName}>{data.projectTitle || 'Project'}</p>
