@@ -173,6 +173,22 @@
     gap: 8px;
 }
 
+.previewModalBody {
+    max-height: min(80vh, 900px);
+}
+
+.previewModal {
+    max-width: min(1100px, 96vw) !important;
+    width: 96vw !important;
+}
+
+.previewLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+}
+
 .mediaSectionHeader {
     display: flex;
     justify-content: space-between;
