@@ -74,7 +74,7 @@ export interface NewSignupsDashboard extends DashboardRange {
 }
 
 export interface MembersPaidMonth {
-    contest: number
+    challenge: number
     engagement: number
     month: string
     taas: number
@@ -82,7 +82,7 @@ export interface MembersPaidMonth {
 }
 
 export interface MembersPaidSummary {
-    contestUniqueMembers: number
+    challengeUniqueMembers: number
     engagementUniqueMembers: number
     peakMonth: string | null
     peakMonthUniqueMembers: number
