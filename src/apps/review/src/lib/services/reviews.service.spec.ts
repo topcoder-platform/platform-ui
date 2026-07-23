@@ -86,12 +86,12 @@ describe('fetchAllProjectResults', () => {
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 1,
-                'https://api.topcoder.test/v6/review/projectResult?challengeId=challenge-id&page=1&perPage=1',
+                'https://api.topcoder.test/v6/projectResult?challengeId=challenge-id&page=1&perPage=1',
             )
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 2,
-                'https://api.topcoder.test/v6/review/projectResult?challengeId=challenge-id&page=2&perPage=1',
+                'https://api.topcoder.test/v6/projectResult?challengeId=challenge-id&page=2&perPage=1',
             )
         expect(results.map(result => result.submissionId))
             .toEqual([

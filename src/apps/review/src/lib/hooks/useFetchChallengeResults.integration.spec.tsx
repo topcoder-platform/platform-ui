@@ -207,6 +207,43 @@ describe('useFetchChallengeResults canonical project results', () => {
                 initialScore: 75,
                 submissionId: 'canonical-submission',
             })
+        expect(mockedFetchAllChallengeReviews)
+            .not
+            .toHaveBeenCalled()
+    })
+
+    it('renders a canonical winner for a registered-only viewer without fetching reviews', async () => {
+        mockedFetchAllProjectResults.mockResolvedValue([buildProjectResult()])
+        const contextValue = buildContextValue([])
+        contextValue.myResources = [{
+            challengeId: 'challenge-id',
+            created: '2026-01-01T00:00:00.000Z',
+            createdBy: 'registered-viewer',
+            id: 'registered-viewer-resource',
+            memberHandle: 'registered-viewer',
+            memberId: '2002',
+            roleId: 'submitter-role',
+            roleName: 'Submitter',
+        }]
+        contextValue.myRoles = ['Submitter']
+
+        const { result }: RenderHookResult<
+            useFetchChallengeResultsProps,
+            unknown
+        > = renderHook(
+            () => useFetchChallengeResults([]),
+            { wrapper: createWrapper(contextValue) },
+        )
+
+        await waitFor(() => expect(result.current.isLoading)
+            .toBe(false))
+        expect(result.current.projectResults)
+            .toHaveLength(1)
+        expect(result.current.projectResults[0].submissionId)
+            .toBe('canonical-submission')
+        expect(mockedFetchAllChallengeReviews)
+            .not
+            .toHaveBeenCalled()
     })
 
     it('reports a canonical result request failure and returns no inferred winner', async () => {

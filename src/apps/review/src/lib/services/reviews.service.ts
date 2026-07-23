@@ -312,7 +312,7 @@ export const fetchProjectResults = async (
     const results = await xhrGetAsync<
         BackendResponseWithMeta<BackendProjectResult[]>
     >(
-        `${EnvironmentConfig.API.V6}/review/projectResult?${qs.stringify({
+        `${EnvironmentConfig.API.V6}/projectResult?${qs.stringify({
             challengeId,
             page,
             perPage,

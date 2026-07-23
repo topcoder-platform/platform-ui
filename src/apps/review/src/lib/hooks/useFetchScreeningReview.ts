@@ -275,6 +275,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const {
         challengeId,
         challengeInfo,
+        isLoadingChallengeResources,
         resourceMemberIdMapping,
         reviewers: challengeReviewers,
         resources,
@@ -520,13 +521,33 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         [reviewerIds],
     )
 
+    const isTaskChallenge = useMemo(
+        () => (challengeInfo?.type?.name ?? '')
+            .trim()
+            .toLowerCase() === 'task',
+        [challengeInfo?.type?.name],
+    )
+
     const shouldForceReviewFetch = useMemo(
-        () => shouldForceChallengeReviewFetch(
+        () => (
+            isLoadingChallengeResources
+                ? false
+                : shouldForceChallengeReviewFetch(
+                    actionChallengeRole,
+                    challengeInfo?.status,
+                    myResources,
+                    visibleChallengeSubmissions.length > 0,
+                    isTaskChallenge,
+                )
+        ),
+        [
             actionChallengeRole,
             challengeInfo?.status,
+            isTaskChallenge,
+            isLoadingChallengeResources,
             myResources,
-        ),
-        [actionChallengeRole, challengeInfo?.status, myResources],
+            visibleChallengeSubmissions.length,
+        ],
     )
 
     const {

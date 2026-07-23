@@ -183,10 +183,6 @@ describe('buildCanonicalChallengeResults', () => {
             memberMapping: {
                 1001: resource,
             },
-            reviewsBySubmissionId: new Map([
-                ['canonical-submission', [exactReview]],
-                ['higher-scoring-sibling', [siblingReview]],
-            ]),
             submissions: [
                 buildSubmission({
                     aggregateScore: 99,
@@ -231,7 +227,6 @@ describe('buildCanonicalChallengeResults', () => {
         const params = {
             challengeUuid: 'challenge-id',
             memberMapping: {},
-            reviewsBySubmissionId: new Map<string, ReviewResult[]>(),
             submissions: [buildSubmission({
                 aggregateScore: 99,
                 id: 'higher-scoring-sibling',
@@ -257,7 +252,6 @@ describe('buildCanonicalChallengeResults', () => {
             canonicalResults,
             challengeUuid: 'challenge-id',
             memberMapping: {},
-            reviewsBySubmissionId: new Map<string, ReviewResult[]>(),
             submissions: [],
         }
 

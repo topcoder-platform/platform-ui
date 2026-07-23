@@ -12,17 +12,14 @@ import { getRatingColor } from '~/libs/core'
 import {
     adjustProjectResult,
     BackendResource,
-    BackendReview,
     ChallengeDetailContextModel,
     ChallengeWinner,
-    convertBackendReviewToReviewResult,
     convertBackendSubmissionToSubmissionInfo,
     ProjectResult,
     ReviewResult,
     SubmissionInfo,
 } from '../models'
 import {
-    fetchAllChallengeReviews,
     fetchAllProjectResults,
     fetchAllSubmissions,
 } from '../services'
@@ -39,7 +36,6 @@ interface BuildProjectResultParams {
     canonicalResult: ProjectResult
     challengeUuid: string
     memberMapping: ResourceMemberMapping
-    reviewsBySubmissionId: Map<string, ReviewResult[]>
     submissions: SubmissionInfo[]
     winner: ChallengeWinner
 }
@@ -48,7 +44,6 @@ interface BuildCanonicalChallengeResultsParams {
     canonicalResults: ProjectResult[]
     challengeUuid: string
     memberMapping: ResourceMemberMapping
-    reviewsBySubmissionId: Map<string, ReviewResult[]>
     submissions: SubmissionInfo[]
     winners: ChallengeWinner[]
 }
@@ -185,7 +180,6 @@ const buildProjectResult = ({
     canonicalResult,
     challengeUuid,
     memberMapping,
-    reviewsBySubmissionId,
     submissions,
     winner,
 }: BuildProjectResultParams): ProjectResult | undefined => {
@@ -200,8 +194,7 @@ const buildProjectResult = ({
         submission => normalizeIdentifier(submission.id) === canonicalSubmissionId,
     )
     const fallbackReviews = exactSubmission?.reviews ?? canonicalResult.reviews ?? []
-    const mappedReviews = reviewsBySubmissionId.get(canonicalSubmissionId) ?? fallbackReviews
-    const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
+    const orderedReviews = orderReviewsByCreatedDate(fallbackReviews)
 
     const userInfo = resolveUserInfo({
         challengeUuid,
@@ -237,7 +230,6 @@ export function buildCanonicalChallengeResults({
     canonicalResults,
     challengeUuid,
     memberMapping,
-    reviewsBySubmissionId,
     submissions,
     winners,
 }: BuildCanonicalChallengeResultsParams): ProjectResult[] {
@@ -282,7 +274,6 @@ export function buildCanonicalChallengeResults({
                 canonicalResult,
                 challengeUuid,
                 memberMapping,
-                reviewsBySubmissionId,
                 submissions,
                 winner,
             })
@@ -304,8 +295,10 @@ export interface useFetchChallengeResultsProps {
  * Fetches canonical Winners-tab results and enriches them with local display data.
  *
  * The Review API project-result endpoint is authoritative for the winning submission id,
- * placement, and scores. Challenge submissions and reviews contribute display-only data for the
- * exact canonical submission. Loading remains active until all three request streams settle.
+ * placement, and scores. Challenge submissions contribute display-only data for the exact
+ * canonical submission. Loading remains active until both request streams settle. Challenge
+ * reviews are deliberately not fetched because registered members without submissions may
+ * download winners but are not authorized to inspect challenge review data.
  *
  * @param submissions submissions already available in the challenge detail view.
  * @returns Canonical display-ready project results and their combined loading state.
@@ -391,27 +384,6 @@ export function useFetchChallengeResults(
         winnerSubmissions,
     ])
 
-    // Use swr hooks for challenge reviews fetching when winners are available
-    const {
-        data: challengeReviews,
-        error: reviewsError,
-        isValidating: isLoadingReviews,
-    }: SWRResponse<BackendReview[], Error> = useSWR<
-        BackendReview[],
-        Error
-    >(
-        shouldFetchWinnerData
-            ? `reviewBaseUrl/challengeReviews/${challengeUuid}`
-            : undefined,
-        () => fetchAllChallengeReviews(challengeUuid, 100),
-    )
-    // Show backend error when fetching data fail
-    useEffect(() => {
-        if (reviewsError) {
-            handleError(reviewsError)
-        }
-    }, [reviewsError])
-
     useEffect(() => {
         if (projectResultsError) {
             handleError(projectResultsError)
@@ -424,55 +396,11 @@ export function useFetchChallengeResults(
         }
     }, [winnerSubmissionsError])
 
-    const reviewsBySubmissionId = useMemo(() => {
-        const result = new Map<string, ReviewResult[]>()
-        const reviewList = challengeReviews ?? []
-        const submissionIdAliases = new Map<string, string>()
-
-        submissionSource.forEach(submission => {
-            const canonicalId = normalizeIdentifier(submission.id)
-            if (!canonicalId) {
-                return
-            }
-
-            submissionIdAliases.set(canonicalId, canonicalId)
-
-            const legacySubmissionId = normalizeIdentifier(submission.legacySubmissionId)
-            if (legacySubmissionId) {
-                submissionIdAliases.set(legacySubmissionId, canonicalId)
-            }
-        })
-
-        reviewList.forEach(review => {
-            const canonicalSubmissionId = [
-                normalizeIdentifier(review.submissionId),
-                normalizeIdentifier(review.legacySubmissionId),
-            ]
-                .map(identifier => (
-                    identifier
-                        ? (submissionIdAliases.get(identifier) ?? identifier)
-                        : undefined
-                ))
-                .find((identifier): identifier is string => Boolean(identifier))
-
-            if (!canonicalSubmissionId) {
-                return
-            }
-
-            const transformedReview = convertBackendReviewToReviewResult(review)
-            const existing = result.get(canonicalSubmissionId) ?? []
-            result.set(canonicalSubmissionId, [...existing, transformedReview])
-        })
-
-        return result
-    }, [challengeReviews, submissionSource])
-
     const projectResults = useMemo(
         () => buildCanonicalChallengeResults({
             canonicalResults: canonicalProjectResults ?? [],
             challengeUuid,
             memberMapping: resourceMemberIdMapping,
-            reviewsBySubmissionId,
             submissions: submissionSource,
             winners,
         }),
@@ -480,7 +408,6 @@ export function useFetchChallengeResults(
             canonicalProjectResults,
             challengeUuid,
             resourceMemberIdMapping,
-            reviewsBySubmissionId,
             submissionSource,
             winners,
         ],
@@ -490,7 +417,6 @@ export function useFetchChallengeResults(
         isLoading: shouldFetchWinnerData
             ? (
                 isLoadingProjectResults
-                || isLoadingReviews
                 || isLoadingWinnerSubmissions
             )
             : false,
