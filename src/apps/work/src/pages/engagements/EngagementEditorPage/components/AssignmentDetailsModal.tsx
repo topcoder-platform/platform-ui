@@ -114,7 +114,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             .toUpperCase()
 
         if (!startDate) {
-            nextErrors.startDate = 'Engagement start date is required.'
+            nextErrors.startDate = 'Billing start date is required.'
         }
 
         if (parsedDurationMonths === undefined) {
@@ -199,7 +199,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
 
                 <div className={styles.fieldRow}>
                     <StartDateTimeInput
-                        label='Engagement start date *'
+                        label='Billing start date *'
                         onChange={value => {
                             setStartDate(value || undefined)
                             setErrors(previous => ({
