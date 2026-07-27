@@ -6,6 +6,7 @@ export const TC_FINANCE_API = 'http://localhost:3009/v6/finance'
 export const REPORTS_API = 'http://localhost:3013/v6/reports'
 export const DEBUG_CHECKPOINT_PHASES = true
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
+    { prefix: '/v6/status', target: 'http://localhost:3000' },
     { prefix: '/v5/billing-accounts', target: 'http://localhost:3010' },
     { prefix: '/v6/billing-accounts', target: 'http://localhost:3010' },
     { prefix: '/v6/clients', target: 'http://localhost:3010' },

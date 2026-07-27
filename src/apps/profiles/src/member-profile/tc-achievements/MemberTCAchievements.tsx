@@ -1,8 +1,10 @@
 import { FC, useCallback, useMemo } from 'react'
-import { Outlet, Route, Routes } from 'react-router-dom'
+import { Location, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 
 import {
+    MemberRoleStats,
     useMemberBadges,
+    useMemberRoleStats,
     useMemberStats,
     UserBadge,
     UserBadgesResponse,
@@ -11,8 +13,9 @@ import {
 } from '~/libs/core'
 
 import { DefaultAchievementsView } from './default-achievements-view'
-import { TrackView } from './track-view'
+import { MemberRoleDetailsView } from './member-role-details-view'
 import { SubTrackView } from './sub-track-view'
+import { TrackView } from './track-view'
 import styles from './MemberTCAchievements.module.scss'
 
 interface MemberTCAchievementsProps {
@@ -20,7 +23,9 @@ interface MemberTCAchievementsProps {
 }
 
 const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchievementsProps) => {
+    const location: Location = useLocation()
     const memberStats: UserStats | undefined = useMemberStats(props.profile?.handle)
+    const { data: roleStats }: { data?: MemberRoleStats } = useMemberRoleStats(props.profile?.handle)
 
     const memberBadges: UserBadgesResponse | undefined
         = useMemberBadges(props.profile?.userId as number, { limit: 500 })
@@ -45,8 +50,12 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
             tcoQualifications={tcoQualifications}
             tcoTrips={tcoTrips}
             memberStats={memberStats}
+            roleStats={roleStats}
         />
-    ), [memberStats, props.profile, tcoQualifications, tcoTrips, tcoWins])
+    ), [memberStats, props.profile, roleStats, tcoQualifications, tcoTrips, tcoWins])
+
+    const hasSpecialRole = !!roleStats?.copilot?.challengeCount || !!roleStats?.reviewer?.challengeCount
+    const isRoleDetailsRoute = /\/stats\/roles\/[^/]+\/?$/i.test(location.pathname)
 
     if (
         !memberStats?.challenges
@@ -54,6 +63,8 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
         && !tcoWins
         && !tcoQualifications
         && !tcoTrips
+        && !hasSpecialRole
+        && !isRoleDetailsRoute
     ) {
         return <></>
     }
@@ -65,6 +76,10 @@ const MemberTCAchievements: FC<MemberTCAchievementsProps> = (props: MemberTCAchi
                 <Route
                     path=''
                     element={renderDefaultRoute()}
+                />
+                <Route
+                    path='roles/:roleType'
+                    element={<MemberRoleDetailsView profile={props.profile} />}
                 />
                 <Route
                     path=':trackType'

@@ -21,3 +21,15 @@ sudo yarn start
 ### Mock data:
 
 - Mock data files are under src/apps/review/src/mock-datas
+
+### Winners result identity:
+
+- The Winners tab loads every page from the Review API `projectResult` endpoint.
+- Each final-placement winner is matched by normalized member ID and placement. The endpoint's
+  `submissionId` is authoritative for display and download; another submission from the same
+  member is never substituted based on score or recency.
+- Local submission and review data may enrich the submitted date and reviews only when the local
+  submission ID exactly matches the canonical ID. Missing or malformed canonical results are
+  omitted safely.
+- Canonical `PLACEMENT` winner types are shown. Untyped and contest-submission winner types remain
+  supported for legacy challenge records, while checkpoint winner types are excluded.

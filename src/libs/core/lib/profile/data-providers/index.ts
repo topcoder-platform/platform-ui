@@ -1,5 +1,6 @@
 export * from './useCountry'
 export * from './useMemberStats'
+export * from './useMemberRoleStats'
 export * from './useMemberBadges'
 export * from './useUserCompletedCertifications'
 export * from './useStatsHistory'

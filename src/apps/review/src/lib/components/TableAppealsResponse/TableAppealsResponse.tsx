@@ -28,7 +28,10 @@ import {
     aggregateSubmissionReviews,
 } from '../../utils/aggregateSubmissionReviews'
 import { challengeHasSubmissionLimit } from '../../utils/challenge'
-import { hasIsLatestFlag } from '../../utils'
+import {
+    filterSubmissionRowsByOwnership,
+    hasIsLatestFlag,
+} from '../../utils'
 import { getReviewRoute } from '../../utils/routes'
 import { TableWrapper } from '../TableWrapper'
 import {
@@ -142,18 +145,6 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         ],
     )
 
-    const normalizedChallengeStatus = useMemo<string>(
-        () => (challengeInfo?.status ?? '')
-            .trim()
-            .toUpperCase(),
-        [challengeInfo?.status],
-    )
-
-    const submitterCanViewAllRows = useMemo<boolean>(
-        () => normalizedChallengeStatus.startsWith('COMPLETED'),
-        [normalizedChallengeStatus],
-    )
-
     const submissionTypes = useMemo<Set<string>>(
         () => new Set<string>(
             datas
@@ -231,6 +222,30 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         aggregatedResults,
         filteredChallengeSubmissions,
     ])
+    const ownedSubmissionIds = useMemo<Set<string>>(
+        () => {
+            const ids = new Set<string>()
+            const submissions = [
+                ...(challengeInfo?.submissions ?? []),
+                ...datas,
+            ]
+
+            submissions.forEach(submission => {
+                const memberId = `${submission.memberId ?? ''}`.trim()
+                const submissionId = `${submission.id ?? ''}`.trim()
+                if (
+                    memberId.length
+                    && submissionId.length
+                    && ownedMemberIds.has(memberId)
+                ) {
+                    ids.add(submissionId)
+                }
+            })
+
+            return ids
+        },
+        [challengeInfo?.submissions, datas, ownedMemberIds],
+    )
 
     const visibleRows = useMemo<SubmissionRow[]>(() => {
         if (!canRender) {
@@ -241,17 +256,18 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             return aggregatedRows
         }
 
-        if (canViewAsSubmitter && submitterCanViewAllRows) {
-            return aggregatedRows
-        }
+        const ownedSubmitterRows = new Set<SubmissionRow>(
+            canViewAsSubmitter
+                ? filterSubmissionRowsByOwnership(
+                    aggregatedRows,
+                    ownedMemberIds,
+                    ownedSubmissionIds,
+                )
+                : [],
+        )
 
         const matchesSubmitter = (row: SubmissionRow): boolean => {
-            if (!canViewAsSubmitter) {
-                return false
-            }
-
-            const memberId = row.memberId
-            if (!memberId || !ownedMemberIds.has(memberId)) {
+            if (!canViewAsSubmitter || !ownedSubmitterRows.has(row)) {
                 return false
             }
 
@@ -281,7 +297,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         canViewAsSubmitter,
         myReviewerResourceIds,
         ownedMemberIds,
-        submitterCanViewAllRows,
+        ownedSubmissionIds,
     ])
 
     const reviewerRows = useMemo<SubmissionReviewerRow[]>(
@@ -298,7 +314,11 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             isSubmissionDownloadRestrictedForMember,
             ownedMemberIds,
             restrictionMessage,
-            shouldRestrictSubmitterToOwnSubmission,
+            shouldRestrictSubmitterToOwnSubmission: canViewAsSubmitter
+                && !canViewAllAppeals
+                && !canViewAsReviewer
+                ? true
+                : shouldRestrictSubmitterToOwnSubmission,
         }),
         [
             downloadSubmission,
@@ -309,6 +329,9 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             ownedMemberIds,
             restrictionMessage,
             shouldRestrictSubmitterToOwnSubmission,
+            canViewAllAppeals,
+            canViewAsReviewer,
+            canViewAsSubmitter,
         ],
     )
 

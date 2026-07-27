@@ -60,8 +60,8 @@ export interface Challenge {
     typeId: string
     /** Challenge track. */
     track: ChallengeTrack
-    legacy: {
-        subTrack: string
+    legacy?: {
+        subTrack?: string
     }
     /** Challenge status. */
     status: ChallengeStatus
