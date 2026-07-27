@@ -8,6 +8,7 @@ import {
 
 import {
     useAutosave,
+    UseAutosaveResult,
 } from './useAutosave'
 
 interface TestComponentProps {
@@ -17,7 +18,7 @@ interface TestComponentProps {
 }
 
 const TestComponent = (props: TestComponentProps): JSX.Element => {
-    const { saveStatus } = useAutosave<Record<string, unknown>>({
+    const { saveStatus }: UseAutosaveResult = useAutosave<Record<string, unknown>>({
         delay: 100,
         enabled: props.enabled,
         formValues: props.formValues,
@@ -177,10 +178,12 @@ describe('useAutosave', () => {
         await advanceAutosaveDelay()
 
         await waitFor(() => {
-            expect(onSave).toHaveBeenCalledTimes(1)
+            expect(onSave)
+                .toHaveBeenCalledTimes(1)
         })
 
-        expect(screen.getByTestId('save-status').textContent).toBe('saved')
+        expect(screen.getByTestId('save-status').textContent)
+            .toBe('saved')
 
         rerender(
             <TestComponent
@@ -190,7 +193,8 @@ describe('useAutosave', () => {
         )
 
         await waitFor(() => {
-            expect(screen.getByTestId('save-status').textContent).toBe('idle')
+            expect(screen.getByTestId('save-status').textContent)
+                .toBe('idle')
         })
     })
 })

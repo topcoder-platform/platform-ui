@@ -12,10 +12,10 @@ import {
 import { Button, IconSolid } from '~/libs/ui'
 import { ChallengeStatus } from '~/apps/admin/src/lib/models'
 import { ConfirmationModal } from '~/apps/work/src/lib/components'
+import { IconButton } from '~/libs/ui/lib/components/button/icon-button'
 
 import ReviewContextEditor from './ReviewContextEditor'
 import styles from './ReviewContextTab.module.scss'
-import { IconButton } from '~/libs/ui/lib/components/button/icon-button'
 
 interface ReviewContextTabProps {
     challengeId?: string
@@ -57,7 +57,8 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
 
         if ((props.challengeDescription?.trim().length ?? 0) < 100
             || props.challengeStatus === ChallengeStatus.New) {
-            return 'Provide a detailed description of at least 100 characters and save the challenge as Draft before generating review context.'
+            return `Provide a detailed description of at least 100 characters
+                and save the challenge as Draft before generating review context.`
         }
 
         if (hasLoadedContext && !hasContext) {

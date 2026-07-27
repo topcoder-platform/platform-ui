@@ -143,7 +143,9 @@ describe('ReviewContextTab', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Regenerate' }))
 
-        expect(screen.getByText('Regenerate review context?')).toBeInTheDocument()
-        expect(screen.getByText('This will delete the existing review context and generate a new one.')).toBeInTheDocument()
+        expect(screen.getByText('Regenerate review context?'))
+            .toBeInTheDocument()
+        expect(screen.getByText('This will delete the existing review context and generate a new one.'))
+            .toBeInTheDocument()
     })
 })

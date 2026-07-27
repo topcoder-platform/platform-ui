@@ -1,11 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { updateChallengeReviewContext } from '~/apps/work/src/lib/services'
+import { ChallengeReviewContextData } from '~/apps/work/src/lib/models'
 
 import ReviewContextEditor, {
     validateReviewContext,
 } from './ReviewContextEditor'
-import { updateChallengeReviewContext } from '~/apps/work/src/lib/services'
-import { ChallengeReviewContextData } from '~/apps/work/src/lib/models'
 
 jest.mock('~/apps/work/src/lib/services', () => ({
     updateChallengeReviewContext: jest.fn(),
@@ -13,53 +13,58 @@ jest.mock('~/apps/work/src/lib/services', () => ({
 jest.mock('~/apps/work/src/lib', () => ({
     showErrorToast: jest.fn(),
 }))
-jest.mock('./ReviewContextRawEditor', () => () => (
-    <div data-testid='raw-editor'>Raw editor</div>
-))
+jest.mock('./ReviewContextRawEditor', () => function ReviewContextRawEditor(): JSX.Element {
+    return <div data-testid='raw-editor'>Raw editor</div>
+})
 jest.mock('~/libs/ui', () => ({
-    Button: ({ label, onClick }: { label: string, onClick: () => void }) => (
-        <button type='button' onClick={onClick}>{label}</button>
+    Button: (props: { label: string; onClick: () => void }): JSX.Element => (
+        <button type='button' onClick={props.onClick}>{props.label}</button>
     ),
-    InputSelect: ({ value }: { value: string }) => (
-        <input value={value} readOnly />
+    InputSelect: (props: { value: string }): JSX.Element => (
+        <input value={props.value} readOnly />
     ),
-    InputText: ({ value }: { value: string }) => (
-        <input value={value} readOnly />
+    InputText: (props: { value: string }): JSX.Element => (
+        <input value={props.value} readOnly />
     ),
-    InputTextarea: ({ value }: { value: string }) => (
-        <textarea value={value} readOnly />
+    InputTextarea: (props: { value: string }): JSX.Element => (
+        <textarea value={props.value} readOnly />
     ),
 }))
 jest.mock('~/apps/work/src/lib/components', () => ({
-    ConfirmationModal: ({ onCancel, onConfirm, confirmText }: {
+    ConfirmationModal: (props: {
+        confirmText: string
         onCancel: () => void
         onConfirm: () => void
-        confirmText: string
-    }) => (
+    }): JSX.Element => (
         <div data-testid='confirmation-modal'>
-            <button type='button' onClick={onConfirm}>{confirmText}</button>
-            <button type='button' onClick={onCancel}>Cancel</button>
+            <button type='button' onClick={props.onConfirm}>{props.confirmText}</button>
+            <button type='button' onClick={props.onCancel}>Cancel</button>
         </div>
     ),
 }))
 
-const mockUpdateChallengeReviewContext = updateChallengeReviewContext as jest.MockedFunction<typeof updateChallengeReviewContext>
+type UpdateChallengeReviewContextFunction = jest.MockedFunction<
+    typeof updateChallengeReviewContext
+>
+
+const mockUpdateChallengeReviewContext:
+    UpdateChallengeReviewContextFunction = updateChallengeReviewContext as UpdateChallengeReviewContextFunction
 
 const baseContext = {
-    title: 'Test review context',
+    challengeId: 'challenge-1',
+    descriptionRaw: 'Description',
     prizes: [],
+    requirements: [],
     skills: [],
+    tech_stack: [],
     timeline: {
         endDate: '2026-12-31',
-        startDate: '2026-01-01',
-        totalDurationDays: 365,
         registrationEndDate: '2026-01-01',
         registrationStartDate: '2026-01-01',
+        startDate: '2026-01-01',
+        totalDurationDays: 365,
     },
-    tech_stack: [],
-    challengeId: 'challenge-1',
-    requirements: [],
-    descriptionRaw: 'Description',
+    title: 'Test review context',
 } as ChallengeReviewContextData
 
 describe('ReviewContextEditor', () => {
@@ -74,13 +79,13 @@ describe('ReviewContextEditor', () => {
 
     it('saves the empty requirements state after removing the last requirement', async () => {
         mockUpdateChallengeReviewContext.mockResolvedValue({
-            id: 'context-1',
             challengeId: 'challenge-1',
-            status: 'AI_GENERATED',
             context: {
                 ...baseContext,
                 requirements: [],
             },
+            id: 'context-1',
+            status: 'AI_GENERATED',
         } as any)
 
         const onContextSaved = jest.fn(async () => undefined)
@@ -89,26 +94,26 @@ describe('ReviewContextEditor', () => {
             <ReviewContextEditor
                 challengeId='challenge-1'
                 reviewContext={{
-                    id: 'context-1',
                     challengeId: 'challenge-1',
-                    status: 'AI_GENERATED',
                     context: {
                         ...baseContext,
                         requirements: [
                             {
-                                id: 'req-1',
-                                title: 'Code quality',
-                                priority: 'medium',
-                                description: 'Ensure code is clean and maintainable.',
                                 constraints: [
                                     {
                                         id: 'const-1',
                                         text: 'No hard-coded values.',
                                     },
                                 ],
+                                description: 'Ensure code is clean and maintainable.',
+                                id: 'req-1',
+                                priority: 'medium',
+                                title: 'Code quality',
                             },
                         ],
                     },
+                    id: 'context-1',
+                    status: 'AI_GENERATED',
                 }}
                 onContextSaved={onContextSaved}
             />,
@@ -123,17 +128,20 @@ describe('ReviewContextEditor', () => {
         })
 
         await waitFor(() => {
-            expect(mockUpdateChallengeReviewContext).toHaveBeenCalledTimes(1)
+            expect(mockUpdateChallengeReviewContext)
+                .toHaveBeenCalledTimes(1)
         })
 
-        expect(mockUpdateChallengeReviewContext).toHaveBeenCalledWith('challenge-1', {
-            status: 'AI_GENERATED',
-            context: expect.objectContaining({
-                requirements: [],
-            }),
-        })
+        expect(mockUpdateChallengeReviewContext)
+            .toHaveBeenCalledWith('challenge-1', {
+                context: expect.objectContaining({
+                    requirements: [],
+                }),
+                status: 'AI_GENERATED',
+            })
 
-        expect(onContextSaved).toHaveBeenCalledTimes(1)
+        expect(onContextSaved)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('marks empty review context as invalid only at the top level', () => {
@@ -142,7 +150,9 @@ describe('ReviewContextEditor', () => {
             requirements: [],
         })
 
-        expect(validation.requirementsError).toBe('Add at least one requirement.')
-        expect(validation.requirementErrors).toEqual({})
+        expect(validation.requirementsError)
+            .toBe('Add at least one requirement.')
+        expect(validation.requirementErrors)
+            .toEqual({})
     })
 })
