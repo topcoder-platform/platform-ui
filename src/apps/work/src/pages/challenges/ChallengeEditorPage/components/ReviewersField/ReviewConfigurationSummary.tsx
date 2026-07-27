@@ -39,6 +39,7 @@ import {
 import {
     buildAssignedResourcesByReviewer,
 } from './reviewerAssignments.utils'
+import { ReviewContextSection } from './ReviewContextSection'
 import {
     isAiReviewer,
     normalizeReviewerText,
@@ -513,6 +514,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
             workflowMap,
         ],
     )
+
     const referencedScorecardIds = useMemo(
         () => getReferencedScorecardIds(humanReviewers, workflowsToDisplay, workflowMap),
         [
@@ -1070,6 +1072,8 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                     </section>
                 )
                 : undefined}
+
+            <ReviewContextSection challengeId={props.challengeId} />
 
             {humanReviewers.length
                 ? (

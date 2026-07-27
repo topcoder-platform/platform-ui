@@ -8,9 +8,11 @@ import {
     AI_WORKFLOW_POLL_TIMEOUT_MS,
     TC_AI_API_BASE_URL,
     TC_AI_AUTOWRITE_WORKFLOW_ID,
+    TC_AI_CONTEXT_WORKFLOW_ID,
     TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID,
 } from '../constants'
 import {
+    ChallengeReviewContextData,
     Skill,
 } from '../models'
 
@@ -136,13 +138,10 @@ async function createWorkflowRun(workflowId: string): Promise<string> {
 async function startWorkflowRun(
     workflowId: string,
     runId: string,
-    description: string,
-    payloadKey: string = 'jobDescription',
+    payloadData: any,
 ): Promise<void> {
     const payload: WorkflowStartPayload = {
-        inputData: {
-            [payloadKey]: description,
-        },
+        inputData: payloadData,
     }
 
     await xhrPostAsync<WorkflowStartPayload, unknown>(
@@ -178,7 +177,13 @@ async function pollWorkflowRunResult(
         throw new Error('Workflow request timed out')
     }
 
-    const runStatus = await fetchWorkflowRunStatus(workflowId, runId)
+    let runStatus: WorkflowRunStatusResponse
+    try {
+        runStatus = await fetchWorkflowRunStatus(workflowId, runId)
+    } catch {
+        runStatus = {}
+    }
+
     const status = String(runStatus.status || '')
         .trim()
         .toLowerCase()
@@ -230,7 +235,7 @@ export async function extractSkillsFromText(
         await startWorkflowRun(
             normalizedWorkflowId,
             runId,
-            normalizedDescription,
+            { jobDescription: normalizedDescription },
         )
 
         const result = await pollWorkflowRunResult(normalizedWorkflowId, runId, Date.now())
@@ -238,6 +243,76 @@ export async function extractSkillsFromText(
         return extractSkillsFromResult(result)
     } catch (error) {
         throw normalizeError(error, 'Failed to extract skills from description')
+    }
+}
+
+function parseWorkflowResultToObject(value: unknown): ChallengeReviewContextData {
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+
+        if (!trimmed) {
+            throw new Error('Workflow result did not contain any data')
+        }
+
+        try {
+            const parsed = JSON.parse(trimmed)
+
+            if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                throw new Error('Workflow result JSON must be an object')
+            }
+
+            return parsed as ChallengeReviewContextData
+        } catch {
+            throw new Error('Workflow result was not valid JSON')
+        }
+    }
+
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error('Workflow result must be an object')
+    }
+
+    const resultObject = value as Record<string, unknown>
+
+    const candidateContext = resultObject.context
+    const candidateResult = resultObject.result
+    const candidateOutput = resultObject.output
+    const candidateData = resultObject.data
+
+    const preferredContext = [candidateContext, candidateResult, candidateOutput, candidateData]
+        .find(item => item && typeof item === 'object' && !Array.isArray(item)) as Record<string, unknown> | undefined
+
+    return (preferredContext || resultObject) as ChallengeReviewContextData
+}
+
+export async function generateChallengeReviewContext(
+    challengeId: string,
+    workflowId?: string,
+): Promise<ChallengeReviewContextData> {
+    const normalizedWorkflowId = String(
+        workflowId || TC_AI_CONTEXT_WORKFLOW_ID,
+    )
+        .trim()
+
+    if (!normalizedWorkflowId) {
+        throw new Error('Workflow ID is required to generate review context')
+    }
+
+    try {
+        const runId = await createWorkflowRun(normalizedWorkflowId)
+
+        await startWorkflowRun(
+            normalizedWorkflowId,
+            runId,
+            {
+                challengeId,
+            },
+        )
+
+        const result = await pollWorkflowRunResult(normalizedWorkflowId, runId, Date.now())
+
+        return parseWorkflowResultToObject(result)
+    } catch (error) {
+        throw normalizeError(error, 'Failed to generate review context')
     }
 }
 
@@ -275,8 +350,7 @@ export async function autowriteDescription(
         await startWorkflowRun(
             normalizedWorkflowId,
             runId,
-            normalizedDescription,
-            'rawDescription',
+            { rawDescription: normalizedDescription },
         )
 
         const result = await pollWorkflowRunResult(normalizedWorkflowId, runId, Date.now())
