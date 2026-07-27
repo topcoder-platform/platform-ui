@@ -389,11 +389,6 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                     Review context is locked because this challenge already has submissions.
                 </div>
             )}
-            {!props.isLocked && (
-                <p className={styles.description}>
-                    Define the evaluation criteria for AI-powered requirements review.
-                </p>
-            )}
             <div className={styles.toolbar}>
                 <div className={styles.statusBlock}>
                     <div className={styles.statusText}>{showSaveStatus}</div>

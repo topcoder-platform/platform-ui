@@ -1,4 +1,5 @@
 import {
+    xhrDeleteAsync,
     xhrGetAsync,
     xhrPostAsync,
     xhrPutAsync,
@@ -192,5 +193,17 @@ export async function updateChallengeReviewContext(
         return normalizedResult
     } catch (error) {
         throw normalizeError(error, 'Failed to update review context')
+    }
+}
+
+export async function deleteChallengeReviewContext(
+    challengeId: string,
+): Promise<void> {
+    try {
+        await xhrDeleteAsync<unknown>(
+            `${CHALLENGE_REVIEW_CONTEXT_API_URL}/${encodeURIComponent(challengeId.trim())}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to delete review context')
     }
 }

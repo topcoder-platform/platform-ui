@@ -50,3 +50,10 @@
     gap: 10px;
     margin-top: 16px;
 }
+
+.regenerateToolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-top: $sp-4;
+    margin-bottom: $sp-4;
+}
