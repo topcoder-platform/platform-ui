@@ -70,7 +70,7 @@ function createConstraint(text: string): ReviewContextConstraint {
     }
 }
 
-function validateReviewContext(
+export function validateReviewContext(
     context: ChallengeReviewContextData,
 ): ReviewContextValidationResult {
     const requirements = Array.isArray(context.requirements)
@@ -157,8 +157,7 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
     )
 
     const hasValidationErrors = Boolean(
-        validation.requirementsError
-        || Object.keys(validation.requirementErrors).length > 0,
+        Object.keys(validation.requirementErrors).length > 0,
     )
 
     const saveReviewContext = useCallback(async (values: ChallengeReviewContextData): Promise<void> => {
@@ -366,7 +365,7 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
             return 'Saving...'
         }
 
-        if (saveStatus === 'saved') {
+        if (saveStatus === 'saved' && !hasValidationErrors) {
             return '✓ All changes saved'
         }
 
@@ -389,6 +388,11 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                 <div className={styles.infoBanner}>
                     Review context is locked because this challenge already has submissions.
                 </div>
+            )}
+            {!props.isLocked && (
+                <p className={styles.description}>
+                    Define the evaluation criteria for AI-powered requirements review.
+                </p>
             )}
             <div className={styles.toolbar}>
                 <div className={styles.statusBlock}>
@@ -498,6 +502,7 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
                                             event.target.value,
                                         )
                                     }}
+                                    dirty
                                     rows={5}
                                     error={requirementErrors?.description}
                                     placeholder='Describe the requirement in detail.'

@@ -2,6 +2,7 @@
 import {
     act,
     render,
+    screen,
     waitFor,
 } from '@testing-library/react'
 
@@ -16,14 +17,19 @@ interface TestComponentProps {
 }
 
 const TestComponent = (props: TestComponentProps): JSX.Element => {
-    useAutosave<Record<string, unknown>>({
+    const { saveStatus } = useAutosave<Record<string, unknown>>({
         delay: 100,
         enabled: props.enabled,
         formValues: props.formValues,
         onSave: props.onSave,
     })
 
-    return <div>Autosave Test</div>
+    return (
+        <div>
+            <div>Autosave Test</div>
+            <div data-testid='save-status'>{saveStatus}</div>
+        </div>
+    )
 }
 
 async function advanceAutosaveDelay(): Promise<void> {
@@ -145,6 +151,46 @@ describe('useAutosave', () => {
         await waitFor(() => {
             expect(onSave)
                 .toHaveBeenCalledTimes(2)
+        })
+    })
+
+    it('resets saved status when form values change after a successful save', async () => {
+        const onSave = jest.fn<Promise<void>, [Record<string, unknown>]>()
+            .mockResolvedValue(undefined)
+
+        const rendered = render(
+            <TestComponent
+                formValues={{ projectId: '100' }}
+                onSave={onSave}
+            />,
+        )
+        const rerender = rendered.rerender
+
+        // Trigger the autosave effect by re-rendering after initial render.
+        rerender(
+            <TestComponent
+                formValues={{ projectId: '100' }}
+                onSave={onSave}
+            />,
+        )
+
+        await advanceAutosaveDelay()
+
+        await waitFor(() => {
+            expect(onSave).toHaveBeenCalledTimes(1)
+        })
+
+        expect(screen.getByTestId('save-status').textContent).toBe('saved')
+
+        rerender(
+            <TestComponent
+                formValues={{ projectId: '200' }}
+                onSave={onSave}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('save-status').textContent).toBe('idle')
         })
     })
 })
