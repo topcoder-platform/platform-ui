@@ -39,4 +39,8 @@
 .content {
     overflow: auto;
     padding: 16px;
+
+    pre {
+        white-space: pre-wrap;
+    }
 }

@@ -9,6 +9,7 @@ import {
     UseFetchChallengeReviewContextResult,
 } from '~/apps/work/src/lib'
 import { Button } from '~/libs/ui'
+import { ChallengeStatus } from '~/apps/admin/src/lib/models'
 
 import ReviewContextEditor from './ReviewContextEditor'
 import styles from './ReviewContextTab.module.scss'
@@ -16,12 +17,14 @@ import styles from './ReviewContextTab.module.scss'
 interface ReviewContextTabProps {
     challengeId?: string
     challengeDescription?: string
+    challengeStatus?: ChallengeStatus
     hasSubmissions?: boolean
     onRequirementCountChange?: (count: number | undefined) => void
 }
 
 const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const [isSaving, setIsSaving] = useState(false)
+    const blockGenerate = props.challengeStatus !== ChallengeStatus.Draft
     const [saveError, setSaveError] = useState<string | undefined>()
 
     const {
@@ -48,8 +51,9 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
             return fetchError
         }
 
-        if ((props.challengeDescription?.trim().length ?? 0) < 100) {
-            return 'Make sure to add a clear challenge description before generating the review context.'
+        if ((props.challengeDescription?.trim().length ?? 0) < 100
+            || props.challengeStatus === ChallengeStatus.New) {
+            return 'Provide a detailed description of at least 100 characters and save the challenge as Draft before generating review context.'
         }
 
         if (hasLoadedContext && !hasContext) {
@@ -57,7 +61,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
         }
 
         return undefined
-    }, [props.challengeId, fetchError, hasContext, hasLoadedContext])
+    }, [props.challengeId, fetchError, hasContext, hasLoadedContext, props.challengeDescription, props.challengeStatus])
 
     const handleGenerateClick = useCallback(async (): Promise<void> => {
         if (!props.challengeId) {
@@ -108,7 +112,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                     <p>
                         Define the evaluation criteria for AI-powered requirements review.
                     </p>
-                    <p>{descriptionText}</p>
+                    <p><strong>{descriptionText}</strong></p>
                     {isLocked ? (
                         <div className={styles.errorText}>
                             Review context is locked because this challenge already has submissions.
@@ -116,7 +120,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                     ) : (
                         <>
                             <Button
-                                disabled={isSaving}
+                                disabled={isSaving || blockGenerate}
                                 label={isSaving ? 'Generating context...' : 'Generate Challenge Review Context'}
                                 onClick={handleGenerateClick}
                                 size='lg'

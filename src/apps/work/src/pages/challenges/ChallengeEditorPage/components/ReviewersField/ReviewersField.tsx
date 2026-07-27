@@ -16,6 +16,8 @@ import {
 } from 'react-hook-form'
 import classNames from 'classnames'
 
+import { ChallengeStatus } from '~/apps/admin/src/lib/models'
+
 import * as services from '../../../../../lib/services'
 import {
     AiReviewConfig,
@@ -96,6 +98,10 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         control: formContext.control,
         name: 'typeId',
     }) as string | undefined
+    const challengeStatus = useWatch({
+        control: formContext.control,
+        name: 'status',
+    }) as ChallengeStatus | undefined
     const numOfSubmissions = useWatch({
         control: formContext.control,
         name: 'numOfSubmissions',
@@ -449,6 +455,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 <ReviewContextTab
                                     challengeId={challengeId}
                                     challengeDescription={formContext.getValues('description')}
+                                    challengeStatus={challengeStatus}
                                     hasSubmissions={hasSubmissions}
                                     onRequirementCountChange={setReviewContextRequirementCount}
                                 />
