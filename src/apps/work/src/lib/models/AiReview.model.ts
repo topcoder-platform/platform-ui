@@ -24,6 +24,7 @@ export interface AiReviewConfig {
     decisions?: Record<string, unknown>[]
     formula?: Record<string, unknown>
     id: string
+    instantReview: boolean
     minPassingThreshold: number
     mode: AiReviewMode
     templateId?: string

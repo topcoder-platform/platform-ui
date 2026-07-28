@@ -24,6 +24,7 @@ const TEMPLATE_TRACK_ALIASES: Record<string, string> = {
 export interface AiReviewConfigurationDraft {
     autoFinalize?: boolean
     challengeId?: string
+    instantReview?: boolean
     minPassingThreshold?: number
     mode?: AiReviewMode
     templateId?: string
@@ -108,12 +109,15 @@ export function aiReviewConfigHasChanges(
     const updatedTemplateId = normalizeReviewerText(updated?.templateId)
     const originalAutoFinalize = toBoolean(original?.autoFinalize)
     const updatedAutoFinalize = toBoolean(updated?.autoFinalize)
+    const originalInstantReview = toBoolean(original?.instantReview)
+    const updatedInstantReview = toBoolean(updated?.instantReview)
 
     if (
         originalMode !== updatedMode
         || originalThreshold !== updatedThreshold
         || originalTemplateId !== updatedTemplateId
         || originalAutoFinalize !== updatedAutoFinalize
+        || originalInstantReview !== updatedInstantReview
     ) {
         return true
     }

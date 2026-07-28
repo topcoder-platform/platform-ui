@@ -234,6 +234,20 @@
     gap: 4px;
 }
 
+.infoTooltipRow {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.infoTooltipIcon {
+    color: #70757a;
+    cursor: help;
+    flex-shrink: 0;
+    height: 16px;
+    width: 16px;
+}
+
 .checkboxDescriptionIcon {
     color: #d87a16;
     flex: 0 0 auto;

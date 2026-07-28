@@ -9,7 +9,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconOutline } from '~/libs/ui'
+import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
 import {
@@ -97,6 +97,7 @@ interface ReviewSettingsProps {
 
 const DEFAULT_CONFIGURATION: AiReviewConfigurationDraft = {
     autoFinalize: false,
+    instantReview: false,
     minPassingThreshold: 75,
     mode: 'AI_GATING',
     templateId: undefined,
@@ -168,6 +169,7 @@ function normalizeConfiguration(
         autoFinalize: configuration.mode === 'AI_ONLY' && configuration.autoFinalize === true,
         challengeId,
         formula: undefined,
+        instantReview: configuration.instantReview === true,
         minPassingThreshold: Number(configuration.minPassingThreshold || 0),
         mode: configuration.mode || 'AI_GATING',
         templateId,
@@ -184,6 +186,7 @@ function normalizeConfiguration(
 function mapConfigToDraft(config: AiReviewConfig): AiReviewConfigurationDraft {
     return {
         autoFinalize: config.autoFinalize,
+        instantReview: config.instantReview,
         minPassingThreshold: config.minPassingThreshold,
         mode: config.mode,
         templateId: config.templateId || undefined,
@@ -401,6 +404,12 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
         },
         [props],
     )
+    const handleInstantReviewChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>): void => {
+            props.onUpdate('instantReview', event.target.checked)
+        },
+        [props],
+    )
 
     return (
         <section className={styles.sectionCard}>
@@ -452,6 +461,30 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                         type='checkbox'
                     />
                     <span>Auto-finalize AI decisions</span>
+                </label>
+
+                <label className={styles.checkboxField}>
+                    <input
+                        checked={props.configuration.instantReview === true}
+                        disabled={props.readOnly}
+                        onChange={handleInstantReviewChange}
+                        type='checkbox'
+                    />
+                    <div className={styles.infoTooltipRow}>
+                        <span>Instant Review</span>
+                        <Tooltip
+                            content={`
+                                Queue AI review workflows immediately when a submission
+                                clears scan validation instead of waiting for phase-based
+                                review assignment.`}
+                            triggerOn='click-hover'
+                        >
+                            <IconOutline.InformationCircleIcon
+                                aria-hidden
+                                className={styles.infoTooltipIcon}
+                            />
+                        </Tooltip>
+                    </div>
                 </label>
             </div>
         </section>
@@ -523,6 +556,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         () => (reviewers || []).filter(isAiReviewer),
         [reviewers],
     )
+
     const assignedWorkflowIds = useMemo(
         () => new Set(
             aiReviewers
@@ -914,12 +948,6 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         }
 
         if (hasPersistedConfigForCurrentChallenge) {
-            setIsConfigLoading(false)
-            setLoadError(undefined)
-            return undefined
-        }
-
-        if (initialConfigLookupChallengeIdRef.current === normalizedChallengeId) {
             setIsConfigLoading(false)
             setLoadError(undefined)
             return undefined
