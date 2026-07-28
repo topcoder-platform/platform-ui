@@ -24,6 +24,9 @@ import {
     PROJECT_STATUS,
 } from '../../../lib/constants'
 import {
+    rootRoute,
+} from '../../../config/routes.config'
+import {
     WorkAppContext,
 } from '../../../lib/contexts'
 import {
@@ -246,7 +249,8 @@ function renderMembersAssignedCell(
         ? (
             <Link
                 className={styles.link}
-                to={`/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`}
+                to={`${rootRoute}/projects/${engagementProjectId}`
+                    + `/engagements/${engagement.id}/assignments`}
                 state={assignmentsBackUrl
                     ? {
                         backUrl: assignmentsBackUrl,
@@ -309,8 +313,16 @@ function renderEngagementRows(
     return engagements.map(engagement => {
         const applicationsCount = getApplicationsCount(engagement)
         const engagementProjectId = getEngagementProjectId(engagement, fallbackProjectId)
-        const engagementAssignmentsRoute = engagementProjectId && engagement.id
-            ? `/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`
+        const engagementDetailsRoute = engagementProjectId && engagement.id
+            ? `${rootRoute}/projects/${engagementProjectId}/engagements/${engagement.id}/view`
+            : undefined
+        const engagementApplicationsRoute = engagementProjectId && engagement.id
+            ? `${rootRoute}/projects/${engagementProjectId}`
+                + `/engagements/${engagement.id}/applications`
+            : undefined
+        const engagementEditRoute = engagementProjectId && engagement.id
+            ? `${rootRoute}/projects/${engagementProjectId}`
+                + `/engagements/${engagement.id}/edit`
             : undefined
         const projectName = getEngagementProjectName(
             engagement,
@@ -321,7 +333,7 @@ function renderEngagementRows(
             || engagementProjectId
             || '-'
         const projectChallengesRoute = engagementProjectId
-            ? `/projects/${engagementProjectId}/challenges`
+            ? `${rootRoute}/projects/${engagementProjectId}/challenges`
             : undefined
 
         return (
@@ -336,16 +348,11 @@ function renderEngagementRows(
                         : projectName}
                 </td>
                 <td className={styles.engagementTitle}>
-                    {engagementAssignmentsRoute
+                    {engagementDetailsRoute
                         ? (
                             <Link
                                 className={styles.link}
-                                to={engagementAssignmentsRoute}
-                                state={assignmentsBackUrl
-                                    ? {
-                                        backUrl: assignmentsBackUrl,
-                                    }
-                                    : undefined}
+                                to={engagementDetailsRoute}
                             >
                                 {engagement.title || '-'}
                             </Link>
@@ -355,11 +362,11 @@ function renderEngagementRows(
                 <td>{engagement.isPrivate ? 'Private' : 'Public'}</td>
                 <td>{renderEngagementStatus(engagement.status)}</td>
                 <td>
-                    {engagementProjectId
+                    {engagementApplicationsRoute
                         ? (
                             <Link
                                 className={styles.link}
-                                to={`/projects/${engagementProjectId}/engagements/${engagement.id}/applications`}
+                                to={engagementApplicationsRoute}
                             >
                                 {applicationsCount}
                             </Link>
@@ -375,13 +382,17 @@ function renderEngagementRows(
                             rel='noreferrer noopener'
                             target='_blank'
                         >
-                            View
+                            View Post
+                            <IconOutline.ExternalLinkIcon
+                                aria-hidden='true'
+                                className={styles.externalIcon}
+                            />
                         </a>
-                        {canEditEngagement && engagementProjectId
+                        {canEditEngagement && engagementEditRoute
                             ? (
                                 <Link
                                     className={styles.actionLink}
-                                    to={`/projects/${engagementProjectId}/engagements/${engagement.id}`}
+                                    to={engagementEditRoute}
                                 >
                                     Edit
                                 </Link>
@@ -706,8 +717,8 @@ export const EngagementsListPage: FC = () => {
             projectResult.project,
         )
     const assignmentsBackUrl = isAllEngagementsPage
-        ? '/engagements'
-        : `/projects/${projectId}/engagements`
+        ? `${rootRoute}/engagements`
+        : `${rootRoute}/projects/${projectId}/engagements`
     const isProjectActive = String(projectResult.project?.status || '')
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
@@ -727,7 +738,7 @@ export const EngagementsListPage: FC = () => {
                 : (
                     <Link
                         className={styles.headerActionLink}
-                        to={`/projects/${projectId}/engagements/new`}
+                        to={`${rootRoute}/projects/${projectId}/engagements/new`}
                     >
                         <Button
                             label='Create Engagement'
@@ -750,7 +761,7 @@ export const EngagementsListPage: FC = () => {
                         <Link
                             aria-label='Edit project'
                             className={styles.projectEditLink}
-                            to={`/projects/${projectId}/edit`}
+                            to={`${rootRoute}/projects/${projectId}/edit`}
                         >
                             <IconOutline.PencilIcon className={styles.projectEditIcon} />
                         </Link>

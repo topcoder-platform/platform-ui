@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
+import { rootRoute } from '../../../config/routes.config'
 import { Engagement } from '../../models'
 import {
     formatAnticipatedStart,
@@ -59,13 +60,13 @@ export const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardPro
             <footer className={styles.actions}>
                 <Link
                     className={styles.actionLink}
-                    to={`/projects/${projectId}/engagements/${engagement.id}/applications`}
+                    to={`${rootRoute}/projects/${projectId}/engagements/${engagement.id}/applications`}
                 >
                     Applications
                 </Link>
                 <Link
                     className={styles.actionLink}
-                    to={`/projects/${projectId}/engagements/${engagement.id}/assignments`}
+                    to={`${rootRoute}/projects/${projectId}/engagements/${engagement.id}/assignments`}
                 >
                     Assignments
                 </Link>
@@ -73,7 +74,7 @@ export const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardPro
                     ? (
                         <Link
                             className={styles.actionLink}
-                            to={`/projects/${projectId}/engagements/${engagement.id}`}
+                            to={`${rootRoute}/projects/${projectId}/engagements/${engagement.id}/edit`}
                         >
                             Edit
                         </Link>
