@@ -3,12 +3,16 @@
 .container {
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)) max-content;
     margin-bottom: 20px;
     margin-top: 8px;
     padding: 20px;
     border-radius: 8px;
     background: rgba(224, 228, 232, 0.3);
+
+    &.withProjectFilter {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) max-content;
+    }
 }
 
 .filterField {
@@ -46,8 +50,32 @@
     width: 100%;
 }
 
+.statusMultiselect {
+    width: 100%;
+}
+
+.actions {
+    align-items: flex-start;
+    margin-top: 30px;
+    display: flex;
+
+    // Override primary disabled ($black-5) so it doesn't blend into the filter panel.
+    :global(button.btn-style-primary:disabled),
+    :global(button.btn-style-primary.btn-disabled) {
+        background: $tc-white !important;
+    }
+}
+
 @media (max-width: 767px) {
     .container {
         grid-template-columns: 1fr;
+    }
+
+    .actions {
+        align-items: stretch;
+
+        :global(button) {
+            width: 100%;
+        }
     }
 }
