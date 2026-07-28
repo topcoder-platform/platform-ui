@@ -2,6 +2,7 @@
 import {
     fireEvent,
     render,
+    RenderResult,
     screen,
 } from '@testing-library/react'
 
@@ -171,7 +172,7 @@ describe('EngagementsFilter', () => {
     it('resets status to the default when cleared and applied', () => {
         const handleFiltersChange = jest.fn()
 
-        const { rerender } = render(
+        const { rerender }: RenderResult = render(
             <EngagementsFilter
                 filters={{
                     status: ['Open', 'Active'],
