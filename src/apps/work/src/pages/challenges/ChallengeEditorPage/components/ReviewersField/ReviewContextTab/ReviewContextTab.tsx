@@ -28,7 +28,10 @@ interface ReviewContextTabProps {
 const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const [isSaving, setIsSaving] = useState(false)
     const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false)
-    const blockGenerate = props.challengeStatus !== ChallengeStatus.Draft
+    const blockGenerate = ![
+        ChallengeStatus.Draft,
+        ChallengeStatus.Active,
+    ].includes(props.challengeStatus as ChallengeStatus)
     const [saveError, setSaveError] = useState<string | undefined>()
 
     const {

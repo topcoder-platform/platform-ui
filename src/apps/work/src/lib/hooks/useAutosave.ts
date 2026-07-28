@@ -58,6 +58,7 @@ export function useAutosave<T>(
         if (!enabled) {
             debouncedSave.cancel()
             lastQueuedValuesRef.current = undefined
+            isInitialRender.current = false
             return undefined
         }
 
