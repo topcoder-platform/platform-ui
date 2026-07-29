@@ -68,7 +68,7 @@ describe('AssignmentDetailsModal', () => {
         }
 
         expect(startDateTimeInputProps.label)
-            .toBe('Engagement start date *')
+            .toBe('Billing start date *')
         expect(startDateTimeInputProps.minDate)
             .toBeUndefined()
     })

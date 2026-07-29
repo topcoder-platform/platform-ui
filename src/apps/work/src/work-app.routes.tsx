@@ -20,6 +20,7 @@ import {
     engagementApplicationsRouteId,
     engagementAssignmentsRouteId,
     engagementCreateRouteId,
+    engagementDetailRouteId,
     engagementEditRouteId,
     engagementExperienceRouteId,
     engagementFeedbackRouteId,
@@ -89,6 +90,10 @@ const EngagementsListPage: LazyLoadedComponent = lazyLoad(
 
 const EngagementEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementEditorPage'),
+)
+
+const EngagementDetailsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementDetailsPage'),
 )
 
 const ApplicationsListPage: LazyLoadedComponent = lazyLoad(
@@ -337,7 +342,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                     </ProjectRouteAccessGuard>
                 ),
                 id: engagementEditRouteId,
-                route: '/projects/:projectId/engagements/:engagementId',
+                route: '/projects/:projectId/engagements/:engagementId/edit',
                 title: 'Edit Engagement',
             },
             {
@@ -383,6 +388,25 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: engagementExperienceRouteId,
                 route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/experience',
                 title: 'Experience',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <ProjectRouteAccessGuard pageTitle='Engagement Details'>
+                        <EngagementDetailsPage />
+                    </ProjectRouteAccessGuard>
+                ),
+                id: engagementDetailRouteId,
+                route: '/projects/:projectId/engagements/:engagementId/view',
+                title: 'Engagement Details',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <Rewrite to={`${rootRoute}/projects/:projectId/engagements/:engagementId/view`} />
+                ),
+                route: '/projects/:projectId/engagements/:engagementId',
+                title: 'Engagement Details',
             },
             {
                 authRequired: true,

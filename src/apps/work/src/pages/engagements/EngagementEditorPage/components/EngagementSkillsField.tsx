@@ -133,7 +133,12 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
     )
 
     const handleAISuggest = useCallback(async (): Promise<void> => {
-        if (!description || isLoadingAI) {
+        if (isLoadingAI) {
+            return
+        }
+
+        if (!description) {
+            showErrorToast('Enter a description before using AI Suggest.')
             return
         }
 
@@ -203,19 +208,15 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
                     value={selectedOptions}
                 />
 
-                {description
-                    ? (
-                        <div className={styles.actions}>
-                            <Button
-                                disabled={props.disabled || isLoadingAI}
-                                label={isLoadingAI ? 'Suggesting...' : 'AI Suggest'}
-                                onClick={handleAISuggest}
-                                secondary
-                                size='sm'
-                            />
-                        </div>
-                    )
-                    : undefined}
+                <div className={styles.actions}>
+                    <Button
+                        disabled={props.disabled || isLoadingAI}
+                        label={isLoadingAI ? 'Suggesting...' : 'AI Suggest'}
+                        onClick={handleAISuggest}
+                        secondary
+                        size='sm'
+                    />
+                </div>
             </div>
         </FormFieldWrapper>
     )
