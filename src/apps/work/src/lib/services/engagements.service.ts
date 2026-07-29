@@ -22,9 +22,11 @@ import {
 } from '../models'
 import {
     fromEngagementAnticipatedStartApi,
+    fromEngagementDateInputValue,
     normalizeEngagement,
     toEngagementAnticipatedStartApi,
     toEngagementRoleApi,
+    toEngagementRoleLevelApi,
     toEngagementStatusApi,
     toEngagementWorkloadApi,
 } from '../utils'
@@ -286,6 +288,11 @@ function normalizeStatusFilters(status?: string | string[]): string[] {
 function serializeEngagementPayload(data: EngagementUpsertData): Record<string, unknown> {
     const payload: Record<string, unknown> = {}
 
+    if (data.account !== undefined) {
+        payload.account = String(data.account || '')
+            .trim()
+    }
+
     if (data.anticipatedStart) {
         payload.anticipatedStart = toEngagementAnticipatedStartApi(data.anticipatedStart)
     }
@@ -399,6 +406,17 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
         payload.projectId = String(data.projectId)
     }
 
+    if (data.receivedDateFromAccount !== undefined) {
+        const receivedDateFromAccount = fromEngagementDateInputValue(
+            data.receivedDateFromAccount,
+        )
+
+        // Backend clears the field when null is sent; empty form values must clear on update.
+        payload.receivedDateFromAccount = receivedDateFromAccount
+            // eslint-disable-next-line unicorn/no-null
+            ?? null
+    }
+
     if (data.requiredMemberCount !== undefined) {
         payload.requiredMemberCount = Number(data.requiredMemberCount)
     }
@@ -407,9 +425,30 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
         payload.role = toEngagementRoleApi(data.role)
     }
 
+    if (data.roleLevel !== undefined) {
+        const roleLevel = String(data.roleLevel || '')
+            .trim()
+
+        // Backend enum field is cleared with null; empty string fails validation.
+        payload.roleLevel = roleLevel
+            ? toEngagementRoleLevelApi(roleLevel)
+            // eslint-disable-next-line unicorn/no-null
+            : null
+    }
+
     const requiredSkills = normalizeSkillIds(data.skills)
     if (requiredSkills.length) {
         payload.requiredSkills = requiredSkills
+    }
+
+    if (data.smu !== undefined) {
+        payload.smu = String(data.smu || '')
+            .trim()
+    }
+
+    if (data.spoc !== undefined) {
+        payload.spoc = String(data.spoc || '')
+            .trim()
     }
 
     if (data.status) {

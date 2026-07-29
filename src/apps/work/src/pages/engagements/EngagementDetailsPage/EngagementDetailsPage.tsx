@@ -33,6 +33,7 @@ import {
     canCreateEngagement,
     canViewAllEngagements,
     formatAnticipatedStart,
+    formatDate,
     formatDuration,
     formatEngagementStatus,
     formatLocation,
@@ -45,6 +46,12 @@ const ROLE_LABELS: Record<string, string> = {
     DATA_SCIENTIST: 'Data Scientist',
     DESIGNER: 'Designer',
     SOFTWARE_DEVELOPER: 'Software Developer',
+}
+
+const ROLE_LEVEL_LABELS: Record<string, string> = {
+    JUNIOR: 'Junior',
+    MID: 'Mid',
+    SENIOR: 'Senior',
 }
 
 const WORKLOAD_LABELS: Record<string, string> = {
@@ -70,6 +77,18 @@ function formatRole(role: string | undefined): string {
         .toUpperCase()
 
     return ROLE_LABELS[normalized] || role
+}
+
+function formatRoleLevel(roleLevel: string | undefined): string {
+    if (!roleLevel) {
+        return '-'
+    }
+
+    const normalized = String(roleLevel)
+        .trim()
+        .toUpperCase()
+
+    return ROLE_LEVEL_LABELS[normalized] || roleLevel
 }
 
 function formatWorkload(workload: string | undefined): string {
@@ -279,6 +298,23 @@ export const EngagementDetailsPage: FC = () => {
                                             </div>
                                         )
                                         : <span className={styles.value}>-</span>}
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Internal Account Details</h3>
+                                <div className={styles.metaGrid}>
+                                    {renderDetailField(
+                                        'Received Date from Account',
+                                        formatDate(engagement.receivedDateFromAccount),
+                                    )}
+                                    {renderDetailField('Account', engagement.account || '-')}
+                                    {renderDetailField('SMU', engagement.smu || '-')}
+                                    {renderDetailField('SPOC', engagement.spoc || '-')}
+                                    {renderDetailField(
+                                        'Role Level',
+                                        formatRoleLevel(engagement.roleLevel),
+                                    )}
                                 </div>
                             </section>
 

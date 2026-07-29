@@ -142,6 +142,18 @@ jest.mock('../../../../lib/utils', () => ({
     ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
+    toEngagementDateInputValue: (value?: string) => {
+        if (!value) {
+            return ''
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return value
+        }
+
+        return String(value)
+            .slice(0, 10)
+    },
 }))
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
@@ -318,6 +330,59 @@ describe('EngagementEditorForm', () => {
 
         expect(softwareDeveloperOption?.text)
             .toBe('Software Developer')
+    })
+
+    it('renders internal account fields and role level options', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        account: 'Acme Corp',
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        receivedDateFromAccount: '2026-07-15T00:00:00.000Z',
+                        role: 'SOFTWARE_DEVELOPER',
+                        roleLevel: 'SENIOR',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        smu: 'North America',
+                        spoc: 'Jane Doe',
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'AR Test',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        expect((screen.getByLabelText('Account') as HTMLInputElement).value)
+            .toBe('Acme Corp')
+        expect((screen.getByLabelText('SMU') as HTMLInputElement).value)
+            .toBe('North America')
+        expect((screen.getByLabelText('SPOC') as HTMLInputElement).value)
+            .toBe('Jane Doe')
+        expect((screen.getByLabelText('Received Date from Account') as HTMLInputElement).value)
+            .toBe('2026-07-15')
+        expect((screen.getByLabelText('Role Level') as HTMLSelectElement).value)
+            .toBe('SENIOR')
+
+        const roleLevelField = screen.getByLabelText('Role Level') as HTMLSelectElement
+        const midOption = Array.from(roleLevelField.options)
+            .find(option => option.value === 'MID')
+
+        expect(midOption?.text)
+            .toBe('Mid')
     })
 
     it('renders the selected parent project on the create page', () => {
