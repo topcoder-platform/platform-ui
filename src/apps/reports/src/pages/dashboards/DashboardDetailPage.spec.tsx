@@ -37,13 +37,13 @@ jest.mock('~/libs/ui', () => {
     return {
         Button: (
             props: PropsWithChildren<
-            Pick<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled' | 'onClick'>
+            Pick<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled' | 'onClick' | 'type'>
             >,
         ): JSX.Element => (
             <button
                 disabled={props.disabled}
                 onClick={props.onClick}
-                type='button'
+                type={props.type === 'submit' ? 'submit' : 'button'}
             >
                 {props.children}
             </button>
@@ -159,13 +159,15 @@ describe('Dashboard detail page', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('table', { name: 'New Signups by Month monthly data' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Next 6 Months' }))
+        expect(screen.getByText('6 months selected'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Next Period' }))
             .toBeDisabled()
         expect(screen.getByRole('link', { name: 'Back to Dashboards' }))
             .toHaveAttribute('href', '/reports/dashboards')
 
         jest.setSystemTime(new Date('2026-08-01T00:01:00.000Z'))
-        fireEvent.click(screen.getByRole('button', { name: 'Previous 6 Months' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Previous Period' }))
         await flushAsyncUpdates()
 
         expect(mockedFetchDashboard)
@@ -191,6 +193,125 @@ describe('Dashboard detail page', () => {
                 expect.any(Blob),
                 'new-signups-2025-08-01-to-2026-02-01.csv',
             )
+    })
+
+    it('applies and exports an inclusive custom month range without fetching drafts', async () => {
+        renderDetailRoute('new-signups')
+        await flushAsyncUpdates()
+
+        fireEvent.change(screen.getByLabelText('Date Range'), {
+            target: { value: 'custom' },
+        })
+
+        const startMonth = screen.getByLabelText('Start month')
+        const endMonth = screen.getByLabelText('End month')
+
+        expect(startMonth)
+            .toHaveValue('2026-02')
+        expect(endMonth)
+            .toHaveValue('2026-07')
+        expect(endMonth)
+            .toHaveAttribute('max', '2026-07')
+
+        fireEvent.change(startMonth, {
+            target: { value: '2025-07' },
+        })
+        fireEvent.change(endMonth, {
+            target: { value: '2026-06' },
+        })
+
+        expect(mockedFetchDashboard)
+            .toHaveBeenCalledTimes(1)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+        await flushAsyncUpdates()
+
+        expect(mockedFetchDashboard)
+            .toHaveBeenLastCalledWith('new-signups', {
+                endDate: '2026-07-01',
+                startDate: '2025-07-01',
+            })
+        expect(screen.getByText('Jul ’25 – Jun ’26'))
+            .toBeInTheDocument()
+        expect(screen.getByText('12 months selected'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Next Period' }))
+            .toBeDisabled()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Download CSV' }))
+        await flushAsyncUpdates()
+
+        expect(mockedDownloadDashboardCsv)
+            .toHaveBeenCalledWith('new-signups', {
+                endDate: '2026-07-01',
+                startDate: '2025-07-01',
+            })
+        expect(mockedDownloadBlobFile)
+            .toHaveBeenCalledWith(
+                expect.any(Blob),
+                'new-signups-2025-07-01-to-2026-07-01.csv',
+            )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Previous Period' }))
+        await flushAsyncUpdates()
+
+        expect(mockedFetchDashboard)
+            .toHaveBeenLastCalledWith('new-signups', {
+                endDate: '2025-07-01',
+                startDate: '2024-07-01',
+            })
+        expect(screen.getByLabelText('Start month'))
+            .toHaveValue('2024-07')
+        expect(screen.getByLabelText('End month'))
+            .toHaveValue('2025-06')
+        expect(screen.getByRole('button', { name: 'Next Period' }))
+            .toBeEnabled()
+
+        fireEvent.change(screen.getByLabelText('Date Range'), {
+            target: { value: 'six-months' },
+        })
+        await flushAsyncUpdates()
+
+        expect(mockedFetchDashboard)
+            .toHaveBeenLastCalledWith('new-signups', {
+                endDate: '2026-08-01',
+                startDate: '2026-02-01',
+            })
+        expect(screen.queryByLabelText('Start month'))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps the applied report when a custom range is reversed or in the future', async () => {
+        renderDetailRoute('new-signups')
+        await flushAsyncUpdates()
+
+        fireEvent.change(screen.getByLabelText('Date Range'), {
+            target: { value: 'custom' },
+        })
+        fireEvent.change(screen.getByLabelText('Start month'), {
+            target: { value: '2026-07' },
+        })
+        fireEvent.change(screen.getByLabelText('End month'), {
+            target: { value: '2026-06' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Start month must be on or before end month.')
+        expect(mockedFetchDashboard)
+            .toHaveBeenCalledTimes(1)
+
+        fireEvent.change(screen.getByLabelText('End month'), {
+            target: { value: '2026-08' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('End month cannot be later than Jul ’26.')
+        expect(mockedFetchDashboard)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByText('Feb ’26 – Jul ’26'))
+            .toBeInTheDocument()
     })
 
     it('redirects unknown dashboard slugs to the dashboard landing page', async () => {

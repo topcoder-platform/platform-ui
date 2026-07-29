@@ -1,10 +1,14 @@
 import {
     buildDashboardCsvFileName,
+    buildDashboardRangeFromMonths,
     formatCompactInteger,
     formatDashboardMonth,
     formatDashboardRangeLabel,
     formatPercentage,
     getDashboardRange,
+    getDashboardRangeMonthCount,
+    getDashboardRangeMonths,
+    shiftDashboardRange,
 } from './dashboard.utils'
 
 describe('dashboard date range utilities', () => {
@@ -65,6 +69,58 @@ describe('dashboard date range utilities', () => {
         expect(() => getDashboardRange(0, new Date('invalid')))
             .toThrow('Dashboard reference date must be valid.')
         expect(() => getDashboardRange(-0.5, julyReference))
+            .toThrow('Dashboard period offset must be an integer.')
+    })
+
+    it('converts an inclusive custom month selection to exclusive API dates', () => {
+        expect(buildDashboardRangeFromMonths('2025-07', '2026-06'))
+            .toEqual({
+                endDate: '2026-07-01',
+                startDate: '2025-07-01',
+            })
+        expect(buildDashboardRangeFromMonths('2025-12', '2025-12'))
+            .toEqual({
+                endDate: '2026-01-01',
+                startDate: '2025-12-01',
+            })
+    })
+
+    it('counts, exposes, and shifts the selected calendar months as one period', () => {
+        const range = {
+            endDate: '2026-07-01',
+            startDate: '2025-07-01',
+        }
+
+        expect(getDashboardRangeMonths(range))
+            .toEqual({
+                endMonth: '2026-06',
+                startMonth: '2025-07',
+            })
+        expect(getDashboardRangeMonthCount(range))
+            .toBe(12)
+        expect(shiftDashboardRange(range, -1))
+            .toEqual({
+                endDate: '2025-07-01',
+                startDate: '2024-07-01',
+            })
+    })
+
+    it('rejects incomplete, reversed, and partial-month custom ranges', () => {
+        expect(() => buildDashboardRangeFromMonths('', '2026-06'))
+            .toThrow('Choose both a start and end month.')
+        expect(() => buildDashboardRangeFromMonths('2026-07', '2026-06'))
+            .toThrow('Start month must be on or before end month.')
+        expect(() => buildDashboardRangeFromMonths('2026-13', '2027-01'))
+            .toThrow('Dashboard months must be valid calendar months.')
+        expect(() => getDashboardRangeMonthCount({
+            endDate: '2026-07-15',
+            startDate: '2025-07-01',
+        }))
+            .toThrow('Dashboard month ranges must use first-of-month boundaries.')
+        expect(() => shiftDashboardRange({
+            endDate: '2026-07-01',
+            startDate: '2025-07-01',
+        }, 0.5))
             .toThrow('Dashboard period offset must be an integer.')
     })
 })
