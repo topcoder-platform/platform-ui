@@ -1,5 +1,6 @@
 const DASHBOARD_PERIOD_MONTHS = 6
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+const ISO_MONTH_PATTERN = /^(\d{4})-(\d{2})$/
 const MONTH_LABELS = [
     'Jan',
     'Feb',
@@ -36,6 +37,14 @@ const percentageFormatter = new Intl.NumberFormat('en-US', {
 export interface DashboardRange {
     endDate: string
     startDate: string
+}
+
+/**
+ * Inclusive UTC month keys displayed by the dashboard range controls.
+ */
+export interface DashboardMonthSelection {
+    endMonth: string
+    startMonth: string
 }
 
 /**
@@ -113,6 +122,66 @@ function parseDashboardIsoDate(isoDate: string): Date {
     }
 
     return parsed
+}
+
+/**
+ * Parses and validates a dashboard month input without local-time conversion.
+ *
+ * @param monthKey Month input in exact `YYYY-MM` format.
+ * @returns A date at midnight UTC on the first day of the selected month.
+ * @throws RangeError when the value is missing or is not a real calendar month.
+ *
+ * Custom range controls use this parser before converting their inclusive end
+ * month to the API's exclusive date boundary.
+ */
+function parseDashboardMonthKey(monthKey: string): Date {
+    const match = ISO_MONTH_PATTERN.exec(monthKey)
+
+    if (!match) {
+        throw new RangeError('Dashboard months must use YYYY-MM format.')
+    }
+
+    const [, year, month] = match
+    const parsed = new Date(Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        1,
+    ))
+
+    if (toIsoDate(parsed)
+        .slice(0, 7) !== monthKey) {
+        throw new RangeError('Dashboard months must be valid calendar months.')
+    }
+
+    return parsed
+}
+
+/**
+ * Validates a dashboard range used by month-granular navigation.
+ *
+ * @param range Inclusive start and exclusive end dates at UTC month boundaries.
+ * @returns Parsed UTC boundaries for calendar-month calculations.
+ * @throws RangeError when a date is invalid, not a month start, or the range is empty.
+ *
+ * Month counts and period shifts share this validation so they cannot silently
+ * truncate partial-month API ranges.
+ */
+function parseDashboardMonthRange(range: DashboardRange): {
+    endDate: Date
+    startDate: Date
+} {
+    const startDate = parseDashboardIsoDate(range.startDate)
+    const endDate = parseDashboardIsoDate(range.endDate)
+
+    if (startDate.getUTCDate() !== 1 || endDate.getUTCDate() !== 1) {
+        throw new RangeError('Dashboard month ranges must use first-of-month boundaries.')
+    }
+
+    if (endDate.getTime() <= startDate.getTime()) {
+        throw new RangeError('Dashboard range end date must be after its start date.')
+    }
+
+    return { endDate, startDate }
 }
 
 /**
@@ -224,6 +293,120 @@ export function getDashboardRange(
     return {
         endDate: toIsoDate(endDate),
         startDate: toIsoDate(startDate),
+    }
+}
+
+/**
+ * Converts inclusive month input values into an API dashboard range.
+ *
+ * @param startMonth First selected month in `YYYY-MM` format.
+ * @param endMonth Last selected month in `YYYY-MM` format.
+ * @returns A UTC range whose start is inclusive and whose end is the first day
+ * after the selected end month.
+ * @throws RangeError when either month is missing or invalid, or the end month
+ * precedes the start month.
+ *
+ * For example, `2025-07` through `2026-06` becomes
+ * `2025-07-01` through the exclusive boundary `2026-07-01`.
+ */
+export function buildDashboardRangeFromMonths(
+    startMonth: string,
+    endMonth: string,
+): DashboardRange {
+    if (!startMonth || !endMonth) {
+        throw new RangeError('Choose both a start and end month.')
+    }
+
+    const startDate = parseDashboardMonthKey(startMonth)
+    const inclusiveEndDate = parseDashboardMonthKey(endMonth)
+
+    if (inclusiveEndDate.getTime() < startDate.getTime()) {
+        throw new RangeError('Start month must be on or before end month.')
+    }
+
+    return {
+        endDate: toIsoDate(addUtcMonths(inclusiveEndDate, 1)),
+        startDate: toIsoDate(startDate),
+    }
+}
+
+/**
+ * Returns the inclusive month keys represented by an API dashboard range.
+ *
+ * @param range Inclusive start and exclusive end dates at UTC month boundaries.
+ * @returns Start and inclusive end values suitable for native month inputs.
+ * @throws RangeError when the range is invalid or uses partial-month boundaries.
+ *
+ * Range navigation uses these values to keep the editable custom-range draft
+ * synchronized with the data currently shown.
+ */
+export function getDashboardRangeMonths(
+    range: DashboardRange,
+): DashboardMonthSelection {
+    const {
+        endDate,
+        startDate,
+    }: { endDate: Date, startDate: Date } = parseDashboardMonthRange(range)
+
+    return {
+        endMonth: toIsoDate(addUtcMonths(endDate, -1))
+            .slice(0, 7),
+        startMonth: toIsoDate(startDate)
+            .slice(0, 7),
+    }
+}
+
+/**
+ * Counts the calendar months represented by an API dashboard range.
+ *
+ * @param range Inclusive start and exclusive end dates at UTC month boundaries.
+ * @returns Positive number of selected calendar months.
+ * @throws RangeError when the range is invalid or uses partial-month boundaries.
+ *
+ * Detail dashboards display this count and use it as the custom period size.
+ */
+export function getDashboardRangeMonthCount(range: DashboardRange): number {
+    const {
+        endDate,
+        startDate,
+    }: { endDate: Date, startDate: Date } = parseDashboardMonthRange(range)
+
+    return (
+        (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12
+        + endDate.getUTCMonth()
+        - startDate.getUTCMonth()
+    )
+}
+
+/**
+ * Shifts a dashboard range by whole periods of its current month span.
+ *
+ * @param range Inclusive start and exclusive end dates at UTC month boundaries.
+ * @param periodOffset Number of same-sized periods to move; negative values
+ * move backward and positive values move forward.
+ * @returns A new half-open range with the original month count.
+ * @throws RangeError when the range is invalid or the offset is not an integer.
+ *
+ * Previous and next controls use this helper so a custom twelve-month selection
+ * continues to navigate in twelve-month blocks.
+ */
+export function shiftDashboardRange(
+    range: DashboardRange,
+    periodOffset: number,
+): DashboardRange {
+    if (!Number.isInteger(periodOffset)) {
+        throw new RangeError('Dashboard period offset must be an integer.')
+    }
+
+    const {
+        endDate,
+        startDate,
+    }: { endDate: Date, startDate: Date } = parseDashboardMonthRange(range)
+    const monthOffset = getDashboardRangeMonthCount(range) * periodOffset
+
+    return {
+        endDate: toIsoDate(addUtcMonths(endDate, monthOffset)),
+        startDate: toIsoDate(addUtcMonths(startDate, monthOffset)),
     }
 }
 

@@ -31,7 +31,7 @@
 }
 
 .headerActions,
-.periodControls {
+.detailActions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -170,8 +170,82 @@
     min-width: 260px;
 }
 
-.periodControls {
-    flex: 1;
+.rangePanel {
+    display: flex;
+    min-height: 76px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 14px 16px;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #f8f9fb;
+}
+
+.rangeForm,
+.periodNavigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.rangeForm {
+    min-width: 0;
+}
+
+.rangeModeField {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #111b46;
+    font-size: 13px;
+    font-weight: 700;
+
+    select {
+        min-width: 138px;
+    }
+}
+
+.rangeModeField select,
+.monthField input {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #bfc8da;
+    border-radius: 6px;
+    outline: none;
+    background: #fff;
+    color: #111b46;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    &:focus {
+        border-color: #0f62fe;
+        box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.15);
+    }
+}
+
+.monthField input {
+    width: 154px;
+}
+
+.rangeSeparator {
+    color: #34406b;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.rangeInputError {
+    width: 100%;
+    color: #c62828;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.periodNavigation {
+    flex: 0 0 auto;
+    justify-content: flex-end;
 }
 
 .periodIndicator {
@@ -374,7 +448,17 @@
         flex-direction: column;
     }
 
-    .periodControls {
+    .detailActions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .rangePanel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .periodNavigation {
         width: 100%;
         justify-content: flex-start;
     }
@@ -420,7 +504,9 @@
     }
 
     .headerActions,
-    .periodControls {
+    .detailActions,
+    .rangeForm,
+    .periodNavigation {
         width: 100%;
         align-items: stretch;
         flex-direction: column;
@@ -428,6 +514,24 @@
         > * {
             width: 100%;
         }
+    }
+
+    .rangePanel {
+        padding: 14px;
+    }
+
+    .rangeModeField {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .rangeModeField select,
+    .monthField input {
+        width: 100%;
+    }
+
+    .rangeSeparator {
+        text-align: center;
     }
 
     .periodIndicator {
