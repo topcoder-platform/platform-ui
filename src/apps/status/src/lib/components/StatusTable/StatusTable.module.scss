@@ -1,0 +1,141 @@
+@import '@libs/ui/styles/includes';
+
+.wrapper {
+    overflow: hidden;
+    width: 100%;
+}
+
+.desktop {
+    overflow-x: auto;
+
+    table {
+        border-collapse: collapse;
+        min-width: 960px;
+        width: 100%;
+    }
+
+    th {
+        background: #f4f5f5;
+        border-bottom: 1px solid #c9cdd0;
+        color: #555c62;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        padding: $sp-3 $sp-4;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    td {
+        border-bottom: 1px solid #e3e5e6;
+        color: #303438;
+        font-size: 13px;
+        line-height: 19px;
+        padding: $sp-4;
+        vertical-align: top;
+    }
+}
+
+.rowGroup:last-child td {
+    border-bottom: 0;
+}
+
+.critical > td,
+.critical.card {
+    background: #fff0f1;
+    border-color: #d77a84;
+}
+
+.warning > td,
+.warning.card {
+    background: #fff9e9;
+    border-color: #e4b84b;
+}
+
+.unknown > td,
+.unknown.card {
+    background: #f6f7f7;
+}
+
+.healthy-change > td,
+.healthy-change.card {
+    background: #f0fafb;
+}
+
+.clickable {
+    cursor: pointer;
+
+    &:hover > td,
+    &:focus > td {
+        box-shadow: inset 0 1px #087d8b, inset 0 -1px #087d8b;
+    }
+
+    &:focus {
+        outline: 2px solid #087d8b;
+        outline-offset: -2px;
+    }
+}
+
+.expandedArea {
+    background: #f8fafb;
+    padding: $sp-5;
+}
+
+.mobile {
+    display: none;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #d7dadd;
+    border-left: 4px solid #087d8b;
+    border-radius: 6px;
+    margin: $sp-3;
+    padding: $sp-4;
+
+    button {
+        background: #fff;
+        border: 1px solid #087d8b;
+        border-radius: 4px;
+        color: #087d8b;
+        font-weight: 700;
+        margin-top: $sp-3;
+        padding: $sp-2 $sp-3;
+        width: 100%;
+    }
+}
+
+.cardField {
+    border-bottom: 1px solid #e7e8e9;
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: minmax(100px, 36%) 1fr;
+    padding: $sp-2 0;
+
+    > strong {
+        color: #5b6166;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+}
+
+.srOnly {
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+    clip: rect(0, 0, 0, 0);
+}
+
+@include ltemd {
+    .desktop {
+        display: none;
+    }
+
+    .mobile {
+        display: block;
+    }
+}

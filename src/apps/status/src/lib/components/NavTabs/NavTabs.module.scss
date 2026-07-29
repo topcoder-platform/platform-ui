@@ -1,0 +1,135 @@
+@import '@libs/ui/styles/includes';
+
+.navBar {
+    background: #f7f5f1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 20;
+}
+
+.inner {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: $xxl-min;
+    padding: $sp-3 0;
+    width: 100%;
+
+    @include pagePaddings;
+}
+
+.title,
+.tab,
+.mobileTrigger {
+    color: var(--FontColor);
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+.title {
+    font-weight: 700;
+    line-height: 32px;
+}
+
+.tabs {
+    align-items: center;
+    display: flex;
+    gap: $sp-8;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tab {
+    border-bottom: 3px solid transparent;
+    display: block;
+    font-size: 16px;
+    line-height: 29px;
+    text-decoration: none;
+
+    &:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--Actived);
+        outline-offset: 2px;
+    }
+}
+
+.active {
+    border-bottom-color: var(--Actived);
+    font-weight: 700;
+}
+
+.mobileTrigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    display: none;
+    font-size: 16px;
+    font-weight: 700;
+    justify-content: space-between;
+    padding: 0;
+    width: 100%;
+}
+
+.chevron {
+    font-size: 24px;
+    transition: transform 120ms ease;
+}
+
+@include ltemd {
+    .navBar {
+        position: sticky;
+        top: 0;
+    }
+
+    .inner {
+        display: block;
+        position: relative;
+    }
+
+    .title {
+        display: none;
+    }
+
+    .mobileTrigger {
+        display: flex;
+    }
+
+    .tabs {
+        background: #f7f5f1;
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.12);
+        display: none;
+        left: 0;
+        padding: $sp-2 $sp-4 $sp-4;
+        position: absolute;
+        right: 0;
+        top: 100%;
+    }
+
+    .tab {
+        border-bottom: 0;
+        border-radius: 4px;
+        padding: $sp-2 $sp-4;
+    }
+
+    .active {
+        background: var(--Actived);
+        color: var(--invertButtonColor);
+    }
+
+    .open {
+        .tabs {
+            display: block;
+        }
+
+        .chevron {
+            transform: rotate(180deg);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chevron {
+        transition: none;
+    }
+}

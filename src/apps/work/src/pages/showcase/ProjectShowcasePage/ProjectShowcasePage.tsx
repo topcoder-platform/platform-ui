@@ -23,7 +23,10 @@ import {
     Pagination,
     ProjectPageWrapper,
     ProjectsShowcaseFilter,
+    ShowcasePostPreview,
+    type ShowcasePostPreviewData,
 } from '../../../lib/components'
+import { projectsRouteId } from '../../../config/routes.config'
 import {
     WorkAppContext,
 } from '../../../lib/contexts'
@@ -52,11 +55,14 @@ import {
 import { showErrorToast, showSuccessToast } from '../../../lib/utils/toast.utils'
 import { checkCanManageProject, hasManagerRole } from '../../../lib/utils/permissions.utils'
 import type {
+    Challenge,
     FetchProjectShowcasePostsParams,
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
+    ProjectShowcasePostDetails,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
+    ProjectShowcasePostTaxonomyItem,
     WorkAppContextModel,
 } from '../../../lib/models'
 
@@ -197,6 +203,153 @@ function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormD
             url: item.url,
         })) || [],
         title: post?.title || '',
+    }
+}
+
+function resolveTaxonomyItems(
+    selectedIds: string[],
+    options: SelectOption[],
+): ProjectShowcasePostTaxonomyItem[] {
+    return selectedIds
+        .map(selectedId => selectedId.trim())
+        .filter(Boolean)
+        .map(selectedId => {
+            const matchedOption = options.find(option => option.value === selectedId)
+            if (matchedOption?.value) {
+                return {
+                    id: matchedOption.value,
+                    name: matchedOption.label,
+                }
+            }
+
+            return {
+                id: selectedId,
+                name: selectedId,
+            }
+        })
+}
+
+interface BuildShowcasePreviewDataParams {
+    formData: ProjectShowcasePostFormData
+    industryOptions: SelectOption[]
+    categoryOptions: SelectOption[]
+    challengeOptions: FormSelectOption[]
+    projectId: string
+    projectTitle: string
+    manageMode: 'create' | 'edit'
+    editingPost?: ProjectShowcasePostDetails
+}
+
+async function buildShowcasePreviewData(
+    params: BuildShowcasePreviewDataParams,
+): Promise<ShowcasePostPreviewData> {
+    const {
+        formData,
+        industryOptions,
+        categoryOptions,
+        challengeOptions,
+        projectId,
+        projectTitle,
+        manageMode,
+        editingPost,
+    }: BuildShowcasePreviewDataParams = params
+
+    const challengeIds: string[] = formData.challengeIds || []
+    const challengePageBase: string = EnvironmentConfig.URLS.CHALLENGES_PAGE.replace(/\/$/, '')
+
+    let challenges: ShowcasePostPreviewData['challenges'] = challengeIds.map((challengeId: string) => {
+        const matchedOption: FormSelectOption | undefined = challengeOptions.find(
+            (option: FormSelectOption) => option.value === challengeId,
+        )
+        return {
+            id: challengeId,
+            name: matchedOption?.label || challengeId,
+            url: `${challengePageBase}/${challengeId}`,
+        }
+    })
+    let challengeCount: number = challengeIds.length
+    let registrantsCount: number = 0
+    let countriesCount: number = 0
+    let skills: Array<{ id: string; name: string }> = []
+
+    if (challengeIds.length > 0) {
+        const settledResults = await Promise.allSettled(
+            challengeIds.map((challengeId: string) => fetchChallenge(challengeId)),
+        )
+        const loadedChallenges: Challenge[] = settledResults
+            .filter(
+                (result): result is PromiseFulfilledResult<Challenge> => result.status === 'fulfilled',
+            )
+            .map((result: PromiseFulfilledResult<Challenge>) => result.value)
+
+        if (loadedChallenges.length > 0) {
+            challenges = loadedChallenges.map((challenge: Challenge) => {
+                const trackName: string | undefined = typeof challenge.track === 'string'
+                    ? challenge.track
+                    : challenge.track?.name
+                const typeName: string | undefined = typeof challenge.type === 'string'
+                    ? challenge.type
+                    : challenge.type?.name
+
+                return {
+                    id: challenge.id,
+                    name: challenge.name,
+                    numOfRegistrants: challenge.numOfRegistrants,
+                    numOfSubmissions: challenge.numOfSubmissions,
+                    track: trackName || typeName,
+                    url: `${challengePageBase}/${challenge.id}`,
+                }
+            })
+            challengeCount = loadedChallenges.length
+            registrantsCount = loadedChallenges.reduce(
+                (count: number, challenge: Challenge) => count + (challenge.numOfRegistrants ?? 0),
+                0,
+            )
+            // Countries come from post challengeMetadata on the portal API; challenge fetch has none.
+            countriesCount = editingPost?.challengeMetadata
+                ? new Set(
+                    editingPost.challengeMetadata.flatMap(
+                        entry => entry.countries || [],
+                    ),
+                ).size
+                : 0
+
+            const skillMap: Map<string, string> = new Map<string, string>()
+            loadedChallenges.forEach((challenge: Challenge) => {
+                (challenge.skills || []).forEach(skill => {
+                    if (skill.id && !skillMap.has(skill.id)) {
+                        skillMap.set(skill.id, skill.name)
+                    }
+                })
+            })
+            skills = Array.from(skillMap.entries())
+                .map(([id, name]: [string, string]) => ({ id, name }))
+        }
+    }
+
+    const previewTimestamp: number = Date.now()
+    const projectUrl: string = [
+        EnvironmentConfig.URLS.WORK_APP.replace(/\/$/, ''),
+        projectsRouteId,
+        encodeURIComponent(projectId),
+    ].join('/')
+
+    return {
+        categories: resolveTaxonomyItems(formData.categoryIds, categoryOptions),
+        challengeCount,
+        challenges,
+        content: formData.content,
+        countriesCount,
+        industries: resolveTaxonomyItems(formData.industryIds, industryOptions),
+        media: formData.media || [],
+        projectTitle,
+        projectUrl,
+        publishedAt: manageMode === 'edit'
+            ? (editingPost?.publishedAt ?? editingPost?.createdAt ?? previewTimestamp)
+            : previewTimestamp,
+        registrantsCount,
+        skills,
+        title: formData.title,
     }
 }
 
@@ -500,6 +653,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false)
     const [manageMode, setManageMode] = useState<'create' | 'edit'>('create')
     const [selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined)
+    const [editingPostDetails, setEditingPostDetails] = useState<ProjectShowcasePostDetails | undefined>(undefined)
     const [isLoadingPostDetails, setIsLoadingPostDetails] = useState<boolean>(false)
     const [selectedChallengeOptions, setSelectedChallengeOptions] = useState<FormSelectOption[]>([])
     const [isSaving, setIsSaving] = useState<boolean>(false)
@@ -510,18 +664,29 @@ export const ProjectShowcasePage: FC = () => {
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const [isAutoSavingMedia, setIsAutoSavingMedia] = useState<boolean>(false)
     const [mediaLimitWarning, setMediaLimitWarning] = useState<string | undefined>(undefined)
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false)
+    const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
+    const [previewData, setPreviewData] = useState<ShowcasePostPreviewData | undefined>(undefined)
     const confirmation = useConfirmationModal()
     // const projectResult = useFetchProject(projectId || undefined)
 
     const handleOpenCreateModal = useCallback(() => {
         setManageMode('create')
+        setEditingPostDetails(undefined)
         setIsManageModalOpen(true)
     }, [])
 
     const handleEditPost = useCallback((postId: string) => {
         setManageMode('edit')
         setSelectedPostId(postId)
+        setEditingPostDetails(undefined)
         setIsManageModalOpen(true)
+    }, [])
+
+    const handleClosePreviewModal = useCallback(() => {
+        setIsPreviewModalOpen(false)
+        setPreviewData(undefined)
+        setIsLoadingPreview(false)
     }, [])
 
     const handlePublishPost = useCallback(async (post: ProjectShowcasePost) => {
@@ -675,6 +840,45 @@ export const ProjectShowcasePage: FC = () => {
         setValue,
         watch,
     }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
+
+    const handleOpenPreview = useCallback(async () => {
+        if (!projectId) {
+            return
+        }
+
+        setIsLoadingPreview(true)
+        setIsPreviewModalOpen(true)
+
+        try {
+            const formData = getValues()
+            const builtPreview = await buildShowcasePreviewData({
+                categoryOptions: categoryOptions.slice(1),
+                challengeOptions: selectedChallengeOptions,
+                editingPost: editingPostDetails,
+                formData,
+                industryOptions: industryOptions.slice(1),
+                manageMode,
+                projectId,
+                projectTitle: projectResult.project?.name || 'Project',
+            })
+            setPreviewData(builtPreview)
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to build preview.')
+            setIsPreviewModalOpen(false)
+            setPreviewData(undefined)
+        } finally {
+            setIsLoadingPreview(false)
+        }
+    }, [
+        categoryOptions,
+        editingPostDetails,
+        getValues,
+        industryOptions,
+        manageMode,
+        projectId,
+        projectResult.project?.name,
+        selectedChallengeOptions,
+    ])
 
     const updatePostInCache = useCallback(
         async (updatedPost: ProjectShowcasePost) => {
@@ -937,6 +1141,7 @@ export const ProjectShowcasePage: FC = () => {
             setSelectedChallengeOptions([])
             setFormError(undefined)
             setSelectedPostId(undefined)
+            setEditingPostDetails(undefined)
             return
         }
 
@@ -945,6 +1150,7 @@ export const ProjectShowcasePage: FC = () => {
             setSelectedChallengeOptions([])
             setFormError(undefined)
             setSelectedPostId(undefined)
+            setEditingPostDetails(undefined)
             return
         }
 
@@ -956,6 +1162,7 @@ export const ProjectShowcasePage: FC = () => {
         fetchProjectShowcasePost(projectId, selectedPostId)
             .then(post => {
                 setSelectedPostId(post.id)
+                setEditingPostDetails(post)
                 reset(mapPostToFormData(post))
                 setFormError(undefined)
 
@@ -1201,8 +1408,10 @@ export const ProjectShowcasePage: FC = () => {
                 title={manageMode === 'create' ? 'Create Post' : 'Edit Post'}
                 onClose={function onClose() {
                     setSelectedPostId(undefined)
+                    setEditingPostDetails(undefined)
                     setIsManageModalOpen(false)
                     setFormError(undefined)
+                    handleClosePreviewModal()
                 }}
                 size='body'
             >
@@ -1440,6 +1649,17 @@ export const ProjectShowcasePage: FC = () => {
                                 type='button'
                             />
                             <Button
+                                label='Preview'
+                                onClick={function onClick() {
+                                    handleOpenPreview()
+                                        .catch(() => undefined)
+                                }}
+                                secondary
+                                size='lg'
+                                type='button'
+                                disabled={isSaving || isLoadingPostDetails || isLoadingPreview}
+                            />
+                            <Button
                                 label={manageMode === 'create' ? 'Create' : 'Save'}
                                 primary
                                 size='lg'
@@ -1449,6 +1669,26 @@ export const ProjectShowcasePage: FC = () => {
                         </footer>
                     </form>
                 </FormProvider>
+            </BaseModal>
+
+            <BaseModal
+                open={isPreviewModalOpen}
+                title='Preview'
+                onClose={handleClosePreviewModal}
+                size='body'
+                bodyClassName={styles.previewModalBody}
+                classNames={{
+                    modal: styles.previewModal,
+                }}
+            >
+                {isLoadingPreview && (
+                    <div className={styles.previewLoading}>
+                        <LoadingSpinner />
+                    </div>
+                )}
+                {!isLoadingPreview && previewData && (
+                    <ShowcasePostPreview data={previewData} />
+                )}
             </BaseModal>
 
             {confirmation.modal}
