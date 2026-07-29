@@ -170,6 +170,15 @@ export const AiReviewWorkflowsPage: FC = () => {
             },
             type: 'element',
         },
+        {
+            defaultSortDirection: 'asc',
+            label: 'Review Method',
+            propertyName: 'reviewMethod',
+            renderer: (data: AiWorkflow) => (
+                <div className={styles.cellText}>{data.reviewMethod || 'N/A'}</div>
+            ),
+            type: 'element',
+        },
     ], [])
 
     const columnsMobile = useMemo<MobileTableColumn<AiWorkflow>[][]>(

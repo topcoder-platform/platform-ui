@@ -47,6 +47,7 @@ export interface AiWorkflow {
   gitWorkflowId: string;
   gitOwnerRepo: string;
   scorecardId: string;
+  reviewMethod: string;
   disabled: boolean;
   createdAt: string;
   createdBy: string;
