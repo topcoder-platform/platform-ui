@@ -31,6 +31,10 @@ const GeneralSection: FC<SectionProps> = (props: SectionProps) => (
                 </span>
             </div>
             <div className={styles.field}>
+                <span className={styles.label}>Review Method</span>
+                <span className={styles.value}>{props.workflow.reviewMethod || 'N/A'}</span>
+            </div>
+            <div className={styles.field}>
                 <span className={styles.label}>Definition URL</span>
                 <span className={styles.value}>
                     {props.workflow.defUrl ? (
