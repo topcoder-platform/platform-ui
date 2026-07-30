@@ -36,6 +36,7 @@ interface EngagementPrivateSectionForm {
 }
 
 interface EngagementPrivateSectionProps {
+    hideCheckbox?: boolean
     assignmentManagementPath?: string
     lockedAssignedMemberHandles?: string[]
 }
@@ -194,13 +195,19 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
 
     return (
         <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Private</h3>
+            {!props.hideCheckbox
+                ? (
+                    <>
+                        <h3 className={styles.sectionTitle}>Private</h3>
 
-            <FormCheckboxField
-                disabled={hasLockedAssignments}
-                label='Private engagement'
-                name='isPrivate'
-            />
+                        <FormCheckboxField
+                            disabled={hasLockedAssignments}
+                            label='Private engagement'
+                            name='isPrivate'
+                        />
+                    </>
+                )
+                : <h3 className={styles.sectionTitle}>Assigned Members</h3>}
 
             {isPrivate
                 ? (

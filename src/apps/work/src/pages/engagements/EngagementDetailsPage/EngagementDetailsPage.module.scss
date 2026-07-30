@@ -59,10 +59,14 @@
     gap: 6px;
 }
 
-.label {
+.label, .skillslabel {
     color: #5b5b5b;
     font-size: 12px;
     font-weight: 700;
+}
+
+.skillslabel {
+    margin-top: 15px;
 }
 
 .value {

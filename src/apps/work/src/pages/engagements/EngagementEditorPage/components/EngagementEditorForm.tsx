@@ -28,6 +28,7 @@ import {
     rootRoute,
 } from '../../../../config/routes.config'
 import {
+    FormCheckboxField,
     FormSelectField,
     FormSelectOption,
     FormTextField,
@@ -542,23 +543,26 @@ function toPayload(
         assignmentDetails?: SerializedAssignmentDetailsPayload[]
     } = {
         account: values.account,
-        anticipatedStart: values.anticipatedStart,
-        compensationRange: values.compensationRange,
-        countries: values.countries,
         description: values.description,
-        durationWeeks: Number(values.durationWeeks),
         isPrivate: values.isPrivate,
         projectId: values.projectId,
         receivedDateFromAccount: values.receivedDateFromAccount,
-        role: values.role,
         roleLevel: values.roleLevel,
         skills: values.skills,
         smu: values.smu,
         spoc: values.spoc,
         status: values.status,
-        timezones: values.timezones,
         title: values.title,
-        workload: values.workload,
+    }
+
+    if (!values.isPrivate) {
+        payload.anticipatedStart = values.anticipatedStart
+        payload.compensationRange = values.compensationRange
+        payload.countries = values.countries
+        payload.durationWeeks = Number(values.durationWeeks)
+        payload.role = values.role
+        payload.timezones = values.timezones
+        payload.workload = values.workload
     }
 
     const requiredMemberCount = getPayloadRequiredMemberCount(
@@ -828,45 +832,14 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Basic Information</h3>
 
-                    <div className={styles.basicInfoGrid}>
+                    <div className={styles.block}>
                         <FormTextField
-                            className={styles.titleField}
                             label='Title'
                             name='title'
                             placeholder='Engagement title'
                             required
                         />
 
-                        <FormTextField
-                            label='Duration in weeks'
-                            name='durationWeeks'
-                            placeholder='Minimum 4'
-                            required
-                            type='number'
-                        />
-
-                        <FormSelectField
-                            label='Role'
-                            name='role'
-                            options={roleOptions}
-                            placeholder='Select role'
-                        />
-
-                        <FormSelectField
-                            label='Workload'
-                            name='workload'
-                            options={workloadOptions}
-                            placeholder='Select workload'
-                        />
-
-                        <FormTextField
-                            label='Compensation range'
-                            name='compensationRange'
-                            placeholder='$600 - $1000'
-                        />
-                    </div>
-
-                    <div className={styles.block}>
                         <FormTinyMceEditor
                             label='Description'
                             name='description'
@@ -887,44 +860,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 </section>
 
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Details</h3>
-
-                    <div className={styles.block}>
-                        <EngagementSkillsField />
-                    </div>
-
-                    <div className={styles.detailsGrid}>
-                        <div className={styles.startStatusBlock}>
-                            <EngagementStartDateField />
-                            <EngagementStatusField />
-                            <FormSelectField
-                                disabled={!props.canEditParentProject}
-                                isAsync={props.canEditParentProject}
-                                label='Parent Project'
-                                loadOptions={props.canEditParentProject
-                                    ? loadParentProjectOptions
-                                    : undefined}
-                                name='projectId'
-                                options={parentProjectOptions}
-                                placeholder={props.canEditParentProject
-                                    ? 'Type at least 2 characters to search projects...'
-                                    : undefined}
-                                required
-                            />
-                            <FormTextField
-                                label='Required Members'
-                                name='requiredMemberCount'
-                                placeholder='Number of members'
-                                required={values.isPrivate === true}
-                                type='number'
-                            />
-                        </div>
-                        <EngagementLocationFields />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Internal Account Details</h3>
+                    <h3 className={styles.sectionTitle}>Internal Details</h3>
 
                     <div className={styles.basicInfoGrid}>
                         <FormTextField
@@ -964,13 +900,95 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     </div>
                 </section>
 
-                <EngagementPrivateSection
-                    assignmentManagementPath={currentEngagementId
-                        ? `/projects/${normalizeProjectId(values.projectId || props.projectId)}`
-                            + `/engagements/${currentEngagementId}/assignments`
-                        : undefined}
-                    lockedAssignedMemberHandles={lockedAssignedMemberHandles}
-                />
+                <section className={styles.section}>
+                    <div className={styles.block}>
+                        <EngagementSkillsField />
+                    </div>
+
+                    <div className={styles.detailsGrid}>
+                        <div className={styles.startStatusBlock}>
+                            <EngagementStatusField />
+                            <FormSelectField
+                                disabled={!props.canEditParentProject}
+                                isAsync={props.canEditParentProject}
+                                label='Parent Project'
+                                loadOptions={props.canEditParentProject
+                                    ? loadParentProjectOptions
+                                    : undefined}
+                                name='projectId'
+                                options={parentProjectOptions}
+                                placeholder={props.canEditParentProject
+                                    ? 'Type at least 2 characters to search projects...'
+                                    : undefined}
+                                required
+                            />
+                            <FormTextField
+                                label='Required Members'
+                                name='requiredMemberCount'
+                                placeholder='Number of members'
+                                required={values.isPrivate === true}
+                                type='number'
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                <section className={styles.section}>
+                    <h3 className={styles.sectionTitle}>Private</h3>
+                    <FormCheckboxField
+                        disabled={lockedAssignedMemberHandles.length > 0}
+                        label='Private engagement'
+                        name='isPrivate'
+                    />
+                </section>
+
+                {!values.isPrivate
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Details</h3>
+
+                            <div className={styles.detailsGrid}>
+                                <div className={styles.startStatusBlock}>
+                                    <EngagementStartDateField />
+                                    <FormTextField
+                                        label='Duration in weeks'
+                                        name='durationWeeks'
+                                        placeholder='Minimum 4'
+                                        required
+                                        type='number'
+                                    />
+                                    <FormSelectField
+                                        label='Role'
+                                        name='role'
+                                        options={roleOptions}
+                                        placeholder='Select role'
+                                    />
+                                    <FormSelectField
+                                        label='Workload'
+                                        name='workload'
+                                        options={workloadOptions}
+                                        placeholder='Select workload'
+                                    />
+                                    <FormTextField
+                                        label='Compensation range'
+                                        name='compensationRange'
+                                        placeholder='$600 - $1000'
+                                    />
+                                </div>
+                                <EngagementLocationFields />
+                            </div>
+                        </section>
+                    )
+                    : (
+                        <EngagementPrivateSection
+                            assignmentManagementPath={currentEngagementId
+                                ? `/projects/${normalizeProjectId(values.projectId || props.projectId)}`
+                                    + `/engagements/${currentEngagementId}/assignments`
+                                : undefined}
+                            hideCheckbox
+                            lockedAssignedMemberHandles={lockedAssignedMemberHandles}
+                        />
+                    )}
 
                 <div className={styles.footer}>
                     {saveError
