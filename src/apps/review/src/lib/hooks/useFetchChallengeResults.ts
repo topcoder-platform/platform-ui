@@ -167,10 +167,10 @@ function isFinalPlacementWinner(winner: ChallengeWinner): boolean {
 /**
  * Enriches one canonical Review API result with display data from its exact local submission.
  *
- * The canonical result remains authoritative for submission identity, placement, and scores.
- * Local data may supply reviews and the submitted date only when its submission id exactly
- * matches the canonical id, which prevents a multi-submission winner's sibling submission from
- * replacing the downloadable winner.
+ * The canonical result remains authoritative for submission identity and placement. An exact
+ * matching submission may supply its final/system aggregate score, reviews, and submitted date,
+ * which restores Marathon Match scoring without allowing a sibling submission to replace the
+ * downloadable winner.
  *
  * @param params canonical result, matching challenge winner, submissions, reviews, and members.
  * @returns The display-ready project result, or undefined when the canonical identity is invalid.
@@ -193,6 +193,7 @@ const buildProjectResult = ({
     const exactSubmission = submissions.find(
         submission => normalizeIdentifier(submission.id) === canonicalSubmissionId,
     )
+    const finalAggregateScore = toFiniteNumber(exactSubmission?.finalAggregateScore)
     const fallbackReviews = exactSubmission?.reviews ?? canonicalResult.reviews ?? []
     const orderedReviews = orderReviewsByCreatedDate(fallbackReviews)
 
@@ -206,6 +207,7 @@ const buildProjectResult = ({
     return adjustProjectResult({
         ...canonicalResult,
         challengeId: normalizeIdentifier(canonicalResult.challengeId) ?? challengeUuid,
+        finalScore: finalAggregateScore ?? canonicalResult.finalScore,
         reviews: orderedReviews,
         submissionId: canonicalSubmissionId,
         submittedDate: exactSubmission?.submittedDate ?? canonicalResult.submittedDate,
@@ -294,11 +296,11 @@ export interface useFetchChallengeResultsProps {
 /**
  * Fetches canonical Winners-tab results and enriches them with local display data.
  *
- * The Review API project-result endpoint is authoritative for the winning submission id,
- * placement, and scores. Challenge submissions contribute display-only data for the exact
- * canonical submission. Loading remains active until both request streams settle. Challenge
- * reviews are deliberately not fetched because registered members without submissions may
- * download winners but are not authorized to inspect challenge review data.
+ * The Review API project-result endpoint is authoritative for the winning submission id and
+ * placement. The exact challenge submission may contribute its final/system aggregate score and
+ * display data. Loading remains active until both request streams settle. Challenge reviews are
+ * deliberately not fetched because registered members without submissions may download winners
+ * but are not authorized to inspect challenge review data.
  *
  * @param submissions submissions already available in the challenge detail view.
  * @returns Canonical display-ready project results and their combined loading state.

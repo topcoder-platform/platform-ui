@@ -163,6 +163,37 @@ describe('getSubmissionFinalScoreCandidate', () => {
 })
 
 describe('buildCanonicalChallengeResults', () => {
+    it('uses the exact canonical submission final aggregate score for Marathon Match winners', () => {
+        const finalAggregateScore = 99.50699286094532
+        const results = buildCanonicalChallengeResults({
+            canonicalResults: [buildProjectResult({
+                finalScore: 0,
+                submissionId: 'canonical-submission',
+            })],
+            challengeUuid: 'challenge-id',
+            memberMapping: {},
+            submissions: [
+                buildSubmission({
+                    finalAggregateScore: 100,
+                    id: 'higher-scoring-sibling',
+                }),
+                buildSubmission({
+                    finalAggregateScore,
+                    id: 'canonical-submission',
+                }),
+            ],
+            winners: [buildWinner({ type: 'PLACEMENT' })],
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0])
+            .toMatchObject({
+                finalScore: finalAggregateScore,
+                submissionId: 'canonical-submission',
+            })
+    })
+
     it('uses the exact canonical submission and ignores checkpoint and duplicate winner rows', () => {
         const exactReview = buildReview()
         const siblingReview = buildReview({
