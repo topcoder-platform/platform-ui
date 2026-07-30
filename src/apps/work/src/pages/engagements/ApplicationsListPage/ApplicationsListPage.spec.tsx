@@ -98,7 +98,7 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../../lib/constants', () => ({
-    APPLICATION_STATUSES: ['SUBMITTED', 'UNDER_REVIEW', 'SELECTED', 'REJECTED'],
+    APPLICATION_STATUSES: ['SUBMITTED', 'UNDER_REVIEW', 'SHORTLISTED', 'SELECTED', 'REJECTED'],
     PROFILE_URL: 'https://profiles.example.com',
 }))
 jest.mock('../../../lib/components', () => ({
