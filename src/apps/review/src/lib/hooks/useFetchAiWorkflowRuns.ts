@@ -19,12 +19,18 @@ export enum AiWorkflowRunStatusEnum {
     SUCCESS = 'SUCCESS',
 }
 
+export enum AiWorkflowReviewMethod {
+    DETERMINISTIC = 'DETERMINISTIC',
+    AI_ASSISTED = 'AI_ASSISTED'
+}
+
 export interface AiWorkflow {
     id: string;
     name: string;
     description: string;
     scorecard?: Scorecard
     defUrl: string
+    reviewMethod?: string
     llm: {
         name: string
         description: string
@@ -50,6 +56,7 @@ export interface AiWorkflowRun {
         input: number
         output: number
     }
+    commentsCount?: number
 }
 
 export interface AiWorkflowRunArtifact {

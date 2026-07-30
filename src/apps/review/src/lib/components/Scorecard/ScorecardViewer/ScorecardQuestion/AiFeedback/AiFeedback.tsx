@@ -11,6 +11,7 @@ import { getScoreResponseOptions } from '~/apps/review/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
 import { Button, IconOutline, Tooltip } from '~/libs/ui'
 import { useRole } from '~/apps/review/src/lib/hooks'
+import { AiWorkflowReviewMethod } from '~/apps/review/src/lib/hooks/useFetchAiWorkflowRuns'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
@@ -68,6 +69,7 @@ const renderAiFeedbackContent = (
     onShowReply: () => void,
     onSubmitReply: (content: string) => Promise<void>,
     handleCloseReply: () => void,
+    isDeterministicWorkflow: boolean,
 ): JSX.Element => (
     <ScorecardQuestionRow
         icon={<IconAiReview />}
@@ -138,14 +140,11 @@ const renderAiFeedbackContent = (
         <AiFeedbackActions
             feedback={feedback}
             actionType='runItem'
-            onPressReply={onShowReply}
+            onPressReply={isDeterministicWorkflow ? undefined : onShowReply}
         />
+        <AiFeedbackComments comments={commentsArr} feedback={feedback} isRoot />
 
-        {commentsArr.length > 0 && (
-            <AiFeedbackComments comments={commentsArr} feedback={feedback} isRoot />
-        )}
-
-        {showReply && (
+        {showReply && !isDeterministicWorkflow && (
             <AiFeedbackReply
                 onSubmitReply={onSubmitReply}
                 onCloseReply={handleCloseReply}
@@ -166,6 +165,8 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         submissionId,
         aiReviewConfig,
     }: ReviewsContextModel = useReviewsContext()
+
+    const isDeterministicWorkflow = workflowRun?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC
     const { isPrivilegedRole }: { isPrivilegedRole: boolean } = useRole()
     const [showReply, setShowReply] = useState(false)
     const [isUpdatingScore, setIsUpdatingScore] = useState(false)
@@ -182,17 +183,20 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const commentsArr: any[] = (feedback?.comments) || []
 
     const onShowReply = useCallback(() => {
+        if (isDeterministicWorkflow) return
         setShowReply(prevShowReply => !prevShowReply)
-    }, [])
+    }, [isDeterministicWorkflow])
 
     const onSubmitReply = useCallback(async (content: string) => {
+        if (isDeterministicWorkflow) return
+
         await createFeedbackComment(workflowId as string, workflowRun?.id as string, feedback?.id, {
             content,
         })
         // eslint-disable-next-line max-len
         await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setShowReply(false)
-    }, [workflowId, workflowRun?.id, workflowRun?.status, feedback?.id])
+    }, [workflowId, workflowRun?.id, workflowRun?.status, feedback?.id, isDeterministicWorkflow])
 
     const isYesNo = props.question.type === 'YES_NO'
     const hasQuestionScoreEditAccess = isPrivilegedRole
@@ -296,6 +300,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         onShowReply,
         onSubmitReply,
         handleCloseReply,
+        isDeterministicWorkflow,
     )
 }
 

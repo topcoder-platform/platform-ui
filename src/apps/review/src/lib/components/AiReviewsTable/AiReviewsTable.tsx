@@ -18,6 +18,7 @@ import {
     AiWorkflowRun,
     AiWorkflowRunsResponse,
     AiWorkflowRunStatusEnum,
+    AiWorkflowReviewMethod,
     getAiWorkflowRunsCacheKey,
     retriggerAiWorkflowRun,
     useFetchAiWorkflowsRuns,
@@ -51,7 +52,7 @@ interface AiReviewerRow {
     initialScore?: number
     minScore?: number
     reviewDate?: string
-    run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'>
+    run?: Pick<AiWorkflowRun, 'id'|'score'|'status'|'workflow'|'commentsCount'>
     score?: number
     status?: 'failed' | 'failed-score' | 'passed' | 'pending' | 'cancelled'
     title: string
@@ -105,6 +106,11 @@ function formatWeight(value?: number): string {
     }
 
     return `${value.toFixed(0)}%`
+}
+
+function shouldHideComments(run?: Pick<AiWorkflowRun, 'id' | 'workflow'>): boolean {
+    return run?.id === '-1'
+        || run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC
 }
 
 function getConfiguredWorkflowName(workflow?: AiReviewConfigWorkflow['workflow']): string | undefined {
@@ -263,6 +269,12 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
                 workflowId,
             }
+        })
+
+        rows.sort((a, b) => {
+            const aDeterministic = a.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? 1 : 0
+            const bDeterministic = b.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? 1 : 0
+            return aDeterministic - bDeterministic
         })
 
         const hasVirusScan = rows.some(row => row.title.toLowerCase() === 'virus scan')
@@ -455,7 +467,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.label}>Reviewer</div>
                             <div className={styles.value}>
                                 <span className={styles.icon}>
-                                    <IconAiReview />
+                                    {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? (
+                                        <IconOutline.ClipboardCheckIcon className="icon-xl" />
+                                    ) : (
+                                        <IconAiReview />
+                                    )}
                                 </span>
                                 <span className={styles.workflowName} title={row.title}>
                                     {row.title}
@@ -473,6 +489,17 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             </div>
                         </div>
 
+                        <div className={styles.mobileRow}>
+                            <div className={styles.label}>Review Date</div>
+                            <div className={styles.value}>
+                                {row.reviewDate
+                                    ? moment(row.reviewDate)
+                                        .local()
+                                        .format(TABLE_DATE_FORMAT)
+                                    : '-'}
+                            </div>
+                        </div>
+
                         {hasConfig && (
                             <>
                                 <div className={styles.mobileRow}>
@@ -485,17 +512,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 </div>
                             </>
                         )}
-
-                        <div className={styles.mobileRow}>
-                            <div className={styles.label}>Review Date</div>
-                            <div className={styles.value}>
-                                {row.reviewDate
-                                    ? moment(row.reviewDate)
-                                        .local()
-                                        .format(TABLE_DATE_FORMAT)
-                                    : '-'}
-                            </div>
-                        </div>
 
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Score</div>
@@ -542,6 +558,22 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 />
                             </div>
                         </div>
+
+                        {shouldHideComments(row.run) && (
+                            <div className={styles.mobileRow}>
+                                <div className={styles.label}>Comments</div>
+                                <div className={styles.value}>
+                                    <Link
+                                        to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                    >
+                                        <span className={styles.commentValue}>
+                                            <IconOutline.ChatAltIcon className='icon-xl' />
+                                            {row.run?.commentsCount ?? 0}
+                                        </span>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -568,18 +600,19 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 <thead>
                     <tr>
                         <th>AI Reviewer</th>
+                        <th>Review Date</th>
                         {hasConfig && <th>Weight</th>}
                         {hasConfig && <th>Min Score</th>}
-                        <th>Review Date</th>
                         <th className={styles.scoreCol}>Score</th>
                         <th>Result</th>
+                        <th>Comments</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {!reviewerRows.length && loading && (
                         <tr>
-                            <td colSpan={hasConfig ? 6 : 4}>Loading...</td>
+                            <td colSpan={hasConfig ? 7 : 5}>Loading...</td>
                         </tr>
                     )}
 
@@ -588,7 +621,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <td>
                                 <div className={styles.aiReviewer}>
                                     <span className={styles.icon}>
-                                        <IconAiReview />
+                                        {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC || row.run?.id === '-1' ? (
+                                            <IconOutline.ClipboardCheckIcon className="icon-xl" />
+                                        ) : (
+                                            <IconAiReview />
+                                        )}
                                     </span>
                                     <span className={styles.workflowName}>
                                         <Tooltip content={row.title} triggerOn='hover'>
@@ -607,8 +644,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                     )}
                                 </div>
                             </td>
-                            {hasConfig && <td>{formatWeight(row.weight)}</td>}
-                            {hasConfig && <td>{formatScore(row.minScore)}</td>}
                             <td>
                                 {row.reviewDate && (
                                     moment(row.reviewDate)
@@ -616,6 +651,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                         .format(TABLE_DATE_FORMAT)
                                 )}
                             </td>
+                            {hasConfig && <td>{formatWeight(row.weight)}</td>}
+                            {hasConfig && <td>{formatScore(row.minScore)}</td>}
                             <td className={styles.scoreCol}>
                                 {typeof row.score === 'number' ? (
                                     row.workflowId ? (
@@ -653,6 +690,18 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                         )
                                     }
                                 />
+                            </td>
+                            <td>
+                                {shouldHideComments(row.run) ? '' : (
+                                    <Link
+                                        to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
+                                    >
+                                        <span className={styles.commentValue}>
+                                            <IconOutline.ChatAltIcon className='icon-xl' />
+                                            {row.run?.commentsCount ?? 0}
+                                        </span>
+                                    </Link>
+                                )}
                             </td>
                         </tr>
                     ))}

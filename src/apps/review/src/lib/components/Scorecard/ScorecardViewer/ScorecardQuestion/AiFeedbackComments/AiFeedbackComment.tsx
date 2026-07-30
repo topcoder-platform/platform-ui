@@ -6,6 +6,7 @@ import moment from 'moment'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 import { createFeedbackComment, updateRunItemComment } from '~/apps/review/src/lib/services'
 import { AiFeedbackItem, ReviewsContextModel } from '~/apps/review/src/lib/models'
+import { AiWorkflowReviewMethod } from '~/apps/review/src/lib/hooks/useFetchAiWorkflowRuns'
 import { EnvironmentConfig } from '~/config'
 
 import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
@@ -25,6 +26,7 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
     const [editMode, setEditMode] = useState(false)
     const [showReply, setShowReply] = useState(false)
+    const isDeterministicWorkflow = workflowRun?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC
 
     const onPressEdit = useCallback(() => {
         setEditMode(true)
@@ -32,6 +34,8 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
     }, [])
 
     const onSubmitReply = useCallback(async (content: string, comment: AiFeedbackCommentType) => {
+        if (isDeterministicWorkflow) return
+
         await createFeedbackComment(workflowId as string, workflowRun?.id as string, props.feedback?.id, {
             content,
             parentId: comment.id,
@@ -39,16 +43,18 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
         // eslint-disable-next-line max-len
         await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setShowReply(false)
-    }, [workflowId, workflowRun?.id, props.feedback?.id])
+    }, [workflowId, workflowRun?.id, props.feedback?.id, isDeterministicWorkflow])
 
     const onEditReply = useCallback(async (content: string, comment: AiFeedbackCommentType) => {
+        if (isDeterministicWorkflow) return
+
         await updateRunItemComment(workflowId as string, workflowRun?.id as string, props.feedback?.id, comment.id, {
             content,
         })
         // eslint-disable-next-line max-len
         await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setEditMode(false)
-    }, [workflowId, workflowRun?.id, props.feedback?.id])
+    }, [workflowId, workflowRun?.id, props.feedback?.id, isDeterministicWorkflow])
 
     return (
         <div
@@ -96,7 +102,8 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
                 feedback={props.feedback}
                 comment={props.comment}
                 actionType='comment'
-                onPressEdit={onPressEdit}
+                onPressReply={isDeterministicWorkflow ? undefined : () => setShowReply(prev => !prev)}
+                onPressEdit={isDeterministicWorkflow ? undefined : onPressEdit}
             />
             {
                 showReply && (
