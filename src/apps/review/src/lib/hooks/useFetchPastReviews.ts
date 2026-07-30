@@ -40,6 +40,7 @@ type LoadPastReviewsInternalParams = Required<Pick<FetchPastReviewsParams, 'page
     challengeStatus?: string
     challengeTrackId?: string
     challengeTypeId?: string
+    resourceRoleIds?: string[]
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
 }
@@ -57,6 +58,7 @@ function buildRequestKey(params: LoadPastReviewsInternalParams): string {
         params.challengeTrackId ?? '',
         params.challengeName ?? '',
         params.challengeStatus ?? '',
+        params.resourceRoleIds?.join(',') ?? '',
         params.page,
         params.perPage,
         params.sortBy ?? '',
@@ -113,6 +115,7 @@ function mergePastReviewParams(
     assignFromNext('challengeStatus')
     assignFromNext('challengeTrackId')
     assignFromNext('challengeTypeId')
+    assignFromNext('resourceRoleIds')
     assignFromNext('sortBy')
     assignFromNext('sortOrder')
 
@@ -147,6 +150,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
         challengeTypeId: undefined,
         page: 1,
         perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+        resourceRoleIds: undefined,
         sortBy: undefined,
         sortOrder: undefined,
     })

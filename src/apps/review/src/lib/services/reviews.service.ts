@@ -95,6 +95,7 @@ export interface FetchPastReviewsParams {
     challengeTrackId?: string
     challengeName?: string
     challengeStatus?: string
+    resourceRoleIds?: string[]
     page?: number
     perPage?: number
     sortBy?: string
@@ -106,6 +107,7 @@ export const fetchPastReviews = async ({
     challengeTrackId,
     challengeName,
     challengeStatus,
+    resourceRoleIds,
     page,
     perPage,
     sortBy,
@@ -117,13 +119,17 @@ export const fetchPastReviews = async ({
             ...(challengeTrackId ? { challengeTrackId } : {}),
             ...(challengeName ? { challengeName } : {}),
             ...(challengeStatus ? { challengeStatus } : {}),
+            ...(resourceRoleIds?.length ? { resourceRoleIds } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
             ...(sortOrder ? { sortOrder } : {}),
             past: true,
         },
-        { addQueryPrefix: true },
+        {
+            addQueryPrefix: true,
+            arrayFormat: 'comma',
+        },
     )
 
     return xhrGetAsync<BackendResponseWithMeta<BackendMyReviewAssignment[]>>(
