@@ -15,10 +15,10 @@ import { IconOutline, Tooltip } from '~/libs/ui'
 import {
     aiRunFailed,
     aiRunInProgress,
+    AiWorkflowReviewMethod,
     AiWorkflowRun,
     AiWorkflowRunsResponse,
     AiWorkflowRunStatusEnum,
-    AiWorkflowReviewMethod,
     getAiWorkflowRunsCacheKey,
     retriggerAiWorkflowRun,
     useFetchAiWorkflowsRuns,
@@ -468,7 +468,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.value}>
                                 <span className={styles.icon}>
                                     {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? (
-                                        <IconOutline.ClipboardCheckIcon className="icon-xl" />
+                                        <IconOutline.ClipboardCheckIcon className='icon-xl' />
                                     ) : (
                                         <IconAiReview />
                                     )}
@@ -622,7 +622,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 <div className={styles.aiReviewer}>
                                     <span className={styles.icon}>
                                         {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC || row.run?.id === '-1' ? (
-                                            <IconOutline.ClipboardCheckIcon className="icon-xl" />
+                                            <IconOutline.ClipboardCheckIcon className='icon-xl' />
                                         ) : (
                                             <IconAiReview />
                                         )}

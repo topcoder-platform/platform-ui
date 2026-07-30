@@ -102,7 +102,7 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
                 feedback={props.feedback}
                 comment={props.comment}
                 actionType='comment'
-                onPressReply={isDeterministicWorkflow ? undefined : () => setShowReply(prev => !prev)}
+                onPressReply={isDeterministicWorkflow ? undefined : function () { setShowReply(prev => !prev) }}
                 onPressEdit={isDeterministicWorkflow ? undefined : onPressEdit}
             />
             {
