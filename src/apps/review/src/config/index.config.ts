@@ -35,11 +35,22 @@ export const REVIEWER_RESOURCE_ROLE_IDS = [
     'f6df7212-b9d6-4193-bfb1-b383586fce63',
 ]
 
+export const COPILOT_RESOURCE_ROLE_ID = 'cfe12b3f-2a24-4639-9d8b-ec86726f76bd'
+export const SUBMITTER_RESOURCE_ROLE_ID = '732339e7-8e30-49d7-9198-cccf9451e221'
+
 export const PAST_CHALLENGE_ROLE_SELECT_OPTIONS: SelectOption[] = [
     ROLE_SELECT_ALL_OPTION,
     {
         label: 'Reviewer',
         value: REVIEWER_RESOURCE_ROLE_IDS.join(','),
+    },
+    {
+        label: 'Copilot',
+        value: COPILOT_RESOURCE_ROLE_ID,
+    },
+    {
+        label: 'Submitter',
+        value: SUBMITTER_RESOURCE_ROLE_ID,
     },
 ]
 
