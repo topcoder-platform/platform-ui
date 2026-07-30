@@ -29,7 +29,7 @@ import {
 } from './ScorecardViewer.context'
 import { ScorecardGroup } from './ScorecardGroup'
 import { ScorecardTotal } from './ScorecardTotal'
-import { createReviewItemMapping } from './utils'
+import { createReviewItemMapping, fillScorecardWithMaximumAnswers } from './utils'
 import styles from './ScorecardViewer.module.scss'
 
 interface ScorecardViewerProps {
@@ -45,6 +45,7 @@ interface ScorecardViewerProps {
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
     canAddManagerComment?: boolean
+    canFillScorecard?: boolean
     setReviewStatus?: (status: ReviewCtxStatus) => void
     setActionButtons?: (buttons?: ReactNode) => void
     saveReviewInfo?: (
@@ -145,6 +146,25 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
         props.navigateBack?.()
     }, [])
 
+    /**
+     * Populate every supported score selection with its highest value.
+     */
+    const handleFillScorecard = useCallback(() => {
+        if (!form) {
+            return
+        }
+
+        const filledForm = fillScorecardWithMaximumAnswers(
+            form.getValues(),
+            props.scorecard,
+        )
+
+        form.setValue('reviews', filledForm.reviews, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [form, props.scorecard])
+
     const ContainerTag = props.isEdit ? 'form' : 'div'
 
     useEffect(() => {
@@ -178,6 +198,16 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
 
     const actionButtons = useMemo(() => (
         <div className={styles.actions}>
+            {props.canFillScorecard && (
+                <button
+                    type='button'
+                    className='borderButton'
+                    onClick={handleFillScorecard}
+                    disabled={props.isSavingReview}
+                >
+                    Fill Scorecard
+                </button>
+            )}
             <button
                 type='button'
                 className='borderButton'
@@ -198,7 +228,13 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 Mark as Complete
             </button>
         </div>
-    ), [props.isEdit, handleSaveAsDraft, touchedAllFields, props.isSavingReview])
+    ), [
+        handleFillScorecard,
+        handleSaveAsDraft,
+        props.canFillScorecard,
+        props.isSavingReview,
+        touchedAllFields,
+    ])
 
     useEffect(() => {
         props.setActionButtons?.(props.isEdit ? actionButtons : (
@@ -212,7 +248,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 </Link>
             </>
         ))
-    }, [actionButtons, props.setActionButtons])
+    }, [actionButtons, props.isEdit, props.setActionButtons])
 
     if (props.isLoading) {
         return <TableLoading />
