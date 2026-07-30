@@ -18,7 +18,11 @@ import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { Button, IconOutline, InputText } from '~/libs/ui'
 
-import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
+import {
+    CHALLENGE_TYPE_SELECT_ALL_OPTION,
+    PAST_CHALLENGE_ROLE_SELECT_OPTIONS,
+    ROLE_SELECT_ALL_OPTION,
+} from '../../../config/index.config'
 import {
     PageWrapper,
     ReviewAppContext,
@@ -82,6 +86,9 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const [challengeStatus, setChallengeStatus] = useState<SingleValue<SelectOption>>(
         CHALLENGE_STATUS_SELECT_ALL_OPTION,
     )
+    const [challengeRole, setChallengeRole] = useState<SingleValue<SelectOption>>(
+        ROLE_SELECT_ALL_OPTION,
+    )
 
     const challengeTypeOptions = useMemo<SelectOption[]>(() => {
         const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
@@ -115,6 +122,14 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const selectedChallengeTrackId = challengeTrack?.value || undefined
     const selectedChallengeTypeId = challengeType?.value || undefined
     const selectedChallengeStatus = challengeStatus?.value || undefined
+    const selectedResourceRoleIds = useMemo(
+        () => (
+            challengeRole?.value
+                ? challengeRole.value.split(',')
+                : undefined
+        ),
+        [challengeRole],
+    )
 
     // If the selected type is not allowed for the selected track, reset to All
     useEffect(() => {
@@ -137,6 +152,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: 1,
                 perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+                resourceRoleIds: selectedResourceRoleIds,
                 sortBy: sort?.fieldName,
                 sortOrder: sort?.direction,
             })
@@ -151,6 +167,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         selectedChallengeTrackId,
         selectedChallengeTypeId,
         selectedChallengeStatus,
+        selectedResourceRoleIds,
         sort,
     ])
 
@@ -163,6 +180,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: nextPage,
                 perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+                resourceRoleIds: selectedResourceRoleIds,
                 sortBy: sort?.fieldName,
                 sortOrder: sort?.direction,
             })
@@ -173,6 +191,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
             selectedChallengeTrackId,
             selectedChallengeTypeId,
             selectedChallengeStatus,
+            selectedResourceRoleIds,
             sort,
         ],
     )
@@ -196,6 +215,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         setChallengeType(CHALLENGE_TYPE_SELECT_ALL_OPTION)
         setChallengeName('')
         setChallengeStatus(CHALLENGE_STATUS_SELECT_ALL_OPTION)
+        setChallengeRole(ROLE_SELECT_ALL_OPTION)
         loadPastReviews({
             challengeName: undefined,
             challengeStatus: undefined,
@@ -203,6 +223,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
             challengeTypeId: undefined,
             page: 1,
             perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+            resourceRoleIds: undefined,
             sortBy: sort?.fieldName,
             sortOrder: sort?.direction,
         })
@@ -234,6 +255,18 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                                     Search by name
                                 </span>
                             )}
+                        />
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label htmlFor='pastChallengeRole'>Role</label>
+                        <Select
+                            inputId='pastChallengeRole'
+                            className='react-select-container'
+                            classNamePrefix='select'
+                            options={PAST_CHALLENGE_ROLE_SELECT_OPTIONS}
+                            value={challengeRole}
+                            onChange={setChallengeRole}
+                            isDisabled={isLoadingPastReviews}
                         />
                     </div>
                 </div>

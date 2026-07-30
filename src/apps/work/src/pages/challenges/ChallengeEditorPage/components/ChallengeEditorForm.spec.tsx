@@ -3613,6 +3613,73 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('reports DRAFT status when task assignee sync fails after the challenge save', async () => {
+        const user = userEvent.setup()
+        const onChallengeStatusChange = jest.fn()
+        const termsError = 'The user has not yet agreed to the following terms: [Standard Terms 2026]'
+        const newTaskChallenge = {
+            ...validNewChallenge,
+            assignedMemberId: '12345',
+            task: {
+                isTask: true,
+            },
+            terms: ['standard-terms-2026'],
+            type: {
+                abbreviation: 'TSK',
+                name: 'Task',
+            },
+            typeId: 'task-type-id',
+        } as Challenge
+
+        mockedUseFetchTerms.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            terms: [{
+                id: 'standard-terms-2026',
+                title: 'Standard Terms 2026',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'submitter-role-id',
+            name: 'Submitter',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...newTaskChallenge,
+            status: 'DRAFT',
+        })
+        mockedCreateResource.mockRejectedValueOnce(new Error(termsError))
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={newTaskChallenge}
+                    onChallengeStatusChange={onChallengeStatusChange}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'DRAFT',
+                }))
+            expect(onChallengeStatusChange)
+                .toHaveBeenCalledWith('DRAFT')
+            expect(screen.getByText(/The user has not yet agreed to the following terms/))
+                .toBeInTheDocument()
+        })
+        expect(onChallengeStatusChange.mock.invocationCallOrder[0])
+            .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+        expect(screen.getByTestId('location-display'))
+            .toHaveTextContent('/projects/100578/challenges/new')
+    })
+
     it('returns to view mode after saving from an edit route with a trailing slash', async () => {
         const user = userEvent.setup()
 

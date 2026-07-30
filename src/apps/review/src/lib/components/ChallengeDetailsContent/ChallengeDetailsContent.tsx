@@ -29,7 +29,6 @@ import {
 } from '../../hooks/useFetchChallengeResults'
 import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
-import { hasIsLatestFlag } from '../../utils'
 import {
     isContestReviewPhaseSubmission,
     shouldIncludeInReviewPhase,
@@ -118,11 +117,7 @@ const buildScreeningRows = ({
     currentMemberId,
 }: BuildScreeningRowsParams): Screening[] => {
     if (actionChallengeRole === SUBMITTER && currentMemberId) {
-        const mySubmissions = screening.filter(entry => entry.memberId === currentMemberId)
-
-        return hasIsLatestFlag(mySubmissions)
-            ? mySubmissions.filter(submission => submission.isLatest === true)
-            : mySubmissions
+        return screening.filter(entry => entry.memberId === currentMemberId)
     }
 
     return screening

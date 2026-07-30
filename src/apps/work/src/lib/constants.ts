@@ -351,6 +351,12 @@ export const ENGAGEMENT_ROLES = [
     'DATA_ENGINEER',
 ] as const
 
+export const ENGAGEMENT_ROLE_LEVELS = [
+    'JUNIOR',
+    'MID',
+    'SENIOR',
+] as const
+
 export const ENGAGEMENT_WORKLOADS = ['FULL_TIME', 'FRACTIONAL'] as const
 
 export const ANTICIPATED_START_OPTIONS = ['IMMEDIATE', 'FEW_DAYS', 'FEW_WEEKS'] as const

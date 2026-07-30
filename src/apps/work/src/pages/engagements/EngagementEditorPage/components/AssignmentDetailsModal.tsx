@@ -71,12 +71,6 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         props.initialValue?.standardHoursPerDay || '',
     )
 
-    const timezone = useMemo(
-        () => Intl.DateTimeFormat()
-            .resolvedOptions()
-            .timeZone,
-        [],
-    )
     const agreementRate = useMemo(
         () => {
             const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
@@ -120,7 +114,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             .toUpperCase()
 
         if (!startDate) {
-            nextErrors.startDate = 'Engagement start date is required.'
+            nextErrors.startDate = 'Billing start date is required.'
         }
 
         if (parsedDurationMonths === undefined) {
@@ -204,13 +198,8 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <p className={styles.timezoneText}>
-                        Timezone:
-                        {' '}
-                        {timezone}
-                    </p>
                     <StartDateTimeInput
-                        label='Engagement start date *'
+                        label='Billing start date *'
                         onChange={value => {
                             setStartDate(value || undefined)
                             setErrors(previous => ({

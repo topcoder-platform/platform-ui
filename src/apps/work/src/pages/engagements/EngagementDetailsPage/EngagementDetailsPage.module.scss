@@ -1,0 +1,117 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.headerActions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.actionLink,
+.externalActionLink {
+    align-items: center;
+    color: $link-blue-dark;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 4px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        outline: none;
+        text-decoration: underline;
+    }
+}
+
+.externalIcon {
+    height: 14px;
+    width: 14px;
+}
+
+.section {
+    border-bottom: 1px solid #ececec;
+    padding-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    margin: 0 0 12px;
+}
+
+.metaGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    color: #5b5b5b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.description {
+    color: #2a2a2a;
+    font-size: 14px;
+    line-height: 1.5;
+
+    :global(p) {
+        margin: 0 0 12px;
+    }
+
+    :global(p:last-child) {
+        margin-bottom: 0;
+    }
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skillChip {
+    background: #f5f7fa;
+    border: 1px solid #d8dee8;
+    border-radius: 999px;
+    color: #2a2a2a;
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+.membersList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.memberValue {
+    background: #f5f7fa;
+    border: 1px solid #d8dee8;
+    border-radius: 6px;
+    color: #2a2a2a;
+    min-height: 44px;
+    padding: 12px;
+}

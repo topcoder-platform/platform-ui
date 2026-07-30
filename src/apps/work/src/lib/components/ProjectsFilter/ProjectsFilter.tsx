@@ -247,13 +247,23 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
                 return []
             }
 
+            const normalizedSearchValue = normalizedInputValue.toLowerCase()
+            const matchingProjectOptions = projectBillingAccountOptions.filter(
+                option => option.label
+                    .toLowerCase()
+                    .includes(normalizedSearchValue),
+            )
+
             try {
                 const billingAccounts = await searchBillingAccounts({
                     name: normalizedInputValue,
                     page: 1,
                     perPage: 20,
                 })
-                const options = billingAccounts.map(account => toBillingAccountOption(account))
+                const options = mergeOptions(
+                    matchingProjectOptions,
+                    billingAccounts.map(account => toBillingAccountOption(account)),
+                )
 
                 setBillingAccountOptionCache(previousOptions => mergeOptions(previousOptions, options))
 
@@ -265,10 +275,10 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
 
                 setBillingAccountSearchError(errorMessage)
 
-                return []
+                return matchingProjectOptions
             }
         },
-        [],
+        [projectBillingAccountOptions],
     )
 
     const debouncedLoadBillingAccountOptions = useMemo(

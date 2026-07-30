@@ -174,11 +174,15 @@ export const TabContentAiApproval: FC<Props> = (props: Props) => {
                 columnId: 'status',
                 label: 'Status',
                 renderer: (row: SubmissionRowData) => {
-                    const status = row.decision?.status ?? 'PENDING'
+                    const status = row.submission.isFileSubmission !== false
+                        && row.submission.virusScan === false
+                        ? 'INFECTED'
+                        : row.decision?.status ?? 'PENDING'
                     const statusMap: Record<string, { label: string; className: string }> = {
                         ERROR: { className: styles.statusError, label: 'Error' },
                         FAILED: { className: styles.statusFailed, label: 'Failed' },
                         HUMAN_OVERRIDE: { className: styles.statusOverride, label: 'Override' },
+                        INFECTED: { className: styles.statusFailed, label: 'Infected' },
                         PASSED: { className: styles.statusPassed, label: 'Passed' },
                         PENDING: { className: styles.statusPending, label: 'Pending' },
                     }

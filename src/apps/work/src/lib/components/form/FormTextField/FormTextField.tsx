@@ -27,7 +27,7 @@ export interface FormTextFieldProps {
     placeholder?: string
     required?: boolean
     sanitize?: (value: string) => string
-    type?: 'number' | 'text'
+    type?: 'date' | 'number' | 'text'
 }
 
 /**

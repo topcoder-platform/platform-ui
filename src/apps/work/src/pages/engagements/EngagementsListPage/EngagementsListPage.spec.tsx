@@ -65,6 +65,7 @@ jest.mock('~/libs/ui', () => ({
     ),
     IconOutline: {
         DocumentTextIcon: () => <span>document-icon</span>,
+        ExternalLinkIcon: () => <span>external-link-icon</span>,
         PencilIcon: () => <span>pencil-icon</span>,
         UserIcon: () => <span>user-icon</span>,
     },
@@ -77,6 +78,9 @@ jest.mock('../../../lib/constants', () => ({
     PROJECT_STATUS: {
         ACTIVE: 'active',
     },
+}))
+jest.mock('../../../config/routes.config', () => ({
+    rootRoute: '/work',
 }))
 jest.mock('../../../lib/components', () => ({
     ConfirmationModal: (props: {
@@ -508,12 +512,12 @@ describe('EngagementsListPage', () => {
 
         renderPage('/engagements', '/engagements')
 
-        expect(screen.getByRole('link', { name: 'View' })
+        expect(screen.getByRole('link', { name: /View Post/i })
             .getAttribute('href'))
             .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
     })
 
-    it('links engagement titles to the assignees page on the all engagements route', () => {
+    it('links engagement titles to the details page on the all engagements route', () => {
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [sampleEngagement],
             error: undefined,
@@ -525,10 +529,10 @@ describe('EngagementsListPage', () => {
 
         expect(screen.getByRole('link', { name: sampleEngagement.title })
             .getAttribute('href'))
-            .toBe('/projects/200/engagements/111/assignments')
+            .toBe('/work/projects/200/engagements/111/view')
     })
 
-    it('links engagement titles to the assignees page on project engagement routes', () => {
+    it('links engagement titles to the details page on project engagement routes', () => {
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -554,7 +558,7 @@ describe('EngagementsListPage', () => {
 
         expect(screen.getByRole('link', { name: sampleEngagement.title })
             .getAttribute('href'))
-            .toBe('/projects/200/engagements/111/assignments')
+            .toBe('/work/projects/200/engagements/111/view')
     })
 
     it('links zero assigned member counts to the assignees page when completed assignments exist', () => {
@@ -592,7 +596,7 @@ describe('EngagementsListPage', () => {
             .getAllByRole('link', { name: '0' })
 
         expect(zeroCountLinks.some(link => (
-            link.getAttribute('href') === '/projects/200/engagements/111/assignments'
+            link.getAttribute('href') === '/work/projects/200/engagements/111/assignments'
         )))
             .toBe(true)
     })

@@ -1,15 +1,19 @@
 import {
     ChangeEvent,
     FC,
+    useCallback,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
-import Select, { MultiValue, SingleValue } from 'react-select'
+import Select, { SingleValue } from 'react-select'
 
 import {
+    Button,
     IconOutline,
+    InputMultiselect,
+    InputMultiselectOption,
 } from '~/libs/ui'
 
 import {
@@ -53,7 +57,7 @@ const VISIBILITY_OPTIONS: SelectOption[] = [
     },
 ]
 
-function getStatusOptions(): SelectOption[] {
+function getStatusOptions(): InputMultiselectOption[] {
     return ENGAGEMENT_STATUSES.map(status => ({
         label: status,
         value: status,
@@ -64,7 +68,7 @@ function getStatusOptions(): SelectOption[] {
  * Resolves the selected status options for the engagement status filter.
  *
  * The ticket default treats an empty filter value as all engagement statuses
- * selected, so clearing the multi-select returns the control to the default
+ * selected, so clearing the multiselect returns the control to the default
  * unfiltered state.
  *
  * @param statusOptions available engagement status select options.
@@ -72,9 +76,9 @@ function getStatusOptions(): SelectOption[] {
  * @returns selected status options, or every status option for the default state.
  */
 function getSelectedStatusOptions(
-    statusOptions: SelectOption[],
+    statusOptions: InputMultiselectOption[],
     selectedStatuses?: string[],
-): SelectOption[] {
+): InputMultiselectOption[] {
     if (!selectedStatuses?.length) {
         return statusOptions
     }
@@ -84,6 +88,47 @@ function getSelectedStatusOptions(
     return statusOptions.filter(option => selectedStatusValues.has(option.value))
 }
 
+/**
+ * Normalizes multiselect status values for the applied filter payload.
+ *
+ * @param selectedStatuses selected status labels from the draft control.
+ * @param statusOptionCount total number of available status options.
+ * @returns undefined when every status (or none) is selected; otherwise the list.
+ */
+function normalizeStatusFilter(
+    selectedStatuses: string[],
+    statusOptionCount: number,
+): string[] | undefined {
+    if (selectedStatuses.length === 0 || selectedStatuses.length === statusOptionCount) {
+        return undefined
+    }
+
+    return selectedStatuses
+}
+
+/**
+ * Compares two optional status filter arrays for equality.
+ *
+ * @param left first status filter value.
+ * @param right second status filter value.
+ * @returns true when both values represent the same applied status filter.
+ */
+function areStatusFiltersEqual(
+    left?: string[],
+    right?: string[],
+): boolean {
+    const leftValues = left || []
+    const rightValues = right || []
+
+    if (leftValues.length !== rightValues.length) {
+        return false
+    }
+
+    const rightValuesSet = new Set(rightValues)
+
+    return leftValues.every(value => rightValuesSet.has(value))
+}
+
 export const EngagementsFilter: FC<EngagementsFilterProps> = (props: EngagementsFilterProps) => {
     const filters = props.filters
     const showProjectNameFilter = !!props.showProjectNameFilter
@@ -91,6 +136,10 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
 
     const [titleInput, setTitleInput] = useState<string>(filters.title || '')
     const [projectNameInput, setProjectNameInput] = useState<string>(filters.projectName || '')
+    const [draftStatus, setDraftStatus] = useState<string[] | undefined>(filters.status)
+    const [draftVisibility, setDraftVisibility] = useState<'private' | 'public' | undefined>(
+        filters.visibility,
+    )
     const isFirstRender = useRef<boolean>(true)
 
     useEffect(() => {
@@ -100,6 +149,14 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
     useEffect(() => {
         setProjectNameInput(filters.projectName || '')
     }, [filters.projectName])
+
+    useEffect(() => {
+        setDraftStatus(filters.status)
+    }, [filters.status])
+
+    useEffect(() => {
+        setDraftVisibility(filters.visibility)
+    }, [filters.visibility])
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -130,17 +187,35 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         }
     }, [filters, onFiltersChange, projectNameInput, showProjectNameFilter, titleInput])
 
-    const statusOptions = useMemo<SelectOption[]>(() => getStatusOptions(), [])
+    const statusOptions = useMemo<InputMultiselectOption[]>(() => getStatusOptions(), [])
 
-    const selectedStatus = useMemo<SelectOption[]>(
-        () => getSelectedStatusOptions(statusOptions, filters.status),
-        [filters.status, statusOptions],
+    const selectedStatus = useMemo<InputMultiselectOption[]>(
+        () => getSelectedStatusOptions(statusOptions, draftStatus),
+        [draftStatus, statusOptions],
     )
 
     const selectedVisibility = useMemo(
-        () => VISIBILITY_OPTIONS.find(option => option.value === (filters.visibility || 'all')),
-        [filters.visibility],
+        () => VISIBILITY_OPTIONS.find(option => option.value === (draftVisibility || 'all')),
+        [draftVisibility],
     )
+
+    const hasPendingSelectFilters = !areStatusFiltersEqual(draftStatus, filters.status)
+        || draftVisibility !== filters.visibility
+
+    const fetchStatusOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        if (!query) {
+            return statusOptions
+        }
+
+        const normalizedQuery = query.toLowerCase()
+
+        return statusOptions.filter(option => {
+            const normalizedLabel = option.label?.toString()
+                .toLowerCase()
+
+            return normalizedLabel?.includes(normalizedQuery)
+        })
+    }, [statusOptions])
 
     function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
         setTitleInput(event.target.value)
@@ -150,30 +225,39 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         setProjectNameInput(event.target.value)
     }
 
-    function handleStatusChange(nextOptions: MultiValue<SelectOption>): void {
-        const selectedStatuses = Array.from(nextOptions || [])
-            .map(option => option.value)
+    function handleStatusChange(event: ChangeEvent<HTMLInputElement>): void {
+        const options = (event.target.value || []) as unknown as InputMultiselectOption[]
+        const selectedStatuses = options.map(option => option.value)
             .filter(Boolean)
 
-        onFiltersChange({
-            ...filters,
-            status: selectedStatuses.length === 0 || selectedStatuses.length === statusOptions.length
-                ? undefined
-                : selectedStatuses,
-        })
+        setDraftStatus(normalizeStatusFilter(selectedStatuses, statusOptions.length))
     }
 
     function handleVisibilityChange(nextOption: SingleValue<SelectOption>): void {
+        setDraftVisibility(nextOption?.value === 'all'
+            ? undefined
+            : nextOption?.value as 'private' | 'public')
+    }
+
+    function handleApplyFilters(): void {
+        const normalizedTitle = titleInput.trim() || undefined
+        const normalizedProjectName = projectNameInput.trim() || undefined
+
         onFiltersChange({
             ...filters,
-            visibility: nextOption?.value === 'all'
-                ? undefined
-                : nextOption?.value as 'private' | 'public',
+            projectName: showProjectNameFilter
+                ? normalizedProjectName
+                : undefined,
+            status: draftStatus,
+            title: normalizedTitle,
+            visibility: draftVisibility,
         })
     }
 
     return (
-        <div className={styles.container}>
+        <div
+            className={`${styles.container}${showProjectNameFilter ? ` ${styles.withProjectFilter}` : ''}`}
+        >
             <div className={styles.filterField}>
                 <label htmlFor='work-engagements-search'>Search by name</label>
                 <div className={styles.searchInputWrap}>
@@ -209,17 +293,17 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
             )}
 
             <div className={styles.filterField}>
-                <label htmlFor='work-engagements-status'>Engagement Status</label>
-                <Select<SelectOption, true>
-                    inputId='work-engagements-status'
-                    className='react-select-container'
-                    classNamePrefix='select'
+                <label htmlFor='work-engagements-status'>Status</label>
+                <InputMultiselect
+                    className={styles.statusMultiselect}
+                    label='Engagement Status'
+                    name='work-engagements-status'
+                    openMenuOnClick
                     options={statusOptions}
-                    value={selectedStatus}
+                    onFetchOptions={fetchStatusOptions}
                     onChange={handleStatusChange}
-                    closeMenuOnSelect={false}
-                    isClearable
-                    isMulti
+                    placeholder='Select statuses'
+                    value={selectedStatus}
                 />
             </div>
 
@@ -233,6 +317,16 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
                     value={selectedVisibility}
                     onChange={handleVisibilityChange}
                     isClearable={false}
+                />
+            </div>
+
+            <div className={styles.actions}>
+                <Button
+                    disabled={!hasPendingSelectFilters}
+                    label='Apply Filters'
+                    onClick={handleApplyFilters}
+                    primary
+                    size='lg'
                 />
             </div>
         </div>

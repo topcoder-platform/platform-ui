@@ -33,14 +33,16 @@ import {
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
+    challengeHasSubmissionLimit,
     getHandleUrl,
     getSubmissionHistoryKey,
-    hasIsLatestFlag,
     isReviewPhaseCurrentlyOpen,
     partitionSubmissionHistory,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
+    ScreeningRowsSelection,
+    selectVisibleScreeningRows,
     SubmissionHistoryPartition,
 } from '../../utils'
 import {
@@ -950,18 +952,26 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const { historyByMember, latestSubmissionIds }: SubmissionHistoryPartition = submissionHistory
 
-    const shouldShowHistoryActions = useMemo(
-        () => hasIsLatestFlag(primarySubmissionInfos),
-        [primarySubmissionInfos],
+    const {
+        isRestrictedToLatest: shouldShowHistoryActions,
+        rows: visibleScreenings,
+    }: ScreeningRowsSelection = useMemo(
+        () => selectVisibleScreeningRows({
+            hasSubmissionLimit: challengeHasSubmissionLimit(challengeInfo),
+            latestSubmissionIds,
+            screeningRows: props.screenings,
+            submissionInfos: primarySubmissionInfos,
+        }),
+        [
+            challengeInfo,
+            latestSubmissionIds,
+            primarySubmissionInfos,
+            props.screenings,
+        ],
     )
 
-    const filteredScreenings = useMemo(() => (
-        props.screenings
-            .filter(screening => latestSubmissionIds.has(screening.submissionId))
-    ), [props.screenings, latestSubmissionIds])
-
     const maxScreenerCount = useMemo(
-        () => filteredScreenings.reduce(
+        () => visibleScreenings.reduce(
             (maxCount, screening) => Math.max(
                 maxCount,
                 resolveScreeningReviewDetails(screening).length,
@@ -969,7 +979,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             ),
             1,
         ),
-        [filteredScreenings],
+        [visibleScreenings],
     )
 
     const hasMultipleScreeners = useMemo(
@@ -1362,11 +1372,11 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.screenings} />
+                <TableMobile columns={columnsMobile} data={visibleScreenings} />
             ) : (
                 <Table
                     columns={columns}
-                    data={filteredScreenings}
+                    data={visibleScreenings}
                     showExpand
                     expandMode='always'
                     disableSorting
