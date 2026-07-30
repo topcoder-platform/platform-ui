@@ -136,7 +136,7 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
-    const { isEdit }: UseReviewEditAccessResult = useReviewEditAccess({
+    const { isEdit, reviewPhaseType }: UseReviewEditAccessResult = useReviewEditAccess({
         challengeInfo,
         isEditPhase,
         isReviewCompleted,
@@ -257,6 +257,7 @@ const ReviewViewer: FC = () => {
                             scorecardInfo={scorecardInfo}
                             workflow={workflow}
                             reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
+                            reviewPhaseType={reviewPhaseType}
                         />
                         <ScorecardViewer
                             actionChallengeRole={actionChallengeRole}

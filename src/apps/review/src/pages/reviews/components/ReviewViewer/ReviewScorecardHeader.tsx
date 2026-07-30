@@ -4,7 +4,7 @@ import { useChallengeDetailsContext } from '~/apps/review/src/lib'
 import { ProgressBar } from '~/apps/review/src/lib/components/ProgressBar'
 import { IconDeepseekAi, IconPhaseReview, IconPremium } from '~/apps/review/src/lib/assets/icons'
 import { ChallengeDetailContextModel, ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
-import { AiWorkflow } from '~/apps/review/src/lib/hooks'
+import { AiWorkflow, UseReviewEditAccessResult } from '~/apps/review/src/lib/hooks'
 
 import styles from './ReviewScorecardHeader.module.scss'
 
@@ -13,6 +13,7 @@ interface Props {
     scorecardInfo?: ScorecardInfo
     workflow?: AiWorkflow
     reviewProgress?: number
+    reviewPhaseType?: UseReviewEditAccessResult['reviewPhaseType']
 }
 
 export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
@@ -32,6 +33,12 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
     const reviewerColor = reviewer?.handleColor
     const llmModelName = props.workflow?.llm?.name || 'N/A'
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
+    const isScreeningPhase = props.reviewPhaseType === 'screening'
+        || props.reviewPhaseType === 'checkpoint screening'
+    const scorecardTitle = isScreeningPhase
+        ? 'Complete Screening Scorecard'
+        : 'Edit Review Scorecard'
+    const reviewerLabel = isScreeningPhase ? 'Screener:' : 'Reviewer:'
 
     return (
         <div className={styles.wrap}>
@@ -43,14 +50,14 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                         </div>
                     </div>
                     <div className={styles.details}>
-                        <h2 className={styles.title}>Edit Review Scorecard</h2>
+                        <h2 className={styles.title}>{scorecardTitle}</h2>
                         <div className={styles.infoSection}>
                             {reviewerHandle && (
                                 <div className={styles.infoRow}>
                                     <div className={styles.personIcon}>
                                         <i className='icon-handle' />
                                     </div>
-                                    <span className={styles.infoLabel}>Reviewer:</span>
+                                    <span className={styles.infoLabel}>{reviewerLabel}</span>
                                     <span className={styles.infoValue} style={{ color: reviewerColor }}>
                                         {reviewerHandle}
                                     </span>
