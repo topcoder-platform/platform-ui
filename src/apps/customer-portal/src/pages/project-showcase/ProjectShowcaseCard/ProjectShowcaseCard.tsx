@@ -36,12 +36,7 @@ const ProjectShowcaseCard: FC<ProjectShowcaseCardProps> = props => (
         </div>
 
         <div className={styles.content}>
-            <div
-                className={styles.htmlContent}
-                dangerouslySetInnerHTML={{
-                    __html: renderRichTextToPlainText(props.post.content || ''),
-                }}
-            />
+            {renderRichTextToPlainText(props.post.content || '')}
         </div>
 
         <div className={styles.button}>
