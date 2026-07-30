@@ -185,6 +185,7 @@ jest.mock('./components', () => {
                 status: string
             }) => void
             onChallengeApprovalStatusChange?: (status?: string) => void
+            onChallengeStatusChange?: (status?: string) => void
             isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
@@ -226,6 +227,18 @@ jest.mock('./components', () => {
                                 type='button'
                             >
                                 Mock create challenge
+                            </button>
+                        )
+                        : undefined}
+                    {!props.isReadOnly
+                        ? (
+                            <button
+                                onClick={function handleChallengeStatusChange() {
+                                    props.onChallengeStatusChange?.('DRAFT')
+                                }}
+                                type='button'
+                            >
+                                Mock save as draft
                             </button>
                         )
                         : undefined}
@@ -996,6 +1009,37 @@ describe('ChallengeEditorPage', () => {
         await waitFor(() => {
             expect(mockedDeleteChallenge)
                 .toHaveBeenCalledWith('789')
+        })
+    })
+
+    it('hides the delete action when a created challenge advances to DRAFT', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: undefined,
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/new',
+            '/projects/:projectId/challenges/new',
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock create challenge' }))
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock save as draft' }))
+
+        await waitFor(() => {
+            expect(within(screen.getByTestId('title-action'))
+                .getByText('DRAFT'))
+                .toBeTruthy()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
+                .toBeNull()
         })
     })
 

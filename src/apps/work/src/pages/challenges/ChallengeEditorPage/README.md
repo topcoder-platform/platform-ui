@@ -124,7 +124,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Launch` is shown on the details tab for `DRAFT` challenges in the header for both view and edit routes, and again in the footer beside `Save Challenge` while editing.
 - The work app blocks launch attempts when the parent project billing account is inactive, expired, or has insufficient remaining funds, matching the legacy work-manager launch restriction.
 - Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
-- After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
+- After the challenge PATCH persists a `NEW` to `DRAFT` transition, the editor updates the status
+  immediately before syncing resource-backed assignments. A later assignment error therefore keeps
+  the persisted `DRAFT` status visible and does not leave the `NEW`-only delete action available.
 - After the initial create request succeeds on the `/projects/:projectId/challenges/new` route, the
   page header immediately treats that record as an existing `NEW` challenge so the status pill and
   `Delete` action are available before the route transitions to the regular edit page.
