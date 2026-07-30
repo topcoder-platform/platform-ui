@@ -1,10 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
 
 import {
+    useFetchChallengeReviewContext,
     useFetchResourceRoles,
     useFetchResources,
 } from '../../../../../lib/hooks'
@@ -19,6 +21,7 @@ import styles from './ReviewConfigurationSummary.module.scss'
 import { ReviewConfigurationSummary } from './ReviewConfigurationSummary'
 
 jest.mock('../../../../../lib/hooks', () => ({
+    useFetchChallengeReviewContext: jest.fn(),
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
 }))
@@ -36,6 +39,7 @@ const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as j
 const mockedFetchScorecards = fetchScorecards as jest.Mock
 const mockedSearchProfilesByUserIds = searchProfilesByUserIds as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
+const mockedUseFetchChallengeReviewContext = useFetchChallengeReviewContext as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 
@@ -88,6 +92,13 @@ describe('ReviewConfigurationSummary', () => {
             id: 'scorecard-1',
             name: 'Development Review Scorecard',
         }])
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
         mockedSearchProfilesByUserIds.mockResolvedValue([])
         mockedFetchWorkflows.mockResolvedValue([{
             id: 'workflow-1',
@@ -152,6 +163,138 @@ describe('ReviewConfigurationSummary', () => {
                 perPage: 200,
                 typeId: 'type-1',
             })
+    })
+
+    it('renders review context requirements when review context is available', async () => {
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: {
+                challengeId: 'challenge-1',
+                context: {
+                    challengeId: 'challenge-1',
+                    descriptionRaw: '',
+                    prizes: [],
+                    requirements: [
+                        {
+                            constraints: [
+                                {
+                                    id: 'CONSTR_01_1',
+                                    text: 'Must pass ESLint with zero errors',
+                                },
+                            ],
+                            description: 'All submissions must follow established coding standards.',
+                            id: 'REQ_01',
+                            priority: 'high',
+                            title: 'Code Quality Standards',
+                        },
+                    ],
+                    skills: [],
+                    tech_stack: [],
+                    timeline: {
+                        endDate: '2026-12-31',
+                        registrationEndDate: '2025-12-31',
+                        registrationStartDate: '2025-01-01',
+                        startDate: '2026-01-01',
+                        totalDurationDays: 365,
+                    },
+                    title: 'Review context title',
+                },
+                id: 'review-context-1',
+                status: 'AI_GENERATED',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[]}
+                reviewers={[]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByRole('heading', {
+            level: 5,
+            name: 'Review Context Requirements (1)',
+        })).not.toBeNull()
+        expect(screen.getByText('[REQ_01]')).not.toBeNull()
+        expect(screen.getByText('HIGH')).not.toBeNull()
+        expect(screen.getByText('Code Quality Standards')).not.toBeNull()
+        expect(screen.getByText('All submissions must follow established coding standards.')).not.toBeNull()
+        expect(screen.getByText('Must pass ESLint with zero errors')).not.toBeNull()
+    })
+
+    it('shows empty state when review context has no requirements', async () => {
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: {
+                challengeId: 'challenge-1',
+                context: {
+                    challengeId: 'challenge-1',
+                    descriptionRaw: '',
+                    prizes: [],
+                    requirements: [],
+                    skills: [],
+                    tech_stack: [],
+                    timeline: {
+                        endDate: '2026-12-31',
+                        registrationEndDate: '2025-12-31',
+                        registrationStartDate: '2025-01-01',
+                        startDate: '2026-01-01',
+                        totalDurationDays: 365,
+                    },
+                    title: 'Review context title',
+                },
+                id: 'review-context-2',
+                status: 'AI_GENERATED',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[]}
+                reviewers={[]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByText('No review context requirements defined.')).not.toBeNull()
+    })
+
+    it('shows retry button when review context API fails', async () => {
+        const mockedMutate = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: undefined,
+            error: 'Failed to load review context.',
+            isError: true,
+            isLoading: false,
+            mutate: mockedMutate,
+        })
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[]}
+                reviewers={[]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByText('Failed to load review context.')).not.toBeNull()
+
+        const retryButton = screen.getByRole('button', { name: 'Retry' })
+        fireEvent.click(retryButton)
+
+        expect(mockedMutate)
+            .toHaveBeenCalled()
     })
 
     it('loads referenced human-review scorecard names from later scorecard catalog pages', async () => {
@@ -447,6 +590,20 @@ describe('ReviewConfigurationSummary', () => {
             id: 'scorecard-approval',
             name: 'Approval Scorecard',
         }])
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+        mockedUseFetchChallengeReviewContext.mockReturnValue({
+            context: undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
 
         render(
             <ReviewConfigurationSummary

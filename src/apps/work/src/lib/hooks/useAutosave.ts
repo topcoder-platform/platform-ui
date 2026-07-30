@@ -31,6 +31,7 @@ export function useAutosave<T>(
     const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle')
     const isInitialRender = useRef<boolean>(true)
     const lastQueuedValuesRef = useRef<T | undefined>()
+    const lastSavedValuesRef = useRef<T | undefined>()
     const onSaveRef = useRef<(values: T) => Promise<void>>(onSave)
 
     useEffect(() => {
@@ -44,6 +45,7 @@ export function useAutosave<T>(
             try {
                 await onSaveRef.current(values)
                 setLastSaved(new Date())
+                lastSavedValuesRef.current = cloneDeep(values)
                 setSaveStatus('saved')
             } catch {
                 setSaveStatus('error')
@@ -56,12 +58,21 @@ export function useAutosave<T>(
         if (!enabled) {
             debouncedSave.cancel()
             lastQueuedValuesRef.current = undefined
+            isInitialRender.current = false
             return undefined
         }
 
         if (isInitialRender.current) {
             isInitialRender.current = false
             return undefined
+        }
+
+        if (
+            saveStatus === 'saved'
+            && lastSavedValuesRef.current !== undefined
+            && !isEqual(lastSavedValuesRef.current, formValues)
+        ) {
+            setSaveStatus('idle')
         }
 
         if (
@@ -75,7 +86,7 @@ export function useAutosave<T>(
         debouncedSave(formValues)
 
         return undefined
-    }, [debouncedSave, enabled, formValues])
+    }, [debouncedSave, enabled, formValues, saveStatus])
 
     useEffect(() => () => {
         debouncedSave.cancel()

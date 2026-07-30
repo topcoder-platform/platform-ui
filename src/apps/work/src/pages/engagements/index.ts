@@ -1,4 +1,5 @@
 export { default as ApplicationsListPage } from './ApplicationsListPage'
+export { default as EngagementDetailsPage } from './EngagementDetailsPage'
 export { default as EngagementEditorPage } from './EngagementEditorPage'
 export { default as EngagementExperiencePage } from './EngagementExperiencePage'
 export { default as EngagementFeedbackPage } from './EngagementFeedbackPage'

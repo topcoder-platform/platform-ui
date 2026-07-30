@@ -69,12 +69,6 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
     const isSubmitting = props.isSubmitting === true
 
-    const timezone = useMemo(
-        () => Intl.DateTimeFormat()
-            .resolvedOptions()
-            .timeZone,
-        [],
-    )
     const agreementRate = useMemo(
         () => {
             const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
@@ -208,12 +202,6 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <p className={styles.timezoneText}>
-                        Timezone:
-                        {' '}
-                        {timezone}
-                    </p>
-
                     <StartDateTimeInput
                         label='Billing start date'
                         preventOpenOnFocus

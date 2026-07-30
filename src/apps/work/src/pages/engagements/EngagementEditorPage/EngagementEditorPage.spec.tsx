@@ -53,6 +53,9 @@ jest.mock('../../../lib/hooks', () => ({
     useFetchEngagement: jest.fn(),
     useFetchProject: jest.fn(),
 }))
+jest.mock('../../../config/routes.config', () => ({
+    rootRoute: '/work',
+}))
 jest.mock('../../../lib/utils', () => ({
     canCreateEngagement: jest.fn((roles: string[] = []) => (
         roles.includes('administrator') || roles.includes('talent manager')
@@ -149,8 +152,8 @@ describe('EngagementEditorPage', () => {
 
     it('blocks project managers from opening engagement edit routes', () => {
         renderPage(
-            '/projects/123/engagements/engagement-1',
-            '/projects/:projectId/engagements/:engagementId',
+            '/projects/123/engagements/engagement-1/edit',
+            '/projects/:projectId/engagements/:engagementId/edit',
             projectManagerContextValue,
         )
 

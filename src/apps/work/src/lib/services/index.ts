@@ -1,6 +1,7 @@
 export * from './attachments.service'
 export * from './ai-review-configs.service'
 export * from './ai-review-templates.service'
+export * from './challenge-review-context.service'
 export * from './applications.service'
 export * from './billing-accounts.service'
 export * from './challenges.service'
