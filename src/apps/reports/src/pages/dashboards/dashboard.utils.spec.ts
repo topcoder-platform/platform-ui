@@ -1,7 +1,9 @@
 import {
     buildDashboardCsvFileName,
     buildDashboardRangeFromMonths,
+    formatCompactCurrency,
     formatCompactInteger,
+    formatDashboardCurrency,
     formatDashboardMonth,
     formatDashboardRangeLabel,
     formatPercentage,
@@ -173,6 +175,19 @@ describe('dashboard labels and metric formatting', () => {
             .toBe('18.2K')
         expect(formatCompactInteger(2_000_000))
             .toBe('2M')
+    })
+
+    it('formats compact and full rounded dashboard currency values', () => {
+        expect(formatCompactCurrency(0))
+            .toBe('$0')
+        expect(formatCompactCurrency(18_214))
+            .toBe('$18.2K')
+        expect(formatCompactCurrency(2_000_000))
+            .toBe('$2M')
+        expect(formatDashboardCurrency(18_214.49))
+            .toBe('$18,214')
+        expect(formatDashboardCurrency(18_214.5))
+            .toBe('$18,215')
     })
 
     it('formats percentage-point values with at most one decimal place', () => {
