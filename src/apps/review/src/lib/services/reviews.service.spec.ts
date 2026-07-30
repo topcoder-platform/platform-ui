@@ -2,7 +2,10 @@ import { xhrGetAsync } from '~/libs/core'
 
 import type { BackendProjectResult } from '../models'
 
-import { fetchAllProjectResults } from './reviews.service'
+import {
+    fetchAllProjectResults,
+    fetchPastReviews,
+} from './reviews.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -108,5 +111,36 @@ describe('fetchAllProjectResults', () => {
             .toEqual([])
         expect(mockedXhrGetAsync)
             .not.toHaveBeenCalled()
+    })
+})
+
+describe('fetchPastReviews', () => {
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('includes reviewer resource role IDs in the server-side filter', async () => {
+        mockedXhrGetAsync.mockResolvedValue({
+            data: [],
+            meta: {
+                page: 1,
+                perPage: 50,
+                totalCount: 0,
+                totalPages: 0,
+            },
+        } as never)
+
+        await fetchPastReviews({
+            page: 1,
+            perPage: 50,
+            resourceRoleIds: ['reviewer-role', 'screening-role'],
+        })
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith(
+                'https://api.topcoder.test/v6/my-reviews'
+                + '?resourceRoleIds=reviewer-role%2Cscreening-role'
+                + '&page=1&perPage=50&past=true',
+            )
     })
 })

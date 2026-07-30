@@ -19,6 +19,30 @@ export const CHALLENGE_TYPE_SELECT_ALL_OPTION: SelectOption = {
     value: '',
 }
 
+export const ROLE_SELECT_ALL_OPTION: SelectOption = {
+    label: 'All roles',
+    value: '',
+}
+
+export const REVIEWER_RESOURCE_ROLE_IDS = [
+    '318b9c07-079a-42d9-a81f-b96be1dc1099',
+    '3970272b-85b4-48d8-8439-672b4f6031bd',
+    '3eedd4a4-3c68-4f68-8de4-a1ca5c2055e5',
+    '4857fd2e-d9d2-44bb-a429-f75b7c5d5feb',
+    'ac953811-8268-403a-ac06-fd88a100c9c7',
+    'caf7b717-3dee-41e0-8bf8-3217cc5a878c',
+    'e0544b94-6420-4afc-8f63-238eddc751b9',
+    'f6df7212-b9d6-4193-bfb1-b383586fce63',
+]
+
+export const PAST_CHALLENGE_ROLE_SELECT_OPTIONS: SelectOption[] = [
+    ROLE_SELECT_ALL_OPTION,
+    {
+        label: 'Reviewer',
+        value: REVIEWER_RESOURCE_ROLE_IDS.join(','),
+    },
+]
+
 export const CHALLENGE_TYPE_SELECT_OPTIONS: SelectOption[] = [
     CHALLENGE_TYPE_SELECT_ALL_OPTION,
     ...[
