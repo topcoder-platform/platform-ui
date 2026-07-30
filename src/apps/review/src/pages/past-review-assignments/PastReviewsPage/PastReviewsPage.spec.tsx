@@ -8,8 +8,10 @@ import {
 } from '@testing-library/react'
 
 import {
+    COPILOT_RESOURCE_ROLE_ID,
     PAST_CHALLENGE_ROLE_SELECT_OPTIONS,
     REVIEWER_RESOURCE_ROLE_IDS,
+    SUBMITTER_RESOURCE_ROLE_ID,
 } from '../../../config/index.config'
 import {
     useFetchChallengeTracks,
@@ -156,15 +158,15 @@ describe('PastReviewsPage role filter', () => {
         })
     })
 
-    it('offers one aggregate Reviewer option and loads page one with every reviewer role ID', async () => {
+    it('offers every supported role and loads page one with every reviewer role ID', async () => {
         render(<PastReviewsPage />)
 
         const roleSelect = screen.getByLabelText('Role') as HTMLSelectElement
         expect(Array.from(roleSelect.options)
             .map(option => option.text))
-            .toEqual(['All roles', 'Reviewer'])
+            .toEqual(['All roles', 'Reviewer', 'Copilot', 'Submitter'])
         expect(PAST_CHALLENGE_ROLE_SELECT_OPTIONS)
-            .toHaveLength(2)
+            .toHaveLength(4)
 
         fireEvent.change(roleSelect, {
             target: {
@@ -177,6 +179,27 @@ describe('PastReviewsPage role filter', () => {
                 .toHaveBeenLastCalledWith(expect.objectContaining({
                     page: 1,
                     resourceRoleIds: REVIEWER_RESOURCE_ROLE_IDS,
+                }))
+        })
+    })
+
+    it.each([
+        ['Copilot', COPILOT_RESOURCE_ROLE_ID],
+        ['Submitter', SUBMITTER_RESOURCE_ROLE_ID],
+    ])('loads page one for the %s role', async (_label, resourceRoleId) => {
+        render(<PastReviewsPage />)
+
+        fireEvent.change(screen.getByLabelText('Role'), {
+            target: {
+                value: resourceRoleId,
+            },
+        })
+
+        await waitFor(() => {
+            expect(loadPastReviews)
+                .toHaveBeenLastCalledWith(expect.objectContaining({
+                    page: 1,
+                    resourceRoleIds: [resourceRoleId],
                 }))
         })
     })
