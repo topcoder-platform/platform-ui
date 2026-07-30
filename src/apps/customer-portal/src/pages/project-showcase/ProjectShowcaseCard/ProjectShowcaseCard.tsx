@@ -3,6 +3,7 @@ import classNames from 'classnames'
 
 import { ProjectShowcasePost } from '~/apps/work/src/lib'
 import { IconOutline, LinkButton } from '~/libs/ui'
+import { renderRichTextToPlainText } from '~/libs/shared'
 
 import { toClassName } from '../utils'
 import { getPostRoute } from '../project-showcase.routes'
@@ -35,7 +36,12 @@ const ProjectShowcaseCard: FC<ProjectShowcaseCardProps> = props => (
         </div>
 
         <div className={styles.content}>
-            {props.post.content}
+            <div
+                className={styles.htmlContent}
+                dangerouslySetInnerHTML={{
+                    __html: renderRichTextToPlainText(props.post.content || ''),
+                }}
+            />
         </div>
 
         <div className={styles.button}>
