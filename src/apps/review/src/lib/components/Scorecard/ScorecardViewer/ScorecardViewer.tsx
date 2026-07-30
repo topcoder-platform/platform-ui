@@ -38,6 +38,7 @@ interface ScorecardViewerProps {
     reviewInfo?: ReviewInfo
     isEdit?: boolean
     isManagerEdit?: boolean
+    autoOpenManagerComment?: boolean
     actionChallengeRole?: string
     mappingAppeals?: MappingAppeal
     isSavingReview?: boolean
@@ -349,6 +350,7 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => (
         reviewInfo={props.reviewInfo}
         isEdit={props.isEdit}
         isManagerEdit={props.isManagerEdit}
+        autoOpenManagerComment={props.autoOpenManagerComment}
         actionChallengeRole={props.actionChallengeRole}
         mappingAppeals={props.mappingAppeals}
         isSavingReview={props.isSavingReview}

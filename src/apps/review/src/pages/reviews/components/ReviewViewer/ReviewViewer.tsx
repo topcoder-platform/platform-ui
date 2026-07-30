@@ -269,6 +269,7 @@ const ReviewViewer: FC = () => {
                             setIsChanged={setIsChanged}
                             isLoading={isLoading}
                             isManagerEdit={isManagerEdit}
+                            autoOpenManagerComment={isManagerEdit && !respondToAppeals}
                             isSavingReview={isSavingReview}
                             isSavingAppeal={isSavingAppeal}
                             isSavingAppealResponse={isSavingAppealResponse}

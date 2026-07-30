@@ -26,6 +26,7 @@ export interface ScorecardViewerContextProps {
     reviewInfo?: ReviewInfo
     isEdit?: boolean
     isManagerEdit?: boolean
+    autoOpenManagerComment?: boolean
     actionChallengeRole?: string
     mappingAppeals?: MappingAppeal
     isSavingReview?: boolean
@@ -73,6 +74,7 @@ export type ScorecardViewerContextValue = {
     reviewInfo?: ReviewInfo
     isEdit?: boolean
     isManagerEdit?: boolean
+    autoOpenManagerComment?: boolean
     actionChallengeRole?: string
     mappingAppeals?: MappingAppeal
     isSavingReview?: boolean
@@ -144,6 +146,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         addAppealResponse: props.addAppealResponse,
         addManagerComment: props.addManagerComment,
         aiFeedbackItems: props.aiFeedbackItems,
+        autoOpenManagerComment: props.autoOpenManagerComment,
         canAddManagerComment: props.canAddManagerComment,
         doDeleteAppeal: props.doDeleteAppeal,
         form: reviewFormCtx.form,
@@ -168,6 +171,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         props.reviewInfo,
         props.isEdit,
         props.isManagerEdit,
+        props.autoOpenManagerComment,
         props.actionChallengeRole,
         props.mappingAppeals,
         props.isSavingReview,
