@@ -33,6 +33,7 @@ const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.SUBMITTED]: 'Submitted',
     [ApplicationStatus.UNDER_REVIEW]: 'Under review',
+    [ApplicationStatus.SHORTLISTED]: 'Shortlisted',
     [ApplicationStatus.SELECTED]: 'Selected',
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
@@ -161,7 +162,11 @@ const getApplicationStatusLabel = (application?: Application): string | undefine
         return undefined
     }
 
-    return APPLICATION_STATUS_LABELS[application.status]
+    const normalizedStatus = String(application.status)
+        .trim()
+        .toLowerCase() as ApplicationStatus
+
+    return APPLICATION_STATUS_LABELS[normalizedStatus] ?? formatEnumLabel(application.status)
 }
 
 const getApiErrorMessage = (error: any): string | undefined => {

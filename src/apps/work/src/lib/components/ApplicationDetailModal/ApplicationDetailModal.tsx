@@ -78,6 +78,10 @@ function getStatusPillClass(value?: string): string {
         return styles.statusYellow
     }
 
+    if (normalizedStatus === 'SHORTLISTED') {
+        return styles.statusBlue
+    }
+
     if (normalizedStatus === 'REJECTED') {
         return styles.statusRed
     }
