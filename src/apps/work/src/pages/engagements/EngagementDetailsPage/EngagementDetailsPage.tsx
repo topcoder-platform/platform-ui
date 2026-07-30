@@ -283,7 +283,7 @@ export const EngagementDetailsPage: FC = () => {
                                 </div>
 
                                 <div className={styles.field}>
-                                    <span className={styles.label}>Skills</span>
+                                    <span className={styles.skillslabel}>Skills</span>
                                     {skillNames.length > 0
                                         ? (
                                             <div className={styles.skills}>
