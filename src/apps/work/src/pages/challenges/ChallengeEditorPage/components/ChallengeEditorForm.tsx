@@ -3244,6 +3244,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
+                onChallengeStatusChange?.(
+                    normalizeStatus(savedChallenge.status) || payloadStatus,
+                )
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
                 const shouldVerifyPersistedSchedule
                     = shouldVerifyPersistedScheduleAfterSave(formDataWithProjectBilling)
@@ -3295,7 +3298,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         ? { keepValues: true }
                         : undefined,
                 )
-                onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
                     if (wasActivePhaseShorteningRejected) {
