@@ -33,3 +33,5 @@ sudo yarn start
   omitted safely.
 - Canonical `PLACEMENT` winner types are shown. Untyped and contest-submission winner types remain
   supported for legacy challenge records, while checkpoint winner types are excluded.
+- Checkpoint winners remain separate from final placements and are identified by member ID in the
+  Checkpoint Review table.
