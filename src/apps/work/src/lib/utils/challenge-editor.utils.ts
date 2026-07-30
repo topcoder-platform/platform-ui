@@ -935,11 +935,6 @@ export function formatLastSaved(timestamp?: Date): string {
         return 'Not saved yet'
     }
 
-    const diffMs = Date.now() - timestamp.getTime()
-    if (diffMs < 5000) {
-        return 'Saved just now'
-    }
-
     return `Last saved at ${timestamp.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit',
