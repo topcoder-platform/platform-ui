@@ -21,6 +21,7 @@ import {
 import {
     ANTICIPATED_START_OPTIONS,
     ENGAGEMENT_ROLES,
+    ENGAGEMENT_ROLE_LEVELS,
     ENGAGEMENT_WORKLOADS,
 } from '../../../../lib/constants'
 import {
@@ -53,6 +54,7 @@ import {
     getCountableEngagementAssignments,
     showErrorToast,
     showSuccessToast,
+    toEngagementDateInputValue,
 } from '../../../../lib/utils'
 
 import {
@@ -76,6 +78,7 @@ import {
 import styles from './EngagementEditorForm.module.scss'
 
 export interface EngagementEditorFormData {
+    account: string
     anticipatedStart: string
     assignedMemberHandles: string[]
     assignmentDetails: AssignmentDetailsFormValue[]
@@ -85,9 +88,13 @@ export interface EngagementEditorFormData {
     durationWeeks: number | string
     isPrivate: boolean
     projectId: string
+    receivedDateFromAccount: string
     requiredMemberCount: number | string
     role: string
+    roleLevel: string
     skills: Skill[]
+    smu: string
+    spoc: string
     status: string
     timezones: string[]
     title: string
@@ -358,6 +365,7 @@ function getDefaultValues(
     const assignmentDefaults = getAssignmentDefaults(defaultEngagement)
 
     return {
+        account: defaultEngagement?.account || '',
         anticipatedStart: defaultEngagement?.anticipatedStart || ANTICIPATED_START_OPTIONS[0],
         assignedMemberHandles: assignmentDefaults.assignedMemberHandles,
         assignmentDetails: assignmentDefaults.assignmentDetails,
@@ -369,11 +377,17 @@ function getDefaultValues(
             : '',
         isPrivate: defaultEngagement?.isPrivate === true,
         projectId: getDefaultProjectId(defaultEngagement, projectId),
+        receivedDateFromAccount: toEngagementDateInputValue(
+            defaultEngagement?.receivedDateFromAccount,
+        ),
         requiredMemberCount: defaultEngagement?.requiredMemberCount
             ? String(defaultEngagement.requiredMemberCount)
             : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
+        roleLevel: defaultEngagement?.roleLevel || '',
         skills: defaultEngagement?.skills || [],
+        smu: defaultEngagement?.smu || '',
+        spoc: defaultEngagement?.spoc || '',
         status: defaultEngagement?.status
             ? formatEngagementStatus(defaultEngagement.status)
             : 'Open',
@@ -406,6 +420,19 @@ function createWorkloadOptions(): FormSelectOption[] {
     return ENGAGEMENT_WORKLOADS.map(workload => ({
         label: labelsByWorkload[workload] || workload,
         value: workload,
+    }))
+}
+
+function createRoleLevelOptions(): FormSelectOption[] {
+    const labelsByRoleLevel: Record<string, string> = {
+        JUNIOR: 'Junior',
+        MID: 'Mid',
+        SENIOR: 'Senior',
+    }
+
+    return ENGAGEMENT_ROLE_LEVELS.map(roleLevel => ({
+        label: labelsByRoleLevel[roleLevel] || roleLevel,
+        value: roleLevel,
     }))
 }
 
@@ -514,6 +541,7 @@ function toPayload(
     const payload: Partial<Engagement> & {
         assignmentDetails?: SerializedAssignmentDetailsPayload[]
     } = {
+        account: values.account,
         anticipatedStart: values.anticipatedStart,
         compensationRange: values.compensationRange,
         countries: values.countries,
@@ -521,8 +549,12 @@ function toPayload(
         durationWeeks: Number(values.durationWeeks),
         isPrivate: values.isPrivate,
         projectId: values.projectId,
+        receivedDateFromAccount: values.receivedDateFromAccount,
         role: values.role,
+        roleLevel: values.roleLevel,
         skills: values.skills,
+        smu: values.smu,
+        spoc: values.spoc,
         status: values.status,
         timezones: values.timezones,
         title: values.title,
@@ -587,6 +619,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         [lockedAssignmentDetails],
     )
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
+    const roleLevelOptions = useMemo<FormSelectOption[]>(() => createRoleLevelOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
     const currentProjectOption = useMemo<FormSelectOption | undefined>(
         () => createProjectOption(
@@ -887,6 +920,47 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             />
                         </div>
                         <EngagementLocationFields />
+                    </div>
+                </section>
+
+                <section className={styles.section}>
+                    <h3 className={styles.sectionTitle}>Internal Account Details</h3>
+
+                    <div className={styles.basicInfoGrid}>
+                        <FormTextField
+                            label='Received Date from Account'
+                            name='receivedDateFromAccount'
+                            type='date'
+                        />
+
+                        <FormTextField
+                            label='Account'
+                            maxLength={255}
+                            name='account'
+                            placeholder='Account name'
+                        />
+
+                        <FormTextField
+                            label='SMU'
+                            maxLength={255}
+                            name='smu'
+                            placeholder='SMU'
+                        />
+
+                        <FormTextField
+                            label='SPOC'
+                            maxLength={255}
+                            name='spoc'
+                            placeholder='SPOC'
+                        />
+
+                        <FormSelectField
+                            isClearable
+                            label='Role Level'
+                            name='roleLevel'
+                            options={roleLevelOptions}
+                            placeholder='Select role level'
+                        />
                     </div>
                 </section>
 

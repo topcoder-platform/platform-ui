@@ -84,10 +84,11 @@ jest.mock('../../../lib/utils', () => ({
     canViewAllEngagements: jest.fn((roles: string[] = []) => (
         roles.includes('administrator') || roles.includes('talent manager')
     )),
-    formatAnticipatedStart: jest.fn(() => 'Immediate'),
-    formatDuration: jest.fn(() => '8 weeks'),
-    formatEngagementStatus: jest.fn(() => 'Open'),
-    formatLocation: jest.fn(() => 'Remote'),
+    formatAnticipatedStart: () => 'Immediate',
+    formatDate: () => 'Jul 15, 2026',
+    formatDuration: () => '8 weeks',
+    formatEngagementStatus: () => 'Open',
+    formatLocation: () => 'Remote',
 }))
 
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
@@ -147,6 +148,7 @@ describe('EngagementDetailsPage', () => {
         })
         mockedUseFetchEngagement.mockReturnValue({
             engagement: {
+                account: 'Acme Corp',
                 anticipatedStart: 'IMMEDIATE',
                 assignedMemberHandles: [],
                 assignments: [],
@@ -158,9 +160,13 @@ describe('EngagementDetailsPage', () => {
                 isPrivate: false,
                 projectId: 200,
                 projectName: 'Payment Testing',
+                receivedDateFromAccount: '2026-07-15T00:00:00.000Z',
                 requiredMemberCount: 1,
                 role: 'SOFTWARE_DEVELOPER',
+                roleLevel: 'SENIOR',
                 skills: [{ id: '1', name: 'React' }],
+                smu: 'North America',
+                spoc: 'Jane Doe',
                 status: 'OPEN',
                 timezones: [],
                 title: 'Frontend Engagement',
@@ -181,6 +187,16 @@ describe('EngagementDetailsPage', () => {
         expect(screen.getByText('Software Developer'))
             .toBeTruthy()
         expect(screen.getByText('React'))
+            .toBeTruthy()
+        expect(screen.getByText('Acme Corp'))
+            .toBeTruthy()
+        expect(screen.getByText('North America'))
+            .toBeTruthy()
+        expect(screen.getByText('Jane Doe'))
+            .toBeTruthy()
+        expect(screen.getByText('Senior'))
+            .toBeTruthy()
+        expect(screen.getByText('Jul 15, 2026'))
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
