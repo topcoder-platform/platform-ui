@@ -122,6 +122,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 ## Header Actions
 
 - `Launch` is shown on the details tab for `DRAFT` challenges in the header for both view and edit routes, and again in the footer beside `Save Challenge` while editing.
+- Read-only view routes repeat the available `Edit`, `Launch`, `Cancel`, and `Mark Complete` actions at the bottom of the page. Challenge quick links remain in the header only.
 - The work app blocks launch attempts when the parent project billing account is inactive, expired, or has insufficient remaining funds, matching the legacy work-manager launch restriction.
 - Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the challenge PATCH persists a `NEW` to `DRAFT` transition, the editor updates the status

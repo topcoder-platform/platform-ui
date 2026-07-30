@@ -1448,7 +1448,7 @@ export const ChallengeEditorPage: FC = () => {
         && !!editChallengePath
         && (!baseProjectAccessState.isDenied || challengeResourceAccess.canWrite)
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
-    const rightHeader = renderHeaderAction({
+    const challengeActionParams: RenderHeaderActionParams = {
         canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,
         canCompleteTask: canRenderChallengeDetails && canCompleteTask,
         canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
@@ -1461,7 +1461,6 @@ export const ChallengeEditorPage: FC = () => {
             ? persistedChallengeId
             : undefined,
         challengeName: launchChallengeName,
-        challengeQuickLinks,
         isDeleting,
         isLaunchDisabled,
         isLaunching,
@@ -1470,7 +1469,14 @@ export const ChallengeEditorPage: FC = () => {
         onDeleteOpen: handleDeleteOpen,
         onEditOpen: handleEditOpen,
         onLaunchOpen: handleLaunchOpen,
+    }
+    const rightHeader = renderHeaderAction({
+        ...challengeActionParams,
+        challengeQuickLinks,
     })
+    const footerActions = isViewMode
+        ? renderHeaderAction(challengeActionParams)
+        : undefined
     const deleteModal = renderDeleteModal({
         canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
         challengeName: deleteChallengeName,
@@ -1532,6 +1538,17 @@ export const ChallengeEditorPage: FC = () => {
                         onSubmissionsTabClick={handleSubmissionsTabClick}
                         projectId={projectId}
                     />
+                    {footerActions
+                        ? (
+                            <div
+                                aria-label='Challenge footer actions'
+                                className={styles.footerActions}
+                                role='group'
+                            >
+                                {footerActions}
+                            </div>
+                        )
+                        : undefined}
                 </div>
             </PageWrapper>
             {launchModal}
