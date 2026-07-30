@@ -15,17 +15,15 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import {
     ChallengeDetailContextModel,
     ProjectResult,
-    ReviewAppContextModel,
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ORDINAL_SUFFIX } from '../../../config/index.config'
-import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { ChallengeDetailContext } from '../../contexts'
 import { buildPhaseTabs, getHandleUrl } from '../../utils'
 import type { PhaseOrderingOptions } from '../../utils'
-import { useRolePermissions, UseRolePermissionsResult, useSubmissionDownloadAccess } from '../../hooks'
+import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
-import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableWinners.module.scss'
 
@@ -51,8 +49,6 @@ export const TableWinners: FC<Props> = (props: Props) => {
         aiReviewDecisionsBySubmissionId,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const isAiOnly = aiReviewConfig?.mode === 'AI_ONLY'
-    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
-    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
     const phaseOrderingOptions = useMemo<PhaseOrderingOptions>(() => {
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
@@ -64,31 +60,6 @@ export const TableWinners: FC<Props> = (props: Props) => {
             isTask: typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task',
         }
     }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
-
-    const isCompletedDesignChallenge = useMemo(() => {
-        if (!challengeInfo) return false
-        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
-            .toLowerCase() : ''
-        const status = challengeInfo.status ? String(challengeInfo.status)
-            .toLowerCase() : ''
-        return type === 'design' && (
-            status === 'completed'
-        )
-    }, [challengeInfo])
-
-    const isSubmissionsViewable = useMemo(() => {
-        if (!challengeInfo?.metadata?.length) return false
-        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
-            .toLowerCase() === 'true')
-    }, [challengeInfo])
-
-    const canViewSubmissions = useMemo(() => {
-        if (isCompletedDesignChallenge) {
-            return canViewAllSubmissions || isSubmissionsViewable
-        }
-
-        return true
-    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const reviewTabUrl = useMemo(() => {
         const searchParams = new URLSearchParams(location.search)
@@ -141,18 +112,11 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: ProjectResult) => {
-                    const cannotDownloadSubmission = (
-                        !canViewSubmissions && String(data.userId) !== String(loginUserInfo?.userId)
-                    )
                     const isRestrictedForRow = data.submissionId
                         ? isSubmissionDownloadRestrictedForMember(data.userId)
-                            || cannotDownloadSubmission
                         : false
-                    let tooltipMessage = getRestrictionMessageForMember(data.userId)
+                    const tooltipMessage = getRestrictionMessageForMember(data.userId)
                         ?? restrictionMessage
-                    if (cannotDownloadSubmission) {
-                        tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
-                    }
 
                     const isButtonDisabled = Boolean(
                         (data.submissionId

@@ -8,7 +8,10 @@ import {
     useWatch,
 } from 'react-hook-form'
 
-import { FormCheckboxField } from '../../../../../lib/components/form'
+import {
+    FormRadioGroup,
+    FormRadioOption,
+} from '../../../../../lib/components/form'
 import {
     ChallengeEditorFormData,
     ChallengeMetadata,
@@ -18,21 +21,32 @@ import {
     metadataToBoolean,
 } from '../../../../../lib/utils/metadata.utils'
 
-const REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD = 'allowAllRegistrantsToDownloadWinningSubmissions'
+export const REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD = 'allowAllRegistrantsToDownloadWinningSubmissions'
 const REGISTERED_MEMBER_DOWNLOAD_TOGGLE_FIELD = 'allowAllRegistrantsToDownloadWinningSubmissionsToggle'
 
 interface RegisteredMemberDownloadFormData extends ChallengeEditorFormData {
     allowAllRegistrantsToDownloadWinningSubmissionsToggle?: boolean
 }
 
+const registeredMemberDownloadOptions: FormRadioOption<boolean>[] = [
+    {
+        label: 'All challenge registrants - anyone who registered, whether or not they submitted',
+        value: true,
+    },
+    {
+        label: 'Passing submitters only - members who submitted and passed review',
+        value: false,
+    },
+]
+
 /**
- * Renders the challenge setting that expands winning-submission downloads to every registrant.
+ * Renders the winning-submission download access setting.
  *
- * The setting defaults to disabled when its metadata entry is absent and persists an exact string
- * boolean when changed. It intentionally leaves Design's separate `submissionsViewable` metadata
- * untouched so that visibility gate can continue to take precedence.
+ * Existing challenges without metadata retain the restricted passing-submitter behavior. New
+ * challenges receive explicit allow-all metadata during creation, and changes persist exact string
+ * booleans for the Review API authorization contract.
  *
- * @returns The registered-member winning-submission download checkbox.
+ * @returns The winning-submission download access radio group.
  * @throws Does not throw.
  */
 export const RegisteredMemberDownloadField: FC = () => {
@@ -70,7 +84,9 @@ export const RegisteredMemberDownloadField: FC = () => {
         registeredMemberDownloadToggle,
     ])
 
-    const handleRegisteredMemberDownloadChange = useCallback((checked: boolean): void => {
+    const handleRegisteredMemberDownloadChange = useCallback((value: boolean | string): void => {
+        const checked = value === true || value === 'true'
+
         if (checked === isRegisteredMemberDownloadAllowed) {
             return
         }
@@ -94,11 +110,11 @@ export const RegisteredMemberDownloadField: FC = () => {
     ])
 
     return (
-        <FormCheckboxField
-            checkboxOnlyHitArea
-            label='Allow all registered members to download winning submissions after challenge ends'
+        <FormRadioGroup
+            label='Winning submissions download access:'
             name={REGISTERED_MEMBER_DOWNLOAD_TOGGLE_FIELD}
             onChange={handleRegisteredMemberDownloadChange}
+            options={registeredMemberDownloadOptions}
         />
     )
 }
