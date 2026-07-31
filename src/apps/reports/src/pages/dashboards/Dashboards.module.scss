@@ -41,7 +41,7 @@
 
 .dashboardGrid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 24px;
 }
 
@@ -50,10 +50,15 @@
     min-width: 0;
     min-height: 420px;
     flex-direction: column;
+    grid-column: span 2;
     border: 1px solid #dce1eb;
     border-radius: 8px;
     background: #fff;
     box-shadow: 0 2px 8px rgba(18, 24, 40, 0.05);
+}
+
+.dashboardCard:nth-child(n + 4) {
+    grid-column: span 3;
 }
 
 .cardHeader {
@@ -291,6 +296,10 @@
     gap: 28px;
 }
 
+.detailGridFullWidth {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .detailChart,
 .metricsPanel {
     min-width: 0;
@@ -441,6 +450,11 @@
 @media (max-width: 1180px) {
     .dashboardGrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboardCard,
+    .dashboardCard:nth-child(n + 4) {
+        grid-column: auto;
     }
 
     .detailHeader {

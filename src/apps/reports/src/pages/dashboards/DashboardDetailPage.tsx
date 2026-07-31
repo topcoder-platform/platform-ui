@@ -140,6 +140,9 @@ function buildAvailableDashboardRange(
  */
 function buildDashboardMetrics(response: DashboardResponse): DashboardMetric[] {
     switch (response.dashboard) {
+        case 'member-payment-by-customer':
+        case 'member-payment-by-month':
+            return []
         case 'members-paid':
             return [
                 {
@@ -649,38 +652,45 @@ const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
 
                 {response && (
                     <>
-                        <section className={styles.detailGrid}>
+                        <section
+                            className={
+                                metrics.length
+                                    ? styles.detailGrid
+                                    : `${styles.detailGrid} ${styles.detailGridFullWidth}`
+                            }
+                        >
                             <div className={styles.detailChart}>
                                 <DashboardChart
-                                    dashboard={props.dashboard}
-                                    months={response.months}
+                                    response={response}
                                 />
                             </div>
 
-                            <aside
-                                aria-label={`${definition.title} summary metrics`}
-                                className={styles.metricsPanel}
-                            >
-                                {metrics.map(metric => {
-                                    const MetricIcon = metric.icon
+                            {!!metrics.length && (
+                                <aside
+                                    aria-label={`${definition.title} summary metrics`}
+                                    className={styles.metricsPanel}
+                                >
+                                    {metrics.map(metric => {
+                                        const MetricIcon = metric.icon
 
-                                    return (
-                                        <div className={styles.metricRow} key={metric.label}>
-                                            <span
-                                                className={styles.metricIcon}
-                                                data-tone={metric.tone}
-                                            >
-                                                <MetricIcon aria-hidden='true' />
-                                            </span>
-                                            <span className={styles.metricContent}>
-                                                <span>{metric.label}</span>
-                                                <strong>{metric.value}</strong>
-                                                <small>{metric.meta}</small>
-                                            </span>
-                                        </div>
-                                    )
-                                })}
-                            </aside>
+                                        return (
+                                            <div className={styles.metricRow} key={metric.label}>
+                                                <span
+                                                    className={styles.metricIcon}
+                                                    data-tone={metric.tone}
+                                                >
+                                                    <MetricIcon aria-hidden='true' />
+                                                </span>
+                                                <span className={styles.metricContent}>
+                                                    <span>{metric.label}</span>
+                                                    <strong>{metric.value}</strong>
+                                                    <small>{metric.meta}</small>
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+                                </aside>
+                            )}
                         </section>
 
                         <div className={styles.dataNote}>

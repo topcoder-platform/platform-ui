@@ -21,6 +21,7 @@ import {
     downloadBlobFile,
     downloadDashboardCsv,
     fetchDashboard,
+    MemberPaymentByCustomerDashboard,
     NewSignupsDashboard,
 } from '../../lib/services'
 
@@ -88,6 +89,31 @@ const signupResponse: NewSignupsDashboard = {
         peakMonthSignups: 100,
         totalSignups: 1000,
     },
+}
+
+const customerPaymentResponse: MemberPaymentByCustomerDashboard = {
+    dashboard: 'member-payment-by-customer',
+    endDate: '2026-08-01T00:00:00.000Z',
+    months: [{
+        month: '2026-07-01',
+        values: {
+            'customer-1': 125_000,
+            'other-customers': 20_000,
+        },
+    }],
+    series: [
+        {
+            customerId: 'customer-id-1',
+            key: 'customer-1',
+            label: 'Customer A',
+        },
+        {
+            customerId: null, // eslint-disable-line unicorn/no-null
+            key: 'other-customers',
+            label: 'Other Customers',
+        },
+    ],
+    startDate: '2026-02-01T00:00:00.000Z',
 }
 
 const mockedFetchDashboard = fetchDashboard as jest.Mock
@@ -312,6 +338,50 @@ describe('Dashboard detail page', () => {
             .toHaveBeenCalledTimes(1)
         expect(screen.getByText('Feb ’26 – Jul ’26'))
             .toBeInTheDocument()
+    })
+
+    it('renders and exports a customer payment dashboard without invented summary metrics', async () => {
+        mockedFetchDashboard.mockResolvedValue(customerPaymentResponse)
+
+        renderDetailRoute('member-payment-by-customer')
+        await flushAsyncUpdates()
+
+        expect(mockedFetchDashboard)
+            .toHaveBeenCalledWith('member-payment-by-customer', {
+                endDate: '2026-08-01',
+                startDate: '2026-02-01',
+            })
+        expect(screen.getByRole('heading', { name: 'Member Payment $ by Customer' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('table', {
+            name: 'Member Payment $ by Customer monthly data',
+        }))
+            .toBeInTheDocument()
+        expect(screen.getByText('Customer A'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Other Customers'))
+            .toBeInTheDocument()
+        expect(screen.getByText('$125,000'))
+            .toBeInTheDocument()
+        expect(screen.queryByLabelText('Member Payment $ by Customer summary metrics'))
+            .not.toBeInTheDocument()
+        expect(screen.getByLabelText('Member Payment $ by Customer chart')
+            .closest('section'))
+            .toHaveClass('detailGridFullWidth')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Download CSV' }))
+        await flushAsyncUpdates()
+
+        expect(mockedDownloadDashboardCsv)
+            .toHaveBeenCalledWith('member-payment-by-customer', {
+                endDate: '2026-08-01',
+                startDate: '2026-02-01',
+            })
+        expect(mockedDownloadBlobFile)
+            .toHaveBeenCalledWith(
+                expect.any(Blob),
+                'member-payment-by-customer-2026-02-01-to-2026-08-01.csv',
+            )
     })
 
     it('redirects unknown dashboard slugs to the dashboard landing page', async () => {
