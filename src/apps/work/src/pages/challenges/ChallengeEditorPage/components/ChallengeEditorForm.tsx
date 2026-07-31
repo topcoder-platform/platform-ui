@@ -1581,7 +1581,9 @@ function getPhaseDateTime(value: Date | string | undefined): number | undefined 
 }
 
 /**
- * Resolves the canonical phase duration used by the schedule form.
+ * Resolves the canonical phase duration in minutes used by the schedule form.
+ * Scheduled dates take precedence so API second precision is rounded consistently
+ * with end-date edits before the stored duration is used as a fallback.
  *
  * @param phase challenge phase containing a duration value.
  * @returns the positive finite duration, or `undefined` when it is unavailable.
@@ -1589,6 +1591,16 @@ function getPhaseDateTime(value: Date | string | undefined): number | undefined 
 function getPhaseDurationValue(
     phase: ChallengePhase | undefined,
 ): number | undefined {
+    const scheduledStartTime = getPhaseDateTime(phase?.scheduledStartDate)
+    const scheduledEndTime = getPhaseDateTime(phase?.scheduledEndDate)
+    if (
+        scheduledStartTime !== undefined
+        && scheduledEndTime !== undefined
+        && scheduledEndTime > scheduledStartTime
+    ) {
+        return Math.round((scheduledEndTime - scheduledStartTime) / 60_000)
+    }
+
     const duration = Number(phase?.duration)
 
     return Number.isFinite(duration) && duration > 0
