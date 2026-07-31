@@ -84,6 +84,7 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
+import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
@@ -166,6 +167,7 @@ import {
 } from './RateChallengeField'
 import {
     RegisteredMemberDownloadField,
+    REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
 } from './RegisteredMemberDownloadField'
 import {
     ReviewCostField,
@@ -183,9 +185,6 @@ import {
 import {
     StockArtsField,
 } from './StockArtsField'
-import {
-    SubmissionVisibilityField,
-} from './SubmissionVisibilityField'
 import {
     SubmissionTypeField,
 } from './SubmissionTypeField'
@@ -3027,6 +3026,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const createdChallenge = await createChallenge({
                     discussions,
                     funChallenge: formData.funChallenge === true,
+                    metadata: booleanToMetadata(
+                        formData.metadata,
+                        REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
+                        true,
+                    ),
                     name: formData.name,
                     projectId: createProjectId,
                     status: CHALLENGE_STATUS.NEW,
@@ -4121,7 +4125,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             <div className={styles.submissionSettingsGrid}>
                                                 <FinalDeliverablesField />
                                                 <StockArtsField />
-                                                <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField
                                                     deferDirty={shouldDeferInitialResourceDirtyNormalization}
                                                 />

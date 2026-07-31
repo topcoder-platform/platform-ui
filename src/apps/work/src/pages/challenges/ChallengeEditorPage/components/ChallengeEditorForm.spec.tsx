@@ -700,10 +700,8 @@ jest.mock('./StockArtsField', () => ({
         return <>Stock Arts Field</>
     },
 }))
-jest.mock('./SubmissionVisibilityField', () => ({
-    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
-}))
 jest.mock('./RegisteredMemberDownloadField', () => ({
+    REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD: 'allowAllRegistrantsToDownloadWinningSubmissions',
     RegisteredMemberDownloadField: () => <>Registered Member Download Field</>,
 }))
 jest.mock('./SubmissionTypeField', () => ({
@@ -2054,7 +2052,7 @@ describe('ChallengeEditorForm', () => {
         expect(submissionSettingsSection)
             .toHaveTextContent('Final Deliverables Field')
         expect(submissionSettingsSection)
-            .toHaveTextContent('Submission Visibility Field')
+            .not.toHaveTextContent('Submission Visibility Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
@@ -3975,6 +3973,10 @@ describe('ChallengeEditorForm', () => {
                         name: 'Forum Enabled Challenge Discussion',
                         provider: 'vanilla',
                         type: 'CHALLENGE',
+                    }],
+                    metadata: [{
+                        name: 'allowAllRegistrantsToDownloadWinningSubmissions',
+                        value: 'true',
                     }],
                     name: 'Forum Enabled Challenge',
                     projectId: '12345',
