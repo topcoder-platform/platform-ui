@@ -4,7 +4,7 @@ import { useChallengeDetailsContext } from '~/apps/review/src/lib'
 import { ProgressBar } from '~/apps/review/src/lib/components/ProgressBar'
 import { IconDeepseekAi, IconPhaseReview, IconPremium } from '~/apps/review/src/lib/assets/icons'
 import { ChallengeDetailContextModel, ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
-import { AiWorkflow } from '~/apps/review/src/lib/hooks'
+import { AiWorkflow, UseReviewEditAccessResult } from '~/apps/review/src/lib/hooks'
 
 import styles from './ReviewScorecardHeader.module.scss'
 
@@ -14,6 +14,7 @@ interface Props {
     scorecardInfo?: ScorecardInfo
     workflow?: AiWorkflow
     reviewProgress?: number
+    reviewPhaseType?: UseReviewEditAccessResult['reviewPhaseType']
 }
 
 export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
@@ -33,15 +34,20 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
     const reviewerColor = reviewer?.handleColor
     const llmModelName = props.workflow?.llm?.name || 'N/A'
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
+    const isScreeningPhase = props.reviewPhaseType === 'screening'
+        || props.reviewPhaseType === 'checkpoint screening'
     const isPendingReview = (props.reviewInfo?.status ?? '')
         .toString()
         .trim()
         .toUpperCase() === 'PENDING'
     const scorecardTitle = props.isSubmitterView
         ? 'Scorecard Details'
-        : isPendingReview
-            ? 'Fill Scorecard'
-            : 'Edit Review Scorecard'
+        : isScreeningPhase
+            ? 'Complete Screening Scorecard'
+            : isPendingReview
+                ? 'Fill Scorecard'
+                : 'Edit Review Scorecard'
+    const reviewerLabel = isScreeningPhase ? 'Screener:' : 'Reviewer:'
 
     return (
         <div className={styles.wrap}>
@@ -62,7 +68,7 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                                     <div className={styles.personIcon}>
                                         <i className='icon-handle' />
                                     </div>
-                                    <span className={styles.infoLabel}>Reviewer:</span>
+                                    <span className={styles.infoLabel}>{reviewerLabel}</span>
                                     <span className={styles.infoValue} style={{ color: reviewerColor }}>
                                         {reviewerHandle}
                                     </span>
