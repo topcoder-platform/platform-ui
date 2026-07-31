@@ -3298,6 +3298,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     resolvedProjectBillingAccount,
                 )
                 const wasActivePhaseShorteningRejected = shouldVerifyPersistedSchedule
+                    && !isDesignTrackSelected
                     && hasRejectedActivePhaseShortening(
                         formDataWithProjectBilling.phases,
                         persistedFormData.phases,
@@ -3380,6 +3381,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             currentChallengeId,
             fallbackProjectId,
             hydratePersistedSavedFormData,
+            isDesignTrackSelected,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
