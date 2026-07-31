@@ -52,6 +52,10 @@ import styles from './ChallengeScheduleSection.module.scss'
 
 interface ChallengeScheduleSectionProps {
     disabled?: boolean
+    /**
+     * Reports the current schedule validation message to the parent form.
+     */
+    onValidationErrorChange?: (error?: string) => void
 }
 
 interface ApplyPhasesOptions {
@@ -299,6 +303,11 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     )
     const [calculationError, setCalculationError] = useState<string | undefined>()
     const [phaseEndDateErrors, setPhaseEndDateErrors] = useState<Record<string, string>>({})
+    const scheduleValidationError = useMemo(
+        () => Object.values(phaseEndDateErrors)
+            .find(Boolean),
+        [phaseEndDateErrors],
+    )
     const minScheduleDate = useMemo(() => new Date(), [])
 
     const currentTimezone = useMemo(
@@ -360,6 +369,19 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const lastInternalStartDateValueRef = useRef<number | 'empty' | undefined>()
     const initialPhaseEndDatesRef = useRef<Map<string, string>>(new Map<string, string>())
     const phaseStartOverridesRef = useRef<Map<string, string>>(new Map<string, string>())
+
+    useEffect(() => {
+        props.onValidationErrorChange?.(scheduleValidationError)
+    }, [
+        props.onValidationErrorChange,
+        scheduleValidationError,
+    ])
+
+    useEffect(() => (
+        (): void => {
+            props.onValidationErrorChange?.(undefined)
+        }
+    ), [props.onValidationErrorChange])
 
     const prunePhaseStartOverrides = useCallback((nextPhases: ChallengePhase[]): void => {
         if (!phaseStartOverridesRef.current.size) {

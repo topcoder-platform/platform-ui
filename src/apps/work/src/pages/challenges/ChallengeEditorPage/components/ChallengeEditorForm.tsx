@@ -1870,6 +1870,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
+    const [scheduleValidationError, setScheduleValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [dismissedSavedAt, setDismissedSavedAt] = useState<Date | undefined>()
     const isSavedButtonStateVisible = saveStatus === 'saved'
@@ -2946,8 +2947,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return
         }
 
+        if (
+            scheduleValidationError
+            && saveValidationError === scheduleValidationError
+        ) {
+            return
+        }
+
         setSaveValidationError(undefined)
-    }, [formState.isValid, saveValidationError])
+    }, [
+        formState.isValid,
+        saveValidationError,
+        scheduleValidationError,
+    ])
 
     useEffect(() => {
         if (usesManualReviewers) {
@@ -3543,6 +3555,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             && formState.isDirty
             && formState.isValid
             && !isScorerBlockingChallengeActions
+            && !scheduleValidationError
             && normalizedChallengeStatus !== CHALLENGE_STATUS.NEW,
         formValues: values,
         onSave: async formData => {
@@ -3590,6 +3603,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            if (scheduleValidationError) {
+                setSaveStatus('idle')
+                setSaveValidationError(scheduleValidationError)
+                showErrorToast(scheduleValidationError)
+                return
+            }
+
             if (isSaveAsDraft) {
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
@@ -3627,6 +3647,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
             saveChallenge,
+            scheduleValidationError,
             setError,
         ],
     )
@@ -4076,7 +4097,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <section className={styles.section}>
                             <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
                             <div className={styles.block}>
-                                <ChallengeScheduleSection disabled={isReadOnly} />
+                                <ChallengeScheduleSection
+                                    disabled={isReadOnly}
+                                    onValidationErrorChange={setScheduleValidationError}
+                                />
                             </div>
                         </section>
                     )
