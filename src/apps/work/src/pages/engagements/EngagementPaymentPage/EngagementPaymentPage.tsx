@@ -56,6 +56,7 @@ import {
 import {
     calculateAssignmentRatePerWeek,
     deserializeTentativeAssignmentDate,
+    formatAssignmentDaysLeftInEngagement,
     getAssignmentPaymentCycle,
     getAssignmentStandardHoursPerDay,
     getCountableEngagementAssignments,
@@ -1108,6 +1109,15 @@ export const EngagementPaymentPage: FC = () => {
                                             <div>
                                                 <span className={styles.label}>Source</span>
                                                 <span className={styles.value}>{formatAssignmentSource(assignment.source)}</span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Days Left in Engagement</span>
+                                                <span className={styles.value}>
+                                                    {formatAssignmentDaysLeftInEngagement(
+                                                        assignment.startDate,
+                                                        assignment.durationMonths,
+                                                    )}
+                                                </span>
                                             </div>
                                         </div>
 
