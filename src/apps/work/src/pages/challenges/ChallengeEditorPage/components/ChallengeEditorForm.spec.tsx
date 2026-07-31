@@ -3385,6 +3385,75 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Challenge saved successfully')
     })
 
+    it('accepts Design phase shortening when the persisted duration rounds up', async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [{
+                duration: 11520,
+                isOpen: true,
+                name: 'Registration',
+                phaseId: 'registration-phase-id',
+                scheduledEndDate: '2026-04-19T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:41.000Z',
+            }],
+            startDate: '2026-04-11T04:58:41.000Z',
+            status: 'ACTIVE',
+            trackId: 'design-track',
+        } as Challenge
+        const persistedShortenedSchedule = {
+            ...activeChallenge,
+            name: 'Active Design challenge updated',
+            phases: [{
+                ...activeChallenge.phases?.[0],
+                duration: 10081,
+                scheduledEndDate: '2026-04-18T04:58:51.000Z',
+            }],
+        } as Challenge
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue(persistedShortenedSchedule)
+        mockedFetchChallenge.mockResolvedValue(persistedShortenedSchedule)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedFetchChallenge)
+                .toHaveBeenCalledWith('12345')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge saved successfully')
+    })
+
     it('accepts an immediate phase window shifted later with its duration unchanged', async () => {
         const user = userEvent.setup()
         const activeChallenge = {
