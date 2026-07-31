@@ -284,6 +284,7 @@ interface PersistCreatedChallengeCopilotResult {
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const SAVED_BUTTON_STATE_DURATION_MS = 2000
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
@@ -1859,6 +1860,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
+    const [dismissedSavedAt, setDismissedSavedAt] = useState<Date | undefined>()
+    const isSavedButtonStateVisible = saveStatus === 'saved'
+        && !!lastSaved
+        && dismissedSavedAt !== lastSaved
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
@@ -3543,6 +3548,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [autosaveResult.lastSaved, autosaveResult.saveStatus])
 
+    useEffect(() => {
+        if (!isSavedButtonStateVisible || !lastSaved) {
+            return undefined
+        }
+
+        const savedAt = lastSaved
+        const timeoutId = window.setTimeout(() => {
+            setDismissedSavedAt(savedAt)
+        }, SAVED_BUTTON_STATE_DURATION_MS)
+
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [isSavedButtonStateVisible, lastSaved])
+
     const onSubmit = useCallback(
         async (formData: ChallengeEditorFormData): Promise<void> => {
             const {
@@ -3620,6 +3640,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const isSaveButtonSaving = isSaving || saveStatus === 'saving'
+    const displayedSubmitButtonLabel = isSaveButtonSaving
+        ? 'Saving...'
+        : isSavedButtonStateVisible
+            ? 'Saved'
+            : submitButtonLabel
     const displayedBillingAccountId = useMemo(
         (): string => {
             const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
@@ -3757,41 +3783,41 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const footerSection = !isReadOnly
         ? (
             <div className={styles.footer}>
-                <div className={styles.statusArea}>
-                    {statusText
-                        ? <span className={styles.statusText}>{statusText}</span>
-                        : undefined}
-                    <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                    {saveValidationError
-                        ? <span className={styles.errorText}>{saveValidationError}</span>
-                        : undefined}
-                    {renderSaveError(saveError, linkedSaveErrorTerms)}
-                    {isScorerBlockingChallengeActions
-                        ? (
-                            <span className={styles.warningText}>
-                                The scorer configuration must be saved and valid before the
-                                {' '}
-                                challenge can be saved or launched.
-                            </span>
-                        )
-                        : undefined}
-                </div>
-
+                <Button
+                    label='Cancel'
+                    onClick={handleCancelClick}
+                    secondary
+                    size='lg'
+                    type='button'
+                />
                 <div className={styles.actions}>
-                    <Button
-                        label='Cancel'
-                        onClick={handleCancelClick}
-                        secondary
-                        size='lg'
-                        type='button'
-                    />
+                    <div className={styles.statusArea}>
+                        {saveStatus === 'error'
+                            ? <span className={styles.statusText}>{getStatusText('error')}</span>
+                            : undefined}
+                        <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                        {saveValidationError
+                            ? <span className={styles.errorText}>{saveValidationError}</span>
+                            : undefined}
+                        {renderSaveError(saveError, linkedSaveErrorTerms)}
+                        {isScorerBlockingChallengeActions
+                            ? (
+                                <span className={styles.warningText}>
+                                    The scorer configuration must be saved and valid before the
+                                    {' '}
+                                    challenge can be saved or launched.
+                                </span>
+                            )
+                            : undefined}
+                    </div>
                     <Button
                         disabled={
-                            (!formState.isDirty || isSaving)
+                            isSaveButtonSaving
+                            || isSavedButtonStateVisible
                             || isScorerBlockingChallengeActions
                             || isManualReviewerConfigurationMissing
                         }
-                        label={submitButtonLabel}
+                        label={displayedSubmitButtonLabel}
                         secondary
                         size='lg'
                         type='submit'

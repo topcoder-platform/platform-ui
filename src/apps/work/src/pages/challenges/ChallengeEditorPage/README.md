@@ -54,7 +54,10 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Autosave keeps the current editor values in place after patch responses so in-flight typing is
   not replaced by challenge-api normalized content.
 - Status values: `idle`, `saving`, `saved`, `error`.
-- Last save time is shown in the footer.
+- The footer keeps Cancel on the left and groups autosave status plus the exact last-save time beside
+  the manual Save action.
+- Manual Save reports `Saving...`, then `Saved` for two seconds after a successful save, before
+  becoming available again even when the form is unchanged.
 
 ## Field Components
 
