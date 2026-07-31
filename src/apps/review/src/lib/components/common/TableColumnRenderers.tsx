@@ -213,7 +213,8 @@ export function renderReviewDateCell(submission: SubmissionRow): JSX.Element {
 }
 
 /**
- * Renders the aggregated average score for a submission, honoring visibility rules.
+ * Renders the review score for a submission, using only a terminal final/system
+ * aggregate when Marathon Match aggregate scoring is enabled.
  */
 export function renderReviewScoreCell(
     submission: SubmissionRow,
@@ -236,10 +237,10 @@ export function renderReviewScoreCell(
     }
 
     if (useAggregateScore) {
-        const aggregateScoreDisplay = formatScoreDisplay(submission.aggregateScore)
+        const finalAggregateScoreDisplay = formatScoreDisplay(submission.finalAggregateScore)
 
-        return aggregateScoreDisplay ? (
-            <span>{aggregateScoreDisplay}</span>
+        return finalAggregateScoreDisplay ? (
+            <span>{finalAggregateScoreDisplay}</span>
         ) : (
             <span className={styles.notReviewed}>
                 --
@@ -526,7 +527,8 @@ function createReopenActionButtons(
 }
 
 /**
- * Renders an individual review score, linking to the review detail when allowed.
+ * Renders an individual review score, or a terminal final/system aggregate for
+ * Marathon Match submissions, linking to review detail when allowed.
  */
 export function renderScoreCell(
     submission: SubmissionRow,
@@ -559,12 +561,12 @@ export function renderScoreCell(
     if (useAggregateScore) {
         const isFirstSubmissionRow = !('isFirstReviewerRow' in submission)
             || submission.isFirstReviewerRow !== false
-        const aggregateScoreDisplay = isFirstSubmissionRow
-            ? formatScoreDisplay(submission.aggregateScore)
+        const finalAggregateScoreDisplay = isFirstSubmissionRow
+            ? formatScoreDisplay(submission.finalAggregateScore)
             : undefined
 
-        return aggregateScoreDisplay ? (
-            <span>{aggregateScoreDisplay}</span>
+        return finalAggregateScoreDisplay ? (
+            <span>{finalAggregateScoreDisplay}</span>
         ) : (
             <span className={styles.notReviewed}>
                 --
