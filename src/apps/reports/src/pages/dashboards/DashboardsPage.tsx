@@ -50,7 +50,7 @@ function getDashboardErrorMessage(error: unknown): string {
 }
 
 /**
- * Reports dashboard landing page with the latest six months of all three widgets.
+ * Reports dashboard landing page with the latest six months of all widgets.
  *
  * The page supports an explicit refresh and a consolidated CSV export for the
  * same UTC range shown by the cards.

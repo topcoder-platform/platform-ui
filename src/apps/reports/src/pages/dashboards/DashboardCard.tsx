@@ -47,8 +47,7 @@ export const DashboardCard: FC<DashboardCardProps> = props => {
             <div className={styles.cardChart}>
                 <DashboardChart
                     compact
-                    dashboard={props.dashboard}
-                    months={props.response.months}
+                    response={props.response}
                 />
             </div>
 

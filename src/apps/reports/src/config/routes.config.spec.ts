@@ -35,6 +35,8 @@ describe('Reports route configuration', () => {
         expect(dashboardRouteSlugs)
             .toEqual({
                 challengeParticipation: 'challenge-participation',
+                memberPaymentByCustomer: 'member-payment-by-customer',
+                memberPaymentByMonth: 'member-payment-by-month',
                 membersPaid: 'members-paid',
                 newSignups: 'new-signups',
             })

@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, unicorn/no-null */
 import '@testing-library/jest-dom'
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -221,5 +222,54 @@ describe('MarathonMatchScorerSection', () => {
                     }),
                 )
         })
+    })
+
+    it('opens compilation errors from a disabled view-mode fieldset', async () => {
+        const failedTester: MarathonMatchTester = {
+            ...tester,
+            compilationError: 'ExampleScorer.java:1: compilation failed',
+            compilationStatus: 'FAILED',
+        }
+        const savedConfig = buildSavedConfig(CHALLENGE_ID, {
+            compileTimeout: defaults.compileTimeout,
+            name: 'Marathon Match Scorer',
+            reviewScorecardId: defaults.reviewScorecardId,
+            taskDefinitionName: defaults.taskDefinitionName,
+            taskDefinitionVersion: defaults.taskDefinitionVersion,
+            testerId: failedTester.id,
+            testTimeout: defaults.testTimeout,
+        })
+
+        mockFetchMarathonMatchConfig.mockResolvedValue(savedConfig)
+        mockFetchTester.mockResolvedValue(failedTester)
+
+        render(
+            <fieldset disabled>
+                <MarathonMatchScorerSection
+                    challengeId={CHALLENGE_ID}
+                    onScorerConfigChange={jest.fn()}
+                    phases={phases}
+                />
+            </fieldset>,
+        )
+
+        const compilationErrorsControl = await screen.findByRole('button', {
+            name: 'View compilation errors',
+        })
+
+        expect(compilationErrorsControl)
+            .toBeEnabled()
+        fireEvent.click(compilationErrorsControl)
+
+        const compilationErrorsDialog = screen.getByRole('dialog')
+        const compilationErrorsHeading = within(compilationErrorsDialog)
+            .getByRole('heading', {
+                name: 'Compilation Errors',
+            })
+
+        expect(compilationErrorsHeading)
+            .toBeInTheDocument()
+        expect(compilationErrorsDialog)
+            .toHaveTextContent('ExampleScorer.java:1: compilation failed')
     })
 })

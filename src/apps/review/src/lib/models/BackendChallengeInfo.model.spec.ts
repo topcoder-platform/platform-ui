@@ -11,7 +11,9 @@ jest.mock('~/libs/core', () => ({
 
 const buildChallengeInfo = (
     winners: BackendChallengeInfo['winners'],
+    checkpointWinners?: BackendChallengeInfo['checkpointWinners'],
 ): BackendChallengeInfo => ({
+    checkpointWinners,
     created: '2026-01-01T00:00:00.000Z',
     createdBy: 'tester',
     currentPhaseNames: [],
@@ -141,5 +143,54 @@ describe('convertBackendChallengeInfo winners mapping', () => {
 
         expect(result?.winners)
             .toEqual([])
+        expect(result?.checkpointWinners)
+            .toEqual([
+                {
+                    handle: 'canonicalCheckpointHandle',
+                    placement: 1,
+                    type: 'CHECKPOINT',
+                    userId: 8888,
+                },
+                {
+                    handle: 'checkpointHandle',
+                    placement: 1,
+                    type: 'Checkpoint Submission',
+                    userId: 9999,
+                },
+            ])
+    })
+
+    it('preserves checkpoint winners separately from final placements', () => {
+        const result = convertBackendChallengeInfo(buildChallengeInfo(
+            [{
+                handle: 'placementWinner',
+                placement: 1,
+                userId: 1234,
+            }],
+            [{
+                handle: 'checkpointWinner',
+                placement: 1,
+                userId: 5678,
+            }],
+        ))
+
+        expect(result?.winners)
+            .toEqual([
+                {
+                    handle: 'placementWinner',
+                    maxRating: undefined,
+                    placement: 1,
+                    type: undefined,
+                    userId: 1234,
+                },
+            ])
+        expect(result?.checkpointWinners)
+            .toEqual([
+                {
+                    handle: 'checkpointWinner',
+                    placement: 1,
+                    userId: 5678,
+                },
+            ])
     })
 })

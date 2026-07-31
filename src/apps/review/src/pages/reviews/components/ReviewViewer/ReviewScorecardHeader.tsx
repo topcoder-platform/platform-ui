@@ -9,6 +9,7 @@ import { AiWorkflow, UseReviewEditAccessResult } from '~/apps/review/src/lib/hoo
 import styles from './ReviewScorecardHeader.module.scss'
 
 interface Props {
+    isSubmitterView?: boolean
     reviewInfo?: ReviewInfo
     scorecardInfo?: ScorecardInfo
     workflow?: AiWorkflow
@@ -35,9 +36,17 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
     const isScreeningPhase = props.reviewPhaseType === 'screening'
         || props.reviewPhaseType === 'checkpoint screening'
-    const scorecardTitle = isScreeningPhase
-        ? 'Complete Screening Scorecard'
-        : 'Edit Review Scorecard'
+    const isPendingReview = (props.reviewInfo?.status ?? '')
+        .toString()
+        .trim()
+        .toUpperCase() === 'PENDING'
+    const scorecardTitle = props.isSubmitterView
+        ? 'Scorecard Details'
+        : isScreeningPhase
+            ? 'Complete Screening Scorecard'
+            : isPendingReview
+                ? 'Fill Scorecard'
+                : 'Edit Review Scorecard'
     const reviewerLabel = isScreeningPhase ? 'Screener:' : 'Reviewer:'
 
     return (
@@ -50,7 +59,9 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                         </div>
                     </div>
                     <div className={styles.details}>
-                        <h2 className={styles.title}>{scorecardTitle}</h2>
+                        <h2 className={styles.title}>
+                            {scorecardTitle}
+                        </h2>
                         <div className={styles.infoSection}>
                             {reviewerHandle && (
                                 <div className={styles.infoRow}>

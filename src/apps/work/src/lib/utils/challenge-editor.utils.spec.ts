@@ -1,4 +1,5 @@
 import {
+    formatLastSaved,
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from './challenge-editor.utils'
@@ -22,6 +23,24 @@ jest.mock('~/config', () => ({
         },
     }),
 }), { virtual: true })
+
+describe('formatLastSaved', () => {
+    it('reports when a challenge has not been saved', () => {
+        expect(formatLastSaved())
+            .toBe('Not saved yet')
+    })
+
+    it('shows the exact localized time immediately after a save', () => {
+        const timestamp = new Date()
+        const localizedTime = timestamp.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+        })
+
+        expect(formatLastSaved(timestamp))
+            .toBe(`Last saved at ${localizedTime}`)
+    })
+})
 
 describe('challenge-editor utils funChallenge mapping', () => {
     it('defaults funChallenge to false in form data', () => {

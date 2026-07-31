@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -24,7 +25,12 @@ import CopilotField from './CopilotField'
 
 jest.mock('../../../../../lib/components/form', () => ({
     FormSelectField: (props: {
+        disabled?: boolean
         name: string
+        options?: Array<{
+            label: string
+            value: string
+        }>
     }) => {
         const {
             useController,
@@ -37,11 +43,22 @@ jest.mock('../../../../../lib/components/form', () => ({
         })
 
         return (
-            <input
+            <select
                 aria-label='Copilot Field'
-                readOnly
+                disabled={props.disabled}
+                onChange={controller.field.onChange}
                 value={controller.field.value || ''}
-            />
+            >
+                <option value=''>Select copilot</option>
+                {(props.options || []).map(option => (
+                    <option
+                        key={option.value}
+                        value={option.value}
+                    >
+                        {option.label}
+                    </option>
+                ))}
+            </select>
         )
     },
 }))
@@ -51,6 +68,7 @@ jest.mock('../../../../../lib/hooks', () => ({
 jest.mock('../../../../../lib/constants', () => ({
     PROJECT_ROLES: {
         COPILOT: 'copilot',
+        MANAGER: 'manager',
     },
 }))
 jest.mock('../../../../../lib/contexts', () => {
@@ -68,7 +86,19 @@ jest.mock('../../../../../lib/services', () => ({
     searchProfilesByUserIds: jest.fn(),
 }))
 jest.mock('~/libs/ui', () => ({
-    Button: () => undefined,
+    Button: (props: {
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+    }) => (
+        <button
+            disabled={props.disabled}
+            onClick={props.onClick}
+            type='button'
+        >
+            {props.label}
+        </button>
+    ),
 }), {
     virtual: true,
 })
@@ -157,5 +187,35 @@ describe('CopilotField', () => {
             expect(screen.getByLabelText('Copilot Field'))
                 .toHaveValue('profile-copilot')
         })
+    })
+
+    it('allows full access project members to assign themselves as copilot', () => {
+        mockedUseFetchProjectMembers.mockReturnValue({
+            isLoading: false,
+            members: [{
+                handle: 'requester',
+                role: 'manager',
+                userId: 40158995,
+            }],
+        })
+
+        render(<TestHarness />)
+
+        expect(screen.getByRole('option', {
+            name: 'requester',
+        }))
+            .toBeInTheDocument()
+
+        const assignYourselfButton = screen.getByRole('button', {
+            name: 'Assign yourself',
+        })
+
+        expect(assignYourselfButton)
+            .toBeEnabled()
+
+        fireEvent.click(assignYourselfButton)
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('requester')
     })
 })

@@ -27,6 +27,8 @@ export const talentPageRouteId = 'talent'
 
 export const dashboardRouteSlugs = {
     challengeParticipation: 'challenge-participation',
+    memberPaymentByCustomer: 'member-payment-by-customer',
+    memberPaymentByMonth: 'member-payment-by-month',
     membersPaid: 'members-paid',
     newSignups: 'new-signups',
 } as const

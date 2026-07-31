@@ -468,6 +468,41 @@ export function formatCompactInteger(value: number): string {
 }
 
 /**
+ * Formats a dashboard dollar value using compact English notation.
+ *
+ * @param value Numeric dollar value to round and abbreviate.
+ * @returns A compact currency label such as `$18.2K` or `$2M`.
+ * @throws RangeError when the value is NaN or infinite.
+ *
+ * Payment dashboard chart axes use this formatter while count dashboards retain
+ * their existing unit-free labels.
+ */
+export function formatCompactCurrency(value: number): string {
+    return `$${formatCompactInteger(requireFiniteNumber(value, 'Dashboard currency'))}`
+}
+
+/**
+ * Formats a dashboard dollar value as a rounded US currency amount.
+ *
+ * @param value Numeric dollar value to format.
+ * @returns A currency label such as `$18,214`.
+ * @throws RangeError when the value is NaN or infinite.
+ *
+ * Payment dashboard accessible tables use full values instead of compact axis
+ * notation so assistive-technology users receive the underlying amount.
+ */
+export function formatDashboardCurrency(value: number): string {
+    const roundedValue = Math.round(requireFiniteNumber(value, 'Dashboard currency'))
+
+    return roundedValue.toLocaleString('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 0,
+        minimumFractionDigits: 0,
+        style: 'currency',
+    })
+}
+
+/**
  * Formats dashboard percentage points with at most one decimal place.
  *
  * @param percentage Percentage value on a zero-to-one-hundred scale, such as

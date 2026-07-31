@@ -99,4 +99,67 @@ describe('ReviewScorecardHeader', () => {
             .not
             .toBeInTheDocument()
     })
+
+    it('prioritizes the screening title for a pending screening review', () => {
+        render(
+            <ReviewScorecardHeader
+                reviewInfo={{
+                    ...reviewInfo,
+                    status: 'PENDING',
+                } as ReviewInfo}
+                reviewPhaseType='screening'
+            />,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Complete Screening Scorecard' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Fill Scorecard' }))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('labels the submitter scorecard as read-only details', () => {
+        render(
+            <ReviewScorecardHeader
+                isSubmitterView
+                reviewInfo={{
+                    status: 'PENDING',
+                } as ReviewInfo}
+            />,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Scorecard Details' }))
+            .toBeTruthy()
+    })
+
+    it('keeps the edit label for non-submitter views without review status', () => {
+        render(<ReviewScorecardHeader />)
+
+        expect(screen.getByRole('heading', { name: 'Edit Review Scorecard' }))
+            .toBeTruthy()
+    })
+
+    it('distinguishes a pending first fill from an in-progress reopened review', () => {
+        const rendered = render(
+            <ReviewScorecardHeader
+                reviewInfo={{
+                    status: 'PENDING',
+                } as ReviewInfo}
+            />,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Fill Scorecard' }))
+            .toBeTruthy()
+
+        rendered.rerender(
+            <ReviewScorecardHeader
+                reviewInfo={{
+                    status: 'IN_PROGRESS',
+                } as ReviewInfo}
+            />,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Edit Review Scorecard' }))
+            .toBeTruthy()
+    })
 })

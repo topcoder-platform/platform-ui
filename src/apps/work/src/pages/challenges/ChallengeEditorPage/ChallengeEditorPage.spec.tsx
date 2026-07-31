@@ -419,7 +419,7 @@ describe('ChallengeEditorPage', () => {
             .toBe('lg')
     })
 
-    it('renders a read-only draft challenge view with cancel, launch, and edit header actions', async () => {
+    it('renders a read-only draft challenge view with header and footer actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -437,22 +437,35 @@ describe('ChallengeEditorPage', () => {
             .toBe('false')
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Cancel' }))
+        const headerActions = within(screen.getByTestId('right-header'))
+        const footerActions = within(screen.getByRole('group', {
+            name: 'Challenge footer actions',
+        }))
+
+        expect(headerActions.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Launch' }))
+        expect(headerActions.getByRole('button', { name: 'Launch' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Edit' }))
+        expect(headerActions.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Cancel' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
         expect(
-            screen.getByRole('button', { name: 'Edit' })
+            footerActions.getByRole('button', { name: 'Edit' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Edit' })
+            footerActions.getByRole('button', { name: 'Edit' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+        expect(footerActions.queryByRole('link'))
+            .toBeNull()
     })
 
     it('disables launch when challenge budget is not approved', async () => {
@@ -482,7 +495,10 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+        expect(screen.getAllByRole('button', { name: 'Launch' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => (button as HTMLButtonElement).disabled))
             .toBe(true)
     })
 
@@ -513,8 +529,11 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
-            .toBe(false)
+        expect(screen.getAllByRole('button', { name: 'Launch' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => !(button as HTMLButtonElement).disabled))
+            .toBe(true)
     })
 
     it('enables launch immediately after approving the budget from the form', async () => {
@@ -546,13 +565,15 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => (button as HTMLButtonElement).disabled))
             .toBe(true)
 
         await user.click(screen.getByRole('button', { name: 'Mock approve budget' }))
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
-            .toBe(false)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => !(button as HTMLButtonElement).disabled))
+            .toBe(true)
     })
 
     it('allows project-scoped challenge views when the user has challenge resource read access', async () => {
@@ -651,8 +672,8 @@ describe('ChallengeEditorPage', () => {
                     .toBeTruthy()
             })
 
-            expect(screen.getByRole('button', { name: 'Edit' }))
-                .toBeTruthy()
+            expect(screen.getAllByRole('button', { name: 'Edit' }))
+                .toHaveLength(2)
         },
     )
 
@@ -742,8 +763,8 @@ describe('ChallengeEditorPage', () => {
                 .getAttribute('data-edit-mode'),
         )
             .toBe('false')
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('does not render a launch action for non-draft challenges in read-only view mode', async () => {
@@ -774,8 +795,8 @@ describe('ChallengeEditorPage', () => {
 
         expect(screen.queryByRole('button', { name: 'Launch' }))
             .toBeNull()
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('shows mark complete in read-only view mode for active task challenges', async () => {
@@ -824,10 +845,10 @@ describe('ChallengeEditorPage', () => {
                     },
                 }),
             )
-        expect(screen.getByRole('button', { name: 'Mark Complete' }))
-            .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Mark Complete' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('hides the read-only edit action for completed challenges', async () => {
