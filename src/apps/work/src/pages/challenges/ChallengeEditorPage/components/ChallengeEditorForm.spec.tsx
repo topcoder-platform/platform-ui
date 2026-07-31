@@ -357,6 +357,7 @@ jest.mock('./ChallengeDescriptionField', () => ({
 jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: function ChallengeScheduleSection(props: {
         disabled?: boolean
+        onValidationErrorChange?: (error?: string) => void
     }) {
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const formContext = reactHookForm.useFormContext()
@@ -412,6 +413,17 @@ jest.mock('./ChallengeScheduleSection', () => ({
                     type='button'
                 >
                     Mock Clean Form
+                </button>
+                <button
+                    data-testid='mock-schedule-validation-error'
+                    onClick={function handleScheduleValidationError() {
+                        props.onValidationErrorChange?.(
+                            'Active phase end date cannot be shortened for this track.',
+                        )
+                    }}
+                    type='button'
+                >
+                    Mock Schedule Validation Error
                 </button>
             </>
         )
@@ -3323,6 +3335,89 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
         })
+    })
+
+    it('blocks save and autosave when active schedule shortening validation is rejected', async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [{
+                duration: 432000,
+                isOpen: true,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-16T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+            startDate: '2026-04-11T04:58:51.000Z',
+            status: 'ACTIVE',
+        } as Challenge
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'track-id',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            }],
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+
+        await waitFor(() => {
+            const autosaveParams = mockedUseAutosave.mock
+                .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                    enabled: boolean
+                }
+
+            expect(autosaveParams.enabled)
+                .toBe(true)
+        })
+
+        await user.click(screen.getByTestId('mock-schedule-validation-error'))
+
+        await waitFor(() => {
+            const autosaveParams = mockedUseAutosave.mock
+                .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                    enabled: boolean
+                }
+
+            expect(autosaveParams.enabled)
+                .toBe(false)
+        })
+
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedShowErrorToast)
+                .toHaveBeenCalledWith(
+                    'Active phase end date cannot be shortened for this track.',
+                )
+        })
+        expect(screen.getByText('Active phase end date cannot be shortened for this track.'))
+            .toBeInTheDocument()
+        expect(mockedPatchChallenge)
+            .not
+            .toHaveBeenCalled()
+        expect(mockedShowSuccessToast)
+            .not
+            .toHaveBeenCalledWith('Challenge saved successfully')
+        expect(screen.getByTestId('location-display'))
+            .toHaveTextContent('/projects/100578/challenges/12345/edit')
     })
 
     it(activePhaseShorteningRejectionTestName, async () => {
