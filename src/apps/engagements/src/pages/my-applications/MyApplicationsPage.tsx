@@ -18,7 +18,11 @@ import styles from './MyApplicationsPage.module.scss'
 
 type StatusFilterValue = ApplicationStatus | 'active' | 'past'
 
-const ACTIVE_STATUSES = [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW]
+const ACTIVE_STATUSES = [
+    ApplicationStatus.SUBMITTED,
+    ApplicationStatus.UNDER_REVIEW,
+    ApplicationStatus.SHORTLISTED,
+]
 const PAST_STATUSES = [ApplicationStatus.SELECTED, ApplicationStatus.REJECTED]
 
 const PER_PAGE = APPLICATIONS_PER_PAGE
@@ -44,6 +48,7 @@ const MyApplicationsPage: FC = () => {
             { label: 'All Active', value: 'active' },
             { label: 'Submitted', value: ApplicationStatus.SUBMITTED },
             { label: 'Under Review', value: ApplicationStatus.UNDER_REVIEW },
+            { label: 'Shortlisted', value: ApplicationStatus.SHORTLISTED },
             { label: 'All Past', value: 'past' },
             { label: 'Selected', value: ApplicationStatus.SELECTED },
             { label: 'Rejected', value: ApplicationStatus.REJECTED },

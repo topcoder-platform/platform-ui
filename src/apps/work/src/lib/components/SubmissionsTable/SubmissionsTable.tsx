@@ -384,8 +384,19 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const emptyScoreValue = props.showMarathonMatchTestProgress
                             ? '-'
                             : 'N/A'
-                        const initialScore = formatScore(initialScoreValue, emptyScoreValue)
-                        const finalScore = formatScore(finalScoreValue, emptyScoreValue)
+                        const isInitialScoreInProgress = testProgress?.status === 'IN PROGRESS'
+                            && (
+                                testProgress.process === 'example'
+                                || testProgress.process === 'provisional'
+                            )
+                        const isFinalScoreInProgress = testProgress?.status === 'IN PROGRESS'
+                            && testProgress.process === 'system'
+                        const initialScore = isInitialScoreInProgress
+                            ? 'N/A'
+                            : formatScore(initialScoreValue, emptyScoreValue)
+                        const finalScore = isFinalScoreInProgress
+                            ? 'N/A'
+                            : formatScore(finalScoreValue, emptyScoreValue)
                         const reviewTab = submission.type === 'CHECKPOINT_SUBMISSION'
                             ? 'checkpoint-submission'
                             : 'submission'

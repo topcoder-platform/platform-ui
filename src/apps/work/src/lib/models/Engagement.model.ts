@@ -16,7 +16,7 @@ export type EngagementStatus =
     | 'Open'
     | 'Pending Assignment'
 
-export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
+export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SHORTLISTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
 export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
 
