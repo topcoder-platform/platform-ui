@@ -370,3 +370,19 @@ export const APPLICATION_STATUSES = [
 ] as const
 
 export const ASSIGNMENT_STATUSES = ['ASSIGNED', 'ACTIVE', 'TERMINATED'] as const
+
+export const ASSIGNMENT_SOURCES = [
+    'DIRECT',
+    'VENDOR',
+    'WIPRO_REFERRAL',
+    'CUSTOMER_REFERRAL',
+    'TOPCODER_COMMUNITY',
+] as const
+
+export const ASSIGNMENT_SOURCE_LABELS: Record<(typeof ASSIGNMENT_SOURCES)[number], string> = {
+    CUSTOMER_REFERRAL: 'Customer Referral',
+    DIRECT: 'Direct',
+    TOPCODER_COMMUNITY: 'Topcoder Community',
+    VENDOR: 'Vendor',
+    WIPRO_REFERRAL: 'Wipro Referral',
+}

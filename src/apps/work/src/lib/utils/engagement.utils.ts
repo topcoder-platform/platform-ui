@@ -448,6 +448,10 @@ function normalizeAssignment(
 
     return {
         agreementRate: agreementRate || '',
+        candidateWiproId: normalizeString(
+            assignment.candidateWiproId
+            ?? assignment.candidate_wipro_id,
+        ) || undefined,
         durationMonths: toOptionalNumberishValue(
             assignment.durationMonths ?? assignment.duration_months,
         ),
@@ -487,6 +491,9 @@ function normalizeAssignment(
             ?? assignment.payment_cycle,
         ) || 'WEEKLY',
         ratePerHour,
+        source: normalizeString(
+            assignment.source,
+        ) || undefined,
         standardHoursPerDay,
         standardHoursPerWeek,
         startDate: toIsoString(
@@ -506,6 +513,10 @@ function normalizeAssignment(
         ) || undefined,
         termsAccepted: assignment.termsAccepted === true
             || assignment.terms_accepted === true,
+        wiproIdEndDate: toIsoString(
+            assignment.wiproIdEndDate
+            ?? assignment.wipro_id_end_date,
+        ) || undefined,
     }
 }
 

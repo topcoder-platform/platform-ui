@@ -2,13 +2,17 @@ import * as yup from 'yup'
 
 interface EngagementEditorSchemaAssignmentDetails {
     agreementRate?: string
+    candidateWiproId?: string
     durationMonths?: number | string
     memberHandle?: string
+    otherRemarks?: string
     paymentCycle?: string
     ratePerHour?: string
+    source?: string
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    wiproIdEndDate?: string
 }
 
 export interface EngagementEditorSchemaData {

@@ -52,6 +52,7 @@ interface BackendPaginatedResponse<T> {
 
 interface AssignmentDetails {
     agreementRate?: string
+    candidateWiproId?: string
     durationMonths?: number | string
     endDate?: string
     memberHandle?: string
@@ -59,9 +60,11 @@ interface AssignmentDetails {
     otherRemarks?: string
     paymentCycle?: string
     ratePerHour?: string
+    source?: string
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    wiproIdEndDate?: string
 }
 
 interface EngagementUpsertData extends Partial<Engagement> {
@@ -318,6 +321,11 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.candidateWiproId) {
+                    entry.candidateWiproId = String(assignment.candidateWiproId)
+                        .trim()
+                }
+
                 if (assignment.durationMonths !== undefined && assignment.durationMonths !== '') {
                     const durationMonths = Number(assignment.durationMonths)
 
@@ -350,6 +358,12 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.source) {
+                    entry.source = String(assignment.source)
+                        .trim()
+                        .toUpperCase()
+                }
+
                 if (assignment.startDate) {
                     entry.startDate = assignment.startDate
                 }
@@ -376,6 +390,10 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                     if (Number.isFinite(standardHoursPerWeek)) {
                         entry.standardHoursPerWeek = String(standardHoursPerWeek)
                     }
+                }
+
+                if (assignment.wiproIdEndDate) {
+                    entry.wiproIdEndDate = assignment.wiproIdEndDate
                 }
 
                 return entry
