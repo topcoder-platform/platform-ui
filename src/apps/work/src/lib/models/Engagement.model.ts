@@ -22,8 +22,16 @@ export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJE
 
 export type PaymentCycle = 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY'
 
+export type AssignmentSource =
+    | 'CUSTOMER_REFERRAL'
+    | 'DIRECT'
+    | 'TOPCODER_COMMUNITY'
+    | 'VENDOR'
+    | 'WIPRO_REFERRAL'
+
 export interface Assignment {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths?: number | string
     endDate: string
     engagementId: number | string
@@ -33,12 +41,14 @@ export interface Assignment {
     otherRemarks: string
     paymentCycle?: PaymentCycle | string
     ratePerHour?: string
+    source?: AssignmentSource | string
     startDate: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
     terminationReason?: string
     termsAccepted: boolean
+    wiproIdEndDate?: string
 }
 
 export interface Application {

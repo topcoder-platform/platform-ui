@@ -200,11 +200,16 @@ export async function updateApplicationStatus(
 
 export interface AssignmentApprovalDetails {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths: number
     otherRemarks?: string
+    paymentCycle?: string
     ratePerHour: string
+    source?: string
     startDate: string
+    standardHoursPerDay?: number
     standardHoursPerWeek: number
+    wiproIdEndDate?: string
 }
 
 export async function approveApplication(

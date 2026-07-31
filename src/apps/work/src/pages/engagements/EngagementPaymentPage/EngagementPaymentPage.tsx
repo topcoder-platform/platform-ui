@@ -42,6 +42,10 @@ import {
     useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
+    ASSIGNMENT_SOURCES,
+    ASSIGNMENT_SOURCE_LABELS,
+} from '../../../lib/constants'
+import {
     Assignment,
 } from '../../../lib/models'
 import {
@@ -152,6 +156,20 @@ function formatPaymentCycle(value: unknown): string {
     return 'Weekly'
 }
 
+function formatAssignmentSource(value: unknown): string {
+    const normalizedSource = String(value || '')
+        .trim()
+        .toUpperCase()
+
+    if ((ASSIGNMENT_SOURCES as readonly string[]).includes(normalizedSource)) {
+        return ASSIGNMENT_SOURCE_LABELS[
+            normalizedSource as (typeof ASSIGNMENT_SOURCES)[number]
+        ]
+    }
+
+    return normalizedSource || '-'
+}
+
 function toWeeklyHours(standardHoursPerDay: unknown): number | undefined {
     const parsedValue = Number(standardHoursPerDay)
 
@@ -253,26 +271,32 @@ function buildAssignmentDetailsPayloadEntry(
     }
 
     appendPayloadStringField(payload, 'agreementRate', assignment.agreementRate)
+    appendPayloadStringField(payload, 'candidateWiproId', assignment.candidateWiproId)
     appendPayloadNumberField(payload, 'durationMonths', assignment.durationMonths)
     appendPayloadStringField(payload, 'otherRemarks', assignment.otherRemarks)
     appendPayloadStringField(payload, 'paymentCycle', assignment.paymentCycle)
     appendPayloadStringField(payload, 'ratePerHour', assignment.ratePerHour)
+    appendPayloadStringField(payload, 'source', assignment.source)
     appendPayloadNumberField(payload, 'standardHoursPerDay', assignment.standardHoursPerDay)
     appendPayloadNumberField(payload, 'standardHoursPerWeek', assignment.standardHoursPerWeek)
     appendPayloadStringField(payload, 'startDate', assignment.startDate)
+    appendPayloadStringField(payload, 'wiproIdEndDate', assignment.wiproIdEndDate)
 
     return payload
 }
 
 interface EditAssignmentPayload {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths?: number
     otherRemarks?: string
     paymentCycle: string
     ratePerHour: string
+    source?: string
     startDate: string
     standardHoursPerDay: number
     standardHoursPerWeek: number
+    wiproIdEndDate?: string
 }
 
 function buildAssignmentDetailsUpdatePayload(
@@ -329,6 +353,9 @@ interface EditAssignmentErrors {
 export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
     props: EditAssignmentModalProps,
 ) => {
+    const [candidateWiproId, setCandidateWiproId] = useState<string>(
+        props.assignment?.candidateWiproId || '',
+    )
     const [durationMonths, setDurationMonths] = useState<string>(
         props.assignment?.durationMonths !== undefined && props.assignment?.durationMonths !== null
             ? String(props.assignment.durationMonths)
@@ -338,8 +365,12 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
     const [otherRemarks, setOtherRemarks] = useState<string>(props.assignment?.otherRemarks || '')
     const [paymentCycle, setPaymentCycle] = useState<string>(getAssignmentPaymentCycle(props.assignment || {}))
     const [ratePerHour, setRatePerHour] = useState<string>(props.assignment?.ratePerHour || '')
+    const [source, setSource] = useState<string>(props.assignment?.source || '')
     const [startDate, setStartDate] = useState<Date | undefined>(
         deserializeTentativeAssignmentDate(props.assignment?.startDate),
+    )
+    const [wiproIdEndDate, setWiproIdEndDate] = useState<Date | undefined>(
+        deserializeTentativeAssignmentDate(props.assignment?.wiproIdEndDate),
     )
     const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>(
         getAssignmentStandardHoursPerDay(props.assignment || {}) !== undefined
@@ -373,6 +404,7 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
     const isSubmitting = props.isSubmitting === true
 
     const resetState = useCallback((): void => {
+        setCandidateWiproId(props.assignment?.candidateWiproId || '')
         setDurationMonths(
             props.assignment?.durationMonths !== undefined && props.assignment?.durationMonths !== null
                 ? String(props.assignment.durationMonths)
@@ -382,12 +414,14 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
         setOtherRemarks(props.assignment?.otherRemarks || '')
         setPaymentCycle(getAssignmentPaymentCycle(props.assignment || {}))
         setRatePerHour(props.assignment?.ratePerHour || '')
+        setSource(props.assignment?.source || '')
         setStartDate(deserializeTentativeAssignmentDate(props.assignment?.startDate))
         setStandardHoursPerDay(
             getAssignmentStandardHoursPerDay(props.assignment || {}) !== undefined
                 ? String(getAssignmentStandardHoursPerDay(props.assignment || {}))
                 : '',
         )
+        setWiproIdEndDate(deserializeTentativeAssignmentDate(props.assignment?.wiproIdEndDate))
     }, [props.assignment])
 
     const handleCancel = useCallback((): void => {
@@ -460,26 +494,34 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
 
         await props.onConfirm({
             agreementRate,
+            candidateWiproId: candidateWiproId.trim() || undefined,
             durationMonths: parsedDurationMonths,
             otherRemarks: otherRemarks.trim() || undefined,
             paymentCycle: normalizedPaymentCycle,
             ratePerHour: parsedRatePerHour.toString(),
+            source: source.trim() || undefined,
             standardHoursPerDay: parsedStandardHoursPerDay,
             standardHoursPerWeek: parsedStandardHoursPerWeek,
             startDate: serializeTentativeAssignmentDate(startDate),
+            wiproIdEndDate: wiproIdEndDate
+                ? serializeTentativeAssignmentDate(wiproIdEndDate)
+                : undefined,
         })
 
         resetState()
     }, [
         agreementRate,
+        candidateWiproId,
         durationMonths,
         otherRemarks,
         paymentCycle,
         props,
         ratePerHour,
         resetState,
+        source,
         standardHoursPerDay,
         startDate,
+        wiproIdEndDate,
     ])
 
     return (
@@ -640,6 +682,49 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
                         rows={4}
                         value={otherRemarks}
                     />
+                </div>
+
+                <div className={styles.modalFieldRow}>
+                    <label className={styles.modalLabel} htmlFor='edit-assignment-candidate-wipro-id'>
+                        Candidate Wipro ID
+                    </label>
+                    <input
+                        id='edit-assignment-candidate-wipro-id'
+                        className={styles.modalInput}
+                        onChange={event => setCandidateWiproId(event.target.value)}
+                        type='text'
+                        value={candidateWiproId}
+                    />
+                </div>
+
+                <div className={styles.modalFieldRow}>
+                    <StartDateTimeInput
+                        label='Wipro ID End Date'
+                        onChange={value => setWiproIdEndDate(value || undefined)}
+                        preventOpenOnFocus
+                        showTimeSelect={false}
+                        showTimezone={false}
+                        value={wiproIdEndDate}
+                    />
+                </div>
+
+                <div className={styles.modalFieldRow}>
+                    <label className={styles.modalLabel} htmlFor='edit-assignment-source'>
+                        Source
+                    </label>
+                    <select
+                        id='edit-assignment-source'
+                        className={styles.modalInput}
+                        onChange={event => setSource(event.target.value)}
+                        value={source}
+                    >
+                        <option value=''>Select source</option>
+                        {ASSIGNMENT_SOURCES.map(sourceOption => (
+                            <option key={sourceOption} value={sourceOption}>
+                                {ASSIGNMENT_SOURCE_LABELS[sourceOption]}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
         </BaseModal>
@@ -1011,6 +1096,18 @@ export const EngagementPaymentPage: FC = () => {
                                             <div>
                                                 <span className={styles.label}>Payment Cycle</span>
                                                 <span className={styles.value}>{formatPaymentCycle(assignment.paymentCycle)}</span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Candidate Wipro ID</span>
+                                                <span className={styles.value}>{assignment.candidateWiproId || '-'}</span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Wipro ID End Date</span>
+                                                <span className={styles.value}>{formatDate(assignment.wiproIdEndDate)}</span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Source</span>
+                                                <span className={styles.value}>{formatAssignmentSource(assignment.source)}</span>
                                             </div>
                                         </div>
 

@@ -121,14 +121,17 @@ interface AssignmentSerializationOptions {
 type EngagementAssignment = Engagement['assignments'][number]
 type SerializedAssignmentDetailsPayload = {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths?: number
     memberHandle: string
     otherRemarks?: string
     paymentCycle?: string
     ratePerHour: string
+    source?: string
     standardHoursPerDay?: number
     standardHoursPerWeek?: number
     startDate: string
+    wiproIdEndDate?: string
 }
 
 /**
@@ -227,6 +230,10 @@ function serializeAssignmentDetails(
                 return {
                     agreementRate: String(detail.agreementRate || '')
                         .trim(),
+                    candidateWiproId: detail.candidateWiproId
+                        ? String(detail.candidateWiproId)
+                            .trim()
+                        : undefined,
                     durationMonths: detail.durationMonths
                         ? Number(detail.durationMonths)
                         : undefined,
@@ -242,6 +249,11 @@ function serializeAssignmentDetails(
                         : 'WEEKLY',
                     ratePerHour: String(detail.ratePerHour || '')
                         .trim(),
+                    source: detail.source
+                        ? String(detail.source)
+                            .trim()
+                            .toUpperCase()
+                        : undefined,
                     standardHoursPerDay: detail.standardHoursPerDay
                         ? Number(detail.standardHoursPerDay)
                         : undefined,
@@ -249,6 +261,7 @@ function serializeAssignmentDetails(
                         ? Number(detail.standardHoursPerWeek)
                         : undefined,
                     startDate: detail.startDate || '',
+                    wiproIdEndDate: detail.wiproIdEndDate || undefined,
                 }
             })
 
@@ -260,6 +273,9 @@ function serializeAssignmentDetails(
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
     return {
         agreementRate: String(assignment.agreementRate || ''),
+        candidateWiproId: assignment.candidateWiproId
+            ? String(assignment.candidateWiproId)
+            : undefined,
         durationMonths: assignment.durationMonths !== undefined && assignment.durationMonths !== null
             ? String(assignment.durationMonths)
             : '',
@@ -273,6 +289,9 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
         ratePerHour: assignment.ratePerHour
             ? String(assignment.ratePerHour)
             : '',
+        source: assignment.source
+            ? String(assignment.source)
+            : undefined,
         standardHoursPerDay:
             assignment.standardHoursPerDay !== undefined && assignment.standardHoursPerDay !== null
                 ? String(assignment.standardHoursPerDay)
@@ -284,6 +303,7 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
                 ? String(assignment.standardHoursPerWeek)
                 : '',
         startDate: assignment.startDate || '',
+        wiproIdEndDate: assignment.wiproIdEndDate || undefined,
     }
 }
 
