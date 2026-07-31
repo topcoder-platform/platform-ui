@@ -361,6 +361,12 @@ export const ENGAGEMENT_WORKLOADS = ['FULL_TIME', 'FRACTIONAL'] as const
 
 export const ANTICIPATED_START_OPTIONS = ['IMMEDIATE', 'FEW_DAYS', 'FEW_WEEKS'] as const
 
-export const APPLICATION_STATUSES = ['SUBMITTED', 'UNDER_REVIEW', 'SELECTED', 'REJECTED'] as const
+export const APPLICATION_STATUSES = [
+    'SUBMITTED',
+    'UNDER_REVIEW',
+    'SHORTLISTED',
+    'SELECTED',
+    'REJECTED',
+] as const
 
 export const ASSIGNMENT_STATUSES = ['ASSIGNED', 'ACTIVE', 'TERMINATED'] as const

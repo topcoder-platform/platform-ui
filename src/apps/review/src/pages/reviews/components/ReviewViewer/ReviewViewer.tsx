@@ -23,6 +23,7 @@ import {
     COPILOT,
     DESIGN,
     MANAGER,
+    SUBMITTER,
 } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
@@ -150,7 +151,7 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
-    const { isEdit }: UseReviewEditAccessResult = useReviewEditAccess({
+    const { isEdit, reviewPhaseType }: UseReviewEditAccessResult = useReviewEditAccess({
         challengeInfo,
         isEditPhase,
         isReviewCompleted,
@@ -267,10 +268,12 @@ const ReviewViewer: FC = () => {
                 {!isSubmitterPhaseLocked && (
                     <>
                         <ReviewScorecardHeader
+                            isSubmitterView={actionChallengeRole === SUBMITTER}
                             reviewInfo={reviewInfo}
                             scorecardInfo={scorecardInfo}
                             workflow={workflow}
                             reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
+                            reviewPhaseType={reviewPhaseType}
                         />
                         <ScorecardViewer
                             actionChallengeRole={actionChallengeRole}
@@ -283,6 +286,7 @@ const ReviewViewer: FC = () => {
                             setIsChanged={setIsChanged}
                             isLoading={isLoading}
                             isManagerEdit={isManagerEdit}
+                            autoOpenManagerComment={isManagerEdit && !respondToAppeals}
                             isSavingReview={isSavingReview}
                             isSavingAppeal={isSavingAppeal}
                             isSavingAppealResponse={isSavingAppealResponse}

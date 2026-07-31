@@ -133,7 +133,11 @@ jest.mock('../../../../lib/utils', () => ({
         && (project?.members || []).some(member => (
             member.userId === userId && member.role === 'manager'
         )),
-    formatLastSaved: () => '',
+    formatLastSaved: (timestamp?: Date) => (
+        timestamp
+            ? 'Last saved at 1:25 PM'
+            : 'Not saved yet'
+    ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
     transformChallengeToFormData: (challenge?: Partial<Challenge>) => ({
@@ -696,10 +700,8 @@ jest.mock('./StockArtsField', () => ({
         return <>Stock Arts Field</>
     },
 }))
-jest.mock('./SubmissionVisibilityField', () => ({
-    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
-}))
 jest.mock('./RegisteredMemberDownloadField', () => ({
+    REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD: 'allowAllRegistrantsToDownloadWinningSubmissions',
     RegisteredMemberDownloadField: () => <>Registered Member Download Field</>,
 }))
 jest.mock('./SubmissionTypeField', () => ({
@@ -1252,26 +1254,39 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
+        const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+        const saveButton = screen.getByRole('button', { name: 'Save Challenge' })
+        const lastSaved = screen.getByText('Not saved yet')
+        const actionGroup = saveButton.parentElement
+
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            cancelButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            cancelButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
         expect(
-            screen.getByRole('button', { name: 'Save Challenge' })
+            saveButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Save Challenge' })
+            saveButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+        expect(saveButton)
+            .toBeEnabled()
+        expect(actionGroup)
+            .toContainElement(lastSaved)
+        expect(actionGroup)
+            .not.toContainElement(cancelButton)
+        expect(cancelButton.parentElement)
+            .toBe(actionGroup?.parentElement)
         expect(
             screen.getByRole('button', { name: 'Launch' })
                 .getAttribute('data-primary'),
@@ -1282,6 +1297,65 @@ describe('ChallengeEditorForm', () => {
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+    })
+
+    it('manually saves an unchanged challenge', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const saveButton = screen.getByRole('button', { name: 'Save Challenge' })
+
+        expect(saveButton)
+            .toBeEnabled()
+
+        await user.click(saveButton)
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    name: validDraftChallenge.name,
+                }))
+        })
+    })
+
+    it('uses the save action for transient autosave feedback before enabling it again', () => {
+        jest.useFakeTimers()
+        mockedUseAutosave.mockReturnValue({
+            lastSaved: new Date('2026-07-29T13:25:00+03:00'),
+            saveStatus: 'saved',
+        })
+
+        try {
+            render(
+                <MemoryRouter>
+                    <ChallengeEditorForm challenge={draftChallenge} />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByText('Last saved at 1:25 PM'))
+                .toBeInTheDocument()
+            expect(screen.getAllByText('Saved'))
+                .toHaveLength(1)
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
+
+            act(() => {
+                jest.advanceTimersByTime(2000)
+            })
+
+            expect(screen.queryByRole('button', { name: 'Saved' }))
+                .toBeNull()
+            expect(screen.getByRole('button', { name: 'Save Challenge' }))
+                .toBeEnabled()
+        } finally {
+            jest.useRealTimers()
+        }
     })
 
     it('renders existing challenges as read-only in view mode', () => {
@@ -1978,7 +2052,7 @@ describe('ChallengeEditorForm', () => {
         expect(submissionSettingsSection)
             .toHaveTextContent('Final Deliverables Field')
         expect(submissionSettingsSection)
-            .toHaveTextContent('Submission Visibility Field')
+            .not.toHaveTextContent('Submission Visibility Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
@@ -3900,6 +3974,10 @@ describe('ChallengeEditorForm', () => {
                         provider: 'vanilla',
                         type: 'CHALLENGE',
                     }],
+                    metadata: [{
+                        name: 'allowAllRegistrantsToDownloadWinningSubmissions',
+                        value: 'true',
+                    }],
                     name: 'Forum Enabled Challenge',
                     projectId: '12345',
                     status: 'NEW',
@@ -3996,8 +4074,8 @@ describe('ChallengeEditorForm', () => {
         await user.click(screen.getByRole('button', { name: 'New' }))
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Save as Draft' }))
-                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
         })
         expect(screen.queryByRole('button', { name: 'New' }))
             .toBeNull()
@@ -4050,8 +4128,8 @@ describe('ChallengeEditorForm', () => {
         await waitFor(() => {
             expect(screen.getByText('Specification'))
                 .toBeInTheDocument()
-            expect(screen.getByRole('button', { name: 'Save as Draft' }))
-                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
             expect(screen.queryByRole('button', { name: 'New' }))
                 .toBeNull()
         })

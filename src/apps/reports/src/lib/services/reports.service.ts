@@ -97,6 +97,36 @@ export interface MembersPaidDashboard extends DashboardRange {
     summary: MembersPaidSummary
 }
 
+export interface MemberPaymentByMonthMonth {
+    challenge: number
+    engagement: number
+    month: string
+    taas: number
+    task: number
+}
+
+export interface MemberPaymentByMonthDashboard extends DashboardRange {
+    dashboard: 'member-payment-by-month'
+    months: MemberPaymentByMonthMonth[]
+}
+
+export interface MemberPaymentCustomerSeries {
+    customerId: string | null
+    key: string
+    label: string
+}
+
+export interface MemberPaymentByCustomerMonth {
+    month: string
+    values: Record<string, number>
+}
+
+export interface MemberPaymentByCustomerDashboard extends DashboardRange {
+    dashboard: 'member-payment-by-customer'
+    months: MemberPaymentByCustomerMonth[]
+    series: MemberPaymentCustomerSeries[]
+}
+
 export interface ChallengeParticipationMonth {
     month: string
     registrants: number
@@ -119,12 +149,16 @@ export interface ChallengeParticipationDashboard extends DashboardRange {
 
 export interface DashboardsResponse {
     challengeParticipation: ChallengeParticipationDashboard
+    memberPaymentByCustomer: MemberPaymentByCustomerDashboard
+    memberPaymentByMonth: MemberPaymentByMonthDashboard
     membersPaid: MembersPaidDashboard
     newSignups: NewSignupsDashboard
 }
 
 export interface DashboardResponseBySlug {
     'challenge-participation': ChallengeParticipationDashboard
+    'member-payment-by-customer': MemberPaymentByCustomerDashboard
+    'member-payment-by-month': MemberPaymentByMonthDashboard
     'members-paid': MembersPaidDashboard
     'new-signups': NewSignupsDashboard
 }
@@ -403,7 +437,7 @@ export const downloadReportAsCsv = (path: string): Promise<Blob> => (
 )
 
 /**
- * Fetches all dashboard cards for the requested six-month UTC range.
+ * Fetches all dashboard cards for the requested UTC range.
  *
  * @param query Optional inclusive start and exclusive end date filters.
  * @returns Aggregate dashboard data used by the Dashboards landing page.

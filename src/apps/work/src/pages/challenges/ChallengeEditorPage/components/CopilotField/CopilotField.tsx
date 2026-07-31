@@ -73,7 +73,14 @@ function normalizeProjectCopilotHandle(member: ProjectMember): string | undefine
         .toLowerCase()
     const handle = normalizeHandle(member.handle)
 
-    if (normalizedRole !== PROJECT_ROLES.COPILOT || !handle) {
+    if (
+        normalizedRole !== PROJECT_ROLES.COPILOT
+        && normalizedRole !== PROJECT_ROLES.MANAGER
+    ) {
+        return undefined
+    }
+
+    if (!handle) {
         return undefined
     }
 

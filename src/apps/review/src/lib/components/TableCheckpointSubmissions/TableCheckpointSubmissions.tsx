@@ -11,7 +11,13 @@ import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
-import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
+import {
+    IconOutline,
+    IconSolid,
+    Table,
+    TableColumn,
+    Tooltip,
+} from '~/libs/ui'
 import { UserRole } from '~/libs/core'
 import { handleError } from '~/apps/admin/src/lib/utils'
 
@@ -109,6 +115,13 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
     const canReopenGlobally = isAdminUser || hasCopilotRole
     const challengeId = challengeInfo?.id
+    const checkpointWinnerMemberIds = useMemo(
+        () => new Set(
+            (challengeInfo?.checkpointWinners ?? [])
+                .map(winner => `${winner.userId}`),
+        ),
+        [challengeInfo?.checkpointWinners],
+    )
 
     const [pendingReopen, setPendingReopen] = useState<{
         reviewId: string
@@ -176,7 +189,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         setIsReopening(true)
 
         try {
-            await updateReview(reviewId, { committed: false, status: 'PENDING' })
+            await updateReview(reviewId, { committed: false, status: 'IN_PROGRESS' })
             toast.success('Scorecard reopened.')
             closeReopenDialog()
             await refreshChallengeReviewData(challengeId)
@@ -597,23 +610,46 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     renderer: (data: Screening) => {
                         const reviewId = data.reviewId
                         const scoreLabel = data.score ?? 'Pending'
-
-                        if (!reviewId) {
-                            return <span>{scoreLabel}</span>
-                        }
+                        const isCheckpointWinner = checkpointWinnerMemberIds.has(`${data.memberId}`)
 
                         return (
-                            <Link
-                                to={`./../reviews/${data.submissionId}?reviewId=${reviewId}`}
-                                className={classNames(
-                                    styles.scoreLink,
-                                    {
-                                        [styles.pendingScore]: !data.score || data.score === 'Pending',
-                                    },
+                            <span className={styles.scoreCell}>
+                                {reviewId ? (
+                                    <Link
+                                        to={`./../reviews/${data.submissionId}?reviewId=${reviewId}`}
+                                        className={classNames(
+                                            styles.scoreLink,
+                                            {
+                                                [styles.pendingScore]: !data.score
+                                                    || data.score === 'Pending',
+                                            },
+                                        )}
+                                    >
+                                        {scoreLabel}
+                                    </Link>
+                                ) : (
+                                    <span>{scoreLabel}</span>
                                 )}
-                            >
-                                {scoreLabel}
-                            </Link>
+                                {isCheckpointWinner && (
+                                    <Tooltip
+                                        content={(
+                                            <span>
+                                                Checkpoint winner. This member is eligible for the checkpoint prize
+                                                associated with this challenge.
+                                            </span>
+                                        )}
+                                        triggerOn='click-hover'
+                                    >
+                                        <button
+                                            type='button'
+                                            className={styles.checkpointWinnerButton}
+                                            aria-label='Checkpoint winner details'
+                                        >
+                                            <IconSolid.StarIcon aria-hidden='true' />
+                                        </button>
+                                    </Tooltip>
+                                )}
+                            </span>
                         )
                     },
                     type: 'element',
@@ -765,6 +801,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             isSubmissionDownloadRestrictedForMember,
             getRestrictionMessageForMember,
             canReopenGlobally,
+            checkpointWinnerMemberIds,
             myResourceIds,
             openReopenDialog,
             isReopening,

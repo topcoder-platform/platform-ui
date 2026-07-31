@@ -1,6 +1,7 @@
 import {
     ChangeEvent,
     FC,
+    KeyboardEvent,
     useCallback,
     useEffect,
     useMemo,
@@ -1006,6 +1007,20 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     }, [])
 
     /**
+     * Opens compilation diagnostics when the link-styled control is activated from the keyboard.
+     * @param event Keyboard event from the compilation errors control.
+     * @returns void
+     */
+    const handleCompilationErrorsKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>): void => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return
+        }
+
+        event.preventDefault()
+        handleOpenCompilationErrorsModal()
+    }, [handleOpenCompilationErrorsModal])
+
+    /**
      * Closes the failed scorer compilation diagnostics modal.
      * @returns void
      */
@@ -1793,13 +1808,16 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     <div className={styles.error}>
                         <div className={styles.errorActionRow}>
                             <strong>Scorer compilation failed.</strong>
-                            <button
+                            <span
+                                aria-haspopup='dialog'
                                 className={styles.linkButton}
                                 onClick={handleOpenCompilationErrorsModal}
-                                type='button'
+                                onKeyDown={handleCompilationErrorsKeyDown}
+                                role='button'
+                                tabIndex={0}
                             >
                                 View compilation errors
-                            </button>
+                            </span>
                         </div>
                     </div>
                 )
