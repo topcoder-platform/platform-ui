@@ -526,24 +526,26 @@ export function formatPercentage(percentage: number): string {
  * Pass `all` for the landing-page aggregate export.
  * @param range Dashboard request range with an exclusive `endDate`.
  * @returns A normalized filename such as
- * `new-signups-2026-02-01-to-2026-08-01.csv`. The `all` slug produces a
+ * `new-signups-2026-02-01-to-2026-07-31.csv`. The `all` slug produces a
  * `reports-dashboards-...csv` filename.
  * @throws RangeError when the slug or range dates are invalid, or the range is empty.
  *
- * Detail dashboard downloads use the filename alongside the same date range
- * supplied to the CSV endpoint.
+ * Detail dashboard downloads keep the API's half-open request range while the
+ * filename presents both boundaries as inclusive calendar dates.
  */
 export function buildDashboardCsvFileName(
     dashboardSlug: string,
     range: DashboardRange,
 ): string {
     formatDashboardRangeLabel(range)
+    const inclusiveEndDate = parseDashboardIsoDate(range.endDate)
+    inclusiveEndDate.setUTCDate(inclusiveEndDate.getUTCDate() - 1)
 
     return [
         normalizeDashboardSlug(dashboardSlug),
         range.startDate,
         'to',
-        range.endDate,
+        toIsoDate(inclusiveEndDate),
     ].join('-')
         .concat('.csv')
 }

@@ -217,7 +217,7 @@ describe('Dashboard detail page', () => {
         expect(mockedDownloadBlobFile)
             .toHaveBeenCalledWith(
                 expect.any(Blob),
-                'new-signups-2025-08-01-to-2026-02-01.csv',
+                'new-signups-2025-08-01-to-2026-01-31.csv',
             )
     })
 
@@ -275,7 +275,7 @@ describe('Dashboard detail page', () => {
         expect(mockedDownloadBlobFile)
             .toHaveBeenCalledWith(
                 expect.any(Blob),
-                'new-signups-2025-07-01-to-2026-07-01.csv',
+                'new-signups-2025-07-01-to-2026-06-30.csv',
             )
 
         fireEvent.click(screen.getByRole('button', { name: 'Previous Period' }))
@@ -380,7 +380,7 @@ describe('Dashboard detail page', () => {
         expect(mockedDownloadBlobFile)
             .toHaveBeenCalledWith(
                 expect.any(Blob),
-                'member-payment-by-customer-2026-02-01-to-2026-08-01.csv',
+                'member-payment-by-customer-2026-02-01-to-2026-07-31.csv',
             )
     })
 
