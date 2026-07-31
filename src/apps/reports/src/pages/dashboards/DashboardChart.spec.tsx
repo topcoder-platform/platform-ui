@@ -5,6 +5,7 @@ import {
     screen,
     within,
 } from '@testing-library/react'
+import Highcharts from 'highcharts'
 
 import {
     MemberPaymentByCustomerDashboard,
@@ -100,6 +101,13 @@ const countTooltipValue = `<b>${pointValueToken}</b>`
 const currencyTooltipValue = `<b>$${pointValueToken}</b>`
 
 describe('DashboardChart', () => {
+    it('formats tooltip thousands with commas', () => {
+        expect(Highcharts.getOptions().lang?.thousandsSep)
+            .toBe(',')
+        expect(Highcharts.numberFormat(9_189, 0))
+            .toBe('9,189')
+    })
+
     it('renders API-ordered customer series as currency data', () => {
         render(<DashboardChart response={customerPaymentResponse} />)
 

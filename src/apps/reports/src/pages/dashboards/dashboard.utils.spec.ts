@@ -201,7 +201,7 @@ describe('dashboard labels and metric formatting', () => {
 })
 
 describe('dashboard CSV filenames', () => {
-    it('combines a normalized slug with the exact API request range', () => {
+    it('shows the inclusive final date instead of the exclusive API boundary', () => {
         expect(buildDashboardCsvFileName(
             'Challenge Registrants / Submitters',
             {
@@ -209,7 +209,7 @@ describe('dashboard CSV filenames', () => {
                 startDate: '2026-02-01',
             },
         ))
-            .toBe('challenge-registrants-submitters-2026-02-01-to-2026-08-01.csv')
+            .toBe('challenge-registrants-submitters-2026-02-01-to-2026-07-31.csv')
     })
 
     it('uses the reports dashboard stem for the landing-page aggregate', () => {
@@ -220,7 +220,7 @@ describe('dashboard CSV filenames', () => {
                 startDate: '2026-02-01',
             },
         ))
-            .toBe('reports-dashboards-2026-02-01-to-2026-08-01.csv')
+            .toBe('reports-dashboards-2026-02-01-to-2026-07-31.csv')
     })
 
     it('rejects empty slugs and invalid ranges', () => {

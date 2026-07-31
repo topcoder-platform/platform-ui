@@ -74,6 +74,7 @@
         font-size: 16px;
         font-weight: 700;
         line-height: 22px;
+        text-transform: none;
     }
 
     p {
@@ -173,6 +174,10 @@
 
 .detailHeading {
     min-width: 260px;
+
+    h1 {
+        text-transform: none;
+    }
 }
 
 .rangePanel {

@@ -249,7 +249,7 @@ describe('Dashboards landing page', () => {
         expect(mockedDownloadBlobFile)
             .toHaveBeenCalledWith(
                 expect.any(Blob),
-                'reports-dashboards-2026-02-01-to-2026-08-01.csv',
+                'reports-dashboards-2026-02-01-to-2026-07-31.csv',
             )
     })
 })

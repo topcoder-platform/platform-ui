@@ -16,6 +16,12 @@ import {
 } from './dashboard.utils'
 import styles from './Dashboards.module.scss'
 
+Highcharts.setOptions({
+    lang: {
+        thousandsSep: ',',
+    },
+})
+
 type DashboardChartProps = {
     compact?: boolean
     response: DashboardResponse
