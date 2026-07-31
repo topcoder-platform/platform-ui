@@ -22,6 +22,27 @@ jest.mock('~/apps/review/src/lib/components/ProgressBar', () => ({
 }), { virtual: true })
 
 describe('ReviewScorecardHeader', () => {
+    it('labels the submitter scorecard as read-only details', () => {
+        render(
+            <ReviewScorecardHeader
+                isSubmitterView
+                reviewInfo={{
+                    status: 'PENDING',
+                } as ReviewInfo}
+            />,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Scorecard Details' }))
+            .toBeTruthy()
+    })
+
+    it('keeps the edit label for non-submitter views without review status', () => {
+        render(<ReviewScorecardHeader />)
+
+        expect(screen.getByRole('heading', { name: 'Edit Review Scorecard' }))
+            .toBeTruthy()
+    })
+
     it('distinguishes a pending first fill from an in-progress reopened review', () => {
         const rendered = render(
             <ReviewScorecardHeader

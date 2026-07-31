@@ -18,7 +18,7 @@ import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
 import { rootRoute } from '~/apps/review/src/config/routes.config'
 
-import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
+import { ADMIN, COPILOT, MANAGER, SUBMITTER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
 import { ReviewScorecardHeader } from './ReviewScorecardHeader'
@@ -253,6 +253,7 @@ const ReviewViewer: FC = () => {
                 {!isSubmitterPhaseLocked && (
                     <>
                         <ReviewScorecardHeader
+                            isSubmitterView={actionChallengeRole === SUBMITTER}
                             reviewInfo={reviewInfo}
                             scorecardInfo={scorecardInfo}
                             workflow={workflow}

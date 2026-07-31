@@ -9,6 +9,7 @@ import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 import styles from './ReviewScorecardHeader.module.scss'
 
 interface Props {
+    isSubmitterView?: boolean
     reviewInfo?: ReviewInfo
     scorecardInfo?: ScorecardInfo
     workflow?: AiWorkflow
@@ -36,6 +37,11 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
         .toString()
         .trim()
         .toUpperCase() === 'PENDING'
+    const scorecardTitle = props.isSubmitterView
+        ? 'Scorecard Details'
+        : isPendingReview
+            ? 'Fill Scorecard'
+            : 'Edit Review Scorecard'
 
     return (
         <div className={styles.wrap}>
@@ -48,7 +54,7 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                     </div>
                     <div className={styles.details}>
                         <h2 className={styles.title}>
-                            {isPendingReview ? 'Fill Scorecard' : 'Edit Review Scorecard'}
+                            {scorecardTitle}
                         </h2>
                         <div className={styles.infoSection}>
                             {reviewerHandle && (
