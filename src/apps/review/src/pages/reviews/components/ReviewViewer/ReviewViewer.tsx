@@ -18,7 +18,13 @@ import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
 import { rootRoute } from '~/apps/review/src/config/routes.config'
 
-import { ADMIN, COPILOT, MANAGER, SUBMITTER } from '../../../../config/index.config'
+import {
+    ADMIN,
+    COPILOT,
+    DESIGN,
+    MANAGER,
+    SUBMITTER,
+} from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
 import { ReviewScorecardHeader } from './ReviewScorecardHeader'
@@ -37,6 +43,7 @@ const ReviewViewer: FC = () => {
 
     const {
         actionChallengeRole,
+        hasReviewerRole,
         myChallengeResources,
         myChallengeRoles,
     }: useRoleProps = useRole()
@@ -80,6 +87,14 @@ const ReviewViewer: FC = () => {
     const {
         challengeInfo,
     }: ChallengeDetailContextModel = useChallengeDetailsContext()
+    const canFillScorecard = useMemo(
+        () => (
+            hasReviewerRole
+            && challengeInfo?.track?.name?.trim()
+                .toLowerCase() === DESIGN.toLowerCase()
+        ),
+        [challengeInfo?.track?.name, hasReviewerRole],
+    )
     const { isEdit: isEditPhase }: useIsEditReviewProps = useIsEditReview()
 
     const {
@@ -276,6 +291,7 @@ const ReviewViewer: FC = () => {
                             isSavingAppeal={isSavingAppeal}
                             isSavingAppealResponse={isSavingAppealResponse}
                             isSavingManagerComment={isSavingManagerComment}
+                            canFillScorecard={canFillScorecard}
                             canAddManagerComment={
                                 hasChallengeAdminRole
                                 || hasTopcoderAdminRole
