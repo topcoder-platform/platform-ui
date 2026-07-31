@@ -32,6 +32,10 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
     const reviewerColor = reviewer?.handleColor
     const llmModelName = props.workflow?.llm?.name || 'N/A'
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
+    const isPendingReview = (props.reviewInfo?.status ?? '')
+        .toString()
+        .trim()
+        .toUpperCase() === 'PENDING'
 
     return (
         <div className={styles.wrap}>
@@ -43,7 +47,9 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                         </div>
                     </div>
                     <div className={styles.details}>
-                        <h2 className={styles.title}>Edit Review Scorecard</h2>
+                        <h2 className={styles.title}>
+                            {isPendingReview ? 'Fill Scorecard' : 'Edit Review Scorecard'}
+                        </h2>
                         <div className={styles.infoSection}>
                             {reviewerHandle && (
                                 <div className={styles.infoRow}>

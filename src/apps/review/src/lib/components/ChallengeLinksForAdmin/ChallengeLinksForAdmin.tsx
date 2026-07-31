@@ -67,7 +67,7 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
     )
 
     const canShowReopenButton = useMemo(() => {
-        if (!props.reviewInfo?.id) {
+        if (!props.reviewInfo?.id || !props.reviewInfo.committed) {
             return false
         }
 
@@ -105,6 +105,7 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
         challengeInfo?.currentPhaseObject?.id,
         challengeInfo?.currentPhaseObject?.isOpen,
         challengeInfo?.status,
+        props.reviewInfo?.committed,
         props.reviewInfo?.id,
         props.reviewInfo?.phaseId,
     ])

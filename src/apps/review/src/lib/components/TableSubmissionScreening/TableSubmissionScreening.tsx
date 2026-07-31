@@ -1091,7 +1091,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         setIsReopening(true)
 
         try {
-            await updateReview(reviewId, { committed: false, status: 'PENDING' })
+            await updateReview(reviewId, { committed: false, status: 'IN_PROGRESS' })
             toast.success('Scorecard reopened.')
             closeReopenDialog()
             await refreshChallengeReviewData(challengeId)

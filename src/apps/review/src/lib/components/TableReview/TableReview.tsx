@@ -446,7 +446,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         try {
             await updateReview(reviewId, {
                 committed: false,
-                status: 'PENDING',
+                status: 'IN_PROGRESS',
             })
             toast.success('Scorecard reopened.')
             closeReopenDialog()
