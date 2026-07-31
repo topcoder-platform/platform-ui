@@ -202,7 +202,7 @@ describe('resolveSubmissionReviewResult', () => {
             .toBe('PASS')
     })
 
-    it('prefers the summation aggregate score when requested', () => {
+    it('uses the final system aggregate score when requested', () => {
         const submission = {
             ...buildSubmission([
                 {
@@ -211,7 +211,8 @@ describe('resolveSubmissionReviewResult', () => {
                     status: 'COMPLETED',
                 },
             ], 0),
-            aggregateScore: 88,
+            aggregateScore: 40,
+            finalAggregateScore: 88,
             isPassingReview: true,
         }
 
@@ -222,6 +223,28 @@ describe('resolveSubmissionReviewResult', () => {
 
         expect(result)
             .toBe('PASS')
+    })
+
+    it('defers the Marathon Match result when only an earlier aggregate is available', () => {
+        const submission = {
+            ...buildSubmission([
+                {
+                    finalScore: 95,
+                    resourceId: 'res-1',
+                    status: 'PENDING',
+                },
+            ], 95),
+            aggregateScore: 95,
+            isPassingReview: true,
+        }
+
+        const result = resolveSubmissionReviewResult(submission, {
+            defaultMinimumPassingScore: DEFAULT_PASSING_SCORE,
+            preferAggregateScore: true,
+        })
+
+        expect(result)
+            .toBeUndefined()
     })
 })
 

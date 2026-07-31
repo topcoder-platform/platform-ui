@@ -129,6 +129,60 @@ describe('convertBackendSubmissionToSubmissionInfo', () => {
             .toBeUndefined()
     })
 
+    it('does not expose an in-progress system placeholder or fall back to an earlier score', () => {
+        const result = convertBackendSubmissionToSubmissionInfo(buildBackendSubmission({
+            reviewSummation: [
+                {
+                    aggregateScore: 95.86,
+                    isPassing: true,
+                    metadata: { testType: 'example' },
+                    updatedAt: '2026-06-05T05:10:00.000Z',
+                },
+                {
+                    aggregateScore: 0,
+                    isFinal: true,
+                    isPassing: false,
+                    metadata: {
+                        testProcess: 'system',
+                        testStatus: 'IN PROGRESS',
+                    },
+                    updatedAt: '2026-06-05T05:15:00.000Z',
+                },
+            ],
+        }))
+
+        expect(result.aggregateScore)
+            .toBeUndefined()
+        expect(result.finalAggregateScore)
+            .toBeUndefined()
+        expect(result.isPassingReview)
+            .toBeUndefined()
+    })
+
+    it('keeps a completed zero system score available as a final result', () => {
+        const result = convertBackendSubmissionToSubmissionInfo(buildBackendSubmission({
+            reviewSummation: [
+                {
+                    aggregateScore: 0,
+                    isFinal: true,
+                    isPassing: false,
+                    metadata: {
+                        testProcess: 'system',
+                        testStatus: 'SUCCESS',
+                    },
+                    updatedAt: '2026-06-05T05:15:00.000Z',
+                },
+            ],
+        }))
+
+        expect(result.aggregateScore)
+            .toBe(0)
+        expect(result.finalAggregateScore)
+            .toBe(0)
+        expect(result.isPassingReview)
+            .toBe(false)
+    })
+
     it('uses the review submission id when the backend omits the top-level submission id', () => {
         const result = convertBackendSubmissionToSubmissionInfo(buildBackendSubmission({
             id: undefined,

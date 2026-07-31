@@ -94,10 +94,11 @@ const resolveSubmissionReviewScore = (
     submission: SubmissionInfo,
     preferAggregateScore: boolean,
 ): number | undefined => {
-    const aggregateScore = parseScoreValue(submission.aggregateScore)
-    if (preferAggregateScore && aggregateScore !== undefined) {
-        return aggregateScore
+    if (preferAggregateScore) {
+        return parseScoreValue(submission.finalAggregateScore)
     }
+
+    const aggregateScore = parseScoreValue(submission.aggregateScore)
 
     const reviewResultScores = Array.isArray(submission.reviews)
         ? submission.reviews

@@ -84,7 +84,7 @@ export interface ScoreVisibilityConfig {
     canDisplayScores: (submission: SubmissionRow) => boolean
     /** Whether the viewer can navigate to the detailed scorecard for the submission. */
     canViewScorecard: boolean
-    /** True when the table should render the submission aggregate score instead of scorecard links. */
+    /** True when the table should render the Marathon Match final/system aggregate instead of scorecard links. */
     useAggregateScore?: boolean
     /** Tooltip message shown when scorecard access is restricted. */
     viewOwnScorecardTooltip?: string
