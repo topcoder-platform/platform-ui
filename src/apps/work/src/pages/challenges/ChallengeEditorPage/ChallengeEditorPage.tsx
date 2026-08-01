@@ -116,6 +116,7 @@ interface ChallengeEditorContentProps {
     canLaunchChallenge: boolean
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
+    footerCancelAction?: JSX.Element
     isExistingChallenge: boolean
     isLaunchDisabled: boolean
     isReadOnly: boolean
@@ -134,6 +135,7 @@ interface ChallengeEditorBodyProps {
     canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
+    footerCancelAction?: JSX.Element
     isProjectAccessDenied: boolean
     isProjectAccessLoading: boolean
     isExistingChallenge: boolean
@@ -970,6 +972,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             <ChallengeEditorForm
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
+                footerCancelAction={props.footerCancelAction}
                 isLaunchDisabled={props.isLaunchDisabled}
                 isEditMode={isEditMode}
                 isReadOnly={props.isReadOnly}
@@ -1007,6 +1010,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
         <ChallengeEditorForm
             canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
+            footerCancelAction={props.footerCancelAction}
             isLaunchDisabled={props.isLaunchDisabled}
             isEditMode={isEditMode}
             isReadOnly={props.isReadOnly}
@@ -1063,6 +1067,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challengeResult.challenge}
                 challengeId={props.challengeId}
+                footerCancelAction={props.footerCancelAction}
                 isExistingChallenge={props.isExistingChallenge}
                 isLaunchDisabled={props.isLaunchDisabled}
                 isReadOnly={props.isReadOnly}
@@ -1477,6 +1482,17 @@ export const ChallengeEditorPage: FC = () => {
     const footerActions = isViewMode
         ? renderHeaderAction(challengeActionParams)
         : undefined
+    const footerCancelAction = isEditMode
+        && challengeActionParams.canCancelChallenge
+        && challengeActionParams.challengeId
+        ? (
+            <CancelChallengeAction
+                challengeId={challengeActionParams.challengeId}
+                challengeName={challengeActionParams.challengeName}
+                onCancelled={challengeActionParams.onChallengeUpdated}
+            />
+        )
+        : undefined
     const deleteModal = renderDeleteModal({
         canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
         challengeName: deleteChallengeName,
@@ -1520,6 +1536,7 @@ export const ChallengeEditorPage: FC = () => {
                         canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
+                        footerCancelAction={footerCancelAction}
                         isProjectAccessDenied={projectAccessState.isDenied}
                         isProjectAccessLoading={projectAccessState.isLoading}
                         isExistingChallenge={isExistingChallenge}

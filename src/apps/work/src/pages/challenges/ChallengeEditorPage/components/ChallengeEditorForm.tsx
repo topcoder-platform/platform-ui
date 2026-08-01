@@ -214,6 +214,7 @@ import styles from './ChallengeEditorForm.module.scss'
 interface ChallengeEditorFormProps {
     canLaunchChallenge?: boolean
     challenge?: Challenge
+    footerCancelAction?: JSX.Element
     isLaunchDisabled?: boolean
     isEditMode?: boolean
     isReadOnly?: boolean
@@ -3820,13 +3821,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const footerSection = !isReadOnly
         ? (
             <div className={styles.footer}>
-                <Button
-                    label='Cancel'
-                    onClick={handleCancelClick}
-                    secondary
-                    size='lg'
-                    type='button'
-                />
+                {props.footerCancelAction || (
+                    <Button
+                        label='Cancel'
+                        onClick={handleCancelClick}
+                        secondary
+                        size='lg'
+                        type='button'
+                    />
+                )}
                 <div className={styles.actions}>
                     <div className={styles.statusArea}>
                         {saveStatus === 'error'

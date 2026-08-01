@@ -1311,6 +1311,25 @@ describe('ChallengeEditorForm', () => {
             .toBe('lg')
     })
 
+    it('renders a provided cancellation action in the edit footer', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    footerCancelAction={(
+                        <button data-testid='footer-cancel-action' type='button'>
+                            Cancel
+                        </button>
+                    )}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBe(screen.getByTestId('footer-cancel-action'))
+    })
+
     it('manually saves an unchanged challenge', async () => {
         const user = userEvent.setup()
         mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
