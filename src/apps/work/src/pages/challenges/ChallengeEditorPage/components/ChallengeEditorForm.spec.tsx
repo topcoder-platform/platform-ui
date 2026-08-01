@@ -398,6 +398,7 @@ jest.mock('./ChallengeScheduleSection', () => ({
                 <div
                     data-disabled={props.disabled === true ? 'true' : 'false'}
                     data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                    data-second-phase-end={phases?.[1]?.scheduledEndDate || ''}
                     data-testid='challenge-schedule-section'
                 />
                 <button
@@ -406,6 +407,32 @@ jest.mock('./ChallengeScheduleSection', () => ({
                     type='button'
                 >
                     Mock Dirty Phase End
+                </button>
+                <button
+                    data-testid='mock-dirty-design-phase-ends'
+                    onClick={() => {
+                        const currentPhases = formContext.getValues('phases') as typeof phases
+                        const shortenedEndDates = [
+                            '2026-07-31T11:17:00.000Z',
+                            '2026-08-01T11:17:00.000Z',
+                        ]
+
+                        formContext.setValue('phases', (currentPhases || []).map((phase, index) => (
+                            shortenedEndDates[index]
+                                ? {
+                                    ...phase,
+                                    duration: index === 0 ? 1438 : 2878,
+                                    scheduledEndDate: shortenedEndDates[index],
+                                }
+                                : phase
+                        )), {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                        })
+                    }}
+                    type='button'
+                >
+                    Mock Dirty Design Phase Ends
                 </button>
                 <button
                     data-testid='mock-clean-form'
@@ -3499,7 +3526,7 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Challenge saved successfully')
     })
 
-    it('accepts Design phase shortening when the persisted duration rounds up', async () => {
+    it('accepts multi-phase Design shortening after persisted windows normalize later', async () => {
         const user = userEvent.setup()
         const activeChallenge = {
             ...validDraftChallenge,
@@ -3507,26 +3534,43 @@ describe('ChallengeEditorForm', () => {
                 reviewType: 'INTERNAL',
                 useSchedulingAPI: true,
             },
-            phases: [{
-                duration: 11520,
-                isOpen: true,
-                name: 'Registration',
-                phaseId: 'registration-phase-id',
-                scheduledEndDate: '2026-04-19T04:58:51.000Z',
-                scheduledStartDate: '2026-04-11T04:58:41.000Z',
-            }],
-            startDate: '2026-04-11T04:58:41.000Z',
+            phases: [
+                {
+                    duration: 4320,
+                    isOpen: true,
+                    name: 'Registration',
+                    phaseId: 'registration-phase-id',
+                    scheduledEndDate: '2026-08-02T11:17:00.000Z',
+                    scheduledStartDate: '2026-07-30T11:18:55.496Z',
+                },
+                {
+                    duration: 4320,
+                    isOpen: true,
+                    name: 'Submission',
+                    phaseId: 'submission-phase-id',
+                    scheduledEndDate: '2026-08-02T11:17:00.000Z',
+                    scheduledStartDate: '2026-07-30T11:18:55.496Z',
+                },
+            ],
+            startDate: '2026-07-30T11:18:55.496Z',
             status: 'ACTIVE',
             trackId: 'design-track',
         } as Challenge
         const persistedShortenedSchedule = {
             ...activeChallenge,
             name: 'Active Design challenge updated',
-            phases: [{
-                ...activeChallenge.phases?.[0],
-                duration: 10081,
-                scheduledEndDate: '2026-04-18T04:58:51.000Z',
-            }],
+            phases: [
+                {
+                    ...activeChallenge.phases?.[0],
+                    duration: 86258,
+                    scheduledEndDate: '2026-07-31T11:17:33.000Z',
+                },
+                {
+                    ...activeChallenge.phases?.[1],
+                    duration: 172658,
+                    scheduledEndDate: '2026-08-01T11:17:33.000Z',
+                },
+            ],
         } as Challenge
 
         mockedUseFetchChallengeTracks.mockReturnValue({
@@ -3550,7 +3594,7 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        await user.click(screen.getByTestId('mock-dirty-phase-end'))
+        await user.click(screen.getByTestId('mock-dirty-design-phase-ends'))
         await user.type(screen.getByLabelText('Challenge Name'), ' updated')
         await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
 
@@ -3558,7 +3602,9 @@ describe('ChallengeEditorForm', () => {
             expect(mockedFetchChallenge)
                 .toHaveBeenCalledWith('12345')
             expect(screen.getByTestId('challenge-schedule-section'))
-                .toHaveAttribute('data-first-phase-end', '2026-04-18T04:58:51.000Z')
+                .toHaveAttribute('data-first-phase-end', '2026-07-31T11:17:33.000Z')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-second-phase-end', '2026-08-01T11:17:33.000Z')
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
         })

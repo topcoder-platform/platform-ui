@@ -114,9 +114,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
 - Manual saves for active scheduled challenges refetch the persisted challenge after `patchChallenge`
   before resetting or navigating. Rejected shortening is detected from the submitted and persisted
-  scheduled phase windows, falling back to stored durations when dates are unavailable, so an
-  API-rejected edit is restored with a partial-save warning while scheduler timing and sub-minute
-  duration normalization do not show a false error.
+  scheduled phase windows for tracks that disallow active shortening, falling back to stored
+  durations when dates are unavailable, so an API-rejected edit is restored with a partial-save
+  warning while permitted Design shortening and scheduler normalization do not show a false error.
 - Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses and to surface the generated forum link for challenge types that provision a discussion on create.
 - Skills search: `searchSkills`.
 - Tracks fetch: `fetchChallengeTracks`.
