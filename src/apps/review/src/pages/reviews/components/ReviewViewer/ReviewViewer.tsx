@@ -72,6 +72,13 @@ const ReviewViewer: FC = () => {
         [myChallengeResources],
     )
 
+    const hasChallengeCopilotRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
     const canManagerEdit = useMemo(
         () => hasChallengeAdminRole
         || hasTopcoderAdminRole
@@ -211,11 +218,13 @@ const ReviewViewer: FC = () => {
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
-                || hasChallengeManagerRole),
+                || hasChallengeManagerRole
+                || hasChallengeCopilotRole),
         )
     }, [
         challengeInfo?.status,
         hasChallengeAdminRole,
+        hasChallengeCopilotRole,
         hasChallengeManagerRole,
         hasTopcoderAdminRole,
         reviewInfo?.committed,
