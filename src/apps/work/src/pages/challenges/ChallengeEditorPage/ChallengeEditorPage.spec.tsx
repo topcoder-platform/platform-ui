@@ -23,7 +23,10 @@ import {
     type UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import type { WorkAppContextModel } from '../../../lib/models'
-import { deleteChallenge } from '../../../lib/services'
+import {
+    deleteChallenge,
+    patchChallenge,
+} from '../../../lib/services'
 import {
     checkProjectAccess,
     isChallengeCompletedOrCancelled,
@@ -177,6 +180,7 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            footerCancelAction?: ReactNode
             isEditMode?: boolean
             onChallengeCreated?: (challenge: {
                 id: string
@@ -211,6 +215,7 @@ jest.mock('./components', () => {
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
+                    {props.footerCancelAction}
                     <button
                         onClick={function handleChallengeApproval() {
                             props.onChallengeApprovalStatusChange?.('APPROVED')
@@ -264,6 +269,7 @@ const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedCheckProjectAccess = checkProjectAccess as jest.Mock
 const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
@@ -370,16 +376,21 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect(
-            screen.getByTestId('challenge-editor-form')
-                .getAttribute('data-edit-mode'),
-        )
+        const editorForm = screen.getByTestId('challenge-editor-form')
+        const rightHeader = screen.getByTestId('right-header')
+        const headerCancelButton = within(rightHeader)
+            .getByRole('button', { name: 'Cancel' })
+        const footerCancelButton = within(editorForm)
+            .getByRole('button', { name: 'Cancel' })
+
+        expect(editorForm.getAttribute('data-edit-mode'))
             .toBe('true')
-        expect(screen.getByRole('button', { name: 'Cancel' }))
+        expect(headerCancelButton)
+            .toBeTruthy()
+        expect(footerCancelButton)
             .toBeTruthy()
 
         const titleAction = screen.getByTestId('title-action')
-        const rightHeader = screen.getByTestId('right-header')
         const quickLinks = within(rightHeader)
             .getAllByRole('link')
 
@@ -408,15 +419,72 @@ describe('ChallengeEditorPage', () => {
             .getAttribute('href'))
             .toBe('https://example.com/forum/challenges/456')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            headerCancelButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            footerCancelButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+    })
+
+    it('opens cancellation options from the edit footer and applies the selected status', async () => {
+        const user = userEvent.setup()
+        const mutate = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedPatchChallenge.mockResolvedValue({})
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate,
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/edit',
+            '/projects/:projectId/challenges/:challengeId/edit',
+        )
+
+        const editorForm = await screen.findByTestId('challenge-editor-form')
+        await user.click(within(editorForm)
+            .getByRole('button', { name: 'Cancel' }))
+
+        const cancelStatusOption = screen.getByRole('button', {
+            name: 'Cancelled Failed Review',
+        })
+        expect(cancelStatusOption)
+            .toBeTruthy()
+        expect(screen.getByText('Challenge Editor Form'))
+            .toBeTruthy()
+
+        await user.click(cancelStatusOption)
+
+        expect(screen.getByText('Cancel Challenge'))
+            .toBeTruthy()
+        expect(screen.getByText(
+            'Do you want to cancel challenge Edit test with status Cancelled Failed Review?',
+        ))
+            .toBeTruthy()
+
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('456', {
+                    status: 'CANCELLED_FAILED_REVIEW',
+                })
+        })
+        expect(mutate)
+            .toHaveBeenCalled()
     })
 
     it('renders a read-only draft challenge view with header and footer actions', async () => {
@@ -941,28 +1009,33 @@ describe('ChallengeEditorPage', () => {
             '/projects/:projectId/challenges/:challengeId/edit',
         )
 
+        const rightHeader = within(screen.getByTestId('right-header'))
+        const editorForm = within(screen.getByTestId('challenge-editor-form'))
+
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Cancel' }))
+            expect(rightHeader.getByRole('button', { name: 'Cancel' }))
+                .toBeTruthy()
+            expect(editorForm.getByRole('button', { name: 'Cancel' }))
                 .toBeTruthy()
         })
 
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            rightHeader.getByRole('button', { name: 'Cancel' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            editorForm.getByRole('button', { name: 'Cancel' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
         expect(
-            screen.getByRole('button', { name: 'Mark Complete' })
+            rightHeader.getByRole('button', { name: 'Mark Complete' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Mark Complete' })
+            rightHeader.getByRole('button', { name: 'Mark Complete' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
