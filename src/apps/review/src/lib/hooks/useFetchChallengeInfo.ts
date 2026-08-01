@@ -9,10 +9,38 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'
 
-import {
+import type {
     ChallengeInfo,
 } from '../models'
 import { fetchChallengeInfoById } from '../services'
+
+const CHECKPOINT_REVIEW_PHASE_NAME = 'checkpoint review'
+const CHECKPOINT_WINNER_REFRESH_INTERVAL_MS = 10_000
+
+/**
+ * Select the challenge-info polling interval used while checkpoint winners are pending.
+ * The Challenge API intentionally hides checkpoint winners until Checkpoint Review closes,
+ * so active pages poll during that phase and stop as soon as the refreshed response changes.
+ *
+ * @param challengeInfo latest challenge response held by SWR
+ * @returns polling interval in milliseconds, or zero when no refresh is needed
+ */
+export function getChallengeInfoRefreshInterval(
+    challengeInfo?: ChallengeInfo,
+): number {
+    const isActive = challengeInfo?.status?.trim()
+        .toUpperCase() === 'ACTIVE'
+    const hasCheckpointWinners = Boolean(challengeInfo?.checkpointWinners?.length)
+    const hasOpenCheckpointReview = challengeInfo?.phases?.some(phase => (
+        phase.isOpen === true
+        && phase.name?.trim()
+            .toLowerCase() === CHECKPOINT_REVIEW_PHASE_NAME
+    )) ?? false
+
+    return isActive && !hasCheckpointWinners && hasOpenCheckpointReview
+        ? CHECKPOINT_WINNER_REFRESH_INTERVAL_MS
+        : 0
+}
 
 export interface useFetchChallengeInfoProps {
     challengeInfo: ChallengeInfo | undefined
@@ -41,6 +69,7 @@ export function useFetchChallengeInfo(
         {
             fetcher: () => fetchChallengeInfoById(challengeId ?? ''),
             isPaused: () => !challengeId,
+            refreshInterval: getChallengeInfoRefreshInterval,
         },
     )
 
