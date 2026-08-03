@@ -610,7 +610,8 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     renderer: (data: Screening) => {
                         const reviewId = data.reviewId
                         const scoreLabel = data.score ?? 'Pending'
-                        const isCheckpointWinner = checkpointWinnerMemberIds.has(`${data.memberId}`)
+                        const isCheckpointWinner = data.result === 'PASS'
+                            && checkpointWinnerMemberIds.has(`${data.memberId}`)
 
                         return (
                             <span className={styles.scoreCell}>

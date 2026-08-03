@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { PropsWithChildren, ReactNode } from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 
 import {
     ChallengeDetailContext,
@@ -160,6 +160,14 @@ const secondWinnerRow = {
     submissionId: 'second-winner-submission',
 } as Screening
 
+const failedWinnerRow = {
+    ...winnerRow,
+    result: 'NO PASS',
+    reviewId: 'failed-winner-review',
+    score: '0.00',
+    submissionId: 'failed-winner-submission',
+} as Screening
+
 const challengeInfo = {
     checkpointWinners: [{
         handle: 'checkpointWinner',
@@ -202,7 +210,7 @@ const reviewAppContext = {
 } as ReviewAppContextModel
 
 /**
- * Renders the desktop checkpoint review table with two winner rows and one non-winner.
+ * Renders the desktop checkpoint review table with passing, failing, and non-winner rows.
  *
  * @returns The Testing Library render result for the checkpoint table.
  * @throws This test helper does not throw.
@@ -212,7 +220,7 @@ function renderCheckpointTable(): ReturnType<typeof render> {
         <ReviewAppContext.Provider value={reviewAppContext}>
             <ChallengeDetailContext.Provider value={challengeContext}>
                 <TableCheckpointSubmissions
-                    datas={[winnerRow, secondWinnerRow, nonWinnerRow]}
+                    datas={[winnerRow, secondWinnerRow, failedWinnerRow, nonWinnerRow]}
                     downloadSubmission={jest.fn()}
                     isDownloading={{}}
                     mode='review'
@@ -223,7 +231,7 @@ function renderCheckpointTable(): ReturnType<typeof render> {
 }
 
 describe('TableCheckpointSubmissions checkpoint winner indicator', () => {
-    it('marks only rows whose member id matches a checkpoint winner', () => {
+    it('marks only passing rows whose member id matches a checkpoint winner', () => {
         renderCheckpointTable()
 
         expect(screen.getAllByRole('button', { name: 'Checkpoint winner details' }))
@@ -241,6 +249,12 @@ describe('TableCheckpointSubmissions checkpoint winner indicator', () => {
             .toHaveLength(2)
         expect(screen.getByText('100.00'))
             .toBeTruthy()
+        const failedScoreCell = screen.getByRole('link', { name: '0.00' }).parentElement
+        expect(failedScoreCell)
+            .toBeTruthy()
+        expect(within(failedScoreCell as HTMLElement)
+            .queryByRole('button', { name: 'Checkpoint winner details' }))
+            .toBeNull()
         expect(screen.getByRole('link', { name: '88.89' })
             .getAttribute('href'))
             .toBe('./../reviews/non-winner-submission?reviewId=non-winner-review')
