@@ -297,9 +297,14 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     id: '-1',
                     score: props.submission.virusScan === true ? 100 : 0,
                     status: AiWorkflowRunStatusEnum.SUCCESS,
-                    workflow: virusScanWorkflow,
+                    workflow: {
+                        description: '',
+                        name: 'Virus Scan',
+                        scorecard: {
+                            minimumPassingScore: 100,
+                        },
+                    } as AiWorkflowRun['workflow'],
                 },
-                workflow: virusScanWorkflow,
                 score: props.submission.virusScan === undefined
                     ? undefined
                     : (props.submission.virusScan ? 100 : 0),
