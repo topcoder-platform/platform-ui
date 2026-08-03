@@ -247,6 +247,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const configured = configuredWorkflows.find(item => item.workflowId === workflowId)
             const fromDecision = decisionWorkflowRows.find(item => item.workflowId === workflowId)
             const run = runsByWorkflowId.get(workflowId)
+            const workflow = run?.workflow ?? configured?.workflow
             const minScore = fromDecision?.minimumPassingScore
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
@@ -262,7 +263,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 isGating: fromDecision?.isGating ?? configured?.isGating,
                 minScore,
                 reviewDate: run?.completedAt,
-                run,
+                run: run || (workflow ? { workflow } as AiWorkflowRun : undefined),
                 score: fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
