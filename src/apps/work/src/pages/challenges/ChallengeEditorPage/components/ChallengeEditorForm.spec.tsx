@@ -1032,7 +1032,7 @@ describe('ChallengeEditorForm', () => {
             .toBeChecked()
     })
 
-    it('loads exact true test challenge metadata as checked when editing', () => {
+    it('renders exact true test challenge metadata in Advanced Options when editing', () => {
         render(
             <MemoryRouter>
                 <ChallengeEditorForm
@@ -1047,8 +1047,21 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('checkbox', { name: 'Test Challenge' }))
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(
+            within(advancedOptionsSection as HTMLElement)
+                .getByRole('checkbox', { name: 'Test Challenge' }),
+        )
             .toBeChecked()
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .queryByRole('checkbox', { name: 'Test Challenge' }),
+        )
+            .toBeNull()
     })
 
     it('renders the registered-member download setting for existing challenges', () => {
