@@ -338,6 +338,9 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
             .optional(),
         id: yup.string()
             .optional(),
+        isTestChallenge: yup.boolean()
+            .default(false)
+            .optional(),
         name: yup
             .string()
             .max(MAX_CHALLENGE_NAME_LENGTH, `Challenge name cannot exceed ${MAX_CHALLENGE_NAME_LENGTH} characters`)

@@ -11,6 +11,7 @@ import {
 import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
+    IS_TEST_CHALLENGE_METADATA_FIELD,
 } from '../constants'
 import {
     SUBMITTER_ROLE_UUID,
@@ -27,6 +28,11 @@ import {
     Prize,
     PrizeSet,
 } from '../models'
+
+import {
+    booleanToMetadata,
+    metadataToBoolean,
+} from './metadata.utils'
 
 interface BillingInfo {
     billingAccountId?: number | string
@@ -1024,6 +1030,10 @@ export function transformChallengeToFormData(
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
         groups: normalizeStringArray(challenge?.groups),
         id: challenge?.id,
+        isTestChallenge: metadataToBoolean(
+            metadata,
+            IS_TEST_CHALLENGE_METADATA_FIELD,
+        ),
         legacy: {
             isTask,
             reviewType,
@@ -1073,9 +1083,14 @@ export function transformFormDataToChallenge(
         || hasEditableSchedule
     const metadataWithoutMilestone = normalizeMetadataEntries(formData.metadata)
         .filter(metadataEntry => !MILESTONE_METADATA_KEYS.includes(metadataEntry.name))
+    const metadataWithTestChallenge = booleanToMetadata(
+        metadataWithoutMilestone,
+        IS_TEST_CHALLENGE_METADATA_FIELD,
+        formData.isTestChallenge === true,
+    )
     const milestoneMetadata = buildMilestoneMetadata(formData.milestoneConfiguration)
     const metadata = [
-        ...metadataWithoutMilestone,
+        ...metadataWithTestChallenge,
         ...milestoneMetadata,
     ]
     const roundType = normalizeRoundType(formData.roundType) || ROUND_TYPES.SINGLE_ROUND

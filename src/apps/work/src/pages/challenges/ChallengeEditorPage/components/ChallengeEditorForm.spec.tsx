@@ -158,6 +158,10 @@ jest.mock('../../../../lib/utils', () => ({
             ? challenge?.groups
             : [],
         id: challenge?.id,
+        isTestChallenge: challenge?.metadata?.some(metadataEntry => (
+            metadataEntry.name === 'is_test_challenge'
+            && String(metadataEntry.value) === 'true'
+        )) === true,
         legacy: challenge?.legacy || {
             isTask: false,
             reviewType: 'INTERNAL',
@@ -749,6 +753,32 @@ jest.mock('./SubmissionTypeField', () => ({
 jest.mock('./TermsField', () => ({
     TermsField: jest.fn(() => <></>),
 }))
+jest.mock('./TestChallengeField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        TestChallengeField: function MockTestChallengeField(props: { disabled?: boolean }) {
+            const controller = reactHookForm.useController({
+                control: reactHookForm.useFormContext().control,
+                name: 'isTestChallenge',
+            })
+
+            return (
+                <label htmlFor='isTestChallenge'>
+                    Test Challenge
+                    <input
+                        checked={controller.field.value === true}
+                        disabled={props.disabled}
+                        id='isTestChallenge'
+                        onBlur={controller.field.onBlur}
+                        onChange={event => controller.field.onChange(event.target.checked)}
+                        type='checkbox'
+                    />
+                </label>
+            )
+        },
+    }
+})
 
 const mockedUseAutosave = useAutosave as jest.Mock
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
@@ -988,6 +1018,37 @@ describe('ChallengeEditorForm', () => {
                 .queryByText('Copilot Field'),
         )
             .toBeNull()
+    })
+
+    it('defaults the test challenge checkbox to unchecked for new challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('checkbox', { name: 'Test Challenge' }))
+            .not
+            .toBeChecked()
+    })
+
+    it('loads exact true test challenge metadata as checked when editing', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        metadata: [{
+                            name: 'is_test_challenge',
+                            value: 'true',
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('checkbox', { name: 'Test Challenge' }))
+            .toBeChecked()
     })
 
     it('renders the registered-member download setting for existing challenges', () => {
@@ -4206,12 +4267,52 @@ describe('ChallengeEditorForm', () => {
                     metadata: [{
                         name: 'allowAllRegistrantsToDownloadWinningSubmissions',
                         value: 'true',
+                    }, {
+                        name: 'is_test_challenge',
+                        value: 'false',
                     }],
                     name: 'Forum Enabled Challenge',
                     projectId: '12345',
                     status: 'NEW',
                     trackId: 'track-id',
                     typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                }))
+        })
+    })
+
+    it('persists checked test challenge metadata during initial creation', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-test-challenge-id',
+            name: 'Production test challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-test-challenge-id',
+            name: 'Production test challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Production test challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('checkbox', { name: 'Test Challenge' }))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    metadata: expect.arrayContaining([{
+                        name: 'is_test_challenge',
+                        value: 'true',
+                    }]),
                 }))
         })
     })

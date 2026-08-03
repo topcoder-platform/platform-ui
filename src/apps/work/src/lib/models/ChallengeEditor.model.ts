@@ -40,6 +40,8 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     wiproAllowed?: boolean
     groups?: string[]
     id?: string
+    /** Whether the challenge is a production test, persisted in challenge metadata. */
+    isTestChallenge?: boolean
     metadata?: ChallengeMetadata[]
     name: string
     prizeSets?: PrizeSet[]

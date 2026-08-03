@@ -38,6 +38,8 @@ export const CHALLENGE_APPROVAL_STATUS = {
     REJECTED: 'REJECTED',
 } as const
 
+export const IS_TEST_CHALLENGE_METADATA_FIELD = 'is_test_challenge'
+
 export const PAGE_SIZE = 10
 
 export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]

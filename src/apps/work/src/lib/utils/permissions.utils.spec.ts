@@ -1,9 +1,13 @@
 import { decodeToken } from 'tc-auth-lib'
 
-import type { Project } from '../models'
+import type {
+    Challenge,
+    Project,
+} from '../models'
 
 import {
     canCreateEngagement,
+    canModifyChallenge,
     canViewAllEngagements,
     checkCanEditProjectDetails,
     checkCanManageProject,
@@ -31,6 +35,12 @@ jest.mock('../services/resources.service', () => ({
 const mockedDecodeToken = decodeToken as jest.MockedFunction<typeof decodeToken>
 
 describe('permissions.utils project management helpers', () => {
+    const challenge: Challenge = {
+        createdBy: 'challenge-owner',
+        id: 'challenge-123',
+        name: 'Permission test challenge',
+        status: 'COMPLETED',
+    }
     const managedProject: Project = {
         id: '123',
         members: [
@@ -135,6 +145,125 @@ describe('permissions.utils project management helpers', () => {
         expect(checkProjectAccess(['Project Manager'], '999', managedProject))
             .toBe(false)
         expect(checkProjectAccess(['Project Manager'], '123', undefined))
+            .toBe(false)
+    })
+
+    it('allows challenge modification for admins and the normalized challenge creator', () => {
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: 'different-user',
+                userId: 999,
+            },
+            project: managedProject,
+            userRoles: ['administrator'],
+        }))
+            .toBe(true)
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: ' Challenge-Owner ',
+                userId: 999,
+            },
+            project: managedProject,
+            userRoles: [],
+        }))
+            .toBe(true)
+        expect(canModifyChallenge({
+            challenge: {
+                ...challenge,
+                createdBy: '999',
+            },
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: 'different-user',
+                userId: 999,
+            },
+            project: managedProject,
+            userRoles: [],
+        }))
+            .toBe(true)
+    })
+
+    it('requires another modifier signal for connect-admin-only challenge mutation access', () => {
+        const connectAdminParams = {
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: 'connect-admin-user',
+                userId: 999,
+            },
+            project: managedProject,
+            userRoles: [' Connect Admin '],
+        }
+
+        expect(canModifyChallenge(connectAdminParams))
+            .toBe(false)
+        expect(canModifyChallenge({
+            ...connectAdminParams,
+            hasChallengeResourceWriteAccess: true,
+        }))
+            .toBe(true)
+    })
+
+    it('allows challenge modification for an active full-write challenge resource', () => {
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: true,
+            loginUserInfo: {
+                handle: 'resource-writer',
+                userId: 999,
+            },
+            project: managedProject,
+            userRoles: [],
+        }))
+            .toBe(true)
+    })
+
+    it.each([
+        'manager',
+        'copilot',
+        'customer',
+        'write',
+    ])('allows challenge modification for %s project membership', role => {
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: 'project-writer',
+                userId: 999,
+            },
+            project: {
+                ...managedProject,
+                members: [{
+                    role: ` ${role.toUpperCase()} `,
+                    userId: 999,
+                }],
+            },
+            userRoles: [],
+        }))
+            .toBe(true)
+    })
+
+    it('rejects observer project members without another challenge modification signal', () => {
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: {
+                handle: 'project-observer',
+                userId: 999,
+            },
+            project: {
+                ...managedProject,
+                members: [{
+                    role: 'observer',
+                    userId: 999,
+                }],
+            },
+            userRoles: ['project manager'],
+        }))
             .toBe(false)
     })
 

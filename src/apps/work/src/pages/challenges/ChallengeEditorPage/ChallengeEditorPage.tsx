@@ -30,6 +30,7 @@ import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     COMMUNITY_APP_URL,
+    IS_TEST_CHALLENGE_METADATA_FIELD,
     REVIEW_APP_URL,
 } from '../../../lib/constants'
 import { WorkAppContext } from '../../../lib/contexts'
@@ -52,6 +53,7 @@ import {
     patchChallenge,
 } from '../../../lib/services'
 import {
+    canModifyChallenge,
     checkProjectAccess,
     extractErrorMessage,
     getStatusText,
@@ -354,15 +356,22 @@ function shouldShowCancelAction(
 }
 
 function shouldShowDeleteAction(
-    isEditMode: boolean,
+    isEditableOrCreatedChallenge: boolean,
+    isPersistedTestChallenge: boolean,
     challengeStatus: string | undefined,
 ): boolean {
     const normalizedStatus = (challengeStatus || '')
         .trim()
         .toUpperCase()
 
-    return isEditMode
-        && normalizedStatus === CHALLENGE_STATUS.NEW
+    return (
+        isPersistedTestChallenge
+        && isChallengeCompletedOrCancelled(normalizedStatus)
+    )
+        || (
+            isEditableOrCreatedChallenge
+            && normalizedStatus === CHALLENGE_STATUS.NEW
+        )
 }
 
 function useResolvedChallengeStatus(
@@ -1264,10 +1273,6 @@ export const ChallengeEditorPage: FC = () => {
         activeTab,
         effectiveChallengeStatus,
     )
-    const canDeleteChallenge = shouldShowDeleteAction(
-        isEditMode || isCreatedChallenge,
-        effectiveChallengeStatus,
-    )
     const canCompleteTask = shouldShowCompleteTaskAction(
         isExistingChallenge,
         activeTab,
@@ -1400,7 +1405,9 @@ export const ChallengeEditorPage: FC = () => {
         && baseProjectAccessState.isDenied
         && !hasChallengeProjectMismatch
         && !!challengeId
-    const shouldFetchChallengeResources = shouldResolveChallengeResourceAccess
+    const shouldFetchChallengeResources = isExistingChallenge
+        && !hasChallengeProjectMismatch
+        && !!challengeId
         && !!challengeResult.challenge
     const resourcesResult = useFetchResources(
         shouldFetchChallengeResources
@@ -1435,6 +1442,14 @@ export const ChallengeEditorPage: FC = () => {
             || isChallengeResourceAccessLoading,
     }
     const canRenderChallengeDetails = !projectAccessState.isDenied && !projectAccessState.isLoading
+    const hasChallengeModificationAccess = isCreatedChallenge
+        || canModifyChallenge({
+            challenge: currentChallenge,
+            hasChallengeResourceWriteAccess: challengeResourceAccess.canWrite,
+            loginUserInfo: workAppContext.loginUserInfo,
+            project: projectAccessResult.project,
+            userRoles: workAppContext.userRoles,
+        })
     const pageTitle = getChallengeEditorPageTitle(
         challengeId,
         isViewMode,
@@ -1451,8 +1466,21 @@ export const ChallengeEditorPage: FC = () => {
         && canRenderChallengeDetails
         && isViewMode
         && !!editChallengePath
-        && (!baseProjectAccessState.isDenied || challengeResourceAccess.canWrite)
+        && hasChallengeModificationAccess
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
+    const isPersistedTestChallenge = isExistingChallenge
+        && currentChallenge?.metadata?.some(metadataEntry => (
+            metadataEntry.name === IS_TEST_CHALLENGE_METADATA_FIELD
+            && metadataEntry.value === 'true'
+        )) === true
+    const canDeleteChallenge = hasSuccessfulCurrentChallengeFetch
+        && canRenderChallengeDetails
+        && hasChallengeModificationAccess
+        && shouldShowDeleteAction(
+            isEditMode || isCreatedChallenge,
+            isPersistedTestChallenge,
+            effectiveChallengeStatus,
+        )
     const challengeActionParams: RenderHeaderActionParams = {
         canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,
         canCompleteTask: canRenderChallengeDetails && canCompleteTask,

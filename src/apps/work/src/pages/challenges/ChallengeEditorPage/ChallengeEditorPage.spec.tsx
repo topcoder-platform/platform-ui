@@ -40,6 +40,15 @@ import { ChallengeEditorPage } from './ChallengeEditorPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
+jest.mock('tc-auth-lib', () => ({
+    decodeToken: jest.fn(),
+}))
+
+jest.mock('../../../lib/services/resources.service', () => ({
+    fetchResourceRoles: jest.fn(),
+    fetchResources: jest.fn(),
+}))
+
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
         props: PropsWithChildren<{
@@ -121,6 +130,7 @@ jest.mock('../../../lib/constants', () => ({
     },
     CHALLENGE_STATUS: {
         ACTIVE: 'ACTIVE',
+        APPROVED: 'APPROVED',
         CANCELLED_CLIENT_REQUEST: 'CANCELLED_CLIENT_REQUEST',
         CANCELLED_FAILED_REVIEW: 'CANCELLED_FAILED_REVIEW',
         CANCELLED_FAILED_SCREENING: 'CANCELLED_FAILED_SCREENING',
@@ -133,6 +143,14 @@ jest.mock('../../../lib/constants', () => ({
         NEW: 'NEW',
     },
     COMMUNITY_APP_URL: 'https://example.com/community',
+    IS_TEST_CHALLENGE_METADATA_FIELD: 'is_test_challenge',
+    PROJECT_ROLES: {
+        COPILOT: 'copilot',
+        CUSTOMER: 'customer',
+        MANAGER: 'manager',
+        READ: 'observer',
+        WRITE: 'customer',
+    },
     REVIEW_APP_URL: 'https://example.com/review',
 }))
 jest.mock('../../../lib/contexts', () => {
@@ -168,6 +186,7 @@ jest.mock('../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    canModifyChallenge: jest.requireActual('../../../lib/utils/permissions.utils').canModifyChallenge,
     checkProjectAccess: jest.fn(() => true),
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
@@ -345,6 +364,7 @@ describe('ChallengeEditorPage', () => {
             project: {
                 id: '123',
                 members: [{
+                    role: 'manager',
                     userId: 12345,
                 }],
                 name: 'Allowed Project',
@@ -646,6 +666,23 @@ describe('ChallengeEditorPage', () => {
 
     it('allows project-scoped challenge views when the user has challenge resource read access', async () => {
         mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Read-only test challenge',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -692,6 +729,8 @@ describe('ChallengeEditorPage', () => {
         expect(screen.queryByText('You don’t have access to this project. Please contact support@topcoder.com.'))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
             .toBeNull()
     })
 
@@ -926,6 +965,10 @@ describe('ChallengeEditorPage', () => {
                     url: 'https://example.com/forum/challenges/456',
                 }],
                 id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'false',
+                }],
                 name: 'Completed challenge',
                 prizeSets: [],
                 status: 'COMPLETED',
@@ -947,6 +990,8 @@ describe('ChallengeEditorPage', () => {
 
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: 'Edit' }))
+                .toBeNull()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
                 .toBeNull()
         })
     })
@@ -980,7 +1025,174 @@ describe('ChallengeEditorPage', () => {
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: 'Edit' }))
                 .toBeNull()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
+                .toBeNull()
         })
+    })
+
+    it.each([
+        'COMPLETED',
+        'CANCELLED_CLIENT_REQUEST',
+    ])('allows an authorized user to delete a persisted test challenge in %s status', async status => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Disposable production test',
+                prizeSets: [],
+                projectId: '123',
+                status,
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        const rightHeader = within(screen.getByTestId('right-header'))
+
+        await waitFor(() => {
+            expect(rightHeader.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+        expect(screen.getAllByRole('button', { name: 'Delete' }))
+            .toHaveLength(2)
+
+        fireEvent.click(rightHeader.getByRole('button', { name: 'Delete' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteChallenge)
+                .toHaveBeenCalledWith('456')
+        })
+    })
+
+    it.each([
+        'DRAFT',
+        'APPROVED',
+        'ACTIVE',
+    ])('hides delete for a persisted test challenge in non-terminal %s status', async status => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'In-progress production test',
+                prizeSets: [],
+                projectId: '123',
+                status,
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it.each([
+        true,
+        'TRUE',
+        false,
+        'false',
+    ])('hides terminal test-challenge delete for non-exact metadata value %p', async value => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value,
+                }],
+                name: 'Invalid metadata production test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it('hides terminal test-challenge delete from an observer project member', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Observer-only production test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    role: 'observer',
+                    userId: 12345,
+                }],
+                name: 'Read-only Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
     })
 
     it('renders active header actions with the shared large secondary styling', async () => {

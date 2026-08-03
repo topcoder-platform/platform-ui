@@ -26,6 +26,7 @@ import {
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
     CREATE_FORUM_TYPE_IDS,
+    IS_TEST_CHALLENGE_METADATA_FIELD,
 } from '../../../../lib/constants'
 import {
     AUTOSAVE_DELAY_MS,
@@ -191,6 +192,9 @@ import {
 import {
     TermsField,
 } from './TermsField'
+import {
+    TestChallengeField,
+} from './TestChallengeField'
 import {
     applyProjectBillingToChallengeFormData,
     COPILOT_RESOURCE_ROLE_NAMES,
@@ -3048,14 +3052,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     discussionForum: formData.discussionForum,
                     selectedChallengeType,
                 })
-                const createdChallenge = await createChallenge({
-                    discussions,
-                    funChallenge: formData.funChallenge === true,
-                    metadata: booleanToMetadata(
+                const metadata = booleanToMetadata(
+                    booleanToMetadata(
                         formData.metadata,
                         REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
                         true,
                     ),
+                    IS_TEST_CHALLENGE_METADATA_FIELD,
+                    formData.isTestChallenge === true,
+                )
+                const createdChallenge = await createChallenge({
+                    discussions,
+                    funChallenge: formData.funChallenge === true,
+                    metadata,
                     name: formData.name,
                     projectId: createProjectId,
                     status: CHALLENGE_STATUS.NEW,
@@ -3898,6 +3907,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 track={selectedChallengeTrack}
                             />
                             <CopilotField projectId={fallbackProjectId} />
+                            <TestChallengeField disabled={isReadOnly} />
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
                                 : undefined}
