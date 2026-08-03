@@ -12,6 +12,7 @@ import {
     useNavigate,
     useParams,
 } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
 import {
@@ -472,6 +473,7 @@ function getChallengesListPath(projectId?: string): string {
 interface CancelChallengeActionProps {
     challengeId: string
     challengeName: string
+    menuAlign?: 'end' | 'start'
     onCancelled: () => void
 }
 
@@ -584,7 +586,11 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                 />
                 {showCancelMenu
                     ? (
-                        <div className={styles.cancelMenu}>
+                        <div
+                            className={classNames(styles.cancelMenu, {
+                                [styles.cancelMenuStart]: props.menuAlign === 'start',
+                            })}
+                        >
                             {CANCEL_CHALLENGE_STATUSES.map(status => (
                                 <button
                                     key={status}
@@ -1517,6 +1523,7 @@ export const ChallengeEditorPage: FC = () => {
             <CancelChallengeAction
                 challengeId={challengeActionParams.challengeId}
                 challengeName={challengeActionParams.challengeName}
+                menuAlign='start'
                 onCancelled={challengeActionParams.onChallengeUpdated}
             />
         )
