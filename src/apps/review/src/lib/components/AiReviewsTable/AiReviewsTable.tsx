@@ -58,6 +58,7 @@ interface AiReviewerRow {
     title: string
     weight?: number
     workflowId?: string
+    workflow?: AiWorkflowRun['workflow']
 }
 
 const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {
@@ -247,6 +248,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const configured = configuredWorkflows.find(item => item.workflowId === workflowId)
             const fromDecision = decisionWorkflowRows.find(item => item.workflowId === workflowId)
             const run = runsByWorkflowId.get(workflowId)
+            const workflow = run?.workflow ?? configured?.workflow
             const minScore = fromDecision?.minimumPassingScore
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
@@ -262,7 +264,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 isGating: fromDecision?.isGating ?? configured?.isGating,
                 minScore,
                 reviewDate: run?.completedAt,
-                run,
+                run: run || (workflow ? { workflow } as AiWorkflowRun : undefined),
                 score: fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
@@ -280,6 +282,14 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         const hasVirusScan = rows.some(row => row.title.toLowerCase() === 'virus scan')
 
         if (!hasVirusScan) {
+            const virusScanWorkflow = {
+                description: '',
+                name: 'Virus Scan',
+                scorecard: {
+                    minimumPassingScore: 100,
+                },
+            } as AiWorkflowRun['workflow']
+
             rows.push({
                 id: 'virus-scan-fallback',
                 minScore: hasConfig ? 100 : undefined,
@@ -288,14 +298,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     id: '-1',
                     score: props.submission.virusScan === true ? 100 : 0,
                     status: AiWorkflowRunStatusEnum.SUCCESS,
-                    workflow: {
-                        description: '',
-                        name: 'Virus Scan',
-                        scorecard: {
-                            minimumPassingScore: 100,
-                        },
-                    } as AiWorkflowRun['workflow'],
+                    workflow: virusScanWorkflow,
                 },
+                workflow: virusScanWorkflow,
                 score: props.submission.virusScan === undefined
                     ? undefined
                     : (props.submission.virusScan ? 100 : 0),
