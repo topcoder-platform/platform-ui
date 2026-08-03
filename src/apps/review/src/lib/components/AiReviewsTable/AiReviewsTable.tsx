@@ -58,7 +58,6 @@ interface AiReviewerRow {
     title: string
     weight?: number
     workflowId?: string
-    workflow?: AiWorkflowRun['workflow']
 }
 
 const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {
