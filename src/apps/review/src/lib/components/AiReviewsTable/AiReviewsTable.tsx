@@ -281,14 +281,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         const hasVirusScan = rows.some(row => row.title.toLowerCase() === 'virus scan')
 
         if (!hasVirusScan) {
-            const virusScanWorkflow = {
-                description: '',
-                name: 'Virus Scan',
-                scorecard: {
-                    minimumPassingScore: 100,
-                },
-            } as AiWorkflowRun['workflow']
-
             rows.push({
                 id: 'virus-scan-fallback',
                 minScore: hasConfig ? 100 : undefined,
