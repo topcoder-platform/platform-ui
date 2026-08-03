@@ -20,14 +20,14 @@ jest.mock('~/apps/review/src/lib/components/ChallengeLinksForAdmin', () => ({
         canEditScorecard?: boolean
         isManagerEdit?: boolean
         onToggleManagerEdit?: () => void
-    }) => props.canEditScorecard ? (
+    }) => (props.canEditScorecard ? (
         <button
             type='button'
             onClick={props.onToggleManagerEdit}
         >
             {props.isManagerEdit ? 'Exit Edit Mode' : 'Edit Scorecard'}
         </button>
-    ) : <></>,
+    ) : <></>),
 }), { virtual: true })
 
 jest.mock('~/apps/review/src/lib/components/Scorecard', () => ({
