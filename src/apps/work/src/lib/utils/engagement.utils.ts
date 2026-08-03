@@ -700,31 +700,58 @@ export function getEngagementDurationInDays(engagement: Partial<Engagement>): nu
     return engagement.durationWeeks * 7
 }
 
+function isAnyLocationValue(value: string): boolean {
+    return value.trim()
+        .toLowerCase() === 'any'
+}
+
+/**
+ * Resolves an ISO country code (or existing name) to a display name.
+ *
+ * @param countryCodeOrName country code or already-localized country name.
+ * @returns localized country name when available; otherwise the original value.
+ */
+function formatCountryDisplayName(countryCodeOrName: string): string {
+    const normalized = countryCodeOrName.trim()
+
+    if (!normalized || isAnyLocationValue(normalized)) {
+        return ''
+    }
+
+    if (
+        typeof Intl !== 'undefined'
+        && typeof Intl.DisplayNames === 'function'
+        && /^[A-Za-z]{2}$/.test(normalized)
+    ) {
+        const displayName = new Intl.DisplayNames(['en'], { type: 'region' })
+            .of(normalized.toUpperCase())
+
+        if (displayName) {
+            return displayName
+        }
+    }
+
+    return normalized
+}
+
 export function formatLocation(engagement: Partial<Engagement>): string {
     const countries = Array.isArray(engagement.countries)
         ? engagement.countries
             .map(value => normalizeString(value))
             .filter(Boolean)
         : []
-    const timezones = Array.isArray(engagement.timezones)
-        ? engagement.timezones
-            .map(value => normalizeString(value))
-            .filter(Boolean)
-        : []
 
-    if (!countries.length && !timezones.length) {
+    if (!countries.length || countries.some(isAnyLocationValue)) {
         return 'Remote'
     }
 
-    if (!countries.length) {
-        return timezones.join(', ')
-    }
+    const countryNames = countries
+        .map(formatCountryDisplayName)
+        .filter(Boolean)
 
-    if (!timezones.length) {
-        return countries.join(', ')
-    }
-
-    return `${timezones.join(', ')} / ${countries.join(', ')}`
+    return countryNames.length > 0
+        ? countryNames.join(', ')
+        : 'Remote'
 }
 
 export function getAssignedMembersCount(engagement: Partial<Engagement>): number {

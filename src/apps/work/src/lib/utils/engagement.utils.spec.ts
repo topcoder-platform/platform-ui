@@ -5,6 +5,7 @@ import {
 import {
     formatEngagementRoleLevel,
     formatEngagementStatus,
+    formatLocation,
     fromEngagementDateInputValue,
     fromEngagementRoleLevelApi,
     fromEngagementStatusApi,
@@ -122,5 +123,27 @@ describe('engagement.utils status mappings', () => {
             .toBe('2026-07-15T00:00:00.000Z')
         expect(fromEngagementDateInputValue(''))
             .toBeUndefined()
+    })
+})
+
+describe('formatLocation', () => {
+    it('shows country names without timezones', () => {
+        expect(formatLocation({
+            countries: ['IN', 'US'],
+            timezones: ['Asia/Kolkata', 'America/New_York'],
+        } as any))
+            .toBe('India, United States')
+    })
+
+    it('returns Remote when countries are missing or Any', () => {
+        expect(formatLocation({
+            timezones: ['Asia/Kolkata'],
+        } as any))
+            .toBe('Remote')
+        expect(formatLocation({
+            countries: ['Any'],
+            timezones: ['Asia/Kolkata'],
+        } as any))
+            .toBe('Remote')
     })
 })
