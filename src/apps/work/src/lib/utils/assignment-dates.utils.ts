@@ -146,16 +146,33 @@ export function getAssignmentDaysLeftInEngagement(
 /**
  * Formats remaining engagement days for Assignments list display.
  *
+ * Cancelled, completed, and terminated assignments show `N/A`.
+ *
  * @param startDate billing start date.
  * @param durationMonths assignment duration in months.
+ * @param status optional assignment status.
  * @param now optional "today" override for tests.
- * @returns display string such as `16 days`, or `-` when unavailable.
+ * @returns display string such as `16 days`, `N/A`, or `-` when unavailable.
  */
 export function formatAssignmentDaysLeftInEngagement(
     startDate?: Date | string | null,
     durationMonths?: number | string | null,
+    status?: string | null,
     now: Date = new Date(),
 ): string {
+    const normalizedStatus = String(status || '')
+        .trim()
+        .toUpperCase()
+        .replace(/[\s-]+/g, '_')
+
+    if (
+        normalizedStatus === 'CANCELLED'
+        || normalizedStatus === 'COMPLETED'
+        || normalizedStatus === 'TERMINATED'
+    ) {
+        return 'N/A'
+    }
+
     const daysLeft = getAssignmentDaysLeftInEngagement(startDate, durationMonths, now)
 
     if (daysLeft === undefined) {

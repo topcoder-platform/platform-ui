@@ -1116,6 +1116,7 @@ export const EngagementPaymentPage: FC = () => {
                                                     {formatAssignmentDaysLeftInEngagement(
                                                         assignment.startDate,
                                                         assignment.durationMonths,
+                                                        assignment.status,
                                                     )}
                                                 </span>
                                             </div>
