@@ -483,6 +483,8 @@ describe('ChallengeEditorPage', () => {
         })
         expect(cancelStatusOption)
             .toBeTruthy()
+        expect(cancelStatusOption.parentElement?.className)
+            .toContain('cancelMenuStart')
         expect(screen.getByText('Challenge Editor Form'))
             .toBeTruthy()
 
