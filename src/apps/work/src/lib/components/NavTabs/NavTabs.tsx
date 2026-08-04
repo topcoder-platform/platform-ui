@@ -16,6 +16,7 @@ import classNames from 'classnames'
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { IconOutline } from '~/libs/ui'
 
+import { rootRoute } from '../../../config/routes.config'
 import { WorkAppContext } from '../../contexts/WorkAppContext'
 import { WorkAppContextModel } from '../../models'
 
@@ -125,7 +126,7 @@ const NavTabs: FC = () => {
                                         className={styles.tabLink}
                                         data-tab-id={tab.id}
                                         onClick={handleTabClick}
-                                        to={tab.id}
+                                        to={`${rootRoute}/${tab.id}`}
                                     >
                                         <span className={styles.tabLabel}>{tab.title}</span>
                                     </Link>

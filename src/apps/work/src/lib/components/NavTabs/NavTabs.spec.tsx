@@ -4,7 +4,12 @@ import {
     render,
     screen,
 } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import {
+    MemoryRouter,
+    Route,
+    Routes,
+    useLocation,
+} from 'react-router-dom'
 
 import { WorkAppContext } from '../../contexts/WorkAppContext'
 import { WorkAppContextModel } from '../../models/WorkAppContextModel.model'
@@ -62,8 +67,17 @@ function renderNavTabs(pathname: string = '/challenges'): void {
     render(
         <WorkAppContext.Provider value={contextValue}>
             <MemoryRouter initialEntries={[pathname]}>
-                <NavTabs />
-                <LocationViewer />
+                <Routes>
+                    <Route
+                        path='/*'
+                        element={(
+                            <>
+                                <NavTabs />
+                                <LocationViewer />
+                            </>
+                        )}
+                    />
+                </Routes>
             </MemoryRouter>
         </WorkAppContext.Provider>,
     )
@@ -97,6 +111,34 @@ describe('NavTabs', () => {
 
         expect(screen.getByTestId('location-pathname').textContent)
             .toBe('/projects')
+    })
+
+    it('builds every menu link from the app root on a nested work route', () => {
+        renderNavTabs('/projects/200/engagements/300/view')
+
+        expect(screen.getByRole('link', { name: 'Challenges' })
+            .getAttribute('href'))
+            .toBe('/challenges')
+        expect(screen.getByRole('link', { name: 'Engagements' })
+            .getAttribute('href'))
+            .toBe('/engagements')
+        expect(screen.getByRole('link', { name: 'Projects' })
+            .getAttribute('href'))
+            .toBe('/projects')
+        expect(screen.getByRole('link', { name: 'Budget Approvals' })
+            .getAttribute('href'))
+            .toBe('/budget-approvals')
+        expect(screen.getByRole('link', { name: 'TaaS Projects' })
+            .getAttribute('href'))
+            .toBe('/taas')
+        expect(screen.getByRole('link', { name: 'Groups' })
+            .getAttribute('href'))
+            .toBe('/groups')
+
+        fireEvent.click(screen.getByRole('link', { name: 'Challenges' }))
+
+        expect(screen.getByTestId('location-pathname').textContent)
+            .toBe('/challenges')
     })
 
     it('leaves the current tab active when a menu link is opened with a modifier click', () => {
