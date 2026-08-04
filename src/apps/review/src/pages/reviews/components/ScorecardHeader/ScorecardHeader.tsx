@@ -2,7 +2,7 @@ import { FC, useCallback, useMemo, useState } from 'react'
 import moment, { Duration } from 'moment'
 
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
-import { useRolePermissions, UseRolePermissionsResult } from '~/apps/review/src/lib/hooks'
+import { AiWorkflowReviewMethod, useRolePermissions, UseRolePermissionsResult } from '~/apps/review/src/lib/hooks'
 import { ArrowCircleDownIcon, ArrowCircleUpIcon } from '@heroicons/react/outline'
 
 import { MarkdownReview } from '../../../../lib/components/MarkdownReview'
@@ -52,6 +52,15 @@ const ScorecardHeader: FC = () => {
                     </div>
                 </div>
                 <div className={styles.workflowRunStats}>
+                    <span>
+                        <IconPremium />
+                        <span>
+                            <strong>Scorecard Type:</strong>
+                            {' '}
+                            {workflow.reviewMethod === AiWorkflowReviewMethod.AI_ASSISTED && 'AI Assisted'}
+                            {workflow.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC && 'Deterministic'}
+                        </span>
+                    </span>
                     <span>
                         <IconPremium />
                         <span>
