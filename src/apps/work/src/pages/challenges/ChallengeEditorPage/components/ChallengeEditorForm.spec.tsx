@@ -623,7 +623,7 @@ jest.mock('./CopilotField', () => ({
     },
 }))
 jest.mock('./CopilotFeeField', () => ({
-    CopilotFeeField: () => <></>,
+    CopilotFeeField: () => <span>Copilot Fee Field</span>,
 }))
 jest.mock('./DesignWorkTypeField', () => ({
     DesignWorkTypeField: function DesignWorkTypeField() {
@@ -1276,6 +1276,42 @@ describe('ChallengeEditorForm', () => {
 
         expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
             .toBeNull()
+    })
+
+    it('hides the copilot fee for task challenges while keeping the copilot assignment', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={taskDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Prizes & Billing' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Copilot Fee Field'))
+            .toBeNull()
+    })
+
+    it('keeps the copilot fee for non-task challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Copilot Fee Field'))
+            .toBeInTheDocument()
     })
 
     it('hides the editable timeline section for task challenges in read-only view mode', () => {

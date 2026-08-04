@@ -4004,12 +4004,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                             )
                                                             : undefined}
                                                     </div>
-                                                    <div className={styles.copilotFeeColumn}>
-                                                        <CopilotFeeField
-                                                            disabled={arePrizeFieldsDisabled}
-                                                            name='prizeSets'
-                                                        />
-                                                    </div>
+                                                    {!isTaskChallenge
+                                                        ? (
+                                                            <div className={styles.copilotFeeColumn}>
+                                                                <CopilotFeeField
+                                                                    disabled={arePrizeFieldsDisabled}
+                                                                    name='prizeSets'
+                                                                />
+                                                            </div>
+                                                        )
+                                                        : undefined}
                                                 </div>
                                                 <div className={styles.billingSummary}>
                                                     <ReviewCostField name='prizeSets' />
