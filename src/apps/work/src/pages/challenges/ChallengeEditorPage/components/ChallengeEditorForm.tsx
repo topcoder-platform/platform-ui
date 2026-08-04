@@ -3907,7 +3907,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 track={selectedChallengeTrack}
                             />
                             <CopilotField projectId={fallbackProjectId} />
-                            <TestChallengeField disabled={isReadOnly} />
+                            {!isChallengeCreated
+                                ? <TestChallengeField disabled={isReadOnly} />
+                                : undefined}
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
                                 : undefined}
@@ -4166,6 +4168,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         {showRateChallengeField
                                             ? <RateChallengeField />
                                             : undefined}
+                                        <TestChallengeField disabled={isReadOnly} />
                                     </div>
                                 </section>
 
