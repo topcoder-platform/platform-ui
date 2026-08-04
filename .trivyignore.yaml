@@ -1,0 +1,31 @@
+# React Router GHSA-qwww-vcr4-c8h2 affects only applications using its unstable
+# React Server Components APIs. This project is a browser-only CRA application
+# and has no RSC dependencies, configuration, or API usage. React Router 8 also
+# requires React 19 and a newer Node runtime, so keep this exception pinned to
+# the reviewed package version and lockfile entry.
+vulnerabilities:
+  - id: GHSA-qwww-vcr4-c8h2
+    paths:
+      - "yarn.lock"
+    purls:
+      - "pkg:npm/react-router@7.18.2"
+    statement: "Not applicable: this browser SPA does not use React Router's unstable RSC APIs."
+
+# Stripe publishable keys are client-side identifiers, not secret API keys. Keep
+# this exception limited to the three environment files that intentionally
+# configure the browser application.
+secrets:
+  - id: stripe-publishable-token
+    paths:
+      - ".environments/.env.dev"
+      - ".environments/.env.qa"
+      - ".environments/.env.prod"
+    statement: "These are intentional Stripe publishable keys used by the client application."
+
+# ISC is the declared license for this project. Trivy reports the project-level
+# license against the dependency lockfile, so scope the exception to that path.
+licenses:
+  - id: ISC
+    paths:
+      - "yarn.lock"
+    statement: "ISC is the approved license for this project."

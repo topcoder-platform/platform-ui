@@ -17,10 +17,7 @@ const SettingSection: FC<SettingSectionProps> = (props: SettingSectionProps) => 
 
         <div className={styles.contentMiddle}>
             <p className='body-main-bold'>{props.title}</p>
-            <p
-                className={styles.infoText}
-                dangerouslySetInnerHTML={{ __html: props.infoText || '' }}
-            />
+            <p className={styles.infoText}>{props.infoText || ''}</p>
         </div>
 
         {props.actionElement}

@@ -1020,16 +1020,15 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('defaults the test challenge checkbox to unchecked for new challenges', () => {
+    it('does not render the test challenge checkbox during initial creation', () => {
         render(
             <MemoryRouter>
                 <ChallengeEditorForm />
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('checkbox', { name: 'Test Challenge' }))
-            .not
-            .toBeChecked()
+        expect(screen.queryByRole('checkbox', { name: 'Test Challenge' }))
+            .toBeNull()
     })
 
     it('renders exact true test challenge metadata in Advanced Options when editing', () => {
@@ -4325,43 +4324,6 @@ describe('ChallengeEditorForm', () => {
                     status: 'NEW',
                     trackId: 'track-id',
                     typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
-                }))
-        })
-    })
-
-    it('persists checked test challenge metadata during initial creation', async () => {
-        const user = userEvent.setup()
-
-        mockedCreateChallenge.mockResolvedValue({
-            id: 'created-test-challenge-id',
-            name: 'Production test challenge',
-            status: 'NEW',
-        })
-        mockedFetchChallenge.mockResolvedValue({
-            id: 'created-test-challenge-id',
-            name: 'Production test challenge',
-            status: 'NEW',
-        })
-
-        render(
-            <MemoryRouter>
-                <ChallengeEditorForm projectId='12345' />
-            </MemoryRouter>,
-        )
-
-        await user.type(screen.getByLabelText('Challenge Name'), 'Production test challenge')
-        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
-        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
-        await user.click(screen.getByRole('checkbox', { name: 'Test Challenge' }))
-        await user.click(screen.getByRole('button', { name: 'New' }))
-
-        await waitFor(() => {
-            expect(mockedCreateChallenge)
-                .toHaveBeenCalledWith(expect.objectContaining({
-                    metadata: expect.arrayContaining([{
-                        name: 'is_test_challenge',
-                        value: 'true',
-                    }]),
                 }))
         })
     })

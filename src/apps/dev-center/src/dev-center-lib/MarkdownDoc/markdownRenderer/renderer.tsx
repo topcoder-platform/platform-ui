@@ -265,7 +265,7 @@ export class Renderer implements MarkdownRenderer {
         ) => {
             htmlString = htmlString.trim()
             const tagRegExp: RegExp
-                = /^<([a-zA-Z0-9]+)\b[^>]*?>(.|n)*?<\/\1>$/g
+                = /^<([a-zA-Z0-9]+)\b/
             const matches: RegExpExecArray | null = tagRegExp.exec(htmlString)
             return matches ? matches[1] : ''
         }

@@ -7,7 +7,7 @@ interface TestChallengeFieldProps {
 }
 
 /**
- * Renders the production test-challenge toggle used during challenge setup and editing.
+ * Renders the production test-challenge toggle in the post-creation Advanced Options section.
  *
  * @param props field state supplied by the challenge editor, including read-only disablement.
  * @returns A checkbox bound to the editor's `isTestChallenge` form value.

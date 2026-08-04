@@ -3907,9 +3907,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 track={selectedChallengeTrack}
                             />
                             <CopilotField projectId={fallbackProjectId} />
-                            {!isChallengeCreated
-                                ? <TestChallengeField disabled={isReadOnly} />
-                                : undefined}
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
                                 : undefined}
