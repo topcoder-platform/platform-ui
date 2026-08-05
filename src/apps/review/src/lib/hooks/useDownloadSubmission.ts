@@ -7,7 +7,7 @@ import { some } from 'lodash'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { handleError } from '~/apps/admin/src/lib/utils'
 
-import { downloadSubmissionFile } from '../services'
+import { getSubmissionDownloadUrl } from '../services'
 
 export interface useDownloadSubmissionProps {
     isLoading: IsRemovingType
@@ -16,8 +16,9 @@ export interface useDownloadSubmissionProps {
 }
 
 /**
- * Download submission
- * @returns download info
+ * Requests signed submission URLs and starts browser-managed downloads.
+ *
+ * @returns The download callback and its per-submission loading state.
  */
 export function useDownloadSubmission(): useDownloadSubmissionProps {
     const [isLoading, setIsLoading] = useState<IsRemovingType>({})
@@ -31,17 +32,15 @@ export function useDownloadSubmission(): useDownloadSubmissionProps {
             ...previous,
             [submissionId]: true,
         }))
-        // download blob of file from submission id
-        downloadSubmissionFile(submissionId)
-            .then((data: Blob) => {
+        getSubmissionDownloadUrl(submissionId)
+            .then((downloadUrl: string) => {
                 setIsLoading(previous => ({
                     ...previous,
                     [submissionId]: false,
                 }))
 
-                const url = window.URL.createObjectURL(new Blob([data]))
                 const link = document.createElement('a')
-                link.href = url
+                link.href = downloadUrl
                 link.setAttribute('download', `submission-${submissionId}.zip`)
                 document.body.appendChild(link)
                 // trigger browser download

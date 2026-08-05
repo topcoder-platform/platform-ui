@@ -67,6 +67,10 @@ function normalizeHandle(value: unknown): string | undefined {
     return normalizedValue || undefined
 }
 
+function isUserIdToken(value: string): boolean {
+    return /^\d+$/.test(value)
+}
+
 function normalizeProjectCopilotHandle(member: ProjectMember): string | undefined {
     const normalizedRole = String(member.role || '')
         .trim()
@@ -241,6 +245,10 @@ export const CopilotField: FC<CopilotFieldProps> = (props: CopilotFieldProps) =>
             .some(handle => handle.toLowerCase() === normalizedCopilot.toLowerCase())
 
         if (hasMatchingHandle) {
+            return undefined
+        }
+
+        if (!isUserIdToken(normalizedCopilot)) {
             return undefined
         }
 
