@@ -58,6 +58,7 @@ interface AiReviewerRow {
     title: string
     weight?: number
     workflowId?: string
+    workflow?: AiWorkflowRun['workflow']
 }
 
 const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {
@@ -109,7 +110,8 @@ function formatWeight(value?: number): string {
 }
 
 function shouldHideComments(run?: Pick<AiWorkflowRun, 'id' | 'workflow'>): boolean {
-    return run?.id === '-1'
+    return !run
+        || run?.id === '-1'
         || run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC
 }
 
@@ -247,7 +249,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const configured = configuredWorkflows.find(item => item.workflowId === workflowId)
             const fromDecision = decisionWorkflowRows.find(item => item.workflowId === workflowId)
             const run = runsByWorkflowId.get(workflowId)
-            const workflow = run?.workflow ?? configured?.workflow
+            const workflow = run?.workflow ?? configured?.workflow as AiWorkflowRun['workflow']
             const minScore = fromDecision?.minimumPassingScore
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
@@ -263,12 +265,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 isGating: fromDecision?.isGating ?? configured?.isGating,
                 minScore,
                 reviewDate: run?.completedAt,
-                run: run || (workflow ? { workflow } as AiWorkflowRun : undefined),
+                run,
                 score: fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
                 workflowId,
+                workflow,
             }
         })
 
@@ -281,6 +284,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         const hasVirusScan = rows.some(row => row.title.toLowerCase() === 'virus scan')
 
         if (!hasVirusScan) {
+            const workflow: AiWorkflowRun['workflow'] = {
+                description: '',
+                name: 'Virus Scan',
+                scorecard: {
+                    minimumPassingScore: 100,
+                },
+            } as AiWorkflowRun['workflow'];
             rows.push({
                 id: 'virus-scan-fallback',
                 minScore: hasConfig ? 100 : undefined,
@@ -289,13 +299,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     id: '-1',
                     score: props.submission.virusScan === true ? 100 : 0,
                     status: AiWorkflowRunStatusEnum.SUCCESS,
-                    workflow: {
-                        description: '',
-                        name: 'Virus Scan',
-                        scorecard: {
-                            minimumPassingScore: 100,
-                        },
-                    } as AiWorkflowRun['workflow'],
+                    workflow,
                 },
                 score: props.submission.virusScan === undefined
                     ? undefined
@@ -305,6 +309,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 ),
                 title: 'Virus Scan',
                 weight: hasConfig ? 0 : undefined,
+                workflow,
             })
         }
 
@@ -468,7 +473,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.label}>Reviewer</div>
                             <div className={styles.value}>
                                 <span className={styles.icon}>
-                                    {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? (
+                                    {(row.run?.workflow ?? row.workflow)?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC ? (
                                         <IconOutline.ClipboardCheckIcon className='icon-xl' />
                                     ) : (
                                         <IconAiReview />
@@ -560,7 +565,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             </div>
                         </div>
 
-                        {shouldHideComments(row.run) && (
+                        {!shouldHideComments(row.run) && (
                             <div className={styles.mobileRow}>
                                 <div className={styles.label}>Comments</div>
                                 <div className={styles.value}>
@@ -622,7 +627,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <td>
                                 <div className={styles.aiReviewer}>
                                     <span className={styles.icon}>
-                                        {row.run?.workflow?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC || row.run?.id === '-1' ? (
+                                        {(row.run?.workflow || row.workflow)?.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC || row.run?.id === '-1' ? (
                                             <IconOutline.ClipboardCheckIcon className='icon-xl' />
                                         ) : (
                                             <IconAiReview />
@@ -693,7 +698,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 />
                             </td>
                             <td>
-                                {shouldHideComments(row.run) ? '' : (
+                                {!shouldHideComments(row.run) && (
                                     <Link
                                         to={`../reviews/${props.submission.id}?workflowId=${row.workflowId}`}
                                     >

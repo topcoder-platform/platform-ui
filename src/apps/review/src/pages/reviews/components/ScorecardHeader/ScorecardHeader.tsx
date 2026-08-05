@@ -57,7 +57,7 @@ const ScorecardHeader: FC = () => {
                         <span>
                             <strong>Scorecard Type:</strong>
                             {' '}
-                            {workflow.reviewMethod === AiWorkflowReviewMethod.AI_ASSISTED && 'AI Assisted'}
+                            {workflow.reviewMethod === AiWorkflowReviewMethod.AI_ASSISTED && 'AI Based'}
                             {workflow.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC && 'Deterministic'}
                         </span>
                     </span>
