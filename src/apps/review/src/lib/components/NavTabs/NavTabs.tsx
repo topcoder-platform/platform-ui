@@ -19,6 +19,7 @@ import { IconOutline } from '~/libs/ui'
 
 import { ReviewAppContext } from '../../contexts'
 import { ReviewAppContextModel } from '../../models'
+import { rootRoute } from '../../../config/routes.config'
 
 import { getTabIdFromPathName, getTabsConfig } from './config'
 import styles from './NavTabs.module.scss'
@@ -70,7 +71,7 @@ const NavTabs: FC = () => {
 
             setActiveTab(tabId)
             setIsOpen(false)
-            navigate(tabId)
+            navigate(`${rootRoute}/${tabId}`)
         },
         [navigate],
     )

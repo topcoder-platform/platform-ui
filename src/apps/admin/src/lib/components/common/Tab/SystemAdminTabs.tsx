@@ -4,6 +4,8 @@ import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { ProfileContextData, useProfileContext } from '~/libs/core'
 import { TabsNavbar } from '~/libs/ui'
 
+import { rootRoute } from '../../../../config/routes.config'
+
 import { getSystemAdminTabs, getTabIdFromPathName } from './config'
 import styles from './SystemAdminTabs.module.scss'
 
@@ -22,12 +24,12 @@ const SystemAdminTabs: FC = () => {
 
     function handleTabChange(tabId: string): void {
         setActiveTab(tabId)
-        navigate(tabId)
+        navigate(`${rootRoute}/${tabId}`)
     }
 
     function handleChildTabChange(tabId: string, childTabId: string): void {
         setActiveTab(tabId)
-        navigate(childTabId)
+        navigate(`${rootRoute}/${childTabId}`)
     }
 
     // If url is changed by navigator on different tabs, we need set activeTab
