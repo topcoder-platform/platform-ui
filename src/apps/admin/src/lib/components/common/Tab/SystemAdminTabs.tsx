@@ -32,13 +32,10 @@ const SystemAdminTabs: FC = () => {
         navigate(`${rootRoute}/${childTabId}`)
     }
 
-    // If url is changed by navigator on different tabs, we need set activeTab
+    // Keep browser navigation in sync without reacting to the optimistic click state.
     useEffect(() => {
-        const pathTabId = getTabIdFromPathName(pathname, tabs)
-        if (pathTabId !== activeTab) {
-            setActiveTab(pathTabId)
-        }
-    }, [activeTab, pathname, tabs])
+        setActiveTab(activeTabPathName)
+    }, [activeTabPathName])
 
     if (!tabs.length) {
         return <></>

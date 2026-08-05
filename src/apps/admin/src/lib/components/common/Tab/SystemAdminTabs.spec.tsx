@@ -6,7 +6,9 @@ import {
 } from '@testing-library/react'
 import {
     MemoryRouter,
+    Navigator,
     Route,
+    Router,
     Routes,
     useLocation,
 } from 'react-router-dom'
@@ -36,6 +38,7 @@ jest.mock('~/libs/core', () => ({
 
 jest.mock('~/libs/ui', () => ({
     TabsNavbar: (props: {
+        defaultActive: string
         onChange: (tabId: string) => void
         onChildChange: (tabId: string, childTabId: string) => void
         tabs: Array<{
@@ -52,6 +55,11 @@ jest.mock('~/libs/ui', () => ({
         return React.createElement(
             'div',
             undefined,
+            React.createElement(
+                'span',
+                { 'data-testid': 'active-tab' },
+                props.defaultActive,
+            ),
             props.tabs.map(tab => (
                 tab.children
                     ? React.createElement(
@@ -142,7 +150,16 @@ jest.mock('./config', () => ({
             title: 'AI',
         },
     ],
-    getTabIdFromPathName: () => 'challenge-management',
+    getTabIdFromPathName: (pathname: string) => [
+        'challenge-management',
+        'user-management',
+        'review-management',
+        'billing-account',
+        'permission-management',
+        'platform',
+        'payments',
+        'ai',
+    ].find(tabId => pathname.includes(`/${tabId}`)) ?? 'challenge-management',
 }))
 
 const LocationViewer = (): JSX.Element => {
@@ -170,6 +187,45 @@ function renderSystemAdminTabs(pathname: string): void {
 }
 
 describe('SystemAdminTabs', () => {
+    it('keeps the clicked tab active while the router location update is pending', () => {
+        const navigator: Navigator = {
+            createHref: jest.fn(() => ''),
+            go: jest.fn(),
+            push: jest.fn(),
+            replace: jest.fn(),
+        }
+        const view = render(
+            <Router location='/challenge-management' navigator={navigator}>
+                <SystemAdminTabs />
+            </Router>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'User Management' }))
+
+        expect(navigator.push)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByTestId('active-tab').textContent)
+            .toBe('user-management')
+
+        view.rerender(
+            <Router location='/user-management' navigator={navigator}>
+                <SystemAdminTabs />
+            </Router>,
+        )
+
+        expect(screen.getByTestId('active-tab').textContent)
+            .toBe('user-management')
+
+        view.rerender(
+            <Router location='/challenge-management' navigator={navigator}>
+                <SystemAdminTabs />
+            </Router>,
+        )
+
+        expect(screen.getByTestId('active-tab').textContent)
+            .toBe('challenge-management')
+    })
+
     it('navigates top-level tabs from the app root when rendered in a wildcard route', () => {
         renderSystemAdminTabs(
             '/challenge-management/user-management/user-management/review-management',
