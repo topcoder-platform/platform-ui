@@ -270,8 +270,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
-                workflowId,
                 workflow,
+                workflowId,
             }
         })
 
@@ -290,7 +290,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 scorecard: {
                     minimumPassingScore: 100,
                 },
-            } as AiWorkflowRun['workflow'];
+            } as AiWorkflowRun['workflow']
+
             rows.push({
                 id: 'virus-scan-fallback',
                 minScore: hasConfig ? 100 : undefined,
