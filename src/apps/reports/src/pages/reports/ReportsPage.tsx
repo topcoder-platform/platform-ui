@@ -25,7 +25,10 @@ import {
 } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib'
 
-import { bulkMemberLookupRouteId } from '../../config/routes.config'
+import {
+    buildReportsPath,
+    bulkMemberLookupRouteId,
+} from '../../config/routes.config'
 import { handleError } from '../../lib/utils'
 import {
     BillingAccountDetail,
@@ -927,7 +930,7 @@ const ReportsPageContent: FC<ReportsPageContentProps> = props => {
     }, [buildReportPathWithParams, hasInvalidParameterValues, parameterValues.challengeId, selectedReport])
 
     const handleOpenBulkMemberLookup = useCallback(() => {
-        navigate(bulkMemberLookupRouteId)
+        navigate(buildReportsPath(bulkMemberLookupRouteId))
     }, [navigate])
 
     const handleResetFilters = useCallback(() => {
