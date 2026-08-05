@@ -57,7 +57,7 @@ describe('assignment-dates.utils', () => {
                 .toBe('-')
         })
 
-        it('returns N/A for cancelled, completed, or terminated assignments', () => {
+        it('returns N/A for cancelled or closed engagements', () => {
             expect(formatAssignmentDaysLeftInEngagement(
                 '2026-01-01T12:00:00.000Z',
                 1,
@@ -69,7 +69,7 @@ describe('assignment-dates.utils', () => {
             expect(formatAssignmentDaysLeftInEngagement(
                 '2026-01-01T12:00:00.000Z',
                 1,
-                'Completed',
+                'Closed',
                 new Date('2026-01-16T12:00:00.000Z'),
             ))
                 .toBe('N/A')
@@ -77,10 +77,10 @@ describe('assignment-dates.utils', () => {
             expect(formatAssignmentDaysLeftInEngagement(
                 '2026-01-01T12:00:00.000Z',
                 1,
-                'terminated',
+                'Active',
                 new Date('2026-01-16T12:00:00.000Z'),
             ))
-                .toBe('N/A')
+                .toBe('16 days')
         })
     })
 })
