@@ -211,7 +211,7 @@ const StatisticsPage: FC = () => {
                                                     ? <IconSecondPlace aria-hidden='true' />
                                                     : index === 2
                                                         ? <IconThirdPlace aria-hidden='true' />
-                                                        : <></>
+                                                        : <>{index + 1}</>
 
                                             return (
                                                 <tr key={country.code || country.name}>
