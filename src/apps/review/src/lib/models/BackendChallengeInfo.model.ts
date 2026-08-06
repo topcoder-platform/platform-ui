@@ -1,7 +1,7 @@
 import moment from 'moment'
 
 import { formatDurationDate } from '../utils'
-import { isContestSubmissionType } from '../constants'
+import { isCheckpointSubmissionType, isContestSubmissionType } from '../constants'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
@@ -67,6 +67,7 @@ export interface BackendChallengeInfo {
     numOfRegistrants: number
     currentPhase?: BackendPhase
     winners?: BackendChallengeWinner[] | null
+    checkpointWinners?: BackendChallengeWinner[] | null
 }
 
 function normalizeType(
@@ -176,6 +177,12 @@ export function convertBackendChallengeInfo(
         : undefined
 
     const winners: ChallengeWinner[] | undefined = mapWinners(data.winners)
+    const checkpointWinners: ChallengeWinner[] | undefined = data.checkpointWinners
+        ?? data.winners?.filter(winner => (
+            winner.type?.trim()
+                .toUpperCase() === 'CHECKPOINT'
+            || isCheckpointSubmissionType(winner.type)
+        ))
 
     // normalize type/track to objects
     const normalizedType: ChallengeType = normalizeType(data.type, data.typeId)
@@ -183,6 +190,7 @@ export function convertBackendChallengeInfo(
 
     return {
         ...data,
+        checkpointWinners,
         currentPhase,
         currentPhaseEndDate,
         currentPhaseEndDateString,

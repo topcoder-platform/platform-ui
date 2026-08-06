@@ -40,9 +40,15 @@ jest.mock('../constants', () => ({
 }))
 jest.mock('../utils', () => ({
     fromEngagementAnticipatedStartApi: jest.fn((value?: string) => value || ''),
+    fromEngagementDateInputValue: jest.fn((value?: string) => (
+        value
+            ? `${value}T00:00:00.000Z`
+            : undefined
+    )),
     normalizeEngagement: jest.fn((engagement: unknown) => engagement),
     toEngagementAnticipatedStartApi: jest.fn((value?: string) => value || ''),
     toEngagementRoleApi: jest.fn((value?: string) => value || ''),
+    toEngagementRoleLevelApi: jest.fn((value?: string) => value || ''),
     toEngagementStatusApi: jest.fn((value?: string) => value || ''),
     toEngagementWorkloadApi: jest.fn((value?: string) => value || ''),
 }))

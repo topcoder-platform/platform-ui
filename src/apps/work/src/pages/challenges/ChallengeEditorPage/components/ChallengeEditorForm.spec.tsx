@@ -133,7 +133,11 @@ jest.mock('../../../../lib/utils', () => ({
         && (project?.members || []).some(member => (
             member.userId === userId && member.role === 'manager'
         )),
-    formatLastSaved: () => '',
+    formatLastSaved: (timestamp?: Date) => (
+        timestamp
+            ? 'Last saved at 1:25 PM'
+            : 'Not saved yet'
+    ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
     transformChallengeToFormData: (challenge?: Partial<Challenge>) => ({
@@ -154,6 +158,10 @@ jest.mock('../../../../lib/utils', () => ({
             ? challenge?.groups
             : [],
         id: challenge?.id,
+        isTestChallenge: challenge?.metadata?.some(metadataEntry => (
+            metadataEntry.name === 'is_test_challenge'
+            && String(metadataEntry.value) === 'true'
+        )) === true,
         legacy: challenge?.legacy || {
             isTask: false,
             reviewType: 'INTERNAL',
@@ -353,6 +361,7 @@ jest.mock('./ChallengeDescriptionField', () => ({
 jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: function ChallengeScheduleSection(props: {
         disabled?: boolean
+        onValidationErrorChange?: (error?: string) => void
     }) {
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const formContext = reactHookForm.useFormContext()
@@ -393,6 +402,7 @@ jest.mock('./ChallengeScheduleSection', () => ({
                 <div
                     data-disabled={props.disabled === true ? 'true' : 'false'}
                     data-first-phase-end={phases?.[0]?.scheduledEndDate || ''}
+                    data-second-phase-end={phases?.[1]?.scheduledEndDate || ''}
                     data-testid='challenge-schedule-section'
                 />
                 <button
@@ -403,11 +413,48 @@ jest.mock('./ChallengeScheduleSection', () => ({
                     Mock Dirty Phase End
                 </button>
                 <button
+                    data-testid='mock-dirty-design-phase-ends'
+                    onClick={() => {
+                        const currentPhases = formContext.getValues('phases') as typeof phases
+                        const shortenedEndDates = [
+                            '2026-07-31T11:17:00.000Z',
+                            '2026-08-01T11:17:00.000Z',
+                        ]
+
+                        formContext.setValue('phases', (currentPhases || []).map((phase, index) => (
+                            shortenedEndDates[index]
+                                ? {
+                                    ...phase,
+                                    duration: index === 0 ? 1438 : 2878,
+                                    scheduledEndDate: shortenedEndDates[index],
+                                }
+                                : phase
+                        )), {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                        })
+                    }}
+                    type='button'
+                >
+                    Mock Dirty Design Phase Ends
+                </button>
+                <button
                     data-testid='mock-clean-form'
                     onClick={handleMarkFormClean}
                     type='button'
                 >
                     Mock Clean Form
+                </button>
+                <button
+                    data-testid='mock-schedule-validation-error'
+                    onClick={function handleScheduleValidationError() {
+                        props.onValidationErrorChange?.(
+                            'Active phase end date cannot be shortened for this track.',
+                        )
+                    }}
+                    type='button'
+                >
+                    Mock Schedule Validation Error
                 </button>
             </>
         )
@@ -576,7 +623,7 @@ jest.mock('./CopilotField', () => ({
     },
 }))
 jest.mock('./CopilotFeeField', () => ({
-    CopilotFeeField: () => <></>,
+    CopilotFeeField: () => <span>Copilot Fee Field</span>,
 }))
 jest.mock('./DesignWorkTypeField', () => ({
     DesignWorkTypeField: function DesignWorkTypeField() {
@@ -696,10 +743,8 @@ jest.mock('./StockArtsField', () => ({
         return <>Stock Arts Field</>
     },
 }))
-jest.mock('./SubmissionVisibilityField', () => ({
-    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
-}))
 jest.mock('./RegisteredMemberDownloadField', () => ({
+    REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD: 'allowAllRegistrantsToDownloadWinningSubmissions',
     RegisteredMemberDownloadField: () => <>Registered Member Download Field</>,
 }))
 jest.mock('./SubmissionTypeField', () => ({
@@ -708,6 +753,32 @@ jest.mock('./SubmissionTypeField', () => ({
 jest.mock('./TermsField', () => ({
     TermsField: jest.fn(() => <></>),
 }))
+jest.mock('./TestChallengeField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        TestChallengeField: function MockTestChallengeField(props: { disabled?: boolean }) {
+            const controller = reactHookForm.useController({
+                control: reactHookForm.useFormContext().control,
+                name: 'isTestChallenge',
+            })
+
+            return (
+                <label htmlFor='isTestChallenge'>
+                    Test Challenge
+                    <input
+                        checked={controller.field.value === true}
+                        disabled={props.disabled}
+                        id='isTestChallenge'
+                        onBlur={controller.field.onBlur}
+                        onChange={event => controller.field.onChange(event.target.checked)}
+                        type='checkbox'
+                    />
+                </label>
+            )
+        },
+    }
+})
 
 const mockedUseAutosave = useAutosave as jest.Mock
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
@@ -949,6 +1020,49 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
+    it('does not render the test challenge checkbox during initial creation', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('checkbox', { name: 'Test Challenge' }))
+            .toBeNull()
+    })
+
+    it('renders exact true test challenge metadata in Advanced Options when editing', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        metadata: [{
+                            name: 'is_test_challenge',
+                            value: 'true',
+                        }],
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(
+            within(advancedOptionsSection as HTMLElement)
+                .getByRole('checkbox', { name: 'Test Challenge' }),
+        )
+            .toBeChecked()
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .queryByRole('checkbox', { name: 'Test Challenge' }),
+        )
+            .toBeNull()
+    })
+
     it('renders the registered-member download setting for existing challenges', () => {
         render(
             <MemoryRouter>
@@ -1163,6 +1277,42 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
+    it('hides the copilot fee for task challenges while keeping the copilot assignment', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={taskDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Prizes & Billing' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Copilot Fee Field'))
+            .toBeNull()
+    })
+
+    it('keeps the copilot fee for non-task challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Copilot Fee Field'))
+            .toBeInTheDocument()
+    })
+
     it('hides the editable timeline section for task challenges in read-only view mode', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [{
@@ -1252,26 +1402,39 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
+        const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+        const saveButton = screen.getByRole('button', { name: 'Save Challenge' })
+        const lastSaved = screen.getByText('Not saved yet')
+        const actionGroup = saveButton.parentElement
+
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            cancelButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            cancelButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
         expect(
-            screen.getByRole('button', { name: 'Save Challenge' })
+            saveButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Save Challenge' })
+            saveButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+        expect(saveButton)
+            .toBeEnabled()
+        expect(actionGroup)
+            .toContainElement(lastSaved)
+        expect(actionGroup)
+            .not.toContainElement(cancelButton)
+        expect(cancelButton.parentElement)
+            .toBe(actionGroup?.parentElement)
         expect(
             screen.getByRole('button', { name: 'Launch' })
                 .getAttribute('data-primary'),
@@ -1282,6 +1445,84 @@ describe('ChallengeEditorForm', () => {
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+    })
+
+    it('renders a provided cancellation action in the edit footer', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    footerCancelAction={(
+                        <button data-testid='footer-cancel-action' type='button'>
+                            Cancel
+                        </button>
+                    )}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBe(screen.getByTestId('footer-cancel-action'))
+    })
+
+    it('manually saves an unchanged challenge', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const saveButton = screen.getByRole('button', { name: 'Save Challenge' })
+
+        expect(saveButton)
+            .toBeEnabled()
+
+        await user.click(saveButton)
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    name: validDraftChallenge.name,
+                }))
+        })
+    })
+
+    it('uses the save action for transient autosave feedback before enabling it again', () => {
+        jest.useFakeTimers()
+        mockedUseAutosave.mockReturnValue({
+            lastSaved: new Date('2026-07-29T13:25:00+03:00'),
+            saveStatus: 'saved',
+        })
+
+        try {
+            render(
+                <MemoryRouter>
+                    <ChallengeEditorForm challenge={draftChallenge} />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByText('Last saved at 1:25 PM'))
+                .toBeInTheDocument()
+            expect(screen.getAllByText('Saved'))
+                .toHaveLength(1)
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
+
+            act(() => {
+                jest.advanceTimersByTime(2000)
+            })
+
+            expect(screen.queryByRole('button', { name: 'Saved' }))
+                .toBeNull()
+            expect(screen.getByRole('button', { name: 'Save Challenge' }))
+                .toBeEnabled()
+        } finally {
+            jest.useRealTimers()
+        }
     })
 
     it('renders existing challenges as read-only in view mode', () => {
@@ -1978,7 +2219,7 @@ describe('ChallengeEditorForm', () => {
         expect(submissionSettingsSection)
             .toHaveTextContent('Final Deliverables Field')
         expect(submissionSettingsSection)
-            .toHaveTextContent('Submission Visibility Field')
+            .not.toHaveTextContent('Submission Visibility Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
@@ -3251,6 +3492,89 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('blocks save and autosave when active schedule shortening validation is rejected', async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [{
+                duration: 432000,
+                isOpen: true,
+                name: 'Submission',
+                phaseId: 'submission-phase-id',
+                scheduledEndDate: '2026-04-16T04:58:51.000Z',
+                scheduledStartDate: '2026-04-11T04:58:51.000Z',
+            }],
+            startDate: '2026-04-11T04:58:51.000Z',
+            status: 'ACTIVE',
+        } as Challenge
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'track-id',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            }],
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+
+        await waitFor(() => {
+            const autosaveParams = mockedUseAutosave.mock
+                .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                    enabled: boolean
+                }
+
+            expect(autosaveParams.enabled)
+                .toBe(true)
+        })
+
+        await user.click(screen.getByTestId('mock-schedule-validation-error'))
+
+        await waitFor(() => {
+            const autosaveParams = mockedUseAutosave.mock
+                .calls[mockedUseAutosave.mock.calls.length - 1][0] as {
+                    enabled: boolean
+                }
+
+            expect(autosaveParams.enabled)
+                .toBe(false)
+        })
+
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedShowErrorToast)
+                .toHaveBeenCalledWith(
+                    'Active phase end date cannot be shortened for this track.',
+                )
+        })
+        expect(screen.getByText('Active phase end date cannot be shortened for this track.'))
+            .toBeInTheDocument()
+        expect(mockedPatchChallenge)
+            .not
+            .toHaveBeenCalled()
+        expect(mockedShowSuccessToast)
+            .not
+            .toHaveBeenCalledWith('Challenge saved successfully')
+        expect(screen.getByTestId('location-display'))
+            .toHaveTextContent('/projects/100578/challenges/12345/edit')
+    })
+
     it(activePhaseShorteningRejectionTestName, async () => {
         const user = userEvent.setup()
         const activeChallenge = {
@@ -3309,6 +3633,94 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
         expect(mockedShowSuccessToast)
             .not.toHaveBeenCalledWith('Challenge saved successfully')
+    })
+
+    it('accepts multi-phase Design shortening after persisted windows normalize later', async () => {
+        const user = userEvent.setup()
+        const activeChallenge = {
+            ...validDraftChallenge,
+            legacy: {
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            phases: [
+                {
+                    duration: 4320,
+                    isOpen: true,
+                    name: 'Registration',
+                    phaseId: 'registration-phase-id',
+                    scheduledEndDate: '2026-08-02T11:17:00.000Z',
+                    scheduledStartDate: '2026-07-30T11:18:55.496Z',
+                },
+                {
+                    duration: 4320,
+                    isOpen: true,
+                    name: 'Submission',
+                    phaseId: 'submission-phase-id',
+                    scheduledEndDate: '2026-08-02T11:17:00.000Z',
+                    scheduledStartDate: '2026-07-30T11:18:55.496Z',
+                },
+            ],
+            startDate: '2026-07-30T11:18:55.496Z',
+            status: 'ACTIVE',
+            trackId: 'design-track',
+        } as Challenge
+        const persistedShortenedSchedule = {
+            ...activeChallenge,
+            name: 'Active Design challenge updated',
+            phases: [
+                {
+                    ...activeChallenge.phases?.[0],
+                    duration: 86258,
+                    scheduledEndDate: '2026-07-31T11:17:33.000Z',
+                },
+                {
+                    ...activeChallenge.phases?.[1],
+                    duration: 172658,
+                    scheduledEndDate: '2026-08-01T11:17:33.000Z',
+                },
+            ],
+        } as Challenge
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue(persistedShortenedSchedule)
+        mockedFetchChallenge.mockResolvedValue(persistedShortenedSchedule)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={activeChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByTestId('mock-dirty-design-phase-ends'))
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Update Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedFetchChallenge)
+                .toHaveBeenCalledWith('12345')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-first-phase-end', '2026-07-31T11:17:33.000Z')
+            expect(screen.getByTestId('challenge-schedule-section'))
+                .toHaveAttribute('data-second-phase-end', '2026-08-01T11:17:33.000Z')
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Active phase shortening cannot be saved. Other challenge changes were saved.')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge saved successfully')
     })
 
     it('accepts an immediate phase window shifted later with its duration unchanged', async () => {
@@ -3613,6 +4025,73 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('reports DRAFT status when task assignee sync fails after the challenge save', async () => {
+        const user = userEvent.setup()
+        const onChallengeStatusChange = jest.fn()
+        const termsError = 'The user has not yet agreed to the following terms: [Standard Terms 2026]'
+        const newTaskChallenge = {
+            ...validNewChallenge,
+            assignedMemberId: '12345',
+            task: {
+                isTask: true,
+            },
+            terms: ['standard-terms-2026'],
+            type: {
+                abbreviation: 'TSK',
+                name: 'Task',
+            },
+            typeId: 'task-type-id',
+        } as Challenge
+
+        mockedUseFetchTerms.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            terms: [{
+                id: 'standard-terms-2026',
+                title: 'Standard Terms 2026',
+            }],
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'submitter-role-id',
+            name: 'Submitter',
+        }])
+        mockedPatchChallenge.mockResolvedValue({
+            ...newTaskChallenge,
+            status: 'DRAFT',
+        })
+        mockedCreateResource.mockRejectedValueOnce(new Error(termsError))
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={newTaskChallenge}
+                    onChallengeStatusChange={onChallengeStatusChange}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'DRAFT',
+                }))
+            expect(onChallengeStatusChange)
+                .toHaveBeenCalledWith('DRAFT')
+            expect(screen.getByText(/The user has not yet agreed to the following terms/))
+                .toBeInTheDocument()
+        })
+        expect(onChallengeStatusChange.mock.invocationCallOrder[0])
+            .toBeLessThan(mockedCreateResource.mock.invocationCallOrder[0])
+        expect(screen.getByTestId('location-display'))
+            .toHaveTextContent('/projects/100578/challenges/new')
+    })
+
     it('returns to view mode after saving from an edit route with a trailing slash', async () => {
         const user = userEvent.setup()
 
@@ -3833,6 +4312,13 @@ describe('ChallengeEditorForm', () => {
                         provider: 'vanilla',
                         type: 'CHALLENGE',
                     }],
+                    metadata: [{
+                        name: 'allowAllRegistrantsToDownloadWinningSubmissions',
+                        value: 'true',
+                    }, {
+                        name: 'is_test_challenge',
+                        value: 'false',
+                    }],
                     name: 'Forum Enabled Challenge',
                     projectId: '12345',
                     status: 'NEW',
@@ -3929,8 +4415,8 @@ describe('ChallengeEditorForm', () => {
         await user.click(screen.getByRole('button', { name: 'New' }))
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Save as Draft' }))
-                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
         })
         expect(screen.queryByRole('button', { name: 'New' }))
             .toBeNull()
@@ -3983,8 +4469,8 @@ describe('ChallengeEditorForm', () => {
         await waitFor(() => {
             expect(screen.getByText('Specification'))
                 .toBeInTheDocument()
-            expect(screen.getByRole('button', { name: 'Save as Draft' }))
-                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Saved' }))
+                .toBeDisabled()
             expect(screen.queryByRole('button', { name: 'New' }))
                 .toBeNull()
         })

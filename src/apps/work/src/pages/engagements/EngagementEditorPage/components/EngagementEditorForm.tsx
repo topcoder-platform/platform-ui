@@ -21,12 +21,14 @@ import {
 import {
     ANTICIPATED_START_OPTIONS,
     ENGAGEMENT_ROLES,
+    ENGAGEMENT_ROLE_LEVELS,
     ENGAGEMENT_WORKLOADS,
 } from '../../../../lib/constants'
 import {
     rootRoute,
 } from '../../../../config/routes.config'
 import {
+    FormCheckboxField,
     FormSelectField,
     FormSelectOption,
     FormTextField,
@@ -53,6 +55,7 @@ import {
     getCountableEngagementAssignments,
     showErrorToast,
     showSuccessToast,
+    toEngagementDateInputValue,
 } from '../../../../lib/utils'
 
 import {
@@ -76,6 +79,7 @@ import {
 import styles from './EngagementEditorForm.module.scss'
 
 export interface EngagementEditorFormData {
+    account: string
     anticipatedStart: string
     assignedMemberHandles: string[]
     assignmentDetails: AssignmentDetailsFormValue[]
@@ -85,9 +89,13 @@ export interface EngagementEditorFormData {
     durationWeeks: number | string
     isPrivate: boolean
     projectId: string
+    receivedDateFromAccount: string
     requiredMemberCount: number | string
     role: string
+    roleLevel: string
     skills: Skill[]
+    smu: string
+    spoc: string
     status: string
     timezones: string[]
     title: string
@@ -113,14 +121,17 @@ interface AssignmentSerializationOptions {
 type EngagementAssignment = Engagement['assignments'][number]
 type SerializedAssignmentDetailsPayload = {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths?: number
     memberHandle: string
     otherRemarks?: string
     paymentCycle?: string
     ratePerHour: string
+    source?: string
     standardHoursPerDay?: number
     standardHoursPerWeek?: number
     startDate: string
+    wiproIdEndDate?: string
 }
 
 /**
@@ -219,6 +230,10 @@ function serializeAssignmentDetails(
                 return {
                     agreementRate: String(detail.agreementRate || '')
                         .trim(),
+                    candidateWiproId: detail.candidateWiproId
+                        ? String(detail.candidateWiproId)
+                            .trim()
+                        : undefined,
                     durationMonths: detail.durationMonths
                         ? Number(detail.durationMonths)
                         : undefined,
@@ -234,6 +249,11 @@ function serializeAssignmentDetails(
                         : 'WEEKLY',
                     ratePerHour: String(detail.ratePerHour || '')
                         .trim(),
+                    source: detail.source
+                        ? String(detail.source)
+                            .trim()
+                            .toUpperCase()
+                        : undefined,
                     standardHoursPerDay: detail.standardHoursPerDay
                         ? Number(detail.standardHoursPerDay)
                         : undefined,
@@ -241,6 +261,7 @@ function serializeAssignmentDetails(
                         ? Number(detail.standardHoursPerWeek)
                         : undefined,
                     startDate: detail.startDate || '',
+                    wiproIdEndDate: detail.wiproIdEndDate || undefined,
                 }
             })
 
@@ -252,6 +273,9 @@ function serializeAssignmentDetails(
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
     return {
         agreementRate: String(assignment.agreementRate || ''),
+        candidateWiproId: assignment.candidateWiproId
+            ? String(assignment.candidateWiproId)
+            : undefined,
         durationMonths: assignment.durationMonths !== undefined && assignment.durationMonths !== null
             ? String(assignment.durationMonths)
             : '',
@@ -265,6 +289,9 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
         ratePerHour: assignment.ratePerHour
             ? String(assignment.ratePerHour)
             : '',
+        source: assignment.source
+            ? String(assignment.source)
+            : undefined,
         standardHoursPerDay:
             assignment.standardHoursPerDay !== undefined && assignment.standardHoursPerDay !== null
                 ? String(assignment.standardHoursPerDay)
@@ -276,6 +303,7 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
                 ? String(assignment.standardHoursPerWeek)
                 : '',
         startDate: assignment.startDate || '',
+        wiproIdEndDate: assignment.wiproIdEndDate || undefined,
     }
 }
 
@@ -358,6 +386,7 @@ function getDefaultValues(
     const assignmentDefaults = getAssignmentDefaults(defaultEngagement)
 
     return {
+        account: defaultEngagement?.account || '',
         anticipatedStart: defaultEngagement?.anticipatedStart || ANTICIPATED_START_OPTIONS[0],
         assignedMemberHandles: assignmentDefaults.assignedMemberHandles,
         assignmentDetails: assignmentDefaults.assignmentDetails,
@@ -369,11 +398,17 @@ function getDefaultValues(
             : '',
         isPrivate: defaultEngagement?.isPrivate === true,
         projectId: getDefaultProjectId(defaultEngagement, projectId),
+        receivedDateFromAccount: toEngagementDateInputValue(
+            defaultEngagement?.receivedDateFromAccount,
+        ),
         requiredMemberCount: defaultEngagement?.requiredMemberCount
             ? String(defaultEngagement.requiredMemberCount)
             : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
+        roleLevel: defaultEngagement?.roleLevel || '',
         skills: defaultEngagement?.skills || [],
+        smu: defaultEngagement?.smu || '',
+        spoc: defaultEngagement?.spoc || '',
         status: defaultEngagement?.status
             ? formatEngagementStatus(defaultEngagement.status)
             : 'Open',
@@ -406,6 +441,19 @@ function createWorkloadOptions(): FormSelectOption[] {
     return ENGAGEMENT_WORKLOADS.map(workload => ({
         label: labelsByWorkload[workload] || workload,
         value: workload,
+    }))
+}
+
+function createRoleLevelOptions(): FormSelectOption[] {
+    const labelsByRoleLevel: Record<string, string> = {
+        JUNIOR: 'Junior',
+        MID: 'Mid',
+        SENIOR: 'Senior',
+    }
+
+    return ENGAGEMENT_ROLE_LEVELS.map(roleLevel => ({
+        label: labelsByRoleLevel[roleLevel] || roleLevel,
+        value: roleLevel,
     }))
 }
 
@@ -514,19 +562,27 @@ function toPayload(
     const payload: Partial<Engagement> & {
         assignmentDetails?: SerializedAssignmentDetailsPayload[]
     } = {
-        anticipatedStart: values.anticipatedStart,
-        compensationRange: values.compensationRange,
-        countries: values.countries,
+        account: values.account,
         description: values.description,
-        durationWeeks: Number(values.durationWeeks),
         isPrivate: values.isPrivate,
         projectId: values.projectId,
-        role: values.role,
+        receivedDateFromAccount: values.receivedDateFromAccount,
+        roleLevel: values.roleLevel,
         skills: values.skills,
+        smu: values.smu,
+        spoc: values.spoc,
         status: values.status,
-        timezones: values.timezones,
         title: values.title,
-        workload: values.workload,
+    }
+
+    if (!values.isPrivate) {
+        payload.anticipatedStart = values.anticipatedStart
+        payload.compensationRange = values.compensationRange
+        payload.countries = values.countries
+        payload.durationWeeks = Number(values.durationWeeks)
+        payload.role = values.role
+        payload.timezones = values.timezones
+        payload.workload = values.workload
     }
 
     const requiredMemberCount = getPayloadRequiredMemberCount(
@@ -587,6 +643,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         [lockedAssignmentDetails],
     )
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
+    const roleLevelOptions = useMemo<FormSelectOption[]>(() => createRoleLevelOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
     const currentProjectOption = useMemo<FormSelectOption | undefined>(
         () => createProjectOption(
@@ -795,45 +852,14 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Basic Information</h3>
 
-                    <div className={styles.basicInfoGrid}>
+                    <div className={styles.block}>
                         <FormTextField
-                            className={styles.titleField}
                             label='Title'
                             name='title'
                             placeholder='Engagement title'
                             required
                         />
 
-                        <FormTextField
-                            label='Duration in weeks'
-                            name='durationWeeks'
-                            placeholder='Minimum 4'
-                            required
-                            type='number'
-                        />
-
-                        <FormSelectField
-                            label='Role'
-                            name='role'
-                            options={roleOptions}
-                            placeholder='Select role'
-                        />
-
-                        <FormSelectField
-                            label='Workload'
-                            name='workload'
-                            options={workloadOptions}
-                            placeholder='Select workload'
-                        />
-
-                        <FormTextField
-                            label='Compensation range'
-                            name='compensationRange'
-                            placeholder='$600 - $1000'
-                        />
-                    </div>
-
-                    <div className={styles.block}>
                         <FormTinyMceEditor
                             label='Description'
                             name='description'
@@ -854,15 +880,53 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 </section>
 
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Details</h3>
+                    <h3 className={styles.sectionTitle}>Internal Details</h3>
 
+                    <div className={styles.basicInfoGrid}>
+                        <FormTextField
+                            label='Received Date from Account'
+                            name='receivedDateFromAccount'
+                            type='date'
+                        />
+
+                        <FormTextField
+                            label='Account'
+                            maxLength={255}
+                            name='account'
+                            placeholder='Account name'
+                        />
+
+                        <FormTextField
+                            label='SMU'
+                            maxLength={255}
+                            name='smu'
+                            placeholder='SMU'
+                        />
+
+                        <FormTextField
+                            label='SPOC'
+                            maxLength={255}
+                            name='spoc'
+                            placeholder='SPOC'
+                        />
+
+                        <FormSelectField
+                            isClearable
+                            label='Role Level'
+                            name='roleLevel'
+                            options={roleLevelOptions}
+                            placeholder='Select role level'
+                        />
+                    </div>
+                </section>
+
+                <section className={styles.section}>
                     <div className={styles.block}>
                         <EngagementSkillsField />
                     </div>
 
                     <div className={styles.detailsGrid}>
                         <div className={styles.startStatusBlock}>
-                            <EngagementStartDateField />
                             <EngagementStatusField />
                             <FormSelectField
                                 disabled={!props.canEditParentProject}
@@ -886,17 +950,65 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                                 type='number'
                             />
                         </div>
-                        <EngagementLocationFields />
                     </div>
                 </section>
 
-                <EngagementPrivateSection
-                    assignmentManagementPath={currentEngagementId
-                        ? `/projects/${normalizeProjectId(values.projectId || props.projectId)}`
-                            + `/engagements/${currentEngagementId}/assignments`
-                        : undefined}
-                    lockedAssignedMemberHandles={lockedAssignedMemberHandles}
-                />
+                <section className={styles.section}>
+                    <h3 className={styles.sectionTitle}>Private</h3>
+                    <FormCheckboxField
+                        disabled={lockedAssignedMemberHandles.length > 0}
+                        label='Private engagement'
+                        name='isPrivate'
+                    />
+                </section>
+
+                {!values.isPrivate
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Details</h3>
+
+                            <div className={styles.detailsGrid}>
+                                <div className={styles.startStatusBlock}>
+                                    <EngagementStartDateField />
+                                    <FormTextField
+                                        label='Duration in weeks'
+                                        name='durationWeeks'
+                                        placeholder='Minimum 4'
+                                        required
+                                        type='number'
+                                    />
+                                    <FormSelectField
+                                        label='Role'
+                                        name='role'
+                                        options={roleOptions}
+                                        placeholder='Select role'
+                                    />
+                                    <FormSelectField
+                                        label='Workload'
+                                        name='workload'
+                                        options={workloadOptions}
+                                        placeholder='Select workload'
+                                    />
+                                    <FormTextField
+                                        label='Compensation range'
+                                        name='compensationRange'
+                                        placeholder='$600 - $1000'
+                                    />
+                                </div>
+                                <EngagementLocationFields />
+                            </div>
+                        </section>
+                    )
+                    : (
+                        <EngagementPrivateSection
+                            assignmentManagementPath={currentEngagementId
+                                ? `/projects/${normalizeProjectId(values.projectId || props.projectId)}`
+                                    + `/engagements/${currentEngagementId}/assignments`
+                                : undefined}
+                            hideCheckbox
+                            lockedAssignedMemberHandles={lockedAssignedMemberHandles}
+                        />
+                    )}
 
                 <div className={styles.footer}>
                     {saveError

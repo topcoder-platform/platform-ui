@@ -38,7 +38,8 @@ jest.mock('~/libs/ui', () => {
 
 const buildMarathonSubmission = (): SubmissionReviewerRow => {
     const submission = {
-        aggregateScore: 88,
+        aggregateScore: 95.86,
+        finalAggregateScore: 88,
         id: 'submission-1',
         memberId: 'member-1',
     }
@@ -65,7 +66,7 @@ const buildMarathonSubmission = (): SubmissionReviewerRow => {
 }
 
 describe('TableColumnRenderers marathon score display', () => {
-    it('renders the aggregate score instead of the scorecard average for Review Score', () => {
+    it('renders the final system aggregate instead of earlier and scorecard scores', () => {
         render(renderReviewScoreCell(buildMarathonSubmission(), {
             canDisplayScores: () => true,
             canViewScorecard: true,
@@ -75,11 +76,13 @@ describe('TableColumnRenderers marathon score display', () => {
 
         expect(screen.getByText('88.00'))
             .toBeTruthy()
+        expect(screen.queryByText('95.86'))
+            .toBeNull()
         expect(screen.queryByText('0.00'))
             .toBeNull()
     })
 
-    it('renders aggregate Score as plain text without a scorecard link', () => {
+    it('renders the final system Score as plain text without a scorecard link', () => {
         const rendered: ReturnType<typeof render> = render(renderScoreCell(
             buildMarathonSubmission(),
             0,
@@ -94,6 +97,35 @@ describe('TableColumnRenderers marathon score display', () => {
         expect(screen.getByText('88.00'))
             .toBeTruthy()
         expect(rendered.container.querySelector('a'))
+            .toBeNull()
+    })
+
+    it('hides Review Score and Score until a final system aggregate is available', () => {
+        const submission = {
+            ...buildMarathonSubmission(),
+            finalAggregateScore: undefined,
+        }
+
+        render(
+            <>
+                {renderReviewScoreCell(submission, {
+                    canDisplayScores: () => true,
+                    canViewScorecard: true,
+                    isAppealsTab: false,
+                    useAggregateScore: true,
+                })}
+                {renderScoreCell(submission, 0, {
+                    canDisplayScores: () => true,
+                    canViewScorecard: true,
+                    isAppealsTab: false,
+                    useAggregateScore: true,
+                })}
+            </>,
+        )
+
+        expect(screen.getAllByText('--'))
+            .toHaveLength(2)
+        expect(screen.queryByText('95.86'))
             .toBeNull()
     })
 })

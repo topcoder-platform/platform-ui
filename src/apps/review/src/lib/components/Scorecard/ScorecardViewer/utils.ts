@@ -1,6 +1,7 @@
 import { filter, reduce } from 'lodash'
 
 import {
+    FormReviews,
     ReviewItemInfo,
     Scorecard,
     ScorecardInfo,
@@ -54,6 +55,69 @@ export const createReviewItemMapping = (
     })
 
     return result
+}
+
+/**
+ * Fill supported review answers with the maximum value defined by the scorecard.
+ * The review viewer uses this for its Fill Scorecard action. Review metadata,
+ * comments, existing answers, unmatched items, and unsupported question types
+ * remain unchanged.
+ *
+ * @param reviewFormData - Current review form values.
+ * @param scorecard - Scorecard whose questions define the maximum answers.
+ * @returns A copy of the form values with unanswered YES_NO questions set to
+ * Yes and unanswered SCALE questions set to their maximum numeric value. This
+ * function does not throw for unsupported question types.
+ */
+export const fillScorecardWithMaximumAnswers = (
+    reviewFormData: FormReviews,
+    scorecard: Scorecard | ScorecardInfo,
+): FormReviews => {
+    const maximumAnswers = new Map<string, string>()
+
+    scorecard.scorecardGroups.forEach(group => {
+        group.sections.forEach(section => {
+            section.questions.forEach(question => {
+                const normalizedQuestionId = normalizeScorecardQuestionId(question.id)
+
+                if (!normalizedQuestionId) {
+                    return
+                }
+
+                if (question.type === 'YES_NO') {
+                    maximumAnswers.set(normalizedQuestionId, 'Yes')
+                } else if (
+                    question.type === 'SCALE'
+                    && question.scaleMax >= question.scaleMin
+                ) {
+                    maximumAnswers.set(normalizedQuestionId, String(question.scaleMax))
+                }
+            })
+        })
+    })
+
+    return {
+        ...reviewFormData,
+        reviews: reviewFormData.reviews.map(review => {
+            if (review.initialAnswer) {
+                return review
+            }
+
+            const normalizedQuestionId = normalizeScorecardQuestionId(
+                review.scorecardQuestionId,
+            )
+            const maximumAnswer = normalizedQuestionId
+                ? maximumAnswers.get(normalizedQuestionId)
+                : undefined
+
+            return maximumAnswer === undefined
+                ? review
+                : {
+                    ...review,
+                    initialAnswer: maximumAnswer,
+                }
+        }),
+    }
 }
 
 export interface ProgressAndScore {

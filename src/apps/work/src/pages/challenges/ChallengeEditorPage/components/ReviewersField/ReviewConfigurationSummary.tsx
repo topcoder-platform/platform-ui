@@ -879,6 +879,12 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                         {aiConfiguration.autoFinalize ? '✅ On' : '❌ Off'}
                                                     </span>
                                                 </div>
+                                                <div className={styles.detailRow}>
+                                                    <span className={styles.detailLabel}>Instant review:</span>
+                                                    <span className={styles.detailValue}>
+                                                        {aiConfiguration.instantReview ? '✅ On' : '❌ Off'}
+                                                    </span>
+                                                </div>
                                             </>
                                         )
                                         : undefined}

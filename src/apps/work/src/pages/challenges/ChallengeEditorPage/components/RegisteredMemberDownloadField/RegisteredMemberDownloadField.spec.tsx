@@ -20,16 +20,18 @@ import {
 
 import { RegisteredMemberDownloadField } from './RegisteredMemberDownloadField'
 
-interface MockFormCheckboxFieldProps {
-    checkboxOnlyHitArea?: boolean
+interface MockFormRadioGroupProps {
     label: string
     name: string
-    onChange?: (checked: boolean) => void
+    onChange?: (value: boolean | string) => void
+    options: Array<{
+        label: string
+        value: boolean | string
+    }>
 }
 
 jest.mock('../../../../../lib/components/form', () => ({
-    FormCheckboxField: function MockFormCheckboxField(props: MockFormCheckboxFieldProps) {
-        const React: typeof import('react') = jest.requireActual('react')
+    FormRadioGroup: function MockFormRadioGroup(props: MockFormRadioGroupProps) {
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const formContext = reactHookForm.useFormContext()
         const controller = reactHookForm.useController({
@@ -37,22 +39,29 @@ jest.mock('../../../../../lib/components/form', () => ({
             name: props.name,
         })
 
-        return React.createElement(
-            'label',
-            {
-                'data-checkbox-only-hit-area': props.checkboxOnlyHitArea === true
-                    ? 'true'
-                    : 'false',
-            },
-            React.createElement('input', {
-                checked: controller.field.value === true,
-                onChange: (event: { target: { checked: boolean } }) => {
-                    controller.field.onChange(event.target.checked)
-                    props.onChange?.(event.target.checked)
-                },
-                type: 'checkbox',
-            }),
-            props.label,
+        return (
+            <fieldset>
+                <legend>{props.label}</legend>
+                {props.options.map(option => {
+                    function handleOptionChange(): void {
+                        controller.field.onChange(option.value)
+                        props.onChange?.(option.value)
+                    }
+
+                    return (
+                        <label key={String(option.value)}>
+                            <input
+                                checked={controller.field.value === option.value}
+                                name={props.name}
+                                onChange={handleOptionChange}
+                                type='radio'
+                                value={String(option.value)}
+                            />
+                            {option.label}
+                        </label>
+                    )
+                })}
+            </fieldset>
         )
     },
 }))
@@ -90,19 +99,24 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
     )
 }
 
-const SETTING_LABEL = 'Allow all registered members to download winning submissions after challenge ends'
+const SETTING_LABEL = 'Winning submissions download access:'
 const SETTING_NAME = 'allowAllRegistrantsToDownloadWinningSubmissions'
+const ALL_REGISTRANTS_LABEL = 'All challenge registrants - anyone who registered, whether or not they submitted'
+const PASSING_SUBMITTERS_LABEL = 'Passing submitters only - members who submitted and passed review'
 
 describe('RegisteredMemberDownloadField', () => {
-    it('defaults to disabled when the metadata entry is absent', async () => {
+    it('uses passing-submitter access when legacy metadata is absent', async () => {
         render(<TestHarness />)
 
-        const checkbox = screen.getByRole('checkbox', { name: SETTING_LABEL })
+        expect(screen.getByRole('group', { name: SETTING_LABEL }))
+            .toBeInTheDocument()
 
         await waitFor(() => {
-            expect(checkbox)
-                .not.toBeChecked()
+            expect(screen.getByRole('radio', { name: PASSING_SUBMITTERS_LABEL }))
+                .toBeChecked()
         })
+        expect(screen.getByRole('radio', { name: ALL_REGISTRANTS_LABEL }))
+            .not.toBeChecked()
         expect(screen.getByTestId('metadata-value').textContent)
             .toBe('[]')
     })
@@ -119,11 +133,12 @@ describe('RegisteredMemberDownloadField', () => {
             />,
         )
 
-        const checkbox = screen.getByRole('checkbox', { name: SETTING_LABEL })
+        const allRegistrantsOption = screen.getByRole('radio', { name: ALL_REGISTRANTS_LABEL })
+        const passingSubmittersOption = screen.getByRole('radio', { name: PASSING_SUBMITTERS_LABEL })
 
-        await user.click(checkbox)
+        await user.click(allRegistrantsOption)
 
-        expect(checkbox)
+        expect(allRegistrantsOption)
             .toBeChecked()
         expect(screen.getByTestId('metadata-value').textContent)
             .toBe(JSON.stringify([
@@ -137,10 +152,10 @@ describe('RegisteredMemberDownloadField', () => {
                 },
             ]))
 
-        await user.click(checkbox)
+        await user.click(passingSubmittersOption)
 
-        expect(checkbox)
-            .not.toBeChecked()
+        expect(passingSubmittersOption)
+            .toBeChecked()
         expect(screen.getByTestId('metadata-value').textContent)
             .toBe(JSON.stringify([
                 {
@@ -154,11 +169,11 @@ describe('RegisteredMemberDownloadField', () => {
             ]))
     })
 
-    it('restores enabled metadata without changing the separate Design visibility gate', async () => {
+    it('restores all-registrant access from enabled metadata', async () => {
         const metadata = [
             {
-                name: 'submissionsViewable',
-                value: 'false',
+                name: 'existingMetadata',
+                value: 'keep-me',
             },
             {
                 name: SETTING_NAME,
@@ -169,9 +184,11 @@ describe('RegisteredMemberDownloadField', () => {
         render(<TestHarness defaultMetadata={metadata} />)
 
         await waitFor(() => {
-            expect(screen.getByRole('checkbox', { name: SETTING_LABEL }))
+            expect(screen.getByRole('radio', { name: ALL_REGISTRANTS_LABEL }))
                 .toBeChecked()
         })
+        expect(screen.getByRole('radio', { name: PASSING_SUBMITTERS_LABEL }))
+            .not.toBeChecked()
         expect(screen.getByTestId('metadata-value').textContent)
             .toBe(JSON.stringify(metadata))
     })

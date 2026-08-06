@@ -468,6 +468,41 @@ export function formatCompactInteger(value: number): string {
 }
 
 /**
+ * Formats a dashboard dollar value using compact English notation.
+ *
+ * @param value Numeric dollar value to round and abbreviate.
+ * @returns A compact currency label such as `$18.2K` or `$2M`.
+ * @throws RangeError when the value is NaN or infinite.
+ *
+ * Payment dashboard chart axes use this formatter while count dashboards retain
+ * their existing unit-free labels.
+ */
+export function formatCompactCurrency(value: number): string {
+    return `$${formatCompactInteger(requireFiniteNumber(value, 'Dashboard currency'))}`
+}
+
+/**
+ * Formats a dashboard dollar value as a rounded US currency amount.
+ *
+ * @param value Numeric dollar value to format.
+ * @returns A currency label such as `$18,214`.
+ * @throws RangeError when the value is NaN or infinite.
+ *
+ * Payment dashboard accessible tables use full values instead of compact axis
+ * notation so assistive-technology users receive the underlying amount.
+ */
+export function formatDashboardCurrency(value: number): string {
+    const roundedValue = Math.round(requireFiniteNumber(value, 'Dashboard currency'))
+
+    return roundedValue.toLocaleString('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 0,
+        minimumFractionDigits: 0,
+        style: 'currency',
+    })
+}
+
+/**
  * Formats dashboard percentage points with at most one decimal place.
  *
  * @param percentage Percentage value on a zero-to-one-hundred scale, such as
@@ -491,24 +526,26 @@ export function formatPercentage(percentage: number): string {
  * Pass `all` for the landing-page aggregate export.
  * @param range Dashboard request range with an exclusive `endDate`.
  * @returns A normalized filename such as
- * `new-signups-2026-02-01-to-2026-08-01.csv`. The `all` slug produces a
+ * `new-signups-2026-02-01-to-2026-07-31.csv`. The `all` slug produces a
  * `reports-dashboards-...csv` filename.
  * @throws RangeError when the slug or range dates are invalid, or the range is empty.
  *
- * Detail dashboard downloads use the filename alongside the same date range
- * supplied to the CSV endpoint.
+ * Detail dashboard downloads keep the API's half-open request range while the
+ * filename presents both boundaries as inclusive calendar dates.
  */
 export function buildDashboardCsvFileName(
     dashboardSlug: string,
     range: DashboardRange,
 ): string {
     formatDashboardRangeLabel(range)
+    const inclusiveEndDate = parseDashboardIsoDate(range.endDate)
+    inclusiveEndDate.setUTCDate(inclusiveEndDate.getUTCDate() - 1)
 
     return [
         normalizeDashboardSlug(dashboardSlug),
         range.startDate,
         'to',
-        range.endDate,
+        toIsoDate(inclusiveEndDate),
     ].join('-')
         .concat('.csv')
 }

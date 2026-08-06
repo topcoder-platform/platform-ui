@@ -305,8 +305,8 @@ function normalizeTestProgress(value: unknown): number | undefined {
 /**
  * Assigns a stable ordering weight for marathon test processes.
  * @param process Normalized marathon test process.
- * @returns Numeric priority used to break ties between progress records.
- * Used by `toSubmissionTestProgressCandidate` after timestamp and status ordering.
+ * @returns Numeric priority used to select the furthest completed process.
+ * Used by `getSubmissionTestProgress` before timestamps are used to break ties.
  */
 function getTestProcessPriority(process: MarathonMatchScoreProcess | undefined): number {
     if (process === 'system') {
@@ -324,7 +324,7 @@ function getTestProcessPriority(process: MarathonMatchScoreProcess | undefined):
  * Resolves the best timestamp available for ordering test progress summations.
  * @param entry Review summation containing marathon metadata.
  * @returns Epoch milliseconds or 0 when no parseable timestamp exists.
- * Used by `getSubmissionTestProgress` to choose the latest non-running process.
+ * Used by `getSubmissionTestProgress` to choose the latest record for a process.
  */
 function getTestProgressUpdatedAt(entry: ReviewSummation): number {
     const updatedAt = entry.metadata?.testProgressDetails?.updatedAt
@@ -384,7 +384,7 @@ function toSubmissionTestProgressCandidate(
 /**
  * Returns display-ready marathon match test progress for one submission.
  * @param submission Submission-like object containing Review API summations.
- * @returns Current process, status, and percent text when present in summation metadata.
+ * @returns Active progress, or the furthest completed process, with its status and percent text.
  * Used by `SubmissionsTable` to render marathon-only test progress columns.
  */
 export function getSubmissionTestProgress(
@@ -395,8 +395,8 @@ export function getSubmissionTestProgress(
         .filter((entry): entry is SubmissionTestProgressCandidate => !!entry)
         .sort((first, second) => (
             second.inProgressPriority - first.inProgressPriority
-            || second.updatedAt - first.updatedAt
             || second.processPriority - first.processPriority
+            || second.updatedAt - first.updatedAt
             || second.statusPriority - first.statusPriority
         ))
 

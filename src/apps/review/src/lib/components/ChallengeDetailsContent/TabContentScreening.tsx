@@ -87,10 +87,6 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
             })
             const canSeeAll = isPrivilegedRole || hasReviewerRole
 
-            if (isChallengeCompleted && !canSeeAll && !hasPassedScreeningThreshold) {
-                return []
-            }
-
             if (canSeeAll || (isChallengeCompleted && hasPassedScreeningThreshold)) {
                 return phaseValidatedRows
             }

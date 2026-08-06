@@ -58,9 +58,15 @@ export const formatApplicationDate = (dateString: string): string => {
     return `${months} months ago`
 }
 
-export const isApplicationActive = (status: ApplicationStatus): boolean => (
-    status === ApplicationStatus.SUBMITTED || status === ApplicationStatus.UNDER_REVIEW
-)
+export const isApplicationActive = (status: ApplicationStatus): boolean => {
+    const normalizedStatus = String(status || '')
+        .trim()
+        .toLowerCase()
+
+    return normalizedStatus === ApplicationStatus.SUBMITTED
+        || normalizedStatus === ApplicationStatus.UNDER_REVIEW
+        || normalizedStatus === ApplicationStatus.SHORTLISTED
+}
 
 export const truncateText = (text: string, maxLength: number): string => {
     if (!text) {

@@ -207,6 +207,7 @@ interface TestHarnessProps {
     disabled?: boolean
     hydratedPhases?: ChallengeEditorFormData['phases']
     metadata?: ChallengeEditorFormData['metadata']
+    onValidationErrorChange?: (error?: string) => void
     phases?: ChallengeEditorFormData['phases']
     startDate?: ChallengeEditorFormData['startDate']
     status?: ChallengeEditorFormData['status']
@@ -288,7 +289,10 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 
     return (
         <FormProvider {...formMethods}>
-            <ChallengeScheduleSection disabled={props.disabled} />
+            <ChallengeScheduleSection
+                disabled={props.disabled}
+                onValidationErrorChange={props.onValidationErrorChange}
+            />
             <HydratedPhases phases={props.hydratedPhases} />
             <StartDateValue />
             <StartDateModeValue />
@@ -949,6 +953,94 @@ describe('ChallengeScheduleSection component', () => {
 
         expect(reviewRow?.minEndDate?.toISOString())
             .toBe('2026-04-02T12:34:00.000Z')
+    })
+
+    it('reports and clears rejected active non-Design duration shortening without changing the schedule', async () => {
+        const handleValidationErrorChange = jest.fn()
+
+        mockUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'development-track',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            }],
+        })
+
+        render(
+            <TestHarness
+                onValidationErrorChange={handleValidationErrorChange}
+                phases={[
+                    {
+                        duration: 4320,
+                        id: 'phase-1',
+                        isOpen: true,
+                        name: 'Review',
+                        phaseId: 'review-phase',
+                        scheduledEndDate: '2026-04-02T12:34:00.000Z',
+                        scheduledStartDate: '2026-03-30T12:34:00.000Z',
+                    },
+                ]}
+                startDate='2026-03-30T12:34:00.000Z'
+                status='ACTIVE'
+                trackId='development-track'
+            />,
+        )
+
+        const initialReviewRow = [...mockPhaseEditorRow.mock.calls]
+            .map(([props]) => props as {
+                index: number
+                onDurationChange: (index: number, durationMinutes: number) => void
+                phase?: {
+                    name?: string
+                }
+            })
+            .reverse()
+            .find(props => props.phase?.name === 'Review')
+
+        expect(initialReviewRow)
+            .toBeDefined()
+
+        const reviewRowToUpdate = initialReviewRow as NonNullable<typeof initialReviewRow>
+        act(() => {
+            reviewRowToUpdate.onDurationChange(reviewRowToUpdate.index, 2880)
+        })
+
+        await waitFor(() => {
+            expect(handleValidationErrorChange)
+                .toHaveBeenLastCalledWith(
+                    'Active phase end date cannot be shortened for this track.',
+                )
+        })
+
+        const rejectedReviewRow = [...mockPhaseEditorRow.mock.calls]
+            .map(([props]) => props as {
+                endDate?: string
+                endDateError?: string
+                phase?: {
+                    duration?: number
+                    name?: string
+                }
+            })
+            .reverse()
+            .find(props => props.phase?.name === 'Review')
+
+        expect(rejectedReviewRow)
+            .toEqual(expect.objectContaining({
+                endDate: '2026-04-02T12:34:00.000Z',
+                endDateError: 'Active phase end date cannot be shortened for this track.',
+                phase: expect.objectContaining({
+                    duration: 4320,
+                }),
+            }))
+
+        act(() => {
+            reviewRowToUpdate.onDurationChange(reviewRowToUpdate.index, 5760)
+        })
+
+        await waitFor(() => {
+            expect(handleValidationErrorChange)
+                .toHaveBeenLastCalledWith(undefined)
+        })
     })
 
     it('uses a completed predecessor actual end date for the submission row start time', () => {

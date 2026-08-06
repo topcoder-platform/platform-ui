@@ -28,8 +28,11 @@ sudo yarn start
 - Each final-placement winner is matched by normalized member ID and placement. The endpoint's
   `submissionId` is authoritative for display and download; another submission from the same
   member is never substituted based on score or recency.
-- Local submission and review data may enrich the submitted date and reviews only when the local
-  submission ID exactly matches the canonical ID. Missing or malformed canonical results are
-  omitted safely.
+- Local submission data may supply a final/system aggregate score, submitted date, and reviews only
+  when the local submission ID exactly matches the canonical ID. This preserves Marathon Match
+  system scores without accepting provisional or sibling-submission scores. Missing or malformed
+  canonical results are omitted safely.
 - Canonical `PLACEMENT` winner types are shown. Untyped and contest-submission winner types remain
   supported for legacy challenge records, while checkpoint winner types are excluded.
+- Checkpoint winners remain separate from final placements and are identified by member ID in the
+  Checkpoint Review table. The winner indicator appears only on rows that passed Checkpoint Review.

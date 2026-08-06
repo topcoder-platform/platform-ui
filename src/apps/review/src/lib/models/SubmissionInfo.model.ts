@@ -47,7 +47,7 @@ export interface SubmissionInfo {
      */
     aggregateScore?: number
     /**
-     * Aggregated system/final score from review summations when available.
+     * Aggregated terminal system/final score from review summations when available.
      */
     finalAggregateScore?: number
     /**
@@ -252,13 +252,35 @@ function isFinalReviewSummation(summation: ReviewSummationLike): boolean {
 }
 
 /**
+ * Checks whether a final/system summation is only an active scoring placeholder.
+ *
+ * @param summation - Review summation returned by Review API.
+ * @returns True when Marathon Match system tests are still in progress.
+ * Used before exposing final aggregate scores so the required zero placeholder is not displayed.
+ * @throws This helper does not throw.
+ */
+function isReviewSummationInProgress(summation: ReviewSummationLike): boolean {
+    const metadata = parseSummationMetadata(summation.metadata)
+    const normalizedStatus = typeof metadata.testStatus === 'string'
+        ? metadata.testStatus
+            .trim()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .toUpperCase()
+        : ''
+
+    return normalizedStatus === 'IN PROGRESS'
+}
+
+/**
  * Selects the newest final/system review summation with a usable score.
  *
  * @param reviewSummations - Summations attached to one submission.
- * @returns Preferred final/system summation, or undefined when none exist.
- * Used to populate final-only aggregate scores for Marathon Match winners.
+ * @returns Newest scored final/system summation, or undefined when none exist.
+ * Used to determine whether the latest Marathon Match final score is terminal.
+ * @throws This helper does not throw.
  */
-function findFinalReviewSummation(
+function findLatestFinalReviewSummation(
     reviewSummations: ReviewSummationLike[],
 ): ReviewSummationLike | undefined {
     return reviewSummations
@@ -349,8 +371,14 @@ export function convertBackendSubmissionToSubmissionInfo(
     const reviewSummations: ReviewSummationLike[] = Array.isArray(data.reviewSummation)
         ? data.reviewSummation
         : []
-    const finalSummation = findFinalReviewSummation(reviewSummations)
-    const preferredSummation = finalSummation ?? reviewSummations[0]
+    const latestFinalSummation = findLatestFinalReviewSummation(reviewSummations)
+    const finalSummation = latestFinalSummation
+        && !isReviewSummationInProgress(latestFinalSummation)
+        ? latestFinalSummation
+        : undefined
+    const preferredSummation = latestFinalSummation
+        ? finalSummation
+        : reviewSummations[0]
     const aggregateScore = parseAggregateScore(preferredSummation?.aggregateScore)
     const finalAggregateScore = parseAggregateScore(finalSummation?.aggregateScore)
     const isPassingReviewRaw = preferredSummation?.isPassing

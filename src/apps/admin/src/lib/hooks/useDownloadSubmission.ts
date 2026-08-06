@@ -4,7 +4,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { some } from 'lodash'
 
-import { downloadSubmissionFile } from '../services'
+import { getSubmissionDownloadUrl } from '../services'
 import { handleError } from '../utils'
 import { IsRemovingType } from '../models'
 
@@ -15,8 +15,9 @@ export interface useDownloadSubmissionProps {
 }
 
 /**
- * Download submission
- * @returns download info
+ * Requests signed submission URLs and starts browser-managed downloads.
+ *
+ * @returns The download callback and its per-submission loading state.
  */
 export function useDownloadSubmission(): useDownloadSubmissionProps {
     const [isLoading, setIsLoading] = useState<IsRemovingType>({})
@@ -30,16 +31,15 @@ export function useDownloadSubmission(): useDownloadSubmissionProps {
             ...previous,
             [submissionId]: true,
         }))
-        downloadSubmissionFile(submissionId)
-            .then((data: Blob) => {
+        getSubmissionDownloadUrl(submissionId)
+            .then((downloadUrl: string) => {
                 setIsLoading(previous => ({
                     ...previous,
                     [submissionId]: false,
                 }))
 
-                const url = window.URL.createObjectURL(new Blob([data]))
                 const link = document.createElement('a')
-                link.href = url
+                link.href = downloadUrl
                 link.setAttribute('download', `submission-${submissionId}.zip`)
                 document.body.appendChild(link)
                 link.click()

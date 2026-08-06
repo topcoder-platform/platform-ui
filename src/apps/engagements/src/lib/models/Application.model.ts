@@ -3,6 +3,7 @@ import { Engagement } from './Engagement.model'
 export enum ApplicationStatus {
     SUBMITTED = 'submitted',
     UNDER_REVIEW = 'under_review',
+    SHORTLISTED = 'shortlisted',
     SELECTED = 'selected',
     REJECTED = 'rejected',
 }

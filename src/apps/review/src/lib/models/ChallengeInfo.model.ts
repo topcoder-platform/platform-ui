@@ -60,6 +60,7 @@ export interface ChallengeInfo {
     status?: string
     phases: BackendPhase[]
     winners?: ChallengeWinner[]
+    checkpointWinners?: ChallengeWinner[]
     // Optional: prize sets from backend (placement, copilot, etc.)
     // Present on the backend response and spread into the converted model.
     // We include it here so components can read prize configuration safely.

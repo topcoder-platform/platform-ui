@@ -22,9 +22,11 @@ import {
 } from '../models'
 import {
     fromEngagementAnticipatedStartApi,
+    fromEngagementDateInputValue,
     normalizeEngagement,
     toEngagementAnticipatedStartApi,
     toEngagementRoleApi,
+    toEngagementRoleLevelApi,
     toEngagementStatusApi,
     toEngagementWorkloadApi,
 } from '../utils'
@@ -50,6 +52,7 @@ interface BackendPaginatedResponse<T> {
 
 interface AssignmentDetails {
     agreementRate?: string
+    candidateWiproId?: string
     durationMonths?: number | string
     endDate?: string
     memberHandle?: string
@@ -57,9 +60,11 @@ interface AssignmentDetails {
     otherRemarks?: string
     paymentCycle?: string
     ratePerHour?: string
+    source?: string
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    wiproIdEndDate?: string
 }
 
 interface EngagementUpsertData extends Partial<Engagement> {
@@ -286,6 +291,11 @@ function normalizeStatusFilters(status?: string | string[]): string[] {
 function serializeEngagementPayload(data: EngagementUpsertData): Record<string, unknown> {
     const payload: Record<string, unknown> = {}
 
+    if (data.account !== undefined) {
+        payload.account = String(data.account || '')
+            .trim()
+    }
+
     if (data.anticipatedStart) {
         payload.anticipatedStart = toEngagementAnticipatedStartApi(data.anticipatedStart)
     }
@@ -308,6 +318,11 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
 
                 if (assignment.agreementRate) {
                     entry.agreementRate = String(assignment.agreementRate)
+                        .trim()
+                }
+
+                if (assignment.candidateWiproId) {
+                    entry.candidateWiproId = String(assignment.candidateWiproId)
                         .trim()
                 }
 
@@ -343,6 +358,12 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.source) {
+                    entry.source = String(assignment.source)
+                        .trim()
+                        .toUpperCase()
+                }
+
                 if (assignment.startDate) {
                     entry.startDate = assignment.startDate
                 }
@@ -369,6 +390,10 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                     if (Number.isFinite(standardHoursPerWeek)) {
                         entry.standardHoursPerWeek = String(standardHoursPerWeek)
                     }
+                }
+
+                if (assignment.wiproIdEndDate) {
+                    entry.wiproIdEndDate = assignment.wiproIdEndDate
                 }
 
                 return entry
@@ -399,6 +424,17 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
         payload.projectId = String(data.projectId)
     }
 
+    if (data.receivedDateFromAccount !== undefined) {
+        const receivedDateFromAccount = fromEngagementDateInputValue(
+            data.receivedDateFromAccount,
+        )
+
+        // Backend clears the field when null is sent; empty form values must clear on update.
+        payload.receivedDateFromAccount = receivedDateFromAccount
+            // eslint-disable-next-line unicorn/no-null
+            ?? null
+    }
+
     if (data.requiredMemberCount !== undefined) {
         payload.requiredMemberCount = Number(data.requiredMemberCount)
     }
@@ -407,9 +443,30 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
         payload.role = toEngagementRoleApi(data.role)
     }
 
+    if (data.roleLevel !== undefined) {
+        const roleLevel = String(data.roleLevel || '')
+            .trim()
+
+        // Backend enum field is cleared with null; empty string fails validation.
+        payload.roleLevel = roleLevel
+            ? toEngagementRoleLevelApi(roleLevel)
+            // eslint-disable-next-line unicorn/no-null
+            : null
+    }
+
     const requiredSkills = normalizeSkillIds(data.skills)
     if (requiredSkills.length) {
         payload.requiredSkills = requiredSkills
+    }
+
+    if (data.smu !== undefined) {
+        payload.smu = String(data.smu || '')
+            .trim()
+    }
+
+    if (data.spoc !== undefined) {
+        payload.spoc = String(data.spoc || '')
+            .trim()
     }
 
     if (data.status) {

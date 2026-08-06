@@ -13,6 +13,7 @@ interface ApplicationStatusBadgeProps {
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.SUBMITTED]: 'Submitted',
     [ApplicationStatus.UNDER_REVIEW]: 'Under Review',
+    [ApplicationStatus.SHORTLISTED]: 'Shortlisted',
     [ApplicationStatus.SELECTED]: 'Selected',
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
@@ -20,14 +21,17 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 const ApplicationStatusBadge: FC<ApplicationStatusBadgeProps> = (
     props: ApplicationStatusBadgeProps,
 ) => {
-    const label = APPLICATION_STATUS_LABELS[props.status] ?? props.status
+    const normalizedStatus = String(props.status || '')
+        .trim()
+        .toLowerCase() as ApplicationStatus
+    const label = APPLICATION_STATUS_LABELS[normalizedStatus] ?? props.status
     const size = props.size ?? 'md'
 
     return (
         <span
             className={classNames(
                 styles.badge,
-                styles[`status-${props.status}`],
+                styles[`status-${normalizedStatus}`],
                 styles[`size-${size}`],
             )}
         >

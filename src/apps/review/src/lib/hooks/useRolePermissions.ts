@@ -61,6 +61,11 @@ export function useRolePermissions(): UseRolePermissionsResult {
         [normalizedRoles],
     )
 
+    const hasIterativeReviewerRole = useMemo<boolean>(
+        () => normalizedRoles.some(role => role.includes('iterative reviewer')),
+        [normalizedRoles],
+    )
+
     const isProjectManager = useMemo<boolean>(
         () => (loginUserInfo?.roles?.some(
             role => typeof role === 'string'
@@ -104,12 +109,22 @@ export function useRolePermissions(): UseRolePermissionsResult {
             isAdmin
             || hasCopilotRole
             || hasReviewerRole
+            || hasIterativeReviewerRole
             || hasManagerRole
             || hasScreenerRole
             || hasApproverRole
             || isProjectManager
         ),
-        [hasCopilotRole, isAdmin, isProjectManager, hasReviewerRole, hasManagerRole, hasScreenerRole, hasApproverRole],
+        [
+            hasApproverRole,
+            hasCopilotRole,
+            hasIterativeReviewerRole,
+            hasManagerRole,
+            hasReviewerRole,
+            hasScreenerRole,
+            isAdmin,
+            isProjectManager,
+        ],
     )
 
     return {

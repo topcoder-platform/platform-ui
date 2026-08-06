@@ -2,27 +2,31 @@ import * as yup from 'yup'
 
 interface EngagementEditorSchemaAssignmentDetails {
     agreementRate?: string
+    candidateWiproId?: string
     durationMonths?: number | string
     memberHandle?: string
+    otherRemarks?: string
     paymentCycle?: string
     ratePerHour?: string
+    source?: string
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    wiproIdEndDate?: string
 }
 
 export interface EngagementEditorSchemaData {
-    anticipatedStart: string
+    anticipatedStart?: string
     assignedMemberHandles?: string[]
     assignmentDetails?: EngagementEditorSchemaAssignmentDetails[]
-    countries: string[]
+    countries?: string[]
     description: string
-    durationWeeks: number
+    durationWeeks?: number
     isPrivate: boolean
     requiredMemberCount?: number
     skills: unknown[]
     status: string
-    timezones: string[]
+    timezones?: string[]
     title: string
 }
 
@@ -147,7 +151,11 @@ function hasCompleteAssignmentDetails(
 export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData> = yup.object({
     anticipatedStart: yup
         .string()
-        .required('Anticipated start is required'),
+        .when('isPrivate', {
+            is: true,
+            otherwise: schema => schema.required('Anticipated start is required'),
+            then: schema => schema.optional(),
+        }),
     assignedMemberHandles: yup
         .array()
         .of(yup.string()
@@ -212,17 +220,31 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
         .array()
         .of(yup.string()
             .required())
-        .min(1, 'Select at least one country')
-        .required('Select at least one country'),
+        .when('isPrivate', {
+            is: true,
+            otherwise: schema => schema
+                .min(1, 'Select at least one country')
+                .required('Select at least one country'),
+            then: schema => schema.optional(),
+        }),
     description: yup
         .string()
         .required('Description is required'),
     durationWeeks: yup
         .number()
-        .typeError('Duration is required')
-        .required('Duration is required')
-        .integer('Duration must be a whole number')
-        .min(4, 'Duration must be at least 4 weeks'),
+        .transform(emptyStringToUndefined)
+        .when('isPrivate', {
+            is: true,
+            otherwise: schema => schema
+                .typeError('Duration is required')
+                .required('Duration is required')
+                .integer('Duration must be a whole number')
+                .min(4, 'Duration must be at least 4 weeks'),
+            then: schema => schema
+                .optional()
+                .integer('Duration must be a whole number')
+                .min(4, 'Duration must be at least 4 weeks'),
+        }),
     isPrivate: yup
         .boolean()
         .required(),
@@ -249,8 +271,13 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
         .array()
         .of(yup.string()
             .required())
-        .min(1, 'Select at least one timezone')
-        .required('Select at least one timezone'),
+        .when('isPrivate', {
+            is: true,
+            otherwise: schema => schema
+                .min(1, 'Select at least one timezone')
+                .required('Select at least one timezone'),
+            then: schema => schema.optional(),
+        }),
     title: yup
         .string()
         .required('Title is required'),

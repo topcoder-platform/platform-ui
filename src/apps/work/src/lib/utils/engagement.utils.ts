@@ -2,6 +2,7 @@ import {
     Engagement,
     EngagementAnticipatedStart,
     EngagementRole,
+    EngagementRoleLevel,
     EngagementStatus,
     EngagementWorkload,
 } from '../models'
@@ -53,6 +54,24 @@ const WORKLOAD_FROM_API: Record<string, EngagementWorkload> = {
     PART_TIME: 'FRACTIONAL',
 }
 
+const ROLE_LEVEL_TO_API: Record<string, string> = {
+    JUNIOR: 'JUNIOR',
+    MID: 'MID',
+    SENIOR: 'SENIOR',
+}
+
+const ROLE_LEVEL_FROM_API: Record<string, EngagementRoleLevel> = {
+    JUNIOR: 'JUNIOR',
+    MID: 'MID',
+    SENIOR: 'SENIOR',
+}
+
+const ROLE_LEVEL_LABELS: Record<string, string> = {
+    JUNIOR: 'Junior',
+    MID: 'Mid',
+    SENIOR: 'Senior',
+}
+
 const ANTICIPATED_START_LABELS: Record<string, string> = {
     FEW_DAYS: 'In a few days',
     FEW_WEEKS: 'In a few weeks',
@@ -90,6 +109,86 @@ function toIsoString(value: unknown): string {
     }
 
     return ''
+}
+
+/**
+ * Converts an API date value into an HTML date-input value (`YYYY-MM-DD`).
+ *
+ * @param value ISO date string or Date from the engagements API.
+ * @returns a calendar date string, or an empty string when the value is blank.
+ */
+export function toEngagementDateInputValue(value: unknown): string {
+    if (!value) {
+        return ''
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+
+        if (!trimmed) {
+            return ''
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+            return trimmed
+        }
+
+        const parsed = new Date(trimmed)
+
+        if (Number.isNaN(parsed.getTime())) {
+            return ''
+        }
+
+        const year = parsed.getUTCFullYear()
+        const month = String(parsed.getUTCMonth() + 1)
+            .padStart(2, '0')
+        const day = String(parsed.getUTCDate())
+            .padStart(2, '0')
+
+        return `${year}-${month}-${day}`
+    }
+
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const year = value.getUTCFullYear()
+        const month = String(value.getUTCMonth() + 1)
+            .padStart(2, '0')
+        const day = String(value.getUTCDate())
+            .padStart(2, '0')
+
+        return `${year}-${month}-${day}`
+    }
+
+    return ''
+}
+
+/**
+ * Converts an HTML date-input value into an ISO datetime string for the API.
+ *
+ * @param value calendar date string from the engagement editor form.
+ * @returns an ISO datetime string, or `undefined` when the value is blank/invalid.
+ */
+export function fromEngagementDateInputValue(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const trimmed = value.trim()
+
+    if (!trimmed) {
+        return undefined
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        return `${trimmed}T00:00:00.000Z`
+    }
+
+    const parsed = new Date(trimmed)
+
+    if (Number.isNaN(parsed.getTime())) {
+        return undefined
+    }
+
+    return parsed.toISOString()
 }
 
 function toNumber(value: unknown, fallback: number = 0): number {
@@ -349,6 +448,10 @@ function normalizeAssignment(
 
     return {
         agreementRate: agreementRate || '',
+        candidateWiproId: normalizeString(
+            assignment.candidateWiproId
+            ?? assignment.candidate_wipro_id,
+        ) || undefined,
         durationMonths: toOptionalNumberishValue(
             assignment.durationMonths ?? assignment.duration_months,
         ),
@@ -388,6 +491,9 @@ function normalizeAssignment(
             ?? assignment.payment_cycle,
         ) || 'WEEKLY',
         ratePerHour,
+        source: normalizeString(
+            assignment.source,
+        ) || undefined,
         standardHoursPerDay,
         standardHoursPerWeek,
         startDate: toIsoString(
@@ -407,6 +513,10 @@ function normalizeAssignment(
         ) || undefined,
         termsAccepted: assignment.termsAccepted === true
             || assignment.terms_accepted === true,
+        wiproIdEndDate: toIsoString(
+            assignment.wiproIdEndDate
+            ?? assignment.wipro_id_end_date,
+        ) || undefined,
     }
 }
 
@@ -485,6 +595,7 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
     )
 
     return {
+        account: normalizeString(data.account) || undefined,
         anticipatedStart,
         applications: Array.isArray(data.applications)
             ? data.applications
@@ -502,9 +613,15 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
         project,
         projectId: data.projectId || project?.id || '',
         projectName,
+        receivedDateFromAccount: toIsoString(data.receivedDateFromAccount) || undefined,
         requiredMemberCount: toNumber(data.requiredMemberCount),
         role,
+        roleLevel: data.roleLevel
+            ? fromEngagementRoleLevelApi(data.roleLevel)
+            : undefined,
         skills,
+        smu: normalizeString(data.smu) || undefined,
+        spoc: normalizeString(data.spoc) || undefined,
         status,
         timezones,
         title: normalizeString(data.title),
@@ -583,31 +700,58 @@ export function getEngagementDurationInDays(engagement: Partial<Engagement>): nu
     return engagement.durationWeeks * 7
 }
 
+function isAnyLocationValue(value: string): boolean {
+    return value.trim()
+        .toLowerCase() === 'any'
+}
+
+/**
+ * Resolves an ISO country code (or existing name) to a display name.
+ *
+ * @param countryCodeOrName country code or already-localized country name.
+ * @returns localized country name when available; otherwise the original value.
+ */
+function formatCountryDisplayName(countryCodeOrName: string): string {
+    const normalized = countryCodeOrName.trim()
+
+    if (!normalized || isAnyLocationValue(normalized)) {
+        return ''
+    }
+
+    if (
+        typeof Intl !== 'undefined'
+        && typeof Intl.DisplayNames === 'function'
+        && /^[A-Za-z]{2}$/.test(normalized)
+    ) {
+        const displayName = new Intl.DisplayNames(['en'], { type: 'region' })
+            .of(normalized.toUpperCase())
+
+        if (displayName) {
+            return displayName
+        }
+    }
+
+    return normalized
+}
+
 export function formatLocation(engagement: Partial<Engagement>): string {
     const countries = Array.isArray(engagement.countries)
         ? engagement.countries
             .map(value => normalizeString(value))
             .filter(Boolean)
         : []
-    const timezones = Array.isArray(engagement.timezones)
-        ? engagement.timezones
-            .map(value => normalizeString(value))
-            .filter(Boolean)
-        : []
 
-    if (!countries.length && !timezones.length) {
+    if (!countries.length || countries.some(isAnyLocationValue)) {
         return 'Remote'
     }
 
-    if (!countries.length) {
-        return timezones.join(', ')
-    }
+    const countryNames = countries
+        .map(formatCountryDisplayName)
+        .filter(Boolean)
 
-    if (!timezones.length) {
-        return countries.join(', ')
-    }
-
-    return `${timezones.join(', ')} / ${countries.join(', ')}`
+    return countryNames.length > 0
+        ? countryNames.join(', ')
+        : 'Remote'
 }
 
 export function getAssignedMembersCount(engagement: Partial<Engagement>): number {
@@ -733,6 +877,36 @@ export function fromEngagementWorkloadApi(workload: string): EngagementWorkload 
     }
 
     return WORKLOAD_FROM_API[normalized] || workload
+}
+
+export function toEngagementRoleLevelApi(roleLevel: string): string {
+    const normalized = toUpperSnake(normalizeString(roleLevel))
+
+    if (!normalized) {
+        return ''
+    }
+
+    return ROLE_LEVEL_TO_API[normalized] || normalized
+}
+
+export function fromEngagementRoleLevelApi(roleLevel: string): EngagementRoleLevel | string {
+    const normalized = toUpperSnake(normalizeString(roleLevel))
+
+    if (!normalized) {
+        return ''
+    }
+
+    return ROLE_LEVEL_FROM_API[normalized] || roleLevel
+}
+
+export function formatEngagementRoleLevel(value: string | EngagementRoleLevel | undefined): string {
+    if (!value) {
+        return '-'
+    }
+
+    const normalized = toUpperSnake(String(value))
+
+    return ROLE_LEVEL_LABELS[normalized] || value
 }
 
 export function toEngagementAnticipatedStartApi(value: string): string {

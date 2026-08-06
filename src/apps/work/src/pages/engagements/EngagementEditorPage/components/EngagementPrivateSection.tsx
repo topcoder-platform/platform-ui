@@ -17,6 +17,10 @@ import {
     FormUserAutocomplete,
 } from '../../../../lib/components/form'
 import {
+    ASSIGNMENT_SOURCES,
+    ASSIGNMENT_SOURCE_LABELS,
+} from '../../../../lib/constants'
+import {
     formatAssignmentCurrency,
     getAssignmentPaymentCycle,
     getAssignmentStandardHoursPerDay,
@@ -36,6 +40,7 @@ interface EngagementPrivateSectionForm {
 }
 
 interface EngagementPrivateSectionProps {
+    hideCheckbox?: boolean
     assignmentManagementPath?: string
     lockedAssignedMemberHandles?: string[]
 }
@@ -66,6 +71,20 @@ function formatDate(value?: string): string {
         month: 'short',
         year: 'numeric',
     })
+}
+
+function formatAssignmentSource(value?: string): string {
+    const normalized = String(value || '')
+        .trim()
+        .toUpperCase()
+
+    if ((ASSIGNMENT_SOURCES as readonly string[]).includes(normalized)) {
+        return ASSIGNMENT_SOURCE_LABELS[
+            normalized as (typeof ASSIGNMENT_SOURCES)[number]
+        ]
+    }
+
+    return normalized || '-'
 }
 
 function formatDurationMonths(value?: string): string {
@@ -113,14 +132,17 @@ function normalizeLockedAssignedMemberHandles(
 function createEmptyAssignmentDetails(): AssignmentDetailsFormValue {
     return {
         agreementRate: '',
+        candidateWiproId: undefined,
         durationMonths: '',
         memberHandle: '',
         otherRemarks: undefined,
         paymentCycle: 'WEEKLY',
         ratePerHour: '',
+        source: undefined,
         standardHoursPerDay: '',
         standardHoursPerWeek: '',
         startDate: '',
+        wiproIdEndDate: undefined,
     }
 }
 
@@ -194,13 +216,19 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
 
     return (
         <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Private</h3>
+            {!props.hideCheckbox
+                ? (
+                    <>
+                        <h3 className={styles.sectionTitle}>Private</h3>
 
-            <FormCheckboxField
-                disabled={hasLockedAssignments}
-                label='Private engagement'
-                name='isPrivate'
-            />
+                        <FormCheckboxField
+                            disabled={hasLockedAssignments}
+                            label='Private engagement'
+                            name='isPrivate'
+                        />
+                    </>
+                )
+                : <h3 className={styles.sectionTitle}>Assigned Members</h3>}
 
             {isPrivate
                 ? (
@@ -297,6 +325,24 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                                                         <span className={styles.detailLabel}>Payment Cycle:</span>
                                                                         {' '}
                                                                         {getAssignmentPaymentCycle(assignmentDetail)}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Candidate Wipro ID:</span>
+                                                                        {' '}
+                                                                        {assignmentDetail.candidateWiproId || '-'}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Wipro ID End Date:</span>
+                                                                        {' '}
+                                                                        {formatDate(assignmentDetail.wiproIdEndDate)}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Source:</span>
+                                                                        {' '}
+                                                                        {formatAssignmentSource(assignmentDetail.source)}
                                                                     </span>
                                                                     {!isLockedAssignment
                                                                         ? (

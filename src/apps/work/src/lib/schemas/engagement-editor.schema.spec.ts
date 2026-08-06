@@ -79,6 +79,23 @@ describe('engagementEditorSchema', () => {
             )
     })
 
+    it('accepts private engagements without public posting fields', async () => {
+        await expect(engagementEditorSchema.validate({
+            ...createValidFormValues(),
+            anticipatedStart: undefined,
+            countries: undefined,
+            durationWeeks: undefined,
+            isPrivate: true,
+            requiredMemberCount: 1,
+            timezones: undefined,
+        }, {
+            abortEarly: false,
+        })).resolves.toMatchObject({
+            isPrivate: true,
+            requiredMemberCount: 1,
+        })
+    })
+
     it('accepts private engagements without assigned members', async () => {
         await expect(engagementEditorSchema.validate({
             ...createValidFormValues(),

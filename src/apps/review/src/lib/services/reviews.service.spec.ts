@@ -2,7 +2,11 @@ import { xhrGetAsync } from '~/libs/core'
 
 import type { BackendProjectResult } from '../models'
 
-import { fetchAllProjectResults } from './reviews.service'
+import {
+    fetchAllProjectResults,
+    fetchPastReviews,
+    getSubmissionDownloadUrl,
+} from './reviews.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -15,7 +19,6 @@ jest.mock('~/config', () => ({
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
-    xhrGetBlobAsync: jest.fn(),
     xhrPatchAsync: jest.fn(),
     xhrPostAsync: jest.fn(),
 }), { virtual: true })
@@ -108,5 +111,64 @@ describe('fetchAllProjectResults', () => {
             .toEqual([])
         expect(mockedXhrGetAsync)
             .not.toHaveBeenCalled()
+    })
+})
+
+describe('fetchPastReviews', () => {
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('includes reviewer resource role IDs in the server-side filter', async () => {
+        mockedXhrGetAsync.mockResolvedValue({
+            data: [],
+            meta: {
+                page: 1,
+                perPage: 50,
+                totalCount: 0,
+                totalPages: 0,
+            },
+        } as never)
+
+        await fetchPastReviews({
+            page: 1,
+            perPage: 50,
+            resourceRoleIds: ['reviewer-role', 'screening-role'],
+        })
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith(
+                'https://api.topcoder.test/v6/my-reviews'
+                + '?resourceRoleIds=reviewer-role%2Cscreening-role'
+                + '&page=1&perPage=50&past=true',
+            )
+    })
+})
+
+describe('getSubmissionDownloadUrl', () => {
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('returns the signed URL without following the storage redirect', async () => {
+        mockedXhrGetAsync.mockResolvedValue({
+            url: 'https://storage.example.test/signed-submission',
+        } as never)
+
+        await expect(getSubmissionDownloadUrl('submission/id'))
+            .resolves
+            .toBe('https://storage.example.test/signed-submission')
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith(
+                'https://api.topcoder.test/v6/submissions/submission%2Fid/download-url',
+            )
+    })
+
+    it('rejects responses that omit the signed URL', async () => {
+        mockedXhrGetAsync.mockResolvedValue({} as never)
+
+        await expect(getSubmissionDownloadUrl('submission-id'))
+            .rejects
+            .toThrow('Submission download URL is missing')
     })
 })

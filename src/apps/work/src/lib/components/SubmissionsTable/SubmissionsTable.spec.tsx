@@ -399,6 +399,87 @@ describe('SubmissionsTable', () => {
             .toBeNull()
     })
 
+    it('renders N/A only for the marathon score whose tests are in progress', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        reviewSummation: [
+                            {
+                                aggregateScore: 0,
+                                isProvisional: true,
+                                metadata: {
+                                    testProcess: 'provisional',
+                                    testProgress: 0.02,
+                                    testStatus: 'IN PROGRESS',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-2',
+                        id: 'submission-2',
+                        reviewSummation: [
+                            {
+                                aggregateScore: 0,
+                                isFinal: true,
+                                metadata: {
+                                    testProcess: 'system',
+                                    testProgress: 0.2,
+                                    testStatus: 'IN PROGRESS',
+                                },
+                            },
+                            {
+                                aggregateScore: 31.41,
+                                isProvisional: true,
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-3',
+                        id: 'submission-3',
+                        reviewSummation: [
+                            {
+                                aggregateScore: 0,
+                                isProvisional: true,
+                                metadata: {
+                                    testProcess: 'provisional',
+                                    testProgress: 1,
+                                    testStatus: 'SUCCESS',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: 'N/A / -' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: '31.41 / N/A' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: '0.00 / -' }))
+            .toBeTruthy()
+        expect(screen.queryByRole('link', { name: '0.00 / N/A' }))
+            .toBeNull()
+    })
+
     it('renders example validation process and score for marathon submissions', () => {
         render(
             <SubmissionsTable

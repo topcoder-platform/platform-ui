@@ -34,6 +34,28 @@ interface DecodedTokenData {
     userId?: number | string
 }
 
+interface ChallengeUserIdentity {
+    handle?: string
+    userId?: number | string
+}
+
+export interface ChallengeModificationAccessParams {
+    challenge?: Challenge
+    hasChallengeResourceWriteAccess: boolean
+    loginUserInfo?: ChallengeUserIdentity
+    project?: Project
+    userRoles: string[]
+}
+
+const CHALLENGE_WRITE_PROJECT_ROLES = new Set<string>([
+    PROJECT_ROLES.COPILOT,
+    PROJECT_ROLES.CUSTOMER,
+    PROJECT_ROLES.MANAGER,
+    PROJECT_ROLES.WRITE,
+    'write',
+])
+const CHALLENGE_API_ADMIN_ROLE = 'administrator'
+
 export interface CheckChallengeEditPermissionOptions {
     hasProjectAccess?: boolean
     loggedInUserId?: number | string
@@ -120,7 +142,7 @@ function hasDownloadSubmissionsRole(userRoles: string[]): boolean {
     return hasRole(userRoles, ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES)
 }
 
-function isChallengeCreator(challenge: Challenge, loginUserInfo?: User): boolean {
+function isChallengeCreator(challenge: Challenge, loginUserInfo?: ChallengeUserIdentity): boolean {
     const challengeCreator = normalizeValue(challenge.createdBy)
 
     if (!challengeCreator || !loginUserInfo) {
@@ -128,7 +150,7 @@ function isChallengeCreator(challenge: Challenge, loginUserInfo?: User): boolean
     }
 
     const loginHandle = normalizeValue(loginUserInfo.handle)
-    const loginUserId = normalizeValue(loginUserInfo.userId)
+    const loginUserId = normalizeUserId(loginUserInfo.userId)
 
     return challengeCreator === loginHandle || challengeCreator === loginUserId
 }
@@ -149,6 +171,34 @@ export function canEditChallengeResources(
     }
 
     return isChallengeCreator(challenge, loginUserInfo)
+}
+
+/**
+ * Returns whether the caller has a backend-recognized challenge modification signal.
+ *
+ * @param params challenge, caller, project membership, and resolved active-resource access.
+ * @returns `true` for challenge-api administrators, challenge creators, active full-write
+ * challenge resources, or project members whose normalized role is manager, copilot, customer,
+ * or write. Challenge-api recognizes only the normalized `administrator` role as its admin signal.
+ * This is used by challenge routes to gate mutation actions such as Edit and Delete.
+ * @throws Does not throw.
+ */
+export function canModifyChallenge(params: ChallengeModificationAccessParams): boolean {
+    if (!params.challenge) {
+        return false
+    }
+
+    if (params.userRoles.some(role => normalizeValue(role) === CHALLENGE_API_ADMIN_ROLE)
+        || isChallengeCreator(params.challenge, params.loginUserInfo)
+        || params.hasChallengeResourceWriteAccess) {
+        return true
+    }
+
+    const projectMemberRole = normalizeValue(
+        getProjectMemberByUserId(params.project, params.loginUserInfo?.userId)?.role,
+    )
+
+    return CHALLENGE_WRITE_PROJECT_ROLES.has(projectMemberRole)
 }
 
 export function canDownloadSubmissions(userRoles: string[]): boolean {

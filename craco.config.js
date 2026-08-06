@@ -22,6 +22,47 @@ function withNodeModulesWatchIgnore(ignored) {
 }
 
 /**
+ * Converts CRA's webpack-dev-server v4 hook registrations into v5 middleware entries.
+ *
+ * @param {Function|undefined} hook - Legacy CRA middleware hook.
+ * @param {object} devServer - Active webpack-dev-server instance.
+ * @param {string} namePrefix - Stable prefix used for middleware diagnostics.
+ * @returns {Array<object>} Middleware entries accepted by webpack-dev-server v5.
+ */
+function collectLegacyMiddlewares(hook, devServer, namePrefix) {
+    if (!hook) {
+        return [];
+    }
+
+    const originalApp = devServer.app;
+    const appProxy = Object.create(originalApp);
+    const registrations = [];
+
+    appProxy.use = (...args) => {
+        registrations.push(args);
+        return appProxy;
+    };
+
+    devServer.app = appProxy;
+    try {
+        hook(devServer);
+    } finally {
+        devServer.app = originalApp;
+    }
+
+    return registrations.flatMap((registration, registrationIndex) => {
+        const args = [...registration];
+        const path = typeof args[0] === 'string' ? args.shift() : undefined;
+
+        return args.map((middleware, middlewareIndex) => ({
+            name: `${namePrefix}-${registrationIndex}-${middlewareIndex}`,
+            ...(path ? { path } : {}),
+            middleware,
+        }));
+    });
+}
+
+/**
  * Preserves CRA's dev-server static config while disabling public asset watches.
  *
  * @param {object} devServerConfig - CRA webpack-dev-server config passed through CRACO for yarn start.
@@ -29,13 +70,52 @@ function withNodeModulesWatchIgnore(ignored) {
  * @throws This function does not throw.
  */
 function configureDevServer(devServerConfig) {
+    const {
+        https,
+        onAfterSetupMiddleware,
+        onBeforeSetupMiddleware,
+        setupMiddlewares,
+        ...supportedConfig
+    } = devServerConfig;
     const staticConfig = devServerConfig.static || {};
 
     return {
-        ...devServerConfig,
+        ...supportedConfig,
+        ...(https ? {
+            server: {
+                type: 'https',
+                options: typeof https === 'object' ? https : {},
+            },
+        } : {}),
         static: {
             ...staticConfig,
             watch: false,
+        },
+        setupMiddlewares: (middlewares, devServer) => {
+            // CRA 5 still calls the webpack-dev-server v4 shutdown method.
+            if (!devServer.close && devServer.stopCallback) {
+                devServer.close = devServer.stopCallback.bind(devServer);
+            }
+
+            const configuredMiddlewares = setupMiddlewares
+                ? setupMiddlewares(middlewares, devServer)
+                : middlewares;
+            const beforeMiddlewares = collectLegacyMiddlewares(
+                onBeforeSetupMiddleware,
+                devServer,
+                'cra-before-setup',
+            );
+            const afterMiddlewares = collectLegacyMiddlewares(
+                onAfterSetupMiddleware,
+                devServer,
+                'cra-after-setup',
+            );
+
+            return [
+                ...beforeMiddlewares,
+                ...configuredMiddlewares,
+                ...afterMiddlewares,
+            ];
         },
     };
 }
@@ -72,6 +152,15 @@ const localIdentName = isProd
 const resolve = dir => path.resolve(__dirname, dir);
 
 module.exports = {
+    jest: {
+        configure: {
+            moduleNameMapper: {
+                // Jest 27 cannot resolve React Router 7's nested conditional export.
+                '^react-router/dom$': '<rootDir>/test/react-router-dom.cjs',
+            },
+        },
+    },
+
     style: {
         modules: {
             localIdentName,

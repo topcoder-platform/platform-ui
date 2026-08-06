@@ -30,6 +30,7 @@ interface ReviewManagerCommentProps {
 const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
     const {
         isManagerEdit,
+        autoOpenManagerComment,
         canAddManagerComment,
         isSavingManagerComment,
         addManagerComment,
@@ -74,6 +75,10 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
             setComment(props.managerComment)
         }
     }, [props.managerComment])
+
+    useEffect(() => {
+        setShowCommentForm(Boolean(autoOpenManagerComment))
+    }, [autoOpenManagerComment])
 
     const handleShowCommentForm = useCallback(() => {
         setShowCommentForm(true)

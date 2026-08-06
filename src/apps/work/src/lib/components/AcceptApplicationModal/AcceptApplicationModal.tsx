@@ -13,6 +13,10 @@ import {
 } from '~/libs/ui'
 
 import {
+    ASSIGNMENT_SOURCES,
+    ASSIGNMENT_SOURCE_LABELS,
+} from '../../constants'
+import {
     Application,
 } from '../../models'
 import {
@@ -31,13 +35,16 @@ import styles from './AcceptApplicationModal.module.scss'
 
 export interface AcceptApplicationFormData {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths: number
     otherRemarks?: string
     paymentCycle: string
     ratePerHour: string
+    source?: string
     startDate: string
     standardHoursPerDay: number
     standardHoursPerWeek: number
+    wiproIdEndDate?: string
 }
 
 interface AcceptApplicationModalProps {
@@ -59,22 +66,19 @@ interface ValidationErrors {
 const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
     props: AcceptApplicationModalProps,
 ) => {
+    const [candidateWiproId, setCandidateWiproId] = useState<string>('')
     const [durationMonths, setDurationMonths] = useState<string>('')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [otherRemarks, setOtherRemarks] = useState<string>('')
     const [paymentCycle, setPaymentCycle] = useState<string>('WEEKLY')
     const [ratePerHour, setRatePerHour] = useState<string>('')
+    const [source, setSource] = useState<string>('')
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>('')
+    const [wiproIdEndDate, setWiproIdEndDate] = useState<Date | undefined>()
 
     const isSubmitting = props.isSubmitting === true
 
-    const timezone = useMemo(
-        () => Intl.DateTimeFormat()
-            .resolvedOptions()
-            .timeZone,
-        [],
-    )
     const agreementRate = useMemo(
         () => {
             const parsedStandardHoursPerDay = toPositiveNumberWithMaxDecimalPlaces(
@@ -92,13 +96,16 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
     )
 
     const resetState = useCallback((): void => {
+        setCandidateWiproId('')
         setDurationMonths('')
         setErrors({})
         setOtherRemarks('')
         setPaymentCycle('WEEKLY')
         setRatePerHour('')
+        setSource('')
         setStartDate(undefined)
         setStandardHoursPerDay('')
+        setWiproIdEndDate(undefined)
     }, [])
 
     const handleCancel = useCallback((): void => {
@@ -155,26 +162,34 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
         await props.onConfirm({
             agreementRate,
+            candidateWiproId: candidateWiproId.trim() || undefined,
             durationMonths: parsedDurationMonths,
             otherRemarks: otherRemarks.trim() || undefined,
             paymentCycle: normalizedPaymentCycle,
             ratePerHour: parsedRatePerHour.toString(),
+            source: source.trim() || undefined,
             standardHoursPerDay: parsedStandardHoursPerDay,
             standardHoursPerWeek: Number((parsedStandardHoursPerDay * 5).toFixed(2)),
             startDate: serializeTentativeAssignmentDate(startDate),
+            wiproIdEndDate: wiproIdEndDate
+                ? serializeTentativeAssignmentDate(wiproIdEndDate)
+                : undefined,
         })
 
         resetState()
     }, [
         agreementRate,
+        candidateWiproId,
         durationMonths,
         otherRemarks,
         paymentCycle,
         props,
         ratePerHour,
         resetState,
+        source,
         standardHoursPerDay,
         startDate,
+        wiproIdEndDate,
     ])
 
     return (
@@ -208,12 +223,6 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <p className={styles.timezoneText}>
-                        Timezone:
-                        {' '}
-                        {timezone}
-                    </p>
-
                     <StartDateTimeInput
                         label='Billing start date'
                         preventOpenOnFocus
@@ -343,6 +352,49 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                         rows={3}
                         value={otherRemarks}
                     />
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='accept-application-candidate-wipro-id'>
+                        Candidate Wipro ID
+                    </label>
+                    <input
+                        id='accept-application-candidate-wipro-id'
+                        className={styles.input}
+                        onChange={event => setCandidateWiproId(event.target.value)}
+                        type='text'
+                        value={candidateWiproId}
+                    />
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <StartDateTimeInput
+                        label='Wipro ID End Date'
+                        preventOpenOnFocus
+                        showTimeSelect={false}
+                        showTimezone={false}
+                        value={wiproIdEndDate}
+                        onChange={nextValue => setWiproIdEndDate(nextValue || undefined)}
+                    />
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='accept-application-source'>
+                        Source
+                    </label>
+                    <select
+                        id='accept-application-source'
+                        className={styles.input}
+                        onChange={event => setSource(event.target.value)}
+                        value={source}
+                    >
+                        <option value=''>Select source</option>
+                        {ASSIGNMENT_SOURCES.map(sourceOption => (
+                            <option key={sourceOption} value={sourceOption}>
+                                {ASSIGNMENT_SOURCE_LABELS[sourceOption]}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
         </BaseModal>

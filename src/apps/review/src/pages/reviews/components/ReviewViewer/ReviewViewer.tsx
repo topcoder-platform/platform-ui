@@ -18,7 +18,13 @@ import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
 import { rootRoute } from '~/apps/review/src/config/routes.config'
 
-import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
+import {
+    ADMIN,
+    COPILOT,
+    DESIGN,
+    MANAGER,
+    SUBMITTER,
+} from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
 import { ReviewScorecardHeader } from './ReviewScorecardHeader'
@@ -37,6 +43,7 @@ const ReviewViewer: FC = () => {
 
     const {
         actionChallengeRole,
+        hasReviewerRole,
         myChallengeResources,
         myChallengeRoles,
     }: useRoleProps = useRole()
@@ -65,6 +72,13 @@ const ReviewViewer: FC = () => {
         [myChallengeResources],
     )
 
+    const hasChallengeCopilotRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
     const canManagerEdit = useMemo(
         () => hasChallengeAdminRole
         || hasTopcoderAdminRole
@@ -80,6 +94,14 @@ const ReviewViewer: FC = () => {
     const {
         challengeInfo,
     }: ChallengeDetailContextModel = useChallengeDetailsContext()
+    const canFillScorecard = useMemo(
+        () => (
+            hasReviewerRole
+            && challengeInfo?.track?.name?.trim()
+                .toLowerCase() === DESIGN.toLowerCase()
+        ),
+        [challengeInfo?.track?.name, hasReviewerRole],
+    )
     const { isEdit: isEditPhase }: useIsEditReviewProps = useIsEditReview()
 
     const {
@@ -136,7 +158,7 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
-    const { isEdit }: UseReviewEditAccessResult = useReviewEditAccess({
+    const { isEdit, reviewPhaseType }: UseReviewEditAccessResult = useReviewEditAccess({
         challengeInfo,
         isEditPhase,
         isReviewCompleted,
@@ -196,11 +218,13 @@ const ReviewViewer: FC = () => {
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
-                || hasChallengeManagerRole),
+                || hasChallengeManagerRole
+                || hasChallengeCopilotRole),
         )
     }, [
         challengeInfo?.status,
         hasChallengeAdminRole,
+        hasChallengeCopilotRole,
         hasChallengeManagerRole,
         hasTopcoderAdminRole,
         reviewInfo?.committed,
@@ -253,10 +277,12 @@ const ReviewViewer: FC = () => {
                 {!isSubmitterPhaseLocked && (
                     <>
                         <ReviewScorecardHeader
+                            isSubmitterView={actionChallengeRole === SUBMITTER}
                             reviewInfo={reviewInfo}
                             scorecardInfo={scorecardInfo}
                             workflow={workflow}
                             reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
+                            reviewPhaseType={reviewPhaseType}
                         />
                         <ScorecardViewer
                             actionChallengeRole={actionChallengeRole}
@@ -269,10 +295,12 @@ const ReviewViewer: FC = () => {
                             setIsChanged={setIsChanged}
                             isLoading={isLoading}
                             isManagerEdit={isManagerEdit}
+                            autoOpenManagerComment={isManagerEdit && !respondToAppeals}
                             isSavingReview={isSavingReview}
                             isSavingAppeal={isSavingAppeal}
                             isSavingAppealResponse={isSavingAppealResponse}
                             isSavingManagerComment={isSavingManagerComment}
+                            canFillScorecard={canFillScorecard}
                             canAddManagerComment={
                                 hasChallengeAdminRole
                                 || hasTopcoderAdminRole

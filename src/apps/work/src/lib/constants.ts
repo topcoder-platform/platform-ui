@@ -38,6 +38,8 @@ export const CHALLENGE_APPROVAL_STATUS = {
     REJECTED: 'REJECTED',
 } as const
 
+export const IS_TEST_CHALLENGE_METADATA_FIELD = 'is_test_challenge'
+
 export const PAGE_SIZE = 10
 
 export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]
@@ -351,10 +353,38 @@ export const ENGAGEMENT_ROLES = [
     'DATA_ENGINEER',
 ] as const
 
+export const ENGAGEMENT_ROLE_LEVELS = [
+    'JUNIOR',
+    'MID',
+    'SENIOR',
+] as const
+
 export const ENGAGEMENT_WORKLOADS = ['FULL_TIME', 'FRACTIONAL'] as const
 
 export const ANTICIPATED_START_OPTIONS = ['IMMEDIATE', 'FEW_DAYS', 'FEW_WEEKS'] as const
 
-export const APPLICATION_STATUSES = ['SUBMITTED', 'UNDER_REVIEW', 'SELECTED', 'REJECTED'] as const
+export const APPLICATION_STATUSES = [
+    'SUBMITTED',
+    'UNDER_REVIEW',
+    'SHORTLISTED',
+    'SELECTED',
+    'REJECTED',
+] as const
 
 export const ASSIGNMENT_STATUSES = ['ASSIGNED', 'ACTIVE', 'TERMINATED'] as const
+
+export const ASSIGNMENT_SOURCES = [
+    'DIRECT',
+    'VENDOR',
+    'WIPRO_REFERRAL',
+    'CUSTOMER_REFERRAL',
+    'TOPCODER_COMMUNITY',
+] as const
+
+export const ASSIGNMENT_SOURCE_LABELS: Record<(typeof ASSIGNMENT_SOURCES)[number], string> = {
+    CUSTOMER_REFERRAL: 'Customer Referral',
+    DIRECT: 'Direct',
+    TOPCODER_COMMUNITY: 'Topcoder Community',
+    VENDOR: 'Vendor',
+    WIPRO_REFERRAL: 'Wipro Referral',
+}

@@ -23,7 +23,10 @@ import {
     type UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import type { WorkAppContextModel } from '../../../lib/models'
-import { deleteChallenge } from '../../../lib/services'
+import {
+    deleteChallenge,
+    patchChallenge,
+} from '../../../lib/services'
 import {
     checkProjectAccess,
     isChallengeCompletedOrCancelled,
@@ -36,6 +39,15 @@ import {
 import { ChallengeEditorPage } from './ChallengeEditorPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
+
+jest.mock('tc-auth-lib', () => ({
+    decodeToken: jest.fn(),
+}))
+
+jest.mock('../../../lib/services/resources.service', () => ({
+    fetchResourceRoles: jest.fn(),
+    fetchResources: jest.fn(),
+}))
 
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
@@ -118,6 +130,7 @@ jest.mock('../../../lib/constants', () => ({
     },
     CHALLENGE_STATUS: {
         ACTIVE: 'ACTIVE',
+        APPROVED: 'APPROVED',
         CANCELLED_CLIENT_REQUEST: 'CANCELLED_CLIENT_REQUEST',
         CANCELLED_FAILED_REVIEW: 'CANCELLED_FAILED_REVIEW',
         CANCELLED_FAILED_SCREENING: 'CANCELLED_FAILED_SCREENING',
@@ -130,6 +143,14 @@ jest.mock('../../../lib/constants', () => ({
         NEW: 'NEW',
     },
     COMMUNITY_APP_URL: 'https://example.com/community',
+    IS_TEST_CHALLENGE_METADATA_FIELD: 'is_test_challenge',
+    PROJECT_ROLES: {
+        COPILOT: 'copilot',
+        CUSTOMER: 'customer',
+        MANAGER: 'manager',
+        READ: 'observer',
+        WRITE: 'customer',
+    },
     REVIEW_APP_URL: 'https://example.com/review',
 }))
 jest.mock('../../../lib/contexts', () => {
@@ -165,6 +186,7 @@ jest.mock('../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    canModifyChallenge: jest.requireActual('../../../lib/utils/permissions.utils').canModifyChallenge,
     checkProjectAccess: jest.fn(() => true),
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
@@ -177,6 +199,7 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            footerCancelAction?: ReactNode
             isEditMode?: boolean
             onChallengeCreated?: (challenge: {
                 id: string
@@ -185,6 +208,7 @@ jest.mock('./components', () => {
                 status: string
             }) => void
             onChallengeApprovalStatusChange?: (status?: string) => void
+            onChallengeStatusChange?: (status?: string) => void
             isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
@@ -210,6 +234,7 @@ jest.mock('./components', () => {
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
+                    {props.footerCancelAction}
                     <button
                         onClick={function handleChallengeApproval() {
                             props.onChallengeApprovalStatusChange?.('APPROVED')
@@ -226,6 +251,18 @@ jest.mock('./components', () => {
                                 type='button'
                             >
                                 Mock create challenge
+                            </button>
+                        )
+                        : undefined}
+                    {!props.isReadOnly
+                        ? (
+                            <button
+                                onClick={function handleChallengeStatusChange() {
+                                    props.onChallengeStatusChange?.('DRAFT')
+                                }}
+                                type='button'
+                            >
+                                Mock save as draft
                             </button>
                         )
                         : undefined}
@@ -251,6 +288,7 @@ const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedCheckProjectAccess = checkProjectAccess as jest.Mock
 const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
@@ -326,6 +364,7 @@ describe('ChallengeEditorPage', () => {
             project: {
                 id: '123',
                 members: [{
+                    role: 'manager',
                     userId: 12345,
                 }],
                 name: 'Allowed Project',
@@ -357,16 +396,21 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect(
-            screen.getByTestId('challenge-editor-form')
-                .getAttribute('data-edit-mode'),
-        )
+        const editorForm = screen.getByTestId('challenge-editor-form')
+        const rightHeader = screen.getByTestId('right-header')
+        const headerCancelButton = within(rightHeader)
+            .getByRole('button', { name: 'Cancel' })
+        const footerCancelButton = within(editorForm)
+            .getByRole('button', { name: 'Cancel' })
+
+        expect(editorForm.getAttribute('data-edit-mode'))
             .toBe('true')
-        expect(screen.getByRole('button', { name: 'Cancel' }))
+        expect(headerCancelButton)
+            .toBeTruthy()
+        expect(footerCancelButton)
             .toBeTruthy()
 
         const titleAction = screen.getByTestId('title-action')
-        const rightHeader = screen.getByTestId('right-header')
         const quickLinks = within(rightHeader)
             .getAllByRole('link')
 
@@ -395,18 +439,77 @@ describe('ChallengeEditorPage', () => {
             .getAttribute('href'))
             .toBe('https://example.com/forum/challenges/456')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            headerCancelButton
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            footerCancelButton
                 .getAttribute('data-size'),
         )
             .toBe('lg')
     })
 
-    it('renders a read-only draft challenge view with cancel, launch, and edit header actions', async () => {
+    it('opens cancellation options from the edit footer and applies the selected status', async () => {
+        const user = userEvent.setup()
+        const mutate = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedPatchChallenge.mockResolvedValue({})
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                name: 'Edit test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate,
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/edit',
+            '/projects/:projectId/challenges/:challengeId/edit',
+        )
+
+        const editorForm = await screen.findByTestId('challenge-editor-form')
+        await user.click(within(editorForm)
+            .getByRole('button', { name: 'Cancel' }))
+
+        const cancelStatusOption = screen.getByRole('button', {
+            name: 'Cancelled Failed Review',
+        })
+        expect(cancelStatusOption)
+            .toBeTruthy()
+        expect(cancelStatusOption.parentElement?.className)
+            .toContain('cancelMenuStart')
+        expect(screen.getByText('Challenge Editor Form'))
+            .toBeTruthy()
+
+        await user.click(cancelStatusOption)
+
+        expect(screen.getByText('Cancel Challenge'))
+            .toBeTruthy()
+        expect(screen.getByText(
+            'Do you want to cancel challenge Edit test with status Cancelled Failed Review?',
+        ))
+            .toBeTruthy()
+
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('456', {
+                    status: 'CANCELLED_FAILED_REVIEW',
+                })
+        })
+        expect(mutate)
+            .toHaveBeenCalled()
+    })
+
+    it('renders a read-only draft challenge view with header and footer actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -424,22 +527,35 @@ describe('ChallengeEditorPage', () => {
             .toBe('false')
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Cancel' }))
+        const headerActions = within(screen.getByTestId('right-header'))
+        const footerActions = within(screen.getByRole('group', {
+            name: 'Challenge footer actions',
+        }))
+
+        expect(headerActions.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Launch' }))
+        expect(headerActions.getByRole('button', { name: 'Launch' }))
             .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Edit' }))
+        expect(headerActions.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Cancel' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+        expect(footerActions.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
         expect(
-            screen.getByRole('button', { name: 'Edit' })
+            footerActions.getByRole('button', { name: 'Edit' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Edit' })
+            footerActions.getByRole('button', { name: 'Edit' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
+        expect(footerActions.queryByRole('link'))
+            .toBeNull()
     })
 
     it('disables launch when challenge budget is not approved', async () => {
@@ -469,7 +585,10 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+        expect(screen.getAllByRole('button', { name: 'Launch' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => (button as HTMLButtonElement).disabled))
             .toBe(true)
     })
 
@@ -500,8 +619,11 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
-            .toBe(false)
+        expect(screen.getAllByRole('button', { name: 'Launch' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => !(button as HTMLButtonElement).disabled))
+            .toBe(true)
     })
 
     it('enables launch immediately after approving the budget from the form', async () => {
@@ -533,17 +655,36 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => (button as HTMLButtonElement).disabled))
             .toBe(true)
 
         await user.click(screen.getByRole('button', { name: 'Mock approve budget' }))
 
-        expect((screen.getByRole('button', { name: 'Launch' }) as HTMLButtonElement).disabled)
-            .toBe(false)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => !(button as HTMLButtonElement).disabled))
+            .toBe(true)
     })
 
     it('allows project-scoped challenge views when the user has challenge resource read access', async () => {
         mockedCheckProjectAccess.mockReturnValue(false)
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Read-only test challenge',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -590,6 +731,8 @@ describe('ChallengeEditorPage', () => {
         expect(screen.queryByText('You don’t have access to this project. Please contact support@topcoder.com.'))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
             .toBeNull()
     })
 
@@ -638,8 +781,8 @@ describe('ChallengeEditorPage', () => {
                     .toBeTruthy()
             })
 
-            expect(screen.getByRole('button', { name: 'Edit' }))
-                .toBeTruthy()
+            expect(screen.getAllByRole('button', { name: 'Edit' }))
+                .toHaveLength(2)
         },
     )
 
@@ -729,8 +872,8 @@ describe('ChallengeEditorPage', () => {
                 .getAttribute('data-edit-mode'),
         )
             .toBe('false')
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('does not render a launch action for non-draft challenges in read-only view mode', async () => {
@@ -761,8 +904,8 @@ describe('ChallengeEditorPage', () => {
 
         expect(screen.queryByRole('button', { name: 'Launch' }))
             .toBeNull()
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('shows mark complete in read-only view mode for active task challenges', async () => {
@@ -811,10 +954,10 @@ describe('ChallengeEditorPage', () => {
                     },
                 }),
             )
-        expect(screen.getByRole('button', { name: 'Mark Complete' }))
-            .toBeTruthy()
-        expect(screen.getByRole('button', { name: 'Edit' }))
-            .toBeTruthy()
+        expect(screen.getAllByRole('button', { name: 'Mark Complete' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Edit' }))
+            .toHaveLength(2)
     })
 
     it('hides the read-only edit action for completed challenges', async () => {
@@ -824,6 +967,10 @@ describe('ChallengeEditorPage', () => {
                     url: 'https://example.com/forum/challenges/456',
                 }],
                 id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'false',
+                }],
                 name: 'Completed challenge',
                 prizeSets: [],
                 status: 'COMPLETED',
@@ -845,6 +992,8 @@ describe('ChallengeEditorPage', () => {
 
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: 'Edit' }))
+                .toBeNull()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
                 .toBeNull()
         })
     })
@@ -878,7 +1027,174 @@ describe('ChallengeEditorPage', () => {
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: 'Edit' }))
                 .toBeNull()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
+                .toBeNull()
         })
+    })
+
+    it.each([
+        'COMPLETED',
+        'CANCELLED_CLIENT_REQUEST',
+    ])('allows an authorized user to delete a persisted test challenge in %s status', async status => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Disposable production test',
+                prizeSets: [],
+                projectId: '123',
+                status,
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        const rightHeader = within(screen.getByTestId('right-header'))
+
+        await waitFor(() => {
+            expect(rightHeader.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+        expect(screen.getAllByRole('button', { name: 'Delete' }))
+            .toHaveLength(2)
+
+        fireEvent.click(rightHeader.getByRole('button', { name: 'Delete' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteChallenge)
+                .toHaveBeenCalledWith('456')
+        })
+    })
+
+    it.each([
+        'DRAFT',
+        'APPROVED',
+        'ACTIVE',
+    ])('hides delete for a persisted test challenge in non-terminal %s status', async status => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'In-progress production test',
+                prizeSets: [],
+                projectId: '123',
+                status,
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it.each([
+        true,
+        'TRUE',
+        false,
+        'false',
+    ])('hides terminal test-challenge delete for non-exact metadata value %p', async value => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value,
+                }],
+                name: 'Invalid metadata production test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it('hides terminal test-challenge delete from an observer project member', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [],
+                id: '456',
+                metadata: [{
+                    name: 'is_test_challenge',
+                    value: 'true',
+                }],
+                name: 'Observer-only production test',
+                prizeSets: [],
+                projectId: '123',
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: '123',
+                members: [{
+                    role: 'observer',
+                    userId: 12345,
+                }],
+                name: 'Read-only Project',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
     })
 
     it('renders active header actions with the shared large secondary styling', async () => {
@@ -907,28 +1223,33 @@ describe('ChallengeEditorPage', () => {
             '/projects/:projectId/challenges/:challengeId/edit',
         )
 
+        const rightHeader = within(screen.getByTestId('right-header'))
+        const editorForm = within(screen.getByTestId('challenge-editor-form'))
+
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Cancel' }))
+            expect(rightHeader.getByRole('button', { name: 'Cancel' }))
+                .toBeTruthy()
+            expect(editorForm.getByRole('button', { name: 'Cancel' }))
                 .toBeTruthy()
         })
 
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            rightHeader.getByRole('button', { name: 'Cancel' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Cancel' })
+            editorForm.getByRole('button', { name: 'Cancel' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
         expect(
-            screen.getByRole('button', { name: 'Mark Complete' })
+            rightHeader.getByRole('button', { name: 'Mark Complete' })
                 .getAttribute('data-secondary'),
         )
             .toBe('true')
         expect(
-            screen.getByRole('button', { name: 'Mark Complete' })
+            rightHeader.getByRole('button', { name: 'Mark Complete' })
                 .getAttribute('data-size'),
         )
             .toBe('lg')
@@ -996,6 +1317,37 @@ describe('ChallengeEditorPage', () => {
         await waitFor(() => {
             expect(mockedDeleteChallenge)
                 .toHaveBeenCalledWith('789')
+        })
+    })
+
+    it('hides the delete action when a created challenge advances to DRAFT', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: undefined,
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/new',
+            '/projects/:projectId/challenges/new',
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock create challenge' }))
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock save as draft' }))
+
+        await waitFor(() => {
+            expect(within(screen.getByTestId('title-action'))
+                .getByText('DRAFT'))
+                .toBeTruthy()
+            expect(screen.queryByRole('button', { name: 'Delete' }))
+                .toBeNull()
         })
     })
 

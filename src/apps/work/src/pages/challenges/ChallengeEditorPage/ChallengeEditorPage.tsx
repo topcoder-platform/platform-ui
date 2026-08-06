@@ -12,6 +12,7 @@ import {
     useNavigate,
     useParams,
 } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
 import {
@@ -30,6 +31,7 @@ import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
     COMMUNITY_APP_URL,
+    IS_TEST_CHALLENGE_METADATA_FIELD,
     REVIEW_APP_URL,
 } from '../../../lib/constants'
 import { WorkAppContext } from '../../../lib/contexts'
@@ -52,6 +54,7 @@ import {
     patchChallenge,
 } from '../../../lib/services'
 import {
+    canModifyChallenge,
     checkProjectAccess,
     extractErrorMessage,
     getStatusText,
@@ -116,6 +119,7 @@ interface ChallengeEditorContentProps {
     canLaunchChallenge: boolean
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
+    footerCancelAction?: JSX.Element
     isExistingChallenge: boolean
     isLaunchDisabled: boolean
     isReadOnly: boolean
@@ -134,6 +138,7 @@ interface ChallengeEditorBodyProps {
     canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
+    footerCancelAction?: JSX.Element
     isProjectAccessDenied: boolean
     isProjectAccessLoading: boolean
     isExistingChallenge: boolean
@@ -352,15 +357,22 @@ function shouldShowCancelAction(
 }
 
 function shouldShowDeleteAction(
-    isEditMode: boolean,
+    isEditableOrCreatedChallenge: boolean,
+    isPersistedTestChallenge: boolean,
     challengeStatus: string | undefined,
 ): boolean {
     const normalizedStatus = (challengeStatus || '')
         .trim()
         .toUpperCase()
 
-    return isEditMode
-        && normalizedStatus === CHALLENGE_STATUS.NEW
+    return (
+        isPersistedTestChallenge
+        && isChallengeCompletedOrCancelled(normalizedStatus)
+    )
+        || (
+            isEditableOrCreatedChallenge
+            && normalizedStatus === CHALLENGE_STATUS.NEW
+        )
 }
 
 function useResolvedChallengeStatus(
@@ -461,6 +473,7 @@ function getChallengesListPath(projectId?: string): string {
 interface CancelChallengeActionProps {
     challengeId: string
     challengeName: string
+    menuAlign?: 'end' | 'start'
     onCancelled: () => void
 }
 
@@ -573,7 +586,11 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                 />
                 {showCancelMenu
                     ? (
-                        <div className={styles.cancelMenu}>
+                        <div
+                            className={classNames(styles.cancelMenu, {
+                                [styles.cancelMenuStart]: props.menuAlign === 'start',
+                            })}
+                        >
                             {CANCEL_CHALLENGE_STATUSES.map(status => (
                                 <button
                                     key={status}
@@ -970,6 +987,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             <ChallengeEditorForm
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
+                footerCancelAction={props.footerCancelAction}
                 isLaunchDisabled={props.isLaunchDisabled}
                 isEditMode={isEditMode}
                 isReadOnly={props.isReadOnly}
@@ -1007,6 +1025,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
         <ChallengeEditorForm
             canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
+            footerCancelAction={props.footerCancelAction}
             isLaunchDisabled={props.isLaunchDisabled}
             isEditMode={isEditMode}
             isReadOnly={props.isReadOnly}
@@ -1063,6 +1082,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challengeResult.challenge}
                 challengeId={props.challengeId}
+                footerCancelAction={props.footerCancelAction}
                 isExistingChallenge={props.isExistingChallenge}
                 isLaunchDisabled={props.isLaunchDisabled}
                 isReadOnly={props.isReadOnly}
@@ -1259,10 +1279,6 @@ export const ChallengeEditorPage: FC = () => {
         activeTab,
         effectiveChallengeStatus,
     )
-    const canDeleteChallenge = shouldShowDeleteAction(
-        isEditMode || isCreatedChallenge,
-        effectiveChallengeStatus,
-    )
     const canCompleteTask = shouldShowCompleteTaskAction(
         isExistingChallenge,
         activeTab,
@@ -1395,7 +1411,9 @@ export const ChallengeEditorPage: FC = () => {
         && baseProjectAccessState.isDenied
         && !hasChallengeProjectMismatch
         && !!challengeId
-    const shouldFetchChallengeResources = shouldResolveChallengeResourceAccess
+    const shouldFetchChallengeResources = isExistingChallenge
+        && !hasChallengeProjectMismatch
+        && !!challengeId
         && !!challengeResult.challenge
     const resourcesResult = useFetchResources(
         shouldFetchChallengeResources
@@ -1430,6 +1448,14 @@ export const ChallengeEditorPage: FC = () => {
             || isChallengeResourceAccessLoading,
     }
     const canRenderChallengeDetails = !projectAccessState.isDenied && !projectAccessState.isLoading
+    const hasChallengeModificationAccess = isCreatedChallenge
+        || canModifyChallenge({
+            challenge: currentChallenge,
+            hasChallengeResourceWriteAccess: challengeResourceAccess.canWrite,
+            loginUserInfo: workAppContext.loginUserInfo,
+            project: projectAccessResult.project,
+            userRoles: workAppContext.userRoles,
+        })
     const pageTitle = getChallengeEditorPageTitle(
         challengeId,
         isViewMode,
@@ -1446,9 +1472,22 @@ export const ChallengeEditorPage: FC = () => {
         && canRenderChallengeDetails
         && isViewMode
         && !!editChallengePath
-        && (!baseProjectAccessState.isDenied || challengeResourceAccess.canWrite)
+        && hasChallengeModificationAccess
         && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
-    const rightHeader = renderHeaderAction({
+    const isPersistedTestChallenge = isExistingChallenge
+        && currentChallenge?.metadata?.some(metadataEntry => (
+            metadataEntry.name === IS_TEST_CHALLENGE_METADATA_FIELD
+            && metadataEntry.value === 'true'
+        )) === true
+    const canDeleteChallenge = hasSuccessfulCurrentChallengeFetch
+        && canRenderChallengeDetails
+        && hasChallengeModificationAccess
+        && shouldShowDeleteAction(
+            isEditMode || isCreatedChallenge,
+            isPersistedTestChallenge,
+            effectiveChallengeStatus,
+        )
+    const challengeActionParams: RenderHeaderActionParams = {
         canCancelChallenge: canRenderChallengeDetails && canCancelChallenge,
         canCompleteTask: canRenderChallengeDetails && canCompleteTask,
         canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
@@ -1461,7 +1500,6 @@ export const ChallengeEditorPage: FC = () => {
             ? persistedChallengeId
             : undefined,
         challengeName: launchChallengeName,
-        challengeQuickLinks,
         isDeleting,
         isLaunchDisabled,
         isLaunching,
@@ -1470,7 +1508,26 @@ export const ChallengeEditorPage: FC = () => {
         onDeleteOpen: handleDeleteOpen,
         onEditOpen: handleEditOpen,
         onLaunchOpen: handleLaunchOpen,
+    }
+    const rightHeader = renderHeaderAction({
+        ...challengeActionParams,
+        challengeQuickLinks,
     })
+    const footerActions = isViewMode
+        ? renderHeaderAction(challengeActionParams)
+        : undefined
+    const footerCancelAction = isEditMode
+        && challengeActionParams.canCancelChallenge
+        && challengeActionParams.challengeId
+        ? (
+            <CancelChallengeAction
+                challengeId={challengeActionParams.challengeId}
+                challengeName={challengeActionParams.challengeName}
+                menuAlign='start'
+                onCancelled={challengeActionParams.onChallengeUpdated}
+            />
+        )
+        : undefined
     const deleteModal = renderDeleteModal({
         canDeleteChallenge: canRenderChallengeDetails && canDeleteChallenge,
         challengeName: deleteChallengeName,
@@ -1514,6 +1571,7 @@ export const ChallengeEditorPage: FC = () => {
                         canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
+                        footerCancelAction={footerCancelAction}
                         isProjectAccessDenied={projectAccessState.isDenied}
                         isProjectAccessLoading={projectAccessState.isLoading}
                         isExistingChallenge={isExistingChallenge}
@@ -1532,6 +1590,17 @@ export const ChallengeEditorPage: FC = () => {
                         onSubmissionsTabClick={handleSubmissionsTabClick}
                         projectId={projectId}
                     />
+                    {footerActions
+                        ? (
+                            <div
+                                aria-label='Challenge footer actions'
+                                className={styles.footerActions}
+                                role='group'
+                            >
+                                {footerActions}
+                            </div>
+                        )
+                        : undefined}
                 </div>
             </PageWrapper>
             {launchModal}

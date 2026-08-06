@@ -18,6 +18,7 @@ export interface SaveAiReviewConfigInput {
     autoFinalize: boolean
     challengeId: string
     formula?: Record<string, unknown>
+    instantReview?: boolean
     minPassingThreshold: number
     mode: AiReviewMode
     templateId?: string
@@ -145,6 +146,7 @@ function normalizeAiReviewConfig(
             ? typedConfig.formula as Record<string, unknown>
             : undefined,
         id,
+        instantReview: normalizeBoolean(typedConfig.instantReview) === true,
         minPassingThreshold,
         mode,
         templateId: normalizeText(typedConfig.templateId) || undefined,
@@ -165,6 +167,7 @@ function serializeInput(
         autoFinalize: input.autoFinalize === true,
         challengeId: input.challengeId.trim(),
         formula: input.formula,
+        instantReview: input.instantReview === true,
         minPassingThreshold: Number(input.minPassingThreshold),
         mode: input.mode,
         templateId: input.templateId === undefined

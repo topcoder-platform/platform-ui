@@ -163,9 +163,12 @@
 
 .actionLink,
 .actionButton {
+    align-items: center;
     color: $link-blue-dark;
+    display: inline-flex;
     font-size: 12px;
     font-weight: 700;
+    gap: 4px;
     text-decoration: none;
 
     &:hover,
@@ -173,6 +176,11 @@
         text-decoration: underline;
         outline: none;
     }
+}
+
+.externalIcon {
+    height: 12px;
+    width: 12px;
 }
 
 .actionButton {

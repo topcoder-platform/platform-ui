@@ -115,6 +115,36 @@ describe('challenge utils', () => {
                     status: 'SUCCESS',
                 })
         })
+
+        it('prefers a completed provisional process over a later example process', () => {
+            expect(getSubmissionTestProgress({
+                reviewSummation: [
+                    {
+                        isExample: true,
+                        metadata: {
+                            testProgress: 1,
+                            testStatus: 'SUCCESS',
+                            testType: 'example',
+                        },
+                        updatedAt: '2026-07-30T05:09:59.950Z',
+                    },
+                    {
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                            testProgress: 1,
+                            testStatus: 'SUCCESS',
+                        },
+                        updatedAt: '2026-07-30T05:05:34.045Z',
+                    },
+                ],
+            }))
+                .toEqual({
+                    process: 'provisional',
+                    progressPercent: '100%',
+                    status: 'SUCCESS',
+                })
+        })
     })
 
     describe('getSubmissionProvisionalScore', () => {

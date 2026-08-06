@@ -3,11 +3,17 @@ import {
 } from '../constants'
 
 import {
+    formatEngagementRoleLevel,
     formatEngagementStatus,
+    formatLocation,
+    fromEngagementDateInputValue,
+    fromEngagementRoleLevelApi,
     fromEngagementStatusApi,
     getCountableEngagementAssignments,
     getEngagementStatusPillVariant,
     normalizeEngagement,
+    toEngagementDateInputValue,
+    toEngagementRoleLevelApi,
     toEngagementStatusApi,
 } from './engagement.utils'
 
@@ -83,5 +89,61 @@ describe('engagement.utils status mappings', () => {
         expect(getCountableEngagementAssignments(normalized.assignments)
             .map(assignment => assignment.memberHandle))
             .toEqual(['active_member'])
+    })
+
+    it('normalizes and formats internal account fields', () => {
+        const normalized = normalizeEngagement({
+            account: 'Acme Corp',
+            id: 'engagement-1',
+            receivedDateFromAccount: '2026-07-15T00:00:00.000Z',
+            roleLevel: 'SENIOR',
+            smu: 'North America',
+            spoc: 'Jane Doe',
+        } as any)
+
+        expect(normalized.account)
+            .toBe('Acme Corp')
+        expect(normalized.receivedDateFromAccount)
+            .toBe('2026-07-15T00:00:00.000Z')
+        expect(normalized.roleLevel)
+            .toBe('SENIOR')
+        expect(normalized.smu)
+            .toBe('North America')
+        expect(normalized.spoc)
+            .toBe('Jane Doe')
+        expect(formatEngagementRoleLevel('SENIOR'))
+            .toBe('Senior')
+        expect(toEngagementRoleLevelApi('Senior'))
+            .toBe('SENIOR')
+        expect(fromEngagementRoleLevelApi('MID'))
+            .toBe('MID')
+        expect(toEngagementDateInputValue('2026-07-15T12:00:00.000Z'))
+            .toBe('2026-07-15')
+        expect(fromEngagementDateInputValue('2026-07-15'))
+            .toBe('2026-07-15T00:00:00.000Z')
+        expect(fromEngagementDateInputValue(''))
+            .toBeUndefined()
+    })
+})
+
+describe('formatLocation', () => {
+    it('shows country names without timezones', () => {
+        expect(formatLocation({
+            countries: ['IN', 'US'],
+            timezones: ['Asia/Kolkata', 'America/New_York'],
+        } as any))
+            .toBe('India, United States')
+    })
+
+    it('returns Remote when countries are missing or Any', () => {
+        expect(formatLocation({
+            timezones: ['Asia/Kolkata'],
+        } as any))
+            .toBe('Remote')
+        expect(formatLocation({
+            countries: ['Any'],
+            timezones: ['Asia/Kolkata'],
+        } as any))
+            .toBe('Remote')
     })
 })

@@ -2,6 +2,8 @@ import { Skill } from './Skill.model'
 
 export type EngagementRole = 'DESIGNER' | 'SOFTWARE_DEVELOPER' | 'DATA_SCIENTIST' | 'DATA_ENGINEER'
 
+export type EngagementRoleLevel = 'JUNIOR' | 'MID' | 'SENIOR'
+
 export type EngagementWorkload = 'FULL_TIME' | 'FRACTIONAL'
 
 export type EngagementAnticipatedStart = 'FEW_DAYS' | 'FEW_WEEKS' | 'IMMEDIATE'
@@ -14,14 +16,22 @@ export type EngagementStatus =
     | 'Open'
     | 'Pending Assignment'
 
-export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
+export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SHORTLISTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
 export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'OFFER_REJECTED' | 'SELECTED' | 'TERMINATED'
 
 export type PaymentCycle = 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY'
 
+export type AssignmentSource =
+    | 'CUSTOMER_REFERRAL'
+    | 'DIRECT'
+    | 'TOPCODER_COMMUNITY'
+    | 'VENDOR'
+    | 'WIPRO_REFERRAL'
+
 export interface Assignment {
     agreementRate: string
+    candidateWiproId?: string
     durationMonths?: number | string
     endDate: string
     engagementId: number | string
@@ -31,12 +41,14 @@ export interface Assignment {
     otherRemarks: string
     paymentCycle?: PaymentCycle | string
     ratePerHour?: string
+    source?: AssignmentSource | string
     startDate: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
     terminationReason?: string
     termsAccepted: boolean
+    wiproIdEndDate?: string
 }
 
 export interface Application {
@@ -59,6 +71,7 @@ export interface Application {
 }
 
 export interface Engagement {
+    account?: string
     anticipatedStart: EngagementAnticipatedStart | string
     applications?: Application[]
     applicationsCount?: number
@@ -77,9 +90,13 @@ export interface Engagement {
     }
     projectId: number | string
     projectName?: string
+    receivedDateFromAccount?: string
     requiredMemberCount: number
     role: EngagementRole | string
+    roleLevel?: EngagementRoleLevel | string
     skills: Skill[]
+    smu?: string
+    spoc?: string
     status: EngagementStatus | string
     timezones: string[]
     title: string

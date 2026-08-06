@@ -1,4 +1,5 @@
 import {
+    formatLastSaved,
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from './challenge-editor.utils'
@@ -22,6 +23,24 @@ jest.mock('~/config', () => ({
         },
     }),
 }), { virtual: true })
+
+describe('formatLastSaved', () => {
+    it('reports when a challenge has not been saved', () => {
+        expect(formatLastSaved())
+            .toBe('Not saved yet')
+    })
+
+    it('shows the exact localized time immediately after a save', () => {
+        const timestamp = new Date()
+        const localizedTime = timestamp.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+        })
+
+        expect(formatLastSaved(timestamp))
+            .toBe(`Last saved at ${localizedTime}`)
+    })
+})
 
 describe('challenge-editor utils funChallenge mapping', () => {
     it('defaults funChallenge to false in form data', () => {
@@ -93,6 +112,67 @@ describe('challenge-editor utils funChallenge mapping', () => {
         expect(result)
             .not
             .toHaveProperty('prizeSets')
+    })
+})
+
+describe('challenge-editor utils test challenge metadata mapping', () => {
+    it('defaults the test challenge checkbox to false when metadata is absent', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Production challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.isTestChallenge)
+            .toBe(false)
+    })
+
+    it('loads an exact true metadata value into the test challenge checkbox', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            metadata: [{
+                name: 'is_test_challenge',
+                value: 'true',
+            }],
+            name: 'Test challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.isTestChallenge)
+            .toBe(true)
+    })
+
+    it.each([
+        [true, 'true'],
+        [false, 'false'],
+    ])('serializes %s as explicit string metadata', (isTestChallenge, expectedValue) => {
+        const result = transformFormDataToChallenge({
+            description: 'Public specification',
+            isTestChallenge,
+            metadata: [{
+                name: 'existing_metadata',
+                value: 'preserved',
+            }],
+            name: 'Test challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.metadata)
+            .toEqual([
+                {
+                    name: 'existing_metadata',
+                    value: 'preserved',
+                },
+                {
+                    name: 'is_test_challenge',
+                    value: expectedValue,
+                },
+            ])
     })
 })
 

@@ -3,23 +3,28 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
 import {
-    DashboardSlug,
-} from '../../lib/services'
-
-import {
     dashboardDefinitions,
     DashboardMonth,
+    DashboardResponse,
+    getDashboardSeries,
 } from './dashboard.config'
 import {
+    formatCompactCurrency,
     formatCompactInteger,
+    formatDashboardCurrency,
     formatDashboardMonth,
 } from './dashboard.utils'
 import styles from './Dashboards.module.scss'
 
+Highcharts.setOptions({
+    lang: {
+        thousandsSep: ',',
+    },
+})
+
 type DashboardChartProps = {
     compact?: boolean
-    dashboard: DashboardSlug
-    months: DashboardMonth[]
+    response: DashboardResponse
 }
 
 /**
@@ -31,23 +36,30 @@ type DashboardChartProps = {
  * @throws Does not throw.
  */
 function getSeriesValue(month: DashboardMonth, key: string): number {
-    const value = (month as unknown as Record<string, unknown>)[key]
+    const monthRecord = month as unknown as Record<string, unknown>
+    const values = monthRecord.values
+    const value = values && typeof values === 'object'
+        ? (values as Record<string, unknown>)[key]
+        : monthRecord[key]
+
     return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 /**
  * Renders the configured Highcharts visualization for a dashboard dataset.
  *
- * @param props Dashboard slug, monthly data, and compact-card presentation flag.
+ * @param props Dashboard response and compact-card presentation flag.
  * @returns A stacked or grouped column chart with month categories along the
  * bottom axis and an accessible monthly data table.
  * @throws Does not throw. Invalid or absent point values are rendered as zero.
  */
 export const DashboardChart: FC<DashboardChartProps> = props => {
-    const definition = dashboardDefinitions[props.dashboard]
-    const hasData = props.months.some(month => (
-        definition.series.some(series => getSeriesValue(month, series.key) > 0)
+    const definition = dashboardDefinitions[props.response.dashboard]
+    const seriesDefinitions = getDashboardSeries(props.response)
+    const hasData = props.response.months.some(month => (
+        seriesDefinitions.some(series => getSeriesValue(month, series.key) > 0)
     ))
+    const isCurrency = definition.valueType === 'currency'
 
     const options = useMemo<Highcharts.Options>(() => ({
         accessibility: {
@@ -62,7 +74,7 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
                 : [16, 8, 8, 8],
             type: definition.chartType,
         },
-        colors: definition.series.map(series => series.color),
+        colors: seriesDefinitions.map(series => series.color),
         credits: {
             enabled: false,
         },
@@ -97,9 +109,9 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
                 },
             },
         },
-        series: definition.series.map(series => ({
+        series: seriesDefinitions.map(series => ({
             color: series.color,
-            data: props.months.map(month => getSeriesValue(month, series.key)),
+            data: props.response.months.map(month => getSeriesValue(month, series.key)),
             name: series.label,
             type: definition.chartType,
         })) as Highcharts.SeriesOptionsType[],
@@ -108,11 +120,12 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
         },
         tooltip: {
             headerFormat: '<strong>{point.key}</strong><br/>',
-            pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y:,.0f}</b><br/>',
+            pointFormat: '<span style="color:{series.color}">●</span> '
+                + `{series.name}: <b>${isCurrency ? '$' : ''}{point.y:,.0f}</b><br/>`,
             shared: true,
         },
         xAxis: {
-            categories: props.months.map(month => formatDashboardMonth(month.month)),
+            categories: props.response.months.map(month => formatDashboardMonth(month.month)),
             labels: {
                 style: {
                     color: '#111b46',
@@ -122,7 +135,7 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
             lineColor: '#dce1eb',
             tickColor: '#dce1eb',
             title: {
-                text: undefined,
+                text: definition.xAxisTitle,
             },
         },
         yAxis: {
@@ -132,7 +145,11 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
                 // Highcharts supplies the axis-label context through `this`.
                 formatter() {
                     // eslint-disable-next-line react/no-this-in-sfc
-                    return formatCompactInteger(Number(this.value))
+                    const axisValue = Number(this.value)
+
+                    return isCurrency
+                        ? formatCompactCurrency(axisValue)
+                        : formatCompactInteger(axisValue)
                 },
                 style: {
                     color: '#111b46',
@@ -146,8 +163,10 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
         },
     }), [
         definition,
+        isCurrency,
         props.compact,
-        props.months,
+        props.response,
+        seriesDefinitions,
     ])
 
     if (!hasData) {
@@ -172,19 +191,23 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
                 <thead>
                     <tr>
                         <th scope='col'>Month</th>
-                        {definition.series.map(series => (
+                        {seriesDefinitions.map(series => (
                             <th key={series.key} scope='col'>{series.label}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {props.months.map(month => (
+                    {props.response.months.map(month => (
                         <tr key={month.month}>
                             <th scope='row'>{formatDashboardMonth(month.month)}</th>
-                            {definition.series.map(series => (
+                            {seriesDefinitions.map(series => (
                                 <td key={series.key}>
-                                    {getSeriesValue(month, series.key)
-                                        .toLocaleString('en-US')}
+                                    {isCurrency
+                                        ? formatDashboardCurrency(
+                                            getSeriesValue(month, series.key),
+                                        )
+                                        : getSeriesValue(month, series.key)
+                                            .toLocaleString('en-US')}
                                 </td>
                             ))}
                         </tr>

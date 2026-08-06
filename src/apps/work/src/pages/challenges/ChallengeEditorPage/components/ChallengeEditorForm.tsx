@@ -26,6 +26,7 @@ import {
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
     CREATE_FORUM_TYPE_IDS,
+    IS_TEST_CHALLENGE_METADATA_FIELD,
 } from '../../../../lib/constants'
 import {
     AUTOSAVE_DELAY_MS,
@@ -84,6 +85,7 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
+import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
@@ -166,6 +168,7 @@ import {
 } from './RateChallengeField'
 import {
     RegisteredMemberDownloadField,
+    REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
 } from './RegisteredMemberDownloadField'
 import {
     ReviewCostField,
@@ -184,14 +187,14 @@ import {
     StockArtsField,
 } from './StockArtsField'
 import {
-    SubmissionVisibilityField,
-} from './SubmissionVisibilityField'
-import {
     SubmissionTypeField,
 } from './SubmissionTypeField'
 import {
     TermsField,
 } from './TermsField'
+import {
+    TestChallengeField,
+} from './TestChallengeField'
 import {
     applyProjectBillingToChallengeFormData,
     COPILOT_RESOURCE_ROLE_NAMES,
@@ -215,6 +218,7 @@ import styles from './ChallengeEditorForm.module.scss'
 interface ChallengeEditorFormProps {
     canLaunchChallenge?: boolean
     challenge?: Challenge
+    footerCancelAction?: JSX.Element
     isLaunchDisabled?: boolean
     isEditMode?: boolean
     isReadOnly?: boolean
@@ -284,6 +288,7 @@ interface PersistCreatedChallengeCopilotResult {
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const SAVED_BUTTON_STATE_DURATION_MS = 2000
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
@@ -1581,7 +1586,9 @@ function getPhaseDateTime(value: Date | string | undefined): number | undefined 
 }
 
 /**
- * Resolves the canonical phase duration used by the schedule form.
+ * Resolves the canonical phase duration in minutes used by the schedule form.
+ * Scheduled dates take precedence so API second precision is rounded consistently
+ * with end-date edits before the stored duration is used as a fallback.
  *
  * @param phase challenge phase containing a duration value.
  * @returns the positive finite duration, or `undefined` when it is unavailable.
@@ -1589,6 +1596,16 @@ function getPhaseDateTime(value: Date | string | undefined): number | undefined 
 function getPhaseDurationValue(
     phase: ChallengePhase | undefined,
 ): number | undefined {
+    const scheduledStartTime = getPhaseDateTime(phase?.scheduledStartDate)
+    const scheduledEndTime = getPhaseDateTime(phase?.scheduledEndDate)
+    if (
+        scheduledStartTime !== undefined
+        && scheduledEndTime !== undefined
+        && scheduledEndTime > scheduledStartTime
+    ) {
+        return Math.round((scheduledEndTime - scheduledStartTime) / 60_000)
+    }
+
     const duration = Number(phase?.duration)
 
     return Number.isFinite(duration) && duration > 0
@@ -1858,7 +1875,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
+    const [scheduleValidationError, setScheduleValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
+    const [dismissedSavedAt, setDismissedSavedAt] = useState<Date | undefined>()
+    const isSavedButtonStateVisible = saveStatus === 'saved'
+        && !!lastSaved
+        && dismissedSavedAt !== lastSaved
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
@@ -2930,8 +2952,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return
         }
 
+        if (
+            scheduleValidationError
+            && saveValidationError === scheduleValidationError
+        ) {
+            return
+        }
+
         setSaveValidationError(undefined)
-    }, [formState.isValid, saveValidationError])
+    }, [
+        formState.isValid,
+        saveValidationError,
+        scheduleValidationError,
+    ])
 
     useEffect(() => {
         if (usesManualReviewers) {
@@ -3019,9 +3052,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     discussionForum: formData.discussionForum,
                     selectedChallengeType,
                 })
+                const metadata = booleanToMetadata(
+                    booleanToMetadata(
+                        formData.metadata,
+                        REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
+                        true,
+                    ),
+                    IS_TEST_CHALLENGE_METADATA_FIELD,
+                    formData.isTestChallenge === true,
+                )
                 const createdChallenge = await createChallenge({
                     discussions,
                     funChallenge: formData.funChallenge === true,
+                    metadata,
                     name: formData.name,
                     projectId: createProjectId,
                     status: CHALLENGE_STATUS.NEW,
@@ -3244,6 +3287,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
+                onChallengeStatusChange?.(
+                    normalizeStatus(savedChallenge.status) || payloadStatus,
+                )
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
                 const shouldVerifyPersistedSchedule
                     = shouldVerifyPersistedScheduleAfterSave(formDataWithProjectBilling)
@@ -3262,6 +3308,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     resolvedProjectBillingAccount,
                 )
                 const wasActivePhaseShorteningRejected = shouldVerifyPersistedSchedule
+                    && !isDesignTrackSelected
                     && hasRejectedActivePhaseShortening(
                         formDataWithProjectBilling.phases,
                         persistedFormData.phases,
@@ -3295,7 +3342,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         ? { keepValues: true }
                         : undefined,
                 )
-                onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
                     if (wasActivePhaseShorteningRejected) {
@@ -3345,6 +3391,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             currentChallengeId,
             fallbackProjectId,
             hydratePersistedSavedFormData,
+            isDesignTrackSelected,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
@@ -3520,6 +3567,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             && formState.isDirty
             && formState.isValid
             && !isScorerBlockingChallengeActions
+            && !scheduleValidationError
             && normalizedChallengeStatus !== CHALLENGE_STATUS.NEW,
         formValues: values,
         onSave: async formData => {
@@ -3541,6 +3589,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [autosaveResult.lastSaved, autosaveResult.saveStatus])
 
+    useEffect(() => {
+        if (!isSavedButtonStateVisible || !lastSaved) {
+            return undefined
+        }
+
+        const savedAt = lastSaved
+        const timeoutId = window.setTimeout(() => {
+            setDismissedSavedAt(savedAt)
+        }, SAVED_BUTTON_STATE_DURATION_MS)
+
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [isSavedButtonStateVisible, lastSaved])
+
     const onSubmit = useCallback(
         async (formData: ChallengeEditorFormData): Promise<void> => {
             const {
@@ -3549,6 +3612,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             if (isScorerBlockingChallengeActions) {
                 showErrorToast('Save a valid scorer configuration before saving the challenge')
+                return
+            }
+
+            if (scheduleValidationError) {
+                setSaveStatus('idle')
+                setSaveValidationError(scheduleValidationError)
+                showErrorToast(scheduleValidationError)
                 return
             }
 
@@ -3589,6 +3659,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
             saveChallenge,
+            scheduleValidationError,
             setError,
         ],
     )
@@ -3618,6 +3689,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const isSaveButtonSaving = isSaving || saveStatus === 'saving'
+    const displayedSubmitButtonLabel = isSaveButtonSaving
+        ? 'Saving...'
+        : isSavedButtonStateVisible
+            ? 'Saved'
+            : submitButtonLabel
     const displayedBillingAccountId = useMemo(
         (): string => {
             const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
@@ -3755,27 +3832,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const footerSection = !isReadOnly
         ? (
             <div className={styles.footer}>
-                <div className={styles.statusArea}>
-                    {statusText
-                        ? <span className={styles.statusText}>{statusText}</span>
-                        : undefined}
-                    <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                    {saveValidationError
-                        ? <span className={styles.errorText}>{saveValidationError}</span>
-                        : undefined}
-                    {renderSaveError(saveError, linkedSaveErrorTerms)}
-                    {isScorerBlockingChallengeActions
-                        ? (
-                            <span className={styles.warningText}>
-                                The scorer configuration must be saved and valid before the
-                                {' '}
-                                challenge can be saved or launched.
-                            </span>
-                        )
-                        : undefined}
-                </div>
-
-                <div className={styles.actions}>
+                {props.footerCancelAction || (
                     <Button
                         label='Cancel'
                         onClick={handleCancelClick}
@@ -3783,13 +3840,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         size='lg'
                         type='button'
                     />
+                )}
+                <div className={styles.actions}>
+                    <div className={styles.statusArea}>
+                        {saveStatus === 'error'
+                            ? <span className={styles.statusText}>{getStatusText('error')}</span>
+                            : undefined}
+                        <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                        {saveValidationError
+                            ? <span className={styles.errorText}>{saveValidationError}</span>
+                            : undefined}
+                        {renderSaveError(saveError, linkedSaveErrorTerms)}
+                        {isScorerBlockingChallengeActions
+                            ? (
+                                <span className={styles.warningText}>
+                                    The scorer configuration must be saved and valid before the
+                                    {' '}
+                                    challenge can be saved or launched.
+                                </span>
+                            )
+                            : undefined}
+                    </div>
                     <Button
                         disabled={
-                            (!formState.isDirty || isSaving)
+                            isSaveButtonSaving
+                            || isSavedButtonStateVisible
                             || isScorerBlockingChallengeActions
                             || isManualReviewerConfigurationMissing
                         }
-                        label={submitButtonLabel}
+                        label={displayedSubmitButtonLabel}
                         secondary
                         size='lg'
                         type='submit'
@@ -3922,12 +4001,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                             )
                                                             : undefined}
                                                     </div>
-                                                    <div className={styles.copilotFeeColumn}>
-                                                        <CopilotFeeField
-                                                            disabled={arePrizeFieldsDisabled}
-                                                            name='prizeSets'
-                                                        />
-                                                    </div>
+                                                    {!isTaskChallenge
+                                                        ? (
+                                                            <div className={styles.copilotFeeColumn}>
+                                                                <CopilotFeeField
+                                                                    disabled={arePrizeFieldsDisabled}
+                                                                    name='prizeSets'
+                                                                />
+                                                            </div>
+                                                        )
+                                                        : undefined}
                                                 </div>
                                                 <div className={styles.billingSummary}>
                                                     <ReviewCostField name='prizeSets' />
@@ -4032,7 +4115,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <section className={styles.section}>
                             <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
                             <div className={styles.block}>
-                                <ChallengeScheduleSection disabled={isReadOnly} />
+                                <ChallengeScheduleSection
+                                    disabled={isReadOnly}
+                                    onValidationErrorChange={setScheduleValidationError}
+                                />
                             </div>
                         </section>
                     )
@@ -4083,6 +4169,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         {showRateChallengeField
                                             ? <RateChallengeField />
                                             : undefined}
+                                        <TestChallengeField disabled={isReadOnly} />
                                     </div>
                                 </section>
 
@@ -4093,7 +4180,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             <div className={styles.submissionSettingsGrid}>
                                                 <FinalDeliverablesField />
                                                 <StockArtsField />
-                                                <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField
                                                     deferDirty={shouldDeferInitialResourceDirtyNormalization}
                                                 />

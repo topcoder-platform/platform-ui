@@ -44,6 +44,34 @@ jest.mock('../../../../lib/components/form', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
 
     return {
+        FormCheckboxField: function FormCheckboxField(props: {
+            disabled?: boolean
+            label: string
+            name: string
+        }) {
+            const controller = reactHookForm.useController({
+                control: reactHookForm.useFormContext().control,
+                name: props.name,
+            })
+
+            function handleChange(event: { target: { checked: boolean } }): void {
+                controller.field.onChange(event.target.checked)
+            }
+
+            return (
+                <label htmlFor={props.name}>
+                    {props.label}
+                    <input
+                        checked={Boolean(controller.field.value)}
+                        disabled={props.disabled}
+                        id={props.name}
+                        onBlur={controller.field.onBlur}
+                        onChange={handleChange}
+                        type='checkbox'
+                    />
+                </label>
+            )
+        },
         FormSelectField: function FormSelectField(props: {
             label: string
             name: string
@@ -142,6 +170,18 @@ jest.mock('../../../../lib/utils', () => ({
     ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
+    toEngagementDateInputValue: (value?: string) => {
+        if (!value) {
+            return ''
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return value
+        }
+
+        return String(value)
+            .slice(0, 10)
+    },
 }))
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
@@ -201,7 +241,11 @@ jest.mock('./EngagementLocationFields', () => ({
     },
 }))
 jest.mock('./EngagementPrivateSection', () => ({
-    EngagementPrivateSection: () => <></>,
+    EngagementPrivateSection: (props: { hideCheckbox?: boolean }) => (
+        props.hideCheckbox
+            ? <h3>Assigned Members</h3>
+            : <></>
+    ),
 }))
 jest.mock('./EngagementSkillsField', () => ({
     EngagementSkillsField: function EngagementSkillsField() {
@@ -318,6 +362,106 @@ describe('EngagementEditorForm', () => {
 
         expect(softwareDeveloperOption?.text)
             .toBe('Software Developer')
+    })
+
+    it('hides public posting fields and shows assignments when private is checked', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        requiredMemberCount: 1,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'AR Test',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByLabelText('Duration in weeks'))
+            .toBeTruthy()
+        expect(screen.getByLabelText('Role'))
+            .toBeTruthy()
+
+        await user.click(screen.getByLabelText('Private engagement'))
+
+        expect(screen.queryByLabelText('Duration in weeks'))
+            .toBeNull()
+        expect(screen.queryByLabelText('Role'))
+            .toBeNull()
+        expect(screen.getByRole('heading', { name: 'Assigned Members' }))
+            .toBeTruthy()
+    })
+
+    it('renders internal account fields and role level options', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        account: 'Acme Corp',
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        receivedDateFromAccount: '2026-07-15T00:00:00.000Z',
+                        role: 'SOFTWARE_DEVELOPER',
+                        roleLevel: 'SENIOR',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        smu: 'North America',
+                        spoc: 'Jane Doe',
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'AR Test',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        expect((screen.getByLabelText('Account') as HTMLInputElement).value)
+            .toBe('Acme Corp')
+        expect((screen.getByLabelText('SMU') as HTMLInputElement).value)
+            .toBe('North America')
+        expect((screen.getByLabelText('SPOC') as HTMLInputElement).value)
+            .toBe('Jane Doe')
+        expect((screen.getByLabelText('Received Date from Account') as HTMLInputElement).value)
+            .toBe('2026-07-15')
+        expect((screen.getByLabelText('Role Level') as HTMLSelectElement).value)
+            .toBe('SENIOR')
+
+        const roleLevelField = screen.getByLabelText('Role Level') as HTMLSelectElement
+        const midOption = Array.from(roleLevelField.options)
+            .find(option => option.value === 'MID')
+
+        expect(midOption?.text)
+            .toBe('Mid')
     })
 
     it('renders the selected parent project on the create page', () => {

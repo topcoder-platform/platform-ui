@@ -45,6 +45,10 @@ describe('reports dashboard service paths', () => {
             .toBe('/dashboard/new-signups')
         expect(buildDashboardPath({}, 'challenge-participation', true))
             .toBe('/dashboard/challenge-participation/export')
+        expect(buildDashboardPath({}, 'member-payment-by-month'))
+            .toBe('/dashboard/member-payment-by-month')
+        expect(buildDashboardPath({}, 'member-payment-by-customer', true))
+            .toBe('/dashboard/member-payment-by-customer/export')
     })
 
     it('adds trimmed UTC range boundaries in stable query order', () => {

@@ -317,10 +317,27 @@ const resolveAggregateScore = (submission: SubmissionRow): number | undefined =>
 }
 
 /**
+ * Resolves the terminal final/system aggregate score from a submission row.
+ *
+ * @param submission - Submission row that may include a Marathon Match final aggregate score.
+ * @returns Finite final aggregate score, or undefined while final scoring is unavailable.
+ * Used for Marathon Match Review Result decisions so earlier phase scores are not exposed.
+ * @throws This helper does not throw.
+ */
+const resolveFinalAggregateScore = (submission: SubmissionRow): number | undefined => {
+    const finalAggregateScore = submission.finalAggregateScore
+    if (typeof finalAggregateScore === 'number' && Number.isFinite(finalAggregateScore)) {
+        return finalAggregateScore
+    }
+
+    return undefined
+}
+
+/**
  * Resolves the score used for pass/fail decisions.
  *
  * @param submission - Submission row containing review and summation scores.
- * @param preferAggregateScore - True when summation scores should take priority over scorecard scores.
+ * @param preferAggregateScore - True when only a terminal final/system aggregate should be used.
  * @returns Finite score for outcome evaluation, or undefined when no score is available.
  */
 const resolveReviewScore = (
@@ -328,10 +345,7 @@ const resolveReviewScore = (
     preferAggregateScore: boolean,
 ): number | undefined => {
     if (preferAggregateScore) {
-        const aggregateScore = resolveAggregateScore(submission)
-        if (aggregateScore !== undefined) {
-            return aggregateScore
-        }
+        return resolveFinalAggregateScore(submission)
     }
 
     const aggregatedAverage = submission.aggregated?.averageFinalScore
@@ -496,6 +510,9 @@ export function resolveSubmissionReviewResult(
     )
 
     const reviewScore = resolveReviewScore(submission, preferAggregateScore)
+    if (preferAggregateScore && reviewScore === undefined) {
+        return undefined
+    }
 
     const scoreOutcome = resolveScoreOutcome(reviewScore, minimumPassingScore)
 

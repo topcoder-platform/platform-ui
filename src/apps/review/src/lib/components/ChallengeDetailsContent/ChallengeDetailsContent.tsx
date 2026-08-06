@@ -1,11 +1,11 @@
 /* eslint-disable complexity */
 /**
- * Challenge Details Content.
+ * Renders the selected challenge phase and submission-download feedback.
  */
 import { FC, ReactNode, useCallback, useContext, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
-import { ActionLoading } from '~/apps/admin/src/lib'
+import { LoadingSpinner } from '~/libs/ui'
 
 import { ChallengeDetailContext } from '../../contexts'
 import {
@@ -29,7 +29,6 @@ import {
 } from '../../hooks/useFetchChallengeResults'
 import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
-import { hasIsLatestFlag } from '../../utils'
 import {
     isContestReviewPhaseSubmission,
     shouldIncludeInReviewPhase,
@@ -118,11 +117,7 @@ const buildScreeningRows = ({
     currentMemberId,
 }: BuildScreeningRowsParams): Screening[] => {
     if (actionChallengeRole === SUBMITTER && currentMemberId) {
-        const mySubmissions = screening.filter(entry => entry.memberId === currentMemberId)
-
-        return hasIsLatestFlag(mySubmissions)
-            ? mySubmissions.filter(submission => submission.isLatest === true)
-            : mySubmissions
+        return screening.filter(entry => entry.memberId === currentMemberId)
     }
 
     return screening
@@ -604,7 +599,9 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 renderSelectedTab()
             )}
 
-            {isDownloadingSubmissionBool && <ActionLoading />}
+            {isDownloadingSubmissionBool && (
+                <LoadingSpinner overlay message='Download starting' />
+            )}
         </>
     )
 }

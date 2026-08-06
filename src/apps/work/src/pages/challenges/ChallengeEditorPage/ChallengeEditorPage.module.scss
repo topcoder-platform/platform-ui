@@ -83,6 +83,12 @@
     justify-content: flex-end;
 }
 
+.footerActions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
 .cancelAction {
     position: relative;
 }
@@ -98,6 +104,11 @@
     right: 0;
     top: calc(100% + 8px);
     z-index: 20;
+}
+
+.cancelMenuStart {
+    left: 0;
+    right: auto;
 }
 
 .cancelMenuItem {

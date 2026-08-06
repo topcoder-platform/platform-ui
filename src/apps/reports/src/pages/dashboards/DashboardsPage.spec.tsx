@@ -84,6 +84,42 @@ const dashboardResponse: DashboardsResponse = {
             totalUniqueSubmitters: 625,
         },
     },
+    memberPaymentByCustomer: {
+        dashboard: 'member-payment-by-customer',
+        endDate: '2026-08-01T00:00:00.000Z',
+        months: [{
+            month: '2026-07-01',
+            values: {
+                'customer-1': 125_000,
+                'other-customers': 20_000,
+            },
+        }],
+        series: [
+            {
+                customerId: 'customer-id-1',
+                key: 'customer-1',
+                label: 'Customer A',
+            },
+            {
+                customerId: null, // eslint-disable-line unicorn/no-null
+                key: 'other-customers',
+                label: 'Other Customers',
+            },
+        ],
+        startDate: '2026-02-01T00:00:00.000Z',
+    },
+    memberPaymentByMonth: {
+        dashboard: 'member-payment-by-month',
+        endDate: '2026-08-01T00:00:00.000Z',
+        months: [{
+            challenge: 75_000,
+            engagement: 25_000,
+            month: '2026-07-01',
+            taas: 200_000,
+            task: 100_000,
+        }],
+        startDate: '2026-02-01T00:00:00.000Z',
+    },
     membersPaid: {
         dashboard: 'members-paid',
         endDate: '2026-08-01T00:00:00.000Z',
@@ -172,10 +208,22 @@ describe('Dashboards landing page', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('heading', { name: /Challenge Registrants vs Submitters/ }))
             .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: /Member Payment \$ by Month/ }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: /Member Payment \$ by Customer/ }))
+            .toBeInTheDocument()
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(3)
+            .toHaveLength(5)
         expect(screen.getAllByRole('table'))
-            .toHaveLength(3)
+            .toHaveLength(5)
+        const detailLinks = screen.getAllByRole('link', { name: 'View full dashboard' })
+
+        expect(detailLinks)
+            .toHaveLength(5)
+        expect(detailLinks[3])
+            .toHaveAttribute('href', '/reports/dashboards/member-payment-by-month')
+        expect(detailLinks[4])
+            .toHaveAttribute('href', '/reports/dashboards/member-payment-by-customer')
         expect(mockedFetchDashboards)
             .toHaveBeenCalledWith({
                 endDate: '2026-08-01',
@@ -201,7 +249,7 @@ describe('Dashboards landing page', () => {
         expect(mockedDownloadBlobFile)
             .toHaveBeenCalledWith(
                 expect.any(Blob),
-                'reports-dashboards-2026-02-01-to-2026-08-01.csv',
+                'reports-dashboards-2026-02-01-to-2026-07-31.csv',
             )
     })
 })

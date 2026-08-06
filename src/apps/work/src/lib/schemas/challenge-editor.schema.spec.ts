@@ -256,6 +256,26 @@ describe('challenge-editor schema fun challenge prize validation', () => {
     })
 })
 
+describe('challenge-editor schema test challenge default', () => {
+    it('defaults isTestChallenge to false', () => {
+        const result = challengeBasicInfoSchema.cast({
+            description: 'This is a valid public specification description.',
+            funChallenge: true,
+            name: 'Default test flag challenge',
+            skills: [{
+                id: 'skill-id',
+                name: 'JavaScript',
+            }],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.isTestChallenge)
+            .toBe(false)
+    })
+})
+
 describe('challenge-editor schema reviewer slot assignment validation', () => {
     const baseFormData = {
         roundType: ROUND_TYPES.SINGLE_ROUND,

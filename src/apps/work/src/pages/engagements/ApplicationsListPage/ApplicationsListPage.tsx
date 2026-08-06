@@ -113,6 +113,10 @@ function getApplicationStatusPillClass(status: string): string {
         return styles.statusYellow
     }
 
+    if (normalizedStatus === 'SHORTLISTED') {
+        return styles.statusShortlisted
+    }
+
     if (normalizedStatus === 'REJECTED') {
         return styles.statusRed
     }
