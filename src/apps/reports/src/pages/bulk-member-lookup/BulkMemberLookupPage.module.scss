@@ -36,3 +36,14 @@
     color: #6b6f75;
     font-style: italic;
 }
+
+.handleLink {
+    color: #0f62fe;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+        color: #0043ce;
+        text-decoration: underline;
+    }
+}
