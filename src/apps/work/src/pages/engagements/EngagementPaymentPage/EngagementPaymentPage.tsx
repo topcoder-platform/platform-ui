@@ -187,6 +187,14 @@ function isAssignedStatus(status: string): boolean {
         .toUpperCase() === 'ASSIGNED'
 }
 
+function canEditAssignment(status: string): boolean {
+    const normalizedStatus = status
+        .trim()
+        .toUpperCase()
+
+    return normalizedStatus === 'ASSIGNED' || normalizedStatus === 'SELECTED'
+}
+
 function getAssignmentStatusPillClass(status: string): string {
     const normalizedStatus = String(status || '')
         .trim()
@@ -1015,6 +1023,7 @@ export const EngagementPaymentPage: FC = () => {
                             {assignments.map(assignment => {
                                 const normalizedStatus = normalizeAssignmentStatus(String(assignment.status || ''))
                                 const assignedStatus = isAssignedStatus(String(assignment.status || ''))
+                                const canEdit = canEditAssignment(String(assignment.status || ''))
                                 const isHighlightedAssignment = String(assignment.id) === highlightedAssignmentId
                                 const remarksText = toTrimmedText(assignment.otherRemarks)
 
@@ -1116,7 +1125,7 @@ export const EngagementPaymentPage: FC = () => {
                                                     {formatAssignmentDaysLeftInEngagement(
                                                         assignment.startDate,
                                                         assignment.durationMonths,
-                                                        assignment.status,
+                                                        engagementResult.engagement?.status,
                                                     )}
                                                 </span>
                                             </div>
@@ -1157,23 +1166,25 @@ export const EngagementPaymentPage: FC = () => {
                                                     secondary
                                                     size='sm'
                                                 />
+                                                {canEdit
+                                                    ? (
+                                                        <Button
+                                                            label='Edit'
+                                                            onClick={() => setEditingAssignment(assignment)}
+                                                            secondary
+                                                            size='sm'
+                                                        />
+                                                    )
+                                                    : undefined}
                                                 {assignedStatus
                                                     ? (
-                                                        <>
-                                                            <Button
-                                                                label='Edit'
-                                                                onClick={() => setEditingAssignment(assignment)}
-                                                                secondary
-                                                                size='sm'
-                                                            />
-                                                            <Button
-                                                                label='Pay'
-                                                                onClick={() => handlePayClick(assignment)}
-                                                                variant='linkblue'
-                                                                primary
-                                                                size='sm'
-                                                            />
-                                                        </>
+                                                        <Button
+                                                            label='Pay'
+                                                            onClick={() => handlePayClick(assignment)}
+                                                            variant='linkblue'
+                                                            primary
+                                                            size='sm'
+                                                        />
                                                     )
                                                     : undefined}
                                             </div>

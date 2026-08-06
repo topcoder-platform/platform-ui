@@ -46,7 +46,7 @@ export const onboardingRoutes: ReadonlyArray<PlatformRoute> = [
                 route: '/personalization',
             },
             {
-                element: <Navigate to='./skills' />,
+                element: <Navigate replace to={`${rootRoute}/skills`} />,
                 route: '/*',
             },
         ],

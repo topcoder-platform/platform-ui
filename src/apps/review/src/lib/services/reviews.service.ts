@@ -8,7 +8,6 @@ import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
-    xhrGetBlobAsync,
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
@@ -284,18 +283,28 @@ export const fetchReview = async (
 )
 
 /**
- * Download submission file
+ * Request a short-lived URL for downloading a clean submission directly from storage.
  *
  * @param submissionId submission id
- * @returns resolves to the submission file
+ * @returns resolves to the signed submission download URL
+ * @throws rejects when the submission id is empty or the Review API fails or omits the signed URL
  */
-export const downloadSubmissionFile = async (
+export const getSubmissionDownloadUrl = async (
     submissionId: string,
-): Promise<Blob> => {
-    const results = await xhrGetBlobAsync<Blob>(
-        `${EnvironmentConfig.API.V6}/submissions/${submissionId}/download`,
+): Promise<string> => {
+    const normalizedSubmissionId = submissionId.trim()
+    if (!normalizedSubmissionId) {
+        throw new Error('Submission id is required')
+    }
+
+    const results = await xhrGetAsync<{ url?: unknown }>(
+        `${EnvironmentConfig.API.V6}/submissions/${encodeURIComponent(normalizedSubmissionId)}/download-url`,
     )
-    return results
+    if (typeof results?.url !== 'string' || !results.url.trim()) {
+        throw new Error('Submission download URL is missing')
+    }
+
+    return results.url.trim()
 }
 
 /**

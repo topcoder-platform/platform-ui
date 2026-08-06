@@ -4,7 +4,7 @@ import {
     useState,
 } from 'react'
 
-import { downloadSubmission as downloadSubmissionService } from '../services'
+import { getSubmissionDownloadUrl } from '../services'
 import { showErrorToast } from '../utils'
 
 export interface UseDownloadSubmissionResult {
@@ -21,16 +21,22 @@ function getErrorMessage(error: unknown): string {
     return 'Failed to download submission'
 }
 
-function downloadBlob(blob: Blob, fileName: string): void {
-    const blobUrl = window.URL.createObjectURL(blob)
+/**
+ * Starts a browser-managed download from a signed storage URL.
+ *
+ * @param downloadUrl The short-lived URL returned by the Review API.
+ * @param fileName The preferred local filename when the browser honors the download attribute.
+ * @returns Nothing.
+ * @throws Never directly; the browser owns the resulting navigation and download.
+ */
+function startDownload(downloadUrl: string, fileName: string): void {
     const link = document.createElement('a')
 
-    link.href = blobUrl
+    link.href = downloadUrl
     link.setAttribute('download', fileName)
     document.body.appendChild(link)
     link.click()
     link.parentNode?.removeChild(link)
-    window.URL.revokeObjectURL(blobUrl)
 }
 
 export function useDownloadSubmission(): UseDownloadSubmissionResult {
@@ -54,9 +60,9 @@ export function useDownloadSubmission(): UseDownloadSubmissionResult {
         }))
 
         try {
-            const blob = await downloadSubmissionService(normalizedSubmissionId)
+            const downloadUrlValue = await getSubmissionDownloadUrl(normalizedSubmissionId)
 
-            downloadBlob(blob, `submission-${normalizedSubmissionId}.zip`)
+            startDownload(downloadUrlValue, `submission-${normalizedSubmissionId}.zip`)
         } catch (error) {
             showErrorToast(getErrorMessage(error))
         } finally {

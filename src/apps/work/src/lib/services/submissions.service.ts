@@ -35,6 +35,10 @@ interface SubmissionRegistrant {
     userId?: unknown
 }
 
+interface SubmissionDownloadUrlResponse {
+    url?: unknown
+}
+
 interface UnknownRecord {
     [key: string]: unknown
 }
@@ -722,19 +726,57 @@ export async function fetchSubmissionArtifacts(submissionId: string): Promise<st
     }
 }
 
-export async function downloadSubmission(submissionId: string): Promise<Blob> {
+/**
+ * Requests a short-lived URL for downloading a clean submission directly from storage.
+ *
+ * @param submissionId The submission identifier used by the Review API.
+ * @returns The signed download URL returned by the authenticated Review API request.
+ * @throws When the submission id is empty, the request fails, or the response omits the URL.
+ */
+export async function getSubmissionDownloadUrl(submissionId: string): Promise<string> {
     const normalizedSubmissionId = submissionId.trim()
     if (!normalizedSubmissionId) {
         throw new Error('Submission id is required')
     }
 
     try {
-        const xhrInstance = createBlobDownloadXhrInstance()
-
-        return await xhrGetAsync<Blob>(
-            `${SUBMISSIONS_API_URL}/${encodeURIComponent(normalizedSubmissionId)}/download`,
-            xhrInstance,
+        const response = await xhrGetAsync<SubmissionDownloadUrlResponse>(
+            `${SUBMISSIONS_API_URL}/${encodeURIComponent(normalizedSubmissionId)}/download-url`,
         )
+        const downloadUrl = toOptionalString(response?.url)
+
+        if (!downloadUrl) {
+            throw new Error('Submission download URL is missing')
+        }
+
+        return downloadUrl
+    } catch (error) {
+        throw normalizeError(error, 'Failed to get submission download URL')
+    }
+}
+
+/**
+ * Downloads a clean submission as a Blob for flows that need to control the local filename.
+ *
+ * The authenticated API request obtains a signed URL first. The storage request deliberately
+ * omits credentials and custom headers so browsers do not redirect an authenticated CORS request.
+ *
+ * @param submissionId The submission identifier used by the Review API.
+ * @returns The clean submission file as a Blob.
+ * @throws When URL creation or the direct storage download fails.
+ */
+export async function downloadSubmission(submissionId: string): Promise<Blob> {
+    try {
+        const downloadUrl = await getSubmissionDownloadUrl(submissionId)
+        const response = await fetch(downloadUrl, {
+            credentials: 'omit',
+        })
+
+        if (!response.ok) {
+            throw new Error(`Submission download failed with status ${response.status}`)
+        }
+
+        return await response.blob()
     } catch (error) {
         throw normalizeError(error, 'Failed to download submission')
     }

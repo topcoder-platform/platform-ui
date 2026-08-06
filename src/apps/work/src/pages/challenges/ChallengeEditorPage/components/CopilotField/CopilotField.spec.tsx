@@ -187,6 +187,28 @@ describe('CopilotField', () => {
             expect(screen.getByLabelText('Copilot Field'))
                 .toHaveValue('profile-copilot')
         })
+
+        expect(mockedSearchProfilesByUserIds)
+            .toHaveBeenCalledWith(['501'])
+    })
+
+    it('does not use member-profile user id lookup for a persisted copilot handle', async () => {
+        render(
+            <TestHarness
+                defaultValues={{
+                    copilot: 'TCConnCopilot',
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('TCConnCopilot')
+        })
+
+        expect(mockedSearchProfilesByUserIds)
+            .not
+            .toHaveBeenCalled()
     })
 
     it('allows full access project members to assign themselves as copilot', () => {

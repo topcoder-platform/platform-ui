@@ -20,6 +20,7 @@ import { IconOutline } from '~/libs/ui'
 import { CustomerPortalAppContext } from '../../contexts'
 import { CustomerPortalAppContextModel } from '../../models'
 import { PRIVILEGED_ROLES } from '../../../config/index.config'
+import { rootRoute } from '../../../config/routes.config'
 
 import { getTabIdFromPathName, getTabsConfig } from './config'
 import styles from './NavTabs.module.scss'
@@ -79,7 +80,7 @@ const NavTabs: FC = () => {
 
             setActiveTab(tabId)
             setIsOpen(false)
-            navigate(tabId)
+            navigate(`${rootRoute}/${tabId}`)
         },
         [navigate],
     )
