@@ -1,5 +1,6 @@
 import { FC, KeyboardEvent, useCallback, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
+import 'flag-icons/css/flag-icons.min.css'
 
 import { IconOutline } from '~/libs/ui'
 
@@ -10,13 +11,12 @@ import {
     StatisticsCountry,
 } from '../../../lib'
 
-import WorldMap from './WorldMap'
 import {
     IconFirstPlace,
     IconSecondPlace,
     IconThirdPlace,
 } from './assets'
-import 'flag-icons/css/flag-icons.min.css'
+import WorldMap from './WorldMap'
 import styles from './StatisticsPage.module.scss'
 
 type StatisticsTab = 'countries' | 'winners'
@@ -211,7 +211,7 @@ const StatisticsPage: FC = () => {
                                                     ? <IconSecondPlace aria-hidden='true' />
                                                     : index === 2
                                                         ? <IconThirdPlace aria-hidden='true' />
-                                                        : null
+                                                        : <></>
 
                                             return (
                                                 <tr key={country.code || country.name}>
@@ -225,7 +225,10 @@ const StatisticsPage: FC = () => {
                                                             {country.code && (
                                                                 <span
                                                                     aria-hidden='true'
-                                                                    className={`${styles.flag} fi fi-${country.code.toLowerCase()}`}
+                                                                    className={`
+                                                                        ${styles.flag}
+                                                                        fi fi-${country.code.toLowerCase()}
+                                                                    `}
                                                                 />
                                                             )}
                                                             <span>{country.name}</span>

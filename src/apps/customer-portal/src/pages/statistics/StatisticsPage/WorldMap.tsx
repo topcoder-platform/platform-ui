@@ -15,7 +15,8 @@ interface WorldMapProps {
 
 const WorldMap: FC<WorldMapProps> = props => {
     const chartData = useMemo(() => props.countries.map(country => {
-        const code = String(country.code ?? '').toUpperCase()
+        const code = String(country.code ?? '')
+            .toUpperCase()
         const iso2 = code.length === 3 ? ISO3_TO_2.get(code) ?? code : code
 
         return {
