@@ -880,6 +880,41 @@ export const ProjectShowcasePage: FC = () => {
         selectedChallengeOptions,
     ])
 
+    const handlePreviewListPost = useCallback(async (post: ProjectShowcasePost) => {
+        if (!projectId) {
+            return
+        }
+
+        setIsLoadingPreview(true)
+        setIsPreviewModalOpen(true)
+
+        try {
+            const postDetails = await fetchProjectShowcasePost(projectId, post.id)
+            const builtPreview = await buildShowcasePreviewData({
+                categoryOptions: categoryOptions.slice(1),
+                challengeOptions: [],
+                editingPost: postDetails,
+                formData: mapPostToFormData(postDetails),
+                industryOptions: industryOptions.slice(1),
+                manageMode: 'edit',
+                projectId,
+                projectTitle: postDetails.projectTitle || projectResult.project?.name || 'Project',
+            })
+            setPreviewData(builtPreview)
+        } catch (err) {
+            showErrorToast(err instanceof Error ? err.message : 'Unable to load post preview.')
+            setIsPreviewModalOpen(false)
+            setPreviewData(undefined)
+        } finally {
+            setIsLoadingPreview(false)
+        }
+    }, [
+        categoryOptions,
+        industryOptions,
+        projectId,
+        projectResult.project?.name,
+    ])
+
     const updatePostInCache = useCallback(
         async (updatedPost: ProjectShowcasePost) => {
             await postsResult.mutate(currentData => {
@@ -1335,6 +1370,17 @@ export const ProjectShowcasePage: FC = () => {
                                     <td className={styles.rowActions}>
                                         {canManageProjectShowcasePosts && (
                                             <>
+                                                <button
+                                                    type='button'
+                                                    className={styles.actionButton}
+                                                    disabled={isLoadingPreview}
+                                                    onClick={function onClick() {
+                                                        handlePreviewListPost(post)
+                                                            .catch(() => undefined)
+                                                    }}
+                                                >
+                                                    Preview
+                                                </button>
                                                 {post.status !== 'ARCHIVED' && (
                                                     <button
                                                         type='button'
