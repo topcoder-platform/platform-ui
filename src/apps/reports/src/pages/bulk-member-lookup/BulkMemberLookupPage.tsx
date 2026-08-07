@@ -1,4 +1,12 @@
-import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    MouseEvent,
+    SetStateAction,
+    useCallback,
+    useMemo,
+    useState,
+} from 'react'
 
 import { InputHandlesSelector } from '~/apps/admin/src/lib/components/InputHandlesSelector'
 import { SearchUserInfo } from '~/apps/admin/src/lib/models'
@@ -39,6 +47,14 @@ type BulkMemberRow = {
 const buildDownloadName = (extension: 'json' | 'csv'): string => (
     `bulk-member-lookup.${extension}`
 )
+
+/**
+ * Stops table-row click handling so profile links can navigate.
+ * Table rows call preventDefault on click by default.
+ */
+function handleProfileLinkClick(event: MouseEvent<HTMLAnchorElement>): void {
+    event.stopPropagation()
+}
 
 /**
  * Parses the blob response from the reports API into lookup rows.
@@ -178,9 +194,10 @@ export const BulkMemberLookupPage: FC = () => {
                 data.handle ? (
                     <a
                         className={styles.handleLink}
-                        href={`${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(data.handle)}`}
+                        href={`${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(data.handle.toLowerCase())}`}
                         target='_blank'
                         rel='noreferrer'
+                        onClick={handleProfileLinkClick}
                     >
                         {data.handle}
                     </a>
@@ -348,7 +365,11 @@ export const BulkMemberLookupPage: FC = () => {
 
                         <div className={styles.tableWrapper}>
                             {results.length ? (
-                                <Table columns={tableColumns} data={results} />
+                                <Table
+                                    columns={tableColumns}
+                                    data={results}
+                                    preventDefault
+                                />
                             ) : (
                                 <div className={styles.emptyState}>
                                     No members were returned for the provided handles.
