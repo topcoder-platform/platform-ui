@@ -141,6 +141,65 @@
         &:hover {
             text-decoration: underline;
         }
+
+        &[target] {
+            &::after {
+                content: "";
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+                -webkit-mask-position: center;
+                mask-position: center;
+                -webkit-mask-size: 12px 12px;
+                mask-size: 12px 12px;
+                -webkit-mask-image: url(./assets/external-link.svg);
+                mask-image: url(./assets/external-link.svg);
+                width: 12px;
+                height: 12px;
+                display: inline-block;
+                background-color: currentColor;
+                margin-left: $sp-1;
+            }
+        }
+    }
+
+    // Explicit borders — do not rely on `all: revert-layer` / UA defaults
+    // (those can look different across Mac vs Windows Chrome / DPI scaling).
+    table {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    th,
+    td {
+        border: 1px solid $black-20;
+        padding: 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    pre {
+        background: $black-10;
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    code {
+        background: $black-10;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    blockquote {
+        border-left: 4px solid $black-20;
+        color: $black-80;
+        padding-left: 16px;
+        margin: 0;
     }
 }
 
