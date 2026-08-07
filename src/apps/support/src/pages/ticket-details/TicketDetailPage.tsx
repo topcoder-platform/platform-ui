@@ -33,6 +33,7 @@ import {
     unassignSupportTicketFromMe,
 } from '../../lib/services'
 import {
+    buildSupportChallengeUrl,
     formatSupportDate,
     getSupportErrorMessage,
     isSupportTeamMember,
@@ -103,6 +104,8 @@ export const TicketDetailPage: FC = () => {
         assignee => String(assignee.userId) === currentUserId,
     ))
     const closed = data.status === 'CLOSED'
+    const ticketOwner = Boolean(currentUserId && String(data.memberUserId) === currentUserId)
+    const canReply = !closed || ticketOwner
     const replyContext = `${data.id}-reply-${replyRevision}`
 
     /**
@@ -132,7 +135,7 @@ export const TicketDetailPage: FC = () => {
     }
 
     /**
-     * Validates and submits an open-ticket Markdown response.
+     * Validates and submits Markdown, including an owner response that reopens a closed ticket.
      *
      * @returns a promise resolved after validation or the reply request settles.
      * @throws Does not throw; request failures are stored for display.
@@ -147,12 +150,14 @@ export const TicketDetailPage: FC = () => {
         setSubmittingReply(true)
         setActionError(undefined)
         try {
-            await addSupportResponse(data.id, { markdown })
+            const updatedTicket = await addSupportResponse(data.id, { markdown })
             setReply('')
             setReplyRevision(current => current + 1)
             setReplyError(undefined)
-            setActionMessage('Your reply was added.')
-            await mutate()
+            setActionMessage(closed
+                ? 'Your reply was added and the support ticket was reopened.'
+                : 'Your reply was added.')
+            await mutate(updatedTicket, false)
         } catch (responseError) {
             setActionError(getSupportErrorMessage(responseError, 'The reply could not be added.'))
         } finally {
@@ -210,9 +215,16 @@ export const TicketDetailPage: FC = () => {
                     </p>
                     {data.challengeId && (
                         <p>
-                            Challenge ID:
+                            Challenge:
                             {' '}
-                            <strong>{data.challengeId}</strong>
+                            <a
+                                className={styles.challengeLink}
+                                href={buildSupportChallengeUrl(data.challengeId)}
+                                rel='noreferrer noopener'
+                                target='_blank'
+                            >
+                                View challenge
+                            </a>
                         </p>
                     )}
                     {closed && (
@@ -292,7 +304,7 @@ export const TicketDetailPage: FC = () => {
                     ))}
             </ol>
 
-            {!closed ? (
+            {canReply ? (
                 <section className={styles.replyPanel}>
                     <h2>Add a reply</h2>
                     <SupportMarkdownEditor

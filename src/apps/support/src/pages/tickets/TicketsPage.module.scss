@@ -43,16 +43,23 @@
         font-size: 12px;
         font-weight: 700;
         gap: $sp-2;
+        min-width: 0;
     }
 
-    input {
+    > label > input {
         border: 1px solid $black-40;
         border-radius: 4px;
         box-sizing: border-box;
         font: inherit;
-        min-height: 38px;
+        min-height: 42px;
+        height: 42px;
         padding: $sp-2 $sp-3;
         width: 100%;
+    }
+
+    :global(.support-member-select__control) {
+        height: 42px;
+        min-height: 42px;
     }
 }
 
@@ -61,6 +68,14 @@
     align-items: center;
     display: flex;
     gap: $sp-2;
+}
+
+.filterActions {
+    min-height: 42px;
+
+    > button {
+        height: 42px;
+    }
 }
 
 .pagination {

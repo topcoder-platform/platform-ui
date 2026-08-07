@@ -57,6 +57,11 @@ export interface SupportTicketPage {
     meta: SupportPaginationMeta
 }
 
+export interface SupportChallenge {
+    id: string
+    name: string
+}
+
 export interface SupportTicketQuery {
     status: SupportTicketStatus
     page: number

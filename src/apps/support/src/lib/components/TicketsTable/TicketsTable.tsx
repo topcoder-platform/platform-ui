@@ -3,10 +3,11 @@
 import { FC, KeyboardEvent, MouseEvent } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { Button, LinkButton } from '~/libs/ui'
 
 import { SupportTicketSummary } from '../../models'
 import {
+    buildSupportChallengeUrl,
     formatSupportDate,
     markdownToPlainText,
     truncateText,
@@ -82,6 +83,40 @@ const UnreadBadge = ({ ticket }: { ticket: SupportTicketSummary }): JSX.Element 
         </span>
     )
     : <></>)
+
+/**
+ * Prevents an external challenge-link click from also opening the Support ticket row.
+ *
+ * @param event challenge-link click event bubbling through the ticket row.
+ * @returns void.
+ * @throws Does not throw.
+ */
+function stopTicketRowNavigation(event: MouseEvent): void {
+    event.stopPropagation()
+}
+
+/**
+ * Renders a public challenge link without exposing the opaque challenge identifier.
+ *
+ * @param ticket ticket whose optional challenge association should be rendered.
+ * @returns link button or an em dash when the ticket has no challenge.
+ * @throws Does not throw.
+ */
+const ChallengeLink = ({ ticket }: { ticket: SupportTicketSummary }): JSX.Element => {
+    if (!ticket.challengeId) return <>—</>
+
+    return (
+        <LinkButton
+            label='View challenge'
+            onClick={stopTicketRowNavigation}
+            rel='noreferrer noopener'
+            secondary
+            size='sm'
+            target='_blank'
+            to={buildSupportChallengeUrl(ticket.challengeId)}
+        />
+    )
+}
 
 /**
  * Renders responsive, keyboard-navigable ticket results.
@@ -175,7 +210,7 @@ export const TicketsTable: FC<TicketsTableProps> = props => {
                                             />
                                         </td>
                                     )}
-                                    <td>{ticket.challengeId || '—'}</td>
+                                    <td><ChallengeLink ticket={ticket} /></td>
                                     <td>{ticket.responseCount}</td>
                                     <td><Assignees ticket={ticket} /></td>
                                     <td>{formatSupportDate(ticket.latestActivityAt)}</td>
@@ -221,7 +256,7 @@ export const TicketsTable: FC<TicketsTableProps> = props => {
                             <p>
                                 <strong>Challenge:</strong>
                                 {' '}
-                                {ticket.challengeId || '—'}
+                                <ChallengeLink ticket={ticket} />
                             </p>
                             <p>
                                 <strong>Replies:</strong>

@@ -1,15 +1,27 @@
 /* eslint-disable react/jsx-no-bind */
 /** Member form for opening a support request. */
 import {
-    ChangeEvent,
     FC,
+    useMemo,
     useState,
 } from 'react'
+import Select, { SingleValue } from 'react-select'
+import useSWR, { SWRResponse } from 'swr'
 
+import {
+    ProfileContextData,
+    useProfileContext,
+} from '~/libs/core'
 import { BaseModal, Button } from '~/libs/ui'
 
-import { SupportTicketDetail } from '../../models'
-import { createSupportTicket } from '../../services'
+import {
+    SupportChallenge,
+    SupportTicketDetail,
+} from '../../models'
+import {
+    createSupportTicket,
+    getActiveMemberChallenges,
+} from '../../services'
 import { getSupportErrorMessage } from '../../utils'
 import { SupportMarkdownEditor } from '../SupportMarkdownEditor'
 
@@ -19,6 +31,11 @@ export interface OpenSupportRequestModalProps {
     onClose: () => void
     onCreated: (ticket: SupportTicketDetail) => void
     open: boolean
+}
+
+interface ChallengeOption {
+    label: string
+    value: string
 }
 
 /**
@@ -41,12 +58,34 @@ function createUploadContext(): string {
  * @throws Does not throw; API errors stay visible without clearing form data.
  */
 export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props => {
+    const { profile }: ProfileContextData = useProfileContext()
+    const memberId: string | undefined = profile?.userId === undefined ? undefined : String(profile.userId)
     const [challengeId, setChallengeId] = useState('')
     const [description, setDescription] = useState('')
     const [descriptionError, setDescriptionError] = useState<string | undefined>()
     const [requestError, setRequestError] = useState<string | undefined>()
     const [submitting, setSubmitting] = useState(false)
     const [uploadContext, setUploadContext] = useState(createUploadContext)
+    const challengeRequestKey: string | undefined = props.open && memberId
+        ? `support-active-challenges:${memberId}`
+        : undefined
+    const {
+        data: challenges = [],
+        error: challengeError,
+        isValidating: challengesLoading,
+    }: SWRResponse<SupportChallenge[], Error> = useSWR<SupportChallenge[]>(
+        challengeRequestKey,
+        () => getActiveMemberChallenges(memberId as string),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+    const challengeOptions = useMemo<ChallengeOption[]>(() => challenges.map(challenge => ({
+        label: challenge.name,
+        value: challenge.id,
+    })), [challenges])
+    const selectedChallenge = useMemo<ChallengeOption | undefined>(
+        () => challengeOptions.find(option => option.value === challengeId),
+        [challengeId, challengeOptions],
+    )
 
     /**
      * Clears local form and error state for the next modal session.
@@ -88,14 +127,14 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
     }
 
     /**
-     * Copies the optional challenge identifier from its text input.
+     * Copies the optional challenge identifier from the resource-scoped picker.
      *
-     * @param event challenge input change event.
+     * @param option selected active challenge, or null when the selection is cleared.
      * @returns void.
      * @throws Does not throw.
      */
-    const handleChallengeChange = (event: ChangeEvent<HTMLInputElement>): void => {
-        setChallengeId(event.target.value)
+    const handleChallengeChange = (option: SingleValue<ChallengeOption>): void => {
+        setChallengeId(option?.value || '')
     }
 
     /**
@@ -114,7 +153,9 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
         setSubmitting(true)
         setRequestError(undefined)
         try {
-            const normalizedChallengeId = challengeId.trim()
+            // Resolve from the current option list so a profile/cache refresh
+            // cannot submit an ID that is no longer visible in the picker.
+            const normalizedChallengeId = selectedChallenge?.value.trim() || ''
             const ticket = await createSupportTicket({
                 ...(normalizedChallengeId ? { challengeId: normalizedChallengeId } : {}),
                 description: normalizedDescription,
@@ -133,7 +174,7 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
             center
             onClose={handleClose}
             open={props.open}
-            size='lg'
+            size='body'
             title='Open support request'
             buttons={(
                 <>
@@ -150,19 +191,34 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
             )}
         >
             <div className={styles.form}>
-                <label htmlFor='support-challenge-id'>
-                    Challenge ID
-                    <span>Optional</span>
-                </label>
-                <input
-                    disabled={submitting}
-                    id='support-challenge-id'
-                    maxLength={64}
-                    onChange={handleChallengeChange}
-                    placeholder='Associated challenge ID'
-                    type='text'
-                    value={challengeId}
-                />
+                <div className={styles.challengeField}>
+                    <label htmlFor='support-challenge-id'>Challenge (if applicable)</label>
+                    <Select<ChallengeOption, false>
+                        aria-describedby={challengeError ? 'support-challenge-error' : undefined}
+                        className={styles.challengeSelect}
+                        classNamePrefix='support-challenge-select'
+                        inputId='support-challenge-id'
+                        instanceId='support-challenge'
+                        isClearable
+                        isDisabled={submitting || challengesLoading || !memberId}
+                        isLoading={challengesLoading}
+                        menuPlacement='auto'
+                        menuPortalTarget={typeof document === 'undefined' ? undefined : document.body}
+                        menuPosition='fixed'
+                        noOptionsMessage={() => (
+                            challengeError ? 'Challenges could not be loaded' : 'No active challenges found'
+                        )}
+                        onChange={handleChallengeChange}
+                        options={challengeOptions}
+                        placeholder='Select challenge'
+                        value={selectedChallenge}
+                    />
+                    {challengeError && (
+                        <p className={styles.challengeError} id='support-challenge-error' role='status'>
+                            Active challenges could not be loaded. You can still open a request without one.
+                        </p>
+                    )}
+                </div>
                 <SupportMarkdownEditor
                     contextId={uploadContext}
                     disabled={submitting}

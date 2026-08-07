@@ -1,4 +1,5 @@
 /** Pure presentation and authorization helpers for Support. */
+import { EnvironmentConfig } from '~/config'
 import { UserRole } from '~/libs/core'
 
 import { SupportResponse } from '../models'
@@ -14,6 +15,18 @@ export function isSupportTeamMember(roles: readonly string[] | undefined): boole
     const expected = UserRole.topcoderSupportTeam.toLowerCase()
     return Boolean(roles?.some(role => role.trim()
         .toLowerCase() === expected))
+}
+
+/**
+ * Builds the environment-specific public challenge page URL for a Support ticket.
+ *
+ * @param challengeId opaque challenge identifier.
+ * @returns absolute, safely encoded public challenge URL.
+ * @throws Does not throw.
+ */
+export function buildSupportChallengeUrl(challengeId: string): string {
+    const challengeBaseUrl = EnvironmentConfig.URLS.CHALLENGES_PAGE.replace(/\/$/, '')
+    return `${challengeBaseUrl}/${encodeURIComponent(challengeId)}`
 }
 
 /**

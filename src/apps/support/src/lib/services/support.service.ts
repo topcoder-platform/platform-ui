@@ -90,7 +90,7 @@ export function getSupportTicket(ticketId: string): Promise<SupportTicketDetail>
 }
 
 /**
- * Adds a markdown response to an open ticket.
+ * Adds a markdown response to a ticket; an owner reply can reopen a closed ticket.
  *
  * @param ticketId ticket identifier.
  * @param request response markdown.

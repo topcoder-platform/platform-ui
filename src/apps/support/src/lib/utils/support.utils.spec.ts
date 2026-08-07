@@ -1,16 +1,28 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {
+    buildSupportChallengeUrl,
     isSupportTeamMember,
     markdownToPlainText,
     sortResponsesAscending,
     truncateText,
 } from './support.utils'
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        URLS: { CHALLENGES_PAGE: 'https://www.example.test/challenges/' },
+    },
+}), { virtual: true })
+
 jest.mock('~/libs/core', () => ({
     UserRole: { topcoderSupportTeam: 'Topcoder Support Team' },
 }), { virtual: true })
 
 describe('Support utilities', () => {
+    it('builds an encoded environment-specific challenge link', () => {
+        expect(buildSupportChallengeUrl('challenge/id'))
+            .toBe('https://www.example.test/challenges/challenge%2Fid')
+    })
+
     it('matches only the exact Support Team role case-insensitively', () => {
         expect(isSupportTeamMember([' topcoder SUPPORT team ']))
             .toBe(true)
