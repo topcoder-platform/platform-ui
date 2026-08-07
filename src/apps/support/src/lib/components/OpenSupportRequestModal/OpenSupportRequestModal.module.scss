@@ -1,0 +1,49 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    min-width: min(720px, 70vw);
+
+    > label {
+        color: $black-80;
+        display: flex;
+        font-size: 14px;
+        font-weight: 700;
+        justify-content: space-between;
+        margin-bottom: -$sp-4;
+
+        span {
+            color: $black-60;
+            font-size: 12px;
+            font-weight: 400;
+        }
+    }
+
+    > input {
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font: inherit;
+        min-height: 42px;
+        padding: $sp-2 $sp-3;
+        width: 100%;
+    }
+}
+
+.requestError {
+    background: #fff0f1;
+    border: 1px solid #d98b91;
+    border-radius: 4px;
+    color: #8c1520;
+    margin: 0;
+    padding: $sp-3;
+}
+
+@include ltemd {
+    .form {
+        min-width: 0;
+        width: 100%;
+    }
+}
