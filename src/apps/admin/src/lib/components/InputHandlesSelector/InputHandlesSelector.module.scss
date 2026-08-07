@@ -12,8 +12,12 @@
 }
 
 .selectUserHandlesCustomMultiValue {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
-    padding: 0 8px;
+    line-height: 1.4;
+    padding: 2px 8px;
     margin-right: 6px;
     color: $black-60;
     background-color: $black-10;
@@ -25,6 +29,24 @@
 
     .label {
         font-weight: 700;
+    }
+}
+
+// Sized here so the control works outside admin-app (which provides svg.icon globals).
+.removeIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+
+    :global(svg) {
+        display: block;
+        width: 12px;
+        height: 12px;
+        max-width: 12px;
+        max-height: 12px;
+        stroke: currentColor;
     }
 }
 
