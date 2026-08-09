@@ -4269,6 +4269,95 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it.each([
+        {
+            expectedDownloadAccess: 'true',
+            track: {
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            },
+            workType: 'Web Design',
+        },
+        {
+            expectedDownloadAccess: 'false',
+            track: {
+                id: 'development-track',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            },
+            workType: undefined,
+        },
+    ])('defaults $track.name winning downloads to $expectedDownloadAccess', async ({
+        expectedDownloadAccess,
+        track,
+        workType,
+    }: {
+        expectedDownloadAccess: string
+        track: {
+            id: string
+            name: string
+            track: string
+        }
+        workType?: string
+    }) => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [track],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'challenge-type-id',
+                isActive: true,
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: `${track.name} challenge`,
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: `${track.name} challenge`,
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), `${track.name} challenge`)
+        await user.type(screen.getByLabelText('Challenge Track'), track.id)
+        await user.type(screen.getByLabelText('Challenge Type'), 'challenge-type-id')
+
+        if (workType) {
+            await user.type(screen.getByLabelText('Work Type'), workType)
+        }
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    metadata: [{
+                        name: 'allowAllRegistrantsToDownloadWinningSubmissions',
+                        value: expectedDownloadAccess,
+                    }, {
+                        name: 'is_test_challenge',
+                        value: 'false',
+                    }],
+                }))
+        })
+    })
+
     it('creates a forum discussion for forum-enabled challenge types', async () => {
         const user = userEvent.setup()
 

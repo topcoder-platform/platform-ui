@@ -1999,6 +1999,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [resolvedChallengeTrackName],
     )
+    const isDevelopmentTrackSelected = useMemo(
+        (): boolean => {
+            const normalizedTrack = normalizeChallengeTypeToken(resolvedChallengeTrackName)
+
+            return normalizedTrack === CHALLENGE_TRACK_DEVELOPMENT_NAME
+                || normalizedTrack === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
+        },
+        [resolvedChallengeTrackName],
+    )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
             const normalizedChallengeTypeName = (selectedChallengeType?.name || '')
@@ -2064,22 +2073,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isDevelopmentChallengeSelected = useMemo(
         (): boolean => {
-            const normalizedTrackName = normalizeChallengeTypeToken(resolvedChallengeTrackName)
             const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
             const normalizedChallengeTypeAbbreviation
                 = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
 
-            return (
-                normalizedTrackName === CHALLENGE_TRACK_DEVELOPMENT_NAME
-                || normalizedTrackName === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
-            )
+            return isDevelopmentTrackSelected
                 && (
                     normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
                     || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
                 )
         },
         [
-            resolvedChallengeTrackName,
+            isDevelopmentTrackSelected,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
         ],
@@ -3056,7 +3061,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     booleanToMetadata(
                         formData.metadata,
                         REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
-                        true,
+                        !isDevelopmentTrackSelected,
                     ),
                     IS_TEST_CHALLENGE_METADATA_FIELD,
                     formData.isTestChallenge === true,
@@ -3147,6 +3152,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             clearErrors,
             fallbackProjectId,
             getValues,
+            isDevelopmentTrackSelected,
             isTaskSingleAssignmentChallenge,
             reset,
             onChallengeCreated,
