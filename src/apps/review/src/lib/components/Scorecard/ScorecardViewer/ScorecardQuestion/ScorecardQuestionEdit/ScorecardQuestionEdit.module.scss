@@ -82,10 +82,19 @@
 .answerWrap {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: $sp-4;
     .answerInput {
         width: 120px;
     }
+}
+
+.placementGuidelines {
+    flex-basis: 100%;
+    order: 1;
+    color: #767676;
+    font-size: 14px;
+    line-height: 20px;
 }
 
 .responseTypeWrap {
