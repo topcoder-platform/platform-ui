@@ -1993,12 +1993,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // get review progress from challenge review
     const reviewProgress = useMemo(() => calculateReviewProgress({
         challengePhases: challengeInfo?.phases,
+        checkpointReviewRows: checkpointReview,
+        checkpointScreeningRows: checkpoint,
+        currentPhaseName: challengeInfo?.currentPhaseObject?.name || challengeInfo?.currentPhase,
         isDesignChallenge: challengeInfo?.track?.name === DESIGN,
         reviewRows: review,
         screeningRows: screening,
     }), [
         challengeInfo?.phases,
+        challengeInfo?.currentPhase,
+        challengeInfo?.currentPhaseObject?.name,
         challengeInfo?.track?.name,
+        checkpoint,
+        checkpointReview,
         review,
         screening,
     ])

@@ -53,6 +53,7 @@ const createReviewSubmission = (
 const createScreeningRow = (
     submissionId: string,
     result: Screening['result'],
+    overrides: Partial<Screening> = {},
 ): Screening => ({
     challengeId: 'challenge-id',
     createdAt: '2025-01-01T00:00:00.000Z',
@@ -60,6 +61,7 @@ const createScreeningRow = (
     result,
     score: '100',
     submissionId,
+    ...overrides,
 })
 
 describe('calculateReviewProgress', () => {
@@ -80,6 +82,9 @@ describe('calculateReviewProgress', () => {
 
         const progress = calculateReviewProgress({
             challengePhases: reviewPhases,
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [],
+            currentPhaseName: 'Review',
             isDesignChallenge: false,
             reviewRows,
             screeningRows,
@@ -101,6 +106,9 @@ describe('calculateReviewProgress', () => {
 
         const progress = calculateReviewProgress({
             challengePhases: reviewPhases,
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [],
+            currentPhaseName: 'Review',
             isDesignChallenge: false,
             reviewRows,
             screeningRows,
@@ -122,8 +130,82 @@ describe('calculateReviewProgress', () => {
 
         const progress = calculateReviewProgress({
             challengePhases: reviewPhases,
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [],
+            currentPhaseName: 'Review',
             isDesignChallenge: true,
             reviewRows,
+            screeningRows,
+        })
+
+        expect(progress)
+            .toBe(50)
+    })
+
+    it('uses completed checkpoint review rows for an open checkpoint review phase', () => {
+        const checkpointReviewPhase = createPhase('Checkpoint Review')
+        const checkpointReviewRows: Screening[] = [
+            createScreeningRow('submission-one', 'PASS', { reviewStatus: 'COMPLETED' }),
+            createScreeningRow('submission-two', 'PASS', { reviewStatus: 'SUBMITTED' }),
+        ]
+
+        const progress = calculateReviewProgress({
+            challengePhases: [checkpointReviewPhase],
+            checkpointReviewRows,
+            checkpointScreeningRows: [],
+            currentPhaseName: '',
+            isDesignChallenge: true,
+            reviewRows: [createReviewSubmission('final-review', 'PENDING')],
+            screeningRows: [],
+        })
+
+        expect(progress)
+            .toBe(100)
+    })
+
+    it('uses checkpoint screening rows for partial checkpoint screening progress', () => {
+        const progress = calculateReviewProgress({
+            challengePhases: [createPhase('Checkpoint Screening')],
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [
+                createScreeningRow('submission-one', 'PASS', { reviewStatus: 'COMPLETED' }),
+                createScreeningRow('submission-two', '-', { reviewStatus: 'IN_PROGRESS' }),
+            ],
+            currentPhaseName: 'Checkpoint Screening',
+            isDesignChallenge: true,
+            reviewRows: [],
+            screeningRows: [],
+        })
+
+        expect(progress)
+            .toBe(50)
+    })
+
+    it('counts each reviewer assignment in multi-screener phase progress', () => {
+        const screeningRows: Screening[] = [
+            createScreeningRow('submission-one', '-', {
+                screeningReviews: [
+                    {
+                        result: 'PASS',
+                        reviewStatus: 'COMPLETED',
+                        score: '100',
+                    },
+                    {
+                        result: '-',
+                        reviewStatus: 'PENDING',
+                        score: 'Pending',
+                    },
+                ],
+            }),
+        ]
+
+        const progress = calculateReviewProgress({
+            challengePhases: [createPhase('Screening')],
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [],
+            currentPhaseName: 'Screening',
+            isDesignChallenge: false,
+            reviewRows: [],
             screeningRows,
         })
 
