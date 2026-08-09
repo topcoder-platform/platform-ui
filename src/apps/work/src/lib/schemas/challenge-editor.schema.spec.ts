@@ -285,11 +285,16 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
                 ...baseFormData,
+                phases: [{
+                    name: 'Review',
+                    phaseId: 'review-phase-id',
+                }],
                 reviewers: [
                     {
                         isMemberReview: true,
                         memberId: '1111',
                         memberReviewerCount: 2,
+                        phaseId: 'review-phase-id',
                         scorecardId: 'scorecard-id',
                         shouldOpenOpportunity: false,
                     },
@@ -299,6 +304,56 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
             .rejects
             .toMatchObject({
                 path: 'reviewers[0].additionalMemberIds.0',
+            })
+    })
+
+    it('accepts an unassigned screener for the standard Screening phase', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                phases: [{
+                    id: 'screening-phase-instance-id',
+                    name: 'Screening',
+                    phaseId: 'screening-phase-template-id',
+                }],
+                reviewers: [
+                    {
+                        additionalMemberIds: [],
+                        isMemberReview: true,
+                        memberReviewerCount: 2,
+                        phaseId: 'screening-phase-instance-id',
+                        scorecardId: 'screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('still requires an assigned checkpoint screener', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                phases: [{
+                    name: 'Checkpoint Screening',
+                    phaseId: 'checkpoint-screening-phase-id',
+                }],
+                reviewers: [
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'checkpoint-screening-phase-id',
+                        scorecardId: 'checkpoint-screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toMatchObject({
+                path: 'reviewers[0].memberId',
             })
     })
 
