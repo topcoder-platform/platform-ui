@@ -86,6 +86,7 @@ import {
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
 import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
+import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
@@ -1233,7 +1234,10 @@ async function hydratePersistedManualReviewerAssignments(
     )
 }
 
-function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
+function getReviewerEntryValidationError(
+    reviewer: Reviewer | undefined,
+    phases: ChallengeEditorFormData['phases'],
+): string | undefined {
     if (!reviewer) {
         return undefined
     }
@@ -1253,7 +1257,10 @@ function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string
             return 'Number of reviewers must be a positive integer.'
         }
 
-        if (reviewer.shouldOpenOpportunity !== true) {
+        if (
+            reviewer.shouldOpenOpportunity !== true
+            && !isScreenerAssignmentOptional(reviewer, phases)
+        ) {
             const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
             const hasAllRequiredMembers = requiredAssignedMembers.length === reviewerCount
@@ -1322,7 +1329,7 @@ function getReviewerValidationError(
     }
 
     const invalidReviewer = reviewers
-        .map(reviewer => getReviewerEntryValidationError(reviewer))
+        .map(reviewer => getReviewerEntryValidationError(reviewer, formData.phases))
         .find(Boolean)
     if (invalidReviewer) {
         return invalidReviewer

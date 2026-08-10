@@ -51,6 +51,7 @@ import {
     calculateEstimatedReviewerCost,
     getFirstPlacePrizeValue,
 } from '../../../../../lib/utils'
+import { isScreenerAssignmentOptional } from '../../../../../lib/utils/reviewer.utils'
 
 import { isAiReviewer } from './reviewers-field.utils'
 import {
@@ -1983,6 +1984,7 @@ export const HumanReviewTab: FC = () => {
                         || index
                     const reviewerKey = `${reviewerPrefix}-${reviewerIdentity}`
                     const shouldDisablePublicOpportunity = isDesignTrackSelected
+                    const isMemberAssignmentOptional = isScreenerAssignmentOptional(reviewer, phases)
 
                     return (
                         <div
@@ -2055,7 +2057,7 @@ export const HumanReviewTab: FC = () => {
                                                                 memberIndex,
                                                             )}
                                                             placeholder='Search member'
-                                                            required
+                                                            required={!isMemberAssignmentOptional}
                                                             valueField='userId'
                                                         />
                                                     )
