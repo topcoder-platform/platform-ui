@@ -241,7 +241,11 @@ const StatisticsPage: FC = () => {
                                     </tbody>
                                 </table>
                             </div>
-                            <WorldMap countries={countries} valueLabel={valueLabel} />
+                            <WorldMap
+                                countries={countries}
+                                showWinnerDetails={activeTab === 'winners'}
+                                valueLabel={valueLabel}
+                            />
                         </>
                     )}
                 </div>

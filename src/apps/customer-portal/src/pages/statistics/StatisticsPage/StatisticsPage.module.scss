@@ -262,6 +262,155 @@
     }
 }
 
+.mapTooltip,
+.mapTooltipCompact {
+    background: #0f172a;
+    box-sizing: border-box;
+    color: #fff;
+    font-family: 'Figtree', sans-serif;
+    pointer-events: none;
+}
+
+.mapTooltip {
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    position: relative;
+    width: 218px;
+
+    &::after {
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-top: 8px solid #0f172a;
+        content: '';
+        height: 0;
+        left: 50%;
+        position: absolute;
+        top: 100%;
+        transform: translateX(-50%);
+        width: 0;
+    }
+}
+
+.mapTooltipCompact {
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 10px 12px;
+}
+
+.tooltipHeader {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 4px;
+    line-height: normal;
+}
+
+.tooltipCountry {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+
+    strong {
+        font-size: 20px;
+        line-height: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.tooltipFlag {
+    flex: 0 0 16px;
+    height: 16px;
+    width: 16px;
+}
+
+.tooltipSectionTitle {
+    font-size: 12px;
+    line-height: normal;
+}
+
+.tooltipWinners {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tooltipWinner {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tooltipAvatar {
+    background-color: #d9d9d9;
+    background-position: center;
+    background-size: cover;
+    border-radius: 50%;
+    display: block;
+    flex: 0 0 40px;
+    height: 40px;
+    overflow: hidden;
+    position: relative;
+    width: 40px;
+
+    &[style] {
+        .tooltipAvatarHead,
+        .tooltipAvatarBody {
+            display: none;
+        }
+    }
+}
+
+.tooltipAvatarHead {
+    background: #aab6c2;
+    border-radius: 50%;
+    height: 14px;
+    left: 13px;
+    position: absolute;
+    top: 7px;
+    width: 14px;
+}
+
+.tooltipAvatarBody {
+    background: #aab6c2;
+    border-radius: 16px 16px 8px 8px;
+    bottom: -2px;
+    height: 18px;
+    left: 7px;
+    position: absolute;
+    width: 26px;
+}
+
+.tooltipWinnerText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tooltipHandle {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tooltipWins {
+    color: #fff;
+    font-size: 12px;
+    line-height: normal;
+}
+
 .status {
     align-items: center;
     color: #545f71;

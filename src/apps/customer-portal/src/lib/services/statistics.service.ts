@@ -23,11 +23,19 @@ function toAlpha2CountryCode(code: string): string {
     return normalized.length === 3 ? ISO3_TO_2.get(normalized) ?? normalized : normalized
 }
 
+export type StatisticsWinner = {
+    handle: string
+    maxRating?: number
+    photoURL?: string
+    wins: number
+}
+
 export type StatisticsCountry = {
     code?: string
     count: number
     flagUrl?: string
     name: string
+    topWinners?: StatisticsWinner[]
 }
 
 export type GeneralStatistics = {
@@ -40,6 +48,12 @@ export type GeneralStatistics = {
 type CountryReportRow = {
     'challenge_stats.count'?: number | string
     'country.country_name'?: string
+    topWinners?: Array<{
+        handle?: string
+        maxRating?: number | string | null
+        photoURL?: string | null
+        wins?: number | string
+    }>
     'user.count'?: number | string
 }
 
@@ -121,11 +135,29 @@ function normalizeCountryRows(
 
         const code = toAlpha2CountryCode(lookup.countryCode)
         const current = countries.get(code)
+        const topWinners = (row.topWinners || [])
+            .map(winner => ({
+                handle: String(winner.handle || '')
+                    .trim(),
+                maxRating: winner.maxRating === null || winner.maxRating === undefined
+                    ? undefined
+                    : Number(winner.maxRating),
+                photoURL: String(winner.photoURL || '')
+                    .trim() || undefined,
+                wins: Number(winner.wins || 0),
+            }))
+            .filter(winner => (
+                winner.handle
+                && Number.isFinite(winner.wins)
+                && winner.wins > 0
+            ))
+            .slice(0, 3)
         countries.set(code, {
             code,
             count: (current?.count || 0) + count,
             // flagUrl: lookup.countryFlag?.replace(/^http:/, 'https:'),
             name: lookup.name || name,
+            topWinners: topWinners.length > 0 ? topWinners : current?.topWinners,
         })
     })
 
@@ -144,7 +176,7 @@ export async function fetchCountriesRepresented(): Promise<StatisticsCountry[]> 
 
 export async function fetchWinnersByCountry(): Promise<StatisticsCountry[]> {
     const [rows, lookupResponse] = await Promise.all([
-        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/first-place-by-country`),
+        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/top-winners-by-country`),
         xhrGetAsync<CountryLookupResponse | CountryLookupRow[]>(COUNTRY_LOOKUP_URL),
     ])
 
