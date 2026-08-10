@@ -39,6 +39,19 @@ jest.mock('../../../../../lib/components/form', () => {
             })
             const field = controller.field
 
+            function handleChange(event: ChangeEvent<HTMLInputElement>): void {
+                const selectedOption = props.options.find(option => (
+                    String(option.value) === event.target.value
+                ))
+
+                if (!selectedOption) {
+                    return
+                }
+
+                field.onChange(selectedOption.value)
+                props.onChange?.(selectedOption.value)
+            }
+
             return (
                 <fieldset>
                     <legend>{props.label}</legend>
@@ -49,10 +62,7 @@ jest.mock('../../../../../lib/components/form', () => {
                                 checked={field.value === option.value}
                                 name={field.name}
                                 onBlur={field.onBlur}
-                                onChange={() => {
-                                    field.onChange(option.value)
-                                    props.onChange?.(option.value)
-                                }}
+                                onChange={handleChange}
                                 type='radio'
                                 value={String(option.value)}
                             />
