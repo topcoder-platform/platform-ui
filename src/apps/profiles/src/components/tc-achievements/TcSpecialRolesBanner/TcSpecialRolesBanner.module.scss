@@ -127,6 +127,14 @@
     }
 }
 
+@include gtexl {
+    @container (min-width: 656px) {
+        .roleCard + .roleCard {
+            margin-left: $sp-10;
+        }
+    }
+}
+
 @container (max-width: 420px) {
     .roleCard {
         min-height: 58px;
