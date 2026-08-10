@@ -1,10 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { FC } from 'react'
+import {
+    ChangeEvent,
+    FC,
+} from 'react'
 import {
     render,
     screen,
     waitFor,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {
     FormProvider,
     useForm,
@@ -14,6 +18,90 @@ import {
 import { ChallengeEditorFormData } from '../../../../../lib/models'
 
 import { MaximumSubmissionsField } from './MaximumSubmissionsField'
+
+jest.mock('../../../../../lib/components/form', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        FormRadioGroup: (props: {
+            label: string
+            name: string
+            onChange?: (value: boolean | string) => void
+            options: Array<{
+                label: string
+                value: boolean | string
+            }>
+        }) => {
+            const formContext: ReturnType<typeof reactHookForm.useFormContext> = reactHookForm.useFormContext()
+            const controller: ReturnType<typeof reactHookForm.useController> = reactHookForm.useController({
+                control: formContext.control,
+                name: props.name,
+            })
+            const field = controller.field
+
+            return (
+                <fieldset>
+                    <legend>{props.label}</legend>
+                    {props.options.map(option => (
+                        <label key={String(option.value)}>
+                            {option.label}
+                            <input
+                                checked={field.value === option.value}
+                                name={field.name}
+                                onBlur={field.onBlur}
+                                onChange={() => {
+                                    field.onChange(option.value)
+                                    props.onChange?.(option.value)
+                                }}
+                                type='radio'
+                                value={String(option.value)}
+                            />
+                        </label>
+                    ))}
+                </fieldset>
+            )
+        },
+        FormTextField: (props: {
+            label: string
+            min?: number
+            name: string
+            placeholder?: string
+            sanitize?: (value: string) => string
+            type?: 'number' | 'text'
+        }) => {
+            const formContext: ReturnType<typeof reactHookForm.useFormContext> = reactHookForm.useFormContext()
+            const controller: ReturnType<typeof reactHookForm.useController> = reactHookForm.useController({
+                control: formContext.control,
+                name: props.name,
+            })
+            const field = controller.field
+
+            function handleChange(event: ChangeEvent<HTMLInputElement>): void {
+                const nextValue = props.sanitize
+                    ? props.sanitize(event.target.value)
+                    : event.target.value
+                field.onChange(nextValue)
+            }
+
+            return (
+                <label>
+                    {props.label}
+                    <input
+                        min={props.min}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onChange={handleChange}
+                        placeholder={props.placeholder}
+                        type={props.type || 'text'}
+                        value={typeof field.value === 'string'
+                            ? field.value
+                            : ''}
+                    />
+                </label>
+            )
+        },
+    }
+})
 
 jest.mock('../../../../../lib/utils', () => ({
     getMetadataValue: (
@@ -95,57 +183,19 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
 }
 
 describe('MaximumSubmissionsField', () => {
-    it('does not render submission-cap controls', () => {
-        render(
-            <TestHarness
-                defaultMetadata={[{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '3',
-                        limit: 'true',
-                        unlimited: 'false',
-                    }),
-                }]}
-            />,
-        )
-
-        expect(screen.queryByRole('checkbox', { name: 'Limit' }))
-            .toBeNull()
-        expect(screen.queryByRole('spinbutton', { name: 'Limit Count' }))
-            .toBeNull()
-    })
-
-    it('normalizes legacy submission-limit metadata to unlimited', async () => {
-        render(
-            <TestHarness
-                defaultMetadata={[{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '3',
-                        limit: 'true',
-                        unlimited: 'false',
-                    }),
-                }]}
-            />,
-        )
-
-        await waitFor(() => {
-            expect(screen.getByTestId('metadata-value').textContent)
-                .toBe(JSON.stringify([{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '',
-                        limit: 'false',
-                        unlimited: 'true',
-                    }),
-                }]))
-        })
-    })
-
-    it('adds unlimited submission-limit metadata when it is missing', async () => {
+    it('defaults missing metadata to unlimited submissions', async () => {
         render(<TestHarness />)
 
         await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+            .toBe(false)
+        expect(screen.queryByRole('spinbutton', { name: 'Limit count' }))
+            .toBeNull()
+
+        await waitFor(() => {
             expect(screen.getByTestId('metadata-value').textContent)
                 .toBe(JSON.stringify([{
                     name: 'submissionLimit',
@@ -158,20 +208,124 @@ describe('MaximumSubmissionsField', () => {
         })
     })
 
-    it('defers dirtying until resource hydration finishes', async () => {
-        const rendered = render(
+    it('restores an existing limited submission count', async () => {
+        const limitedMetadata = [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count: '3',
+                limit: 'true',
+                unlimited: 'false',
+            }),
+        }]
+
+        render(<TestHarness defaultMetadata={limitedMetadata} />)
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        expect((screen.getByRole('spinbutton', { name: 'Limit count' }) as HTMLInputElement).value)
+            .toBe('3')
+        expect(screen.getByTestId('metadata-value').textContent)
+            .toBe(JSON.stringify(limitedMetadata))
+    })
+
+    it('persists a selected limit and count', async () => {
+        const user = userEvent.setup()
+
+        render(
             <TestHarness
                 defaultMetadata={[{
                     name: 'submissionLimit',
                     value: JSON.stringify({
-                        count: '3',
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]}
+            />,
+        )
+
+        await user.click(screen.getByRole('radio', { name: 'Limited' }))
+        await user.type(screen.getByRole('spinbutton', { name: 'Limit count' }), '12')
+
+        await waitFor(() => {
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '12',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]))
+        })
+    })
+
+    it('clears the count when unlimited submissions are selected', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '2',
                         limit: 'true',
                         unlimited: 'false',
                     }),
                 }]}
-                deferDirty
             />,
         )
+
+        await waitFor(() => {
+            expect((screen.getByRole('spinbutton', { name: 'Limit count' }) as HTMLInputElement).value)
+                .toBe('2')
+        })
+        await user.click(screen.getByRole('radio', { name: 'Unlimited' }))
+
+        expect(screen.queryByRole('spinbutton', { name: 'Limit count' }))
+            .toBeNull()
+        await waitFor(() => {
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]))
+        })
+    })
+
+    it('safely normalizes malformed metadata to unlimited', async () => {
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: '{invalid',
+                }]}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]))
+        })
+    })
+
+    it('defers dirtying default metadata until resource hydration finishes', async () => {
+        const rendered = render(<TestHarness deferDirty />)
 
         await waitFor(() => {
             expect(screen.getByTestId('metadata-value').textContent)
@@ -187,19 +341,7 @@ describe('MaximumSubmissionsField', () => {
         expect(screen.getByTestId('dirty-value').textContent)
             .toBe('false')
 
-        rendered.rerender(
-            <TestHarness
-                defaultMetadata={[{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '3',
-                        limit: 'true',
-                        unlimited: 'false',
-                    }),
-                }]}
-                deferDirty={false}
-            />,
-        )
+        rendered.rerender(<TestHarness deferDirty={false} />)
 
         await waitFor(() => {
             expect(screen.getByTestId('dirty-value').textContent)
