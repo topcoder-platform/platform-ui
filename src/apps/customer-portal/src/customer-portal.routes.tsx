@@ -17,6 +17,7 @@ import {
 import { customerPortalFlexiTalentRoutes } from './pages/flexi-talent/flexi-talent.routes'
 import { customerPortalTalentSearchRoutes } from './pages/talent-search/talent-search.routes'
 import { customerPortalProjectShowcaseRoutes } from './pages/project-showcase/project-showcase.routes'
+import { customerPortalStatisticsRoutes } from './pages/statistics/statistics.routes'
 
 const CustomerPortalApp: LazyLoadedComponent = lazyLoad(() => import('./CustomerPortalApp'))
 
@@ -32,6 +33,7 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <Rewrite to={talentSearchRouteId} />,
                 route: '',
             },
+            ...customerPortalStatisticsRoutes,
             ...customerPortalTalentSearchRoutes,
             ...customerPortalProjectShowcaseRoutes,
             ...customerPortalFlexiTalentRoutes,

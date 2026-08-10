@@ -162,14 +162,11 @@
         }
     }
 
-    // Explicit borders — do not rely on `all: revert-layer` / UA defaults
-    // (those can look different across Mac vs Windows Chrome / DPI scaling).
     table {
         display: block;
         overflow-x: auto;
         max-width: 100%;
         border-collapse: collapse;
-        border-spacing: 0;
     }
 
     th,
@@ -303,7 +300,7 @@
 }
 
 .challengeTitle {
-    color: $black-100;
+    color: $link-blue-dark;
     font-family: Roboto;
     font-size: 16px;
     font-weight: 500;
@@ -311,7 +308,6 @@
     text-decoration: none;
 
     &:hover {
-        color: $link-blue-dark;
         text-decoration: none;
     }
 }
@@ -327,12 +323,28 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
     color: $black-80;
     font-family: Roboto;
     font-size: 14px;
     font-weight: 400;
     line-height: 22px;
+    min-width: 220px;
+
+    span {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.statSeparator::before {
+    display: block;
+    content: "";
+    border-radius: 50%;
+    width: 3px;
+    height: 3px;
+    background: url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 1.36035C0 0.963867 0.125326 0.638021 0.375977 0.382812C0.631185 0.127604 0.968424 0 1.3877 0C1.80241 0 2.13965 0.125326 2.39941 0.375977C2.65918 0.62207 2.78906 0.957031 2.78906 1.38086V1.63379C2.78906 2.03027 2.66374 2.35384 2.41309 2.60449C2.16243 2.85514 1.82292 2.98047 1.39453 2.98047C0.970703 2.98047 0.631185 2.85514 0.375977 2.60449C0.125326 2.34928 0 2.02116 0 1.62012V1.36035Z" fill="%23555555"/></svg>') center no-repeat;
+    margin-left: 8px;
+    margin-right: 8px;
 }
 
 .challengeViewLink {
