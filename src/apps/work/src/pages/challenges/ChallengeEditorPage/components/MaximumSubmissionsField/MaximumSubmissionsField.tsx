@@ -2,19 +2,18 @@ import {
     FC,
     useCallback,
     useEffect,
-    useMemo,
-    useRef,
 } from 'react'
 import {
     useFormContext,
+    UseFormReturn,
     useWatch,
 } from 'react-hook-form'
 
 import {
     FormRadioGroup,
     FormRadioOption,
-    FormTextField,
-} from '../../../../../lib/components/form'
+} from '../../../../../lib/components/form/FormRadioGroup'
+import { FormTextField } from '../../../../../lib/components/form/FormTextField'
 import {
     ChallengeEditorFormData,
     ChallengeMetadata,
@@ -22,7 +21,7 @@ import {
 import {
     getMetadataValue,
     setMetadataValue,
-} from '../../../../../lib/utils'
+} from '../../../../../lib/utils/metadata.utils'
 
 import styles from './MaximumSubmissionsField.module.scss'
 
@@ -37,6 +36,11 @@ type SubmissionLimitMode = typeof LIMITED_MODE | typeof UNLIMITED_MODE
 interface SubmissionLimitMetadata {
     count: string
     mode: SubmissionLimitMode
+}
+
+interface SubmissionLimitFormData extends ChallengeEditorFormData {
+    submissionLimitCount?: string
+    submissionLimitMode?: SubmissionLimitMode
 }
 
 const submissionLimitOptions: FormRadioOption<string>[] = [
@@ -57,9 +61,9 @@ const defaultSubmissionLimitMetadata: SubmissionLimitMetadata = {
 
 interface MaximumSubmissionsFieldProps {
     /**
-     * Defers dirtying the form while the editor is still restoring persisted assignments.
-     * Once hydration finishes, newly defaulted metadata is marked dirty so save/autosave
-     * persists the canonical unlimited payload.
+     * Defers automatic metadata normalization while the editor restores persisted assignments.
+     * User changes still persist immediately; once hydration finishes, newly defaulted metadata
+     * is marked dirty so save/autosave persists the canonical unlimited payload.
      */
     deferDirty?: boolean
 }
@@ -172,35 +176,69 @@ function serializeSubmissionLimitMetadata(
 export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
     props: MaximumSubmissionsFieldProps,
 ) => {
-    const formContext = useFormContext<ChallengeEditorFormData>()
-    const dynamicFormControl = formContext.control as any
-    const deferredDirtyNormalizationRef = useRef(false)
+    const {
+        control,
+        getValues,
+        setValue,
+    }: Pick<
+        UseFormReturn<SubmissionLimitFormData>,
+        'control' | 'getValues' | 'setValue'
+    > = useFormContext<SubmissionLimitFormData>()
     const metadata = useWatch({
-        control: dynamicFormControl,
+        control,
         name: 'metadata',
     }) as ChallengeMetadata[] | undefined
     const submissionLimitMode = useWatch({
-        control: dynamicFormControl,
+        control,
         name: SUBMISSION_LIMIT_MODE_FIELD,
     }) as SubmissionLimitMode | undefined
     const submissionLimitCount = useWatch({
-        control: dynamicFormControl,
+        control,
         name: SUBMISSION_LIMIT_COUNT_FIELD,
     }) as string | undefined
-    const submissionLimitValue = useMemo(
-        () => getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD),
-        [metadata],
-    )
-    const parsedSubmissionLimitMetadata = useMemo(
-        () => parseSubmissionLimitMetadata(submissionLimitValue),
-        [submissionLimitValue],
-    )
+    const submissionLimitValue = getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD)
+
+    const persistSubmissionLimitMetadata = useCallback((
+        mode: SubmissionLimitMode,
+        count: string,
+    ): void => {
+        const currentMetadata = getValues('metadata')
+        const nextSubmissionLimitValue = serializeSubmissionLimitMetadata(mode, count)
+
+        if (getMetadataValue(currentMetadata, SUBMISSION_LIMIT_FIELD) === nextSubmissionLimitValue) {
+            return
+        }
+
+        setValue(
+            'metadata',
+            setMetadataValue(
+                currentMetadata,
+                SUBMISSION_LIMIT_FIELD,
+                nextSubmissionLimitValue,
+            ),
+            {
+                shouldDirty: true,
+                shouldValidate: false,
+            },
+        )
+    }, [
+        getValues,
+        setValue,
+    ])
 
     useEffect(() => {
+        if (submissionLimitMode !== undefined && submissionLimitCount !== undefined) {
+            return
+        }
+
+        const currentSubmissionLimitMetadata = parseSubmissionLimitMetadata(
+            getMetadataValue(getValues('metadata'), SUBMISSION_LIMIT_FIELD),
+        )
+
         if (submissionLimitMode === undefined) {
-            formContext.setValue(
-                SUBMISSION_LIMIT_MODE_FIELD as never,
-                parsedSubmissionLimitMetadata.mode as never,
+            setValue(
+                SUBMISSION_LIMIT_MODE_FIELD,
+                currentSubmissionLimitMetadata.mode,
                 {
                     shouldDirty: false,
                     shouldValidate: false,
@@ -209,9 +247,9 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         }
 
         if (submissionLimitCount === undefined) {
-            formContext.setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD as never,
-                parsedSubmissionLimitMetadata.count as never,
+            setValue(
+                SUBMISSION_LIMIT_COUNT_FIELD,
+                currentSubmissionLimitMetadata.count,
                 {
                     shouldDirty: false,
                     shouldValidate: false,
@@ -219,109 +257,77 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
             )
         }
     }, [
-        formContext,
-        parsedSubmissionLimitMetadata.count,
-        parsedSubmissionLimitMetadata.mode,
-        submissionLimitCount,
-        submissionLimitMode,
-    ])
-
-    useEffect(() => {
-        if (submissionLimitMode === undefined || submissionLimitCount === undefined) {
-            return
-        }
-
-        const nextSubmissionLimitValue = serializeSubmissionLimitMetadata(
-            submissionLimitMode,
-            submissionLimitCount,
-        )
-
-        if (submissionLimitValue === nextSubmissionLimitValue) {
-            return
-        }
-
-        deferredDirtyNormalizationRef.current = props.deferDirty === true
-
-        formContext.setValue(
-            'metadata',
-            setMetadataValue(
-                metadata,
-                SUBMISSION_LIMIT_FIELD,
-                nextSubmissionLimitValue,
-            ),
-            {
-                shouldDirty: props.deferDirty !== true,
-                shouldValidate: true,
-            },
-        )
-    }, [
-        formContext,
-        metadata,
-        props.deferDirty,
+        getValues,
+        setValue,
         submissionLimitCount,
         submissionLimitMode,
         submissionLimitValue,
     ])
 
     useEffect(() => {
-        if (
-            props.deferDirty
-            || !deferredDirtyNormalizationRef.current
-            || submissionLimitMode === undefined
-            || submissionLimitCount === undefined
-        ) {
+        if (props.deferDirty) {
             return
         }
 
+        const currentMetadata = getValues('metadata')
+        const currentSubmissionLimitValue = getMetadataValue(
+            currentMetadata,
+            SUBMISSION_LIMIT_FIELD,
+        )
+        const parsedCurrentMetadata = parseSubmissionLimitMetadata(currentSubmissionLimitValue)
         const normalizedSubmissionLimitValue = serializeSubmissionLimitMetadata(
-            submissionLimitMode,
-            submissionLimitCount,
+            parsedCurrentMetadata.mode,
+            parsedCurrentMetadata.count,
         )
 
-        if (submissionLimitValue !== normalizedSubmissionLimitValue) {
+        if (currentSubmissionLimitValue === normalizedSubmissionLimitValue) {
             return
         }
 
-        deferredDirtyNormalizationRef.current = false
-
-        formContext.setValue(
-            'metadata',
-            setMetadataValue(
-                metadata,
-                SUBMISSION_LIMIT_FIELD,
-                normalizedSubmissionLimitValue,
-            ),
-            {
-                shouldDirty: true,
-                shouldValidate: true,
-            },
+        persistSubmissionLimitMetadata(
+            parsedCurrentMetadata.mode,
+            parsedCurrentMetadata.count,
         )
     }, [
-        formContext,
-        metadata,
+        getValues,
+        persistSubmissionLimitMetadata,
         props.deferDirty,
-        submissionLimitCount,
-        submissionLimitMode,
         submissionLimitValue,
     ])
 
     const handleModeChange = useCallback((value: boolean | string): void => {
-        if (value !== UNLIMITED_MODE || !submissionLimitCount) {
+        if (value !== LIMITED_MODE && value !== UNLIMITED_MODE) {
             return
         }
 
-        formContext.setValue(
-            SUBMISSION_LIMIT_COUNT_FIELD as never,
-            '' as never,
-            {
-                shouldDirty: true,
-                shouldValidate: false,
-            },
+        const count = getValues(SUBMISSION_LIMIT_COUNT_FIELD) || ''
+
+        if (value === UNLIMITED_MODE && count) {
+            setValue(
+                SUBMISSION_LIMIT_COUNT_FIELD,
+                '',
+                {
+                    shouldDirty: true,
+                    shouldValidate: false,
+                },
+            )
+        }
+
+        persistSubmissionLimitMetadata(
+            value,
+            value === LIMITED_MODE
+                ? count
+                : '',
         )
     }, [
-        formContext,
-        submissionLimitCount,
+        getValues,
+        persistSubmissionLimitMetadata,
+        setValue,
     ])
+
+    const handleCountChange = useCallback((count: string): void => {
+        persistSubmissionLimitMetadata(LIMITED_MODE, count)
+    }, [persistSubmissionLimitMetadata])
 
     return (
         <div className={styles.container}>
@@ -339,6 +345,7 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
                         label='Limit count'
                         min={1}
                         name={SUBMISSION_LIMIT_COUNT_FIELD}
+                        onChange={handleCountChange}
                         placeholder='Enter submission limit'
                         sanitize={sanitizeSubmissionLimitCount}
                         type='number'

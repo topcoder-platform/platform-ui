@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
-    ChangeEvent,
     FC,
+    useCallback,
 } from 'react'
 import {
     render,
@@ -12,147 +12,33 @@ import userEvent from '@testing-library/user-event'
 import {
     FormProvider,
     useForm,
-    useWatch,
 } from 'react-hook-form'
 
-import { ChallengeEditorFormData } from '../../../../../lib/models'
+import {
+    ChallengeEditorFormData,
+    ChallengeMetadata,
+} from '../../../../../lib/models'
 
 import { MaximumSubmissionsField } from './MaximumSubmissionsField'
 
-jest.mock('../../../../../lib/components/form', () => {
+let mockStaleMetadata: ChallengeMetadata[] | undefined
+
+jest.mock('react-hook-form', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
 
     return {
-        FormRadioGroup: (props: {
-            label: string
-            name: string
-            onChange?: (value: boolean | string) => void
-            options: Array<{
-                label: string
-                value: boolean | string
-            }>
-        }) => {
-            const formContext: ReturnType<typeof reactHookForm.useFormContext> = reactHookForm.useFormContext()
-            const controller: ReturnType<typeof reactHookForm.useController> = reactHookForm.useController({
-                control: formContext.control,
-                name: props.name,
-            })
-            const field = controller.field
+        ...reactHookForm,
+        useWatch: (props: { name?: string }): unknown => {
+            const watchedValue = reactHookForm.useWatch(props as never)
 
-            function handleChange(event: ChangeEvent<HTMLInputElement>): void {
-                const selectedOption = props.options.find(option => (
-                    String(option.value) === event.target.value
-                ))
-
-                if (!selectedOption) {
-                    return
-                }
-
-                field.onChange(selectedOption.value)
-                props.onChange?.(selectedOption.value)
-            }
-
-            return (
-                <fieldset>
-                    <legend>{props.label}</legend>
-                    {props.options.map(option => (
-                        <label key={String(option.value)}>
-                            {option.label}
-                            <input
-                                checked={field.value === option.value}
-                                name={field.name}
-                                onBlur={field.onBlur}
-                                onChange={handleChange}
-                                type='radio'
-                                value={String(option.value)}
-                            />
-                        </label>
-                    ))}
-                </fieldset>
-            )
-        },
-        FormTextField: (props: {
-            label: string
-            min?: number
-            name: string
-            placeholder?: string
-            sanitize?: (value: string) => string
-            type?: 'number' | 'text'
-        }) => {
-            const formContext: ReturnType<typeof reactHookForm.useFormContext> = reactHookForm.useFormContext()
-            const controller: ReturnType<typeof reactHookForm.useController> = reactHookForm.useController({
-                control: formContext.control,
-                name: props.name,
-            })
-            const field = controller.field
-
-            function handleChange(event: ChangeEvent<HTMLInputElement>): void {
-                const nextValue = props.sanitize
-                    ? props.sanitize(event.target.value)
-                    : event.target.value
-                field.onChange(nextValue)
-            }
-
-            return (
-                <label>
-                    {props.label}
-                    <input
-                        min={props.min}
-                        name={field.name}
-                        onBlur={field.onBlur}
-                        onChange={handleChange}
-                        placeholder={props.placeholder}
-                        type={props.type || 'text'}
-                        value={typeof field.value === 'string'
-                            ? field.value
-                            : ''}
-                    />
-                </label>
-            )
+            return props.name === 'metadata' && mockStaleMetadata
+                ? mockStaleMetadata.map(metadataEntry => ({
+                    ...metadataEntry,
+                }))
+                : watchedValue
         },
     }
 })
-
-jest.mock('../../../../../lib/utils', () => ({
-    getMetadataValue: (
-        metadata: Array<{
-            name: string
-            value: string
-        }> | undefined,
-        name: string,
-    ): string | undefined => metadata
-        ?.find(entry => entry.name === name)
-        ?.value,
-    setMetadataValue: (
-        metadata: Array<{
-            name: string
-            value: string
-        }> | undefined,
-        name: string,
-        value: string,
-    ): Array<{
-        name: string
-        value: string
-    }> => {
-        const metadataEntries = metadata || []
-        const existingEntryIndex = metadataEntries.findIndex(entry => entry.name === name)
-
-        return existingEntryIndex >= 0
-            ? metadataEntries.map((entry, index) => (index === existingEntryIndex
-                ? {
-                    ...entry,
-                    value,
-                }
-                : entry))
-            : [
-                ...metadataEntries,
-                {
-                    name,
-                    value,
-                },
-            ]
-    },
-}))
 
 interface TestHarnessProps {
     defaultMetadata?: Array<{
@@ -160,14 +46,7 @@ interface TestHarnessProps {
         value: string
     }>
     deferDirty?: boolean
-}
-
-const MetadataWatcher: FC = () => {
-    const metadata = useWatch<ChallengeEditorFormData>({
-        name: 'metadata',
-    })
-
-    return <output data-testid='metadata-value'>{JSON.stringify(metadata || [])}</output>
+    onMetadataWrite?: () => void
 }
 
 const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
@@ -182,17 +61,39 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
             typeId: 'design-type',
         },
     })
+    const setValue = useCallback<typeof formMethods.setValue>((
+        name,
+        value,
+        options,
+    ) => {
+        if (name === 'metadata') {
+            props.onMetadataWrite?.()
+        }
+
+        formMethods.setValue(name, value as never, options)
+    }, [
+        formMethods,
+        props.onMetadataWrite,
+    ])
+    const values = formMethods.watch()
 
     return (
-        <FormProvider {...formMethods}>
+        <FormProvider
+            {...formMethods}
+            setValue={setValue}
+        >
             <MaximumSubmissionsField deferDirty={props.deferDirty} />
             <output data-testid='dirty-value'>{String(formMethods.formState.isDirty)}</output>
-            <MetadataWatcher />
+            <output data-testid='metadata-value'>{JSON.stringify(values.metadata || [])}</output>
         </FormProvider>
     )
 }
 
 describe('MaximumSubmissionsField', () => {
+    afterEach(() => {
+        mockStaleMetadata = undefined
+    })
+
     it('defaults missing metadata to unlimited submissions', async () => {
         render(<TestHarness />)
 
@@ -240,19 +141,95 @@ describe('MaximumSubmissionsField', () => {
             .toBe(JSON.stringify(limitedMetadata))
     })
 
+    it('writes metadata once when the watched metadata lags during resource hydration', async () => {
+        const user = userEvent.setup()
+        const onMetadataWrite = jest.fn()
+        const defaultMetadata = [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count: '',
+                limit: 'false',
+                unlimited: 'true',
+            }),
+        }]
+        mockStaleMetadata = defaultMetadata
+
+        const rendered = render(
+            <TestHarness
+                defaultMetadata={defaultMetadata}
+                deferDirty
+                onMetadataWrite={onMetadataWrite}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        await user.click(screen.getByRole('radio', { name: 'Limited' }))
+
+        expect(await screen.findByRole('spinbutton', { name: 'Limit count' }))
+            .toBeTruthy()
+        await waitFor(() => {
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]))
+            expect(screen.getByTestId('dirty-value').textContent)
+                .toBe('true')
+        })
+        expect(onMetadataWrite)
+            .toHaveBeenCalledTimes(1)
+
+        rendered.rerender(
+            <TestHarness
+                defaultMetadata={defaultMetadata}
+                deferDirty={false}
+                onMetadataWrite={onMetadataWrite}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]))
+        })
+        expect(onMetadataWrite)
+            .toHaveBeenCalledTimes(1)
+    })
+
     it('persists a selected limit and count', async () => {
         const user = userEvent.setup()
 
         render(
             <TestHarness
-                defaultMetadata={[{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '',
-                        limit: 'false',
-                        unlimited: 'true',
-                    }),
-                }]}
+                defaultMetadata={[
+                    {
+                        name: 'otherMetadata',
+                        value: 'preserved',
+                    },
+                    {
+                        name: 'submissionLimit',
+                        value: JSON.stringify({
+                            count: '',
+                            limit: 'false',
+                            unlimited: 'true',
+                        }),
+                    },
+                ]}
             />,
         )
 
@@ -261,14 +238,20 @@ describe('MaximumSubmissionsField', () => {
 
         await waitFor(() => {
             expect(screen.getByTestId('metadata-value').textContent)
-                .toBe(JSON.stringify([{
-                    name: 'submissionLimit',
-                    value: JSON.stringify({
-                        count: '12',
-                        limit: 'true',
-                        unlimited: 'false',
-                    }),
-                }]))
+                .toBe(JSON.stringify([
+                    {
+                        name: 'otherMetadata',
+                        value: 'preserved',
+                    },
+                    {
+                        name: 'submissionLimit',
+                        value: JSON.stringify({
+                            count: '12',
+                            limit: 'true',
+                            unlimited: 'false',
+                        }),
+                    },
+                ]))
         })
     })
 
@@ -335,7 +318,32 @@ describe('MaximumSubmissionsField', () => {
     })
 
     it('defers dirtying default metadata until resource hydration finishes', async () => {
-        const rendered = render(<TestHarness deferDirty />)
+        const onMetadataWrite = jest.fn()
+        const rendered = render(
+            <TestHarness
+                deferDirty
+                onMetadataWrite={onMetadataWrite}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([]))
+        })
+        expect(screen.getByTestId('dirty-value').textContent)
+            .toBe('false')
+        expect(onMetadataWrite)
+            .not
+            .toHaveBeenCalled()
+
+        rendered.rerender(
+            <TestHarness
+                deferDirty={false}
+                onMetadataWrite={onMetadataWrite}
+            />,
+        )
 
         await waitFor(() => {
             expect(screen.getByTestId('metadata-value').textContent)
@@ -347,15 +355,10 @@ describe('MaximumSubmissionsField', () => {
                         unlimited: 'true',
                     }),
                 }]))
-        })
-        expect(screen.getByTestId('dirty-value').textContent)
-            .toBe('false')
-
-        rendered.rerender(<TestHarness deferDirty={false} />)
-
-        await waitFor(() => {
             expect(screen.getByTestId('dirty-value').textContent)
                 .toBe('true')
         })
+        expect(onMetadataWrite)
+            .toHaveBeenCalledTimes(1)
     })
 })
