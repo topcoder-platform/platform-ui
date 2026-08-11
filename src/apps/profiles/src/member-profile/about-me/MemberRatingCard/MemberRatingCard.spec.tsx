@@ -15,6 +15,12 @@ const mockTooltip = jest.fn((props: PropsWithChildren<{ disableTooltip?: boolean
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#616BD5'),
     useMemberStats: jest.fn(),
+    useProfileCompleteness: jest.fn(() => ({
+        entries: {},
+        isLoading: false,
+        mutate: jest.fn(),
+        percent: 100,
+    })),
     useStatsDistribution: jest.fn(),
 }), {
     virtual: true,
@@ -117,6 +123,8 @@ describe('MemberRatingCard', () => {
 
         expect(screen.queryByText('Rating'))
             .not
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Add preferred roles' }))
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeInTheDocument()

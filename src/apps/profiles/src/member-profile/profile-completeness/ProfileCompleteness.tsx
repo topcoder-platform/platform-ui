@@ -22,8 +22,9 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
     useEffect(() => { completeness?.mutate() }, [props.profile])
 
     const [count, incompleteEntries] = useMemo(() => {
+        // Only boolean criteria count toward incompleteness (ignore *LastUpdateDate fields)
         const fields = Object.entries(completeness.entries)
-            .filter(([, value]) => value === false || value === null || value === undefined)
+            .filter(([, value]) => value === false)
             .map(([key]) => startCase(key))
 
         if (fields.length === 2) {

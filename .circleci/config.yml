@@ -230,6 +230,7 @@ workflows:
                               - dev
                               - copilot_reviewer
                               - support-app
+                              - PM-5460
                       tags:
                           only: /^dev-.*/
 
