@@ -340,7 +340,7 @@ interface ChartDataPoint {
 const WorldMap: FC<WorldMapProps> = props => {
     const mapRef = useRef<HTMLDivElement>(null)
     const chartRef = useRef<any>(null)
-    const hoveredPointRef = useRef<Highcharts.Point | null>(null)
+    const hoveredPointRef = useRef<Highcharts.Point | undefined>(undefined)
     const chartData: ChartDataPoint[] = useMemo(
         () => props.countries.map(country => {
             const code = String(country.code ?? '')
@@ -385,7 +385,7 @@ const WorldMap: FC<WorldMapProps> = props => {
         const clearHover = (): void => {
             if (hoveredPointRef.current) {
                 hoveredPointRef.current.setState('')
-                hoveredPointRef.current = null
+                hoveredPointRef.current = undefined
             }
 
             chart.tooltip?.hide()

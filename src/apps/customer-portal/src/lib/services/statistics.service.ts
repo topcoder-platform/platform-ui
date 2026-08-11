@@ -6,12 +6,12 @@ import { xhrGetAsync } from '~/libs/core'
 
 type LocaleData = { locale: string; countries: Record<string, string> }
 
-const enLocale: LocaleData =
-    (enLocaleJson as { default?: LocaleData } | undefined)?.default ??
-    (enLocaleJson as LocaleData)
+const enLocale: LocaleData
+    = (enLocaleJson as { default?: LocaleData } | undefined)?.default
+    ?? (enLocaleJson as LocaleData)
 
-const countryUtil =
-    ((countriesModule as unknown as { default?: typeof countriesModule })
+const countryUtil
+    = ((countriesModule as unknown as { default?: typeof countriesModule })
         .default ?? countriesModule) as typeof countriesModule
 
 countryUtil.registerLocale(enLocale)
@@ -158,9 +158,10 @@ function normalizeCountryRows(
         }
 
         if (row['country.country_name'] === 'Taiwan') {
-            console.log('here', row);
+            console.log('here', row)
 
         }
+
         const code = toAlpha2CountryCode(lookup.countryCode)
         const current = countries.get(code)
         const topWinners = (row.topWinners || [])

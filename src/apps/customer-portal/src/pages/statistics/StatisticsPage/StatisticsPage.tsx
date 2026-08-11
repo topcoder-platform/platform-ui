@@ -226,9 +226,9 @@ const StatisticsPage: FC = () => {
                                                 <tr
                                                     key={country.code || country.name}
                                                     tabIndex={0}
-                                                    onMouseEnter={() => handleRowMouseEnter(country.code)}
+                                                    onMouseEnter={function () { handleRowMouseEnter(country.code) }}
                                                     onMouseLeave={handleRowMouseLeave}
-                                                    onFocus={() => handleRowMouseEnter(country.code)}
+                                                    onFocus={function () { handleRowMouseEnter(country.code) }}
                                                     onBlur={handleRowMouseLeave}
                                                 >
                                                     <td>
