@@ -631,6 +631,76 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('keeps a Reviewer resource on Review when Screening has no assigned Screener', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-screener',
+                    name: 'Screener',
+                },
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-reviewer',
+                    roleId: 'role-reviewer',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'screening-instance',
+                            name: 'Screening',
+                            phaseId: 'phase-screening',
+                        },
+                        {
+                            id: 'review-instance',
+                            name: 'Review',
+                            phaseId: 'phase-review',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-screening',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-review',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.memberId')
+                .getAttribute('data-value'))
+                .toBe('')
+            expect(screen.getByTestId('reviewers.1.memberId')
+                .getAttribute('data-value'))
+                .toBe('member-reviewer')
+        })
+    })
+
     it('restores iterative reviewer member ids from the generic reviewer role fallback', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [

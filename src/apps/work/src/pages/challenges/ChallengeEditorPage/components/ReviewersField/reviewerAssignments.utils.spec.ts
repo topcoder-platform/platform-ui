@@ -9,6 +9,60 @@ import {
 } from './reviewerAssignments.utils'
 
 describe('buildAssignedResourcesByReviewer', () => {
+    it('reserves generic reviewer resources for Review rows before Screening fallbacks', () => {
+        const resourceRoles: ResourceRole[] = [
+            {
+                id: 'role-screener',
+                name: 'Screener',
+            },
+            {
+                id: 'role-reviewer',
+                name: 'Reviewer',
+            },
+        ]
+        const resources: Resource[] = [
+            {
+                challengeId: 'challenge-1',
+                memberHandle: 'reviewer-one',
+                roleId: 'role-reviewer',
+            },
+        ]
+        const reviewers: Reviewer[] = [
+            {
+                memberReviewerCount: 1,
+                phaseId: 'phase-screening',
+                roleId: 'role-reviewer',
+            },
+            {
+                memberReviewerCount: 1,
+                phaseId: 'phase-review',
+            },
+        ]
+        const assignedResourcesByReviewer = buildAssignedResourcesByReviewer({
+            getReviewerCount: reviewer => Number(reviewer.memberReviewerCount || 1),
+            phaseNameById: new Map([
+                [
+                    'phase-screening',
+                    'Screening',
+                ],
+                [
+                    'phase-review',
+                    'Review',
+                ],
+            ]),
+            resourceRoles,
+            resources,
+            reviewers,
+        })
+
+        expect(assignedResourcesByReviewer.map(assignedResources => assignedResources
+            .map(resource => resource.memberHandle)))
+            .toEqual([
+                [],
+                ['reviewer-one'],
+            ])
+    })
+
     it('continues into the generic reviewer pool when a specific role runs out of resources', () => {
         const resourceRoles: ResourceRole[] = [
             {
