@@ -5,10 +5,10 @@ import HighchartsReact from 'highcharts-react-official'
 import worldMap from '@highcharts/map-collection/custom/world.topo.json'
 
 import {
-    ISO3_TO_2,
     StatisticsCountry,
     StatisticsSkill,
     StatisticsWinner,
+    toAlpha2CountryCode,
 } from '../../../lib/services/statistics.service'
 import { getRatingColor } from '../../../../../../libs/core/lib/profile/profile-functions/rating.functions'
 
@@ -21,6 +21,7 @@ interface WorldMapProps {
     countries: StatisticsCountry[]
     showWinnerDetails: boolean
     valueLabel: string
+    hoveredCountryCode?: string
 }
 
 interface StatisticsMapPoint {
@@ -55,6 +56,10 @@ function safeImageUrl(value?: string): string {
     } catch {
         return ''
     }
+}
+
+function normalizeCountryCode(code?: string): string {
+    return toAlpha2CountryCode(String(code || ''))
 }
 
 function renderAvatar(winner: StatisticsWinner): string {
@@ -322,14 +327,25 @@ function createTooltipFormatter(
     }
 }
 
+interface ChartDataPoint {
+    code: string
+    name: string
+    skillsBreakdown: StatisticsSkill[]
+    topMembers: StatisticsWinner[]
+    topWinners: StatisticsWinner[]
+    totalSkills: number
+    value: number
+}
+
 const WorldMap: FC<WorldMapProps> = props => {
     const mapRef = useRef<HTMLDivElement>(null)
-    const chartData = useMemo(
+    const chartRef = useRef<any>(null)
+    const hoveredPointRef = useRef<Highcharts.Point | undefined>(undefined)
+    const chartData: ChartDataPoint[] = useMemo(
         () => props.countries.map(country => {
             const code = String(country.code ?? '')
                 .toUpperCase()
-            const iso2
-                    = code.length === 3 ? ISO3_TO_2.get(code) ?? code : code
+            const iso2 = toAlpha2CountryCode(code)
 
             return {
                 code: iso2,
@@ -354,6 +370,58 @@ const WorldMap: FC<WorldMapProps> = props => {
         () => buildColorAxisDataClasses(maxChartValue, props.valueLabel),
         [maxChartValue],
     )
+
+    const normalizedHoveredCountry = useMemo(
+        () => normalizeCountryCode(props.hoveredCountryCode),
+        [props.hoveredCountryCode],
+    )
+
+    useEffect(() => {
+        const chart = chartRef.current?.chart
+        if (!chart) {
+            return
+        }
+
+        const clearHover = (): void => {
+            if (hoveredPointRef.current) {
+                hoveredPointRef.current.setState('')
+                hoveredPointRef.current = undefined
+            }
+
+            chart.tooltip?.hide()
+        }
+
+        if (!normalizedHoveredCountry) {
+            clearHover()
+            return
+        }
+
+        const series = chart.series?.[0]
+        if (!series) {
+            clearHover()
+            return
+        }
+
+        const hoveredPoint = series.data.find((point: any) => {
+            const pointCode = normalizeCountryCode(
+                String(point.options?.code ?? point.code ?? point?.properties?.['iso-a2'] ?? ''),
+            )
+            return pointCode && pointCode === normalizedHoveredCountry
+        })
+
+        if (!hoveredPoint) {
+            clearHover()
+            return
+        }
+
+        if (hoveredPointRef.current && hoveredPointRef.current !== hoveredPoint) {
+            hoveredPointRef.current.setState('')
+        }
+
+        hoveredPointRef.current = hoveredPoint
+        hoveredPoint.setState('hover')
+        chart.tooltip.refresh(hoveredPoint)
+    }, [normalizedHoveredCountry, props.showWinnerDetails])
 
     const chartOptions = useMemo<Highcharts.Options>(
         () => ({
@@ -487,6 +555,7 @@ const WorldMap: FC<WorldMapProps> = props => {
                 constructorType='mapChart'
                 highcharts={Highcharts}
                 options={chartOptions}
+                ref={chartRef}
             />
             <button
                 aria-label='Toggle fullscreen map'

@@ -127,7 +127,8 @@
     "universal-navigation": "https://github.com/topcoder-platform/universal-navigation#master",
     "uuid": "^11.1.0",
     "yup": "^1.7.1",
-    "flag-icons": "^6.7.0"
+    "flag-icons": "^6.7.0",
+    "i18n-iso-countries": "^3.7.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.6",

@@ -1,26 +1,29 @@
+import * as countriesModule from 'i18n-iso-countries'
+import enLocaleJson from 'i18n-iso-countries/langs/en.json'
+
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
-import worldMap from '@highcharts/map-collection/custom/world.topo.json'
 
-export const ISO3_TO_2 = new Map<string, string>(
-    ((worldMap as any)?.objects?.default?.geometries ?? [])
-        .map((geometry: any) => {
-            const properties = geometry?.properties
-            const iso3 = String(properties?.['iso-a3'] ?? '')
-                .toUpperCase()
-            const iso2 = String(properties?.['iso-a2'] ?? '')
-                .toUpperCase()
+type LocaleData = { locale: string; countries: Record<string, string> }
 
-            return [iso3, iso2] as [string, string]
-        })
-        .filter(([iso3, iso2]: [string, string]) => iso3 && iso2),
-)
+const enLocale: LocaleData
+    = (enLocaleJson as { default?: LocaleData } | undefined)?.default
+    ?? (enLocaleJson as LocaleData)
 
-function toAlpha2CountryCode(code: string): string {
+const countryUtil
+    = ((countriesModule as unknown as { default?: typeof countriesModule })
+        .default ?? countriesModule) as typeof countriesModule
+
+countryUtil.registerLocale(enLocale)
+
+export function toAlpha2CountryCode(code: string): string {
     const normalized = String(code || '')
         .trim()
         .toUpperCase()
-    return normalized.length === 3 ? ISO3_TO_2.get(normalized) ?? normalized : normalized
+
+    return normalized.length === 3
+        ? countryUtil.alpha3ToAlpha2(normalized) ?? normalized
+        : normalized
 }
 
 export type StatisticsWinner = {
@@ -152,6 +155,11 @@ function normalizeCountryRows(
         // Ignore malformed report rows and values that cannot be mapped to a real country.
         if (!name || !Number.isFinite(count) || count <= 0 || !lookup?.countryCode) {
             return
+        }
+
+        if (row['country.country_name'] === 'Taiwan') {
+            console.log('here', row)
+
         }
 
         const code = toAlpha2CountryCode(lookup.countryCode)
