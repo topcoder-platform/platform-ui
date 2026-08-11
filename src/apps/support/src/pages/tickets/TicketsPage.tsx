@@ -220,7 +220,7 @@ const TicketsPage: FC<TicketsPageProps> = props => {
                     <p>
                         {supportTeam
                             ? 'Review and resolve support requests from all Topcoder members.'
-                            : 'Open a request and track responses from the Topcoder Support Team.'}
+                            : 'Open a request and track responses from the Topcoder Platform Team.'}
                     </p>
                 </div>
                 {!supportTeam && (
