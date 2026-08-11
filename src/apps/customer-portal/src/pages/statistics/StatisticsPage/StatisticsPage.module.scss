@@ -131,6 +131,10 @@
         }
     }
 
+    + * {
+        margin-top: 24px;
+    }
+
     @include ltesm {
         button {
             flex: 1;
@@ -148,7 +152,7 @@
     display: grid;
     column-gap: 48px;
     grid-template-columns: minmax(285px, 32%) minmax(0, 68%);
-    min-height: 470px;
+    min-height: 572px;
 
     @include ltemd {
         column-gap: 24px;
@@ -157,7 +161,7 @@
 }
 
 .tableWrapper {
-    max-height: 470px;
+    max-height: 572px;
     overflow: auto;
     padding-right: 18px;
 
@@ -175,6 +179,7 @@
         height: 52px;
         padding: 16px;
         text-align: left;
+        line-height: 20px;
     }
 
     th {
@@ -190,6 +195,7 @@
     td:first-child {
         text-align: center;
         width: 52px;
+        vertical-align: middle;
     }
 
     th:last-child,
@@ -203,6 +209,7 @@
         display: flex;
         gap: 8px;
         overflow: hidden;
+        line-height: 20px;
 
         span {
             overflow: hidden;
@@ -230,7 +237,7 @@
 .rank3 {
     align-items: center;
     border-radius: 50%;
-    display: inline-flex;
+    display: flex;
     font-size: 10px;
     font-weight: 800;
     height: 19px;
@@ -243,17 +250,18 @@
     display: inline-block;
     min-width: 19px;
     text-align: center;
+    line-height: 20px;
 }
 
 .map {
     background: #fff;
-    min-height: 470px;
+    min-height: 572px;
     position: relative;
 
     > div,
     :global(.highcharts-container),
     :global(.highcharts-root) {
-        height: 470px !important;
+        height: 572px !important;
         width: 100% !important;
     }
 
