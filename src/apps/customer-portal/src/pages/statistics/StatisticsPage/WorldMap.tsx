@@ -5,10 +5,10 @@ import HighchartsReact from 'highcharts-react-official'
 import worldMap from '@highcharts/map-collection/custom/world.topo.json'
 
 import {
-    ISO3_TO_2,
     StatisticsCountry,
     StatisticsSkill,
     StatisticsWinner,
+    toAlpha2CountryCode,
 } from '../../../lib/services/statistics.service'
 import { getRatingColor } from '../../../../../../libs/core/lib/profile/profile-functions/rating.functions'
 
@@ -59,18 +59,7 @@ function safeImageUrl(value?: string): string {
 }
 
 function normalizeCountryCode(code?: string): string {
-    if (!code) {
-        return ''
-    }
-
-    const normalized = String(code)
-        .trim()
-        .toUpperCase()
-    if (normalized.length === 3) {
-        return ISO3_TO_2.get(normalized) ?? normalized
-    }
-
-    return normalized
+    return toAlpha2CountryCode(String(code || ''))
 }
 
 function renderAvatar(winner: StatisticsWinner): string {
@@ -356,8 +345,7 @@ const WorldMap: FC<WorldMapProps> = props => {
         () => props.countries.map(country => {
             const code = String(country.code ?? '')
                 .toUpperCase()
-            const iso2
-                    = code.length === 3 ? ISO3_TO_2.get(code) ?? code : code
+            const iso2 = toAlpha2CountryCode(code)
 
             return {
                 code: iso2,
