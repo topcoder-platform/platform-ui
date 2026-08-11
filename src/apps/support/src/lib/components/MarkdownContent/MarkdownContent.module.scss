@@ -1,0 +1,22 @@
+.markdown {
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
+    img {
+        height: auto;
+        max-width: 100%;
+    }
+
+    pre {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+}

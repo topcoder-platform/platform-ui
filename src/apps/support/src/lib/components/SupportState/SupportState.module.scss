@@ -1,0 +1,25 @@
+@import '@libs/ui/styles/includes';
+
+.state,
+.error {
+    align-items: center;
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    justify-content: center;
+    min-height: 180px;
+    padding: $sp-6;
+    text-align: center;
+}
+
+.error {
+    background: #fff5f5;
+    border-color: #d98b91;
+
+    p {
+        margin: 0;
+    }
+}
