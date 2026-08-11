@@ -41,7 +41,7 @@
         color: #078477;
         font-size: 24px;
         line-height: 38px;
-        font-family: "Figtree", sans-serif;
+        font-family: 'Figtree', sans-serif;
         font-weight: bold;
     }
 }
@@ -85,6 +85,8 @@
         font-weight: 700;
         line-height: 30px;
         margin: 0;
+        text-transform: none;
+        font-family: 'Figtree', sans-serif;
     }
 }
 
@@ -115,11 +117,11 @@
     }
 
     .activeTab {
-        color: #00797A;
+        color: #00797a;
         font-weight: 700;
 
         &::after {
-            background: #00797A;
+            background: #00797a;
             bottom: -1px;
             content: '';
             height: 4px;
@@ -129,11 +131,19 @@
         }
     }
 
+    + * {
+        margin-top: 24px;
+    }
+
     @include ltesm {
         button {
             flex: 1;
             padding-left: 8px;
             padding-right: 8px;
+        }
+
+        + * {
+            margin-top: 32px;
         }
     }
 }
@@ -142,7 +152,7 @@
     display: grid;
     column-gap: 48px;
     grid-template-columns: minmax(285px, 32%) minmax(0, 68%);
-    min-height: 470px;
+    min-height: 572px;
 
     @include ltemd {
         column-gap: 24px;
@@ -151,7 +161,7 @@
 }
 
 .tableWrapper {
-    max-height: 470px;
+    max-height: 572px;
     overflow: auto;
     padding-right: 18px;
 
@@ -169,6 +179,7 @@
         height: 52px;
         padding: 16px;
         text-align: left;
+        line-height: 20px;
     }
 
     th {
@@ -184,6 +195,7 @@
     td:first-child {
         text-align: center;
         width: 52px;
+        vertical-align: middle;
     }
 
     th:last-child,
@@ -197,6 +209,7 @@
         display: flex;
         gap: 8px;
         overflow: hidden;
+        line-height: 20px;
 
         span {
             overflow: hidden;
@@ -224,7 +237,7 @@
 .rank3 {
     align-items: center;
     border-radius: 50%;
-    display: inline-flex;
+    display: flex;
     font-size: 10px;
     font-weight: 800;
     height: 19px;
@@ -237,16 +250,18 @@
     display: inline-block;
     min-width: 19px;
     text-align: center;
+    line-height: 20px;
 }
 
 .map {
-    background: #f8f8f8;
-    min-height: 470px;
+    background: #fff;
+    min-height: 572px;
+    position: relative;
 
     > div,
     :global(.highcharts-container),
     :global(.highcharts-root) {
-        height: 470px !important;
+        height: 572px !important;
         width: 100% !important;
     }
 
@@ -260,6 +275,340 @@
             height: 370px !important;
         }
     }
+
+    @include ltesm {
+        min-height: 319px;
+
+        > div,
+        :global(.highcharts-container),
+        :global(.highcharts-root) {
+            height: 319px !important;
+        }
+    }
+
+    &:fullscreen {
+        height: 100vh;
+        min-height: 100vh;
+
+        > div,
+        :global(.highcharts-container),
+        :global(.highcharts-root) {
+            height: 100vh !important;
+        }
+    }
+}
+
+.mapFullscreenButton {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #a8a8a8;
+    border-radius: 4px;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    position: absolute;
+    right: 9px;
+    top: 12px;
+    width: 40px;
+    z-index: 2;
+
+    &:focus-visible {
+        outline: 2px solid #078477;
+        outline-offset: 2px;
+    }
+
+    img {
+        height: 24px;
+        width: 24px;
+    }
+
+    @include gtelg {
+        display: none;
+    }
+}
+
+.mapTooltip,
+.mapTooltipCompact,
+.countryMapTooltip {
+    background: #0f172a;
+    box-sizing: border-box;
+    color: #fff;
+    font-family: 'Figtree', sans-serif;
+    pointer-events: none;
+}
+
+.mapTooltip,
+.countryMapTooltip {
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    position: relative;
+    &::after {
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-top: 8px solid #0f172a;
+        content: '';
+        height: 0;
+        left: 50%;
+        position: absolute;
+        top: 100%;
+        transform: translateX(-50%);
+        width: 0;
+    }
+}
+
+.mapTooltip {
+    width: 218px;
+}
+
+.countryMapTooltip {
+    width: 360px;
+}
+
+.mapTooltipCompact {
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 10px 12px;
+}
+
+.tooltipHeader {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 4px;
+    line-height: normal;
+}
+
+.tooltipCountry {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+
+    strong {
+        font-size: 20px;
+        line-height: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.tooltipFlag {
+    flex: 0 0 16px;
+    height: 16px;
+    width: 16px;
+}
+
+.tooltipSectionTitle {
+    font-size: 12px;
+    line-height: normal;
+}
+
+.tooltipWinners {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tooltipWinner {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tooltipAvatar {
+    background-color: #d9d9d9;
+    background-position: center;
+    background-size: cover;
+    border-radius: 50%;
+    display: block;
+    flex: 0 0 40px;
+    height: 40px;
+    overflow: hidden;
+    position: relative;
+    width: 40px;
+
+    &[style] {
+        .tooltipAvatarHead,
+        .tooltipAvatarBody {
+            display: none;
+        }
+    }
+}
+
+.tooltipAvatarHead {
+    background: #aab6c2;
+    border-radius: 50%;
+    height: 14px;
+    left: 13px;
+    position: absolute;
+    top: 7px;
+    width: 14px;
+}
+
+.tooltipAvatarBody {
+    background: #aab6c2;
+    border-radius: 16px 16px 8px 8px;
+    bottom: -2px;
+    height: 18px;
+    left: 7px;
+    position: absolute;
+    width: 26px;
+}
+
+.tooltipWinnerText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tooltipHandle {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tooltipWins {
+    color: #fff;
+    font-size: 12px;
+    line-height: normal;
+}
+
+.tooltipCountryTitle {
+    font-size: 20px;
+    line-height: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tooltipMetrics {
+    display: grid;
+    gap: 40px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tooltipMetric {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 3px;
+    line-height: normal;
+}
+
+.tooltipMetricValue {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+
+    img {
+        flex: 0 0 24px;
+        height: 24px;
+        width: 24px;
+    }
+
+    strong {
+        font-size: 24px;
+        font-weight: 600;
+        line-height: normal;
+        white-space: nowrap;
+    }
+}
+
+.tooltipSkillBreakdown {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 10px;
+    line-height: normal;
+}
+
+.tooltipSkillBar {
+    border-radius: 4px;
+    display: flex;
+    height: 24px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.tooltipSkillSegment {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.tooltipSkillLegend {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tooltipSkillLegendItem {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+
+    > span:last-child {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.tooltipSkillDot {
+    border-radius: 50%;
+    flex: 0 0 9px;
+    height: 9px;
+    width: 9px;
+}
+
+.tooltipTopMember {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tooltipTopMemberContent {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tooltipMemberStats {
+    align-items: center;
+    display: flex;
+    font-size: 12px;
+    gap: 5px;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.tooltipMemberFlag {
+    flex: 0 0 16px;
+    height: 16px;
+    width: 16px;
+}
+
+.tooltipMemberDivider {
+    margin: 0 5px;
 }
 
 .status {

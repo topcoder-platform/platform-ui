@@ -873,12 +873,12 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                         %
                                                     </span>
                                                 </div>
-                                                <div className={styles.detailRow}>
+                                                {/* <div className={styles.detailRow}>
                                                     <span className={styles.detailLabel}>Auto-Finalize:</span>
                                                     <span className={styles.detailValue}>
                                                         {aiConfiguration.autoFinalize ? '✅ On' : '❌ Off'}
                                                     </span>
-                                                </div>
+                                                </div> */}
                                                 <div className={styles.detailRow}>
                                                     <span className={styles.detailLabel}>Instant review:</span>
                                                     <span className={styles.detailValue}>

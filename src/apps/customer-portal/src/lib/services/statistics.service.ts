@@ -23,11 +23,28 @@ function toAlpha2CountryCode(code: string): string {
     return normalized.length === 3 ? ISO3_TO_2.get(normalized) ?? normalized : normalized
 }
 
+export type StatisticsWinner = {
+    handle: string
+    maxRating?: number
+    photoURL?: string
+    wins: number
+}
+
+export type StatisticsSkill = {
+    count: number
+    name: string
+    percentage: number
+}
+
 export type StatisticsCountry = {
     code?: string
     count: number
     flagUrl?: string
     name: string
+    skillsBreakdown?: StatisticsSkill[]
+    topMembers?: StatisticsWinner[]
+    topWinners?: StatisticsWinner[]
+    totalSkills?: number
 }
 
 export type GeneralStatistics = {
@@ -40,6 +57,24 @@ export type GeneralStatistics = {
 type CountryReportRow = {
     'challenge_stats.count'?: number | string
     'country.country_name'?: string
+    topWinners?: Array<{
+        handle?: string
+        maxRating?: number | string | null
+        photoURL?: string | null
+        wins?: number | string
+    }>
+    topMembers?: Array<{
+        handle?: string
+        maxRating?: number | string | null
+        photoURL?: string | null
+        wins?: number | string
+    }>
+    skillsBreakdown?: Array<{
+        count?: number | string
+        name?: string
+        percentage?: number | string
+    }>
+    totalSkills?: number | string
     'user.count'?: number | string
 }
 
@@ -121,11 +156,65 @@ function normalizeCountryRows(
 
         const code = toAlpha2CountryCode(lookup.countryCode)
         const current = countries.get(code)
+        const topWinners = (row.topWinners || [])
+            .map(winner => ({
+                handle: String(winner.handle || '')
+                    .trim(),
+                maxRating: winner.maxRating === null || winner.maxRating === undefined
+                    ? undefined
+                    : Number(winner.maxRating),
+                photoURL: String(winner.photoURL || '')
+                    .trim() || undefined,
+                wins: Number(winner.wins || 0),
+            }))
+            .filter(winner => (
+                winner.handle
+                && Number.isFinite(winner.wins)
+                && winner.wins > 0
+            ))
+            .slice(0, 3)
+        const topMembers = (row.topMembers || [])
+            .map(member => ({
+                handle: String(member.handle || '')
+                    .trim(),
+                maxRating: member.maxRating === null || member.maxRating === undefined
+                    ? undefined
+                    : Number(member.maxRating),
+                photoURL: String(member.photoURL || '')
+                    .trim() || undefined,
+                wins: Number(member.wins || 0),
+            }))
+            .filter(member => (
+                member.handle
+                && Number.isFinite(member.wins)
+                && member.wins > 0
+            ))
+            .slice(0, 3)
+        const skillsBreakdown = (row.skillsBreakdown || [])
+            .map(skill => ({
+                count: Number(skill.count || 0),
+                name: String(skill.name || '')
+                    .trim(),
+                percentage: Number(skill.percentage || 0),
+            }))
+            .filter(skill => (
+                skill.name
+                && Number.isFinite(skill.count)
+                && skill.count > 0
+                && Number.isFinite(skill.percentage)
+            ))
+            .slice(0, 3)
         countries.set(code, {
             code,
             count: (current?.count || 0) + count,
             // flagUrl: lookup.countryFlag?.replace(/^http:/, 'https:'),
             name: lookup.name || name,
+            skillsBreakdown: skillsBreakdown.length > 0
+                ? skillsBreakdown
+                : current?.skillsBreakdown,
+            topMembers: topMembers.length > 0 ? topMembers : current?.topMembers,
+            topWinners: topWinners.length > 0 ? topWinners : current?.topWinners,
+            totalSkills: Number(row.totalSkills || 0),
         })
     })
 
@@ -135,7 +224,7 @@ function normalizeCountryRows(
 
 export async function fetchCountriesRepresented(): Promise<StatisticsCountry[]> {
     const [rows, lookupResponse] = await Promise.all([
-        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/countries-represented`),
+        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/country-member-details`),
         xhrGetAsync<CountryLookupResponse | CountryLookupRow[]>(COUNTRY_LOOKUP_URL),
     ])
 
@@ -144,7 +233,7 @@ export async function fetchCountriesRepresented(): Promise<StatisticsCountry[]> 
 
 export async function fetchWinnersByCountry(): Promise<StatisticsCountry[]> {
     const [rows, lookupResponse] = await Promise.all([
-        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/first-place-by-country`),
+        xhrGetAsync<CountryReportRow[]>(`${GENERAL_STATISTICS_URL}/top-winners-by-country`),
         xhrGetAsync<CountryLookupResponse | CountryLookupRow[]>(COUNTRY_LOOKUP_URL),
     ])
 
