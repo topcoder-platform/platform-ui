@@ -398,12 +398,6 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
         },
         [props],
     )
-    const handleAutoFinalizeChange = useCallback(
-        (event: ChangeEvent<HTMLInputElement>): void => {
-            props.onUpdate('autoFinalize', event.target.checked)
-        },
-        [props],
-    )
     const handleInstantReviewChange = useCallback(
         (event: ChangeEvent<HTMLInputElement>): void => {
             props.onUpdate('instantReview', event.target.checked)
