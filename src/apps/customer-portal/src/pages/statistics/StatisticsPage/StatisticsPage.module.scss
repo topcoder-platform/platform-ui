@@ -41,7 +41,7 @@
         color: #078477;
         font-size: 24px;
         line-height: 38px;
-        font-family: "Figtree", sans-serif;
+        font-family: 'Figtree', sans-serif;
         font-weight: bold;
     }
 }
@@ -85,6 +85,8 @@
         font-weight: 700;
         line-height: 30px;
         margin: 0;
+        text-transform: none;
+        font-family: 'Figtree', sans-serif;
     }
 }
 
@@ -115,11 +117,11 @@
     }
 
     .activeTab {
-        color: #00797A;
+        color: #00797a;
         font-weight: 700;
 
         &::after {
-            background: #00797A;
+            background: #00797a;
             bottom: -1px;
             content: '';
             height: 4px;
@@ -134,6 +136,10 @@
             flex: 1;
             padding-left: 8px;
             padding-right: 8px;
+        }
+
+        + * {
+            margin-top: 32px;
         }
     }
 }
@@ -240,8 +246,9 @@
 }
 
 .map {
-    background: #f8f8f8;
+    background: #fff;
     min-height: 470px;
+    position: relative;
 
     > div,
     :global(.highcharts-container),
@@ -260,10 +267,62 @@
             height: 370px !important;
         }
     }
+
+    @include ltesm {
+        min-height: 319px;
+
+        > div,
+        :global(.highcharts-container),
+        :global(.highcharts-root) {
+            height: 319px !important;
+        }
+    }
+
+    &:fullscreen {
+        height: 100vh;
+        min-height: 100vh;
+
+        > div,
+        :global(.highcharts-container),
+        :global(.highcharts-root) {
+            height: 100vh !important;
+        }
+    }
+}
+
+.mapFullscreenButton {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #a8a8a8;
+    border-radius: 4px;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    position: absolute;
+    right: 9px;
+    top: 12px;
+    width: 40px;
+    z-index: 2;
+
+    &:focus-visible {
+        outline: 2px solid #078477;
+        outline-offset: 2px;
+    }
+
+    img {
+        height: 24px;
+        width: 24px;
+    }
+
+    @include gtelg {
+        display: none;
+    }
 }
 
 .mapTooltip,
-.mapTooltipCompact {
+.mapTooltipCompact,
+.countryMapTooltip {
     background: #0f172a;
     box-sizing: border-box;
     color: #fff;
@@ -271,15 +330,14 @@
     pointer-events: none;
 }
 
-.mapTooltip {
+.mapTooltip,
+.countryMapTooltip {
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 24px;
     position: relative;
-    width: 218px;
-
     &::after {
         border-left: 9px solid transparent;
         border-right: 9px solid transparent;
@@ -292,6 +350,14 @@
         transform: translateX(-50%);
         width: 0;
     }
+}
+
+.mapTooltip {
+    width: 218px;
+}
+
+.countryMapTooltip {
+    width: 360px;
 }
 
 .mapTooltipCompact {
@@ -409,6 +475,132 @@
     color: #fff;
     font-size: 12px;
     line-height: normal;
+}
+
+.tooltipCountryTitle {
+    font-size: 20px;
+    line-height: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tooltipMetrics {
+    display: grid;
+    gap: 40px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tooltipMetric {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 3px;
+    line-height: normal;
+}
+
+.tooltipMetricValue {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+
+    img {
+        flex: 0 0 24px;
+        height: 24px;
+        width: 24px;
+    }
+
+    strong {
+        font-size: 24px;
+        font-weight: 600;
+        line-height: normal;
+        white-space: nowrap;
+    }
+}
+
+.tooltipSkillBreakdown {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 10px;
+    line-height: normal;
+}
+
+.tooltipSkillBar {
+    border-radius: 4px;
+    display: flex;
+    height: 24px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.tooltipSkillSegment {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.tooltipSkillLegend {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tooltipSkillLegendItem {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+
+    > span:last-child {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.tooltipSkillDot {
+    border-radius: 50%;
+    flex: 0 0 9px;
+    height: 9px;
+    width: 9px;
+}
+
+.tooltipTopMember {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tooltipTopMemberContent {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tooltipMemberStats {
+    align-items: center;
+    display: flex;
+    font-size: 12px;
+    gap: 5px;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.tooltipMemberFlag {
+    flex: 0 0 16px;
+    height: 16px;
+    width: 16px;
+}
+
+.tooltipMemberDivider {
+    margin: 0 5px;
 }
 
 .status {

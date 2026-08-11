@@ -1,19 +1,27 @@
 /* eslint-disable import/no-extraneous-dependencies, no-script-url, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
-import { render } from '@testing-library/react'
+import { render, RenderResult } from '@testing-library/react'
 import Highcharts from 'highcharts/highmaps'
 
 import WorldMap from './WorldMap'
 
-jest.mock('~/config', () => ({
-    EnvironmentConfig: {
-        API: { V6: 'https://api.example.com' },
-        REPORTS_API: 'https://reports.example.com',
-    },
-}), { virtual: true })
-jest.mock('~/libs/core', () => ({
-    xhrGetAsync: jest.fn(),
-}), { virtual: true })
+jest.mock(
+    '~/config',
+    () => ({
+        EnvironmentConfig: {
+            API: { V6: 'https://api.example.com' },
+            REPORTS_API: 'https://reports.example.com',
+        },
+    }),
+    { virtual: true },
+)
+jest.mock(
+    '~/libs/core',
+    () => ({
+        xhrGetAsync: jest.fn(),
+    }),
+    { virtual: true },
+)
 
 let mockOptions: Highcharts.Options
 
@@ -43,20 +51,89 @@ function formatTooltip(point: Record<string, unknown>): string {
 }
 
 describe('WorldMap tooltip', () => {
+    it('enables desktop and touch map navigation with a mobile legend layout', () => {
+        const { getByRole }: RenderResult = render(
+            <WorldMap
+                countries={[]}
+                showWinnerDetails={false}
+                valueLabel='Members'
+            />,
+        )
+
+        expect(mockOptions.mapNavigation)
+            .toMatchObject({
+                enableButtons: false,
+                enabled: true,
+                enableDoubleClickZoom: true,
+                enableMouseWheelZoom: true,
+                enableTouchZoom: true,
+            })
+        expect(mockOptions.responsive?.rules?.[0])
+            .toMatchObject({
+                chartOptions: {
+                    chart: { margin: [0, 0, 80, 0] },
+                    legend: {
+                        itemDistance: 24,
+                        symbolHeight: 12,
+                        symbolWidth: 12,
+                        width: 340,
+                    },
+                },
+                condition: { maxWidth: 480 },
+            })
+        expect(
+            getByRole('button', { name: 'Toggle fullscreen map' }),
+        )
+            .toBeInTheDocument()
+    })
+
+    it('scales color-axis buckets from the largest value', () => {
+        render(
+            <WorldMap
+                countries={[
+                    {
+                        code: 'IN',
+                        count: 730554,
+                        name: 'India',
+                    },
+                ]}
+                showWinnerDetails={false}
+                valueLabel='Members'
+            />,
+        )
+
+        const colorAxis = Array.isArray(mockOptions.colorAxis)
+            ? mockOptions.colorAxis[0]
+            : mockOptions.colorAxis
+        const dataClasses = colorAxis?.dataClasses
+
+        expect(dataClasses?.map(dataClass => dataClass.name))
+            .toEqual([
+                '1 - 200,000',
+                '200,001 - 400,000',
+                '400,001 - 600,000',
+                '600,001+',
+            ])
+    })
+
     it('renders Figma winner details with formatted and escaped values', () => {
         render(
             <WorldMap
-                countries={[{
-                    code: 'IN',
-                    count: 204024,
-                    name: 'India<script>',
-                    topWinners: [{
-                        handle: 'blue<winner>',
-                        maxRating: 1400,
-                        photoURL: 'javascript:alert(1)',
-                        wins: 1768,
-                    }],
-                }]}
+                countries={[
+                    {
+                        code: 'IN',
+                        count: 204024,
+                        name: 'India<script>',
+                        topWinners: [
+                            {
+                                handle: 'blue<winner>',
+                                maxRating: 1400,
+                                photoURL: 'javascript:alert(1)',
+                                wins: 1768,
+                            },
+                        ],
+                    },
+                ]}
                 showWinnerDetails
                 valueLabel='First-place wins'
             />,
@@ -65,12 +142,14 @@ describe('WorldMap tooltip', () => {
         const html = formatTooltip({
             code: 'IN',
             name: 'India<script>',
-            topWinners: [{
-                handle: 'blue<winner>',
-                maxRating: 1400,
-                photoURL: 'javascript:alert(1)',
-                wins: 1768,
-            }],
+            topWinners: [
+                {
+                    handle: 'blue<winner>',
+                    maxRating: 1400,
+                    photoURL: 'javascript:alert(1)',
+                    wins: 1768,
+                },
+            ],
             value: 204024,
         })
 
@@ -84,39 +163,103 @@ describe('WorldMap tooltip', () => {
             .toContain('#616BD5')
         expect(html)
             .toContain('fi-in')
-        expect(html)
-            .not.toContain('<script>')
-        expect(html)
-            .not.toContain('javascript:')
+        expect(html).not.toContain('<script>')
+        expect(html).not.toContain('javascript:')
     })
 
-    it('keeps the compact member tooltip on Countries Represented', () => {
+    it('renders country member, skill, and top-member details', () => {
         render(
             <WorldMap
-                countries={[{
-                    code: 'US',
-                    count: 1234,
-                    name: 'United States',
-                }]}
+                countries={[
+                    {
+                        code: 'IN',
+                        count: 730554,
+                        name: 'India',
+                        skillsBreakdown: [
+                            { count: 40, name: 'JavaScript', percentage: 40 },
+                            { count: 30, name: 'Python', percentage: 30 },
+                            { count: 15, name: 'Swift', percentage: 15 },
+                        ],
+                        topMembers: [
+                            {
+                                handle: 'top-member',
+                                maxRating: 1400,
+                                wins: 1768,
+                            },
+                            {
+                                handle: 'second-member',
+                                maxRating: 1300,
+                                wins: 1500,
+                            },
+                            {
+                                handle: 'third-member',
+                                maxRating: 1200,
+                                wins: 1200,
+                            },
+                        ],
+                        totalSkills: 1059,
+                    },
+                ]}
                 showWinnerDetails={false}
                 valueLabel='Members'
             />,
         )
 
         const html = formatTooltip({
-            code: 'US',
-            name: 'United States',
+            code: 'IN',
+            name: 'India',
+            skillsBreakdown: [
+                { count: 40, name: 'JavaScript', percentage: 40 },
+                { count: 30, name: 'Python', percentage: 30 },
+                { count: 15, name: 'Swift', percentage: 15 },
+            ],
+            topMembers: [
+                {
+                    handle: 'top-member',
+                    maxRating: 1400,
+                    wins: 1768,
+                },
+                {
+                    handle: 'second-member',
+                    maxRating: 1300,
+                    wins: 1500,
+                },
+                {
+                    handle: 'third-member',
+                    maxRating: 1200,
+                    wins: 1200,
+                },
+            ],
             topWinners: [],
-            value: 1234,
+            totalSkills: 1059,
+            value: 730554,
         })
 
         expect(html)
-            .toContain('United States')
+            .toContain('Total Members')
         expect(html)
-            .toContain('1,234')
+            .toContain('730,554')
         expect(html)
-            .toContain('members')
+            .toContain('Total Skills')
         expect(html)
-            .not.toContain('Top Winners')
+            .toContain('1,059')
+        expect(html)
+            .toContain('Sub-Skill Breakdown')
+        expect(html)
+            .toContain('JavaScript')
+        expect(html)
+            .toContain('Others')
+        expect(html)
+            .toContain('40%')
+        expect(html)
+            .toContain('Top Members')
+        expect(html)
+            .toContain('top-member')
+        expect(html)
+            .toContain('Wins: <strong>1,768</strong>')
+        expect(html)
+            .toContain('third-member')
+        expect(html)
+            .toContain('fi-in')
     })
 })

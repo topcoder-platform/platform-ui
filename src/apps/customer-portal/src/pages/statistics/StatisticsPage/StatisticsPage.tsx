@@ -13,8 +13,10 @@ import {
 
 import {
     IconFirstPlace,
+    IconGlobe,
     IconSecondPlace,
     IconThirdPlace,
+    IconTrophy,
 } from './assets'
 import WorldMap from './WorldMap'
 import styles from './StatisticsPage.module.scss'
@@ -70,7 +72,7 @@ const StatisticsPage: FC = () => {
         ? !generalStatistics && !generalStatisticsError
         : !winners && !winnersError
     const contentError = activeTab === 'countries' ? generalStatisticsError : winnersError
-    const valueLabel = activeTab === 'countries' ? 'Members' : 'First-place wins'
+    const valueLabel = activeTab === 'countries' ? 'Members' : 'Winners'
 
     const selectTab = useCallback((tab: StatisticsTab) => {
         setActiveTab(tab)
@@ -110,15 +112,15 @@ const StatisticsPage: FC = () => {
         label: 'Total Members',
         value: formatCount(generalStatistics?.memberCount),
     }, {
-        icon: <IconOutline.CurrencyDollarIcon aria-hidden='true' />,
+        icon: <IconTrophy aria-hidden='true' />,
         label: 'Total Prizes',
         value: formatPrizeTotal(generalStatistics?.totalPrizes),
     }, {
-        icon: <IconOutline.BadgeCheckIcon aria-hidden='true' />,
+        icon: <IconOutline.UserGroupIcon aria-hidden='true' />,
         label: 'Challenges Completed',
         value: formatCount(generalStatistics?.completedChallenges),
     }, {
-        icon: <IconOutline.GlobeAltIcon aria-hidden='true' />,
+        icon: <IconGlobe aria-hidden='true' />,
         label: 'Countries Represented',
         value: formatCount(generalStatistics?.countries.length),
     }]
