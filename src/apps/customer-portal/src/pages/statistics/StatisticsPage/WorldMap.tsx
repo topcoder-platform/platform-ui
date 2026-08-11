@@ -21,6 +21,7 @@ interface WorldMapProps {
     countries: StatisticsCountry[]
     showWinnerDetails: boolean
     valueLabel: string
+    hoveredCountryCode?: string
 }
 
 interface StatisticsMapPoint {
@@ -55,6 +56,21 @@ function safeImageUrl(value?: string): string {
     } catch {
         return ''
     }
+}
+
+function normalizeCountryCode(code?: string): string {
+    if (!code) {
+        return ''
+    }
+
+    const normalized = String(code)
+        .trim()
+        .toUpperCase()
+    if (normalized.length === 3) {
+        return ISO3_TO_2.get(normalized) ?? normalized
+    }
+
+    return normalized
 }
 
 function renderAvatar(winner: StatisticsWinner): string {
@@ -322,9 +338,21 @@ function createTooltipFormatter(
     }
 }
 
+interface ChartDataPoint {
+    code: string
+    name: string
+    skillsBreakdown: StatisticsSkill[]
+    topMembers: StatisticsWinner[]
+    topWinners: StatisticsWinner[]
+    totalSkills: number
+    value: number
+}
+
 const WorldMap: FC<WorldMapProps> = props => {
     const mapRef = useRef<HTMLDivElement>(null)
-    const chartData = useMemo(
+    const chartRef = useRef<any>(null)
+    const hoveredPointRef = useRef<Highcharts.Point | null>(null)
+    const chartData: ChartDataPoint[] = useMemo(
         () => props.countries.map(country => {
             const code = String(country.code ?? '')
                 .toUpperCase()
@@ -354,6 +382,58 @@ const WorldMap: FC<WorldMapProps> = props => {
         () => buildColorAxisDataClasses(maxChartValue, props.valueLabel),
         [maxChartValue],
     )
+
+    const normalizedHoveredCountry = useMemo(
+        () => normalizeCountryCode(props.hoveredCountryCode),
+        [props.hoveredCountryCode],
+    )
+
+    useEffect(() => {
+        const chart = chartRef.current?.chart
+        if (!chart) {
+            return
+        }
+
+        const clearHover = (): void => {
+            if (hoveredPointRef.current) {
+                hoveredPointRef.current.setState('')
+                hoveredPointRef.current = null
+            }
+
+            chart.tooltip?.hide()
+        }
+
+        if (!normalizedHoveredCountry) {
+            clearHover()
+            return
+        }
+
+        const series = chart.series?.[0]
+        if (!series) {
+            clearHover()
+            return
+        }
+
+        const hoveredPoint = series.data.find((point: any) => {
+            const pointCode = normalizeCountryCode(
+                String(point.options?.code ?? point.code ?? point?.properties?.['iso-a2'] ?? ''),
+            )
+            return pointCode && pointCode === normalizedHoveredCountry
+        })
+
+        if (!hoveredPoint) {
+            clearHover()
+            return
+        }
+
+        if (hoveredPointRef.current && hoveredPointRef.current !== hoveredPoint) {
+            hoveredPointRef.current.setState('')
+        }
+
+        hoveredPointRef.current = hoveredPoint
+        hoveredPoint.setState('hover')
+        chart.tooltip.refresh(hoveredPoint)
+    }, [normalizedHoveredCountry, props.showWinnerDetails])
 
     const chartOptions = useMemo<Highcharts.Options>(
         () => ({
@@ -487,6 +567,7 @@ const WorldMap: FC<WorldMapProps> = props => {
                 constructorType='mapChart'
                 highcharts={Highcharts}
                 options={chartOptions}
+                ref={chartRef}
             />
             <button
                 aria-label='Toggle fullscreen map'

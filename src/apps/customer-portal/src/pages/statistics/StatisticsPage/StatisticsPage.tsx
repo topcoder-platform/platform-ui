@@ -43,6 +43,7 @@ function formatCount(value?: number): string {
 
 const StatisticsPage: FC = () => {
     const [activeTab, setActiveTab] = useState<StatisticsTab>('countries')
+    const [hoveredCountryCode, setHoveredCountryCode] = useState<string | undefined>()
     const {
         data: generalStatistics,
         error: generalStatisticsError,
@@ -106,6 +107,12 @@ const StatisticsPage: FC = () => {
     const selectWinnersTab = useCallback(() => {
         selectTab('winners')
     }, [selectTab])
+    const handleRowMouseEnter = useCallback((code?: string) => {
+        setHoveredCountryCode(code)
+    }, [])
+    const handleRowMouseLeave = useCallback(() => {
+        setHoveredCountryCode(undefined)
+    }, [])
 
     const kpis = [{
         icon: <IconOutline.UserGroupIcon aria-hidden='true' />,
@@ -216,7 +223,14 @@ const StatisticsPage: FC = () => {
                                                         : <>{index + 1}</>
 
                                             return (
-                                                <tr key={country.code || country.name}>
+                                                <tr
+                                                    key={country.code || country.name}
+                                                    tabIndex={0}
+                                                    onMouseEnter={() => handleRowMouseEnter(country.code)}
+                                                    onMouseLeave={handleRowMouseLeave}
+                                                    onFocus={() => handleRowMouseEnter(country.code)}
+                                                    onBlur={handleRowMouseLeave}
+                                                >
                                                     <td>
                                                         <span className={styles[`rank${Math.min(index + 1, 4)}`]}>
                                                             {rankIcon ?? index + 1}
@@ -245,6 +259,7 @@ const StatisticsPage: FC = () => {
                             </div>
                             <WorldMap
                                 countries={countries}
+                                hoveredCountryCode={hoveredCountryCode}
                                 showWinnerDetails={activeTab === 'winners'}
                                 valueLabel={valueLabel}
                             />

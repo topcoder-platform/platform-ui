@@ -204,6 +204,16 @@
         width: 122px;
     }
 
+    tbody tr {
+        cursor: pointer;
+        transition: background-color 150ms ease;
+    }
+
+    tbody tr:hover,
+    tbody tr:focus-within {
+        background-color: #f5f8fa;
+    }
+
     td:nth-child(2) > div {
         align-items: center;
         display: flex;
