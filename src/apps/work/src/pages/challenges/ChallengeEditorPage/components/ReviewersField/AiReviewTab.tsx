@@ -453,7 +453,7 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                     </small>
                 </label>
 
-                <label className={styles.checkboxField}>
+                {/* <label className={styles.checkboxField}>
                     <input
                         checked={props.configuration.autoFinalize === true}
                         disabled={props.readOnly || mode !== 'AI_ONLY'}
@@ -461,7 +461,7 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                         type='checkbox'
                     />
                     <span>Auto-finalize AI decisions</span>
-                </label>
+                </label> */}
 
                 <label className={styles.checkboxField}>
                     <input
