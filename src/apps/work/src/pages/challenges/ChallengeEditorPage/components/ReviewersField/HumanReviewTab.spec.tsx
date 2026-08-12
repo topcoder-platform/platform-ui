@@ -631,7 +631,7 @@ describe('HumanReviewTab', () => {
         })
     })
 
-    it('keeps a Reviewer resource on Review when Screening has no assigned Screener', async () => {
+    it('keeps a Reviewer resource on Review when screening phases have no assigned screeners', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [
                 {
@@ -641,6 +641,10 @@ describe('HumanReviewTab', () => {
                 {
                     id: 'role-reviewer',
                     name: 'Reviewer',
+                },
+                {
+                    id: 'role-checkpoint-screener',
+                    name: 'Checkpoint Screener',
                 },
             ],
         })
@@ -666,6 +670,11 @@ describe('HumanReviewTab', () => {
                             phaseId: 'phase-screening',
                         },
                         {
+                            id: 'checkpoint-screening-instance',
+                            name: 'Checkpoint Screening',
+                            phaseId: 'phase-checkpoint-screening',
+                        },
+                        {
                             id: 'review-instance',
                             name: 'Review',
                             phaseId: 'phase-review',
@@ -677,6 +686,13 @@ describe('HumanReviewTab', () => {
                             isMemberReview: true,
                             memberReviewerCount: 1,
                             phaseId: 'phase-screening',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-checkpoint-screening',
                             shouldOpenOpportunity: false,
                         },
                         {
@@ -696,6 +712,9 @@ describe('HumanReviewTab', () => {
                 .getAttribute('data-value'))
                 .toBe('')
             expect(screen.getByTestId('reviewers.1.memberId')
+                .getAttribute('data-value'))
+                .toBe('')
+            expect(screen.getByTestId('reviewers.2.memberId')
                 .getAttribute('data-value'))
                 .toBe('member-reviewer')
         })
@@ -942,7 +961,7 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
     })
 
-    it('marks only the standard Screening member assignment optional', () => {
+    it('marks Screening and Checkpoint Screening member assignments optional', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             tracks: [
                 {
@@ -962,6 +981,10 @@ describe('HumanReviewTab', () => {
                             phaseId: 'screening-phase-id',
                         },
                         {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
                             name: 'Review',
                             phaseId: 'review-phase-id',
                         },
@@ -972,6 +995,13 @@ describe('HumanReviewTab', () => {
                             memberReviewerCount: 1,
                             phaseId: 'screening-phase-id',
                             scorecardId: 'screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
                             shouldOpenOpportunity: false,
                         },
                         {
@@ -989,6 +1019,8 @@ describe('HumanReviewTab', () => {
         expect(screen.getByTestId('reviewers.0.memberId'))
             .toHaveProperty('dataset.required', 'false')
         expect(screen.getByTestId('reviewers.1.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.2.memberId'))
             .toHaveProperty('dataset.required', 'true')
     })
 
