@@ -67,7 +67,7 @@ export const TicketDetailPage: FC = () => {
     const { data, error, isValidating, mutate } = useSWR<SupportTicketDetail>(
         requestKey,
         () => getSupportTicket(ticketId as string),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
+        { revalidateOnFocus: true, shouldRetryOnError: false },
     )
 
     useEffect(() => {
@@ -75,7 +75,9 @@ export const TicketDetailPage: FC = () => {
 
         markedReadTicket.current = data.id
         markSupportTicketRead(data.id)
-            .then(() => mutate({ ...data, hasUnread: false }, false))
+            .then(() => mutate(current => (current
+                ? { ...current, hasUnread: false }
+                : current), false))
             .catch(() => undefined)
     }, [data, mutate])
 
