@@ -3,7 +3,7 @@
 The Support subapp lets authenticated Topcoder members open requests, follow
 their status, and reply to the Topcoder Support Team. Users with the exact
 `Topcoder Support Team` role can see all tickets, assign themselves, search
-closed tickets, reply, and close resolved requests.
+closed tickets, reply to tickets assigned to them, and close resolved requests.
 
 ## Routes
 
