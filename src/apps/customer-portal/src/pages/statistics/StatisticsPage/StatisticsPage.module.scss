@@ -297,9 +297,7 @@
     }
 
     :global(.highcharts-tooltip) {
-        left: 0 !important;
         position: fixed !important;
-        top: 0 !important;
         transform: none !important;
         z-index: 20;
     }
@@ -381,6 +379,9 @@
         top: 100%;
         transform: translateX(-50%);
         width: 0;
+        @include ltemd {
+            display: none;
+        }
     }
 }
 
