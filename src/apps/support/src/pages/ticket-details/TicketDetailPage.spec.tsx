@@ -196,7 +196,7 @@ describe('TicketDetailPage reply access', () => {
             .toBeTruthy()
     })
 
-    it('preserves freshly revalidated assignees when marking a ticket read completes', async () => {
+    it('revalidates fresh detail after marking the ticket read', async () => {
         const markReadRequest = createDeferred<void>()
         mockedMarkRead.mockReturnValue(markReadRequest.promise)
         mockUseSWR.mockReturnValue({
@@ -211,35 +211,10 @@ describe('TicketDetailPage reply access', () => {
 
         await waitFor(() => {
             expect(mockMutate)
-                .toHaveBeenCalledWith(expect.any(Function), false)
+                .toHaveBeenCalledTimes(1)
         })
-
-        const updateCachedTicket = mockMutate.mock.calls[0][0] as (
-            ticket?: SupportTicketDetail,
-        ) => SupportTicketDetail | undefined
-        const freshlyRevalidatedTicket: SupportTicketDetail = {
-            ...closedTicket,
-            assignees: [{
-                assignedAt: '2026-08-07T01:30:00.000Z',
-                handle: 'support-staff',
-                userId: '67890',
-            }],
-            hasUnread: true,
-            responseCount: 1,
-            responses: [{
-                createdAt: '2026-08-07T01:30:00.000Z',
-                id: 'response-1',
-                markdown: 'We are investigating.',
-                readBy: [],
-                userHandle: 'support-staff',
-                userId: '67890',
-            }],
-        }
-
-        expect(updateCachedTicket(freshlyRevalidatedTicket))
-            .toEqual({ ...freshlyRevalidatedTicket, hasUnread: false })
-        expect(updateCachedTicket(undefined))
-            .toBeUndefined()
+        expect(mockMutate.mock.calls[0])
+            .toEqual([])
     })
 
     it('requires non-owner support staff to assign an open ticket before replying', () => {

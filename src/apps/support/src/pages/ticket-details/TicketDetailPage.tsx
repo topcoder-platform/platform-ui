@@ -75,9 +75,7 @@ export const TicketDetailPage: FC = () => {
 
         markedReadTicket.current = data.id
         markSupportTicketRead(data.id)
-            .then(() => mutate(current => (current
-                ? { ...current, hasUnread: false }
-                : current), false))
+            .then(() => mutate())
             .catch(() => undefined)
     }, [data, mutate])
 
