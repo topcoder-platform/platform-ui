@@ -196,6 +196,49 @@ describe('TicketDetailPage reply access', () => {
             .toBeTruthy()
     })
 
+    it('identifies the support staff member who closed the ticket', () => {
+        mockUseSWR.mockReturnValue({
+            data: {
+                ...closedTicket,
+                assignees: [{
+                    assignedAt: '2026-08-07T00:30:00.000Z',
+                    handle: 'support-agent',
+                    userId: '99999',
+                }],
+                closedByUserId: '99999',
+            },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+
+        expect(screen.getByText((_content, element) => (
+            element?.tagName === 'P'
+            && element.textContent?.includes('Closed') === true
+            && element.textContent?.includes('by support-agent') === true
+        )))
+            .toBeTruthy()
+    })
+
+    it('falls back to the stored closer user ID when no assignee snapshot matches', () => {
+        mockUseSWR.mockReturnValue({
+            data: {
+                ...closedTicket,
+                closedByUserId: 'legacy-staff-1',
+            },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+
+        expect(screen.getByText('legacy-staff-1'))
+            .toBeTruthy()
+    })
+
     it('preserves freshly revalidated assignees when marking a ticket read completes', async () => {
         const markReadRequest = createDeferred<void>()
         mockedMarkRead.mockReturnValue(markReadRequest.promise)
@@ -242,7 +285,7 @@ describe('TicketDetailPage reply access', () => {
             .toBeUndefined()
     })
 
-    it('requires non-owner support staff to assign an open ticket before replying', () => {
+    it('requires non-owner support staff to assign an open ticket before replying or closing it', () => {
         mockProfile = {
             roles: ['Topcoder Support Team'],
             userId: 99999,
@@ -264,9 +307,13 @@ describe('TicketDetailPage reply access', () => {
             .toBeNull()
         expect(screen.getByText('Assign this ticket to yourself before replying.'))
             .toBeTruthy()
+        expect((screen.getByRole('button', {
+            name: 'Close support ticket',
+        }) as HTMLButtonElement).disabled)
+            .toBe(true)
     })
 
-    it('lets assigned support staff reply to an open ticket', () => {
+    it('lets assigned support staff reply to and close an open ticket', () => {
         mockProfile = {
             roles: ['Topcoder Support Team'],
             userId: 99999,
@@ -293,5 +340,9 @@ describe('TicketDetailPage reply access', () => {
             .toBeTruthy()
         expect(screen.queryByText('Assign this ticket to yourself before replying.'))
             .toBeNull()
+        expect((screen.getByRole('button', {
+            name: 'Close support ticket',
+        }) as HTMLButtonElement).disabled)
+            .toBe(false)
     })
 })
