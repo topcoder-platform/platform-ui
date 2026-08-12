@@ -83,6 +83,16 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
         await refetchContext()
     }, [props.challengeId, refetchContext])
 
+    const createManualReviewContext = useCallback(async (): Promise<void> => {
+        await createChallengeReviewContext({
+            challengeId: props.challengeId || '',
+            context: { requirements: [] },
+            status: 'HUMAN_APPROVED',
+        })
+
+        await refetchContext()
+    }, [props.challengeId, refetchContext])
+
     const handleGenerateClick = useCallback(async (): Promise<void> => {
         if (!props.challengeId) {
             showErrorToast('Please save the challenge before generating review context.')
@@ -106,6 +116,30 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
             setIsSaving(false)
         }
     }, [createGeneratedReviewContext])
+
+    const handleManageClick = useCallback(async (): Promise<void> => {
+        if (!props.challengeId) {
+            showErrorToast('Please save the challenge before managing review context.')
+            return
+        }
+
+        setIsSaving(true)
+        setSaveError(undefined)
+
+        try {
+            await createManualReviewContext()
+            showSuccessToast('Review context created. You can now edit it manually.')
+        } catch (error) {
+            const message = error instanceof Error
+                ? error.message
+                : 'Failed to create review context.'
+
+            setSaveError(message)
+            showErrorToast(message)
+        } finally {
+            setIsSaving(false)
+        }
+    }, [createManualReviewContext])
 
     const handleConfirmRegenerate = useCallback(async (): Promise<void> => {
         if (!props.challengeId) {
@@ -159,12 +193,21 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                         </div>
                     ) : (
                         <>
-                            <Button
-                                disabled={isSaving || blockGenerate}
-                                label={isSaving ? 'Generating context...' : 'Generate Challenge Review Context'}
-                                onClick={handleGenerateClick}
-                                size='lg'
-                            />
+                            <div className={styles.reviewContextActions}>
+                                <Button
+                                    disabled={isSaving || blockGenerate}
+                                    label={isSaving ? 'Generating context...' : 'Generate Challenge Review Context'}
+                                    onClick={handleGenerateClick}
+                                    size='lg'
+                                />
+                                <Button
+                                    disabled={isSaving || blockGenerate}
+                                    label='Manage Review Context'
+                                    onClick={handleManageClick}
+                                    secondary
+                                    size='lg'
+                                />
+                            </div>
                             {saveError && (
                                 <div className={styles.errorText}>
                                     <p>{saveError}</p>
