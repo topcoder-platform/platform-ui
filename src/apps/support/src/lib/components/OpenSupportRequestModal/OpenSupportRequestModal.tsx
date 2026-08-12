@@ -192,7 +192,7 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
         >
             <div className={styles.form}>
                 <div className={styles.challengeField}>
-                    <label htmlFor='support-challenge-id'>Challenge (if applicable)</label>
+                    <label htmlFor='support-challenge-id'>Active Challenge (if applicable)</label>
                     <Select<ChallengeOption, false>
                         aria-describedby={challengeError ? 'support-challenge-error' : undefined}
                         className={styles.challengeSelect}
