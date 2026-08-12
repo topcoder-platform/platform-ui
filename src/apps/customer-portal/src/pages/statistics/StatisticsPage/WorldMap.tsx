@@ -505,14 +505,14 @@ const WorldMap: FC<WorldMapProps> = props => {
                                 margin: [0, 0, 80, 0],
                             },
                             legend: {
-                                itemDistance: 24,
+                                itemDistance: 16,
                                 itemMarginBottom: 4,
                                 itemStyle: {
-                                    fontSize: '12px',
+                                    fontSize: '9px',
                                 },
                                 symbolHeight: 12,
                                 symbolWidth: 12,
-                                width: 340,
+                                width: 360,
                             },
                         },
                         condition: {
