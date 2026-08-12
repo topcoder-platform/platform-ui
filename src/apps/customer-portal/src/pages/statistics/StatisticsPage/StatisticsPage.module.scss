@@ -296,6 +296,14 @@
         }
     }
 
+    :global(.highcharts-tooltip) {
+        left: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
+        transform: none !important;
+        z-index: 20;
+    }
+
     &:fullscreen {
         height: 100vh;
         min-height: 100vh;
