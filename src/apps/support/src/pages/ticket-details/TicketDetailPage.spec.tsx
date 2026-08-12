@@ -129,7 +129,7 @@ const closedTicket: SupportTicketDetail = {
     updatedAt: '2026-08-07T01:00:00.000Z',
 }
 
-describe('TicketDetailPage closed reply access', () => {
+describe('TicketDetailPage reply access', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockProfile = {
@@ -240,5 +240,58 @@ describe('TicketDetailPage closed reply access', () => {
             .toEqual({ ...freshlyRevalidatedTicket, hasUnread: false })
         expect(updateCachedTicket(undefined))
             .toBeUndefined()
+    })
+
+    it('requires non-owner support staff to assign an open ticket before replying', () => {
+        mockProfile = {
+            roles: ['Topcoder Support Team'],
+            userId: 99999,
+        }
+        mockUseSWR.mockReturnValue({
+            data: {
+                ...closedTicket,
+                closedAt: undefined,
+                status: 'OPEN',
+            },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+
+        expect(screen.queryByLabelText('Reply'))
+            .toBeNull()
+        expect(screen.getByText('Assign this ticket to yourself before replying.'))
+            .toBeTruthy()
+    })
+
+    it('lets assigned support staff reply to an open ticket', () => {
+        mockProfile = {
+            roles: ['Topcoder Support Team'],
+            userId: 99999,
+        }
+        mockUseSWR.mockReturnValue({
+            data: {
+                ...closedTicket,
+                assignees: [{
+                    assignedAt: '2026-08-07T00:30:00.000Z',
+                    handle: 'support-agent',
+                    userId: '99999',
+                }],
+                closedAt: undefined,
+                status: 'OPEN',
+            },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+
+        expect(screen.getByLabelText('Reply'))
+            .toBeTruthy()
+        expect(screen.queryByText('Assign this ticket to yourself before replying.'))
+            .toBeNull()
     })
 })

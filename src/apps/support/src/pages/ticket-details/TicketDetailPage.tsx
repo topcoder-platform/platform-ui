@@ -107,7 +107,7 @@ export const TicketDetailPage: FC = () => {
     ))
     const closed = data.status === 'CLOSED'
     const ticketOwner = Boolean(currentUserId && String(data.memberUserId) === currentUserId)
-    const canReply = !closed || ticketOwner
+    const canReply = ticketOwner || (!closed && (!supportTeam || assignedToCurrentUser))
     const replyContext = `${data.id}-reply-${replyRevision}`
 
     /**
@@ -334,7 +334,11 @@ export const TicketDetailPage: FC = () => {
                     </div>
                 </section>
             ) : (
-                <p className={styles.closedNotice}>This ticket is closed and cannot receive more replies.</p>
+                <p className={styles.closedNotice}>
+                    {closed
+                        ? 'This ticket is closed and cannot receive more replies.'
+                        : 'Assign this ticket to yourself before replying.'}
+                </p>
             )}
 
             <BaseModal
