@@ -114,7 +114,7 @@ const TicketsPage: FC<TicketsPageProps> = props => {
     const { data, error, isValidating, mutate } = useSWR(
         requestKey,
         () => getSupportTickets(query),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
+        { revalidateOnFocus: true, shouldRetryOnError: false },
     )
 
     /**

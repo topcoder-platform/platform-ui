@@ -18,6 +18,25 @@ const mockMutate = jest.fn()
 const mockUseSWR = jest.fn()
 let mockProfile: { roles: string[]; userId: number | string }
 
+interface Deferred<T> {
+    promise: Promise<T>
+    resolve: (value: T) => void
+}
+
+/**
+ * Creates a promise whose completion can be controlled by the test.
+ *
+ * @returns deferred promise and its resolver.
+ * @throws Does not throw.
+ */
+function createDeferred<T>(): Deferred<T> {
+    let resolve: (value: T) => void = () => undefined
+    const promise = new Promise<T>(promiseResolve => {
+        resolve = promiseResolve
+    })
+    return { promise, resolve }
+}
+
 jest.mock('swr', () => ({
     __esModule: true,
     default: (...args: unknown[]) => mockUseSWR(...args),
@@ -138,6 +157,9 @@ describe('TicketDetailPage closed reply access', () => {
         async () => {
             render(<TicketDetailPage />)
 
+            expect(mockUseSWR.mock.calls[0][2])
+                .toEqual({ revalidateOnFocus: true, shouldRetryOnError: false })
+
             const challengeLink = screen.getByRole('link', { name: 'View challenge' })
             expect(challengeLink.getAttribute('href'))
                 .toBe('https://www.example.test/challenges/challenge%2Fid')
@@ -172,5 +194,51 @@ describe('TicketDetailPage closed reply access', () => {
             .toBeNull()
         expect(screen.getByText('This ticket is closed and cannot receive more replies.'))
             .toBeTruthy()
+    })
+
+    it('preserves freshly revalidated assignees when marking a ticket read completes', async () => {
+        const markReadRequest = createDeferred<void>()
+        mockedMarkRead.mockReturnValue(markReadRequest.promise)
+        mockUseSWR.mockReturnValue({
+            data: { ...closedTicket, hasUnread: true },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+        markReadRequest.resolve(undefined)
+
+        await waitFor(() => {
+            expect(mockMutate)
+                .toHaveBeenCalledWith(expect.any(Function), false)
+        })
+
+        const updateCachedTicket = mockMutate.mock.calls[0][0] as (
+            ticket?: SupportTicketDetail,
+        ) => SupportTicketDetail | undefined
+        const freshlyRevalidatedTicket: SupportTicketDetail = {
+            ...closedTicket,
+            assignees: [{
+                assignedAt: '2026-08-07T01:30:00.000Z',
+                handle: 'support-staff',
+                userId: '67890',
+            }],
+            hasUnread: true,
+            responseCount: 1,
+            responses: [{
+                createdAt: '2026-08-07T01:30:00.000Z',
+                id: 'response-1',
+                markdown: 'We are investigating.',
+                readBy: [],
+                userHandle: 'support-staff',
+                userId: '67890',
+            }],
+        }
+
+        expect(updateCachedTicket(freshlyRevalidatedTicket))
+            .toEqual({ ...freshlyRevalidatedTicket, hasUnread: false })
+        expect(updateCachedTicket(undefined))
+            .toBeUndefined()
     })
 })
