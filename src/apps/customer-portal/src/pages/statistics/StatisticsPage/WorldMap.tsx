@@ -539,17 +539,22 @@ const WorldMap: FC<WorldMapProps> = props => {
                     showWinnerDetails: props.showWinnerDetails,
                 }),
                 padding: 0,
-                positioner(
-                    this: Highcharts.Tooltip,
+                positioner: (
                     labelWidth: number,
                     labelHeight: number,
                     point: Highcharts.Point,
-                ): Highcharts.PositionObject {
+                ): Highcharts.PositionObject => {
+                    const chart = chartRef.current?.chart as Highcharts.Chart | undefined
+
+                    if (!chart) {
+                        return { x: 0, y: 0 }
+                    }
+
                     return getFixedTooltipPosition(
                         labelWidth,
                         labelHeight,
                         point,
-                        this.chart,
+                        chart,
                     )
                 },
                 shadow: false,
