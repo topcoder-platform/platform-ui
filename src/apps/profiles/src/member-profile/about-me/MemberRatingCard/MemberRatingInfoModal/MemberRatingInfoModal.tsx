@@ -295,15 +295,21 @@ const getAxisLabelPosition = (
 /**
  * Calculates a bar height for a histogram count.
  *
- * Used by MemberRatingInfoModal to preserve visible bars for low non-zero ranges.
+ * Empty buckets still get a short stub so the chart baseline stays visible,
+ * especially at the low end of the distribution (0 to the first populated range).
+ * Populated buckets use a slightly taller minimum so small counts remain readable.
  *
  * @param {number} value - Number of members in the rating range.
  * @param {number} maxValue - Highest count in the distribution.
  * @returns {number} A percentage height for CSS rendering.
  */
 const getBarHeight = (value: number, maxValue: number): number => {
-    if (value <= 0 || maxValue <= 0) {
+    if (maxValue <= 0) {
         return 0
+    }
+
+    if (value <= 0) {
+        return 1
     }
 
     return Math.max(4, Math.round((value / maxValue) * 100))
