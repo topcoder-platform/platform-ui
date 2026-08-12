@@ -111,6 +111,7 @@ function resourceMatchesReviewerRole(
 }
 
 interface ReviewerRoleMatchGroup {
+    isFallback: boolean
     key: string
     roleId?: string
     roleNames: string[]
@@ -133,11 +134,19 @@ function getReviewerRoleMatchGroups(
     const seenKeys = new Set<string>()
     const explicitRoleId = normalizeReviewerText(reviewer.roleId)
     const phaseName = phaseNameById.get(normalizeReviewerText(reviewer.phaseId))
+    const roleNameGroups = getReviewerRoleNameGroupsForPhaseName(phaseName)
 
     if (explicitRoleId) {
         const explicitRoleKey = `id:${explicitRoleId}`
+        const explicitRoleName = resourceRoles.find(
+            role => normalizeReviewerText(role.id) === explicitRoleId,
+        )?.name
+        const isGenericFallback = roleNameGroups.length > 1
+            && normalizeReviewerRoleKey(explicitRoleName)
+                === normalizeReviewerRoleKey(GENERIC_REVIEWER_ROLE_NAMES[0])
 
         groups.push({
+            isFallback: isGenericFallback,
             key: explicitRoleKey,
             roleId: explicitRoleId,
             roleNames: [],
@@ -145,8 +154,8 @@ function getReviewerRoleMatchGroups(
         seenKeys.add(explicitRoleKey)
     }
 
-    getReviewerRoleNameGroupsForPhaseName(phaseName)
-        .forEach(roleNames => {
+    roleNameGroups
+        .forEach((roleNames, groupIndex) => {
             const resolvedRoleId = roleNames
                 .map(roleName => resourceRoles.find(
                     role => normalizeReviewerRoleKey(role.name) === normalizeReviewerRoleKey(roleName),
@@ -162,6 +171,7 @@ function getReviewerRoleMatchGroups(
             }
 
             groups.push({
+                isFallback: groupIndex > 0,
                 key: nextKey,
                 roleId: resolvedRoleId,
                 roleNames,
@@ -185,10 +195,13 @@ interface BuildAssignedResourcesByReviewerParams {
  *
  * Reviewer assignments are stored per role rather than per reviewer row. This helper
  * mirrors Work Manager by consuming resources sequentially for repeated rows that share
- * the same role pool, while still honoring persisted `reviewer.roleId` values first and
- * falling back to the generic `Reviewer` role when legacy design drafts were saved that way.
- * If a phase-specific role pool is partially or fully exhausted, allocation continues into
- * later fallback groups so mixed legacy resource layouts still show every assigned reviewer.
+ * the same role pool, while still honoring persisted phase-specific `reviewer.roleId` values
+ * and falling back to the generic `Reviewer` role when legacy design drafts were saved that way.
+ * Primary role pools are allocated across all rows before legacy fallbacks so an empty specific
+ * role, such as Screener, cannot consume a generic resource needed by a later Review row, even if
+ * the specialized row persisted the generic role id. If a phase-specific role pool is partially or
+ * fully exhausted, remaining resources are then allocated from fallback groups so mixed legacy
+ * resource layouts still show every assigned reviewer.
  *
  * @param params reviewer rows, resources, resource roles, and a reviewer-count resolver.
  * @returns a row-aligned list of matching persisted resources for each reviewer row.
@@ -197,46 +210,52 @@ export function buildAssignedResourcesByReviewer(
     params: BuildAssignedResourcesByReviewerParams,
 ): Resource[][] {
     const roleOffsets = new Map<string, number>()
-
-    return params.reviewers.map(reviewer => {
-        const reviewerCount = Math.max(1, params.getReviewerCount(reviewer))
-        const roleMatchGroups = getReviewerRoleMatchGroups(
+    const reviewerAllocations = params.reviewers.map(reviewer => ({
+        assignedResources: [] as Resource[],
+        reviewerCount: Math.max(1, params.getReviewerCount(reviewer)),
+        roleMatchGroups: getReviewerRoleMatchGroups(
             reviewer,
             params.phaseNameById,
             params.resourceRoles,
-        )
-        const assignedResources: Resource[] = []
+        ),
+    }))
 
-        for (const roleMatchGroup of roleMatchGroups) {
-            const matchingResources = params.resources
-                .filter(resource => resourceMatchesReviewerRole(
-                    resource,
-                    roleMatchGroup.roleId,
-                    roleMatchGroup.roleNames,
-                ))
+    for (const isFallbackPass of [
+        false,
+        true,
+    ]) {
+        reviewerAllocations.forEach(allocation => {
+            allocation.roleMatchGroups
+                .filter(roleMatchGroup => roleMatchGroup.isFallback === isFallbackPass)
+                .forEach(roleMatchGroup => {
+                    if (allocation.assignedResources.length >= allocation.reviewerCount) {
+                        return
+                    }
 
-            if (matchingResources.length) {
-                const roleOffset = roleOffsets.get(roleMatchGroup.key) || 0
+                    const matchingResources = params.resources
+                        .filter(resource => resourceMatchesReviewerRole(
+                            resource,
+                            roleMatchGroup.roleId,
+                            roleMatchGroup.roleNames,
+                        ))
+                    const roleOffset = roleOffsets.get(roleMatchGroup.key) || 0
 
-                if (roleOffset < matchingResources.length) {
-                    const remainingReviewerSlots = reviewerCount - assignedResources.length
-                    const allocatedResources = matchingResources.slice(
-                        roleOffset,
-                        roleOffset + remainingReviewerSlots,
-                    )
+                    if (roleOffset < matchingResources.length) {
+                        const remainingReviewerSlots = allocation.reviewerCount
+                            - allocation.assignedResources.length
+                        const allocatedResources = matchingResources.slice(
+                            roleOffset,
+                            roleOffset + remainingReviewerSlots,
+                        )
 
-                    if (allocatedResources.length) {
-                        roleOffsets.set(roleMatchGroup.key, roleOffset + allocatedResources.length)
-                        assignedResources.push(...allocatedResources)
-
-                        if (assignedResources.length >= reviewerCount) {
-                            break
+                        if (allocatedResources.length) {
+                            roleOffsets.set(roleMatchGroup.key, roleOffset + allocatedResources.length)
+                            allocation.assignedResources.push(...allocatedResources)
                         }
                     }
-                }
-            }
-        }
+                })
+        })
+    }
 
-        return assignedResources
-    })
+    return reviewerAllocations.map(allocation => allocation.assignedResources)
 }

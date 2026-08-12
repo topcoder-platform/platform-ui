@@ -141,6 +141,7 @@ jest.mock('../../../../lib/utils', () => ({
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
     transformChallengeToFormData: (challenge?: Partial<Challenge>) => ({
+        approvalStatus: challenge?.approvalStatus,
         assignedMemberId: challenge?.assignedMemberId,
         attachments: Array.isArray(challenge?.attachments)
             ? challenge?.attachments
@@ -855,6 +856,47 @@ describe('ChallengeEditorForm', () => {
     const validNewChallenge = {
         ...validDraftChallenge,
         status: 'NEW',
+    } as Challenge
+    const designChallengeWithDeferredScreener = {
+        ...validDraftChallenge,
+        approvalStatus: 'APPROVED',
+        phases: [
+            {
+                duration: 60,
+                name: 'Screening',
+                phaseId: 'screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            },
+        ],
+        reviewers: [
+            {
+                additionalMemberIds: [],
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'screening-phase-id',
+                scorecardId: 'screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                additionalMemberIds: [],
+                isMemberReview: true,
+                memberId: 'reviewer-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+        ],
+        trackId: 'design-track-id',
+        type: {
+            abbreviation: 'CH',
+            name: 'Challenge',
+        },
+        typeId: 'design-challenge-type-id',
     } as Challenge
     const taskDraftChallenge = {
         ...draftChallenge,
@@ -1806,6 +1848,75 @@ describe('ChallengeEditorForm', () => {
                     status: 'ACTIVE',
                 }))
         })
+    })
+
+    it('launches a design draft before a screener member is assigned', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredScreener,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={designChallengeWithDeferredScreener}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                        }),
+                    ]),
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
     })
 
     it('launches a read-only draft when manual reviewer assignments exist only in resources', async () => {
@@ -4025,6 +4136,61 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('saves a new design draft before a screener member is assigned', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredScreener,
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...designChallengeWithDeferredScreener,
+                        status: 'NEW',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                        }),
+                    ]),
+                    status: 'DRAFT',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+    })
+
     it('reports DRAFT status when task assignee sync fails after the challenge save', async () => {
         const user = userEvent.setup()
         const onChallengeStatusChange = jest.fn()
@@ -4266,6 +4432,95 @@ describe('ChallengeEditorForm', () => {
                 .toBeTruthy()
             expect(screen.queryByText('Original create failure'))
                 .toBeNull()
+        })
+    })
+
+    it.each([
+        {
+            expectedDownloadAccess: 'true',
+            track: {
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            },
+            workType: 'Web Design',
+        },
+        {
+            expectedDownloadAccess: 'false',
+            track: {
+                id: 'development-track',
+                name: 'Development',
+                track: 'DEVELOPMENT',
+            },
+            workType: undefined,
+        },
+    ])('defaults $track.name winning downloads to $expectedDownloadAccess', async ({
+        expectedDownloadAccess,
+        track,
+        workType,
+    }: {
+        expectedDownloadAccess: string
+        track: {
+            id: string
+            name: string
+            track: string
+        }
+        workType?: string
+    }) => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [track],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'challenge-type-id',
+                isActive: true,
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: `${track.name} challenge`,
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: `${track.name} challenge`,
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), `${track.name} challenge`)
+        await user.type(screen.getByLabelText('Challenge Track'), track.id)
+        await user.type(screen.getByLabelText('Challenge Type'), 'challenge-type-id')
+
+        if (workType) {
+            await user.type(screen.getByLabelText('Work Type'), workType)
+        }
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    metadata: [{
+                        name: 'allowAllRegistrantsToDownloadWinningSubmissions',
+                        value: expectedDownloadAccess,
+                    }, {
+                        name: 'is_test_challenge',
+                        value: 'false',
+                    }],
+                }))
         })
     })
 

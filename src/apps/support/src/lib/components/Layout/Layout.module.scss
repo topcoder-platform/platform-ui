@@ -1,0 +1,17 @@
+@import '@libs/ui/styles/includes';
+
+.outer {
+    margin: $sp-6 auto !important;
+}
+
+.inner,
+.main {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.main {
+    color: var(--FontColor);
+    min-height: 60vh;
+    padding: $sp-4 0 $sp-10;
+}

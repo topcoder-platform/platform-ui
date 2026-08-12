@@ -557,6 +557,7 @@ The following summarizes the various [apps](#adding-a-new-platform-ui-applicatio
 - [Learn](#learn)
 - [Self Service](#self-service)
 - [Status](#status)
+- [Support](#support)
 
 ## Platform App
 
@@ -610,3 +611,11 @@ diagnostic section.
 
 [Status README](./src/apps/status/README.md)
 [Status Routes](./src/apps/status/src/status-app.routes.tsx)
+
+## Support
+
+The application where Topcoder members can open support tickets, track their
+status, and communicate with the Topcoder Support Team.
+
+[Support README](./src/apps/support/README.md)
+[Support Routes](./src/apps/support/src/support-app.routes.tsx)

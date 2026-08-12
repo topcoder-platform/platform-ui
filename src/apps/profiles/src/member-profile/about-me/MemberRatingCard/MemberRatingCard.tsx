@@ -1,9 +1,11 @@
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import {
     getRatingColor,
     useMemberStats,
+    useProfileCompleteness,
     UserProfile,
     UserStats,
     UserStatsDistributionResponse,
@@ -38,6 +40,8 @@ interface MemberRatingCardProps {
 
 const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProps) => {
     const memberStats: UserStats | undefined = useMemberStats(props.profile.handle)
+    const { mutate: mutateProfileCompleteness }: { mutate: KeyedMutator<any> }
+        = useProfileCompleteness(props.profile.handle)
     const rating: number | undefined = useMemo(() => getProfileRating(memberStats), [memberStats])
     const compactRatingColor: string = getCompactRatingColor(rating, getRatingColor(rating))
 
@@ -102,6 +106,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
     function handlePreferredRolesModalSave(): void {
         setIsPreferredRolesModalOpen(false)
         props.mutatePersonalizationTraits()
+        mutateProfileCompleteness()
     }
 
     function handlePreferredRolesToggle(): void {
@@ -115,7 +120,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
 
         return (
             <div className={styles.preferredRolesWrap}>
-                {preferredRoles.length > 0 && (
+                {preferredRoles.length > 0 ? (
                     <div className={styles.preferredRolesList}>
                         {preferredRolesDisplay.visibleRoles.map((role: string) => (
                             <span className={styles.preferredRole} key={role}>
@@ -133,6 +138,14 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                             </button>
                         )}
                     </div>
+                ) : (
+                    <button
+                        className={styles.preferredRolesPlaceholder}
+                        onClick={handlePreferredRolesModalOpen}
+                        type='button'
+                    >
+                        Add preferred roles
+                    </button>
                 )}
 
                 {canEditPreferredRoles && (

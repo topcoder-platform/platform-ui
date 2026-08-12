@@ -4,6 +4,7 @@ import { TabsNavItem } from '~/libs/ui'
 import {
     flexiTalentRouteId,
     showcaseSearchRouteId,
+    statisticsRouteId,
     talentSearchRouteId,
 } from '~/apps/customer-portal/src/config/routes.config'
 
@@ -11,6 +12,9 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnpri
 
     const tabs: TabsNavItem[] = [
         ...(!isUnprivilegedUser ? [{
+            id: statisticsRouteId,
+            title: 'General Statistics',
+        }, {
             id: talentSearchRouteId,
             title: 'Talent Search',
         }, {

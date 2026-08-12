@@ -24,6 +24,7 @@ export interface FormTextFieldProps {
     min?: number
     maxLength?: number
     name: string
+    onChange?: (value: string) => void
     placeholder?: string
     required?: boolean
     sanitize?: (value: string) => string
@@ -59,6 +60,7 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
     const min = props.min
     const maxLength = props.maxLength
     const name = props.name
+    const onChange = props.onChange
     const placeholder = props.placeholder
     const required = props.required
     const sanitize = props.sanitize
@@ -87,8 +89,9 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
             }
 
             field.onChange(nextValue)
+            onChange?.(nextValue)
         },
-        [field, sanitize],
+        [field, onChange, sanitize],
     )
 
     const value = getInputValue(field.value)

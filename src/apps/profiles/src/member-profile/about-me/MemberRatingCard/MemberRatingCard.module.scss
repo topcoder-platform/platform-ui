@@ -150,6 +150,25 @@
     }
 }
 
+.preferredRolesPlaceholder {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: $black-60;
+    cursor: pointer;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: $font-weight-medium;
+    line-height: 20px;
+    padding: 0;
+    text-align: center;
+
+    &:hover {
+        color: $black-100;
+        text-decoration: underline;
+    }
+}
+
 .preferredRolesEditButton {
     color: $black-100;
     padding-left: $sp-2 !important;

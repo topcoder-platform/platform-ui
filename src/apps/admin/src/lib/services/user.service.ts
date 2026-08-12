@@ -46,11 +46,23 @@ export const getMemberSuggestionsByHandle = async (
         maxRating?: unknown
     }
 
-    const response = await xhrGetAsync<MemberAutocompleteResponse[]>(
-        `${EnvironmentConfig.API.V6}/members/autocomplete/${sanitizedHandle}`,
+    type MemberAutocompletePagedResponse = {
+        result?: MemberAutocompleteResponse[]
+    }
+
+    // Prefer the query-param autocomplete endpoint: any authenticated member can
+    // call it. The path-param variant historically required copilot/admin only.
+    const response = await xhrGetAsync<
+        MemberAutocompleteResponse[] | MemberAutocompletePagedResponse
+    >(
+        `${EnvironmentConfig.API.V6}/members/autocomplete?term=${sanitizedHandle}`,
     )
 
-    return response.map(member => ({
+    const members = Array.isArray(response)
+        ? response
+        : (response?.result ?? [])
+
+    return members.map(member => ({
         firstName: member.firstName ?? undefined,
         handle: member.handle,
         lastName: member.lastName ?? undefined,

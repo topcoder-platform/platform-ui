@@ -158,6 +158,7 @@ jest.mock('../../../../../lib/components/form', () => ({
     FormUserAutocomplete: (props: {
         label: string
         name: string
+        required?: boolean
     }) => {
         const {
             useController,
@@ -170,7 +171,11 @@ jest.mock('../../../../../lib/components/form', () => ({
         })
 
         return (
-            <div data-testid={props.name} data-value={controller.field.value || ''}>
+            <div
+                data-required={String(props.required === true)}
+                data-testid={props.name}
+                data-value={controller.field.value || ''}
+            >
                 <span>{props.label}</span>
             </div>
         )
@@ -626,6 +631,76 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('keeps a Reviewer resource on Review when Screening has no assigned Screener', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-screener',
+                    name: 'Screener',
+                },
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-reviewer',
+                    roleId: 'role-reviewer',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'screening-instance',
+                            name: 'Screening',
+                            phaseId: 'phase-screening',
+                        },
+                        {
+                            id: 'review-instance',
+                            name: 'Review',
+                            phaseId: 'phase-review',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-screening',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-review',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.memberId')
+                .getAttribute('data-value'))
+                .toBe('')
+            expect(screen.getByTestId('reviewers.1.memberId')
+                .getAttribute('data-value'))
+                .toBe('member-reviewer')
+        })
+    })
+
     it('restores iterative reviewer member ids from the generic reviewer role fallback', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [
@@ -865,6 +940,56 @@ describe('HumanReviewTab', () => {
         })
         expect(screen.getByTestId('reviewers.0.memberId'))
             .not.toBeNull()
+    })
+
+    it('marks only the standard Screening member assignment optional', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'track-1',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(screen.getByTestId('reviewers.0.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.1.memberId'))
+            .toHaveProperty('dataset.required', 'true')
     })
 
     it('defaults new manual reviewer cards to regular review type', async () => {

@@ -53,8 +53,12 @@ export interface AiWorkflowRun {
     score: number;
     workflow: AiWorkflow
     usage: {
-        input: number
-        output: number
+        input?: number
+        output?: number
+        inputTokens?: number
+        outputTokens?: number
+        cachedInputTokens?: number
+        cacheCreationInputTokens?: number
     }
     commentsCount?: number
 }

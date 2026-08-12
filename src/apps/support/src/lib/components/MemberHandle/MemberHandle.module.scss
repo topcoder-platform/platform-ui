@@ -1,0 +1,9 @@
+.handle {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

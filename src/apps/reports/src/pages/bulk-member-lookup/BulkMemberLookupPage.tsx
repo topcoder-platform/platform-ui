@@ -1,5 +1,16 @@
-import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    MouseEvent,
+    SetStateAction,
+    useCallback,
+    useMemo,
+    useState,
+} from 'react'
 
+import { InputHandlesSelector } from '~/apps/admin/src/lib/components/InputHandlesSelector'
+import { SearchUserInfo } from '~/apps/admin/src/lib/models'
+import { EnvironmentConfig } from '~/config'
 import {
     Button,
     InputFilePicker,
@@ -38,6 +49,14 @@ const buildDownloadName = (extension: 'json' | 'csv'): string => (
 )
 
 /**
+ * Stops table-row click handling so profile links can navigate.
+ * Table rows call preventDefault on click by default.
+ */
+function handleProfileLinkClick(event: MouseEvent<HTMLAnchorElement>): void {
+    event.stopPropagation()
+}
+
+/**
  * Parses the blob response from the reports API into lookup rows.
  * @param blob JSON blob returned from `/identity/users-by-handles`.
  * @returns Parsed list of bulk lookup rows.
@@ -63,7 +82,6 @@ const parseLookupResults = async (blob: Blob): Promise<BulkMemberRow[]> => {
  * Parses uploaded text/CSV content into a normalized handle list.
  * @param file Uploaded `.txt` or `.csv` file.
  * @returns Ordered non-empty handles from the file.
- * @throws Error when no handles are found in the uploaded content.
  */
 const parseHandlesFromFile = async (file: File): Promise<string[]> => {
     const content = (await file.text())
@@ -81,8 +99,37 @@ const parseHandlesFromFile = async (file: File): Promise<string[]> => {
         handles.shift()
     }
 
+    return handles
+}
+
+/**
+ * Merges typed and file-sourced handles, preserving order and dropping duplicates.
+ * @param selectedHandles Handles chosen in the multi-entry selector.
+ * @param file Optional uploaded handles file.
+ * @returns Combined unique handle list.
+ * @throws Error when neither source provides handles.
+ */
+const collectHandles = async (
+    selectedHandles: SearchUserInfo[],
+    file: File | undefined,
+): Promise<string[]> => {
+    const fromInput = selectedHandles.map(item => item.handle.trim())
+        .filter(Boolean)
+    const fromFile = file ? await parseHandlesFromFile(file) : []
+    const seen = new Set<string>()
+    const handles: string[] = []
+
+    for (const handle of [...fromInput, ...fromFile]) {
+        const key = handle.toLowerCase()
+
+        if (!seen.has(key)) {
+            seen.add(key)
+            handles.push(handle)
+        }
+    }
+
     if (!handles.length) {
-        throw new Error('Uploaded file does not contain any handles.')
+        throw new Error('Enter at least one handle or upload a file that contains handles.')
     }
 
     return handles
@@ -106,14 +153,19 @@ const downloadBlob = (blob: Blob, fileName: string): void => {
 }
 
 /**
- * Bulk Member Lookup page for uploading handles and resolving account details.
+ * Bulk Member Lookup page for resolving account details by handle.
  *
- * Users upload a `.txt` or `.csv` file of handles, submit for lookup,
- * review results in a table, and optionally download JSON/CSV output.
+ * Users can enter handles in a multi-entry selector and/or upload a `.txt` or
+ * `.csv` file, submit for lookup, review results in a table, and optionally
+ * download JSON/CSV output.
  */
 export const BulkMemberLookupPage: FC = () => {
     const [file, setFile]: [File | undefined, Dispatch<SetStateAction<File | undefined>>]
         = useState<File | undefined>(undefined)
+    const [selectedHandles, setSelectedHandles]: [
+        SearchUserInfo[],
+        Dispatch<SetStateAction<SearchUserInfo[]>>
+    ] = useState<SearchUserInfo[]>([])
     const [isSubmitting, setIsSubmitting]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
     const [results, setResults]: [BulkMemberRow[], Dispatch<SetStateAction<BulkMemberRow[]>>]
@@ -125,6 +177,9 @@ export const BulkMemberLookupPage: FC = () => {
         Dispatch<SetStateAction<'json' | 'csv' | undefined>>
     ] = useState<'json' | 'csv' | undefined>(undefined)
 
+    const hasHandlesInput = selectedHandles.length > 0 || !!file
+    const isBusy = isSubmitting || isDownloading !== undefined
+
     const tableColumns = useMemo<TableColumn<BulkMemberRow>[]>(() => ([
         {
             label: 'User ID',
@@ -135,7 +190,20 @@ export const BulkMemberLookupPage: FC = () => {
         {
             label: 'Handle',
             propertyName: 'handle',
-            type: 'text',
+            renderer: data => (
+                data.handle ? (
+                    <a
+                        className={styles.handleLink}
+                        href={`${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(data.handle.toLowerCase())}`}
+                        target='_blank'
+                        rel='noreferrer'
+                        onClick={handleProfileLinkClick}
+                    >
+                        {data.handle}
+                    </a>
+                ) : <>{emptyValue}</>
+            ),
+            type: 'element',
         },
         {
             label: 'First Name',
@@ -175,14 +243,20 @@ export const BulkMemberLookupPage: FC = () => {
         setResults([])
     }, [])
 
+    const handleHandlesChange = useCallback((handles: SearchUserInfo[]): void => {
+        setSelectedHandles(handles)
+        setHasSubmitted(false)
+        setResults([])
+    }, [])
+
     const handleLookupMembers = useCallback(async (): Promise<void> => {
-        if (!file) {
+        if (!hasHandlesInput) {
             return
         }
 
         try {
             setIsSubmitting(true)
-            const handles = await parseHandlesFromFile(file)
+            const handles = await collectHandles(selectedHandles, file)
             const responseBlob = await postReportAsJson(bulkMembersByHandlesPath, { handles })
             const lookupResults = await parseLookupResults(responseBlob)
 
@@ -193,16 +267,16 @@ export const BulkMemberLookupPage: FC = () => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [file])
+    }, [file, hasHandlesInput, selectedHandles])
 
     const handleDownload = useCallback(async (format: 'json' | 'csv'): Promise<void> => {
-        if (!file) {
+        if (!hasHandlesInput) {
             return
         }
 
         try {
             setIsDownloading(format)
-            const handles = await parseHandlesFromFile(file)
+            const handles = await collectHandles(selectedHandles, file)
 
             const blob = format === 'json'
                 ? await postReportAsJson(bulkMembersByHandlesPath, { handles })
@@ -214,7 +288,7 @@ export const BulkMemberLookupPage: FC = () => {
         } finally {
             setIsDownloading(undefined)
         }
-    }, [file])
+    }, [file, hasHandlesInput, selectedHandles])
 
     const handleJsonDownload = useCallback(() => {
         handleDownload('json')
@@ -224,7 +298,7 @@ export const BulkMemberLookupPage: FC = () => {
         handleDownload('csv')
     }, [handleDownload])
 
-    const isDownloadDisabled = !file || isSubmitting || isDownloading !== undefined
+    const isDownloadDisabled = !hasHandlesInput || isBusy
 
     return (
         <>
@@ -235,11 +309,19 @@ export const BulkMemberLookupPage: FC = () => {
                 <PageTitle>{pageTitle}</PageTitle>
 
                 <p className={styles.instructions}>
-                    Upload a TXT or CSV file that contains one member handle per line,
-                    then submit to resolve user details.
+                    Enter member handles below and/or upload a TXT or CSV file that
+                    contains one member handle per line, then submit to resolve user details.
                 </p>
 
                 <div className={styles.uploadSection}>
+                    <InputHandlesSelector
+                        label='User Handles'
+                        placeholder='Enter handles you are searching for...'
+                        value={selectedHandles}
+                        onChange={handleHandlesChange}
+                        disabled={isBusy}
+                    />
+
                     <InputFilePicker
                         fileConfig={{
                             acceptFileType: '.txt,.csv',
@@ -251,7 +333,7 @@ export const BulkMemberLookupPage: FC = () => {
                     <div className={styles.actions}>
                         <Button
                             primary
-                            disabled={!file || isSubmitting || isDownloading !== undefined}
+                            disabled={!hasHandlesInput || isBusy}
                             onClick={handleLookupMembers}
                         >
                             Look Up Members
@@ -283,10 +365,14 @@ export const BulkMemberLookupPage: FC = () => {
 
                         <div className={styles.tableWrapper}>
                             {results.length ? (
-                                <Table columns={tableColumns} data={results} />
+                                <Table
+                                    columns={tableColumns}
+                                    data={results}
+                                    preventDefault
+                                />
                             ) : (
                                 <div className={styles.emptyState}>
-                                    No members were returned for the uploaded handles.
+                                    No members were returned for the provided handles.
                                 </div>
                             )}
                         </div>

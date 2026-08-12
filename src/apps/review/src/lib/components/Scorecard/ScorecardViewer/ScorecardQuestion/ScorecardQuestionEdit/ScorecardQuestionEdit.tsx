@@ -1,4 +1,9 @@
-import { FC, useCallback, useMemo } from 'react'
+import {
+    FC,
+    useCallback,
+    useContext,
+    useMemo,
+} from 'react'
 import {
     Controller,
     ControllerRenderProps,
@@ -12,14 +17,19 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 import { IconComment } from '~/apps/review/src/lib/assets/icons'
 
-import { QUESTION_RESPONSE_OPTIONS } from '../../../../../../config/index.config'
+import {
+    DESIGN,
+    QUESTION_RESPONSE_OPTIONS,
+} from '../../../../../../config/index.config'
 import { getScoreResponseOptions } from '../../../../../utils'
 import {
+    ChallengeDetailContextModel,
     FormReviews,
     ReviewItemInfo,
     ScorecardQuestion,
     SelectOption,
 } from '../../../../../models'
+import { ChallengeDetailContext } from '../../../../../contexts/ChallengeDetailContext'
 import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
 import { MarkdownReview } from '../../../../MarkdownReview'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
@@ -37,6 +47,7 @@ interface ScorecardQuestionEditProps {
 }
 
 export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
+    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const {
         toggleItem,
         toggledItems,
@@ -61,6 +72,13 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
     const responseOptions = useMemo<SelectOption[]>(() => (
         getScoreResponseOptions(props.question)
     ), [props.question])
+    const showPlacementGuidelines = (
+        challengeInfo?.track?.name?.trim()
+            .toLowerCase() === DESIGN.toLowerCase()
+        && props.question.type === 'SCALE'
+        && props.question.description.trim()
+            .toLowerCase() === 'submission place'
+    )
 
     const {
         fields,
@@ -204,6 +222,16 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                         }}
                                         isDisabled={props.disabled}
                                     />
+
+                                    {showPlacementGuidelines && (
+                                        <div className={styles.placementGuidelines}>
+                                            10 - 1st place, 9 - 2nd place, 8 - 3rd place,
+                                            {' '}
+                                            7 - 4th place, 6 - 5th place, 5 - 6th place,
+                                            {' '}
+                                            4 - 7th place, 3 - 8th place, 2 and 1 - no placement.
+                                        </div>
+                                    )}
 
                                     {errorMessage && (
                                         <div className={styles.errorMessage}>

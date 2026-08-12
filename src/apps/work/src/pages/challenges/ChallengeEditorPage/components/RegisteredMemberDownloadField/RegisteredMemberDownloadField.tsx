@@ -43,8 +43,8 @@ const registeredMemberDownloadOptions: FormRadioOption<boolean>[] = [
  * Renders the winning-submission download access setting.
  *
  * Existing challenges without metadata retain the restricted passing-submitter behavior. New
- * challenges receive explicit allow-all metadata during creation, and changes persist exact string
- * booleans for the Review API authorization contract.
+ * Development challenges receive restricted metadata while other new challenges, including Design,
+ * receive allow-all metadata. Changes persist exact string booleans for the Review API contract.
  *
  * @returns The winning-submission download access radio group.
  * @throws Does not throw.

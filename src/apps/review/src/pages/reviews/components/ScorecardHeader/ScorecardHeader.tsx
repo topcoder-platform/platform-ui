@@ -2,8 +2,15 @@ import { FC, useCallback, useMemo, useState } from 'react'
 import moment, { Duration } from 'moment'
 
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
-import { AiWorkflowReviewMethod, useRolePermissions, UseRolePermissionsResult } from '~/apps/review/src/lib/hooks'
-import { ArrowCircleDownIcon, ArrowCircleUpIcon } from '@heroicons/react/outline'
+import {
+    AiWorkflowReviewMethod,
+    useRolePermissions,
+    UseRolePermissionsResult,
+} from '~/apps/review/src/lib/hooks'
+import {
+    ArrowCircleDownIcon,
+    ArrowCircleUpIcon,
+} from '@heroicons/react/outline'
 
 import { MarkdownReview } from '../../../../lib/components/MarkdownReview'
 import { IconClock, IconFile, IconPremium } from '../../../../lib/assets/icons'
@@ -17,19 +24,26 @@ const formatDuration = (duration: Duration): string => [
     !!duration.hours() && `${duration.hours()}h`,
     !!duration.minutes() && `${duration.minutes()}m`,
     !!duration.seconds() && `${duration.seconds()}s`,
-].filter(Boolean)
+]
+    .filter(Boolean)
     .join(' ')
 
 const ScorecardHeader: FC = () => {
     const { workflow, workflowRun }: ReviewsContextModel = useReviewsContext()
     const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
-    const runDuration = useMemo(() => (
-        workflowRun && workflowRun.completedAt && workflowRun.startedAt && moment.duration(
-            +new Date(workflowRun.completedAt) - +new Date(workflowRun.startedAt),
-            'milliseconds',
-        )
-    ), [workflowRun])
-    const [modelDetailsModalVisible, setModelDetailsModalVisible] = useState(false)
+    const runDuration = useMemo(
+        () => workflowRun
+            && workflowRun.completedAt
+            && workflowRun.startedAt
+            && moment.duration(
+                +new Date(workflowRun.completedAt)
+                    - +new Date(workflowRun.startedAt),
+                'milliseconds',
+            ),
+        [workflowRun],
+    )
+    const [modelDetailsModalVisible, setModelDetailsModalVisible]
+        = useState(false)
 
     const toggleModelDetails = useCallback(() => {
         setModelDetailsModalVisible(wasVisible => !wasVisible)
@@ -48,7 +62,12 @@ const ScorecardHeader: FC = () => {
                     </div>
                     <div className={styles.workflowName}>
                         <h3>{workflow.name}</h3>
-                        <span className={styles.modelName} onClick={toggleModelDetails}>{workflow.llm.name}</span>
+                        <span
+                            className={styles.modelName}
+                            onClick={toggleModelDetails}
+                        >
+                            {workflow.llm.name}
+                        </span>
                     </div>
                 </div>
                 <div className={styles.workflowRunStats}>
@@ -57,8 +76,12 @@ const ScorecardHeader: FC = () => {
                         <span>
                             <strong>Scorecard Type:</strong>
                             {' '}
-                            {workflow.reviewMethod === AiWorkflowReviewMethod.AI_ASSISTED && 'AI Based'}
-                            {workflow.reviewMethod === AiWorkflowReviewMethod.DETERMINISTIC && 'Deterministic'}
+                            {workflow.reviewMethod
+                                === AiWorkflowReviewMethod.AI_ASSISTED
+                                && 'AI Based'}
+                            {workflow.reviewMethod
+                                === AiWorkflowReviewMethod.DETERMINISTIC
+                                && 'Deterministic'}
                         </span>
                     </span>
                     <span>
@@ -84,7 +107,11 @@ const ScorecardHeader: FC = () => {
                                 <strong>Git log:</strong>
                                 {' '}
                                 {workflowRun.gitRunUrl && (
-                                    <a href={workflowRun.gitRunUrl} target='_blank' rel='noreferrer noopener'>
+                                    <a
+                                        href={workflowRun.gitRunUrl}
+                                        target='_blank'
+                                        rel='noreferrer noopener'
+                                    >
                                         #
                                         {workflowRun.gitRunId}
                                     </a>
@@ -98,7 +125,9 @@ const ScorecardHeader: FC = () => {
                             <span>
                                 <strong>Input Tokens:</strong>
                                 {' '}
-                                {workflowRun.usage?.input ?? 'N/A'}
+                                {(workflowRun.usage?.input
+                                    || workflowRun.usage?.inputTokens)
+                                    ?? 'N/A'}
                             </span>
                         </span>
                     )}
@@ -108,7 +137,29 @@ const ScorecardHeader: FC = () => {
                             <span>
                                 <strong>Output Tokens:</strong>
                                 {' '}
-                                {workflowRun.usage?.output ?? 'N/A'}
+                                {(workflowRun.usage?.output
+                                    || workflowRun.usage?.outputTokens)
+                                    ?? 'N/A'}
+                            </span>
+                        </span>
+                    )}
+                    {isAdmin && workflowRun.usage?.cacheCreationInputTokens && (
+                        <span>
+                            <ArrowCircleUpIcon className={styles.md} />
+                            <span>
+                                <strong>Cache Read Tokens:</strong>
+                                {' '}
+                                {workflowRun.usage?.cachedInputTokens}
+                            </span>
+                        </span>
+                    )}
+                    {isAdmin && workflowRun.usage?.cacheCreationInputTokens && (
+                        <span>
+                            <ArrowCircleUpIcon className={styles.md} />
+                            <span>
+                                <strong>Cache Write Tokens:</strong>
+                                {' '}
+                                {workflowRun.usage?.cacheCreationInputTokens}
                             </span>
                         </span>
                     )}
@@ -129,7 +180,10 @@ const ScorecardHeader: FC = () => {
             </div> */}
 
             {modelDetailsModalVisible && (
-                <AiModelModal model={workflow.llm} onClose={toggleModelDetails} />
+                <AiModelModal
+                    model={workflow.llm}
+                    onClose={toggleModelDetails}
+                />
             )}
         </div>
     )

@@ -86,6 +86,7 @@ import {
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
 import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
+import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
@@ -1233,7 +1234,10 @@ async function hydratePersistedManualReviewerAssignments(
     )
 }
 
-function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
+function getReviewerEntryValidationError(
+    reviewer: Reviewer | undefined,
+    phases: ChallengeEditorFormData['phases'],
+): string | undefined {
     if (!reviewer) {
         return undefined
     }
@@ -1253,7 +1257,10 @@ function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string
             return 'Number of reviewers must be a positive integer.'
         }
 
-        if (reviewer.shouldOpenOpportunity !== true) {
+        if (
+            reviewer.shouldOpenOpportunity !== true
+            && !isScreenerAssignmentOptional(reviewer, phases)
+        ) {
             const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
             const hasAllRequiredMembers = requiredAssignedMembers.length === reviewerCount
@@ -1322,7 +1329,7 @@ function getReviewerValidationError(
     }
 
     const invalidReviewer = reviewers
-        .map(reviewer => getReviewerEntryValidationError(reviewer))
+        .map(reviewer => getReviewerEntryValidationError(reviewer, formData.phases))
         .find(Boolean)
     if (invalidReviewer) {
         return invalidReviewer
@@ -1999,6 +2006,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [resolvedChallengeTrackName],
     )
+    const isDevelopmentTrackSelected = useMemo(
+        (): boolean => {
+            const normalizedTrack = normalizeChallengeTypeToken(resolvedChallengeTrackName)
+
+            return normalizedTrack === CHALLENGE_TRACK_DEVELOPMENT_NAME
+                || normalizedTrack === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
+        },
+        [resolvedChallengeTrackName],
+    )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
             const normalizedChallengeTypeName = (selectedChallengeType?.name || '')
@@ -2064,22 +2080,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isDevelopmentChallengeSelected = useMemo(
         (): boolean => {
-            const normalizedTrackName = normalizeChallengeTypeToken(resolvedChallengeTrackName)
             const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
             const normalizedChallengeTypeAbbreviation
                 = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
 
-            return (
-                normalizedTrackName === CHALLENGE_TRACK_DEVELOPMENT_NAME
-                || normalizedTrackName === normalizeChallengeTypeToken(CHALLENGE_TRACKS.DEVELOP)
-            )
+            return isDevelopmentTrackSelected
                 && (
                     normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
                     || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
                 )
         },
         [
-            resolvedChallengeTrackName,
+            isDevelopmentTrackSelected,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
         ],
@@ -3056,7 +3068,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     booleanToMetadata(
                         formData.metadata,
                         REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
-                        true,
+                        !isDevelopmentTrackSelected,
                     ),
                     IS_TEST_CHALLENGE_METADATA_FIELD,
                     formData.isTestChallenge === true,
@@ -3147,6 +3159,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             clearErrors,
             fallbackProjectId,
             getValues,
+            isDevelopmentTrackSelected,
             isTaskSingleAssignmentChallenge,
             reset,
             onChallengeCreated,
