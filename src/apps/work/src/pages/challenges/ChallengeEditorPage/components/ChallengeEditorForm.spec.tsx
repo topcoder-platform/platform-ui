@@ -660,6 +660,12 @@ jest.mock('./MaximumSubmissionsField', () => ({
     MaximumSubmissionsField: (props: {
         deferDirty?: boolean
     }) => {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const metadata = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'metadata',
+        })
+
         mockMaximumSubmissionsDeferDirtyValues.push(props.deferDirty === true)
 
         return (
@@ -667,6 +673,7 @@ jest.mock('./MaximumSubmissionsField', () => ({
                 data-defer-dirty={props.deferDirty === true
                     ? 'true'
                     : 'false'}
+                data-metadata={JSON.stringify(metadata || [])}
                 data-testid='maximum-submissions-field'
             >
                 Maximum Submissions Field
@@ -4256,6 +4263,68 @@ describe('ChallengeEditorForm', () => {
         })
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+    })
+
+    it('keeps submission-limit metadata visible when the draft save response omits metadata', async () => {
+        const user = userEvent.setup()
+        const submissionLimitMetadata = [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count: '2',
+                limit: 'true',
+                unlimited: 'false',
+            }),
+        }]
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredScreener,
+            metadata: [],
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...designChallengeWithDeferredScreener,
+                        metadata: submissionLimitMetadata,
+                        status: 'NEW',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-metadata', JSON.stringify(submissionLimitMetadata))
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(mockedShowSuccessToast)
+                .toHaveBeenCalled()
+            expect(screen.getByTestId('maximum-submissions-field'))
+                .toHaveAttribute('data-metadata', JSON.stringify(submissionLimitMetadata))
+        })
     })
 
     it('reports DRAFT status when task assignee sync fails after the challenge save', async () => {

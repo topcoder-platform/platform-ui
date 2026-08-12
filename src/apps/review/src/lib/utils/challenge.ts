@@ -54,6 +54,13 @@ export function isAppealsResponsePhase(challengeInfo?: ChallengeInfo): boolean {
 }
 
 const SUBMISSION_LIMIT_KEY = 'submissionlimit'
+const SUBMISSION_LIMIT_COUNT_FIELDS = [
+    'count',
+    'max',
+    'maximum',
+    'limitCount',
+    'value',
+] as const
 const UNLIMITED_KEYWORDS = ['unlimited', 'false', '0', 'no', 'none']
 const TRUE_KEYWORDS = ['true', 'yes', '1']
 
@@ -82,6 +89,39 @@ function parseBooleanFlag(value: unknown): boolean | undefined {
         if (UNLIMITED_KEYWORDS.includes(normalized)) {
             return false
         }
+    }
+
+    return undefined
+}
+
+/**
+ * Parse submission-limit object flags using the backend's accepted boolean aliases.
+ *
+ * @param value - Raw `limit` or `unlimited` flag.
+ * @returns The recognized boolean value, or `undefined` for malformed aliases.
+ * @throws Does not throw.
+ */
+function parseSubmissionLimitFlag(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') {
+        return value
+    }
+
+    if (value === 1 || value === 0) {
+        return value === 1
+    }
+
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalized = value.trim()
+        .toLowerCase()
+    if (TRUE_KEYWORDS.includes(normalized)) {
+        return true
+    }
+
+    if (['false', 'no', '0'].includes(normalized)) {
+        return false
     }
 
     return undefined
@@ -171,7 +211,16 @@ function evaluateObjectLimit(candidate: Record<string, unknown>): boolean {
     return true
 }
 
-export function challengeHasSubmissionLimit(challengeInfo?: ChallengeInfo): boolean {
+/**
+ * Determine whether legacy submission-limit metadata represents a finite limit.
+ *
+ * @param challengeInfo - Challenge metadata containing the legacy `submissionLimit` entry.
+ * @returns True for finite or malformed legacy values and false for explicit unlimited values.
+ * @throws Does not throw; missing metadata retains the legacy finite-limit fallback.
+ */
+export function challengeHasSubmissionLimit(
+    challengeInfo?: Pick<ChallengeInfo, 'metadata'>,
+): boolean {
     const rawValue = findSubmissionLimitMetadata(challengeInfo?.metadata)
     if (rawValue === undefined || rawValue === null) {
         return true
@@ -196,6 +245,104 @@ export function challengeHasSubmissionLimit(challengeInfo?: ChallengeInfo): bool
     }
 
     return true
+}
+
+/**
+ * Convert a numeric metadata value to a safe positive-integer submission count.
+ *
+ * @param value - Raw count value from challenge metadata.
+ * @returns The positive whole-number count, or `undefined` when the value is not positive numeric data.
+ * @throws Does not throw; invalid values are ignored.
+ */
+function parsePositiveSubmissionLimit(value: unknown): number | undefined {
+    if (typeof value !== 'number' && typeof value !== 'string') {
+        return undefined
+    }
+
+    const numericValue = Number(value)
+    return Number.isSafeInteger(numericValue) && numericValue > 0
+        ? numericValue
+        : undefined
+}
+
+/**
+ * Resolve how many submissions per member and exact submission type Review should display.
+ *
+ * Design challenges with missing or explicit unlimited metadata keep every submission visible;
+ * a positive configured count selects that many. Flag conflicts, invalid counts, malformed Design
+ * data, and all non-Design challenges retain the existing latest-one behavior. Explicit unlimited
+ * flags take precedence over stale counts. These rules mirror the backend selection policy so the
+ * UI displays the same submission set for which scorecards were created.
+ *
+ * @param challengeInfo - Challenge track and submission-limit metadata.
+ * @returns A positive latest-submission count, or `undefined` when every submission is visible.
+ * @throws Does not throw; malformed limited Design metadata falls back to one.
+ */
+export function getChallengeSubmissionSelectionLimit(
+    challengeInfo?: Pick<ChallengeInfo, 'metadata' | 'track'>,
+): number | undefined {
+    const trackCandidates = [
+        challengeInfo?.track?.name,
+        challengeInfo?.track?.abbreviation,
+        challengeInfo?.track?.track,
+    ]
+    const isDesignChallenge = trackCandidates.some(candidate => (
+        normalizeChallengeKey(candidate) === 'design'
+    ))
+    if (!isDesignChallenge) {
+        return 1
+    }
+
+    const rawValue = findSubmissionLimitMetadata(challengeInfo?.metadata)
+    if (rawValue === undefined || rawValue === null) {
+        return undefined
+    }
+
+    const normalized = normalizeLimitMetadataValue(rawValue)
+    const primitiveLimit = parsePositiveSubmissionLimit(normalized)
+    if (primitiveLimit !== undefined) {
+        return primitiveLimit
+    }
+
+    if (typeof normalized === 'number' && normalized === 0) {
+        return undefined
+    }
+
+    if (typeof normalized === 'boolean') {
+        return normalized ? 1 : undefined
+    }
+
+    if (typeof normalized === 'string') {
+        return UNLIMITED_KEYWORDS.includes(normalized.trim()
+            .toLowerCase())
+            ? undefined
+            : 1
+    }
+
+    if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+        const candidate = normalized as Record<string, unknown>
+        const unlimitedFlag = parseSubmissionLimitFlag(candidate.unlimited)
+        const limitFlag = parseSubmissionLimitFlag(candidate.limit)
+        const countValue = SUBMISSION_LIMIT_COUNT_FIELDS
+            .map(fieldName => candidate[fieldName])
+            .find(value => value !== undefined && value !== null && value !== '')
+        const count = parsePositiveSubmissionLimit(countValue)
+        const flagsConflict = unlimitedFlag !== undefined
+            && limitFlag !== undefined
+            && unlimitedFlag === limitFlag
+
+        if (flagsConflict) {
+            return 1
+        }
+
+        if (unlimitedFlag === true || limitFlag === false) {
+            return undefined
+        }
+
+        return count ?? 1
+    }
+
+    return 1
 }
 
 export type PhaseLike = Pick<

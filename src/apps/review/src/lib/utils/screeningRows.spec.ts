@@ -1,26 +1,21 @@
-import type { Screening, SubmissionInfo } from '../models'
+import type { Screening } from '../models'
 
 import { selectVisibleScreeningRows } from './screeningRows'
 
 const screeningRows = [
-    { submissionId: 'member-one-old' },
+    { submissionId: 'member-one-oldest' },
+    { submissionId: 'member-one-middle' },
     { submissionId: 'member-one-latest' },
-    { submissionId: 'member-two-old' },
+    { submissionId: 'member-two-oldest' },
+    { submissionId: 'member-two-middle' },
     { submissionId: 'member-two-latest' },
 ] as Screening[]
 
-const latestSubmissionIds = new Set([
-    'member-one-latest',
-    'member-two-latest',
-])
-
 describe('selectVisibleScreeningRows', () => {
-    it('retains every row for an unlimited challenge without latest flags', () => {
+    it('retains every row for an unlimited challenge', () => {
         const result = selectVisibleScreeningRows({
-            hasSubmissionLimit: false,
-            latestSubmissionIds,
+            latestSubmissionIds: new Set(),
             screeningRows,
-            submissionInfos: [{}, {}, {}, {}],
         })
 
         expect(result.isRestrictedToLatest)
@@ -29,54 +24,16 @@ describe('selectVisibleScreeningRows', () => {
             .toBe(screeningRows)
     })
 
-    it('retains every row for an unlimited challenge with stale latest flags', () => {
-        const submissionInfos: Array<Pick<SubmissionInfo, 'isLatest'>> = [
-            { isLatest: false },
-            { isLatest: true },
-            { isLatest: false },
-            { isLatest: true },
-        ]
-
+    it('retains the latest two selected rows per member for a finite count of two', () => {
         const result = selectVisibleScreeningRows({
-            hasSubmissionLimit: false,
-            latestSubmissionIds,
+            latestSubmissionIds: new Set([
+                'member-one-middle',
+                'member-one-latest',
+                'member-two-middle',
+                'member-two-latest',
+            ]),
             screeningRows,
-            submissionInfos,
-        })
-
-        expect(result.isRestrictedToLatest)
-            .toBe(false)
-        expect(result.rows)
-            .toBe(screeningRows)
-    })
-
-    it('retains every row for a limited challenge without explicit latest flags', () => {
-        const result = selectVisibleScreeningRows({
-            hasSubmissionLimit: true,
-            latestSubmissionIds,
-            screeningRows,
-            submissionInfos: [{}, {}, {}, {}],
-        })
-
-        expect(result.isRestrictedToLatest)
-            .toBe(false)
-        expect(result.rows)
-            .toBe(screeningRows)
-    })
-
-    it('retains only explicit latest submissions for a limited challenge', () => {
-        const submissionInfos: Array<Pick<SubmissionInfo, 'isLatest'>> = [
-            { isLatest: false },
-            { isLatest: true },
-            { isLatest: false },
-            { isLatest: true },
-        ]
-
-        const result = selectVisibleScreeningRows({
-            hasSubmissionLimit: true,
-            latestSubmissionIds,
-            screeningRows,
-            submissionInfos,
+            submissionLimit: 2,
         })
 
         expect(result.isRestrictedToLatest)
@@ -84,7 +41,28 @@ describe('selectVisibleScreeningRows', () => {
         expect(result.rows)
             .toEqual([
                 screeningRows[1],
-                screeningRows[3],
+                screeningRows[2],
+                screeningRows[4],
+                screeningRows[5],
+            ])
+    })
+
+    it('retains only the selected latest row for a finite count of one', () => {
+        const result = selectVisibleScreeningRows({
+            latestSubmissionIds: new Set([
+                'member-one-latest',
+                'member-two-latest',
+            ]),
+            screeningRows,
+            submissionLimit: 1,
+        })
+
+        expect(result.isRestrictedToLatest)
+            .toBe(true)
+        expect(result.rows)
+            .toEqual([
+                screeningRows[2],
+                screeningRows[5],
             ])
     })
 })
