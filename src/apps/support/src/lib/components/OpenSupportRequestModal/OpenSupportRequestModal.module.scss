@@ -1,0 +1,68 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    min-width: 0;
+    width: 100%;
+}
+
+.challengeField {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    min-width: 0;
+
+    > label {
+        color: $black-80;
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+    }
+}
+
+.challengeSelect {
+    min-width: 0;
+    width: 100%;
+
+    :global(.support-challenge-select__control) {
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        box-shadow: none;
+        min-height: 42px;
+    }
+
+    :global(.support-challenge-select__control--is-focused) {
+        border-color: $turq-160;
+    }
+
+    :global(.support-challenge-select__menu) {
+        z-index: 10001;
+    }
+}
+
+:global(.support-challenge-select__menu-portal) {
+    z-index: 10001 !important;
+}
+
+.challengeError {
+    color: #8c1520;
+    font-size: 13px;
+    margin: 0;
+}
+
+.requestError {
+    background: #fff0f1;
+    border: 1px solid #d98b91;
+    border-radius: 4px;
+    color: #8c1520;
+    margin: 0;
+    padding: $sp-3;
+}
+
+@include ltemd {
+    .form {
+        width: 100%;
+    }
+}

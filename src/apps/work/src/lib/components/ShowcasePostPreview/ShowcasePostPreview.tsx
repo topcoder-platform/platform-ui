@@ -199,7 +199,7 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                                             </span>
                                                         )}
                                                         {typeof challenge.numOfRegistrants === 'number' && (
-                                                            <span>
+                                                            <span className={styles.statSeparator}>
                                                                 {challenge.numOfRegistrants}
                                                                 {' '}
                                                                 registrants

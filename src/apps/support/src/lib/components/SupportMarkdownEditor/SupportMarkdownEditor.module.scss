@@ -1,0 +1,19 @@
+@import '@libs/ui/styles/includes';
+
+.field {
+    min-width: 0;
+}
+
+.label {
+    color: $black-80;
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: $sp-2;
+}
+
+.error {
+    color: #c01b2b;
+    font-size: 13px;
+    margin: $sp-2 0 0;
+}

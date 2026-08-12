@@ -11,8 +11,14 @@ import {
     REVIEW_TYPES,
     ROUND_TYPES,
 } from '../constants/challenge-editor.constants'
-import { ChallengeEditorFormData } from '../models'
-import { isSkillsRequired } from '../utils/challenge-editor.utils'
+import {
+    ChallengeEditorFormData,
+    ChallengeReviewer,
+} from '../models'
+import {
+    isSkillsRequired,
+} from '../utils/challenge-editor.utils'
+import { isScreenerAssignmentOptional } from '../utils/reviewer.utils'
 
 function isSchedulingApiEnabled(value: unknown): boolean {
     return value !== false
@@ -218,16 +224,7 @@ const reviewerSchema = yup.object({
     isMemberReview: yup.boolean()
         .optional(),
     memberId: yup.string()
-        .when([
-            'isMemberReview',
-            'shouldOpenOpportunity',
-        ], {
-            is: (isMemberReview: boolean | undefined, shouldOpenOpportunity: boolean | undefined): boolean => (
-                isMemberReview !== false && shouldOpenOpportunity !== true
-            ),
-            otherwise: schema => schema.optional(),
-            then: schema => schema.required('Member is required when public review opportunity is closed'),
-        }),
+        .optional(),
     memberReviewerCount: yup.number()
         .transform(emptyStringToUndefined)
         .integer('Number of reviewers must be a positive integer')
@@ -254,63 +251,6 @@ const reviewerSchema = yup.object({
     type: yup.string()
         .optional(),
 })
-    .test(
-        'all-member-slots-required-when-opportunity-closed',
-        'All assigned member slots are required when public review opportunity is closed',
-        function validateMemberSlots(value: unknown): boolean | yup.ValidationError {
-            if (typeof value !== 'object' || !value) {
-                return true
-            }
-
-            const reviewer = value as {
-                additionalMemberIds?: unknown
-                isMemberReview?: boolean
-                memberId?: unknown
-                memberReviewerCount?: unknown
-                shouldOpenOpportunity?: boolean
-            }
-            const isMemberReview = reviewer.isMemberReview !== false
-            const shouldOpenOpportunity = reviewer.shouldOpenOpportunity === true
-
-            if (!isMemberReview || shouldOpenOpportunity) {
-                return true
-            }
-
-            const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)
-            const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
-                ? reviewer.additionalMemberIds
-                : []
-            const normalizedAssignedMemberSlots = [
-                reviewer.memberId,
-                ...additionalMemberIds,
-            ]
-                .slice(0, reviewerSlots)
-                .map(memberId => toNormalizedText(memberId))
-            const missingSlotIndex = normalizedAssignedMemberSlots.findIndex(memberId => !memberId)
-            const hasAllAssignments = normalizedAssignedMemberSlots.length === reviewerSlots
-                && missingSlotIndex === -1
-
-            if (hasAllAssignments) {
-                return true
-            }
-
-            const rootPath = this.path || ''
-            const firstMissingSlotIndex = missingSlotIndex >= 0
-                ? missingSlotIndex
-                : normalizedAssignedMemberSlots.length
-            const missingSlotFieldPath = firstMissingSlotIndex === 0
-                ? 'memberId'
-                : `additionalMemberIds.${firstMissingSlotIndex - 1}`
-            const validationPath = rootPath
-                ? `${rootPath}.${missingSlotFieldPath}`
-                : missingSlotFieldPath
-
-            return this.createError({
-                message: 'Assign all required members when public review opportunity is closed',
-                path: validationPath,
-            })
-        },
-    )
 
 type ChallengeBasicInfoFormData = Omit<
     ChallengeEditorFormData,
@@ -475,7 +415,60 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     reviewers: yup.array()
         .of(reviewerSchema)
-        .optional(),
+        .optional()
+        .test(
+            'all-member-slots-required-when-opportunity-closed',
+            'All assigned member slots are required when public review opportunity is closed',
+            function validateMemberSlots(value: unknown): boolean | yup.ValidationError {
+                if (!Array.isArray(value)) {
+                    return true
+                }
+
+                const phases = (this.parent as Partial<ChallengeEditorFormData>)?.phases
+
+                for (let reviewerIndex = 0; reviewerIndex < value.length; reviewerIndex += 1) {
+                    const reviewer = value[reviewerIndex] as ChallengeReviewer | undefined
+                    const isMemberReview = reviewer?.isMemberReview !== false
+                    const shouldOpenOpportunity = reviewer?.shouldOpenOpportunity === true
+                    const requiresMemberAssignments = !!reviewer
+                        && isMemberReview
+                        && !shouldOpenOpportunity
+                        && !isScreenerAssignmentOptional(reviewer, phases)
+
+                    if (requiresMemberAssignments) {
+                        const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)
+                        const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
+                            ? reviewer.additionalMemberIds
+                            : []
+                        const normalizedAssignedMemberSlots = [
+                            reviewer.memberId,
+                            ...additionalMemberIds,
+                        ]
+                            .slice(0, reviewerSlots)
+                            .map(memberId => toNormalizedText(memberId))
+                        const missingSlotIndex = normalizedAssignedMemberSlots.findIndex(memberId => !memberId)
+                        const hasAllAssignments = normalizedAssignedMemberSlots.length === reviewerSlots
+                            && missingSlotIndex === -1
+
+                        if (!hasAllAssignments) {
+                            const firstMissingSlotIndex = missingSlotIndex >= 0
+                                ? missingSlotIndex
+                                : normalizedAssignedMemberSlots.length
+                            const missingSlotFieldPath = firstMissingSlotIndex === 0
+                                ? 'memberId'
+                                : `additionalMemberIds.${firstMissingSlotIndex - 1}`
+
+                            return this.createError({
+                                message: 'Assign all required members when public review opportunity is closed',
+                                path: `${this.path}[${reviewerIndex}].${missingSlotFieldPath}`,
+                            })
+                        }
+                    }
+                }
+
+                return true
+            },
+        ),
     roundType: yup.string()
         .oneOf([
             ROUND_TYPES.SINGLE_ROUND,

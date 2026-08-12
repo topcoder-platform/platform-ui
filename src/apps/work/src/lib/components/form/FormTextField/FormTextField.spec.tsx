@@ -16,6 +16,11 @@ interface TestFormData {
     reviewerCount: number
 }
 
+interface TestHarnessProps {
+    defaultReviewerCount?: number
+    onChange?: (value: string) => void
+}
+
 /**
  * Mimics the reviewer count clamp used by `HumanReviewTab`.
  *
@@ -33,10 +38,10 @@ function sanitizeReviewerCount(value: string): string {
  * @returns the test form wrapper.
  * @throws Does not throw.
  */
-const TestHarness = (): JSX.Element => {
+const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<TestFormData>({
         defaultValues: {
-            reviewerCount: 1,
+            reviewerCount: props.defaultReviewerCount ?? 1,
         },
     })
 
@@ -46,6 +51,7 @@ const TestHarness = (): JSX.Element => {
                 label='Reviewer Count'
                 min={1}
                 name='reviewerCount'
+                onChange={props.onChange}
                 sanitize={sanitizeReviewerCount}
                 type='number'
             />
@@ -58,7 +64,9 @@ const TestHarness = (): JSX.Element => {
 
 describe('FormTextField', () => {
     it('does not dirty the form when sanitization keeps the rendered value unchanged', async () => {
-        render(<TestHarness />)
+        const onChange = jest.fn()
+
+        render(<TestHarness onChange={onChange} />)
 
         const reviewerCountInput = screen.getByRole('spinbutton', {
             name: 'Reviewer Count',
@@ -76,5 +84,38 @@ describe('FormTextField', () => {
         })
         expect(screen.getByTestId('is-dirty').textContent)
             .toBe('false')
+        expect(onChange)
+            .not
+            .toHaveBeenCalled()
+    })
+
+    it('reports the sanitized value after updating the form field', async () => {
+        const onChange = jest.fn()
+
+        render(
+            <TestHarness
+                defaultReviewerCount={2}
+                onChange={onChange}
+            />,
+        )
+
+        const reviewerCountInput = screen.getByRole('spinbutton', {
+            name: 'Reviewer Count',
+        }) as HTMLInputElement
+
+        fireEvent.change(reviewerCountInput, {
+            target: {
+                value: '0',
+            },
+        })
+
+        await waitFor(() => {
+            expect(reviewerCountInput.value)
+                .toBe('1')
+        })
+        expect(onChange)
+            .toHaveBeenCalledTimes(1)
+        expect(onChange)
+            .toHaveBeenCalledWith('1')
     })
 })

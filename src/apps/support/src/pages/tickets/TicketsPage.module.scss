@@ -1,0 +1,107 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    color: var(--FontColor);
+}
+
+.header {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-5;
+    justify-content: space-between;
+    margin-bottom: $sp-5;
+
+    h1 {
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 32px;
+        line-height: 40px;
+        margin: 0 0 $sp-2;
+    }
+
+    p {
+        color: $black-60;
+        line-height: 22px;
+        margin: 0;
+    }
+}
+
+.filters {
+    align-items: end;
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+    margin-bottom: $sp-5;
+    padding: $sp-4;
+
+    label {
+        color: $black-80;
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+        font-weight: 700;
+        gap: $sp-2;
+        min-width: 0;
+    }
+
+    > label > input {
+        border: 1px solid $black-40;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font: inherit;
+        min-height: 42px;
+        height: 42px;
+        padding: $sp-2 $sp-3;
+        width: 100%;
+    }
+
+    :global(.support-member-select__control) {
+        height: 42px;
+        min-height: 42px;
+    }
+}
+
+.filterActions,
+.pagination {
+    align-items: center;
+    display: flex;
+    gap: $sp-2;
+}
+
+.filterActions {
+    min-height: 42px;
+
+    > button {
+        height: 42px;
+    }
+}
+
+.pagination {
+    justify-content: flex-end;
+    margin-top: $sp-5;
+}
+
+.actionError {
+    background: #fff0f1;
+    border: 1px solid #d98b91;
+    border-radius: 5px;
+    color: #8c1520;
+    padding: $sp-3 $sp-4;
+}
+
+@include ltemd {
+    .header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    .pagination {
+        justify-content: center;
+    }
+}

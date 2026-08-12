@@ -1,0 +1,120 @@
+@import '@libs/ui/styles/includes';
+
+.wrapper {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.desktop {
+    overflow-x: auto;
+
+    table {
+        border-collapse: collapse;
+        min-width: 960px;
+        width: 100%;
+    }
+
+    th {
+        background: #f4f5f5;
+        color: $black-60;
+        font-size: 11px;
+        letter-spacing: .04em;
+        padding: $sp-3 $sp-4;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    td {
+        border-top: 1px solid $black-20;
+        line-height: 20px;
+        max-width: 340px;
+        padding: $sp-4;
+        vertical-align: top;
+    }
+
+    tbody tr {
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            box-shadow: inset 3px 0 var(--Actived);
+            outline: none;
+        }
+    }
+}
+
+.unread {
+    background: #eef8f9;
+    font-weight: 700;
+}
+
+.unreadBadge {
+    color: #076d78;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 3px;
+    white-space: nowrap;
+}
+
+.assignees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.muted {
+    color: $black-60;
+    font-weight: 400;
+}
+
+.mobile {
+    display: none;
+}
+
+.card {
+    border-bottom: 1px solid $black-20;
+    padding: $sp-4;
+
+    &:last-child {
+        border-bottom: 0;
+    }
+
+    h2 {
+        font-size: 17px;
+        line-height: 23px;
+        margin: 0 0 $sp-3;
+    }
+
+    p {
+        font-size: 13px;
+        margin: $sp-2 0;
+    }
+}
+
+.cardActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+    margin-top: $sp-4;
+}
+
+.srOnly {
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    position: absolute;
+    width: 1px;
+    clip: rect(0, 0, 0, 0);
+}
+
+@include ltemd {
+    .desktop {
+        display: none;
+    }
+
+    .mobile {
+        display: block;
+    }
+}

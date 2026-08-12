@@ -44,6 +44,16 @@ describe('TcSpecialRolesBanner styles', () => {
         expect(tcSpecialRolesBannerStyles).not
             .toMatch(/font-size: 22px;/)
     })
+
+    it('aligns the second role card with member stats on desktop', () => {
+        expect(tcSpecialRolesBannerStyles)
+            .toMatch(new RegExp(
+                '@include gtexl \\{[\\s\\S]*?'
+                + '@container \\(min-width: 656px\\) \\{[\\s\\S]*?'
+                + '\\.roleCard \\+ \\.roleCard \\{[\\s\\S]*?'
+                + 'margin-left: \\$sp-10;',
+            ))
+    })
 })
 
 /**

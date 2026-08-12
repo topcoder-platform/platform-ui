@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.tabs {
+    border-bottom: 1px solid $black-20;
+    display: flex;
+    gap: $sp-6;
+    margin-bottom: $sp-6;
+}
+
+.tab {
+    border-bottom: 3px solid transparent;
+    color: var(--FontColor);
+    font-size: 16px;
+    font-weight: 600;
+    padding: $sp-3 $sp-1;
+    text-decoration: none;
+
+    &:focus-visible {
+        outline: 2px solid var(--Actived);
+        outline-offset: 2px;
+    }
+}
+
+.active {
+    border-bottom-color: var(--Actived);
+    color: var(--Actived);
+}

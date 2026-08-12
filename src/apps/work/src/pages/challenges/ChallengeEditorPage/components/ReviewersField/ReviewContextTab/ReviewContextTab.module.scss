@@ -51,6 +51,21 @@
     margin-top: 16px;
 }
 
+.reviewContextActions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+}
+
+@media (min-width: 640px) {
+    .reviewContextActions {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
 .regenerateToolbar {
     display: flex;
     justify-content: space-between;
