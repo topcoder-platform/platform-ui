@@ -14,7 +14,7 @@ import {
 } from '~/libs/core'
 import { Tooltip } from '~/libs/ui'
 
-import { EditMemberPropertyBtn } from '../../../components'
+import { AddButton, EditMemberPropertyBtn } from '../../../components'
 import { getPreferredRolesText } from '../../../lib'
 
 import {
@@ -118,35 +118,38 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
             return <></>
         }
 
+        if (preferredRoles.length === 0) {
+            return (
+                <div className={styles.preferredRolesWrap}>
+                    <AddButton
+                        className={styles.preferredRolesAddButton}
+                        label='Add preferred roles'
+                        onClick={handlePreferredRolesModalOpen}
+                        variant='mt0'
+                    />
+                </div>
+            )
+        }
+
         return (
             <div className={styles.preferredRolesWrap}>
-                {preferredRoles.length > 0 ? (
-                    <div className={styles.preferredRolesList}>
-                        {preferredRolesDisplay.visibleRoles.map((role: string) => (
-                            <span className={styles.preferredRole} key={role}>
-                                {role}
-                            </span>
-                        ))}
+                <div className={styles.preferredRolesList}>
+                    {preferredRolesDisplay.visibleRoles.map((role: string) => (
+                        <span className={styles.preferredRole} key={role}>
+                            {role}
+                        </span>
+                    ))}
 
-                        {preferredRolesDisplay.toggleLabel && (
-                            <button
-                                className={styles.preferredRolesToggle}
-                                onClick={handlePreferredRolesToggle}
-                                type='button'
-                            >
-                                {preferredRolesDisplay.toggleLabel}
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <button
-                        className={styles.preferredRolesPlaceholder}
-                        onClick={handlePreferredRolesModalOpen}
-                        type='button'
-                    >
-                        Add preferred roles
-                    </button>
-                )}
+                    {preferredRolesDisplay.toggleLabel && (
+                        <button
+                            className={styles.preferredRolesToggle}
+                            onClick={handlePreferredRolesToggle}
+                            type='button'
+                        >
+                            {preferredRolesDisplay.toggleLabel}
+                        </button>
+                    )}
+                </div>
 
                 {canEditPreferredRoles && (
                     <EditMemberPropertyBtn
