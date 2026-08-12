@@ -1287,7 +1287,10 @@ export const ChallengeEditorPage: FC = () => {
     const isBudgetApproved = isBudgetApprovedForLaunch(
         challengeApprovalStatus || headerChallenge?.approvalStatus,
     )
-    const isLaunchDisabled = isLaunching || isSavingChallenge || !isBudgetApproved
+    const requiresBudgetApproval = headerChallenge?.funChallenge !== true
+    const isLaunchDisabled = isLaunching
+        || isSavingChallenge
+        || (requiresBudgetApproval && !isBudgetApproved)
     const handleSavingChange = useCallback((isSaving: boolean): void => {
         setIsSavingChallenge(isSaving)
     }, [])

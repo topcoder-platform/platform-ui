@@ -3220,6 +3220,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             if (
                 isChallengeBeingActivated
+                && formData.funChallenge !== true
                 && normalizeStatus(formData.approvalStatus) !== CHALLENGE_APPROVAL_STATUS.APPROVED
             ) {
                 setSaveStatus('idle')

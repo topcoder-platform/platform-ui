@@ -838,6 +838,7 @@ describe('ChallengeEditorForm', () => {
     } as Challenge
     const validDraftChallenge = {
         ...draftChallenge,
+        approvalStatus: 'APPROVED',
         description: 'Valid public specification for the attachment save regression test.',
         prizeSets: [{
             prizes: [{
@@ -959,7 +960,11 @@ describe('ChallengeEditorForm', () => {
             },
         })
         mockedUseFetchProjectBillingAccount.mockReturnValue({
-            billingAccount: undefined,
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
             isLoading: false,
         })
         mockedUseFetchResourceRoles.mockImplementation(() => ({
@@ -1181,7 +1186,10 @@ describe('ChallengeEditorForm', () => {
             <MemoryRouter>
                 <WorkAppContext.Provider value={managerContextValue}>
                     <ChallengeEditorForm
-                        challenge={validDraftChallenge}
+                        challenge={{
+                            ...validDraftChallenge,
+                            approvalStatus: 'PENDING_APPROVAL',
+                        }}
                         isReadOnly
                     />
                 </WorkAppContext.Provider>
@@ -1848,6 +1856,60 @@ describe('ChallengeEditorForm', () => {
                     status: 'ACTIVE',
                 }))
         })
+    })
+
+    it('launches a fun challenge without budget approval', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            approvalStatus: 'APPROVED',
+            funChallenge: true,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        approvalStatus: 'PENDING_APPROVAL',
+                        funChallenge: true,
+                    }}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    funChallenge: true,
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Challenge launch is blocked until budget approval is Approved.')
     })
 
     it('launches a design draft before a screener member is assigned', async () => {
@@ -3378,6 +3440,11 @@ describe('ChallengeEditorForm', () => {
     it('blocks launch with a clear reason when the project has no billing account', async () => {
         let launchAction: (() => Promise<void>) | undefined
         let launchError: Error | undefined
+
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: undefined,
+            isLoading: false,
+        })
 
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
