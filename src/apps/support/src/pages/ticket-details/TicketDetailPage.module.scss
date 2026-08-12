@@ -12,9 +12,11 @@
     text-decoration: none;
 }
 
-.challengeLink {
-    color: var(--Actived);
+.challengeLink,
+.challengeLink:hover {
+    color: $link-blue-dark;
     font-weight: 700;
+    text-decoration: underline;
 }
 
 .header {
