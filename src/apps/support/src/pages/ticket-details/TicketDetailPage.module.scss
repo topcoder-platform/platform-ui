@@ -107,7 +107,7 @@
     margin: 0;
     padding: 0;
 
-    li {
+    > li {
         border-left: 3px solid #9acfd3;
         padding: 0 0 $sp-5 $sp-5;
         position: relative;
@@ -182,7 +182,7 @@
         flex-direction: column;
     }
 
-    .timeline li {
+    .timeline > li {
         padding-left: $sp-4;
     }
 

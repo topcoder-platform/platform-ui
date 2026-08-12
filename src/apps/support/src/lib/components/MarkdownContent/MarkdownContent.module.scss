@@ -1,6 +1,59 @@
+@import '@libs/ui/styles/includes';
+
 .markdown {
     line-height: 1.55;
     overflow-wrap: anywhere;
+
+    a,
+    a:hover {
+        color: $link-blue-dark;
+        text-decoration: underline;
+    }
+
+    strong {
+        font-weight: $font-weight-bold;
+    }
+
+    em {
+        font-style: italic;
+    }
+
+    h1,
+    h2,
+    h3 {
+        font-weight: $font-weight-bold;
+        margin: $sp-4 0 $sp-2;
+    }
+
+    h1 {
+        font-size: 24px;
+        line-height: 28px;
+    }
+
+    h2 {
+        font-size: 20px;
+        line-height: 24px;
+    }
+
+    h3 {
+        font-size: 18px;
+        line-height: 22px;
+    }
+
+    ol,
+    ul {
+        list-style-position: outside;
+        margin: $sp-3 0;
+        padding-left: $sp-6;
+    }
+
+    ol {
+        list-style-type: decimal;
+    }
+
+    ul {
+        list-style-type: disc;
+    }
 
     > :first-child {
         margin-top: 0;
