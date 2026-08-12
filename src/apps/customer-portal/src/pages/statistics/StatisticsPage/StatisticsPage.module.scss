@@ -306,6 +306,12 @@
             height: 100vh !important;
         }
     }
+
+    @include ltesm {
+        :global(.highcharts-legend-item text) {
+            font-size: 10px !important;
+        }
+    }
 }
 
 .mapFullscreenButton {

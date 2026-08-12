@@ -157,11 +157,6 @@ function normalizeCountryRows(
             return
         }
 
-        if (row['country.country_name'] === 'Taiwan') {
-            console.log('here', row)
-
-        }
-
         const code = toAlpha2CountryCode(lookup.countryCode)
         const current = countries.get(code)
         const topWinners = (row.topWinners || [])
