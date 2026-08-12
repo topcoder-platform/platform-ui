@@ -204,6 +204,7 @@
     transform: translateX(-50%);
     width: 0;
     z-index: 2;
+    left: 50%;
 
     &::after {
         background: currentColor;
@@ -217,11 +218,9 @@
 }
 
 .markerBadge {
-    align-items: center;
-    display: flex;
-    gap: $sp-2;
+    flex-shrink: 0;
     position: relative;
-    transform: translateX(34px);
+    width: 32px;
     z-index: 1;
 }
 
@@ -230,10 +229,10 @@
         top: $sp-14;
     }
 
-    .markerBadge {
-        flex-direction: column;
-        gap: $sp-1;
-        transform: translateX(0);
+    .markerRating {
+        left: 50%;
+        top: calc(100% + #{$sp-1});
+        transform: translateX(-50%);
     }
 }
 
@@ -274,7 +273,12 @@
     font-family: $font-roboto;
     font-size: 13px;
     font-weight: $font-weight-bold;
+    left: calc(100% + #{$sp-2});
     line-height: 18px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
 }
 
 .axisLabels {
