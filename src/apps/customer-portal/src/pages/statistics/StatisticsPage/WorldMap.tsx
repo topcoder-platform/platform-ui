@@ -311,6 +311,30 @@ function renderCountryTooltip(point: StatisticsMapPoint): string {
     `
 }
 
+function getFixedTooltipPosition(
+    labelWidth: number,
+    labelHeight: number,
+    point: Highcharts.Point,
+    chart: Highcharts.Chart,
+): Highcharts.PositionObject {
+    const chartRenderTo = (chart as unknown as { renderTo: HTMLElement }).renderTo
+    const chartRect = chartRenderTo.getBoundingClientRect()
+    const plotX = (point.plotX ?? 0) + chart.plotLeft
+    const plotY = (point.plotY ?? 0) + chart.plotTop
+    const pointX = chartRect.left + plotX
+    const pointY = chartRect.top + plotY
+    const minOffset = 12
+    const offsetAbove = 14
+
+    return {
+        x: Math.min(
+            Math.max(pointX - Math.round(labelWidth / 2), minOffset),
+            window.innerWidth - labelWidth - minOffset,
+        ),
+        y: Math.max(pointY - labelHeight - offsetAbove, minOffset),
+    }
+}
+
 function createTooltipFormatter(
     props: Pick<WorldMapProps, 'showWinnerDetails'>,
 ): Highcharts.TooltipFormatterCallbackFunction {
@@ -515,7 +539,28 @@ const WorldMap: FC<WorldMapProps> = props => {
                     showWinnerDetails: props.showWinnerDetails,
                 }),
                 padding: 0,
+                positioner: (
+                    labelWidth: number,
+                    labelHeight: number,
+                    point: Highcharts.Point,
+                ): Highcharts.PositionObject => {
+                    const chart = chartRef.current?.chart as Highcharts.Chart | undefined
+
+                    if (!chart) {
+                        return { x: 0, y: 0 }
+                    }
+
+                    return getFixedTooltipPosition(
+                        labelWidth,
+                        labelHeight,
+                        point,
+                        chart,
+                    )
+                },
                 shadow: false,
+                style: {
+                    position: 'fixed',
+                },
                 useHTML: true,
             },
         }),
