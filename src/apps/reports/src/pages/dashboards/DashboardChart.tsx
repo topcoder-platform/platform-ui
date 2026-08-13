@@ -50,7 +50,7 @@ function getSeriesValue(month: DashboardMonth, key: string): number {
  *
  * @param props Dashboard response and compact-card presentation flag.
  * @returns A stacked or grouped column chart with month categories along the
- * bottom axis and an accessible monthly data table.
+ * bottom axis, monthly tooltip totals, and an accessible monthly data table.
  * @throws Does not throw. Invalid or absent point values are rendered as zero.
  */
 export const DashboardChart: FC<DashboardChartProps> = props => {
@@ -119,6 +119,29 @@ export const DashboardChart: FC<DashboardChartProps> = props => {
             text: undefined,
         },
         tooltip: {
+            /**
+             * Appends the hovered month's total to Highcharts' shared tooltip.
+             *
+             * Highcharts invokes this callback for card and detail charts.
+             *
+             * @param tooltip Highcharts tooltip used to render the existing rows.
+             * @returns The default tooltip content followed by the formatted total.
+             * @throws Does not throw for the normalized chart-series values.
+             */
+            formatter(tooltip: Highcharts.Tooltip) {
+                // Highcharts supplies the shared tooltip context through `this`.
+                // eslint-disable-next-line react/no-this-in-sfc
+                const points = this.points || [this]
+                const total = points.reduce((sum, point) => sum + (point.y ?? 0), 0)
+                // eslint-disable-next-line react/no-this-in-sfc
+                const content = tooltip.defaultFormatter.call(this, tooltip)
+                const totalRow = `Total: <b>${isCurrency ? '$' : ''}`
+                    + `${Highcharts.numberFormat(total, 0)}</b>`
+
+                return Array.isArray(content)
+                    ? [...content, totalRow]
+                    : `${content}${totalRow}`
+            },
             headerFormat: '<strong>{point.key}</strong><br/>',
             pointFormat: '<span style="color:{series.color}">●</span> '
                 + `{series.name}: <b>${isCurrency ? '$' : ''}{point.y:,.0f}</b><br/>`,
