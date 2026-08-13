@@ -17,12 +17,13 @@ import {
 import { IconOutline, LoadingSpinner } from '~/libs/ui'
 
 import {
+    ChallengeDescription,
     ChallengeDetailHeader,
-    ChallengeMarkdown,
     ChallengeSidebar,
     ChallengeTermsModal,
     ChallengeTocItem,
     extractTableOfContents,
+    isHtmlDescriptionFormat,
     OpportunityPagination,
     ReportIssueModal,
 } from '../components'
@@ -36,12 +37,14 @@ import {
 import {
     agreeToChallengeTerms,
     getChallengeOpportunity,
+    getChallengeRegistration,
     getChallengeSubmissionPreviews,
     getChallengeSubmissions,
     getChallengeSubmitters,
     registerForChallenge,
     unregisterFromChallenge,
 } from '../services'
+import { challengeForumUrl } from '../utils'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -93,12 +96,12 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false },
     )
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
-    const registrationResponse: SWRResponse<ChallengeResource[], Error> = useSWR(
+    const registrationResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
         challengeId && memberId ? ['opportunities:registration', challengeId, memberId] : undefined,
-        () => getChallengeSubmitters(challengeId, memberId),
+        () => getChallengeRegistration(challengeId, memberId as string),
         { revalidateOnFocus: false },
     )
-    const registration = registrationResponse.data?.[0]
+    const registration = registrationResponse.data
     const challenge = challengeResponse.data
     const tabs = useMemo<TabConfig[]>(() => [
         { id: 'requirements', label: 'Requirements' },
@@ -255,10 +258,14 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     return <WinnersTab challenge={props.challenge} />
 }
 
-/** Renders the Markdown requirements and generated table of contents. */
+/** Renders format-aware requirements and a Markdown-only table of contents. */
 const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
-    const markdown = props.challenge.description || props.challenge.overview || 'Requirements are not available yet.'
-    const toc = useMemo(() => extractTableOfContents(markdown), [markdown])
+    const description = props.challenge.description || props.challenge.overview || 'Requirements are not available yet.'
+    const htmlFormat = isHtmlDescriptionFormat(props.challenge.descriptionFormat)
+    const toc = useMemo(
+        () => (htmlFormat ? [] : extractTableOfContents(description)),
+        [description, htmlFormat],
+    )
 
     return (
         <div className={styles.requirements}>
@@ -278,7 +285,11 @@ const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
                 </nav>
             )}
             <ChallengeTimeline challenge={props.challenge} />
-            <ChallengeMarkdown markdown={markdown} />
+            <ChallengeDescription
+                content={description}
+                format={props.challenge.descriptionFormat}
+                privateDescription={props.challenge.privateDescription}
+            />
         </div>
     )
 }
@@ -310,16 +321,30 @@ const ChallengeTimeline: FC<{ challenge: ChallengeOpportunity }> = props => (
 
 /** Loads registrants only after the Registrants tab is selected. */
 const RegistrantsTab: FC<{ challengeId: string }> = props => {
-    const response: SWRResponse<ChallengeResource[], Error> = useSWR(
-        ['opportunities:registrants', props.challengeId],
-        () => getChallengeSubmitters(props.challengeId),
+    const [page, setPage] = useState(1)
+    const [perPage, setPerPage] = useState(20)
+    const response: SWRResponse<OpportunityPage<ChallengeResource>, Error> = useSWR(
+        ['opportunities:registrants', props.challengeId, page, perPage],
+        () => getChallengeSubmitters(props.challengeId, page, perPage),
         { revalidateOnFocus: false },
     )
     if (response.isValidating && !response.data) return <LoadingSpinner />
     if (response.error) return <TabError onRetry={() => response.mutate()} />
+    if (!response.data?.items.length) return <EmptyTab text='No registrants are visible yet.' />
     return (
         <div className={styles.tableCard}>
-            <h2>{`Registrants (${response.data?.length ?? 0})`}</h2>
+            <h2>{`Registrants (${response.data.total})`}</h2>
+            <OpportunityPagination
+                onPageChange={setPage}
+                onPerPageChange={(value: number) => {
+                    setPerPage(value)
+                    setPage(1)
+                }}
+                page={response.data.page}
+                perPage={response.data.perPage}
+                total={response.data.total}
+                totalPages={response.data.totalPages}
+            />
             <table>
                 <thead>
                     <tr>
@@ -328,7 +353,7 @@ const RegistrantsTab: FC<{ challengeId: string }> = props => {
                     </tr>
                 </thead>
                 <tbody>
-                    {response.data?.map(resource => (
+                    {response.data.items.map(resource => (
                         <tr key={resource.id}>
                             <td>{resource.memberHandle || resource.memberId || 'Member'}</td>
                             <td>{resource.memberId || '—'}</td>
@@ -469,21 +494,21 @@ const SubmissionPreview: FC<{ submission: ChallengeSubmission }> = props => {
 
 /** Renders the forum handoff without loading forum data before selection. */
 const ForumTab: FC<{ challenge: ChallengeOpportunity }> = props => (
-    <div className={styles.calloutTab}>
-        <IconOutline.ChatAlt2Icon />
-        <h2>Challenge Forum</h2>
-        <p>Ask questions and follow clarifications from the challenge team.</p>
-        <a
-            href={props.challenge.forumId
-                ? `https://discussions.topcoder.com/discussion/${props.challenge.forumId}`
-                : 'https://discussions.topcoder.com/'}
-            rel='noreferrer'
-            target='_blank'
-        >
-            Open forum
-            <IconOutline.ExternalLinkIcon />
-        </a>
-    </div>
+    challengeForumUrl(props.challenge) ? (
+        <div className={styles.calloutTab}>
+            <IconOutline.ChatAlt2Icon />
+            <h2>Challenge Forum</h2>
+            <p>Ask questions and follow clarifications from the challenge team.</p>
+            <a
+                href={challengeForumUrl(props.challenge)}
+                rel='noreferrer'
+                target='_blank'
+            >
+                Open forum
+                <IconOutline.ExternalLinkIcon />
+            </a>
+        </div>
+    ) : <EmptyTab text='A challenge forum is not available.' />
 )
 
 /** Renders challenge winners once present in the Challenge API response. */

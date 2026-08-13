@@ -104,6 +104,28 @@ export function formatEngagementDuration(item: EngagementOpportunity): string {
 }
 
 /**
+ * Resolves member-facing Engagement skill labels from the hydrated API field.
+ *
+ * @param item Engagement API response.
+ * @returns hydrated names, or legacy required-skill IDs when names are absent.
+ * @throws Does not throw.
+ */
+export function engagementSkillNames(item: EngagementOpportunity): string[] {
+    /**
+     * Trims, removes empty labels, and deduplicates names for stable card keys.
+     *
+     * @param values raw API skill labels or IDs.
+     * @returns normalized unique labels in source order.
+     * @throws Does not throw.
+     */
+    const normalizedNames = (values: string[]): string[] => Array.from(new Set(values
+        .map(value => value.trim())
+        .filter(Boolean)))
+    const names = normalizedNames((item.skills ?? []).map(skill => skill.name))
+    return names.length ? names : normalizedNames(item.requiredSkills ?? [])
+}
+
+/**
  * Converts an API enum token into title-cased words for card metadata.
  *
  * @param value underscore-delimited enum value.
@@ -205,7 +227,7 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
                 value: item.compensationRange || 'Negotiable',
             },
         ],
-        skills: item.requiredSkills ?? [],
+        skills: engagementSkillNames(item),
         state: item.status === 'OPEN' ? 'Open for application' : item.status,
         title: item.title,
         type: enumLabel(item.workload),

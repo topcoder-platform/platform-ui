@@ -8,12 +8,13 @@ import {
 import { paginationWindow } from './OpportunityPagination'
 import { requiresExternalAgreement } from './ChallengeTermsModal'
 import {
+    engagementSkillNames,
     formatAnticipatedStart,
     formatEngagementDuration,
     reviewApplicationTotal,
 } from './OpportunityListCard'
 import { buildLegacyOpportunityRedirect } from '../pages/LegacyOpportunityRedirectPage'
-import { parseSkillsFilter } from '../utils'
+import { parseSkillsFilter } from '../utils/opportunity-filter.utils'
 
 jest.mock('react-markdown', () => () => undefined)
 jest.mock('remark-breaks', () => jest.fn())
@@ -73,6 +74,27 @@ describe('opportunity presentation utilities', () => {
             .toBe('Immediate')
         expect(formatAnticipatedStart('FEW_WEEKS'))
             .toBe('In a few weeks')
+    })
+
+    it('prefers hydrated Engagement skill names with a legacy ID fallback', () => {
+        expect(engagementSkillNames({
+            id: 'hydrated-engagement',
+            requiredSkills: ['react-uuid', 'figma-uuid'],
+            skills: [
+                { id: 'react-uuid', name: 'React' },
+                { id: 'react-duplicate', name: ' React ' },
+                { id: 'blank-skill', name: '   ' },
+                { id: 'figma-uuid', name: 'Figma' },
+            ],
+            title: 'Frontend Engineer',
+        }))
+            .toEqual(['React', 'Figma'])
+        expect(engagementSkillNames({
+            id: 'legacy-engagement',
+            requiredSkills: ['react-uuid'],
+            title: 'Legacy Engineer',
+        }))
+            .toEqual(['react-uuid'])
     })
 
     it('normalizes editable comma-separated skill facets', () => {

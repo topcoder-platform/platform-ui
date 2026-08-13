@@ -1,4 +1,4 @@
-/* eslint-disable ordered-imports/ordered-imports */
+/* eslint-disable no-script-url, ordered-imports/ordered-imports */
 
 import type { CmsResource } from '~/libs/cms'
 
@@ -11,12 +11,29 @@ import {
     getMarkdownPreview,
     getRootThriveCategories,
     getThriveArticleUrl,
+    getThriveExternalUrl,
     groupThriveCategories,
     parseThriveFilters,
 } from './thrive.utils'
 
 jest.mock('~/libs/cms', () => ({
     getCmsResourceAssetUrl: jest.fn(),
+    getSafeCmsLink: (value?: string) => {
+        if (!value) return undefined
+        try {
+            const url = new URL(value, 'https://topcoder-dev.com')
+            const safeProtocol = ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)
+                || value.startsWith('#')
+            const retiredHost = url.hostname === 'contentful.com'
+                || url.hostname.endsWith('.contentful.com')
+                || url.hostname === 'ctfassets.net'
+                || url.hostname.endsWith('.ctfassets.net')
+                || url.hostname.includes('octana')
+            return safeProtocol && !retiredHost ? value : undefined
+        } catch (error) {
+            return undefined
+        }
+    },
 }), { virtual: true })
 
 describe('Thrive utilities', () => {
@@ -88,6 +105,33 @@ describe('Thrive utilities', () => {
             type: 'Article',
         }))
             .toBe('https://www.topcoder.com/article')
+    })
+
+    it.each([
+        'javascript:alert(1)',
+        'data:text/html,<script>alert(1)</script>',
+        'vbscript:msgbox(1)',
+        'mailto:member@example.com',
+        'tel:+15555555555',
+        '#article-section',
+        '/thrive/articles/local-article',
+        'https://images.ctfassets.net/legacy/image.png',
+        'https://cdn.contentful.com/legacy/article',
+        'https://api.octana.io/article',
+    ])('fails closed to the local article route for unsafe external URL %s', contentUrl => {
+        const article = {
+            content: '',
+            contentUrl,
+            externalArticle: true,
+            slug: 'safe-local-fallback',
+            title: 'External',
+            type: 'Article' as const,
+        }
+
+        expect(getThriveExternalUrl(article))
+            .toBeUndefined()
+        expect(getThriveArticleUrl(article))
+            .toBe('/thrive/articles/safe-local-fallback')
     })
 
     it('creates plain compact previews from markdown', () => {

@@ -17,3 +17,9 @@ Set `REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN` to the Payload delivery credential 
 `piwi0eufbb2g`. The token is sent as a bearer credential and is never placed in a query string. Missing or
 rejected credentials produce a visible page error; there is deliberately no Contentful, Octana, or
 community-app proxy fallback.
+
+External article redirects, article cards, and video links all use the shared
+CMS safe-link policy. Unsafe schemes and retired Contentful, CTF Assets, or
+Octana hosts are never exposed; unsafe card targets fall back to the local
+article route, while a direct unsafe external-article route fails closed with
+an in-page unavailable state.

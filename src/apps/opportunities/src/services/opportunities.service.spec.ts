@@ -3,6 +3,7 @@ import { xhrGetAsync, xhrGlobalInstance, xhrPostAsync } from '~/libs/core'
 import {
     buildOpportunityPageUrl,
     getChallengeSubmissionPreviews,
+    getChallengeRegistration,
     getChallengeSubmitterTermsDetails,
     getChallengeSubmitters,
     getChallengeTermDocuSignUrl,
@@ -196,24 +197,76 @@ describe('opportunities service normalization', () => {
 
     it('resolves and retains only Submitter challenge resources', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
-        get
-            .mockResolvedValueOnce([
-                { id: 'submitter-role', name: 'Submitter' },
-                { id: 'reviewer-role', name: 'Reviewer' },
-            ])
-            .mockResolvedValueOnce([
-                { challengeId: 'challenge', id: 'submitter', roleId: 'submitter-role' },
-                { challengeId: 'challenge', id: 'reviewer', roleId: 'reviewer-role' },
-            ])
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce([
+            { id: 'submitter-role', name: 'Submitter' },
+            { id: 'reviewer-role', name: 'Reviewer' },
+        ])
+        globalGet.mockResolvedValueOnce({
+            data: [{ challengeId: 'challenge', id: 'submitter', roleId: 'submitter-role' }],
+            headers: {
+                get: (name: string) => ({
+                    'x-page': '2',
+                    'x-per-page': '20',
+                    'x-total': '31',
+                    'x-total-pages': '2',
+                } as Record<string, string>)[name],
+            },
+        })
 
-        await expect(getChallengeSubmitters('challenge'))
-            .resolves.toEqual([
-                { challengeId: 'challenge', id: 'submitter', roleId: 'submitter-role' },
-            ])
-        expect(get)
+        await expect(getChallengeSubmitters('challenge', 2, 20))
+            .resolves.toEqual({
+                items: [{ challengeId: 'challenge', id: 'submitter', roleId: 'submitter-role' }],
+                page: 2,
+                perPage: 20,
+                total: 31,
+                totalPages: 2,
+            })
+        expect(globalGet)
             .toHaveBeenLastCalledWith(
-                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=500&roleId=submitter-role',
+                'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role',
             )
+    })
+
+    it('uses a bounded member-scoped Submitter page for registration state', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+        globalGet.mockResolvedValueOnce({
+            data: [{ challengeId: 'challenge', id: 'self', memberId: '123', roleId: 'submitter-role' }],
+            headers: { get: () => undefined },
+        })
+
+        await expect(getChallengeRegistration('challenge', '123'))
+            .resolves.toEqual({ challengeId: 'challenge', id: 'self', memberId: '123', roleId: 'submitter-role' })
+
+        expect(globalGet)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=1'
+                + '&memberId=123&roleId=submitter-role',
+            )
+    })
+
+    it('never treats another member or role as the caller registration', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{ challengeId: 'challenge', id: 'other', memberId: '456', roleId: 'submitter-role' }],
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: [{ challengeId: 'challenge', id: 'reviewer', memberId: '123', roleId: 'reviewer-role' }],
+                headers: { get: () => undefined },
+            })
+
+        await expect(getChallengeRegistration('challenge', '123'))
+            .resolves.toBeUndefined()
+        await expect(getChallengeRegistration('challenge', '123'))
+            .resolves.toBeUndefined()
     })
 
     it('globally filters and pages My competitions in one role-aware Challenge API request', async () => {

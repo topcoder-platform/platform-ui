@@ -447,24 +447,30 @@ export async function getChallengeSubmissionPreviews(
  * Loads resources belonging to a challenge, optionally scoped to one member.
  *
  * @param challengeId challenge UUID.
+ * @param page one-based Resource API page.
+ * @param perPage bounded page size.
  * @param memberId optional authenticated member ID.
  * @param roleId optional canonical resource-role ID.
- * @returns challenge resources visible to the caller.
+ * @returns paginated challenge resources visible to the caller.
  * @throws Propagates Resource API and network errors.
  */
 export async function getChallengeResources(
     challengeId: string,
+    page: number,
+    perPage: number,
     memberId?: string,
     roleId?: string,
-): Promise<ChallengeResource[]> {
+): Promise<OpportunityPage<ChallengeResource>> {
     const url = new URL(`${V6_URL}/resources`)
     url.searchParams.set('challengeId', challengeId)
-    url.searchParams.set('page', '1')
-    url.searchParams.set('perPage', '500')
+    url.searchParams.set('page', String(Math.max(1, page)))
+    url.searchParams.set('perPage', String(Math.max(1, perPage)))
     if (memberId) url.searchParams.set('memberId', memberId)
     if (roleId) url.searchParams.set('roleId', roleId)
-    const response = await xhrGetAsync<ChallengeResource[] | ApiEnvelope<ChallengeResource[]>>(url.toString())
-    return unwrap(response)
+    const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
+        ChallengeResource[] | ApiEnvelope<ChallengeResource[]> | ApiListResponse<ChallengeResource>
+    >
+    return normalizePage(response, page, perPage)
 }
 
 /**
@@ -489,17 +495,41 @@ export async function getSubmitterRole(): Promise<ChallengeResourceRole> {
  * reviewer, observer, and manager resources as registrations.
  *
  * @param challengeId challenge UUID.
+ * @param page one-based Resource API page.
+ * @param perPage bounded page size.
  * @param memberId optional authenticated member ID.
- * @returns resources whose role matches the canonical Submitter role.
+ * @returns paginated resources whose role matches the canonical Submitter role.
  * @throws Propagates role resolution, Resource API, and network errors.
  */
 export async function getChallengeSubmitters(
     challengeId: string,
+    page: number,
+    perPage: number,
     memberId?: string,
-): Promise<ChallengeResource[]> {
+): Promise<OpportunityPage<ChallengeResource>> {
     const role = await getSubmitterRole()
-    const resources = await getChallengeResources(challengeId, memberId, role.id)
-    return resources.filter(resource => resource.roleId === role.id)
+    return getChallengeResources(challengeId, page, perPage, memberId, role.id)
+}
+
+/**
+ * Resolves the authenticated member's own canonical Submitter resource.
+ * The response is rechecked defensively so a broad or stale Resource API page
+ * can never enable unregister for another member or another resource role.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberId authenticated member ID.
+ * @returns caller-owned Submitter resource, or undefined when absent/mismatched.
+ * @throws Propagates role resolution, authorization, and Resource API errors.
+ */
+export async function getChallengeRegistration(
+    challengeId: string,
+    memberId: string,
+): Promise<ChallengeResource | undefined> {
+    const role = await getSubmitterRole()
+    const resources = await getChallengeResources(challengeId, 1, 1, memberId, role.id)
+    return resources.items.find(resource => (
+        String(resource.memberId) === memberId && resource.roleId === role.id
+    ))
 }
 
 /**

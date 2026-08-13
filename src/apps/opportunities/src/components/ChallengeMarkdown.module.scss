@@ -84,3 +84,17 @@
         }
     }
 }
+
+.privateDetails {
+    border-top: 1px solid #cfd7dc;
+    margin-top: 28px;
+    padding-top: 4px;
+
+    > h2 {
+        color: #15191c;
+        font-family: 'Figtree', sans-serif;
+        font-size: 20px;
+        margin: 24px 0 12px;
+        text-transform: none;
+    }
+}

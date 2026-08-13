@@ -9,6 +9,7 @@ import {
     getMarkdownPreview,
     getThriveArticleUrl,
     getThriveAuthors,
+    getThriveExternalUrl,
     getThriveImageUrl,
 } from '../utils'
 import styles from '../Thrive.module.scss'
@@ -30,7 +31,7 @@ export const ThriveArticleCard: FC<ThriveArticleCardProps> = (props: ThriveArtic
     const authors = getThriveAuthors(fields)
     const href = getThriveArticleUrl(fields)
     const image = getThriveImageUrl(props.article)
-    const external = fields.externalArticle && Boolean(fields.contentUrl)
+    const external = Boolean(getThriveExternalUrl(fields))
     const content = (
         <>
             {image && <img alt='' className={styles.cardImage} loading='lazy' src={image} />}

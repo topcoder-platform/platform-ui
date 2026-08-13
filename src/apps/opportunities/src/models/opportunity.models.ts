@@ -46,19 +46,52 @@ export interface ChallengeTerm {
     url?: string
 }
 
-export interface ChallengeOpportunity {
+export interface ChallengeAttachment {
     description?: string
+    fileSize?: number
+    id: string
+    name?: string
+    url?: string
+}
+
+export interface ChallengeDiscussion {
+    id?: string
+    name?: string
+    provider?: string
+    type?: string
+    url?: string
+}
+
+export interface ChallengeLegacy {
+    forumId?: number
+    reviewScorecardId?: number
+    screeningScorecardId?: number
+}
+
+export interface ChallengeMetadata {
+    name: string
+    value: unknown
+}
+
+export interface ChallengeOpportunity {
+    attachments?: ChallengeAttachment[]
+    description?: string
+    descriptionFormat?: string
+    discussions?: ChallengeDiscussion[]
     endDate?: string
     events?: Array<{ key?: string; name?: string }>
     forumId?: number
     id: string
     legacyId?: number
+    legacy?: ChallengeLegacy
+    metadata?: ChallengeMetadata[]
     name: string
     numOfRegistrants?: number
     numOfSubmissions?: number
     overview?: string
     overviewTotalPrizes?: number
     phases?: ChallengePhase[]
+    privateDescription?: string
     prizeSets?: ChallengePrizeSet[]
     projectId?: string
     registrationEndDate?: string
@@ -81,7 +114,7 @@ export interface ChallengeResource {
     challengeId?: string
     id: string
     memberHandle?: string
-    memberId?: string
+    memberId?: number | string
     roleId?: string
 }
 
@@ -109,6 +142,7 @@ export interface EngagementOpportunity {
     nanoId?: string
     requiredSkills?: string[]
     role?: string
+    skills?: OpportunitySkill[]
     status?: string
     timeZones?: string[]
     title: string

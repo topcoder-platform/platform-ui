@@ -6,6 +6,7 @@ import {
     useEffect,
     useMemo,
 } from 'react'
+import DOMPurify from 'dompurify'
 import ReactMarkdown, { Components, Options as ReactMarkdownOptions } from 'react-markdown'
 import type { HeadingProps } from 'react-markdown/lib/ast-to-react'
 import remarkBreaks from 'remark-breaks'
@@ -24,6 +25,24 @@ export interface ChallengeTocItem {
 interface ChallengeMarkdownProps {
     markdown: string
     onTableOfContents?: (items: ChallengeTocItem[]) => void
+}
+
+interface ChallengeDescriptionProps {
+    content: string
+    format?: string
+    privateDescription?: string
+}
+
+/**
+ * Detects the legacy Challenge API HTML description format.
+ *
+ * @param format Challenge API description format.
+ * @returns true only for a case-insensitive `html` value.
+ * @throws Does not throw.
+ */
+export function isHtmlDescriptionFormat(format?: string): boolean {
+    return format?.trim()
+        .toLowerCase() === 'html'
 }
 
 /**
@@ -138,5 +157,46 @@ export const ChallengeMarkdown: FC<ChallengeMarkdownProps> = props => {
                 {props.markdown}
             </Markdown>
         </article>
+    )
+}
+
+/**
+ * Renders Challenge API description fields using their declared format.
+ * HTML is sanitized after receipt; every other format uses safe Markdown.
+ * When the API returns private details, they are appended without applying a
+ * second UI authorization check because Challenge API is authoritative for
+ * field visibility.
+ *
+ * @param props public content, optional private content, and description format.
+ * @returns safe formatted challenge requirements.
+ * @throws Does not throw.
+ */
+export const ChallengeDescription: FC<ChallengeDescriptionProps> = props => {
+    const htmlFormat = isHtmlDescriptionFormat(props.format)
+    const privateDescription = props.privateDescription?.trim()
+    /**
+     * Selects the safe renderer matching the challenge's declared format.
+     *
+     * @param content public or API-authorized private description content.
+     * @returns sanitized HTML or safe Markdown React content.
+     * @throws Does not throw.
+     */
+    const renderContent = (content: string): ReactNode => (htmlFormat ? (
+        <article
+            className={styles.markdown}
+            dangerouslySetInnerHTML={{ __html: String(DOMPurify.sanitize(content)) }}
+        />
+    ) : <ChallengeMarkdown markdown={content} />)
+
+    return (
+        <>
+            {renderContent(props.content)}
+            {privateDescription && (
+                <section className={styles.privateDetails}>
+                    <h2>Registered User Additional Information</h2>
+                    {renderContent(privateDescription)}
+                </section>
+            )}
+        </>
     )
 }

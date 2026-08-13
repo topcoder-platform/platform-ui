@@ -1,10 +1,15 @@
 import type { FC, ReactNode } from 'react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Helmet } from 'react-helmet'
 import { Link, useParams } from 'react-router-dom'
 
 import type { CmsResource } from '~/libs/cms'
-import { CmsMarkdown, getCmsResourceAssetUrl, useCmsCollection } from '~/libs/cms'
+import {
+    CmsMarkdown,
+    getCmsResourceAssetUrl,
+    getSafeCmsLink,
+    useCmsCollection,
+} from '~/libs/cms'
 
 import { ThriveArticleCard } from '../../components'
 import { THRIVE_DEFAULT_BANNER } from '../../config'
@@ -14,6 +19,7 @@ import {
     getMarkdownPreview,
     getThriveAuthors,
     getThriveCategories,
+    getThriveExternalUrl,
     getThriveImageUrl,
     isResolvedCmsResource,
 } from '../../utils'
@@ -67,6 +73,13 @@ export const ThriveArticlePage: FC = () => {
     ))
     const error = slugResult.error || titleResult.error
     const loading = slugResult.loading || (needsTitleFallback && titleResult.loading)
+    const externalUrl = article ? getThriveExternalUrl(article.fields) : undefined
+
+    useEffect(() => {
+        if (article?.fields.externalArticle && externalUrl) {
+            window.location.assign(externalUrl)
+        }
+    }, [article, externalUrl])
 
     if (loading) {
         return <main className={styles.pageState}>Loading article…</main>
@@ -85,6 +98,18 @@ export const ThriveArticlePage: FC = () => {
         )
     }
 
+    if (article.fields.externalArticle) {
+        return externalUrl ? (
+            <main className={styles.pageState}>Opening external article…</main>
+        ) : (
+            <main className={styles.pageState}>
+                <h1>External article unavailable</h1>
+                <p>The configured destination is unavailable or is not permitted.</p>
+                <Link to='/thrive'>Return to Thrive</Link>
+            </main>
+        )
+    }
+
     const fields = article.fields
     const authors = getThriveAuthors(fields)
     const categories = getThriveCategories(fields)
@@ -92,6 +117,7 @@ export const ThriveArticlePage: FC = () => {
     const recommended = (fields.recommended || [])
         .filter(isResolvedCmsResource<ThriveArticleFields>) as Array<CmsResource<ThriveArticleFields>>
     const shareUrl = encodeURIComponent(window.location.href)
+    const videoUrl = getSafeCmsLink(fields.contentUrl)
 
     return (
         <main className={styles.articlePage}>
@@ -172,10 +198,10 @@ export const ThriveArticlePage: FC = () => {
                 </aside>
                 <article className={styles.articleContent}>
                     <CmsMarkdown>{fields.content}</CmsMarkdown>
-                    {fields.type === 'Video' && fields.contentUrl && (
+                    {fields.type === 'Video' && videoUrl && (
                         <a
                             className={styles.videoLink}
-                            href={fields.contentUrl}
+                            href={videoUrl}
                             rel='noreferrer'
                             target='_blank'
                         >

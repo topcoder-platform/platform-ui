@@ -2,6 +2,7 @@ import {
     CmsQuery,
     CmsResource,
     getCmsResourceAssetUrl,
+    getSafeCmsLink,
 } from '~/libs/cms'
 
 import {
@@ -77,15 +78,33 @@ export function getThriveCategories(
  * Builds the canonical internal or external destination for a Thrive record.
  *
  * @param article Thrive content fields.
- * @returns external content URL when configured, otherwise the local article route.
+ * @returns safe external content URL when configured, otherwise the local article route.
  * @throws URIError when an article title cannot be encoded for its legacy slug fallback.
  */
 export function getThriveArticleUrl(article: ThriveArticleFields): string {
-    if (article.externalArticle && article.contentUrl) {
-        return article.contentUrl
-    }
+    const externalUrl = getThriveExternalUrl(article)
+    if (externalUrl) return externalUrl
 
     return `/thrive/articles/${encodeURIComponent(article.slug || article.title)}`
+}
+
+/**
+ * Resolves an authored external Thrive destination through the shared CMS
+ * scheme and retired-host policy.
+ *
+ * @param article Thrive content fields.
+ * @returns safe external URL, or undefined for local, unsafe, or retired URLs.
+ * @throws Does not throw.
+ */
+export function getThriveExternalUrl(article: ThriveArticleFields): string | undefined {
+    const safeUrl = article.externalArticle ? getSafeCmsLink(article.contentUrl) : undefined
+    if (!safeUrl || !/^(?:https?:)?\/\//i.test(safeUrl)) return undefined
+    try {
+        const externalUrl = new URL(safeUrl, 'https://topcoder-dev.com')
+        return ['http:', 'https:'].includes(externalUrl.protocol) ? externalUrl.toString() : undefined
+    } catch (error) {
+        return undefined
+    }
 }
 
 /**
