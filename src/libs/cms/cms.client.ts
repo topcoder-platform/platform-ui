@@ -16,11 +16,19 @@ export const PAYLOAD_ASSET_ORIGIN = 'https://assets.topcoder-dev.com'
 const CMS_SPACE_IDS: Record<CmsSpace, string> = {
     default: 'b5f1djy59z3a',
     edu: 'piwi0eufbb2g',
+    website: 'xooissnm36jt',
+}
+
+const CMS_ENVIRONMENTS: Record<CmsSpace, string> = {
+    default: 'master',
+    edu: 'master',
+    website: 'uat',
 }
 
 const CMS_ACCESS_TOKENS: Record<CmsSpace, string> = {
     default: process.env.REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN || '',
     edu: process.env.REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN || '',
+    website: process.env.REACT_APP_PAYLOAD_CMS_WEBSITE_ACCESS_TOKEN || '',
 }
 
 /** Options accepted by a Payload CMS compatibility request. */
@@ -77,10 +85,11 @@ export function getPayloadAssetUrl(value: unknown): string | undefined {
 }
 
 /**
- * Prevents rendered CMS links from navigating to retired Contentful hosts.
+ * Prevents rendered CMS links from navigating to unsafe schemes or retired
+ * Contentful and Octana hosts.
  *
  * @param value href supplied by CMS-authored markdown.
- * @returns the original safe link, or undefined when it targets a retired CMS host.
+ * @returns the original safe link, or undefined when its scheme/host is blocked.
  * @throws Does not throw for relative or malformed links.
  */
 export function getSafeCmsLink(value: string | undefined): string | undefined {
@@ -91,8 +100,14 @@ export function getSafeCmsLink(value: string | undefined): string | undefined {
     try {
         const base = typeof window === 'undefined' ? PAYLOAD_CMS_ORIGIN : window.location.origin
         const url = new URL(value, base)
-        return url.hostname.endsWith('.contentful.com')
+        const safeProtocol = ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)
+            || value.startsWith('#')
+        const retiredContentfulHost = url.hostname === 'contentful.com'
+            || url.hostname.endsWith('.contentful.com')
+            || url.hostname === 'ctfassets.net'
             || url.hostname.endsWith('.ctfassets.net')
+        return !safeProtocol
+            || retiredContentfulHost
             || url.hostname.includes('octana')
             ? undefined
             : value
@@ -224,7 +239,7 @@ export class PayloadCmsClient {
         }
 
         const queryString = serializeCmsQuery(query)
-        const url = `${this.origin}/spaces/${CMS_SPACE_IDS[space]}/environments/master/entries${
+        const url = `${this.origin}/spaces/${CMS_SPACE_IDS[space]}/environments/${CMS_ENVIRONMENTS[space]}/entries${
             queryString ? `?${queryString}` : ''
         }`
 

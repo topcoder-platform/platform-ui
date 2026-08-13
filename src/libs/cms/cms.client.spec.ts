@@ -1,3 +1,4 @@
+/* eslint-disable no-script-url */
 import {
     getPayloadAssetUrl,
     getSafeCmsLink,
@@ -25,13 +26,23 @@ describe('Payload CMS client', () => {
             .toBeUndefined()
     })
 
-    it('blocks links to retired CMS providers', () => {
+    it('blocks links to retired CMS providers and executable URL schemes', () => {
+        expect(getSafeCmsLink('https://contentful.com/spaces/example'))
+            .toBeUndefined()
         expect(getSafeCmsLink('https://cdn.contentful.com/spaces/example'))
+            .toBeUndefined()
+        expect(getSafeCmsLink('https://ctfassets.net/example.png'))
             .toBeUndefined()
         expect(getSafeCmsLink('https://docs.octana.example/article'))
             .toBeUndefined()
         expect(getSafeCmsLink('/thrive'))
             .toBe('/thrive')
+        expect(getSafeCmsLink('#article-details'))
+            .toBe('#article-details')
+        expect(getSafeCmsLink('javascript:alert(1)'))
+            .toBeUndefined()
+        expect(getSafeCmsLink('data:text/html,<script>alert(1)</script>'))
+            .toBeUndefined()
     })
 
     it('uses the fixed Payload origin and resolves included relationships', async () => {
@@ -75,6 +86,24 @@ describe('Payload CMS client', () => {
             .toEqual({ Authorization: 'Bearer delivery-token' })
         expect(result.items[0].fields.author)
             .toMatchObject({ fields: { name: 'Ada' } })
+    })
+
+    it('uses the website space UAT environment for Blog content', async () => {
+        const fetcher = jest.fn() as jest.MockedFunction<typeof fetch>
+        fetcher.mockResolvedValue({
+            json: async () => ({ items: [], limit: 1, skip: 0, sys: { type: 'Array' }, total: 0 }),
+            ok: true,
+            status: 200,
+        } as Response)
+        const client = new PayloadCmsClient({
+            accessTokens: { website: 'website-token' },
+            fetcher,
+        })
+
+        await client.queryEntries('website', { limit: 1 })
+
+        expect(fetcher.mock.calls[0][0])
+            .toBe(`${PAYLOAD_CMS_ORIGIN}/spaces/xooissnm36jt/environments/uat/entries?limit=1`)
     })
 
     it('refuses to issue a request without the selected space credential', async () => {

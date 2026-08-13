@@ -84,6 +84,30 @@
     }
 }
 
+.skillSearch {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    > span {
+        color: #111;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    input {
+        border: 1px solid #d1d7db;
+        border-radius: 3px;
+        font: inherit;
+        font-size: 12px;
+        padding: 8px 9px;
+    }
+
+    small {
+        margin: 0;
+    }
+}
+
 .checkRow,
 .radioRow {
     align-items: center;

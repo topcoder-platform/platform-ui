@@ -1,42 +1,83 @@
+/* eslint-disable ordered-imports/ordered-imports */
+
 import type { FC } from 'react'
 import { Link } from 'react-router-dom'
 
 import type { CmsResource } from '~/libs/cms'
-import { CmsMarkdown } from '~/libs/cms'
 
-import type { BlogPostFields } from '../models'
-import { getBlogHeroUrl } from '../utils'
+import type { BlogArticleFields } from '../models'
+import {
+    formatBlogDate,
+    getBlogAuthors,
+    getBlogCardImageUrl,
+    getBlogPostHref,
+    getBlogTaxonomies,
+    isResolvedBlogResource,
+} from '../utils'
+import { BlogRichText } from './BlogRichText'
 import styles from '../Blog.module.scss'
 
 interface BlogPostCardProps {
-    post: CmsResource<BlogPostFields>
-    related?: boolean
+    hideSnippet?: boolean
+    pageUrl?: string
+    post: CmsResource<BlogArticleFields>
 }
 
 /**
- * Renders the community-app Blog list treatment for one Payload-hosted post.
+ * Renders one migrated Blog article card using its joined routed Page URL.
  *
- * @param props post record plus the optional compact related-post treatment.
- * @returns linked hero image, title, description, and read-more action.
- * @throws Does not throw.
+ * @param props article record, Page URL, and authored snippet visibility.
+ * @returns a responsive card containing approved media, metadata, Rich Text snippet, and action.
+ * @throws Does not throw; missing Page routes render non-linked article content.
  */
 export const BlogPostCard: FC<BlogPostCardProps> = (props: BlogPostCardProps) => {
-    const image = getBlogHeroUrl(props.post)
-    const href = `/blog/post/${encodeURIComponent(props.post.fields.slug)}`
+    const fields = props.post.fields
+    const image = getBlogCardImageUrl(props.post)
+    const href = getBlogPostHref(props.pageUrl)
+    const authors = getBlogAuthors(fields.authors)
+    const topics = getBlogTaxonomies(fields.topics)
+    const category = isResolvedBlogResource(fields.category) ? fields.category : undefined
+    const publishedDate = formatBlogDate(fields.publishedDate)
+    const title = fields.title || fields.name || 'Blog article'
 
     return (
-        <article className={props.related ? styles.relatedCard : styles.postCard}>
+        <article className={styles.postCard}>
             {image && (
-                <Link className={styles.cardImage} to={href}>
-                    <img alt={props.post.fields.title} loading='lazy' src={image} />
-                </Link>
+                href ? (
+                    <Link aria-label={title} className={styles.cardImage} to={href}>
+                        <img alt='' loading='lazy' src={image} />
+                    </Link>
+                ) : (
+                    <div className={styles.cardImage}>
+                        <img alt='' loading='lazy' src={image} />
+                    </div>
+                )
             )}
             <div className={styles.cardContent}>
-                <Link to={href}><h1>{props.post.fields.title}</h1></Link>
-                {props.post.fields.description && (
-                    <CmsMarkdown className={styles.description}>{props.post.fields.description}</CmsMarkdown>
+                {(category || publishedDate) && (
+                    <div className={styles.cardEyebrow}>
+                        {category && <span>{category.fields.title}</span>}
+                        {publishedDate && <time dateTime={fields.publishedDate}>{publishedDate}</time>}
+                    </div>
                 )}
-                <Link className={styles.readMore} to={href}>Read More</Link>
+                {href ? <Link to={href}><h2>{title}</h2></Link> : <h2>{title}</h2>}
+                {authors.length > 0 && (
+                    <div className={styles.cardAuthors}>
+                        By
+                        {' '}
+                        {authors.map(author => author.fields.authorName)
+                            .join(', ')}
+                    </div>
+                )}
+                {!props.hideSnippet && fields.snippet && (
+                    <BlogRichText className={styles.description} document={fields.snippet} />
+                )}
+                {topics.length > 0 && (
+                    <div className={styles.tags}>
+                        {topics.map(topic => <span key={topic.sys.id}>{topic.fields.title}</span>)}
+                    </div>
+                )}
+                {href && <Link className={styles.readMore} to={href}>Read More</Link>}
             </div>
         </article>
     )

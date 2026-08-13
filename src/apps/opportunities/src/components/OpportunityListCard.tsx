@@ -61,6 +61,64 @@ function formatDate(value?: string): string {
 }
 
 /**
+ * Formats the Engagement API's anticipated-start enum, while retaining an ISO
+ * date fallback for older responses.
+ *
+ * @param value anticipated-start enum or legacy ISO timestamp.
+ * @returns member-friendly start timeframe.
+ * @throws Does not throw.
+ */
+export function formatAnticipatedStart(value?: string): string {
+    const labels: Record<string, string> = {
+        FEW_DAYS: 'In a few days',
+        FEW_WEEKS: 'In a few weeks',
+        IMMEDIATE: 'Immediate',
+    }
+    return value && labels[value] ? labels[value] : formatDate(value)
+}
+
+/**
+ * Formats the canonical top-level engagement duration fields, with legacy
+ * nested-duration and explicit date-range fallbacks.
+ *
+ * @param item Engagement API response.
+ * @returns duration label such as `8 weeks`, `2 months`, or `TBD`.
+ * @throws Does not throw.
+ */
+export function formatEngagementDuration(item: EngagementOpportunity): string {
+    const weeks = item.durationWeeks ?? item.duration?.lengthInWeeks
+    if (weeks) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`
+    const months = item.durationMonths ?? item.duration?.lengthInMonths
+    if (months) return `${months} ${months === 1 ? 'month' : 'months'}`
+
+    const startValue = item.durationStartDate ?? item.duration?.startDate
+    const endValue = item.durationEndDate ?? item.duration?.endDate
+    const start = startValue ? new Date(startValue) : undefined
+    const end = endValue ? new Date(endValue) : undefined
+    if (start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000))
+        return `${days} ${days === 1 ? 'day' : 'days'}`
+    }
+
+    return 'TBD'
+}
+
+/**
+ * Converts an API enum token into title-cased words for card metadata.
+ *
+ * @param value underscore-delimited enum value.
+ * @returns title-cased label, or undefined when the value is absent.
+ * @throws Does not throw.
+ */
+function enumLabel(value?: string): string | undefined {
+    return value?.toLowerCase()
+        .split('_')
+        .map(part => `${part.charAt(0)
+            .toUpperCase()}${part.slice(1)}`)
+        .join(' ')
+}
+
+/**
  * Formats a dollar amount without unnecessary decimal places.
  *
  * @param value dollar value.
@@ -128,19 +186,19 @@ function challengeView(item: ChallengeOpportunity): CardViewModel {
 
 /** Converts engagement data to the shared card presentation model. */
 function engagementView(item: EngagementOpportunity): CardViewModel {
-    const length = item.duration?.lengthInWeeks
-        ? `${item.duration.lengthInWeeks} weeks`
-        : item.duration?.lengthInMonths
-            ? `${item.duration.lengthInMonths} months`
-            : 'TBD'
+    const role = enumLabel(item.role) || 'Contributor'
     return {
-        badge: item.role || 'Engagement',
+        badge: role,
         description: descriptionExcerpt(item.description),
         href: `/engagements/${item.nanoId ?? item.id}`,
         meta: [
-            { icon: <IconOutline.UserIcon />, label: 'Role', value: item.role || 'Contributor' },
-            { icon: <IconOutline.CalendarIcon />, label: 'Duration', value: length },
-            { icon: <IconOutline.PlayIcon />, label: 'Start', value: formatDate(item.anticipatedStart) },
+            { icon: <IconOutline.UserIcon />, label: 'Role', value: role },
+            { icon: <IconOutline.CalendarIcon />, label: 'Duration', value: formatEngagementDuration(item) },
+            {
+                icon: <IconOutline.PlayIcon />,
+                label: 'Start',
+                value: formatAnticipatedStart(item.anticipatedStart),
+            },
             {
                 icon: <IconOutline.CurrencyDollarIcon />,
                 label: 'Payment',
@@ -150,7 +208,7 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
         skills: item.requiredSkills ?? [],
         state: item.status === 'OPEN' ? 'Open for application' : item.status,
         title: item.title,
-        type: item.workload,
+        type: enumLabel(item.workload),
     }
 }
 

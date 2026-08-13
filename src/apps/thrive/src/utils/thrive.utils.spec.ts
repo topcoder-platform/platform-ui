@@ -5,9 +5,13 @@ import type { CmsResource } from '~/libs/cms'
 import type { ThriveCategoryFields, ThriveFilters } from '../models'
 import {
     buildThriveContentQuery,
+    buildThriveTaxonomyRootQuery,
+    buildThriveTrackCardQuery,
     collectThriveArticles,
     getMarkdownPreview,
+    getRootThriveCategories,
     getThriveArticleUrl,
+    groupThriveCategories,
     parseThriveFilters,
 } from './thrive.utils'
 
@@ -51,6 +55,23 @@ describe('Thrive utilities', () => {
             })
     })
 
+    it('uses the curated root and source-compatible mixed-content home cards', () => {
+        expect(buildThriveTaxonomyRootQuery())
+            .toEqual({
+                include: 10,
+                limit: 1,
+                'sys.id': '15caxocitaxyK65K9oSd91',
+            })
+        expect(buildThriveTrackCardQuery('Development'))
+            .toMatchObject({
+                'fields.trackCategory': 'Development',
+                limit: 3,
+                order: '-sys.createdAt',
+            })
+        expect(buildThriveTrackCardQuery('Development'))
+            .not.toHaveProperty('fields.type')
+    })
+
     it('builds local and external article destinations', () => {
         expect(getThriveArticleUrl({
             content: '',
@@ -86,5 +107,31 @@ describe('Thrive utilities', () => {
 
         expect(collectThriveArticles({ fields: { content: [article, article] } }))
             .toEqual([article])
+    })
+
+    it('keeps the Thrive taxonomy rooted and ignores malformed or orphan categories', () => {
+        const curated: CmsResource<ThriveCategoryFields> = {
+            fields: { name: 'Frontend', trackParent: 'Development' },
+            sys: { id: 'curated', type: 'Entry' },
+        }
+        const malformed = {
+            fields: { trackParent: 'Development' },
+            sys: { id: 'missing-name', type: 'Entry' },
+        } as CmsResource<ThriveCategoryFields>
+        const orphan: CmsResource<ThriveCategoryFields> = {
+            fields: { name: 'Orphan', trackParent: 'Development' },
+            sys: { id: 'orphan', type: 'Entry' },
+        }
+        const categories = getRootThriveCategories({
+            development: [curated, curated, malformed],
+            unrelatedField: [orphan],
+        })
+
+        expect(categories.map(category => category.sys.id))
+            .toEqual(['curated'])
+        expect(groupThriveCategories(categories))
+            .toEqual({ Development: [curated] })
+        expect(() => groupThriveCategories([malformed, orphan]))
+            .not.toThrow()
     })
 })

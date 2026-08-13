@@ -22,6 +22,7 @@ import {
     ChallengeSidebar,
     ChallengeTermsModal,
     ChallengeTocItem,
+    extractTableOfContents,
     OpportunityPagination,
     ReportIssueModal,
 } from '../components'
@@ -29,14 +30,15 @@ import {
     ChallengeOpportunity,
     ChallengeResource,
     ChallengeSubmission,
+    ChallengeTerm,
     OpportunityPage,
 } from '../models'
 import {
     agreeToChallengeTerms,
     getChallengeOpportunity,
-    getChallengeResources,
+    getChallengeSubmissionPreviews,
     getChallengeSubmissions,
-    getSubmissionPreviewUrl,
+    getChallengeSubmitters,
     registerForChallenge,
     unregisterFromChallenge,
 } from '../services'
@@ -82,6 +84,7 @@ export const ChallengeDetailsPage: FC = () => {
     const { profile }: ProfileContextData = useProfileContext()
     const [activeTab, setActiveTab] = useState<ChallengeTab>('requirements')
     const [termsOpen, setTermsOpen] = useState(false)
+    const [termsMode, setTermsMode] = useState<'register' | 'view'>('view')
     const [issueOpen, setIssueOpen] = useState(false)
     const [registrationBusy, setRegistrationBusy] = useState(false)
     const challengeResponse: SWRResponse<ChallengeOpportunity, Error> = useSWR(
@@ -92,7 +95,7 @@ export const ChallengeDetailsPage: FC = () => {
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
     const registrationResponse: SWRResponse<ChallengeResource[], Error> = useSWR(
         challengeId && memberId ? ['opportunities:registration', challengeId, memberId] : undefined,
-        () => getChallengeResources(challengeId, memberId),
+        () => getChallengeSubmitters(challengeId, memberId),
         { revalidateOnFocus: false },
     )
     const registration = registrationResponse.data?.[0]
@@ -113,15 +116,16 @@ export const ChallengeDetailsPage: FC = () => {
             return
         }
 
+        setTermsMode('register')
         setTermsOpen(true)
     }
 
     /** Agrees to electronic terms and creates the Submitter resource. */
-    const completeRegistration = async (): Promise<void> => {
+    const completeRegistration = async (terms: ChallengeTerm[]): Promise<void> => {
         if (!challenge || !profile) return
         setRegistrationBusy(true)
         try {
-            await agreeToChallengeTerms(challenge.terms ?? [])
+            await agreeToChallengeTerms(terms)
             await registerForChallenge(challenge.id, profile.handle)
             await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
             setTermsOpen(false)
@@ -200,11 +204,15 @@ export const ChallengeDetailsPage: FC = () => {
                 <ChallengeSidebar
                     challenge={challenge}
                     onContactTeam={() => setIssueOpen(true)}
-                    onShowTerms={() => setTermsOpen(true)}
+                    onShowTerms={() => {
+                        setTermsMode('view')
+                        setTermsOpen(true)
+                    }}
                 />
             </div>
             <ChallengeTermsModal
                 busy={registrationBusy}
+                mode={termsMode}
                 onAccept={completeRegistration}
                 onClose={() => setTermsOpen(false)}
                 open={termsOpen}
@@ -230,13 +238,17 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'requirements') return <RequirementsTab challenge={props.challenge} />
     if (props.activeTab === 'registrants') return <RegistrantsTab challengeId={props.challenge.id} />
     if (props.activeTab === 'submissions') {
-        return <SubmissionsTab challenge={props.challenge} />
+        const isDesign = catalogName(props.challenge.track)
+            .toLowerCase() === 'design'
+        return props.memberId || isDesign
+            ? <SubmissionsTab challenge={props.challenge} />
+            : <SignInTab subject='submissions' />
     }
 
     if (props.activeTab === 'mine') {
         return props.memberId
             ? <SubmissionsTab challenge={props.challenge} memberId={props.memberId} mine />
-            : <SignInTab />
+            : <SignInTab subject='your submissions' />
     }
 
     if (props.activeTab === 'forum') return <ForumTab challenge={props.challenge} />
@@ -246,27 +258,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 /** Renders the Markdown requirements and generated table of contents. */
 const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
     const markdown = props.challenge.description || props.challenge.overview || 'Requirements are not available yet.'
-    const toc = useMemo(() => {
-        const seen = new Map<string, number>()
-        return markdown.split('\n')
-            .map(line => /^(#{2,3})\s+(.+?)\s*#*$/.exec(line.trim()))
-            .filter((match): match is RegExpExecArray => !!match)
-            .map(match => {
-                const label = match[2].replace(/[*_`~]/g, '')
-                    .trim()
-                const base = label.toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '-') || 'section'
-                const count = (seen.get(base) ?? 0) + 1
-                seen.set(base, count)
-                return {
-                    id: count === 1 ? base : `${base}-${count}`,
-                    label,
-                    level: match[1].length as 2 | 3,
-                }
-            })
-    }, [markdown])
+    const toc = useMemo(() => extractTableOfContents(markdown), [markdown])
 
     return (
         <div className={styles.requirements}>
@@ -320,7 +312,7 @@ const ChallengeTimeline: FC<{ challenge: ChallengeOpportunity }> = props => (
 const RegistrantsTab: FC<{ challengeId: string }> = props => {
     const response: SWRResponse<ChallengeResource[], Error> = useSWR(
         ['opportunities:registrants', props.challengeId],
-        () => getChallengeResources(props.challengeId),
+        () => getChallengeSubmitters(props.challengeId),
         { revalidateOnFocus: false },
     )
     if (response.isValidating && !response.data) return <LoadingSpinner />
@@ -358,19 +350,30 @@ interface SubmissionsTabProps {
 const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
+    const isDesign = catalogName(props.challenge.track)
+        .toLowerCase() === 'design'
+    const releasedPreviewGallery = isDesign && !props.mine
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
-        ['opportunities:submissions', props.challenge.id, props.memberId, page, perPage],
-        () => getChallengeSubmissions(props.challenge.id, page, perPage, props.memberId),
+        [
+            releasedPreviewGallery ? 'opportunities:submission-previews' : 'opportunities:submissions',
+            props.challenge.id,
+            props.memberId,
+            page,
+            perPage,
+        ],
+        () => (releasedPreviewGallery
+            ? getChallengeSubmissionPreviews(props.challenge.id, page, perPage)
+            : getChallengeSubmissions(props.challenge.id, page, perPage, props.memberId)),
         { revalidateOnFocus: false },
     )
-    const track = catalogName(props.challenge.track)
-        .toLowerCase()
     if (response.isValidating && !response.data) return <LoadingSpinner />
     if (response.error) return <TabError onRetry={() => response.mutate()} />
     if (!response.data?.items.length) {
         const emptyText = props.mine
             ? 'You have not submitted a solution yet.'
-            : 'No submissions are visible yet.'
+            : releasedPreviewGallery
+                ? 'No reviewed submission previews are available yet.'
+                : 'No submissions are visible yet.'
         return <EmptyTab text={emptyText} />
     }
 
@@ -391,7 +394,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         <div className={styles.submissions}>
             <h2>{props.mine ? 'My Submissions' : 'All Submissions'}</h2>
             {pagination}
-            {track === 'design' ? (
+            {releasedPreviewGallery ? (
                 <div className={styles.previewGrid}>
                     {response.data.items.map(submission => (
                         <SubmissionPreview key={submission.id} submission={submission} />
@@ -426,7 +429,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
 
 /** Resolves the best available submission handle. */
 function submissionHandle(submission: ChallengeSubmission): string {
-    return submission.memberHandle
+    return submission.submitterHandle
+        || submission.memberHandle
         || submission.registrant?.memberHandle
         || submission.registrant?.handle
         || submission.createdBy
@@ -434,10 +438,10 @@ function submissionHandle(submission: ChallengeSubmission): string {
         || 'Member'
 }
 
-/** Renders one design submission preview, hiding unreleased/missing images on 404. */
+/** Renders one release-gated design submission preview returned by Review API. */
 const SubmissionPreview: FC<{ submission: ChallengeSubmission }> = props => {
-    const [previewAvailable, setPreviewAvailable] = useState(true)
-    /** Hides a preview when the Review API enforces its release gate. */
+    const [previewAvailable, setPreviewAvailable] = useState(!!props.submission.previewUrl)
+    /** Hides an asset when a previously released Payload URL becomes unavailable. */
     const hidePreview = (event: SyntheticEvent<HTMLImageElement>): void => {
         event.currentTarget.removeAttribute('src')
         setPreviewAvailable(false)
@@ -449,7 +453,7 @@ const SubmissionPreview: FC<{ submission: ChallengeSubmission }> = props => {
                 <img
                     alt={`Submission preview by ${submissionHandle(props.submission)}`}
                     onError={hidePreview}
-                    src={getSubmissionPreviewUrl(props.submission.id)}
+                    src={props.submission.previewUrl}
                 />
             ) : (
                 <div className={styles.previewPending}>
@@ -511,10 +515,10 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity }> = props => {
 }
 
 /** Renders the auth handoff for private member tabs. */
-const SignInTab: FC = () => (
+const SignInTab: FC<{ subject: string }> = props => (
     <div className={styles.calloutTab}>
         <IconOutline.LockClosedIcon />
-        <h2>Sign in to view your submissions</h2>
+        <h2>{`Sign in to view ${props.subject}`}</h2>
         <a href={authUrlLogin()}>Sign in</a>
     </div>
 )

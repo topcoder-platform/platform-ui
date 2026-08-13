@@ -1,0 +1,29 @@
+.markdown {
+    scroll-behavior: smooth;
+}
+
+.themedButton {
+    align-items: center;
+    background: #137d60;
+    border: 1px solid #137d60;
+    border-radius: 4px;
+    color: #fff;
+    display: inline-flex;
+    font-weight: 700;
+    justify-content: center;
+    line-height: 1.25;
+    min-height: 40px;
+    padding: 10px 20px;
+    text-decoration: none;
+
+    &:focus-visible,
+    &:hover {
+        background: #0c5f49;
+        border-color: #0c5f49;
+        color: #fff;
+    }
+}
+
+.anchorLink {
+    scroll-margin-top: 80px;
+}

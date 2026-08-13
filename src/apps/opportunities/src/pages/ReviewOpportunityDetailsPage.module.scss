@@ -188,6 +188,28 @@
     }
 }
 
+.roleSelect {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    span {
+        color: #a9bec6;
+        font-size: 10px;
+    }
+
+    select {
+        background: #fff;
+        border: 1px solid #8aa0a9;
+        border-radius: 3px;
+        color: #17313b;
+        font: inherit;
+        font-size: 12px;
+        padding: 7px 8px;
+        text-transform: capitalize;
+    }
+}
+
 .tabs {
     background: #fff;
     border-bottom: 1px solid #ccd5d9;

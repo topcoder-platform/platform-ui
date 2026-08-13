@@ -58,6 +58,29 @@
     margin: 5px 0 29px;
 }
 
+.summaryError {
+    align-items: center;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 4px;
+    display: flex;
+    font-size: 12px;
+    gap: 12px;
+    margin: -18px 0 12px;
+    max-width: max-content;
+    padding: 7px 10px;
+
+    button {
+        background: none;
+        border: 0;
+        color: #72f2ec;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        padding: 0;
+    }
+}
+
 .cells {
     display: grid;
     gap: 20px;

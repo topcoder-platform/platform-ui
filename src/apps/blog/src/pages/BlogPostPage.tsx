@@ -3,16 +3,19 @@ import { useMemo } from 'react'
 import { Helmet } from 'react-helmet'
 import { Link, useParams } from 'react-router-dom'
 
-import type { CmsResource } from '~/libs/cms'
-import { CmsMarkdown, useCmsCollection } from '~/libs/cms'
+import { useCmsCollection } from '~/libs/cms'
 
-import { BlogPostCard } from '../components'
-import type { BlogPostFields } from '../models'
+import { BlogRichText } from '../components'
+import type { BlogPageFields } from '../models'
 import {
+    buildBlogDetailQuery,
     formatBlogDate,
-    getBlogAuthorName,
+    getBlogAuthors,
     getBlogHeroUrl,
+    getBlogRichTextPlainText,
+    getBlogTaxonomies,
     isResolvedBlogResource,
+    selectBlogArticlePage,
 } from '../utils'
 import styles from '../Blog.module.scss'
 
@@ -21,24 +24,21 @@ interface BlogPostPageProps {
 }
 
 /**
- * Loads and renders one public Payload-hosted Blog post selected by slug.
+ * Loads a routed Page and renders its resolved `pageContentArticle` Rich Text content.
  *
  * @param props optional slug supplied by the legacy `/blog/:slug` route.
- * @returns the post header, metadata, image, markdown body, and related posts.
- * @throws Does not throw; missing or failed records render a page state.
+ * @returns the article header, approved hero media, taxonomy, and safely rendered Rich Text body.
+ * @throws Does not throw; unresolved or incorrectly typed Page content renders a not-found state.
  */
 export const BlogPostPage: FC<BlogPostPageProps> = (props: BlogPostPageProps) => {
     const params = useParams<{ slug: string }>()
     const slug = props.slugOverride || params.slug || ''
-    const query = useMemo(() => ({
-        content_type: 'blogPost',
-        'fields.slug': slug,
-        'fields.title[exists]': true,
-        include: 10,
-        limit: 1,
-    }), [slug])
-    const result = useCmsCollection<BlogPostFields>('default', query)
-    const post = result.data?.items[0]
+    const query = useMemo(() => buildBlogDetailQuery(slug), [slug])
+    const result = useCmsCollection<BlogPageFields>('website', query, Boolean(slug))
+    const selected = useMemo(
+        () => selectBlogArticlePage(result.data?.items || [], slug),
+        [result.data, slug],
+    )
 
     if (result.loading) {
         return <main className={styles.pageState}>Loading Blog post…</main>
@@ -48,7 +48,7 @@ export const BlogPostPage: FC<BlogPostPageProps> = (props: BlogPostPageProps) =>
         return <main className={styles.error}>{result.error.message}</main>
     }
 
-    if (!post) {
+    if (!selected) {
         return (
             <main className={styles.pageState}>
                 <h1>Blog post not found</h1>
@@ -57,18 +57,23 @@ export const BlogPostPage: FC<BlogPostPageProps> = (props: BlogPostPageProps) =>
         )
     }
 
-    const fields = post.fields
-    const heroImage = getBlogHeroUrl(post)
-    const relatedPosts = (fields.relatedPosts || [])
-        .filter(isResolvedBlogResource<BlogPostFields>) as Array<CmsResource<BlogPostFields>>
+    const fields = selected.article.fields
+    const title = fields.title || fields.name || 'Blog article'
+    const heroImage = getBlogHeroUrl(selected.article)
+    const authors = getBlogAuthors(fields.authors)
+    const category = isResolvedBlogResource(fields.category) ? fields.category : undefined
+    const topics = getBlogTaxonomies(fields.topics)
+    const publishedDate = formatBlogDate(fields.publishedDate)
+    const description = getBlogRichTextPlainText(fields.snippet)
+        .slice(0, 180)
 
     return (
         <main className={styles.blogPost}>
             <Helmet>
-                {fields.description && <meta content={fields.description.slice(0, 180)} name='description' />}
+                {description && <meta content={description} name='description' />}
                 {heroImage && <meta content={heroImage} property='og:image' />}
                 <title>
-                    {fields.title}
+                    {title}
                     {' '}
                     | Topcoder Blog
                 </title>
@@ -77,41 +82,30 @@ export const BlogPostPage: FC<BlogPostPageProps> = (props: BlogPostPageProps) =>
                 <header className={styles.postHeader}>
                     <Link aria-label='Back to Blog' className={styles.back} to='/blog'>←</Link>
                     <div>
-                        <h1>{fields.title}</h1>
+                        {category && <div className={styles.postCategory}>{category.fields.title}</div>}
+                        <h1>{title}</h1>
                         <div className={styles.postMeta}>
-                            {getBlogAuthorName(fields.author) && (
+                            {authors.length > 0 && (
                                 <span>
-                                    ●
-                                    {getBlogAuthorName(fields.author)}
+                                    By
+                                    {' '}
+                                    {authors.map(author => author.fields.authorName)
+                                        .join(', ')}
                                 </span>
                             )}
-                            <time>
-                                ●
-                                {formatBlogDate(post.sys.updatedAt)}
-                            </time>
+                            {publishedDate && (
+                                <time dateTime={fields.publishedDate}>{publishedDate}</time>
+                            )}
                         </div>
-                        {fields.tags && (
+                        {topics.length > 0 && (
                             <div className={styles.tags}>
-                                {fields.tags.map(tag => <span key={tag}>{tag}</span>)}
+                                {topics.map(topic => <span key={topic.sys.id}>{topic.fields.title}</span>)}
                             </div>
                         )}
                     </div>
                 </header>
-                {heroImage && <img alt={fields.title} className={styles.heroImage} src={heroImage} />}
-                <div className={styles.markdown}>
-                    {fields.description && <CmsMarkdown>{fields.description}</CmsMarkdown>}
-                    {fields.body && <CmsMarkdown>{fields.body}</CmsMarkdown>}
-                </div>
-                {relatedPosts.length > 0 && (
-                    <section className={styles.related}>
-                        <h2>Related Posts</h2>
-                        <div>
-                            {relatedPosts.map(related => (
-                                <BlogPostCard key={related.sys.id} post={related} related />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                {heroImage && <img alt={title} className={styles.heroImage} src={heroImage} />}
+                <BlogRichText className={styles.richText} document={fields.body} />
             </article>
         </main>
     )

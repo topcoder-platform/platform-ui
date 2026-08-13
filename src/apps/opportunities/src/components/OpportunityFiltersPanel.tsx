@@ -13,14 +13,59 @@ interface OpportunityFiltersPanelProps {
     onAppliedChange: (checked: boolean) => void
     onReset: () => void
     onSearchChange: (value: string) => void
+    onSkillsChange: (skills: string) => void
     onStatusChange: (status: string) => void
     onTrackChange: (track: string, checked: boolean) => void
+    onTypeChange: (type: string, checked: boolean) => void
     search: string
+    skills: string
     status: string
     tracks: string[]
+    types: string[]
 }
 
-const TRACKS = ['Design', 'Development', 'Data Science', 'QA', 'AI']
+interface FacetOption {
+    label: string
+    value: string
+}
+
+const TRACKS: Record<OpportunityKind, FacetOption[]> = {
+    competitions: [
+        { label: 'Design', value: 'Des' },
+        { label: 'Development', value: 'Dev' },
+        { label: 'Data Science', value: 'DS' },
+        { label: 'QA', value: 'QA' },
+    ],
+    copilots: [
+        { label: 'Design', value: 'design' },
+        { label: 'Development', value: 'dev' },
+        { label: 'Data Science', value: 'datascience' },
+        { label: 'QA', value: 'qa' },
+        { label: 'AI', value: 'ai' },
+    ],
+    engagements: [],
+    reviews: [
+        { label: 'Design', value: 'Design' },
+        { label: 'Development', value: 'Development' },
+        { label: 'Data Science', value: 'Data Science' },
+        { label: 'QA', value: 'Quality Assurance' },
+    ],
+}
+
+const COMPETITION_TYPES: FacetOption[] = [
+    { label: 'Challenge', value: 'CH' },
+    { label: 'First2Finish', value: 'F2F' },
+    { label: 'Marathon Match', value: 'MM' },
+    { label: 'Task', value: 'TSK' },
+]
+
+const REVIEW_TYPES: FacetOption[] = [
+    { label: 'Regular review', value: 'REGULAR_REVIEW' },
+    { label: 'Iterative review', value: 'ITERATIVE_REVIEW' },
+    { label: 'Specification review', value: 'SPEC_REVIEW' },
+    { label: 'Component development', value: 'COMPONENT_DEV_REVIEW' },
+    { label: 'Scenarios review', value: 'SCENARIOS_REVIEW' },
+]
 
 const MY_LABELS: Record<OpportunityKind, string> = {
     competitions: 'My competitions',
@@ -59,7 +104,7 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
 
     return [
         { label: 'Open for application', value: 'OPEN' },
-        { label: 'Completed', value: kind === 'reviews' ? 'CLOSED' : 'COMPLETED' },
+        { label: 'Completed', value: kind === 'reviews' || kind === 'engagements' ? 'CLOSED' : 'COMPLETED' },
     ]
 }
 
@@ -67,15 +112,18 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
  * Renders the server-backed filter controls shown beside each Opportunities list.
  *
  * @param props current filters and callbacks that reset pagination before refetching.
- * @returns accessible search, ownership, status, and track controls.
+ * @returns accessible search, skills, ownership, status, track, and type controls.
  * @throws Does not throw.
  */
 export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props => {
-    const showTracks = props.kind !== 'engagements'
+    const tracks = TRACKS[props.kind]
     const statuses = statusOptions(props.kind)
 
     /** Updates the controlled search string. */
     const handleSearch = (event: ChangeEvent<HTMLInputElement>): void => props.onSearchChange(event.target.value)
+
+    /** Retains the controlled comma-separated technology input while the member types. */
+    const handleSkills = (event: ChangeEvent<HTMLInputElement>): void => props.onSkillsChange(event.target.value)
 
     return (
         <aside className={styles.panel} aria-label='Opportunity filters'>
@@ -93,7 +141,18 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                     value={props.search}
                 />
             </label>
-            <small>Search skills, technologies, projects</small>
+            {props.kind !== 'reviews' && (
+                <label className={styles.skillSearch}>
+                    <span>Skills / technologies</span>
+                    <input
+                        onChange={handleSkills}
+                        placeholder='React, Figma, Python'
+                        type='text'
+                        value={props.skills}
+                    />
+                    <small>Separate multiple values with commas.</small>
+                </label>
+            )}
             {props.isAuthenticated && (
                 <label className={styles.checkRow}>
                     <input
@@ -118,17 +177,47 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                     </label>
                 ))}
             </fieldset>
-            {showTracks && (
+            {tracks.length > 0 && (
                 <fieldset>
                     <legend>Track</legend>
-                    {TRACKS.map((track: string) => (
-                        <label className={styles.checkRow} key={track}>
+                    {tracks.map((track: FacetOption) => (
+                        <label className={styles.checkRow} key={track.value}>
                             <input
-                                checked={props.tracks.includes(track)}
-                                onChange={event => props.onTrackChange(track, event.target.checked)}
+                                checked={props.tracks.includes(track.value)}
+                                onChange={event => props.onTrackChange(track.value, event.target.checked)}
                                 type='checkbox'
                             />
-                            <span>{track}</span>
+                            <span>{track.label}</span>
+                        </label>
+                    ))}
+                </fieldset>
+            )}
+            {props.kind === 'competitions' && (
+                <fieldset>
+                    <legend>Type</legend>
+                    {COMPETITION_TYPES.map((type: FacetOption) => (
+                        <label className={styles.checkRow} key={type.value}>
+                            <input
+                                checked={props.types.includes(type.value)}
+                                onChange={event => props.onTypeChange(type.value, event.target.checked)}
+                                type='checkbox'
+                            />
+                            <span>{type.label}</span>
+                        </label>
+                    ))}
+                </fieldset>
+            )}
+            {props.kind === 'reviews' && (
+                <fieldset>
+                    <legend>Review type</legend>
+                    {REVIEW_TYPES.map((type: FacetOption) => (
+                        <label className={styles.checkRow} key={type.value}>
+                            <input
+                                checked={props.types.includes(type.value)}
+                                onChange={event => props.onTypeChange(type.value, event.target.checked)}
+                                type='checkbox'
+                            />
+                            <span>{type.label}</span>
                         </label>
                     ))}
                 </fieldset>

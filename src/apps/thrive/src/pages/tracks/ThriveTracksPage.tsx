@@ -9,8 +9,13 @@ import { useCmsCollection } from '~/libs/cms'
 
 import { ThriveFilterPanel, ThriveResults, ThriveSearchBar } from '../../components'
 import { THRIVE_TRACKS } from '../../config'
-import type { ThriveArticleFields, ThriveCategoryFields, ThriveContentType, ThriveFilters } from '../../models'
-import { groupThriveCategories, parseThriveFilters } from '../../utils'
+import type { ThriveArticleFields, ThriveContentType, ThriveFilters } from '../../models'
+import {
+    buildThriveTaxonomyRootQuery,
+    getRootThriveCategories,
+    groupThriveCategories,
+    parseThriveFilters,
+} from '../../utils'
 import styles from '../../Thrive.module.scss'
 
 interface TrackCounterProps {
@@ -67,14 +72,13 @@ export const ThriveTracksPage: FC = () => {
         title: parsedFilters.title,
         track: selectedTrack,
     }), [parsedFilters, selectedTrack])
-    const taxonomyQuery = useMemo(() => ({
-        content_type: 'contentCategory',
-        include: 1,
-        limit: 1000,
-        order: 'fields.name',
-    }), [])
-    const taxonomy = useCmsCollection<ThriveCategoryFields>('edu', taxonomyQuery)
-    const grouped = useMemo(() => groupThriveCategories(taxonomy.data?.items || []), [taxonomy.data])
+    const taxonomyQuery = useMemo(buildThriveTaxonomyRootQuery, [])
+    const taxonomy = useCmsCollection<Record<string, unknown>>('edu', taxonomyQuery)
+    const categories = useMemo(
+        () => getRootThriveCategories(taxonomy.data?.items[0]?.fields),
+        [taxonomy.data],
+    )
+    const grouped = useMemo(() => groupThriveCategories(categories), [categories])
     const track = THRIVE_TRACKS.find(item => item.name === selectedTrack) || THRIVE_TRACKS[0]
 
     /**
@@ -156,7 +160,7 @@ export const ThriveTracksPage: FC = () => {
                     <ThriveFilterPanel filters={filters} onApply={updateFilters} />
                     {taxonomy.loading && <div className={styles.loading}>Loading Thrive taxonomy…</div>}
                     {taxonomy.error && <div className={styles.error}>{taxonomy.error.message}</div>}
-                    {taxonomy.data && <ThriveResults categories={taxonomy.data.items} filters={filters} />}
+                    {taxonomy.data && <ThriveResults categories={categories} filters={filters} />}
                 </section>
             </div>
         </main>

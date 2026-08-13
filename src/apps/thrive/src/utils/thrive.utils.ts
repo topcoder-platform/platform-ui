@@ -5,6 +5,11 @@ import {
 } from '~/libs/cms'
 
 import {
+    THRIVE_CARD_SELECT,
+    THRIVE_TAXONOMY_ROOT_ID,
+    THRIVE_TAXONOMY_TRACK_KEYS,
+} from '../config'
+import {
     ThriveArticleFields,
     ThriveCategoryFields,
     ThriveContentType,
@@ -203,6 +208,42 @@ export function buildThriveContentQuery(
 }
 
 /**
+ * Builds the fixed-root taxonomy request shared by Thrive Home and Tracks.
+ * Querying the root relationship graph prevents orphan category records from
+ * being exposed by either page.
+ *
+ * @returns compatibility query for the curated EDU taxonomy root.
+ * @throws Does not throw.
+ */
+export function buildThriveTaxonomyRootQuery(): CmsQuery {
+    return {
+        include: 10,
+        limit: 1,
+        'sys.id': THRIVE_TAXONOMY_ROOT_ID,
+    }
+}
+
+/**
+ * Builds the source-compatible home-card query for one Thrive track. The
+ * community-app TrackCards implementation intentionally includes the newest
+ * three records of any Thrive content type rather than filtering to Articles.
+ *
+ * @param trackName retained Thrive track name.
+ * @returns compact newest-three CMS query for the home page.
+ * @throws Does not throw.
+ */
+export function buildThriveTrackCardQuery(trackName: string): CmsQuery {
+    return {
+        content_type: 'article',
+        'fields.trackCategory': trackName,
+        include: 3,
+        limit: 3,
+        order: '-sys.createdAt',
+        select: THRIVE_CARD_SELECT,
+    }
+}
+
+/**
  * Groups resolved Thrive taxonomy records by their parent track.
  *
  * @param categories Payload-hosted content-category records.
@@ -213,11 +254,47 @@ export function groupThriveCategories(
     categories: Array<CmsResource<ThriveCategoryFields>>,
 ): Record<string, Array<CmsResource<ThriveCategoryFields>>> {
     return categories.reduce<Record<string, Array<CmsResource<ThriveCategoryFields>>>>((groups, category) => {
-        const track = category.fields.trackParent
+        const track = typeof category.fields.trackParent === 'string'
+            ? category.fields.trackParent.trim()
+            : ''
+        const name = typeof category.fields.name === 'string'
+            ? category.fields.name.trim()
+            : ''
+        if (!track || !name) return groups
         groups[track] = [...(groups[track] || []), category]
-            .sort((first, second) => first.fields.name.localeCompare(second.fields.name))
+            .sort((first, second) => String(first.fields.name ?? '')
+                .localeCompare(String(second.fields.name ?? '')))
         return groups
     }, {})
+}
+
+/**
+ * Extracts only category relationships explicitly curated under the retained
+ * EDU taxonomy root. This prevents unrelated/orphan `contentCategory` entries
+ * from appearing in Thrive's track tree.
+ *
+ * @param rootFields resolved fields from taxonomy root `15caxocitaxyK65K9oSd91`.
+ * @returns unique resolved category records in authored track-key order.
+ * @throws Does not throw for missing, unresolved, or malformed relationships.
+ */
+export function getRootThriveCategories(
+    rootFields: Record<string, unknown> | undefined,
+): Array<CmsResource<ThriveCategoryFields>> {
+    const categories = new Map<string, CmsResource<ThriveCategoryFields>>()
+    THRIVE_TAXONOMY_TRACK_KEYS.forEach(key => {
+        const relationships = rootFields?.[key]
+        if (!Array.isArray(relationships)) return
+        relationships.forEach(value => {
+            const category = value as ThriveReference<ThriveCategoryFields>
+            if (!isResolvedCmsResource(category)) return
+            const name = typeof category.fields.name === 'string' ? category.fields.name.trim() : ''
+            const trackParent = typeof category.fields.trackParent === 'string'
+                ? category.fields.trackParent.trim()
+                : ''
+            if (name && trackParent) categories.set(category.sys.id, category)
+        })
+    })
+    return Array.from(categories.values())
 }
 
 /**

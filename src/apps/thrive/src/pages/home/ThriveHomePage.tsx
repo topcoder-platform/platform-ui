@@ -7,9 +7,14 @@ import type { CmsResource } from '~/libs/cms'
 import { useCmsCollection } from '~/libs/cms'
 
 import { ThriveArticleCard, ThriveSearchBar } from '../../components'
-import { THRIVE_CARD_SELECT, THRIVE_ROOT_ROUTE, THRIVE_TRACKS } from '../../config'
+import { THRIVE_ROOT_ROUTE, THRIVE_TRACKS } from '../../config'
 import type { ThriveArticleFields, ThriveCategoryFields, ThriveTrack } from '../../models'
-import { collectThriveArticles } from '../../utils'
+import {
+    buildThriveTaxonomyRootQuery,
+    buildThriveTrackCardQuery,
+    collectThriveArticles,
+    getRootThriveCategories,
+} from '../../utils'
 import styles from '../../Thrive.module.scss'
 
 interface TrackSectionProps {
@@ -25,15 +30,7 @@ interface TrackSectionProps {
  * @throws Does not throw; loading and empty states render in place.
  */
 const TrackSection: FC<TrackSectionProps> = (props: TrackSectionProps) => {
-    const query = useMemo(() => ({
-        content_type: 'article',
-        'fields.trackCategory': props.track.name,
-        'fields.type': 'Article',
-        include: 3,
-        limit: 3,
-        order: '-sys.createdAt',
-        select: THRIVE_CARD_SELECT,
-    }), [props.track.name])
+    const query = useMemo(() => buildThriveTrackCardQuery(props.track.name), [props.track.name])
     const articles = useCmsCollection<ThriveArticleFields>('edu', query)
     const route = `${THRIVE_ROOT_ROUTE}/tracks?track=${encodeURIComponent(props.track.name)}`
 
@@ -120,12 +117,12 @@ const HomeFeatured: FC = () => {
  * @throws Does not throw.
  */
 export const ThriveHomePage: FC = () => {
-    const taxonomyQuery = useMemo(() => ({
-        content_type: 'contentCategory',
-        limit: 1000,
-        order: 'fields.name',
-    }), [])
-    const taxonomy = useCmsCollection<ThriveCategoryFields>('edu', taxonomyQuery)
+    const taxonomyQuery = useMemo(buildThriveTaxonomyRootQuery, [])
+    const taxonomy = useCmsCollection<Record<string, unknown>>('edu', taxonomyQuery)
+    const categories = useMemo(
+        () => getRootThriveCategories(taxonomy.data?.items[0]?.fields),
+        [taxonomy.data],
+    )
 
     return (
         <main className={styles.app}>
@@ -156,8 +153,7 @@ export const ThriveHomePage: FC = () => {
             <div className={styles.homeTracks}>
                 {THRIVE_TRACKS.map(track => (
                     <TrackSection
-                        categories={(taxonomy.data?.items || [])
-                            .filter(category => category.fields.trackParent === track.name)}
+                        categories={categories.filter(category => category.fields.trackParent === track.name)}
                         key={track.name}
                         track={track}
                     />

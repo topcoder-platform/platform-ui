@@ -13,6 +13,9 @@ import styles from './OpportunityHero.module.scss'
 
 interface OpportunityHeroProps {
     active: OpportunityKind
+    error?: boolean
+    loading?: boolean
+    onRetry?: () => void
     summary?: OpportunitySummary
 }
 
@@ -93,6 +96,12 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
             <p className={styles.subtitle}>
                 Explore and participate in opportunities that match your skills and interests.
             </p>
+            {props.error && (
+                <div className={styles.summaryError} role='alert'>
+                    <span>Live opportunity totals are temporarily unavailable.</span>
+                    <button onClick={props.onRetry} type='button'>Try again</button>
+                </div>
+            )}
             <nav aria-label='Opportunity types' className={styles.cells}>
                 {cells.map((cell: CellConfig) => {
                     const Icon = cell.icon
@@ -112,7 +121,11 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
                                 <strong>{cell.label}</strong>
                                 <span>{cell.description}</span>
                                 <span className={styles.metrics}>
-                                    <small>{`${summary?.count ?? 0} open`}</small>
+                                    <small>
+                                        {`${(props.loading || props.error) && !summary
+                                            ? '—'
+                                            : summary?.count ?? 0} open`}
+                                    </small>
                                     {amount && (
                                         <small>
                                             {`${amount} ${cell.kind === 'copilots' ? 'available' : 'prizes'}`}

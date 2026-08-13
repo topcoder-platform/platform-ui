@@ -1,5 +1,10 @@
 /* eslint-disable no-use-before-define, react/jsx-no-bind */
-import { FC, useState } from 'react'
+import {
+    ChangeEvent,
+    FC,
+    useEffect,
+    useState,
+} from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
@@ -60,6 +65,33 @@ function reviewEnd(startDate?: string, duration?: number): string {
 }
 
 /**
+ * Normalizes Review API enum roles and payment display names to the same key.
+ *
+ * @param value enum token or human-readable role name.
+ * @returns lowercase alphanumeric role key.
+ * @throws Does not throw.
+ */
+function reviewRoleKey(value?: string): string {
+    return (value || '').toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * Formats a Review API role enum for selectors and application tables.
+ *
+ * @param value enum token or existing display name.
+ * @returns title-cased role label.
+ * @throws Does not throw.
+ */
+function reviewRoleLabel(value?: string): string {
+    return (value || 'Reviewer').toLowerCase()
+        .split(/[_\s]+/)
+        .map(part => `${part.charAt(0)
+            .toUpperCase()}${part.slice(1)}`)
+        .join(' ')
+}
+
+/**
  * Renders a public review opportunity with API-authoritative reviewer gating.
  * Non-reviewers receive the education card and an inactive CTA; reviewers do
  * not receive that card and can apply only when `canApply` is true.
@@ -74,6 +106,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     const [activeTab, setActiveTab] = useState<ReviewTab>('requirements')
     const [busy, setBusy] = useState(false)
     const [issueOpen, setIssueOpen] = useState(false)
+    const [applicationRole, setApplicationRole] = useState('')
     const response: SWRResponse<ReviewOpportunity, Error> = useSWR(
         reviewOpportunityId ? `opportunities:review:${reviewOpportunityId}` : undefined,
         () => getReviewOpportunity(reviewOpportunityId),
@@ -81,6 +114,13 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     )
     const opportunity = response.data
     const isReviewer = !!profile?.roles?.some(role => role.toLowerCase() === 'reviewer')
+
+    useEffect(() => {
+        if (!opportunity) return
+        setApplicationRole(opportunity.defaultApplicationRole
+            || opportunity.applicationRoles?.[0]
+            || 'REVIEWER')
+    }, [opportunity])
 
     /** Applies through the Review API and refreshes server-authoritative state. */
     const apply = async (): Promise<void> => {
@@ -90,9 +130,13 @@ export const ReviewOpportunityDetailsPage: FC = () => {
         }
 
         if (!opportunity?.canApply) return
+        const role = applicationRole
+            || opportunity.defaultApplicationRole
+            || opportunity.applicationRoles?.[0]
+            || 'REVIEWER'
         setBusy(true)
         try {
-            await applyToReviewOpportunity(opportunity.id)
+            await applyToReviewOpportunity(opportunity.id, role)
             await response.mutate()
             toast.success('Your reviewer application was submitted.')
         } catch (error) {
@@ -119,13 +163,33 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     const title = opportunity.challengeName || challengeField(opportunity, 'name', 'Review Opportunity')
     const track = challengeField(opportunity, 'track', 'Competition')
     const type = challengeField(opportunity, 'type', opportunity.type || 'Review')
-    const description = challengeField(
-        opportunity,
-        'description',
-        challengeField(opportunity, 'overview', 'Challenge requirements are not available yet.'),
-    )
+    const description = opportunity.reviewRequirements
+        || opportunity.requirements
+        || challengeField(
+            opportunity,
+            'description',
+            challengeField(opportunity, 'overview', 'Challenge requirements are not available yet.'),
+        )
     const applications = opportunity.applications?.filter(application => application.status !== 'CANCELLED') ?? []
-    const disabledLabel = REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
+    const disabledLabel = !isReviewer
+        ? REASON_LABELS.NOT_REVIEWER
+        : REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
+    const applicationRoles = opportunity.applicationRoles?.length
+        ? opportunity.applicationRoles
+        : [opportunity.defaultApplicationRole || 'REVIEWER']
+    const selectedApplicationRole = applicationRole
+        || opportunity.defaultApplicationRole
+        || applicationRoles[0]
+        || 'REVIEWER'
+    const selectedPayment = opportunity.payments?.find(
+        payment => reviewRoleKey(payment.role) === reviewRoleKey(selectedApplicationRole),
+    )
+        ?? opportunity.payments?.[0]
+
+    /** Updates the Review API role selected for this application. */
+    const selectApplicationRole = (event: ChangeEvent<HTMLSelectElement>): void => {
+        setApplicationRole(event.target.value)
+    }
 
     return (
         <main className={styles.page}>
@@ -169,11 +233,23 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                         <aside className={styles.compensation}>
                             <small>Compensation</small>
                             <div>
-                                <strong>{`$${opportunity.basePayment ?? 0}`}</strong>
-                                <span>base payment</span>
+                                <strong>{`$${selectedPayment?.payment ?? opportunity.basePayment ?? 0}`}</strong>
+                                <span>
+                                    {selectedPayment?.role ? `${selectedPayment.role} payment` : 'base payment'}
+                                </span>
                                 <strong>{`$${opportunity.incrementalPayment ?? 0}`}</strong>
                                 <span>per additional submission</span>
                             </div>
+                            {applicationRoles.length > 1 && (
+                                <label className={styles.roleSelect}>
+                                    <span>Reviewer role</span>
+                                    <select onChange={selectApplicationRole} value={selectedApplicationRole}>
+                                        {applicationRoles.map(role => (
+                                            <option key={role} value={role}>{reviewRoleLabel(role)}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
                             <button
                                 disabled={!opportunity.canApply || busy || !isReviewer}
                                 onClick={apply}
@@ -274,6 +350,8 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                     <tr>
                         <th>Member</th>
                         <th>Role</th>
+                        <th>Completed reviews</th>
+                        <th>Open reviews</th>
                         <th>Status</th>
                         <th>Applied</th>
                     </tr>
@@ -282,12 +360,15 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                     {props.applications.map(application => (
                         <tr
                             key={application.id
-                                ?? `${application.userId}-${application.role}-${application.createdAt}`}
+                                ?? `${application.userId}-${application.role}-${application.applicationDate
+                                    ?? application.createdAt}`}
                         >
-                            <td>{application.userHandle || application.userId || 'Member'}</td>
-                            <td>{application.role || 'Reviewer'}</td>
+                            <td>{application.handle || application.userHandle || application.userId || 'Member'}</td>
+                            <td>{reviewRoleLabel(application.role)}</td>
+                            <td>{application.latestCompletedReviews ?? '—'}</td>
+                            <td>{application.openReviews ?? '—'}</td>
                             <td>{application.status || 'Pending'}</td>
-                            <td>{formatDate(application.createdAt)}</td>
+                            <td>{formatDate(application.applicationDate ?? application.createdAt)}</td>
                         </tr>
                     ))}
                 </tbody>

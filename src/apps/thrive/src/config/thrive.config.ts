@@ -6,6 +6,20 @@ export const THRIVE_ROOT_ROUTE = '/thrive'
 /** Content types displayed in the tabbed Thrive results view. */
 export const THRIVE_CONTENT_TYPES = ['Article', 'Video', 'Forum post'] as const
 
+/** Retained source identifier of the curated EDU track taxonomy root. */
+export const THRIVE_TAXONOMY_ROOT_ID = '15caxocitaxyK65K9oSd91'
+
+/** Relationship keys authored on the curated EDU track taxonomy root. */
+export const THRIVE_TAXONOMY_TRACK_KEYS = [
+    'dataScience',
+    'competitiveProgramming',
+    'design',
+    'development',
+    'qualityAssurance',
+    'topcoder',
+    'gigWork',
+] as const
+
 /** Compact field projection used by track cards to avoid downloading full article bodies. */
 export const THRIVE_CARD_SELECT = [
     'sys.id',

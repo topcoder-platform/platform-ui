@@ -7,12 +7,39 @@ const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./pages
 const ReviewOpportunityDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/ReviewOpportunityDetailsPage'),
 )
+const LegacyOpportunityRedirectPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/LegacyOpportunityRedirectPage'),
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.opportunities ? '' : `/${AppSubdomain.opportunities}`
 )
 
 export const toolTitle: string = ToolTitle.opportunities
+
+/** Replacement aliases for community-app challenge and review routes. */
+export const legacyOpportunityRoutes: ReadonlyArray<PlatformRoute> = (
+    EnvironmentConfig.SUBDOMAIN === AppSubdomain.opportunities ? [] : [
+        {
+            element: <LegacyOpportunityRedirectPage list />,
+            id: 'Legacy challenges list redirect',
+            route: '/challenges',
+            title: 'Opportunities',
+        },
+        {
+            element: <LegacyOpportunityRedirectPage review />,
+            id: 'Legacy review opportunity redirect',
+            route: '/challenges/:challengeId/review-opportunities',
+            title: 'Review Opportunity',
+        },
+        {
+            element: <LegacyOpportunityRedirectPage />,
+            id: 'Legacy challenge detail redirect',
+            route: '/challenges/:challengeId',
+            title: 'Competition',
+        },
+    ]
+)
 
 export const opportunitiesRoutes: ReadonlyArray<PlatformRoute> = [
     {

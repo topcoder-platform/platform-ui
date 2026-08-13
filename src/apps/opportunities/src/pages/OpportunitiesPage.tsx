@@ -32,6 +32,7 @@ import {
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
+import { parseSkillsFilter } from '../utils'
 
 import styles from './OpportunitiesPage.module.scss'
 
@@ -85,6 +86,19 @@ function defaultStatus(kind: OpportunityKind): string {
     return 'OPEN'
 }
 
+/**
+ * Returns the semantic sort that accurately describes each domain's API.
+ * Review opportunities do not expose a creation-date sort, so they begin with
+ * the soonest review period instead of claiming to show the newest records.
+ *
+ * @param kind active opportunity domain.
+ * @returns semantic sort choice consumed by the owning API adapter.
+ * @throws Does not throw.
+ */
+export function defaultSort(kind: OpportunityKind): string {
+    return kind === 'reviews' ? 'startingSoon' : 'newest'
+}
+
 interface LearningCardProps {
     body: string
     href: string
@@ -122,25 +136,31 @@ const ResultsLoading: FC = () => (
     </div>
 )
 
+interface OpportunityListingProps {
+    kind: OpportunityKind
+}
+
 /**
  * Renders the unified Opportunities listing while keeping each tab's data call
  * lazy, filtered, and paginated through its owning v6 API.
  *
+ * @param props active route domain supplied by the keyed route wrapper.
  * @returns the four-cell hero, server-backed filters, and one active result page.
  * @throws Does not throw; request failures render a retryable in-page state.
  */
-export const OpportunitiesPage: FC = () => {
-    const params = useParams<{ kind?: string }>()
-    const kind = resolveOpportunityKind(params.kind)
+const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListingProps) => {
+    const kind = props.kind
     const { profile }: ProfileContextData = useProfileContext()
     const [search, setSearch] = useState('')
     const deferredSearch = useDeferredValue(search.trim())
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [applied, setApplied] = useState(false)
+    const [skills, setSkills] = useState('')
     const [tracks, setTracks] = useState<string[]>([])
+    const [types, setTypes] = useState<string[]>([])
     const [status, setStatus] = useState(defaultStatus(kind))
-    const [sort, setSort] = useState('')
+    const [sort, setSort] = useState(defaultSort(kind))
 
     const filters = useMemo<OpportunityFilters>(() => ({
         applied,
@@ -148,10 +168,12 @@ export const OpportunitiesPage: FC = () => {
         page,
         perPage,
         search: deferredSearch || undefined,
-        sort: sort || undefined,
+        skills: skills.trim() ? parseSkillsFilter(skills) : undefined,
+        sort,
         statuses: status ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
-    }), [applied, deferredSearch, page, perPage, profile?.userId, sort, status, tracks])
+        types: types.length ? types : undefined,
+    }), [applied, deferredSearch, page, perPage, profile?.userId, skills, sort, status, tracks, types])
 
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
         'opportunities:summary',
@@ -171,9 +193,11 @@ export const OpportunitiesPage: FC = () => {
     const resetFilters = (): void => {
         setSearch('')
         setApplied(false)
+        setSkills('')
         setTracks([])
+        setTypes([])
         setStatus(defaultStatus(kind))
-        setSort('')
+        setSort(defaultSort(kind))
         setPage(1)
     }
 
@@ -182,6 +206,14 @@ export const OpportunitiesPage: FC = () => {
         setTracks(current => (checked
             ? Array.from(new Set([...current, track]))
             : current.filter(value => value !== track)))
+        setPage(1)
+    }
+
+    /** Updates an opportunity-type facet and starts again at page one. */
+    const updateType = (type: string, checked: boolean): void => {
+        setTypes(current => (checked
+            ? Array.from(new Set([...current, type]))
+            : current.filter(value => value !== type)))
         setPage(1)
     }
 
@@ -203,6 +235,12 @@ export const OpportunitiesPage: FC = () => {
         setPage(1)
     }
 
+    /** Updates comma-separated skill/technology facets and starts at page one. */
+    const updateSkills = (value: string): void => {
+        setSkills(value)
+        setPage(1)
+    }
+
     /** Updates the page size and starts again at page one. */
     const updatePerPage = (value: number): void => {
         setPerPage(value)
@@ -217,7 +255,13 @@ export const OpportunitiesPage: FC = () => {
 
     return (
         <main className={styles.page}>
-            <OpportunityHero active={kind} summary={summaryResponse.data} />
+            <OpportunityHero
+                active={kind}
+                error={!!summaryResponse.error}
+                loading={summaryResponse.isValidating && !summaryResponse.data}
+                onRetry={() => summaryResponse.mutate()}
+                summary={summaryResponse.data}
+            />
             <section className={styles.content}>
                 <div className={styles.titleRow}>
                     <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
@@ -225,9 +269,9 @@ export const OpportunitiesPage: FC = () => {
                         <IconOutline.SortDescendingIcon />
                         <strong>Sort by</strong>
                         <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                            <option value=''>Newest first</option>
-                            <option value='startDate'>Starting soon</option>
-                            {kind === 'reviews' && <option value='basePayment'>Highest payment</option>}
+                            {kind !== 'reviews' && <option value='newest'>Newest first</option>}
+                            <option value='startingSoon'>Starting soon</option>
+                            {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
                         </select>
                     </label>
                 </div>
@@ -240,11 +284,15 @@ export const OpportunitiesPage: FC = () => {
                             onAppliedChange={updateApplied}
                             onReset={resetFilters}
                             onSearchChange={updateSearch}
+                            onSkillsChange={updateSkills}
                             onStatusChange={updateStatus}
                             onTrackChange={updateTrack}
+                            onTypeChange={updateType}
                             search={search}
+                            skills={skills}
                             status={status}
                             tracks={tracks}
+                            types={types}
                         />
                         {kind === 'reviews' && !isReviewer && (
                             <LearningCard
@@ -306,6 +354,19 @@ export const OpportunitiesPage: FC = () => {
             </section>
         </main>
     )
+}
+
+/**
+ * Resolves the route domain and keys the stateful listing by that value. The
+ * key resets every filter before a request to a different owning API begins.
+ *
+ * @returns the active Opportunities category page.
+ * @throws Does not throw; list request errors are handled by the child page.
+ */
+export const OpportunitiesPage: FC = () => {
+    const params = useParams<{ kind?: string }>()
+    const kind = resolveOpportunityKind(params.kind)
+    return <OpportunityListing key={kind} kind={kind} />
 }
 
 export default OpportunitiesPage

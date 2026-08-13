@@ -1,5 +1,11 @@
 /* eslint-disable ordered-imports/ordered-imports */
-import { FC, ReactNode, useEffect, useMemo } from 'react'
+import {
+    FC,
+    isValidElement,
+    ReactNode,
+    useEffect,
+    useMemo,
+} from 'react'
 import ReactMarkdown, { Components, Options as ReactMarkdownOptions } from 'react-markdown'
 import type { HeadingProps } from 'react-markdown/lib/ast-to-react'
 import remarkBreaks from 'remark-breaks'
@@ -70,11 +76,15 @@ export function extractTableOfContents(markdown: string): ChallengeTocItem[] {
  * @returns concatenated plain text.
  * @throws Does not throw.
  */
-function childText(children: ReactNode): string {
+export function markdownHeadingText(children: ReactNode): string {
     if (typeof children === 'string' || typeof children === 'number') return String(children)
     if (Array.isArray(children)) {
-        return children.map(childText)
+        return children.map(markdownHeadingText)
             .join('')
+    }
+
+    if (isValidElement<{ children?: ReactNode }>(children)) {
+        return markdownHeadingText(children.props.children)
     }
 
     return ''
@@ -88,7 +98,7 @@ function childText(children: ReactNode): string {
  * @throws Does not throw.
  */
 const MarkdownHeading: FC<HeadingProps> = props => {
-    const label = childText(props.children)
+    const label = markdownHeadingText(props.children)
     const line = props.node?.position?.start.line ?? 0
     const id = `${headingSlug(label)}-${line}`
     return props.level === 3

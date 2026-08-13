@@ -166,6 +166,92 @@ export async function getOpportunitySummary(): Promise<OpportunitySummary> {
 }
 
 /**
+ * Builds the owning API URL for one opportunity list request.
+ *
+ * UI sort choices are intentionally semantic so each domain receives the
+ * field, direction, and grouping parameters that actually implement the label.
+ * Track values are already normalized by the filter panel for the selected
+ * domain; copilot tracks map to its opportunity `type` enum.
+ *
+ * @param kind active opportunity type.
+ * @param filters search, facets, sorting, and pagination values.
+ * @returns absolute owning API URL.
+ * @throws Does not throw for supported opportunity kinds.
+ */
+export function buildOpportunityPageUrl(
+    kind: OpportunityKind,
+    filters: OpportunityFilters,
+): string {
+    const page = Math.max(1, filters.page)
+    const perPage = Math.max(1, filters.perPage)
+    let endpoint: string
+    const url = new URL(V6_URL)
+
+    if (kind === 'competitions') {
+        endpoint = `${V6_URL}/challenges`
+        url.pathname = new URL(endpoint).pathname
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(perPage))
+        const startingSoon = filters.sort === 'startingSoon'
+        url.searchParams.set('sortBy', startingSoon ? 'startDate' : 'updatedAt')
+        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        if (filters.search) url.searchParams.set('search', filters.search)
+        const competitionStatuses = filters.statuses?.includes('REGISTRATION')
+            ? ['ACTIVE']
+            : filters.statuses
+        appendValues(url, 'status', competitionStatuses)
+        if (filters.statuses?.includes('REGISTRATION')) {
+            url.searchParams.set('currentPhaseName', 'Registration')
+        }
+
+        appendValues(url, 'tracks', filters.tracks)
+        appendValues(url, 'types', filters.types)
+        appendValues(url, 'tags', filters.skills)
+        appendValues(url, 'ids', filters.challengeIds)
+    } else if (kind === 'engagements') {
+        endpoint = `${V6_URL}/engagements/engagements`
+        url.pathname = new URL(endpoint).pathname
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(perPage))
+        const startingSoon = filters.sort === 'startingSoon'
+        url.searchParams.set('sortBy', startingSoon ? 'anticipatedStart' : 'createdAt')
+        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        if (filters.search) url.searchParams.set('search', filters.search)
+        if (filters.statuses?.[0]) url.searchParams.set('status', filters.statuses[0])
+        appendValues(url, 'requiredSkills', filters.skills)
+        if (filters.applied) url.searchParams.set('appliedByMe', 'true')
+    } else if (kind === 'copilots') {
+        endpoint = `${V6_URL}/projects/copilots/opportunities`
+        url.pathname = new URL(endpoint).pathname
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('pageSize', String(perPage))
+        const startingSoon = filters.sort === 'startingSoon'
+        url.searchParams.set('sort', startingSoon ? 'startDate asc' : 'createdAt desc')
+        url.searchParams.set('noGrouping', 'true')
+        if (filters.search) url.searchParams.set('search', filters.search)
+        appendValues(url, 'status', filters.statuses)
+        appendValues(url, 'type', [...(filters.tracks ?? []), ...(filters.types ?? [])])
+        appendValues(url, 'skills', filters.skills)
+        if (filters.applied) url.searchParams.set('applied', 'true')
+    } else {
+        endpoint = `${V6_URL}/review-opportunities/search`
+        url.pathname = new URL(endpoint).pathname
+        url.searchParams.set('offset', String((page - 1) * perPage))
+        url.searchParams.set('limit', String(perPage))
+        const highestPayment = filters.sort === 'highestPayment'
+        url.searchParams.set('sortBy', highestPayment ? 'basePayment' : 'startDate')
+        url.searchParams.set('sortOrder', highestPayment ? 'desc' : 'asc')
+        if (filters.search) url.searchParams.set('search', filters.search)
+        appendValues(url, 'status', filters.statuses)
+        appendValues(url, 'tracks', filters.tracks)
+        appendValues(url, 'opportunityTypes', filters.types)
+        if (filters.applied) url.searchParams.set('appliedByMe', 'true')
+    }
+
+    return url.toString()
+}
+
+/**
  * Loads one filtered page from the owning domain API.
  *
  * @param kind active opportunity type.
@@ -179,61 +265,38 @@ export async function getOpportunityPage(
 ): Promise<OpportunityPage<any>> {
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
-    let endpoint: string
-    const url = new URL(V6_URL)
+    if (kind === 'competitions' && filters.applied && filters.memberId) {
+        const assignedIds = await getSubmitterChallengeIds(filters.memberId, page, perPage)
+        if (!assignedIds.items.length) {
+            return {
+                items: [],
+                page,
+                perPage,
+                total: assignedIds.total,
+                totalPages: assignedIds.totalPages,
+            }
+        }
 
-    if (kind === 'competitions') {
-        endpoint = `${V6_URL}/challenges`
-        url.pathname = new URL(endpoint).pathname
-        url.searchParams.set('page', String(page))
-        url.searchParams.set('perPage', String(perPage))
-        url.searchParams.set('sortBy', filters.sort || 'updatedAt')
-        url.searchParams.set('sortOrder', 'desc')
-        if (filters.search) url.searchParams.set('search', filters.search)
-        const competitionStatuses = filters.statuses?.includes('REGISTRATION')
-            ? ['ACTIVE']
-            : filters.statuses
-        appendValues(url, 'status', competitionStatuses)
-        if (filters.statuses?.includes('REGISTRATION')) url.searchParams.set('phase', 'Registration')
-        appendValues(url, 'track', filters.tracks)
-        appendValues(url, 'type', filters.types)
-        appendValues(url, 'tags', filters.skills)
-        if (filters.applied && filters.memberId) url.searchParams.set('memberId', filters.memberId)
-    } else if (kind === 'engagements') {
-        endpoint = `${V6_URL}/engagements/engagements`
-        url.pathname = new URL(endpoint).pathname
-        url.searchParams.set('page', String(page))
-        url.searchParams.set('perPage', String(perPage))
-        if (filters.search) url.searchParams.set('search', filters.search)
-        appendValues(url, 'status', filters.statuses)
-        appendValues(url, 'requiredSkills', filters.skills)
-        if (filters.applied) url.searchParams.set('appliedByMe', 'true')
-    } else if (kind === 'copilots') {
-        endpoint = `${V6_URL}/projects/copilots/opportunities`
-        url.pathname = new URL(endpoint).pathname
-        url.searchParams.set('page', String(page))
-        url.searchParams.set('pageSize', String(perPage))
-        url.searchParams.set('sort', filters.sort || 'createdAt desc')
-        if (filters.search) url.searchParams.set('search', filters.search)
-        appendValues(url, 'status', filters.statuses)
-        appendValues(url, 'type', filters.types)
-        appendValues(url, 'skills', filters.skills)
-        if (filters.applied) url.searchParams.set('myApplications', 'true')
-    } else {
-        endpoint = `${V6_URL}/review-opportunities/search`
-        url.pathname = new URL(endpoint).pathname
-        url.searchParams.set('offset', String((page - 1) * perPage))
-        url.searchParams.set('limit', String(perPage))
-        url.searchParams.set('sortBy', filters.sort || 'startDate')
-        url.searchParams.set('sortOrder', 'asc')
-        if (filters.search) url.searchParams.set('search', filters.search)
-        appendValues(url, 'statuses', filters.statuses)
-        appendValues(url, 'tracks', filters.tracks)
-        appendValues(url, 'types', filters.types)
-        if (filters.applied) url.searchParams.set('appliedByMe', 'true')
+        const scopedFilters: OpportunityFilters = {
+            ...filters,
+            applied: false,
+            challengeIds: assignedIds.items,
+            memberId: undefined,
+            page: 1,
+        }
+        const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, scopedFilters)) as AxiosResponse<
+            any[] | ApiEnvelope<any[]> | ApiListResponse<any>
+        >
+        const result = normalizePage(response, 1, perPage)
+        return {
+            ...result,
+            page,
+            total: assignedIds.total,
+            totalPages: assignedIds.totalPages,
+        }
     }
 
-    const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
+    const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
         any[] | ApiEnvelope<any[]> | ApiListResponse<any>
     >
     return normalizePage(response, page, perPage)
@@ -298,6 +361,7 @@ interface SubmissionApiResponse {
         page?: number
         perPage?: number
         total?: number
+        totalCount?: number
         totalPages?: number
     }
     result?: {
@@ -339,7 +403,7 @@ export async function getChallengeSubmissions(
 
     const items = response.data ?? response.result?.content ?? []
     const metadata = response.meta ?? response.result?.metadata ?? {}
-    const total = toNumber(metadata.total, items.length)
+    const total = toNumber(metadata.total ?? metadata.totalCount, items.length)
     const normalizedPerPage = toNumber(metadata.perPage, perPage)
     return {
         items,
@@ -354,14 +418,41 @@ export async function getChallengeSubmissions(
 }
 
 /**
- * Returns the public Review API preview endpoint for a released design submission.
+ * Loads the public, release-gated Design preview page for a challenge.
+ * Review API applies challenge visibility, whitelist, and phase gates before
+ * returning immutable Payload asset URLs, so anonymous visitors can browse
+ * only previews that are genuinely public.
  *
- * @param submissionId submission UUID.
- * @returns absolute preview URL; the API redirects to an immutable Payload asset.
- * @throws Does not throw.
+ * @param challengeId challenge UUID.
+ * @param page one-based page.
+ * @param perPage page size.
+ * @returns normalized released-preview page.
+ * @throws Propagates Review API visibility and network errors.
  */
-export function getSubmissionPreviewUrl(submissionId: string): string {
-    return `${V6_URL}/submissions/${encodeURIComponent(submissionId)}/preview`
+export async function getChallengeSubmissionPreviews(
+    challengeId: string,
+    page: number,
+    perPage: number,
+): Promise<OpportunityPage<ChallengeSubmission>> {
+    const url = new URL(`${V6_URL}/submissions/previews`)
+    url.searchParams.set('challengeId', challengeId)
+    url.searchParams.set('page', String(page))
+    url.searchParams.set('perPage', String(perPage))
+    const response = await xhrGetAsync<SubmissionApiResponse>(url.toString())
+    const items = response.data ?? response.result?.content ?? []
+    const metadata = response.meta ?? response.result?.metadata ?? {}
+    const normalizedPerPage = toNumber(metadata.perPage, perPage)
+    const total = toNumber(metadata.totalCount ?? metadata.total, items.length)
+    return {
+        items,
+        page: toNumber(metadata.page, page),
+        perPage: normalizedPerPage,
+        total,
+        totalPages: toNumber(
+            metadata.totalPages,
+            normalizedPerPage > 0 ? Math.ceil(total / normalizedPerPage) : 0,
+        ),
+    }
 }
 
 /**
@@ -369,18 +460,21 @@ export function getSubmissionPreviewUrl(submissionId: string): string {
  *
  * @param challengeId challenge UUID.
  * @param memberId optional authenticated member ID.
+ * @param roleId optional canonical resource-role ID.
  * @returns challenge resources visible to the caller.
  * @throws Propagates Resource API and network errors.
  */
 export async function getChallengeResources(
     challengeId: string,
     memberId?: string,
+    roleId?: string,
 ): Promise<ChallengeResource[]> {
     const url = new URL(`${V6_URL}/resources`)
     url.searchParams.set('challengeId', challengeId)
     url.searchParams.set('page', '1')
     url.searchParams.set('perPage', '500')
     if (memberId) url.searchParams.set('memberId', memberId)
+    if (roleId) url.searchParams.set('roleId', roleId)
     const response = await xhrGetAsync<ChallengeResource[] | ApiEnvelope<ChallengeResource[]>>(url.toString())
     return unwrap(response)
 }
@@ -391,7 +485,7 @@ export async function getChallengeResources(
  * @returns Submitter resource role.
  * @throws Error when Resource API does not expose a Submitter role.
  */
-async function getSubmitterRole(): Promise<ChallengeResourceRole> {
+export async function getSubmitterRole(): Promise<ChallengeResourceRole> {
     const response = await xhrGetAsync<ChallengeResourceRole[] | ApiEnvelope<ChallengeResourceRole[]>>(
         `${V6_URL}/resource-roles?page=1&perPage=500`,
     )
@@ -400,6 +494,50 @@ async function getSubmitterRole(): Promise<ChallengeResourceRole> {
             .toLowerCase() === 'submitter')
     if (!role) throw new Error('The Submitter resource role is not available.')
     return role
+}
+
+/**
+ * Loads only Submitter resources for a challenge instead of treating copilot,
+ * reviewer, observer, and manager resources as registrations.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberId optional authenticated member ID.
+ * @returns resources whose role matches the canonical Submitter role.
+ * @throws Propagates role resolution, Resource API, and network errors.
+ */
+export async function getChallengeSubmitters(
+    challengeId: string,
+    memberId?: string,
+): Promise<ChallengeResource[]> {
+    const role = await getSubmitterRole()
+    const resources = await getChallengeResources(challengeId, memberId, role.id)
+    return resources.filter(resource => resource.roleId === role.id)
+}
+
+/**
+ * Loads one bounded page of challenge IDs for which the authenticated member
+ * has the canonical Submitter role. This powers “My competitions” without the
+ * Challenge API's broad member-access filter, which also includes reviewer,
+ * copilot, observer, and manager resources.
+ *
+ * @param memberId authenticated member ID.
+ * @param page one-based assignment page.
+ * @param perPage bounded assignment page size.
+ * @returns role-scoped challenge IDs and Resource API pagination metadata.
+ * @throws Propagates role resolution, authorization, and Resource API errors.
+ */
+export async function getSubmitterChallengeIds(
+    memberId: string,
+    page: number,
+    perPage: number,
+): Promise<OpportunityPage<string>> {
+    const role = await getSubmitterRole()
+    const url = new URL(`${V6_URL}/resources/${encodeURIComponent(memberId)}/challenges`)
+    url.searchParams.set('resourceRoleId', role.id)
+    url.searchParams.set('page', String(Math.max(1, page)))
+    url.searchParams.set('perPage', String(Math.max(1, perPage)))
+    const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<string[] | ApiEnvelope<string[]>>
+    return normalizePage(response, page, perPage)
 }
 
 /**
@@ -438,16 +576,110 @@ export async function unregisterFromChallenge(resourceId: string): Promise<void>
 }
 
 /**
- * Electronically agrees to every unaccepted term required by a challenge.
+ * Electronically agrees to every unaccepted, electronically agreeable term.
+ * Terms with an explicit DocuSign or non-electronic agreement type are left
+ * untouched and must be completed through their external agreement flow.
  *
  * @param terms challenge term references.
  * @returns void after all agreements succeed.
  * @throws Propagates Terms API validation and network errors.
  */
 export async function agreeToChallengeTerms(terms: ChallengeTerm[]): Promise<void> {
-    const required = terms.filter(term => term.id && !term.agreed)
+    const required = terms.filter(term => term.id
+        && !term.agreed
+        && !term.docusignTemplateId
+        && (!term.agreeabilityType || term.agreeabilityType.toLowerCase() === 'electronically-agreeable'))
     await Promise.all(required.map(term => xhrPostAsync<Record<string, never>, unknown>(
         `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id as string)}/agree`,
         {},
     )))
+}
+
+interface LegacyTermsSearchResponse {
+    result?: ChallengeTerm[]
+}
+
+interface DocuSignViewResponse {
+    recipientViewUrl?: string
+}
+
+/**
+ * Loads the complete title, agreement type, URL, and body for one challenge
+ * term reference from the v5 Terms API.
+ *
+ * Numeric legacy IDs use the legacyId search route; UUIDs use the canonical
+ * detail route. Reference fields are retained when the detail omits them.
+ *
+ * @param term lightweight challenge term reference.
+ * @returns complete term details, or the original reference when it has no ID.
+ * @throws Error when a legacy ID is not found; otherwise propagates API errors.
+ */
+export async function getChallengeTermDetails(term: ChallengeTerm): Promise<ChallengeTerm> {
+    if (!term.id) return term
+    let details: ChallengeTerm
+    if (/^[\d]{5,8}$/.test(term.id)) {
+        const response = await xhrGetAsync<LegacyTermsSearchResponse>(
+            `${EnvironmentConfig.API.V5}/terms?legacyId=${encodeURIComponent(term.id)}`,
+        )
+        const match = response.result?.[0]
+        if (!match) throw new Error(`Challenge term ${term.id} was not found.`)
+        details = match
+    } else {
+        details = await xhrGetAsync<ChallengeTerm>(
+            `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id)}`,
+        )
+    }
+
+    return { ...term, ...details, agreed: details.agreed ?? term.agreed }
+}
+
+/**
+ * Resolves all lightweight challenge term references for modal display.
+ *
+ * @param terms lightweight terms included with a Challenge API response.
+ * @returns complete Terms API records in challenge order.
+ * @throws Propagates any individual term detail failure.
+ */
+export function getChallengeTermsDetails(terms: ChallengeTerm[]): Promise<ChallengeTerm[]> {
+    return Promise.all(terms.map(getChallengeTermDetails))
+}
+
+/**
+ * Loads complete details only for challenge terms assigned to the canonical
+ * Submitter role. Challenge responses can also contain reviewer, copilot, and
+ * manager terms; those must not be displayed or agreed during registration.
+ *
+ * @param terms lightweight role-scoped references from Challenge API.
+ * @returns complete Submitter term records in challenge order.
+ * @throws Propagates Resource Role or Terms API failures.
+ */
+export async function getChallengeSubmitterTermsDetails(
+    terms: ChallengeTerm[],
+): Promise<ChallengeTerm[]> {
+    const submitterRole = await getSubmitterRole()
+    return getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+}
+
+/**
+ * Creates the authenticated DocuSign recipient view for an external challenge
+ * agreement.
+ *
+ * @param templateId Terms API DocuSign template identifier.
+ * @param returnUrl challenge route restored after signing.
+ * @returns recipient URL supplied by Terms API.
+ * @throws Error when Terms API omits the URL; otherwise propagates API errors.
+ */
+export async function getChallengeTermDocuSignUrl(
+    templateId: string | number,
+    returnUrl: string,
+): Promise<string> {
+    const response = await xhrPostAsync<{
+        returnUrl: string
+        templateId: string | number
+    }, DocuSignViewResponse>(`${EnvironmentConfig.API.V5}/terms/docusignViewURL`, {
+        returnUrl,
+        templateId,
+    })
+    if (!response.recipientViewUrl) throw new Error('Terms API did not return a DocuSign URL.')
+    return response.recipientViewUrl
 }

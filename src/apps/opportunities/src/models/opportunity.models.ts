@@ -37,8 +37,11 @@ export interface ChallengePrizeSet {
 
 export interface ChallengeTerm {
     agreed?: boolean
+    agreeabilityType?: string
+    docusignTemplateId?: string | number
     id?: string
     roleId?: string
+    text?: string
     title?: string
     url?: string
 }
@@ -88,7 +91,7 @@ export interface ChallengeResourceRole {
 }
 
 export interface EngagementOpportunity {
-    anticipatedStart?: string
+    anticipatedStart?: 'IMMEDIATE' | 'FEW_DAYS' | 'FEW_WEEKS' | string
     compensationRange?: string
     countries?: string[]
     description?: string
@@ -98,6 +101,10 @@ export interface EngagementOpportunity {
         lengthInWeeks?: number
         startDate?: string
     }
+    durationEndDate?: string
+    durationMonths?: number
+    durationStartDate?: string
+    durationWeeks?: number
     id: string
     nanoId?: string
     requiredSkills?: string[]
@@ -138,8 +145,12 @@ export interface CopilotOpportunity {
 }
 
 export interface ReviewApplicationSummary {
+    applicationDate?: string
     createdAt?: string
+    handle?: string
     id?: string
+    latestCompletedReviews?: number
+    openReviews?: number
     role?: string
     status?: string
     userHandle?: string
@@ -153,6 +164,7 @@ export interface ReviewPayment {
 }
 
 export interface ReviewOpportunity {
+    applicationRoles?: string[]
     applications?: ReviewApplicationSummary[]
     approvedApplicationCount?: number
     basePayment?: number
@@ -162,12 +174,15 @@ export interface ReviewOpportunity {
     challengeId: string
     challengeName?: string
     duration?: number
+    defaultApplicationRole?: string
     id: string
     incrementalPayment?: number
     myApplications?: ReviewApplicationSummary[]
     openPositions?: number
     payments?: ReviewPayment[]
     remainingPositions?: number
+    requirements?: string
+    reviewRequirements?: string
     startDate?: string
     status?: string
     submissions?: number
@@ -186,6 +201,7 @@ export interface OpportunityPage<T> {
 
 export interface OpportunityFilters {
     applied?: boolean
+    challengeIds?: string[]
     memberId?: string
     page: number
     perPage: number
@@ -225,11 +241,13 @@ export interface ChallengeSubmission {
     id: string
     memberHandle?: string
     memberId?: string
+    previewUrl?: string
     registrant?: {
         handle?: string
         memberHandle?: string
         userId?: string
     }
     submittedDate?: string
+    submitterHandle?: string
     type?: string
 }

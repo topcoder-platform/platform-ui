@@ -20,7 +20,7 @@ import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
 import { blogRoutes } from '~/apps/blog'
 import { thriveRoutes } from '~/apps/thrive'
-import { opportunitiesRoutes } from '~/apps/opportunities'
+import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
@@ -40,6 +40,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     // is determined by finding the first route
     // that matches the current path
     ...onboardingRoutes,
+    ...legacyOpportunityRoutes,
     ...opportunitiesRoutes,
     ...devCenterRoutes,
     ...copilotsRoutes,
