@@ -33,6 +33,7 @@ export interface SupportTicketSummary {
     status: SupportTicketStatus
     openedAt: string
     closedAt?: string
+    closedByUserId?: string
     updatedAt: string
     latestActivityAt: string
     responseCount: number
