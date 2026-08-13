@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
+import type { ElementType } from 'react'
 import { readFileSync } from 'fs'
 import { render, screen } from '@testing-library/react'
 import remarkBreaks from 'remark-breaks'
@@ -9,6 +10,9 @@ import { MarkdownContent } from './MarkdownContent'
 
 interface MarkdownRendererProps {
     children: string
+    components: {
+        a: ElementType
+    }
     remarkPlugins: unknown[]
     skipHtml: boolean
 }
@@ -63,6 +67,28 @@ describe('MarkdownContent', () => {
                 remarkPlugins: [remarkGfm, remarkBreaks],
                 skipHtml: true,
             }))
+    })
+
+    it('opens GFM links in a safe new tab', () => {
+        const markdown = 'https://www.topcoder-dev.com/challenges'
+
+        render(<MarkdownContent markdown={markdown} />)
+        const markdownProps = mockReactMarkdown.mock.calls[0][0] as MarkdownRendererProps
+        const MarkdownLink = markdownProps.components.a
+
+        render(
+            <MarkdownLink href={markdown}>
+                {markdown}
+            </MarkdownLink>,
+        )
+        const link = screen.getByRole('link', { name: markdown })
+
+        expect(link)
+            .toHaveAttribute('href', markdown)
+        expect(link)
+            .toHaveAttribute('target', '_blank')
+        expect(link)
+            .toHaveAttribute('rel', 'noopener noreferrer')
     })
 
     it('keeps Markdown formatting visible after the platform style reset', () => {
