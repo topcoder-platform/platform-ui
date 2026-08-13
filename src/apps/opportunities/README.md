@@ -46,7 +46,10 @@ Deliverable content.
 
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager
-resources. The terms modal similarly filters Challenge API references to the
+resources. “My competitions” resolves that same role and sends `memberId` plus
+`resourceRoleId` to Challenge API so role narrowing happens before the other
+filters, global sorting, counts, and pagination. The terms modal similarly
+filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
 agreement. Passive “Review challenge terms” mode never registers or agrees on
 a member's behalf.

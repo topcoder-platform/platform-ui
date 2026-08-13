@@ -13,7 +13,7 @@ jest.mock('~/libs/cms', () => ({
             : undefined
     },
     getSafeCmsLink: (value: string | undefined) => (
-        value?.startsWith('javascript:') ? undefined : value
+        value && /^(?:https?:\/\/|mailto:|tel:|\/|#)/i.test(value) ? value : undefined
     ),
 }), { virtual: true })
 
@@ -53,12 +53,16 @@ describe('BlogRichText', () => {
             .toBeUndefined()
     })
 
-    it('removes unsafe hyperlinks while retaining their authored text', () => {
+    it.each([
+        'javascript:alert(1)',
+        'data:text/html,<script>alert(1)</script>',
+        'vbscript:msgbox(1)',
+    ])('removes unsafe %s hyperlinks while retaining their authored text', unsafeUri => {
         const document: BlogRichTextDocument = {
             content: [{
                 content: [{
                     content: [{ marks: [], nodeType: 'text', value: 'Unsafe link' }],
-                    data: { uri: 'javascript:alert(1)' },
+                    data: { uri: unsafeUri },
                     nodeType: 'hyperlink',
                 }],
                 data: {},

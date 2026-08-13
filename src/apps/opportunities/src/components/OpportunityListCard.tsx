@@ -238,6 +238,17 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
     }
 }
 
+/**
+ * Resolves the public application total for a review opportunity.
+ *
+ * @param item Review API opportunity response.
+ * @returns public total, falling back to the visible rows for older API deployments.
+ * @throws Does not throw.
+ */
+export function reviewApplicationTotal(item: ReviewOpportunity): number {
+    return item.applicationCount ?? item.applications?.length ?? 0
+}
+
 /** Converts review data to the shared card presentation model. */
 function reviewView(item: ReviewOpportunity): CardViewModel {
     const track = String(item.challengeData?.track ?? item.challengeData?.trackName ?? 'Review')
@@ -251,7 +262,7 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
             {
                 icon: <IconOutline.DocumentTextIcon />,
                 label: 'Applications',
-                value: String(item.applications?.length ?? 0),
+                value: String(reviewApplicationTotal(item)),
             },
         ],
         skills: Array.isArray(technologies) ? technologies.map(String) : [],

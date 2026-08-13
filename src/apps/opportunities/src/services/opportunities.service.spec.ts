@@ -7,7 +7,7 @@ import {
     getChallengeSubmitters,
     getChallengeTermDocuSignUrl,
     getChallengeTermDetails,
-    getSubmitterChallengeIds,
+    getOpportunityPage,
     normalizeOpportunitySummary,
 } from './opportunities.service'
 
@@ -77,6 +77,32 @@ describe('opportunities service normalization', () => {
             .toBe('startDate')
         expect(url.searchParams.get('sortOrder'))
             .toBe('asc')
+    })
+
+    it('maps My competitions to the Challenge API member and Submitter-role filter', () => {
+        const url = new URL(buildOpportunityPageUrl('competitions', {
+            applied: true,
+            memberId: '123',
+            page: 2,
+            perPage: 10,
+            resourceRoleId: '2425bb20-9a2c-4316-9f85-8b24f9ce43b8',
+            search: 'design systems',
+            sort: 'newest',
+            tracks: ['Des'],
+        }))
+
+        expect(url.searchParams.get('memberId'))
+            .toBe('123')
+        expect(url.searchParams.get('resourceRoleId'))
+            .toBe('2425bb20-9a2c-4316-9f85-8b24f9ce43b8')
+        expect(url.searchParams.get('search'))
+            .toBe('design systems')
+        expect(url.searchParams.getAll('tracks'))
+            .toEqual(['Des'])
+        expect(url.searchParams.get('page'))
+            .toBe('2')
+        expect(url.searchParams.get('sortOrder'))
+            .toBe('desc')
     })
 
     it('maps engagement filters to its scalar status, skill IDs, and semantic sort', () => {
@@ -190,34 +216,63 @@ describe('opportunities service normalization', () => {
             )
     })
 
-    it('pages My competitions through Submitter-role resource assignments', async () => {
+    it('globally filters and pages My competitions in one role-aware Challenge API request', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        get.mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+        const submitterRoleId = '2425bb20-9a2c-4316-9f85-8b24f9ce43b8'
+        get.mockResolvedValueOnce([{ id: submitterRoleId, name: 'Submitter' }])
         globalGet.mockResolvedValueOnce({
-            data: ['challenge-a', 'challenge-b'],
+            data: [{ id: 'challenge-b', name: 'Design challenge' }],
             headers: {
                 get: (name: string) => ({
                     'x-page': '2',
-                    'x-per-page': '2',
-                    'x-total': '5',
+                    'x-per-page': '10',
+                    'x-total': '21',
                     'x-total-pages': '3',
                 } as Record<string, string>)[name],
             },
         })
 
-        await expect(getSubmitterChallengeIds('123', 2, 2))
+        await expect(getOpportunityPage('competitions', {
+            applied: true,
+            memberId: '123',
+            page: 2,
+            perPage: 10,
+            search: 'design',
+            sort: 'newest',
+            statuses: ['ACTIVE'],
+            tracks: ['Des'],
+        }))
             .resolves.toEqual({
-                items: ['challenge-a', 'challenge-b'],
+                items: [{ id: 'challenge-b', name: 'Design challenge' }],
                 page: 2,
-                perPage: 2,
-                total: 5,
+                perPage: 10,
+                total: 21,
                 totalPages: 3,
             })
+        const requestUrl = new URL(String(globalGet.mock.calls.at(-1)?.[0]))
+        expect(requestUrl.pathname)
+            .toBe('/v6/challenges')
+        expect(requestUrl.searchParams.get('memberId'))
+            .toBe('123')
+        expect(requestUrl.searchParams.get('resourceRoleId'))
+            .toBe(submitterRoleId)
+        expect(requestUrl.searchParams.get('search'))
+            .toBe('design')
+        expect(requestUrl.searchParams.getAll('status'))
+            .toEqual(['ACTIVE'])
+        expect(requestUrl.searchParams.getAll('tracks'))
+            .toEqual(['Des'])
+        expect(requestUrl.searchParams.get('page'))
+            .toBe('2')
+        expect(requestUrl.searchParams.get('perPage'))
+            .toBe('10')
+        expect(requestUrl.searchParams.get('sortBy'))
+            .toBe('updatedAt')
+        expect(requestUrl.searchParams.get('sortOrder'))
+            .toBe('desc')
         expect(globalGet)
-            .toHaveBeenCalledWith(
-                'https://api.example/v6/resources/123/challenges?resourceRoleId=submitter-role&page=2&perPage=2',
-            )
+            .toHaveBeenCalledTimes(1)
     })
 
     it('resolves legacy challenge term references from v5 details', async () => {

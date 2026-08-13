@@ -171,7 +171,9 @@ export async function getOpportunitySummary(): Promise<OpportunitySummary> {
  * UI sort choices are intentionally semantic so each domain receives the
  * field, direction, and grouping parameters that actually implement the label.
  * Track values are already normalized by the filter panel for the selected
- * domain; copilot tracks map to its opportunity `type` enum.
+ * domain; copilot tracks map to its opportunity `type` enum. A competition's
+ * `memberId` and `resourceRoleId` are emitted together so Challenge API can
+ * apply Submitter membership before filtering, sorting, and pagination.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -207,7 +209,10 @@ export function buildOpportunityPageUrl(
         appendValues(url, 'tracks', filters.tracks)
         appendValues(url, 'types', filters.types)
         appendValues(url, 'tags', filters.skills)
-        appendValues(url, 'ids', filters.challengeIds)
+        if (filters.applied && filters.memberId && filters.resourceRoleId) {
+            url.searchParams.set('memberId', filters.memberId)
+            url.searchParams.set('resourceRoleId', filters.resourceRoleId)
+        }
     } else if (kind === 'engagements') {
         endpoint = `${V6_URL}/engagements/engagements`
         url.pathname = new URL(endpoint).pathname
@@ -252,7 +257,9 @@ export function buildOpportunityPageUrl(
 }
 
 /**
- * Loads one filtered page from the owning domain API.
+ * Loads one filtered page from the owning domain API. For “My competitions,”
+ * this first resolves the canonical Submitter role and then performs one
+ * globally filtered, sorted, and paginated Challenge API request.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -266,34 +273,15 @@ export async function getOpportunityPage(
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
     if (kind === 'competitions' && filters.applied && filters.memberId) {
-        const assignedIds = await getSubmitterChallengeIds(filters.memberId, page, perPage)
-        if (!assignedIds.items.length) {
-            return {
-                items: [],
-                page,
-                perPage,
-                total: assignedIds.total,
-                totalPages: assignedIds.totalPages,
-            }
-        }
-
-        const scopedFilters: OpportunityFilters = {
+        const submitterRole = await getSubmitterRole()
+        const roleScopedFilters: OpportunityFilters = {
             ...filters,
-            applied: false,
-            challengeIds: assignedIds.items,
-            memberId: undefined,
-            page: 1,
+            resourceRoleId: submitterRole.id,
         }
-        const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, scopedFilters)) as AxiosResponse<
+        const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, roleScopedFilters)) as AxiosResponse<
             any[] | ApiEnvelope<any[]> | ApiListResponse<any>
         >
-        const result = normalizePage(response, 1, perPage)
-        return {
-            ...result,
-            page,
-            total: assignedIds.total,
-            totalPages: assignedIds.totalPages,
-        }
+        return normalizePage(response, page, perPage)
     }
 
     const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
@@ -512,32 +500,6 @@ export async function getChallengeSubmitters(
     const role = await getSubmitterRole()
     const resources = await getChallengeResources(challengeId, memberId, role.id)
     return resources.filter(resource => resource.roleId === role.id)
-}
-
-/**
- * Loads one bounded page of challenge IDs for which the authenticated member
- * has the canonical Submitter role. This powers “My competitions” without the
- * Challenge API's broad member-access filter, which also includes reviewer,
- * copilot, observer, and manager resources.
- *
- * @param memberId authenticated member ID.
- * @param page one-based assignment page.
- * @param perPage bounded assignment page size.
- * @returns role-scoped challenge IDs and Resource API pagination metadata.
- * @throws Propagates role resolution, authorization, and Resource API errors.
- */
-export async function getSubmitterChallengeIds(
-    memberId: string,
-    page: number,
-    perPage: number,
-): Promise<OpportunityPage<string>> {
-    const role = await getSubmitterRole()
-    const url = new URL(`${V6_URL}/resources/${encodeURIComponent(memberId)}/challenges`)
-    url.searchParams.set('resourceRoleId', role.id)
-    url.searchParams.set('page', String(Math.max(1, page)))
-    url.searchParams.set('perPage', String(Math.max(1, perPage)))
-    const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<string[] | ApiEnvelope<string[]>>
-    return normalizePage(response, page, perPage)
 }
 
 /**

@@ -10,6 +10,7 @@ import { requiresExternalAgreement } from './ChallengeTermsModal'
 import {
     formatAnticipatedStart,
     formatEngagementDuration,
+    reviewApplicationTotal,
 } from './OpportunityListCard'
 import { buildLegacyOpportunityRedirect } from '../pages/LegacyOpportunityRedirectPage'
 import { parseSkillsFilter } from '../utils'
@@ -77,6 +78,22 @@ describe('opportunity presentation utilities', () => {
     it('normalizes editable comma-separated skill facets', () => {
         expect(parseSkillsFilter(' React, Figma, React, , Python '))
             .toEqual(['React', 'Figma', 'Python'])
+    })
+
+    it('uses the public review application total instead of caller-visible rows', () => {
+        expect(reviewApplicationTotal({
+            applicationCount: 12,
+            applications: [{ id: 'current-member-application' }],
+            challengeId: 'challenge',
+            id: 'opportunity',
+        }))
+            .toBe(12)
+        expect(reviewApplicationTotal({
+            applications: [{ id: 'legacy-application' }],
+            challengeId: 'challenge',
+            id: 'legacy-opportunity',
+        }))
+            .toBe(1)
     })
 
     it('preserves compatible query and hash values on legacy redirects', () => {

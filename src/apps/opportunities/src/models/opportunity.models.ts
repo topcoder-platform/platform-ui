@@ -164,6 +164,7 @@ export interface ReviewPayment {
 }
 
 export interface ReviewOpportunity {
+    applicationCount?: number
     applicationRoles?: string[]
     applications?: ReviewApplicationSummary[]
     approvedApplicationCount?: number
@@ -201,10 +202,10 @@ export interface OpportunityPage<T> {
 
 export interface OpportunityFilters {
     applied?: boolean
-    challengeIds?: string[]
     memberId?: string
     page: number
     perPage: number
+    resourceRoleId?: string
     search?: string
     skills?: string[]
     sort?: string
