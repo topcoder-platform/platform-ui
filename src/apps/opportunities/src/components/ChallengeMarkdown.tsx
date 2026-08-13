@@ -30,10 +30,8 @@ interface ChallengeMarkdownProps {
 export function headingSlug(value: string): string {
     return value
         .toLowerCase()
-        .replace(/<[^>]+>/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
         || 'section'
 }
 
@@ -107,7 +105,7 @@ const MARKDOWN_COMPONENTS: Components = {
  * Renders a challenge Markdown specification with fragment-addressable headings.
  *
  * @param props specification Markdown and optional TOC observer.
- * @returns sanitized Markdown presentation supporting tables and inline HTML.
+ * @returns safe Markdown presentation supporting GFM tables and hard breaks.
  * @throws Does not throw.
  */
 export const ChallengeMarkdown: FC<ChallengeMarkdownProps> = props => {

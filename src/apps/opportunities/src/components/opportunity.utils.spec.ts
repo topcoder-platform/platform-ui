@@ -23,6 +23,8 @@ describe('opportunity presentation utilities', () => {
             ])
         expect(headingSlug('API & UI Requirements!'))
             .toBe('api-ui-requirements')
+        expect(headingSlug('<script>alert(1)</script>'))
+            .toBe('script-alert-1-script')
     })
 
     it('keeps short pagination complete and compacts large page ranges', () => {
