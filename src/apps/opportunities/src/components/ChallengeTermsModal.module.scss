@@ -1,0 +1,41 @@
+.body {
+    color: #344148;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    gap: 16px;
+    line-height: 20px;
+
+    p,
+    ul {
+        margin: 0;
+    }
+
+    ul {
+        list-style: disc;
+        padding-left: 22px;
+    }
+
+    a {
+        color: #00797a;
+        font-weight: 700;
+    }
+
+    label {
+        align-items: flex-start;
+        background: #f1f7f7;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        padding: 14px;
+
+        input {
+            accent-color: #008f89;
+            height: 17px;
+            margin-top: 2px;
+            width: 17px;
+        }
+    }
+}

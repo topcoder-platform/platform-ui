@@ -1,0 +1,94 @@
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.card,
+.promo {
+    background: #fff;
+    border: 1px solid #e0e5e8;
+    border-radius: 5px;
+    color: #3e4b52;
+    padding: 18px;
+
+    h3 {
+        align-items: center;
+        color: #1b2327;
+        display: flex;
+        font-family: 'Figtree', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        gap: 8px;
+        line-height: 19px;
+        text-transform: none;
+
+        svg {
+            color: #008f89;
+            height: 17px;
+            width: 17px;
+        }
+    }
+
+    p,
+    li {
+        font-size: 11px;
+        line-height: 16px;
+    }
+
+    p {
+        margin: 9px 0;
+    }
+
+    ol {
+        list-style: decimal;
+        margin: 10px 0 0;
+        padding-left: 17px;
+    }
+
+    a,
+    button {
+        align-items: center;
+        background: none;
+        border: 0;
+        color: #00797a;
+        cursor: pointer;
+        display: flex;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        gap: 5px;
+        margin-top: 7px;
+        padding: 0;
+        text-align: left;
+        text-decoration: none;
+
+        svg {
+            height: 13px;
+            width: 13px;
+        }
+    }
+}
+
+.promo {
+    background: linear-gradient(135deg, #172b4d, #76439b);
+    color: #fff;
+
+    h3,
+    a {
+        color: #fff;
+    }
+}
+
+.promoArt {
+    align-items: center;
+    background: linear-gradient(135deg, #23ccc3, #ce3b9a);
+    border-radius: 4px;
+    display: flex;
+    font-family: 'Figtree', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    height: 60px;
+    justify-content: center;
+    margin-bottom: 14px;
+}

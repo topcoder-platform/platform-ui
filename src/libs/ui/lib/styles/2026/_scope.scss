@@ -1,0 +1,106 @@
+@import 'tokens';
+
+// This selector list is intentionally explicit. Do not add a generic `body`
+// selector: non-migrated platform-ui apps must retain the legacy design system.
+$tc-2026-apps:
+    'body.work-app',
+    'body.review-app',
+    'body.support-app',
+    'body.admin-app',
+    'body.calendar-app',
+    'body.copilots-app',
+    'body.engagements-app',
+    'body.procurement-app',
+    'body.reports-app',
+    'body.opportunities-app';
+
+@each $app in $tc-2026-apps {
+    #{$app} {
+        --tc-2026-ink: #{$tc-2026-ink};
+        --tc-2026-ink-raised: #{$tc-2026-ink-raised};
+        --tc-2026-teal: #{$tc-2026-teal};
+        --tc-2026-action: #{$tc-2026-teal-bright};
+        --tc-2026-accent: #{$tc-2026-turquoise};
+        --tc-2026-link: #{$tc-2026-link};
+        --tc-2026-body: #{$tc-2026-body};
+        --tc-2026-muted: #{$tc-2026-muted};
+        --tc-2026-surface: #{$tc-2026-surface};
+        --tc-2026-canvas: #{$tc-2026-canvas};
+        --tc-2026-border: #{$tc-2026-border};
+        --tc-2026-danger: #{$tc-2026-danger};
+        --tc-2026-warning: #{$tc-2026-warning};
+        --tc-2026-success: #{$tc-2026-success};
+
+        background-color: $tc-2026-canvas;
+        color: $tc-2026-body;
+        font-family: $tc-2026-font-body;
+        font-size: 14px;
+        line-height: 1.5;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: inherit;
+            font-family: $tc-2026-font-heading;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        a {
+            color: $tc-2026-link;
+
+            &:focus-visible {
+                border-radius: 2px;
+                outline: 3px solid rgba($tc-2026-focus, .35);
+                outline-offset: 2px;
+            }
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font-family: $tc-2026-font-body;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        [tabindex]:focus-visible {
+            outline: 3px solid rgba($tc-2026-focus, .35);
+            outline-offset: 2px;
+        }
+
+        input:not([type='checkbox'], [type='radio']),
+        select,
+        textarea {
+            border-color: $tc-2026-border-strong;
+            border-radius: $tc-2026-radius-sm;
+
+            &:focus {
+                border-color: $tc-2026-teal;
+            }
+        }
+
+        table {
+            background: $tc-2026-surface;
+            border-color: $tc-2026-border;
+        }
+
+        th {
+            color: $tc-2026-body;
+            font-family: $tc-2026-font-body;
+            font-weight: 700;
+        }
+
+        button:disabled,
+        [aria-disabled='true'] {
+            cursor: not-allowed;
+        }
+    }
+}

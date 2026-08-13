@@ -1,0 +1,133 @@
+.card {
+    background: #fff;
+    border: 1px solid #dce2e5;
+    border-radius: 6px;
+    color: #13191d;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 230px;
+    min-height: 130px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+
+    &:hover {
+        border-color: #008f89;
+        box-shadow: 0 5px 18px rgba(0, 42, 58, .1);
+        transform: translateY(-1px);
+    }
+}
+
+.main {
+    min-width: 0;
+    padding: 20px 22px;
+
+    h3 {
+        color: #15191c;
+        font-family: 'Figtree', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 24px;
+        margin: 8px 0;
+        text-transform: none;
+    }
+
+    p {
+        color: #3f4a50;
+        font-size: 13px;
+        line-height: 19px;
+        margin: 11px 0 0;
+    }
+}
+
+.eyebrow {
+    align-items: center;
+    color: #303b40;
+    display: flex;
+    font-size: 10px;
+    gap: 7px;
+}
+
+.badge {
+    background: #c8f5d6;
+    color: #137d60;
+    padding: 2px 5px;
+}
+
+.state {
+    border: 1px solid #7fa08e;
+    color: #137d60;
+    margin-left: auto;
+    padding: 2px 6px;
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    span {
+        background: #edf0f2;
+        color: #30383d;
+        font-size: 9px;
+        line-height: 16px;
+        padding: 0 5px;
+    }
+}
+
+.meta {
+    align-content: center;
+    border-left: 1px solid #dce2e5;
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 20px;
+
+    div {
+        align-items: center;
+        display: grid;
+        font-size: 12px;
+        gap: 4px;
+        grid-template-columns: 18px auto 1fr;
+    }
+
+    svg {
+        color: #008f89;
+        height: 17px;
+        width: 17px;
+    }
+
+    dt {
+        font-weight: 700;
+    }
+
+    dd {
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 800px) {
+    .card {
+        grid-template-columns: 1fr;
+    }
+
+    .meta {
+        border-left: 0;
+        border-top: 1px solid #dce2e5;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .main {
+        padding: 16px;
+    }
+
+    .meta {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+}

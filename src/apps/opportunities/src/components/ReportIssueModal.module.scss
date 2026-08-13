@@ -1,0 +1,38 @@
+.form {
+    color: #46535a;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    gap: 16px;
+
+    > p {
+        margin: 0;
+    }
+}
+
+.success {
+    align-items: center;
+    color: #344148;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    padding: 20px;
+    text-align: center;
+
+    svg {
+        color: #008f89;
+        height: 52px;
+        width: 52px;
+    }
+
+    h3 {
+        font-family: 'Figtree', sans-serif;
+        font-size: 20px;
+        margin: 14px 0 5px;
+        text-transform: none;
+    }
+
+    p {
+        margin: 0;
+    }
+}
