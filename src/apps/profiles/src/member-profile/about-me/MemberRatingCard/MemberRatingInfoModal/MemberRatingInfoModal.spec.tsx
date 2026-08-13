@@ -212,4 +212,23 @@ describe('MemberRatingInfoModal', () => {
         expect(parseFloat(marker.style.left))
             .toBeCloseTo((3.5 / 6) * 100)
     })
+
+    it('hides the 2200+ axis label when the distribution has no elite buckets', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={15}
+                profile={baseProfile}
+                rating={1646}
+                ratingDistribution={ratingDistribution}
+            />,
+        )
+
+        expect(screen.getByText('1500'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('2200+'))
+            .not
+            .toBeInTheDocument()
+    })
 })

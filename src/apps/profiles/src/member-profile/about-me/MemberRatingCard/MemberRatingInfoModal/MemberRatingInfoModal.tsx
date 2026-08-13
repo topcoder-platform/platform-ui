@@ -293,6 +293,29 @@ const getAxisLabelPosition = (
 }
 
 /**
+ * Returns axis labels that fall within the visible distribution ranges.
+ *
+ * Hides labels such as `2200+` when the trimmed histogram has no elite buckets,
+ * which otherwise stack on top of the final label (e.g. `1500`).
+ *
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {Array<{ label: string, value: number }>} Axis labels to render.
+ */
+const getVisibleAxisLabels = (
+    ranges: RatingDistributionRange[],
+): Array<{ label: string, value: number }> => {
+    if (ranges.length === 0) {
+        return chartAxisLabels
+    }
+
+    const chartEnd = ranges[ranges.length - 1].end
+
+    return chartAxisLabels.filter((axisLabel: { label: string, value: number }) => (
+        axisLabel.value <= chartEnd
+    ))
+}
+
+/**
  * Calculates a bar height for a histogram count.
  *
  * Empty buckets still get a short stub so the chart baseline stays visible,
@@ -359,6 +382,9 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const markerPosition: number = props.rating !== undefined
         ? getMarkerPosition(props.rating, distributionRanges)
         : 0
+    const visibleAxisLabels: Array<{ label: string, value: number }> = useMemo(() => (
+        getVisibleAxisLabels(distributionRanges)
+    ), [distributionRanges])
     const shouldStackMarkerRating: boolean = props.rating !== undefined && (
         markerPosition >= stackedMarkerPositionThreshold
         || props.rating >= stackedMarkerRatingThreshold
@@ -476,7 +502,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                             )}
 
                             <div className={styles.axisLabels}>
-                                {chartAxisLabels.map((axisLabel: { label: string, value: number }) => (
+                                {visibleAxisLabels.map((axisLabel: { label: string, value: number }) => (
                                     <span
                                         key={axisLabel.label}
                                         style={{
