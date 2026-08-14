@@ -285,6 +285,47 @@ describe('TicketDetailPage reply access', () => {
             .toBeUndefined()
     })
 
+    it('identifies support team replies without labelling the ticket owner', () => {
+        mockUseSWR.mockReturnValue({
+            data: {
+                ...closedTicket,
+                responseCount: 2,
+                responses: [{
+                    createdAt: '2026-08-07T01:30:00.000Z',
+                    id: 'response-owner',
+                    markdown: 'Member follow-up.',
+                    readBy: [],
+                    userHandle: 'ticket-owner',
+                    userId: '12345',
+                }, {
+                    createdAt: '2026-08-07T01:45:00.000Z',
+                    id: 'response-support',
+                    markdown: 'Support follow-up.',
+                    readBy: [],
+                    userHandle: 'support-agent',
+                    userId: '67890',
+                }],
+            },
+            error: undefined,
+            isValidating: false,
+            mutate: mockMutate,
+        })
+
+        render(<TicketDetailPage />)
+
+        const ownerReply = screen.getByText('Member follow-up.')
+            .closest('article')
+        const supportReply = screen.getByText('Support follow-up.')
+            .closest('article')
+
+        expect(ownerReply?.textContent)
+            .toContain('ticket-owner')
+        expect(ownerReply?.textContent)
+            .not.toContain('(Support Team)')
+        expect(supportReply?.textContent)
+            .toContain('support-agent (Support Team)')
+    })
+
     it('requires non-owner support staff to assign an open ticket before replying or closing it', () => {
         mockProfile = {
             roles: ['Topcoder Support Team'],

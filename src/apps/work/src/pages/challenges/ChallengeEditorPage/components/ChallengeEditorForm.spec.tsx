@@ -3107,7 +3107,7 @@ describe('ChallengeEditorForm', () => {
         render(
             <MemoryRouter>
                 <WorkAppContext.Provider value={copilotContextValue}>
-                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreener} />
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
                 </WorkAppContext.Provider>
             </MemoryRouter>,
         )
@@ -3131,7 +3131,7 @@ describe('ChallengeEditorForm', () => {
                 <WorkAppContext.Provider value={copilotContextValue}>
                     <ChallengeEditorForm
                         challenge={{
-                            ...designChallengeWithDeferredScreener,
+                            ...designChallengeWithDeferredScreeners,
                             track: {
                                 abbreviation: 'DESIGN',
                                 name: 'Design',
@@ -3172,7 +3172,7 @@ describe('ChallengeEditorForm', () => {
         render(
             <MemoryRouter>
                 <WorkAppContext.Provider value={adminContextValue}>
-                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreener} />
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
                 </WorkAppContext.Provider>
             </MemoryRouter>,
         )
@@ -4443,7 +4443,7 @@ describe('ChallengeEditorForm', () => {
             isLoading: false,
         })
         mockedPatchChallenge.mockResolvedValue({
-            ...designChallengeWithDeferredScreener,
+            ...designChallengeWithDeferredScreeners,
             metadata: [],
             status: 'DRAFT',
         })
@@ -4452,7 +4452,7 @@ describe('ChallengeEditorForm', () => {
             <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
                 <ChallengeEditorForm
                     challenge={{
-                        ...designChallengeWithDeferredScreener,
+                        ...designChallengeWithDeferredScreeners,
                         metadata: submissionLimitMetadata,
                         status: 'NEW',
                     }}

@@ -43,7 +43,7 @@ import {
 import styles from './TicketDetailPage.module.scss'
 
 /**
- * Renders the original request followed by ascending replies and authorized actions.
+ * Renders the original request followed by ascending, role-labelled replies and authorized actions.
  *
  * @returns support ticket detail page.
  * @throws Does not throw; request failures are shown with recovery actions.
@@ -316,6 +316,7 @@ export const TicketDetailPage: FC = () => {
                                             color={response.userHandleColor}
                                             handle={response.userHandle}
                                         />
+                                        {response.userId !== data.memberUserId && ' (Support Team)'}
                                     </span>
                                     <time dateTime={response.createdAt}>{formatSupportDate(response.createdAt)}</time>
                                 </header>
