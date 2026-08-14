@@ -178,6 +178,22 @@ const formatPaymentDate = (iso: string): string => {
         .toLocaleString()
 }
 
+/**
+ * Formats an SFDC payment timestamp in the report's America/New_York timezone.
+ * The input is an ISO date-time string and the returned value is used in payment table cells.
+ * Invalid inputs are returned unchanged, so this function does not throw parsing errors.
+ */
+const formatSfdcPaymentDate = (iso: string): string => {
+    const parsed = Date.parse(iso)
+
+    if (Number.isNaN(parsed)) {
+        return iso
+    }
+
+    return new Date(parsed)
+        .toLocaleString(undefined, { timeZone: 'America/New_York' })
+}
+
 const PAYMENT_TABLE_COLUMNS: { key: keyof SfdcBillingAccountPaymentRow; label: string }[] = [
     { key: 'paymentId', label: 'Payment ID' },
     { key: 'paymentDate', label: 'Payment date' },
@@ -431,7 +447,7 @@ const BillingAccountReportResults = (
         const value = row[colKey]
 
         if (colKey === 'paymentDate') {
-            return formatPaymentDate(String(value))
+            return formatSfdcPaymentDate(String(value))
         }
 
         if (colKey === 'billingAccountId') {
