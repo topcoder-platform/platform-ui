@@ -66,10 +66,21 @@
 }
 
 .state {
+    align-items: center;
     border: 1px solid #a8a8a8;
+    border-radius: 2px;
     color: #161616;
+    display: inline-flex;
+    gap: 2px;
+    height: 20px;
     margin-left: auto;
-    padding: 3px 5px;
+    padding: 3px 4px;
+    white-space: nowrap;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
 }
 
 .skills {
@@ -396,6 +407,133 @@
     }
 }
 
+.gridCard {
+    grid-template-columns: minmax(0, 1fr);
+    height: 100%;
+
+    .main {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 24px;
+
+        h3 {
+            color: #161616;
+            display: -webkit-box;
+            font-family: 'Figtree', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 28px;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        p {
+            color: #000;
+            display: -webkit-box;
+            font-size: 14px;
+            line-height: 20px;
+            margin: 0;
+            max-height: 60px;
+            overflow: hidden;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+    }
+
+    .eyebrow {
+        align-items: flex-start;
+        height: 24px;
+    }
+
+    .skills {
+        gap: 8px;
+    }
+
+    .meta {
+        border-left: 0;
+        border-top: 1px solid #e0e0e0;
+        box-sizing: border-box;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        padding: 24px;
+
+        div {
+            font-family: 'Nunito Sans', sans-serif;
+            font-size: 14px;
+            gap: 4px;
+            grid-template-columns: 20px auto minmax(0, 1fr);
+            line-height: 20px;
+        }
+
+        svg {
+            height: 20px;
+            width: 20px;
+        }
+    }
+}
+
+.competitionCard.gridCard {
+    .competitionMain {
+        gap: 0;
+        min-height: 0;
+    }
+
+    h3 {
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .competitionFooter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .phase {
+        flex-basis: auto;
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .competitionMeta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 24px;
+    }
+}
+
+.engagementCard.gridCard .meta {
+    min-height: 176px;
+}
+
+.copilotCard.gridCard .meta,
+.reviewCard.gridCard .meta {
+    min-height: 140px;
+}
+
+.engagementCard.gridCard .main {
+    min-height: 218px;
+}
+
+.reviewCard.gridCard .main {
+    min-height: 162px;
+}
+
+.copilotCard.gridCard .main {
+    min-height: 238px;
+}
+
+.engagementCard.gridCard .opportunityType {
+    display: none;
+}
+
 @media (max-width: 900px) {
     .competitionFooter {
         align-items: stretch;
@@ -434,12 +572,27 @@
         padding: 16px;
     }
 
+    .gridCard .main,
+    .gridCard .meta {
+        padding: 16px;
+    }
+
+    .copilotCard.gridCard .main,
+    .engagementCard.gridCard .main,
+    .reviewCard.gridCard .main {
+        min-height: 0;
+    }
+
     .eyebrow {
         align-items: flex-start;
         flex-wrap: wrap;
     }
 
     .competitionCard .eyebrow {
+        height: auto;
+    }
+
+    .gridCard .eyebrow {
         height: auto;
     }
 

@@ -31,20 +31,37 @@
     align-items: center;
     display: flex;
     font-size: 14px;
-    gap: 6px;
+    gap: 2px;
+    height: 52px;
     line-height: 20px;
+    width: 179px;
 
     svg {
+        flex: 0 0 20px;
         height: 20px;
         width: 20px;
+    }
+
+    strong {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     select {
         background: transparent;
         border: 0;
-        color: #3c474c;
+        color: #0a0a0a;
+        flex: 1 1 auto;
         font: inherit;
+        margin-left: 6px;
+        min-width: 0;
     }
+}
+
+.toolbar {
+    align-items: center;
+    display: flex;
+    gap: 16px;
 }
 
 .body {
@@ -73,6 +90,15 @@
 
 .list {
     gap: 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.loading.grid span {
+    height: 380px;
 }
 
 .learning {
@@ -189,5 +215,14 @@
         align-items: flex-start;
         flex-direction: column;
         gap: 12px;
+    }
+
+    .toolbar {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .sort {
+        height: 38px;
     }
 }

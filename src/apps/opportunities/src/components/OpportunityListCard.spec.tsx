@@ -3,7 +3,12 @@ import '@testing-library/jest-dom'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { ChallengeOpportunity } from '../models'
+import {
+    ChallengeOpportunity,
+    CopilotOpportunity,
+    EngagementOpportunity,
+    ReviewOpportunity,
+} from '../models'
 
 import { OpportunityListCard } from './OpportunityListCard'
 
@@ -128,6 +133,33 @@ describe('OpportunityListCard competition presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it('uses the compact Figma card structure in grid view', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        skills: [
+                            { name: 'Figma' },
+                            { name: 'UX' },
+                            { name: 'UI' },
+                            { name: 'Architecture' },
+                        ],
+                    })}
+                    kind='competitions'
+                    view='grid'
+                />
+            </MemoryRouter>,
+        )
+
+        const card = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
+        expect(card.className)
+            .toContain('gridCard')
+        expect(screen.getAllByText('+1'))
+            .toHaveLength(2)
+        expect(screen.getByText('Submissions:'))
+            .toBeInTheDocument()
+    })
+
     it('shows Registered for the server-filtered My competitions result', () => {
         render(
             <MemoryRouter>
@@ -248,4 +280,94 @@ describe('OpportunityListCard competition presentation', () => {
                 .toBeInTheDocument()
         },
     )
+})
+
+describe('OpportunityListCard owner-specific grid presentation', () => {
+    it('moves Engagement metrics below a three-line content card', () => {
+        const item: EngagementOpportunity = {
+            anticipatedStart: 'IMMEDIATE',
+            compensationRange: 'Negotiable',
+            description: 'Build a member-facing experience with the client team.',
+            durationWeeks: 44,
+            id: 'engagement-id',
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [{ name: 'React' }, { name: 'Node.js' }],
+            status: 'OPEN',
+            title: 'Senior Front-end Developer',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' view='grid' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link').className)
+            .toEqual(expect.stringContaining('gridCard'))
+        expect(screen.getByText('Role:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Development'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Payment:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Open for application')
+            .querySelector('svg'))
+            .toBeInTheDocument()
+    })
+
+    it('renders Copilot hours, duration, and start metrics in grid view', () => {
+        const item: CopilotOpportunity = {
+            id: 'copilot-id',
+            numHoursPerWeek: 5,
+            numWeeks: 2,
+            opportunityTitle: 'Design Copilot',
+            overview: 'Lead and coordinate the challenge delivery.',
+            projectType: 'Design',
+            skills: [{ name: 'Figma' }],
+            status: 'active',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='copilots' view='grid' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link').className)
+            .toEqual(expect.stringContaining('copilotCard'))
+        expect(screen.getByText('Hours / week:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Challenge')
+            .querySelector('svg'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Duration:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Start:'))
+            .toBeInTheDocument()
+    })
+
+    it('renders Review role, start, and application metrics without a description', () => {
+        const item: ReviewOpportunity = {
+            applicationCount: 3,
+            canApply: true,
+            challengeId: 'challenge-id',
+            challengeName: 'Review this challenge',
+            id: 'review-id',
+            payments: [{ payment: 100, role: 'Reviewer', roleId: 1 }],
+            startDate: '2026-06-22T00:00:00.000Z',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' view='grid' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link').className)
+            .toEqual(expect.stringContaining('reviewCard'))
+        expect(screen.getByText('Role:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Applications:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('3'))
+            .toBeInTheDocument()
+    })
 })

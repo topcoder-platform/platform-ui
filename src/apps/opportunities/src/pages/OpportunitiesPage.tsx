@@ -1,7 +1,9 @@
-/* eslint-disable react/jsx-no-bind */
+/* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
+import classNames from 'classnames'
 import {
     ChangeEvent,
     FC,
+    useContext,
     useDeferredValue,
     useMemo,
     useState,
@@ -20,6 +22,7 @@ import {
     OpportunityHero,
     OpportunityListCard,
     OpportunityPagination,
+    OpportunityViewToggle,
 } from '../components'
 import {
     OpportunityFilters,
@@ -27,11 +30,13 @@ import {
     OpportunityKind,
     OpportunityPage,
     OpportunitySummary,
+    OpportunityView,
 } from '../models'
 import {
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
+import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 import { parseSkillsFilter } from '../utils'
 
 import styles from './OpportunitiesPage.module.scss'
@@ -126,27 +131,38 @@ const LearningCard: FC<LearningCardProps> = props => (
     </aside>
 )
 
+interface ResultsLoadingProps {
+    view: OpportunityView
+}
+
 /**
  * Renders stable card-shaped placeholders during the first page request.
  *
- * @returns animated list placeholder.
+ * @param props active list or grid presentation.
+ * @returns animated result placeholders matching the active presentation.
  * @throws Does not throw.
  */
-const ResultsLoading: FC = () => (
-    <div aria-label='Loading opportunities' className={styles.loading} role='status'>
+const ResultsLoading: FC<ResultsLoadingProps> = props => (
+    <div
+        aria-label='Loading opportunities'
+        className={classNames(styles.loading, { [styles.grid]: props.view === 'grid' })}
+        role='status'
+    >
         {[1, 2, 3, 4].map(value => <span key={value} />)}
     </div>
 )
 
 interface OpportunityListingProps {
     kind: OpportunityKind
+    onViewChange: (view: OpportunityView) => void
+    view: OpportunityView
 }
 
 /**
  * Renders the unified Opportunities listing while keeping each tab's data call
  * lazy, filtered, and paginated through its owning v6 API.
  *
- * @param props active route domain supplied by the keyed route wrapper.
+ * @param props active route domain and shared member-selected display mode.
  * @returns the four-cell hero, server-backed filters, and one active result page.
  * @throws Does not throw; request failures render a retryable in-page state.
  */
@@ -270,15 +286,18 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
             <section className={styles.content}>
                 <div className={styles.titleRow}>
                     <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
-                    <label className={styles.sort}>
-                        <IconOutline.SortDescendingIcon />
-                        <strong>Sort by</strong>
-                        <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                            {kind !== 'reviews' && <option value='newest'>Newest first</option>}
-                            <option value='startingSoon'>Starting soon</option>
-                            {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
-                        </select>
-                    </label>
+                    <div className={styles.toolbar}>
+                        <label className={styles.sort}>
+                            <IconOutline.SortDescendingIcon />
+                            <strong>Sort by</strong>
+                            <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
+                                {kind !== 'reviews' && <option value='newest'>Newest first</option>}
+                                <option value='startingSoon'>Starting soon</option>
+                                {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
+                            </select>
+                        </label>
+                        <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
+                    </div>
                 </div>
                 <div className={styles.body}>
                     <div className={styles.sidebar}>
@@ -323,7 +342,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             total={data?.total ?? 0}
                             totalPages={data?.totalPages ?? 0}
                         />
-                        {pageResponse.isValidating && !data && <ResultsLoading />}
+                        {pageResponse.isValidating && !data && <ResultsLoading view={props.view} />}
                         {pageResponse.error && (
                             <div className={styles.message} role='alert'>
                                 <IconOutline.ExclamationCircleIcon />
@@ -339,13 +358,17 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                                 <p>Try removing a filter or changing your search.</p>
                             </div>
                         )}
-                        <div className={styles.list}>
+                        <div className={classNames(styles.list, {
+                            [styles.grid]: props.view === 'grid',
+                        })}
+                        >
                             {data?.items.map((item: OpportunityItem) => (
                                 <OpportunityListCard
                                     item={item}
                                     key={item.id}
                                     kind={kind}
                                     registered={kind === 'competitions' && applied}
+                                    view={props.view}
                                 />
                             ))}
                         </div>
@@ -376,7 +399,15 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
 export const OpportunitiesPage: FC = () => {
     const params = useParams<{ kind?: string }>()
     const kind = resolveOpportunityKind(params.kind)
-    return <OpportunityListing key={kind} kind={kind} />
+    const viewContext: OpportunityViewContextData = useContext(opportunityViewContext)
+    return (
+        <OpportunityListing
+            key={kind}
+            kind={kind}
+            onViewChange={viewContext.onViewChange}
+            view={viewContext.view}
+        />
+    )
 }
 
 export default OpportunitiesPage

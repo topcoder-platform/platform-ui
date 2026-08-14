@@ -1,8 +1,19 @@
-import { FC, useContext, useEffect, useMemo } from 'react'
+import {
+    FC,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 
+import { OpportunityView } from './models'
+import {
+    opportunityViewContext,
+    OpportunityViewContextData,
+} from './opportunities.context'
 import { toolTitle } from './opportunities.routes'
 import './styles/index.scss'
 
@@ -15,6 +26,11 @@ import './styles/index.scss'
 const OpportunitiesApp: FC = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(() => getChildRoutes(toolTitle), [getChildRoutes])
+    const [view, setView] = useState<OpportunityView>('list')
+    const viewContext = useMemo<OpportunityViewContextData>(() => ({
+        onViewChange: setView,
+        view,
+    }), [view])
 
     useEffect(() => {
         document.body.classList.add('opportunities-app', 'tc-2026')
@@ -22,10 +38,10 @@ const OpportunitiesApp: FC = () => {
     }, [])
 
     return (
-        <>
+        <opportunityViewContext.Provider value={viewContext}>
             <Outlet />
             <Routes>{childRoutes}</Routes>
-        </>
+        </opportunityViewContext.Provider>
     )
 }
 

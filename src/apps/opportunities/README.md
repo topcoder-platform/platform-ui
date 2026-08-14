@@ -16,6 +16,24 @@ is sent through the Challenge API `search` parameter; Competitions does not
 render a second skills/technologies field. Other opportunity domains retain
 their owner-specific skill facet where supported.
 
+## List and grid views
+
+Every domain toolbar exposes the same accessible List/Grid selector from the
+Figma. List remains the default. The selected presentation is held above the
+keyed domain listing, so it remains stable while a member moves among
+Competitions, Engagements, Copilot Opportunities, and Review Opportunities.
+Changing the presentation is client-only: it reuses the current owner API page
+and does not issue another list request or create per-card requests.
+
+At the authored 1200px desktop content width, Grid uses two 439px cards with a
+16px gutter inside the 894px results column. Cards retain each owner's content:
+competition prizes and phase progress stack above a horizontal metric footer;
+engagement, copilot, and review metrics move to a vertical footer below the
+card content. The responsive grid uses the same cards and automatically drops
+to one column when two authored-width cards no longer fit. Both selector
+buttons remain keyboard accessible and expose their active state with
+`aria-pressed`.
+
 ## Competition card contract
 
 Competition list cards consume the Challenge API v6 list response directly;

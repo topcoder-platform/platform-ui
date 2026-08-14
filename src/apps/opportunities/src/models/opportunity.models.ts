@@ -1,5 +1,8 @@
 export type OpportunityKind = 'competitions' | 'engagements' | 'copilots' | 'reviews'
 
+/** Member-selected presentation for an Opportunities result page. */
+export type OpportunityView = 'list' | 'grid'
+
 export interface OpportunityCellSummary {
     count: number
     amount?: number

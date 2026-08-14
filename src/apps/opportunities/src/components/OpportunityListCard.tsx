@@ -11,6 +11,7 @@ import {
     OpportunityItem,
     OpportunityKind,
     OpportunitySkill,
+    OpportunityView,
     ReviewOpportunity,
 } from '../models'
 
@@ -20,8 +21,13 @@ import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
 import { ReactComponent as MedalFirstIcon } from '../assets/medal-1.svg'
 import { ReactComponent as MedalSecondIcon } from '../assets/medal-2.svg'
 import { ReactComponent as MedalThirdIcon } from '../assets/medal-3.svg'
+import { ReactComponent as CalendarMetricIcon } from '../assets/metric-calendar.svg'
+import { ReactComponent as HoursMetricIcon } from '../assets/metric-hours.svg'
+import { ReactComponent as PaymentMetricIcon } from '../assets/metric-payment.svg'
 import { ReactComponent as PostsMetricIcon } from '../assets/metric-posts.svg'
 import { ReactComponent as RegistrantsMetricIcon } from '../assets/metric-registrants.svg'
+import { ReactComponent as RoleMetricIcon } from '../assets/metric-role.svg'
+import { ReactComponent as StartMetricIcon } from '../assets/metric-start.svg'
 import { ReactComponent as SubmissionsMetricIcon } from '../assets/metric-submissions.svg'
 import { ReactComponent as PhaseRegistrationIcon } from '../assets/phase-registration.svg'
 import { ReactComponent as PhaseSubmissionIcon } from '../assets/phase-submission.svg'
@@ -44,11 +50,13 @@ interface OpportunityListCardProps {
     item: OpportunityItem
     kind: OpportunityKind
     registered?: boolean
+    view?: OpportunityView
 }
 
 interface CompetitionListCardProps {
     item: ChallengeOpportunity
     registered?: boolean
+    view?: OpportunityView
 }
 
 interface CardViewModel {
@@ -170,6 +178,30 @@ function enumLabel(value?: string): string | undefined {
         .map(part => `${part.charAt(0)
             .toUpperCase()}${part.slice(1)}`)
         .join(' ')
+}
+
+/**
+ * Maps owning-API discipline enums to the authored Opportunities track labels.
+ *
+ * @param value API role or track token.
+ * @returns Figma-facing track label, retaining unknown values in title case.
+ * @throws Does not throw.
+ */
+function opportunityTrackLabel(value?: string): string {
+    const key = challengeCatalogKey(value)
+    const labels: Record<string, string> = {
+        ai: 'AI',
+        dataengineer: 'Data Science',
+        datascience: 'Data Science',
+        datascientist: 'Data Science',
+        design: 'Design',
+        designer: 'Design',
+        dev: 'Development',
+        development: 'Development',
+        qa: 'QA',
+        softwaredeveloper: 'Development',
+    }
+    return labels[key] ?? enumLabel(value) ?? 'Opportunity'
 }
 
 /**
@@ -324,19 +356,19 @@ function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
 function engagementView(item: EngagementOpportunity): CardViewModel {
     const role = enumLabel(item.role) || 'Contributor'
     return {
-        badge: role,
+        badge: opportunityTrackLabel(item.role),
         description: descriptionExcerpt(item.description),
         href: `/engagements/${item.nanoId ?? item.id}`,
         meta: [
-            { icon: <IconOutline.UserIcon />, label: 'Role', value: role },
-            { icon: <IconOutline.CalendarIcon />, label: 'Duration', value: formatEngagementDuration(item) },
+            { icon: <RoleMetricIcon />, label: 'Role', value: role },
+            { icon: <CalendarMetricIcon />, label: 'Duration', value: formatEngagementDuration(item) },
             {
-                icon: <IconOutline.PlayIcon />,
+                icon: <StartMetricIcon />,
                 label: 'Start',
                 value: formatAnticipatedStart(item.anticipatedStart),
             },
             {
-                icon: <IconOutline.CurrencyDollarIcon />,
+                icon: <PaymentMetricIcon />,
                 label: 'Payment',
                 value: item.compensationRange || 'Negotiable',
             },
@@ -344,33 +376,32 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
         skills: engagementSkillNames(item),
         state: item.status === 'OPEN' ? 'Open for application' : item.status,
         title: item.title,
-        type: enumLabel(item.workload),
     }
 }
 
 /** Converts copilot data to the shared card presentation model. */
 function copilotView(item: CopilotOpportunity): CardViewModel {
     return {
-        badge: item.projectType || item.type || 'Copilot',
+        badge: opportunityTrackLabel(item.projectType || item.type || 'Copilot'),
         description: descriptionExcerpt(item.overview),
         href: `/copilots/opportunity/${item.id}`,
         meta: [
             {
-                icon: <IconOutline.ClockIcon />,
+                icon: <HoursMetricIcon />,
                 label: 'Hours / week',
                 value: String(item.numHoursPerWeek ?? 'TBD'),
             },
             {
-                icon: <IconOutline.CalendarIcon />,
+                icon: <CalendarMetricIcon />,
                 label: 'Duration',
                 value: item.numWeeks ? `${item.numWeeks} weeks` : 'TBD',
             },
-            { icon: <IconOutline.PlayIcon />, label: 'Start', value: formatDate(item.startDate) },
+            { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
         ],
         skills: (item.skills ?? []).map((skill: OpportunitySkill) => skill.name),
         state: item.hasApplied ? 'Applied' : item.status === 'active' ? 'Open for application' : item.status,
         title: item.opportunityTitle || item.projectName || item.project?.name || 'Copilot Opportunity',
-        type: item.complexity,
+        type: 'Challenge',
     }
 }
 
@@ -393,10 +424,10 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
         badge: track,
         href: `/opportunities/review/${item.id}`,
         meta: [
-            { icon: <IconOutline.UserIcon />, label: 'Role', value: item.payments?.[0]?.role || 'Reviewer' },
-            { icon: <IconOutline.PlayIcon />, label: 'Start', value: formatDate(item.startDate) },
+            { icon: <RoleMetricIcon />, label: 'Role', value: item.payments?.[0]?.role || 'Reviewer' },
+            { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
             {
-                icon: <IconOutline.DocumentTextIcon />,
+                icon: <SubmissionsMetricIcon />,
                 label: 'Applications',
                 value: String(reviewApplicationTotal(item)),
             },
@@ -435,7 +466,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const TypeIcon = type.icon
     const trackKey = challengeCatalogKey(item.track)
     const skillLabels = challengeSkillLabels(item)
-    const visibleSkills = skillLabels.slice(0, 5)
+    const visibleSkills = skillLabels.slice(0, props.view === 'grid' ? 3 : 5)
     const remainingSkills = skillLabels.length - visibleSkills.length
     const placementPrizes = challengePlacementPrizes(item)
     const phase = challengeCurrentPhase(item)
@@ -468,7 +499,9 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
 
     return (
         <Link
-            className={classNames(styles.card, styles.competitionCard)}
+            className={classNames(styles.card, styles.competitionCard, {
+                [styles.gridCard]: props.view === 'grid',
+            })}
             to={`/opportunities/challenge/${item.id}`}
         >
             <div className={styles.competitionMain}>
@@ -571,22 +604,46 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
             <CompetitionListCard
                 item={props.item as ChallengeOpportunity}
                 registered={props.registered}
+                view={props.view}
             />
         )
     }
 
     const card = toViewModel(props.kind, props.item)
     const visibleSkills = card.skills.filter(Boolean)
-        .slice(0, 5)
+        .slice(0, props.view === 'grid' ? 3 : 5)
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
+    const cardClassName = classNames(styles.card, {
+        [styles.copilotCard]: props.kind === 'copilots',
+        [styles.engagementCard]: props.kind === 'engagements',
+        [styles.gridCard]: props.view === 'grid',
+        [styles.reviewCard]: props.kind === 'reviews',
+    })
 
     return (
-        <Link className={styles.card} to={card.href}>
+        <Link className={cardClassName} to={card.href}>
             <div className={styles.main}>
                 <div className={styles.eyebrow}>
-                    <span className={styles.badge}>{card.badge}</span>
-                    {card.type && <span>{card.type}</span>}
-                    {card.state && <span className={styles.state}>{card.state}</span>}
+                    <span className={classNames(
+                        styles.badge,
+                        challengeTrackClass(challengeCatalogKey(card.badge)),
+                    )}
+                    >
+                        {card.badge}
+                    </span>
+                    {card.type && (
+                        <span className={classNames(styles.challengeType, styles.opportunityType)}>
+                            <ChallengeTypeIcon aria-hidden='true' />
+                            {card.type}
+                        </span>
+                    )}
+                    {card.state && (
+                        <span className={styles.state}>
+                            {card.state.toLowerCase()
+                                .startsWith('open') && <RegistrationOpenIcon aria-hidden='true' />}
+                            {card.state}
+                        </span>
+                    )}
                 </div>
                 <h3>{card.title}</h3>
                 {visibleSkills.length > 0 && (
