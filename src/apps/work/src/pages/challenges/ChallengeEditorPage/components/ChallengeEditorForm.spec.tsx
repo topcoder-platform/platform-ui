@@ -862,7 +862,7 @@ describe('ChallengeEditorForm', () => {
         ...validDraftChallenge,
         status: 'NEW',
     } as Challenge
-    const designChallengeWithDeferredScreener = {
+    const designChallengeWithDeferredScreeners = {
         ...validDraftChallenge,
         approvalStatus: 'APPROVED',
         phases: [
@@ -870,6 +870,11 @@ describe('ChallengeEditorForm', () => {
                 duration: 60,
                 name: 'Screening',
                 phaseId: 'screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Checkpoint Screening',
+                phaseId: 'checkpoint-screening-phase-id',
             },
             {
                 duration: 60,
@@ -884,6 +889,14 @@ describe('ChallengeEditorForm', () => {
                 memberReviewerCount: 1,
                 phaseId: 'screening-phase-id',
                 scorecardId: 'screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                additionalMemberIds: [],
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-screening-phase-id',
+                scorecardId: 'checkpoint-screening-scorecard-id',
                 shouldOpenOpportunity: false,
             },
             {
@@ -1916,7 +1929,7 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Challenge launch is blocked until budget approval is Approved.')
     })
 
-    it('launches a design draft before a screener member is assigned', async () => {
+    it('launches a design draft before screening members are assigned', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
         mockedUseFetchChallengeTracks.mockReturnValue({
@@ -1944,14 +1957,14 @@ describe('ChallengeEditorForm', () => {
             isLoading: false,
         })
         mockedPatchChallenge.mockResolvedValue({
-            ...designChallengeWithDeferredScreener,
+            ...designChallengeWithDeferredScreeners,
             status: 'ACTIVE',
         })
 
         render(
             <MemoryRouter>
                 <ChallengeEditorForm
-                    challenge={designChallengeWithDeferredScreener}
+                    challenge={designChallengeWithDeferredScreeners}
                     isReadOnly
                     onRegisterLaunchAction={action => {
                         launchAction = action
@@ -1976,6 +1989,10 @@ describe('ChallengeEditorForm', () => {
                         expect.objectContaining({
                             phaseId: 'screening-phase-id',
                             scorecardId: 'screening-scorecard-id',
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
                         }),
                     ]),
                     status: 'ACTIVE',
@@ -4332,7 +4349,7 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
-    it('saves a new design draft before a screener member is assigned', async () => {
+    it('saves a new design draft before screening members are assigned', async () => {
         const user = userEvent.setup()
 
         mockedUseFetchChallengeTracks.mockReturnValue({
@@ -4352,7 +4369,7 @@ describe('ChallengeEditorForm', () => {
             isLoading: false,
         })
         mockedPatchChallenge.mockResolvedValue({
-            ...designChallengeWithDeferredScreener,
+            ...designChallengeWithDeferredScreeners,
             status: 'DRAFT',
         })
 
@@ -4360,7 +4377,7 @@ describe('ChallengeEditorForm', () => {
             <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
                 <ChallengeEditorForm
                     challenge={{
-                        ...designChallengeWithDeferredScreener,
+                        ...designChallengeWithDeferredScreeners,
                         status: 'NEW',
                     }}
                     projectId='100578'
@@ -4378,6 +4395,10 @@ describe('ChallengeEditorForm', () => {
                         expect.objectContaining({
                             phaseId: 'screening-phase-id',
                             scorecardId: 'screening-scorecard-id',
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
                         }),
                     ]),
                     status: 'DRAFT',
