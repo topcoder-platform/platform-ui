@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
+import { readFileSync } from 'fs'
 import {
     fireEvent,
     render,
@@ -17,6 +18,7 @@ import { TicketDetailPage } from './TicketDetailPage'
 const mockMutate = jest.fn()
 const mockUseSWR = jest.fn()
 let mockProfile: { roles: string[]; userId: number | string }
+const ticketDetailStyles = readFileSync(`${__dirname}/TicketDetailPage.module.scss`, 'utf8')
 
 interface Deferred<T> {
     promise: Promise<T>
@@ -194,6 +196,17 @@ describe('TicketDetailPage reply access', () => {
             .toBeNull()
         expect(screen.getByText('This ticket is closed and cannot receive more replies.'))
             .toBeTruthy()
+    })
+
+    it('styles the challenge anchor as a visible link', () => {
+        const challengeLinkRule = ticketDetailStyles.match(
+            /\.challengeLink,\s*\.challengeLink:hover \{[^}]*\}/,
+        )?.[0]
+
+        expect(challengeLinkRule)
+            .toContain('color: $link-blue-dark;')
+        expect(challengeLinkRule)
+            .toContain('text-decoration: underline;')
     })
 
     it('identifies the support staff member who closed the ticket', () => {
