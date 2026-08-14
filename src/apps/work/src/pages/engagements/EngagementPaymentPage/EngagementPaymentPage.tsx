@@ -1125,7 +1125,11 @@ export const EngagementPaymentPage: FC = () => {
                                                     {formatAssignmentDaysLeftInEngagement(
                                                         assignment.startDate,
                                                         assignment.durationMonths,
-                                                        engagementResult.engagement?.status,
+                                                        String(assignment.status || '')
+                                                            .trim()
+                                                            .toUpperCase() === 'TERMINATED'
+                                                            ? assignment.status
+                                                            : engagementResult.engagement?.status,
                                                     )}
                                                 </span>
                                             </div>

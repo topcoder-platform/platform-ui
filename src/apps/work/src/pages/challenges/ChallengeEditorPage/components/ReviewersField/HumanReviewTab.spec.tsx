@@ -32,6 +32,7 @@ import {
     MAX_MANUAL_REVIEWER_COUNT,
 } from '../../../../../lib/constants/challenge-editor.constants'
 import {
+    createResource,
     deleteResource,
     fetchDefaultReviewers,
     fetchProfile,
@@ -68,6 +69,7 @@ jest.mock('../../../../../lib/components/form', () => ({
             control: formContext.control,
             name: props.name,
         })
+
         const selectedValue = typeof controller.field.value === 'string'
             ? controller.field.value
             : ''
@@ -156,8 +158,11 @@ jest.mock('../../../../../lib/components/form', () => ({
         )
     },
     FormUserAutocomplete: (props: {
+        disabled?: boolean
         label: string
         name: string
+        onValueChange?: (value: string) => void
+        placeholder?: string
         required?: boolean
     }) => {
         const {
@@ -170,13 +175,26 @@ jest.mock('../../../../../lib/components/form', () => ({
             name: props.name,
         })
 
+        function handleChange(event: ChangeEvent<HTMLInputElement>): void {
+            props.onValueChange?.(event.target.value)
+            controller.field.onChange(event.target.value)
+        }
+
         return (
             <div
                 data-required={String(props.required === true)}
                 data-testid={props.name}
                 data-value={controller.field.value || ''}
             >
-                <span>{props.label}</span>
+                <label htmlFor={props.name}>{props.label}</label>
+                <input
+                    aria-label={props.label}
+                    disabled={props.disabled}
+                    id={props.name}
+                    onChange={handleChange}
+                    placeholder={props.placeholder}
+                    value={controller.field.value || ''}
+                />
             </div>
         )
     },
@@ -221,6 +239,7 @@ const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedCreateResource = createResource as jest.Mock
 const mockedDeleteResource = deleteResource as jest.Mock
 const mockedFetchDefaultReviewers = fetchDefaultReviewers as jest.Mock
 const mockedFetchProfile = fetchProfile as jest.Mock
@@ -257,11 +276,14 @@ interface TestHarnessProps {
     restoreStaleScorecardId?: boolean
     showAdditionalMemberIdsValue?: boolean
     showMemberValue?: boolean
+    showMemberValueIndex?: number
+    showSecondMemberValue?: boolean
     showPublicOpportunityValue?: boolean
     showRoleValue?: boolean
     showRoleValueIndex?: number
     showScorecardValue?: boolean
     showScorecardValueIndex?: number
+    screenerOnly?: boolean
 }
 
 const baseDefaultValues: ChallengeEditorFormData = {
@@ -398,6 +420,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     })
     const roleValueIndex = props.showRoleValueIndex ?? 0
     const scorecardValueIndex = props.showScorecardValueIndex ?? 0
+    const memberValueIndex = props.showMemberValueIndex ?? 0
 
     useEffect(() => {
         if (!props.initialScorecardErrorMessage) {
@@ -415,7 +438,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 
     return (
         <FormProvider {...formMethods}>
-            <HumanReviewTab />
+            <HumanReviewTab screenerOnly={props.screenerOnly} />
             {props.restoreStaleAdditionalMemberIds
                 ? <StaleAdditionalMemberIdsReporter />
                 : undefined}
@@ -434,7 +457,14 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             {props.showMemberValue
                 ? (
                     <div data-testid='member-id-value'>
-                        {formMethods.watch('reviewers.0.memberId') || ''}
+                        {String(formMethods.watch(`reviewers.${memberValueIndex}.memberId` as never) || '')}
+                    </div>
+                )
+                : undefined}
+            {props.showSecondMemberValue
+                ? (
+                    <div data-testid='second-member-id-value'>
+                        {formMethods.watch('reviewers.1.memberId') || ''}
                     </div>
                 )
                 : undefined}
@@ -498,6 +528,7 @@ describe('HumanReviewTab', () => {
                 .mockResolvedValue(undefined),
             resources: [],
         })
+        mockedCreateResource.mockResolvedValue(undefined)
         mockedDeleteResource.mockResolvedValue(undefined)
         mockedFetchDefaultReviewers.mockImplementation(() => createPendingPromise())
         mockedFetchProfile.mockResolvedValue(undefined)
@@ -1022,6 +1053,581 @@ describe('HumanReviewTab', () => {
             .toHaveProperty('dataset.required', 'false')
         expect(screen.getByTestId('reviewers.2.memberId'))
             .toHaveProperty('dataset.required', 'true')
+    })
+
+    it('assigns one simplified screener selection to checkpoint and final screening roles', async () => {
+        const mutateResources = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [
+                {
+                    id: 'checkpoint-screener-role-id',
+                    name: 'Checkpoint Screener',
+                },
+                {
+                    id: 'screener-role-id',
+                    name: 'Screener',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: mutateResources,
+            resources: [],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+                screenerOnly
+                showMemberValue
+                showMemberValueIndex={0}
+                showSecondMemberValue
+                showScorecardValue
+                showScorecardValueIndex={0}
+            />,
+        )
+
+        expect(screen.getByLabelText('Screener')
+            .getAttribute('placeholder'))
+            .toBe('Select user')
+        expect(screen.queryByLabelText('Phase'))
+            .toBeNull()
+        expect(screen.queryByLabelText('Scorecard'))
+            .toBeNull()
+
+        fireEvent.change(screen.getByLabelText('Screener'), {
+            target: {
+                value: 'screener-member-id',
+            },
+        })
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('screener-member-id')
+            expect(screen.getByTestId('second-member-id-value').textContent)
+                .toBe('screener-member-id')
+            expect((screen.getByLabelText('Screener') as HTMLInputElement).value)
+                .toBe('screener-member-id')
+            expect(mockedCreateResource.mock.calls)
+                .toEqual(expect.arrayContaining([
+                    [{
+                        challengeId: 'challenge-1',
+                        memberId: 'screener-member-id',
+                        roleId: 'checkpoint-screener-role-id',
+                    }],
+                    [{
+                        challengeId: 'challenge-1',
+                        memberId: 'screener-member-id',
+                        roleId: 'screener-role-id',
+                    }],
+                ]))
+        })
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('checkpoint-screening-scorecard-id')
+        expect(mockedCreateResource)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+        await waitFor(() => {
+            expect(mutateResources)
+                .toHaveBeenCalled()
+        })
+    })
+
+    it('disables simplified screener changes while both resource assignments synchronize', async () => {
+        const resourceCreateRequest = createDeferredPromise<void>()
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [
+                {
+                    id: 'checkpoint-screener-role-id',
+                    name: 'Checkpoint Screener',
+                },
+                {
+                    id: 'screener-role-id',
+                    name: 'Screener',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [],
+        })
+        mockedCreateResource.mockReturnValue(resourceCreateRequest.promise)
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                }}
+                screenerOnly
+            />,
+        )
+
+        const screenerField = screen.getByLabelText('Screener') as HTMLInputElement
+
+        fireEvent.change(screenerField, {
+            target: {
+                value: 'first-member-id',
+            },
+        })
+
+        await waitFor(() => {
+            expect(screenerField.disabled)
+                .toBe(true)
+        })
+        fireEvent.change(screenerField, {
+            target: {
+                value: 'second-member-id',
+            },
+        })
+        expect(mockedCreateResource)
+            .toHaveBeenCalledTimes(2)
+
+        await act(async () => {
+            resourceCreateRequest.resolve(undefined)
+            await resourceCreateRequest.promise
+        })
+        await waitFor(() => {
+            expect(screenerField.disabled)
+                .toBe(false)
+        })
+    })
+
+    it('disables simplified screener assignment when challenge resources fail to load', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [{
+                id: 'screener-role-id',
+                name: 'Screener',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isError: true,
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [{
+                        name: 'Screening',
+                        phaseId: 'screening-phase-id',
+                    }],
+                    reviewers: [{
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'screening-phase-id',
+                    }],
+                }}
+                screenerOnly
+            />,
+        )
+
+        expect((screen.getByLabelText('Screener') as HTMLInputElement).disabled)
+            .toBe(true)
+        expect(screen.getByText('Unable to load screener assignments.'))
+            .not.toBeNull()
+    })
+
+    it('replaces existing checkpoint and final screener resources together', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [
+                {
+                    id: 'checkpoint-screener-role-id',
+                    name: 'Checkpoint Screener',
+                },
+                {
+                    id: 'screener-role-id',
+                    name: 'Screener',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    challengeId: 'challenge-1',
+                    memberId: 'old-member-id',
+                    roleId: 'checkpoint-screener-role-id',
+                    roleName: 'Checkpoint Screener',
+                },
+                {
+                    challengeId: 'challenge-1',
+                    memberId: 'old-member-id',
+                    roleId: 'screener-role-id',
+                    roleName: 'Screener',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberId: 'old-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-scorecard-id',
+                        },
+                        {
+                            isMemberReview: true,
+                            memberId: 'old-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                        },
+                    ],
+                }}
+                screenerOnly
+            />,
+        )
+
+        fireEvent.change(screen.getByLabelText('Screener'), {
+            target: {
+                value: 'new-member-id',
+            },
+        })
+
+        await waitFor(() => {
+            expect(mockedDeleteResource.mock.calls)
+                .toEqual(expect.arrayContaining([
+                    [{
+                        challengeId: 'challenge-1',
+                        memberHandle: undefined,
+                        memberId: 'old-member-id',
+                        roleId: 'checkpoint-screener-role-id',
+                    }],
+                    [{
+                        challengeId: 'challenge-1',
+                        memberHandle: undefined,
+                        memberId: 'old-member-id',
+                        roleId: 'screener-role-id',
+                    }],
+                ]))
+        })
+        expect(mockedCreateResource)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedDeleteResource)
+            .toHaveBeenCalledTimes(2)
+    })
+
+    it('clears existing checkpoint and final screener resources together', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [
+                {
+                    id: 'checkpoint-screener-role-id',
+                    name: 'Checkpoint Screener',
+                },
+                {
+                    id: 'screener-role-id',
+                    name: 'Screener',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    challengeId: 'challenge-1',
+                    memberId: 'old-member-id',
+                    roleId: 'checkpoint-screener-role-id',
+                    roleName: 'Checkpoint Screener',
+                },
+                {
+                    challengeId: 'challenge-1',
+                    memberId: 'old-member-id',
+                    roleId: 'screener-role-id',
+                    roleName: 'Screener',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberId: 'old-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            isMemberReview: true,
+                            memberId: 'old-member-id',
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                }}
+                screenerOnly
+            />,
+        )
+
+        fireEvent.change(screen.getByLabelText('Screener'), {
+            target: {
+                value: '',
+            },
+        })
+
+        await waitFor(() => {
+            expect(mockedDeleteResource)
+                .toHaveBeenCalledTimes(2)
+        })
+        expect(mockedCreateResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('does not duplicate a hydrated handle-only screener resource', async () => {
+        const mutateResources = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [{
+                id: 'screener-role-id',
+                name: 'Screener',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isError: false,
+            isLoading: false,
+            mutate: mutateResources,
+            resources: [{
+                challengeId: 'challenge-1',
+                memberHandle: 'legacy.screener',
+                roleId: 'screener-role-id',
+                roleName: 'Screener',
+            }],
+        })
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'legacy.screener',
+            userId: 'legacy-member-id',
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [{
+                        name: 'Screening',
+                        phaseId: 'screening-phase-id',
+                    }],
+                    reviewers: [{
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'screening-phase-id',
+                    }],
+                }}
+                screenerOnly
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByLabelText('Screener') as HTMLInputElement).value)
+                .toBe('legacy-member-id')
+            expect((screen.getByLabelText('Screener') as HTMLInputElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.change(screen.getByLabelText('Screener'), {
+            target: {
+                value: ' legacy-member-id ',
+            },
+        })
+
+        await waitFor(() => {
+            expect(mutateResources)
+                .toHaveBeenCalled()
+        })
+        expect(mockedCreateResource)
+            .not.toHaveBeenCalled()
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('assigns only the final Screener role for one-round design challenges', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [{
+                id: 'screener-role-id',
+                name: 'Screener',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [{
+                        name: 'Screening',
+                        phaseId: 'screening-phase-id',
+                    }],
+                    reviewers: [{
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'screening-phase-id',
+                        scorecardId: 'screening-scorecard-id',
+                    }],
+                }}
+                screenerOnly
+            />,
+        )
+
+        fireEvent.change(screen.getByLabelText('Screener'), {
+            target: {
+                value: 'screener-member-id',
+            },
+        })
+
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: 'challenge-1',
+                    memberId: 'screener-member-id',
+                    roleId: 'screener-role-id',
+                })
+        })
+        expect(mockedCreateResource)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('defaults new manual reviewer cards to regular review type', async () => {

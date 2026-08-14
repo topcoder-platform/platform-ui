@@ -42,6 +42,7 @@ type ReviewTab = typeof REVIEW_TAB[number]
 interface ReviewersFieldProps {
     isReadOnly?: boolean
     onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | undefined) => void
+    screenerOnly?: boolean
 }
 
 function hasReviewerChanges(
@@ -160,10 +161,10 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         ? `Review Context (${reviewContextRequirementCount})`
         : 'Review Context'
     const aiGatingManualReviewError = useMemo(
-        () => (aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+        () => (!props.screenerOnly && aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
             : undefined),
-        [aiReviewMode, humanReviewersCount],
+        [aiReviewMode, humanReviewersCount, props.screenerOnly],
     )
 
     useEffect(() => {
@@ -324,7 +325,11 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 )
                 : undefined}
 
-            {!props.isReadOnly
+            {!props.isReadOnly && props.screenerOnly
+                ? <HumanReviewTab screenerOnly />
+                : undefined}
+
+            {!props.isReadOnly && !props.screenerOnly
                 ? (
                     <>
                         <div
@@ -395,9 +400,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         </div>
 
                         <fieldset className={styles.tabPanels}>
-                            {aiGatingManualReviewError && !errors.reviewers && (
-                                <p className={styles.error}>{aiGatingManualReviewError}</p>
-                            )}
+                            {aiGatingManualReviewError && !errors.reviewers
+                                ? <p className={styles.error}>{aiGatingManualReviewError}</p>
+                                : undefined}
                             <div
                                 aria-labelledby='reviewers-human-tab'
                                 className={classNames(

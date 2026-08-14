@@ -53,6 +53,18 @@ const expandedTailRatingDistribution = {
     },
 }
 
+const cappedRatingDistribution = {
+    ...ratingDistribution,
+    distribution: {
+        ratingRange0To899: 10,
+        ratingRange900To1199: 20,
+        ratingRange1200To1499: 30,
+        ratingRange1500To2199: 40,
+        ratingRange2200To2999: 5,
+        ratingRange3000To3999: 2,
+    },
+}
+
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(),
 }), {
@@ -154,8 +166,69 @@ describe('MemberRatingInfoModal', () => {
         expect(marker)
             .toHaveStyle('color: #616BD5')
         expect(parseFloat(marker.style.left))
-            .toBeLessThan(80)
+            .toBeCloseTo((5.5 / 6) * 100)
         expect(marker)
             .toHaveClass('memberMarkerStacked')
+    })
+
+    it('centers the marker on the final module bar when the rating exceeds the distribution', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={0.1}
+                profile={baseProfile}
+                rating={4051}
+                ratingDistribution={cappedRatingDistribution}
+            />,
+        )
+
+        const marker = screen.getByTestId('rating-member-marker')
+
+        expect(parseFloat(marker.style.left))
+            .toBeCloseTo((5.5 / 6) * 100)
+        expect(marker)
+            .toHaveClass('memberMarkerStacked')
+    })
+
+    it('removes trailing empty buckets so the histogram spans the chart', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={15}
+                profile={baseProfile}
+                rating={1646}
+                ratingDistribution={expandedTailRatingDistribution}
+            />,
+        )
+
+        const marker = screen.getByTestId('rating-member-marker')
+        const bars = document.querySelector('[class*="bars"]') as HTMLElement
+
+        expect(bars)
+            .not
+            .toHaveAttribute('style')
+        expect(parseFloat(marker.style.left))
+            .toBeCloseTo((3.5 / 6) * 100)
+    })
+
+    it('hides the 2200+ axis label when the distribution has no elite buckets', () => {
+        render(
+            <MemberRatingInfoModal
+                audienceLabel='developers'
+                onClose={jest.fn()}
+                percentile={15}
+                profile={baseProfile}
+                rating={1646}
+                ratingDistribution={ratingDistribution}
+            />,
+        )
+
+        expect(screen.getByText('1500'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('2200+'))
+            .not
+            .toBeInTheDocument()
     })
 })

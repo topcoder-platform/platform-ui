@@ -684,7 +684,10 @@ jest.mock('./ReviewCostField', () => ({
     ReviewCostField: () => <></>,
 }))
 jest.mock('./ReviewersField', () => ({
-    ReviewersField: (props: { isReadOnly?: boolean }) => {
+    ReviewersField: (props: {
+        isReadOnly?: boolean
+        screenerOnly?: boolean
+    }) => {
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const reviewers = reactHookForm.useWatch({
             control: reactHookForm.useFormContext().control,
@@ -695,6 +698,7 @@ jest.mock('./ReviewersField', () => ({
             <div
                 data-read-only={props.isReadOnly === true ? 'true' : 'false'}
                 data-reviewers={JSON.stringify(reviewers || [])}
+                data-screener-only={props.screenerOnly === true ? 'true' : 'false'}
                 data-testid='reviewers-field'
             >
                 Reviewers Field
@@ -3073,6 +3077,131 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('reviewers-field')
             .closest('fieldset[disabled]'))
             .toBeNull()
+    })
+
+    it('uses the simplified screener review for a copilot editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreener} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+    })
+
+    it('uses persisted Design Challenge metadata for the copilot review gate', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...designChallengeWithDeferredScreener,
+                            track: {
+                                abbreviation: 'DESIGN',
+                                name: 'Design',
+                            },
+                        }}
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+    })
+
+    it('keeps the full review configuration for an admin editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        const adminContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isAdmin: true,
+            userRoles: ['administrator'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={adminContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreener} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'false')
+    })
+
+    it('keeps the full review configuration for a copilot editing a Design First2Finish', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm challenge={first2FinishDraftChallenge} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'false')
     })
 
     it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {

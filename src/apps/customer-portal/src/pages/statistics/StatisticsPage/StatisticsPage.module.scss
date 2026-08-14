@@ -296,6 +296,12 @@
         }
     }
 
+    :global(.highcharts-tooltip) {
+        position: fixed !important;
+        transform: none !important;
+        z-index: 20;
+    }
+
     &:fullscreen {
         height: 100vh;
         min-height: 100vh;
@@ -304,6 +310,12 @@
         :global(.highcharts-container),
         :global(.highcharts-root) {
             height: 100vh !important;
+        }
+    }
+
+    @include ltesm {
+        :global(.highcharts-legend-item text) {
+            font-size: 10px !important;
         }
     }
 }
@@ -367,6 +379,9 @@
         top: 100%;
         transform: translateX(-50%);
         width: 0;
+        @include ltemd {
+            display: none;
+        }
     }
 }
 
