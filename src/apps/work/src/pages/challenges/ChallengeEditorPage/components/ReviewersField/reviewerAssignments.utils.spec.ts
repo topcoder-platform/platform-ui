@@ -9,7 +9,7 @@ import {
 } from './reviewerAssignments.utils'
 
 describe('buildAssignedResourcesByReviewer', () => {
-    it('reserves generic reviewer resources for Review rows before Screening fallbacks', () => {
+    it('reserves generic reviewer resources for Review rows before screening phase fallbacks', () => {
         const resourceRoles: ResourceRole[] = [
             {
                 id: 'role-screener',
@@ -18,6 +18,10 @@ describe('buildAssignedResourcesByReviewer', () => {
             {
                 id: 'role-reviewer',
                 name: 'Reviewer',
+            },
+            {
+                id: 'role-checkpoint-screener',
+                name: 'Checkpoint Screener',
             },
         ]
         const resources: Resource[] = [
@@ -35,6 +39,11 @@ describe('buildAssignedResourcesByReviewer', () => {
             },
             {
                 memberReviewerCount: 1,
+                phaseId: 'phase-checkpoint-screening',
+                roleId: 'role-reviewer',
+            },
+            {
+                memberReviewerCount: 1,
                 phaseId: 'phase-review',
             },
         ]
@@ -44,6 +53,10 @@ describe('buildAssignedResourcesByReviewer', () => {
                 [
                     'phase-screening',
                     'Screening',
+                ],
+                [
+                    'phase-checkpoint-screening',
+                    'Checkpoint Screening',
                 ],
                 [
                     'phase-review',
@@ -58,6 +71,7 @@ describe('buildAssignedResourcesByReviewer', () => {
         expect(assignedResourcesByReviewer.map(assignedResources => assignedResources
             .map(resource => resource.memberHandle)))
             .toEqual([
+                [],
                 [],
                 ['reviewer-one'],
             ])

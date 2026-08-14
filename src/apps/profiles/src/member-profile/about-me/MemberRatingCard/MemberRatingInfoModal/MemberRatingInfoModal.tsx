@@ -293,17 +293,46 @@ const getAxisLabelPosition = (
 }
 
 /**
+ * Returns axis labels that fall within the visible distribution ranges.
+ *
+ * Hides labels such as `2200+` when the trimmed histogram has no elite buckets,
+ * which otherwise stack on top of the final label (e.g. `1500`).
+ *
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {Array<{ label: string, value: number }>} Axis labels to render.
+ */
+const getVisibleAxisLabels = (
+    ranges: RatingDistributionRange[],
+): Array<{ label: string, value: number }> => {
+    if (ranges.length === 0) {
+        return chartAxisLabels
+    }
+
+    const chartEnd = ranges[ranges.length - 1].end
+
+    return chartAxisLabels.filter((axisLabel: { label: string, value: number }) => (
+        axisLabel.value <= chartEnd
+    ))
+}
+
+/**
  * Calculates a bar height for a histogram count.
  *
- * Used by MemberRatingInfoModal to preserve visible bars for low non-zero ranges.
+ * Empty buckets still get a short stub so the chart baseline stays visible,
+ * especially at the low end of the distribution (0 to the first populated range).
+ * Populated buckets use a slightly taller minimum so small counts remain readable.
  *
  * @param {number} value - Number of members in the rating range.
  * @param {number} maxValue - Highest count in the distribution.
  * @returns {number} A percentage height for CSS rendering.
  */
 const getBarHeight = (value: number, maxValue: number): number => {
-    if (value <= 0 || maxValue <= 0) {
+    if (maxValue <= 0) {
         return 0
+    }
+
+    if (value <= 0) {
+        return 1
     }
 
     return Math.max(4, Math.round((value / maxValue) * 100))
@@ -353,6 +382,9 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const markerPosition: number = props.rating !== undefined
         ? getMarkerPosition(props.rating, distributionRanges)
         : 0
+    const visibleAxisLabels: Array<{ label: string, value: number }> = useMemo(() => (
+        getVisibleAxisLabels(distributionRanges)
+    ), [distributionRanges])
     const shouldStackMarkerRating: boolean = props.rating !== undefined && (
         markerPosition >= stackedMarkerPositionThreshold
         || props.rating >= stackedMarkerRatingThreshold
@@ -470,7 +502,7 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                             )}
 
                             <div className={styles.axisLabels}>
-                                {chartAxisLabels.map((axisLabel: { label: string, value: number }) => (
+                                {visibleAxisLabels.map((axisLabel: { label: string, value: number }) => (
                                     <span
                                         key={axisLabel.label}
                                         style={{

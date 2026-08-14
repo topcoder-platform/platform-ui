@@ -146,11 +146,11 @@ export function getAssignmentDaysLeftInEngagement(
 /**
  * Formats remaining engagement days for Assignments list display.
  *
- * Cancelled or closed engagements show `N/A`.
+ * Cancelled or closed engagements, and terminated assignments, show `N/A`.
  *
  * @param startDate billing start date.
  * @param durationMonths assignment duration in months.
- * @param engagementStatus optional engagement status.
+ * @param engagementStatus optional engagement or assignment status.
  * @param now optional "today" override for tests.
  * @returns display string such as `16 days`, `N/A`, or `-` when unavailable.
  */

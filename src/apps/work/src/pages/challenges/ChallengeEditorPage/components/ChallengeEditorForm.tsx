@@ -85,7 +85,11 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
-import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
+import {
+    booleanToMetadata,
+    getMetadataValue,
+    setMetadataValue,
+} from '../../../../lib/utils/metadata.utils'
 import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
@@ -2017,17 +2021,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
-            const normalizedChallengeTypeName = (selectedChallengeType?.name || '')
+            const normalizedChallengeTypeName = (resolvedChallengeTypeName || '')
                 .trim()
                 .toUpperCase()
-            const normalizedChallengeTypeAbbreviation = (selectedChallengeType?.abbreviation || '')
+            const normalizedChallengeTypeAbbreviation = (resolvedChallengeTypeAbbreviation || '')
                 .trim()
                 .toUpperCase()
 
             return normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
                 || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
         },
-        [selectedChallengeType],
+        [resolvedChallengeTypeAbbreviation, resolvedChallengeTypeName],
     )
     const isTaskChallengeSelected = useMemo(
         (): boolean => isTaskChallengeType(selectedChallengeType)
@@ -2219,6 +2223,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
+    const shouldUseSimplifiedDesignReview = shouldUseCopilotBillingSummary
+        && isDesignTrackSelected
+        && isChallengeTypeSelected
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -3327,6 +3334,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         formDataWithProjectBilling.phases,
                         persistedFormData.phases,
                     )
+                const savedMetadata = Array.isArray(savedChallengeSnapshot.metadata)
+                    ? persistedFormData.metadata
+                    : formDataWithProjectBilling.metadata
+                const submittedSubmissionLimit = getMetadataValue(
+                    formDataWithProjectBilling.metadata,
+                    'submissionLimit',
+                )
+                const savedSubmissionLimit = getMetadataValue(
+                    savedMetadata,
+                    'submissionLimit',
+                )
+                const postSaveMetadata = submittedSubmissionLimit === undefined
+                    || savedSubmissionLimit !== undefined
+                    ? savedMetadata
+                    : setMetadataValue(
+                        savedMetadata,
+                        'submissionLimit',
+                        submittedSubmissionLimit,
+                    )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     await hydratePersistedSavedFormData(
@@ -3336,6 +3362,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             attachments: Array.isArray(persistedFormData.attachments)
                                 ? persistedFormData.attachments
                                 : formDataWithProjectBilling.attachments,
+                            metadata: postSaveMetadata,
                         },
                     ),
                     formDataWithProjectBilling,
@@ -3838,6 +3865,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
                             aiReviewConfigSaveControllerRef.current = controller
                         }}
+                        screenerOnly={shouldUseSimplifiedDesignReview}
                     />
                 </div>
             </section>
