@@ -40,7 +40,7 @@ import type {
 } from '../common/types'
 import {
     aggregateSubmissionReviews,
-    challengeHasSubmissionLimit,
+    getChallengeSubmissionSelectionLimit,
     getSubmissionHistoryKey,
     isAppealsPhase,
     isAppealsResponsePhase,
@@ -155,6 +155,11 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [challengeInfo?.submissions, datas, submissionTypes],
     )
 
+    const submissionSelectionLimit = useMemo<number | undefined>(
+        () => getChallengeSubmissionSelectionLimit(challengeInfo),
+        [challengeInfo],
+    )
+
     const {
         closeHistoryModal,
         historyByMember,
@@ -168,11 +173,12 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         datas,
         filteredAll,
         isSubmissionTab: true,
+        maxVisibleSubmissions: submissionSelectionLimit,
     })
 
     const restrictToLatest = useMemo<boolean>(
-        () => challengeHasSubmissionLimit(challengeInfo),
-        [challengeInfo],
+        () => submissionSelectionLimit !== undefined,
+        [submissionSelectionLimit],
     )
     const useAggregateReviewScore = useMemo<boolean>(
         () => isMarathonMatchChallenge(challengeInfo),
@@ -524,6 +530,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                     const historyKeyForSubmission = getSubmissionHistoryKey(
                         submission.memberId,
                         submission.id,
+                        submission.type,
                     )
                     const historyEntries = historyByMember.get(historyKeyForSubmission) ?? []
                     const filteredHistory = restrictToLatest

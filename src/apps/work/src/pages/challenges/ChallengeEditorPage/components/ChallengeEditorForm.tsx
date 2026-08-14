@@ -85,7 +85,11 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
-import { booleanToMetadata } from '../../../../lib/utils/metadata.utils'
+import {
+    booleanToMetadata,
+    getMetadataValue,
+    setMetadataValue,
+} from '../../../../lib/utils/metadata.utils'
 import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
@@ -3330,6 +3334,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         formDataWithProjectBilling.phases,
                         persistedFormData.phases,
                     )
+                const savedMetadata = Array.isArray(savedChallengeSnapshot.metadata)
+                    ? persistedFormData.metadata
+                    : formDataWithProjectBilling.metadata
+                const submittedSubmissionLimit = getMetadataValue(
+                    formDataWithProjectBilling.metadata,
+                    'submissionLimit',
+                )
+                const savedSubmissionLimit = getMetadataValue(
+                    savedMetadata,
+                    'submissionLimit',
+                )
+                const postSaveMetadata = submittedSubmissionLimit === undefined
+                    || savedSubmissionLimit !== undefined
+                    ? savedMetadata
+                    : setMetadataValue(
+                        savedMetadata,
+                        'submissionLimit',
+                        submittedSubmissionLimit,
+                    )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     await hydratePersistedSavedFormData(
@@ -3339,6 +3362,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             attachments: Array.isArray(persistedFormData.attachments)
                                 ? persistedFormData.attachments
                                 : formDataWithProjectBilling.attachments,
+                            metadata: postSaveMetadata,
                         },
                     ),
                     formDataWithProjectBilling,
