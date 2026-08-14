@@ -144,7 +144,7 @@ describe('OpenSupportRequestModal', () => {
         expect(screen.getByRole('dialog')
             .getAttribute('data-size'))
             .toBe('body')
-        const challengeSelect = screen.getByLabelText('Challenge (if applicable)') as HTMLSelectElement
+        const challengeSelect = screen.getByLabelText('Active Challenge (if applicable)') as HTMLSelectElement
         expect(challengeSelect.options[0].text)
             .toBe('Select challenge')
         expect(mockUseSWR.mock.calls[0][0])
@@ -155,7 +155,7 @@ describe('OpenSupportRequestModal', () => {
         expect(mockedGetActiveChallenges)
             .toHaveBeenCalledWith('12345')
 
-        fireEvent.change(screen.getByLabelText('Challenge (if applicable)'), {
+        fireEvent.change(screen.getByLabelText('Active Challenge (if applicable)'), {
             target: { value: 'challenge-2' },
         })
         fireEvent.change(screen.getByLabelText('Description'), {
@@ -209,7 +209,7 @@ describe('OpenSupportRequestModal', () => {
             />,
         )
 
-        fireEvent.change(screen.getByLabelText('Challenge (if applicable)'), {
+        fireEvent.change(screen.getByLabelText('Active Challenge (if applicable)'), {
             target: { value: 'challenge-2' },
         })
         mockUseSWR.mockReturnValue({

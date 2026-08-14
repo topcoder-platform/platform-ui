@@ -4,6 +4,7 @@ import {
     buildPhaseTabs,
     collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
+    getChallengeSubmissionSelectionLimit,
     hasPendingApprovalReview,
     isFirst2FinishChallenge,
     isMarathonMatchChallenge,
@@ -51,6 +52,115 @@ const createBackendPhase = (
 })
 
 describe('challenge phase tab helpers', () => {
+    it('uses the configured Design submission count', () => {
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [{
+                name: 'submissionLimit',
+                value: JSON.stringify({ count: '2', limit: 'true', unlimited: 'false' }),
+            }],
+            track: {
+                id: 'design-track',
+                name: 'Design',
+            },
+        }))
+            .toBe(2)
+    })
+
+    it('retains the latest-one policy for a finite Design count of one', () => {
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [{
+                name: 'submissionLimit',
+                value: JSON.stringify({ count: 1, limit: true, unlimited: false }),
+            }],
+            track: {
+                id: 'design-track',
+                name: 'Design',
+            },
+        }))
+            .toBe(1)
+    })
+
+    it('keeps explicit and default Design submission limits unlimited', () => {
+        const track = {
+            id: 'design-track',
+            name: 'Design',
+        }
+
+        expect(getChallengeSubmissionSelectionLimit({ metadata: [], track }))
+            .toBeUndefined()
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [{
+                name: 'submissionLimit',
+                value: JSON.stringify({ count: '', limit: 'false', unlimited: 'true' }),
+            }],
+            track,
+        }))
+            .toBeUndefined()
+    })
+
+    it('recognizes Design from canonical track fields and keeps non-Design latest-one', () => {
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [],
+            track: {
+                id: 'design-track',
+                name: '',
+                track: 'DESIGN',
+            },
+        }))
+            .toBeUndefined()
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [{
+                name: 'submissionLimit',
+                value: JSON.stringify({ count: '', limit: 'false', unlimited: 'true' }),
+            }],
+            track: {
+                id: 'development-track',
+                name: 'Development',
+            },
+        }))
+            .toBe(1)
+    })
+
+    it.each([
+        [
+            'an explicit unlimited flag with a stale count',
+            { count: '5', limit: 'false' },
+            undefined,
+        ],
+        [
+            'contradictory flags',
+            { count: '2', limit: 'true', unlimited: 'true' },
+            1,
+        ],
+        [
+            'a non-integer count',
+            '2.5',
+            1,
+        ],
+        [
+            'an invalid higher-priority count alias',
+            { count: 'invalid', maximum: '4' },
+            1,
+        ],
+        [
+            'an unrecognized boolean flag alias with a valid count',
+            { count: '3', limit: 'unlimited' },
+            3,
+        ],
+    ])('matches the backend policy for %s', (_description, value, expected) => {
+        expect(getChallengeSubmissionSelectionLimit({
+            metadata: [{
+                name: 'submissionLimit',
+                value: typeof value === 'string' ? value : JSON.stringify(value),
+            }],
+            track: {
+                id: 'design-track',
+                name: 'Design',
+            },
+        }))
+            .toBe(expected)
+    })
+
     it('recognizes Marathon Match challenges from type metadata', () => {
         expect(isMarathonMatchChallenge({
             type: {

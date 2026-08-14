@@ -33,7 +33,7 @@ import {
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
-    challengeHasSubmissionLimit,
+    getChallengeSubmissionSelectionLimit,
     getHandleUrl,
     getSubmissionHistoryKey,
     isReviewPhaseCurrentlyOpen,
@@ -400,7 +400,11 @@ const createHistoryAction = ({
         return undefined
     }
 
-    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+    const historyKeyForRow = getSubmissionHistoryKey(
+        data.memberId,
+        data.submissionId,
+        data.type,
+    )
     const historyEntries = historyByMember.get(historyKeyForRow) ?? []
     if (!historyEntries.length) {
         return undefined
@@ -945,9 +949,16 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [submissionMetaById],
     )
 
+    const submissionSelectionLimit = useMemo<number | undefined>(
+        () => getChallengeSubmissionSelectionLimit(challengeInfo),
+        [challengeInfo],
+    )
+
     const submissionHistory = useMemo(
-        () => partitionSubmissionHistory(primarySubmissionInfos, historySourceSubmissions),
-        [historySourceSubmissions, primarySubmissionInfos],
+        () => partitionSubmissionHistory(primarySubmissionInfos, historySourceSubmissions, {
+            visibleSubmissionCount: submissionSelectionLimit,
+        }),
+        [historySourceSubmissions, primarySubmissionInfos, submissionSelectionLimit],
     )
 
     const { historyByMember, latestSubmissionIds }: SubmissionHistoryPartition = submissionHistory
@@ -957,16 +968,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         rows: visibleScreenings,
     }: ScreeningRowsSelection = useMemo(
         () => selectVisibleScreeningRows({
-            hasSubmissionLimit: challengeHasSubmissionLimit(challengeInfo),
             latestSubmissionIds,
             screeningRows: props.screenings,
-            submissionInfos: primarySubmissionInfos,
+            submissionLimit: submissionSelectionLimit,
         }),
         [
-            challengeInfo,
             latestSubmissionIds,
-            primarySubmissionInfos,
             props.screenings,
+            submissionSelectionLimit,
         ],
     )
 
@@ -1051,7 +1060,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const openHistoryModal = useCallback(
         (memberId: string | undefined, submissionId: string): void => {
-            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const submissionType = submissionMetaById.get(submissionId)?.type
+            const key = getSubmissionHistoryKey(memberId, submissionId, submissionType)
             const historyEntries = historyByMember.get(key)
             if (!historyEntries || historyEntries.length === 0) {
                 return
@@ -1059,7 +1069,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
             setHistoryKey(key)
         },
-        [historyByMember],
+        [historyByMember, submissionMetaById],
     )
 
     const openReopenDialog = useCallback(

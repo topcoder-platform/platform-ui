@@ -17,9 +17,13 @@ import {
     useLocation,
 } from 'react-router-dom'
 
-import { fetchReportsIndex } from '../../lib/services'
+import {
+    fetchReportJson,
+    fetchReportsIndex,
+    SfdcBillingAccountPaymentRow,
+} from '../../lib/services'
 
-import { ReportsPage } from './ReportsPage'
+import { BillingAccountsPage, ReportsPage } from './ReportsPage'
 
 type MockSelectProps = {
     disabled?: boolean
@@ -86,6 +90,8 @@ jest.mock('../../lib/utils', () => ({
 }))
 
 const mockedFetchReportsIndex = fetchReportsIndex as jest.Mock
+const mockedFetchReportJson = fetchReportJson as jest.Mock
+const originalTimezone = process.env.TZ
 
 const LocationProbe = (): JSX.Element => {
     const { pathname }: { pathname: string } = useLocation()
@@ -107,6 +113,15 @@ describe('Reports page navigation', () => {
                 }],
             },
         })
+    })
+
+    afterEach(() => {
+        if (originalTimezone) {
+            process.env.TZ = originalTimezone
+            return
+        }
+
+        delete process.env.TZ
     })
 
     it('opens Bulk Member Lookup from the Reports app root', async () => {
@@ -136,5 +151,65 @@ describe('Reports page navigation', () => {
 
         expect(screen.getByTestId('location'))
             .toHaveTextContent('/reports/bulk-member-lookup')
+    })
+
+    it('renders SFDC payment dates in America/New_York', async () => {
+        process.env.TZ = 'Asia/Colombo'
+        const paymentDate = '2026-07-31T18:53:33.383-04:00'
+        const payment: SfdcBillingAccountPaymentRow = {
+            billingAccountId: '80000001',
+            category: 'CHALLENGE_PAYMENT',
+            challengeFee: '0.00',
+            challengeId: 'challenge-id',
+            challengeName: 'July payment',
+            challengeStatus: 'Completed',
+            isTask: false,
+            paymentAmount: '100.00',
+            paymentDate,
+            paymentId: 'payment-id',
+            paymentStatus: 'PAID',
+            winnerFirstName: 'Ada',
+            winnerHandle: 'ada',
+            winnerId: '123',
+            winnerLastName: 'Lovelace',
+        }
+        mockedFetchReportJson.mockResolvedValue([payment])
+
+        render(
+            <MemoryRouter initialEntries={['/reports/sfdc-payments']}>
+                <BillingAccountsPage />
+            </MemoryRouter>,
+        )
+
+        expect(await screen.findByText('July payment'))
+            .toBeInTheDocument()
+        const parsedPaymentDate = new Date(paymentDate)
+        const displayedDate = parsedPaymentDate
+            .toLocaleString(undefined, { timeZone: 'America/New_York' })
+        const browserDisplayedDate = parsedPaymentDate
+            .toLocaleString()
+
+        expect(screen.getByText(displayedDate))
+            .toBeInTheDocument()
+        expect(parsedPaymentDate.getUTCDate())
+            .toBe(31)
+        expect(parsedPaymentDate.getDate())
+            .toBe(1)
+        expect(displayedDate)
+            .not.toBe(browserDisplayedDate)
+
+        mockedFetchReportJson.mockResolvedValueOnce({
+            billingAccount: {
+                budget: '1000.00',
+                markup: '0.00',
+                name: 'Boundary account',
+                startDate: paymentDate,
+                status: 'Active',
+            },
+        })
+        fireEvent.click(screen.getByRole('button', { name: '80000001' }))
+
+        expect(await screen.findByText(browserDisplayedDate))
+            .toBeInTheDocument()
     })
 })

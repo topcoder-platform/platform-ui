@@ -36,6 +36,8 @@ import {
     ChallengeEditorFormData,
     DefaultReviewer,
     Resource,
+    ResourcePayload,
+    ResourceRole,
     Reviewer,
     Scorecard,
 } from '../../../../../lib/models'
@@ -88,6 +90,10 @@ const APPEAL_PHASE_KEYS = new Set([
     'appeals',
     'appealsresponse',
 ])
+const SCREENER_ROLE_NAME_BY_PHASE_KEY: Record<string, string> = {
+    checkpointscreening: 'Checkpoint Screener',
+    screening: 'Screener',
+}
 const REVIEW_OPPORTUNITY_TYPES = {
     COMPONENT_DEV_REVIEW: 'COMPONENT_DEV_REVIEW',
     ITERATIVE_REVIEW: 'ITERATIVE_REVIEW',
@@ -595,12 +601,12 @@ function getReviewOpportunityTypeForReviewer(params: {
 function getRoleNameForPhaseName(phaseName: string | undefined): string {
     const normalizedPhaseName = normalizeKey(phaseName)
 
-    if (normalizedPhaseName === 'approval') {
-        return 'Approver'
+    if (SCREENER_ROLE_NAME_BY_PHASE_KEY[normalizedPhaseName]) {
+        return SCREENER_ROLE_NAME_BY_PHASE_KEY[normalizedPhaseName]
     }
 
-    if (normalizedPhaseName === 'checkpointscreening') {
-        return 'Checkpoint Screener'
+    if (normalizedPhaseName === 'approval') {
+        return 'Approver'
     }
 
     if (normalizedPhaseName === 'checkpointreview') {
@@ -611,11 +617,153 @@ function getRoleNameForPhaseName(phaseName: string | undefined): string {
         return 'Iterative Reviewer'
     }
 
-    if (normalizedPhaseName === 'screening') {
-        return 'Screener'
+    return 'Reviewer'
+}
+
+interface ScreenerResourceTarget {
+    assignedMemberIds: string[]
+    assignedResources: Resource[]
+    roleId: string
+    roleName: string
+}
+
+interface ScreenerReviewerEntry {
+    fieldIndex: number
+    reviewer: Reviewer
+    roleName: string
+}
+
+/**
+ * Resolves a screener resource member id, including a hydrated id for legacy handle-only rows.
+ *
+ * @param target screening-role resource target and its hydrated form assignments.
+ * @param resourceIndex persisted resource position within the target.
+ * @returns the normalized member id, or an empty string while a handle remains unresolved.
+ * @throws Does not throw.
+ */
+function getScreenerResourceMemberId(
+    target: ScreenerResourceTarget,
+    resourceIndex: number,
+): string {
+    return normalizeText(target.assignedResources[resourceIndex]?.memberId)
+        || normalizeText(target.assignedMemberIds[resourceIndex])
+}
+
+/**
+ * Builds the resource payload used to remove or restore an existing screener assignment.
+ *
+ * @param resource persisted challenge resource for a screening role.
+ * @returns a resource mutation payload, or `undefined` when the resource has no member identity.
+ * @remarks Used while synchronizing the simplified Design Challenge screener field.
+ * @throws Does not throw.
+ */
+function getResourceMutationPayload(resource: Resource): ResourcePayload | undefined {
+    const memberId = normalizeText(resource.memberId)
+    const memberHandle = normalizeText(resource.memberHandle)
+    const roleId = normalizeText(resource.roleId)
+
+    if (!roleId || (!memberId && !memberHandle)) {
+        return undefined
     }
 
-    return 'Reviewer'
+    return {
+        challengeId: resource.challengeId,
+        memberHandle: memberId ? undefined : memberHandle,
+        memberId: memberId || undefined,
+        roleId,
+    }
+}
+
+/**
+ * Finds persisted challenge resources for one named screening role.
+ *
+ * @param resources challenge resources available to the editor.
+ * @param resourceRoles resource-role metadata used when a resource only exposes a role id.
+ * @param roleName screening role name to match.
+ * @returns all resources assigned to the requested role.
+ * @remarks Role names and ids are both supported for legacy resource payloads.
+ * @throws Does not throw.
+ */
+function getResourcesForRoleName(
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+    roleName: string,
+): Resource[] {
+    const normalizedRoleName = normalizeKey(roleName)
+    const matchingRoleIds = new Set(resourceRoles
+        .filter(role => normalizeKey(role.name) === normalizedRoleName)
+        .map(role => normalizeText(role.id)))
+
+    return resources.filter(resource => (
+        normalizeKey(resource.roleName || resource.role) === normalizedRoleName
+        || matchingRoleIds.has(normalizeText(resource.roleId))
+    ))
+}
+
+/**
+ * Replaces the persisted assignments for every screening role with one selected member.
+ *
+ * @param params challenge id, selected member id, and screening-role resource targets.
+ * @returns a promise that resolves after all resource roles match the selected member.
+ * @remarks New assignments are created before old assignments are removed. Completed mutations
+ * are rolled back on failure so Checkpoint Screener and Screener do not remain out of sync.
+ * @throws Re-throws the resource service error after attempting rollback.
+ */
+async function syncScreenerResourceAssignments(params: {
+    challengeId: string
+    selectedMemberId: string
+    targets: ScreenerResourceTarget[]
+}): Promise<void> {
+    const createdPayloads: ResourcePayload[] = []
+    const deletedPayloads: ResourcePayload[] = []
+    const createPayloads = params.selectedMemberId
+        ? params.targets
+            .filter(target => !target.assignedResources.some((resource, resourceIndex) => (
+                getScreenerResourceMemberId(target, resourceIndex) === params.selectedMemberId
+            )))
+            .map(target => ({
+                challengeId: params.challengeId,
+                memberId: params.selectedMemberId,
+                roleId: target.roleId,
+            }))
+        : []
+    const deletePayloads = params.targets
+        .flatMap(target => target.assignedResources
+            .filter((resource, resourceIndex) => (
+                !params.selectedMemberId
+                || getScreenerResourceMemberId(target, resourceIndex) !== params.selectedMemberId
+            )))
+        .map(getResourceMutationPayload)
+        .filter((payload): payload is ResourcePayload => !!payload)
+
+    try {
+        const createResults = await Promise.allSettled(createPayloads.map(async payload => {
+            await createResource(payload)
+            createdPayloads.push(payload)
+        }))
+        const failedCreate = createResults.find(result => result.status === 'rejected') as PromiseRejectedResult
+            | undefined
+        if (failedCreate) {
+            throw failedCreate.reason
+        }
+
+        const deleteResults = await Promise.allSettled(deletePayloads.map(async payload => {
+            await deleteResource(payload)
+            deletedPayloads.push(payload)
+        }))
+        const failedDelete = deleteResults.find(result => result.status === 'rejected') as PromiseRejectedResult
+            | undefined
+        if (failedDelete) {
+            throw failedDelete.reason
+        }
+    } catch (error) {
+        await Promise.allSettled([
+            ...createdPayloads.map(payload => deleteResource(payload)),
+            ...deletedPayloads.map(payload => createResource(payload)),
+        ])
+
+        throw error
+    }
 }
 
 /**
@@ -817,7 +965,15 @@ const PublicOpportunityCheckboxField: FC<PublicOpportunityCheckboxFieldProps> = 
     )
 }
 
-export const HumanReviewTab: FC = () => {
+interface HumanReviewTabProps {
+    screenerOnly?: boolean
+}
+
+/**
+ * Renders manual reviewer configuration, or a single synchronized screener field
+ * for copilot-only Design Challenge editing.
+ */
+export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const reviewersFieldState = useController({
         control: formContext.control,
@@ -828,15 +984,16 @@ export const HumanReviewTab: FC = () => {
     const challengeTracks = challengeTracksResult.tracks
     const challengeTypes = challengeTypesResult.challengeTypes
 
-    const {
-        resourceRoles,
-    }: UseFetchResourceRolesResult = useFetchResourceRoles()
+    const resourceRolesResult: UseFetchResourceRolesResult = useFetchResourceRoles()
+    const resourceRoles = resourceRolesResult.resourceRoles
 
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
     // Keep existing selections intact until the first scorecard fetch resolves.
     const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
+    const [isScreenerSyncing, setIsScreenerSyncing] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
+    const isScreenerSyncingRef = useRef<boolean>(false)
     const autoBackfilledReviewerTypesRef = useRef<Record<string, string>>({})
     const trimmedAdditionalMemberIdsRef = useRef<Record<string, string>>({})
     const reconciledScorecardSelectionsRef = useRef<Record<string, string>>({})
@@ -912,10 +1069,15 @@ export const HumanReviewTab: FC = () => {
 
             phases.forEach(phase => {
                 const phaseName = normalizeText(phase.name)
-                const phaseId = normalizeText(phase.phaseId) || normalizeText(phase.id)
+                const phaseIds = toUniqueValues([
+                    normalizeText(phase.phaseId),
+                    normalizeText(phase.id),
+                ])
 
-                if (phaseId && phaseName) {
-                    nextPhaseNameById.set(phaseId, phaseName)
+                if (phaseName) {
+                    phaseIds.forEach(phaseId => {
+                        nextPhaseNameById.set(phaseId, phaseName)
+                    })
                 }
             })
 
@@ -974,6 +1136,106 @@ export const HumanReviewTab: FC = () => {
         },
         [resolveRoleIdForPhase],
     )
+
+    const screenerReviewerEntries = useMemo<ScreenerReviewerEntry[]>(
+        () => reviewerRows
+            .map((reviewer, reviewerIndex) => {
+                const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+                const phaseName = phaseNameById.get(normalizeText(reviewer.phaseId))
+                const roleName = SCREENER_ROLE_NAME_BY_PHASE_KEY[normalizeKey(phaseName)]
+
+                return fieldIndex !== undefined && roleName
+                    ? {
+                        fieldIndex,
+                        reviewer,
+                        roleName,
+                    }
+                    : undefined
+            })
+            .filter((entry): entry is ScreenerReviewerEntry => !!entry),
+        [
+            getReviewerFieldIndex,
+            phaseNameById,
+            reviewerRows,
+        ],
+    )
+    const screenerRoleNames = useMemo<string[]>(
+        () => toUniqueValues([
+            ...(Array.isArray(phases)
+                ? phases
+                    .map(phase => SCREENER_ROLE_NAME_BY_PHASE_KEY[normalizeKey(phase.name)])
+                    .filter(Boolean)
+                : []),
+            ...screenerReviewerEntries.map(entry => entry.roleName),
+        ]),
+        [
+            phases,
+            screenerReviewerEntries,
+        ],
+    )
+    const screenerResourceTargets = useMemo<ScreenerResourceTarget[]>(
+        () => screenerRoleNames
+            .map(roleName => {
+                const normalizedRoleName = normalizeKey(roleName)
+                const assignedResources = getResourcesForRoleName(
+                    challengeResourcesResult.resources,
+                    resourceRoles,
+                    roleName,
+                )
+                const reviewerRoleId = normalizeText(screenerReviewerEntries
+                    .find(entry => entry.roleName === roleName)
+                    ?.reviewer.roleId)
+                const reviewerRoleMatches = resourceRoles.some(role => (
+                    normalizeText(role.id) === reviewerRoleId
+                    && normalizeKey(role.name) === normalizedRoleName
+                )) || assignedResources.some(resource => (
+                    normalizeText(resource.roleId) === reviewerRoleId
+                ))
+                const roleId = (reviewerRoleMatches ? reviewerRoleId : '')
+                    || normalizeText(assignedResources[0]?.roleId)
+                    || normalizeText(roleIdByName.get(normalizedRoleName))
+
+                return roleId
+                    ? {
+                        assignedMemberIds: getAssignedMemberIds(screenerReviewerEntries
+                            .find(entry => entry.roleName === roleName)
+                            ?.reviewer),
+                        assignedResources,
+                        roleId,
+                        roleName,
+                    }
+                    : undefined
+            })
+            .filter((target): target is ScreenerResourceTarget => !!target),
+        [
+            challengeResourcesResult.resources,
+            resourceRoles,
+            roleIdByName,
+            screenerReviewerEntries,
+            screenerRoleNames,
+        ],
+    )
+    const primaryScreenerReviewerEntry = useMemo<ScreenerReviewerEntry | undefined>(() => {
+        const finalScreenerEntry = screenerReviewerEntries.find(entry => entry.roleName === 'Screener')
+
+        if (finalScreenerEntry && getAssignedMemberIds(finalScreenerEntry.reviewer)
+            .some(Boolean)) {
+            return finalScreenerEntry
+        }
+
+        return screenerReviewerEntries.find(entry => getAssignedMemberIds(entry.reviewer)
+            .some(Boolean))
+            || finalScreenerEntry
+            || screenerReviewerEntries[0]
+    }, [screenerReviewerEntries])
+    const hasMissingScreenerRole = screenerResourceTargets.length < screenerRoleNames.length
+    const hasUnresolvedScreenerAssignment = screenerResourceTargets.some(target => (
+        target.assignedResources.some((resource, resourceIndex) => (
+            !normalizeText(resource.memberId)
+            && !!normalizeText(resource.memberHandle)
+            && !normalizeText(target.assignedMemberIds[resourceIndex])
+        ))
+    ))
 
     const phaseOptions = useMemo<FormSelectOption[]>(
         () => (Array.isArray(phases)
@@ -1449,12 +1711,12 @@ export const HumanReviewTab: FC = () => {
         },
         [],
     )
-    const refreshChallengeResources = useCallback((): void => {
+    const refreshChallengeResources = useCallback((): Promise<unknown> | undefined => {
         if (!normalizedChallengeId) {
-            return
+            return undefined
         }
 
-        mutateChallengeResources()
+        return mutateChallengeResources()
             .catch(() => undefined)
     }, [
         mutateChallengeResources,
@@ -1679,6 +1941,153 @@ export const HumanReviewTab: FC = () => {
             refreshChallengeResources,
             resolveRoleIdForReviewer,
             reviewerRows,
+        ],
+    )
+
+    /**
+     * Applies one selected user to every configured Design Challenge screening phase.
+     *
+     * @param selectedMemberId selected member user id, or an empty string when clearing the field.
+     * @returns Nothing; resource mutations continue asynchronously and refresh the resource cache.
+     * @remarks The reviewer form rows are kept aligned with the distinct Screener resources.
+     * Resource failures restore the prior form assignments and surface an inline error.
+     * @throws Does not throw to the input component.
+     */
+    const handleScreenerSelectionChange = useCallback(
+        (selectedMemberId: string): void => {
+            if (
+                isScreenerSyncingRef.current
+                || resourceRolesResult.isLoading
+                || challengeResourcesResult.isLoading
+                || challengeResourcesResult.isError
+                || hasMissingScreenerRole
+                || hasUnresolvedScreenerAssignment
+            ) {
+                return
+            }
+
+            const normalizedSelectedMemberId = normalizeText(selectedMemberId)
+            const previousAssignments = screenerReviewerEntries.map(entry => ({
+                additionalMemberIds: entry.reviewer.additionalMemberIds,
+                fieldIndex: entry.fieldIndex,
+                handle: entry.reviewer.handle,
+                memberId: entry.reviewer.memberId,
+                roleId: entry.reviewer.roleId,
+            }))
+
+            screenerReviewerEntries.forEach(entry => {
+                const targetRoleId = screenerResourceTargets
+                    .find(target => target.roleName === entry.roleName)
+                    ?.roleId
+
+                formContext.setValue(
+                    `reviewers.${entry.fieldIndex}.memberId` as any,
+                    normalizedSelectedMemberId || undefined,
+                    {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                    },
+                )
+                formContext.setValue(
+                    `reviewers.${entry.fieldIndex}.additionalMemberIds` as any,
+                    undefined,
+                    {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                    },
+                )
+                formContext.setValue(
+                    `reviewers.${entry.fieldIndex}.handle` as any,
+                    undefined,
+                    {
+                        shouldDirty: true,
+                        shouldValidate: false,
+                    },
+                )
+
+                if (targetRoleId) {
+                    formContext.setValue(
+                        `reviewers.${entry.fieldIndex}.roleId` as any,
+                        targetRoleId,
+                        {
+                            shouldDirty: true,
+                            shouldValidate: false,
+                        },
+                    )
+                }
+            })
+
+            if (
+                !normalizedChallengeId
+                || !screenerResourceTargets.length
+            ) {
+                return
+            }
+
+            isScreenerSyncingRef.current = true
+            setIsScreenerSyncing(true)
+            syncScreenerResourceAssignments({
+                challengeId: normalizedChallengeId,
+                selectedMemberId: normalizedSelectedMemberId,
+                targets: screenerResourceTargets,
+            })
+                .then(() => refreshChallengeResources())
+                .catch(error => {
+                    previousAssignments.forEach(assignment => {
+                        const reviewerPrefix = `reviewers.${assignment.fieldIndex}`
+
+                        formContext.setValue(
+                            `${reviewerPrefix}.memberId` as any,
+                            assignment.memberId,
+                            {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                            },
+                        )
+                        formContext.setValue(
+                            `${reviewerPrefix}.additionalMemberIds` as any,
+                            assignment.additionalMemberIds,
+                            {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                            },
+                        )
+                        formContext.setValue(
+                            `${reviewerPrefix}.handle` as any,
+                            assignment.handle,
+                            {
+                                shouldDirty: true,
+                                shouldValidate: false,
+                            },
+                        )
+                        formContext.setValue(
+                            `${reviewerPrefix}.roleId` as any,
+                            assignment.roleId,
+                            {
+                                shouldDirty: true,
+                                shouldValidate: false,
+                            },
+                        )
+                    })
+                    handleResourceError(error, 'Failed to update screener assignment')
+                })
+                .finally(() => {
+                    isScreenerSyncingRef.current = false
+                    setIsScreenerSyncing(false)
+                })
+        },
+        [
+            challengeResourcesResult.isError,
+            challengeResourcesResult.isLoading,
+            formContext,
+            handleResourceError,
+            hasMissingScreenerRole,
+            hasUnresolvedScreenerAssignment,
+            normalizedChallengeId,
+            refreshChallengeResources,
+            resourceRolesResult.isLoading,
+            screenerResourceTargets,
+            screenerReviewerEntries,
         ],
     )
 
@@ -1937,6 +2346,53 @@ export const HumanReviewTab: FC = () => {
         },
         [handleMemberSelectionChange],
     )
+
+    if (props.screenerOnly) {
+        const isScreenerAssignmentRequired = screenerReviewerEntries.some(entry => (
+            !isScreenerAssignmentOptional(entry.reviewer, phases)
+        ))
+        const isScreenerFieldLoading = resourceRolesResult.isLoading
+            || challengeResourcesResult.isLoading
+        const screenerConfigurationError = !isScreenerFieldLoading && (
+            challengeResourcesResult.isError
+                ? 'Unable to load screener assignments.'
+                : hasUnresolvedScreenerAssignment
+                    ? 'Unable to resolve the current screener assignment.'
+                    : !primaryScreenerReviewerEntry
+                        ? 'Screener configuration is unavailable.'
+                        : hasMissingScreenerRole
+                            ? 'Unable to load all screener roles.'
+                            : undefined
+        )
+
+        return (
+            <div className={styles.screenerOnlyContainer}>
+                {loadError
+                    ? <div className={styles.error}>{loadError}</div>
+                    : undefined}
+                {screenerConfigurationError
+                    ? <div className={styles.error}>{screenerConfigurationError}</div>
+                    : undefined}
+                {primaryScreenerReviewerEntry
+                    ? (
+                        <FormUserAutocomplete
+                            disabled={isScreenerFieldLoading
+                                || isScreenerSyncing
+                                || challengeResourcesResult.isError
+                                || hasMissingScreenerRole
+                                || hasUnresolvedScreenerAssignment}
+                            label='Screener'
+                            name={`reviewers.${primaryScreenerReviewerEntry.fieldIndex}.memberId`}
+                            onValueChange={handleScreenerSelectionChange}
+                            placeholder='Select user'
+                            required={isScreenerAssignmentRequired}
+                            valueField='userId'
+                        />
+                    )
+                    : undefined}
+            </div>
+        )
+    }
 
     return (
         <div className={styles.container}>

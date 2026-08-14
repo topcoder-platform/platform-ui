@@ -8,7 +8,7 @@ import type {
  *
  * @param value reviewer or phase value to normalize.
  * @returns trimmed text for string values, otherwise an empty string.
- * @remarks Used internally while resolving whether a reviewer belongs to standard Screening.
+ * @remarks Used internally while resolving whether a reviewer belongs to a screening phase.
  * @throws Does not throw.
  */
 function normalizeReviewerValue(value: unknown): string {
@@ -22,9 +22,9 @@ function normalizeReviewerValue(value: unknown): string {
  *
  * @param reviewer reviewer configuration whose phase should be inspected.
  * @param phases challenge phases used to resolve the reviewer's phase name.
- * @returns `true` only for a human reviewer configured on the standard Screening phase.
- * @remarks Form validation and reviewer fields use this exception; Checkpoint Screening and every
- * other reviewer phase still require assignments up front.
+ * @returns `true` for a human reviewer configured on Screening or Checkpoint Screening.
+ * @remarks Form validation and reviewer fields use this exception; every other reviewer phase
+ * still requires assignments up front.
  * @throws Does not throw.
  */
 export function isScreenerAssignmentOptional(
@@ -46,8 +46,13 @@ export function isScreenerAssignmentOptional(
         const matchesPhase = reviewerPhaseId === phaseTemplateId
             || reviewerPhaseId === phaseInstanceId
 
+        const normalizedPhaseName = normalizeReviewerValue(phase.name)
+            .toLowerCase()
+
         return matchesPhase
-            && normalizeReviewerValue(phase.name)
-                .toLowerCase() === 'screening'
+            && (
+                normalizedPhaseName === 'screening'
+                || normalizedPhaseName === 'checkpoint screening'
+            )
     })
 }
