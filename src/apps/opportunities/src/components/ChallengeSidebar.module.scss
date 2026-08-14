@@ -1,49 +1,62 @@
 .sidebar {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
+    width: 384px;
 }
 
 .card,
 .promo {
     background: #fff;
-    border: 1px solid #e0e5e8;
-    border-radius: 5px;
-    color: #3e4b52;
-    padding: 18px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: #161616;
+    padding: 24px;
+    width: 384px;
 
     h3 {
         align-items: center;
-        color: #1b2327;
+        color: #161616;
         display: flex;
         font-family: 'Figtree', sans-serif;
-        font-size: 14px;
+        font-size: 18px;
         font-weight: 700;
         gap: 8px;
-        line-height: 19px;
+        line-height: 30px;
+        margin: 0;
         text-transform: none;
 
         svg {
-            color: #008f89;
-            height: 17px;
-            width: 17px;
+            color: #161616;
+            flex: 0 0 20px;
+            height: 20px;
+            width: 20px;
         }
     }
 
     p,
     li {
-        font-size: 11px;
-        line-height: 16px;
+        font-size: 14px;
+        line-height: 20px;
     }
 
     p {
-        margin: 9px 0;
+        margin: 8px 0 0;
+    }
+
+    ol,
+    ul {
+        margin: 8px 0 0;
+        padding-left: 21px;
     }
 
     ol {
         list-style: decimal;
-        margin: 10px 0 0;
-        padding-left: 17px;
+    }
+
+    ul {
+        list-style: disc;
     }
 
     a,
@@ -51,50 +64,94 @@
         align-items: center;
         background: none;
         border: 0;
-        color: #00797a;
+        color: #007d79;
         cursor: pointer;
         display: flex;
         font: inherit;
-        font-size: 11px;
+        font-size: 16px;
         font-weight: 700;
-        gap: 5px;
-        margin-top: 7px;
+        gap: 4px;
+        line-height: 22px;
+        margin-top: 8px;
         padding: 0;
         text-align: left;
         text-decoration: none;
 
         svg {
-            height: 13px;
-            width: 13px;
+            height: 20px;
+            width: 20px;
         }
     }
 }
 
 .promo {
-    background: linear-gradient(135deg, #172b4d, #76439b);
-    color: #fff;
+    border: 0;
+    min-height: 181px;
+    overflow: hidden;
+    position: relative;
+
+    > div {
+        position: relative;
+        z-index: 1;
+    }
 
     h3,
+    p,
     a {
         color: #fff;
+    }
+
+    h3 {
+        font-size: 20px;
+        line-height: 32px;
+    }
+
+    p {
+        max-width: 280px;
     }
 }
 
 .promoArt {
-    align-items: center;
-    background: linear-gradient(135deg, #23ccc3, #ce3b9a);
-    border-radius: 4px;
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+}
+
+.challengeInfo {
     display: flex;
-    font-family: 'Figtree', sans-serif;
-    font-size: 24px;
-    font-weight: 800;
-    height: 60px;
-    justify-content: center;
-    margin-bottom: 14px;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.infoSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    p,
+    ol,
+    ul,
+    a,
+    button {
+        margin-top: 0;
+    }
 }
 
 .resourceLinks {
-    border-top: 1px solid #e0e5e8;
-    margin-top: 10px;
-    padding-top: 2px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+@media (max-width: 1120px) {
+    .sidebar,
+    .card,
+    .promo {
+        width: 100%;
+    }
 }

@@ -52,8 +52,12 @@ describe('opportunity presentation utilities', () => {
     it('keeps short pagination complete and compacts large page ranges', () => {
         expect(paginationWindow(2, 4))
             .toEqual([1, 2, 3, 4])
+        expect(paginationWindow(2, 12))
+            .toEqual([1, 2, 3, 4, 5, 0, 12])
         expect(paginationWindow(6, 12))
             .toEqual([1, 0, 5, 6, 7, 0, 12])
+        expect(paginationWindow(11, 12))
+            .toEqual([1, 0, 8, 9, 10, 11, 12])
     })
 
     it('formats canonical engagement durations and anticipated-start enums', () => {

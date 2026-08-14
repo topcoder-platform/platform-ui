@@ -108,6 +108,40 @@ export function challengeRegistrationIsOpen(challenge: ChallengeOpportunity): bo
 }
 
 /**
+ * Determines whether a challenge currently accepts a solution submission.
+ *
+ * Registration and submission can overlap, so every open phase and every
+ * `currentPhaseNames` value is inspected rather than relying on the single
+ * API-computed `currentPhase`. The legacy combined `Open` phase is treated as
+ * both registration and submission.
+ *
+ * @param challenge challenge returned by Challenge API.
+ * @returns true only for an ACTIVE challenge with an open submission phase.
+ * @throws Does not throw.
+ */
+export function challengeSubmissionIsOpen(challenge: ChallengeOpportunity): boolean {
+    if (challengeCatalogKey(challenge.status) !== 'active') return false
+
+    /**
+     * Identifies canonical submission phases, including the legacy combined Open phase.
+     *
+     * @param name Challenge API phase name.
+     * @returns true when registration grants access to a currently open submission surface.
+     * @throws Does not throw.
+     */
+    const phaseIsSubmission = (name: string): boolean => {
+        const key = challengeCatalogKey(name)
+        return key === 'open' || key.includes('submission')
+    }
+
+    if ((challenge.phases ?? []).some(phase => phase.isOpen === true && phaseIsSubmission(phase.name))) {
+        return true
+    }
+
+    return (challenge.currentPhaseNames ?? []).some(phaseIsSubmission)
+}
+
+/**
  * Extracts only cash placement prizes from a challenge response.
  *
  * Prize order defines finishing placement in Challenge API. Invalid values are

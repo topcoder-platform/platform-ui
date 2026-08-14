@@ -181,6 +181,19 @@ function enumLabel(value?: string): string | undefined {
 }
 
 /**
+ * Normalizes owner-specific API statuses to the three authored card states.
+ *
+ * @param applied whether the current member already applied.
+ * @param open whether the opportunity is currently accepting applications.
+ * @returns Applied, Open for application, or Application closed.
+ * @throws Does not throw.
+ */
+function applicationState(applied: boolean, open: boolean): string {
+    if (applied) return 'Applied'
+    return open ? 'Open for application' : 'Application closed'
+}
+
+/**
  * Maps owning-API discipline enums to the authored Opportunities track labels.
  *
  * @param value API role or track token.
@@ -374,7 +387,7 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
             },
         ],
         skills: engagementSkillNames(item),
-        state: item.status === 'OPEN' ? 'Open for application' : item.status,
+        state: applicationState(false, challengeCatalogKey(item.status) === 'open'),
         title: item.title,
     }
 }
@@ -399,9 +412,9 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
             { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
         ],
         skills: (item.skills ?? []).map((skill: OpportunitySkill) => skill.name),
-        state: item.hasApplied ? 'Applied' : item.status === 'active' ? 'Open for application' : item.status,
+        state: applicationState(!!item.hasApplied, challengeCatalogKey(item.status) === 'active'),
         title: item.opportunityTitle || item.projectName || item.project?.name || 'Copilot Opportunity',
-        type: 'Challenge',
+        type: enumLabel(item.type) || 'Copilot',
     }
 }
 
@@ -433,7 +446,10 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
             },
         ],
         skills: Array.isArray(technologies) ? technologies.map(String) : [],
-        state: item.myApplications?.length ? 'Applied' : item.canApply ? 'Open for application' : item.status,
+        state: applicationState(
+            !!item.myApplications?.length,
+            item.canApply === true || challengeCatalogKey(item.status) === 'open',
+        ),
         title: item.challengeName || String(item.challengeData?.name ?? 'Review Opportunity'),
         type: String(item.challengeData?.type ?? item.type ?? ''),
     }
@@ -613,6 +629,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     const visibleSkills = card.skills.filter(Boolean)
         .slice(0, props.view === 'grid' ? 3 : 5)
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
+    const stateKey = challengeCatalogKey(card.state)
     const cardClassName = classNames(styles.card, {
         [styles.copilotCard]: props.kind === 'copilots',
         [styles.engagementCard]: props.kind === 'engagements',
@@ -638,9 +655,14 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         </span>
                     )}
                     {card.state && (
-                        <span className={styles.state}>
-                            {card.state.toLowerCase()
-                                .startsWith('open') && <RegistrationOpenIcon aria-hidden='true' />}
+                        <span className={classNames(styles.state, {
+                            [styles.stateApplied]: stateKey === 'applied',
+                            [styles.stateClosed]: stateKey === 'applicationclosed',
+                        })}
+                        >
+                            {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
+                            {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateKey === 'applicationclosed' && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}
                         </span>
                     )}

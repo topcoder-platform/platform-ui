@@ -5,8 +5,8 @@
     box-sizing: border-box;
     color: #161616;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 230px;
-    min-height: 130px;
+    grid-template-columns: minmax(0, 1fr) 223px;
+    min-height: 136px;
     overflow: hidden;
     text-decoration: none;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
@@ -21,27 +21,42 @@
         box-shadow: 0 5px 18px rgba(0, 30, 46, .1);
         transform: translateY(-1px);
     }
+
+
+    &:focus-visible {
+        border-color: #007d79;
+        box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
+        outline: 0;
+    }
 }
 
 .main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-width: 0;
-    padding: 20px 22px;
+    padding: 24px;
 
     h3 {
         color: #161616;
         font-family: 'Figtree', sans-serif;
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 700;
-        line-height: 24px;
-        margin: 8px 0;
+        line-height: 28px;
+        margin: 0;
         text-transform: none;
     }
 
     p {
-        color: #26353c;
-        font-size: 13px;
-        line-height: 19px;
-        margin: 11px 0 0;
+        color: #000;
+        display: -webkit-box;
+        font-size: 14px;
+        height: 40px;
+        line-height: 20px;
+        margin: 0;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 }
 
@@ -53,8 +68,8 @@
     font-size: 11px;
     font-weight: 600;
     gap: 4px;
+    height: 24px;
     line-height: 12px;
-    min-height: 20px;
 }
 
 .badge {
@@ -69,6 +84,7 @@
     align-items: center;
     border: 1px solid #a8a8a8;
     border-radius: 2px;
+    box-sizing: border-box;
     color: #161616;
     display: inline-flex;
     gap: 2px;
@@ -83,10 +99,20 @@
     }
 }
 
+.stateApplied {
+    border-color: #198038;
+    color: #198038;
+}
+
+.stateClosed {
+    border-color: #c1294f;
+    color: #c1294f;
+}
+
 .skills {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 8px;
 
     span {
         background: #e9ecef;
@@ -105,22 +131,24 @@
     border-left: 1px solid #e0e0e0;
     color: #161616;
     display: grid;
-    gap: 12px;
+    gap: 16px;
     margin: 0;
-    padding: 20px;
+    padding: 24px 32px;
 
     div {
         align-items: center;
         display: grid;
-        font-size: 12px;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
         gap: 4px;
-        grid-template-columns: 18px auto 1fr;
+        grid-template-columns: 20px auto minmax(0, 1fr);
+        line-height: 20px;
     }
 
     svg {
         color: #007d79;
-        height: 17px;
-        width: 17px;
+        height: 20px;
+        width: 20px;
     }
 
     dt {
@@ -136,6 +164,23 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+}
+
+.engagementCard:not(.gridCard),
+.copilotCard:not(.gridCard) {
+    min-height: 197px;
+
+    .main {
+        padding-bottom: 29px;
+    }
+
+    .skills {
+        padding-bottom: 8px;
+    }
+}
+
+.engagementCard:not(.gridCard) .meta {
+    padding-inline: 16px;
 }
 
 .competitionCard {
@@ -436,6 +481,7 @@
             color: #000;
             display: -webkit-box;
             font-size: 14px;
+            height: auto;
             line-height: 20px;
             margin: 0;
             max-height: 60px;
@@ -474,6 +520,23 @@
             height: 20px;
             width: 20px;
         }
+    }
+}
+
+.gridCard:not(.competitionCard) {
+    align-content: start;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e0e0e0;
+
+    &:hover {
+        box-shadow:
+            inset 0 0 0 1px #007d79,
+            0 5px 18px rgba(0, 30, 46, .1);
+    }
+
+    .meta {
+        border-top: 0;
+        box-shadow: inset 0 1px #e0e0e0;
     }
 }
 
@@ -518,16 +581,9 @@
     min-height: 140px;
 }
 
-.engagementCard.gridCard .main {
-    min-height: 218px;
-}
-
-.reviewCard.gridCard .main {
-    min-height: 162px;
-}
-
-.copilotCard.gridCard .main {
-    min-height: 238px;
+.engagementCard.gridCard .skills,
+.copilotCard.gridCard .skills {
+    padding-bottom: 8px;
 }
 
 .engagementCard.gridCard .opportunityType {
@@ -575,12 +631,6 @@
     .gridCard .main,
     .gridCard .meta {
         padding: 16px;
-    }
-
-    .copilotCard.gridCard .main,
-    .engagementCard.gridCard .main,
-    .reviewCard.gridCard .main {
-        min-height: 0;
     }
 
     .eyebrow {

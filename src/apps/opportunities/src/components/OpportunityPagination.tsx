@@ -1,7 +1,8 @@
 /* eslint-disable no-confusing-arrow, ordered-imports/ordered-imports, react/jsx-no-bind, react/no-array-index-key */
 import { ChangeEvent, FC } from 'react'
-import { IconOutline } from '~/libs/ui'
 
+import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
+import { ReactComponent as PaginationChevronIcon } from '../assets/pagination-chevron-right.svg'
 import styles from './OpportunityPagination.module.scss'
 
 interface OpportunityPaginationProps {
@@ -23,15 +24,12 @@ interface OpportunityPaginationProps {
  */
 export function paginationWindow(page: number, totalPages: number): number[] {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1)
-    const values = new Set([1, totalPages, page - 1, page, page + 1])
-    const sorted = Array.from(values)
-        .filter(value => value > 0 && value <= totalPages)
-        .sort((a, b) => a - b)
-    return sorted.reduce<number[]>((result, value, index) => {
-        if (index > 0 && value - sorted[index - 1] > 1) result.push(0)
-        result.push(value)
-        return result
-    }, [])
+    if (page <= 4) return [1, 2, 3, 4, 5, 0, totalPages]
+    if (page >= totalPages - 3) {
+        return [1, 0, totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+    }
+
+    return [1, 0, page - 1, page, page + 1, 0, totalPages]
 }
 
 /**
@@ -53,13 +51,19 @@ export const OpportunityPagination: FC<OpportunityPaginationProps> = props => {
 
     return (
         <div className={styles.pagination}>
-            <label>
-                Items per page:
-                <select onChange={handlePerPage} value={props.perPage}>
-                    {[10, 20, 50].map(value => <option key={value} value={value}>{value}</option>)}
-                </select>
-            </label>
-            <span>{`${start} - ${end} of ${props.total} items`}</span>
+            <div className={styles.summary}>
+                <label>
+                    Items per page:
+                    <span className={styles.perPageSelect}>
+                        <select onChange={handlePerPage} value={props.perPage}>
+                            {[10, 20, 50].map(value => <option key={value} value={value}>{value}</option>)}
+                        </select>
+                        <ChevronDownIcon aria-hidden='true' />
+                    </span>
+                </label>
+                <span aria-hidden='true' className={styles.divider} />
+                <span className={styles.range}>{`${start} - ${end} of ${props.total} items`}</span>
+            </div>
             <nav aria-label='Results pages'>
                 <button
                     aria-label='Previous page'
@@ -67,10 +71,10 @@ export const OpportunityPagination: FC<OpportunityPaginationProps> = props => {
                     onClick={() => props.onPageChange(props.page - 1)}
                     type='button'
                 >
-                    <IconOutline.ChevronLeftIcon />
+                    <PaginationChevronIcon aria-hidden='true' />
                 </button>
                 {pages.map((page, index) => page === 0
-                    ? <span key={`gap-${index}`}>…</span>
+                    ? <span className={styles.ellipsis} key={`gap-${index}`}>…</span>
                     : (
                         <button
                             aria-current={page === props.page ? 'page' : undefined}
@@ -88,7 +92,7 @@ export const OpportunityPagination: FC<OpportunityPaginationProps> = props => {
                     onClick={() => props.onPageChange(props.page + 1)}
                     type='button'
                 >
-                    <IconOutline.ChevronRightIcon />
+                    <PaginationChevronIcon aria-hidden='true' />
                 </button>
             </nav>
         </div>

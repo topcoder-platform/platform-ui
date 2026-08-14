@@ -163,7 +163,7 @@ describe('opportunities service normalization', () => {
             sort: 'highestPayment',
             statuses: ['OPEN'],
             tracks: ['Design'],
-            types: ['REGULAR_REVIEW'],
+            types: ['Challenge'],
         }))
 
         expect(url.searchParams.get('offset'))
@@ -172,8 +172,8 @@ describe('opportunities service normalization', () => {
             .toEqual(['OPEN'])
         expect(url.searchParams.getAll('tracks'))
             .toEqual(['Design'])
-        expect(url.searchParams.getAll('opportunityTypes'))
-            .toEqual(['REGULAR_REVIEW'])
+        expect(url.searchParams.getAll('types'))
+            .toEqual(['Challenge'])
         expect(url.searchParams.get('sortBy'))
             .toBe('basePayment')
         expect(url.searchParams.get('sortOrder'))

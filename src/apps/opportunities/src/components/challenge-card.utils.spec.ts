@@ -5,6 +5,7 @@ import {
     challengePhaseTiming,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
+    challengeSubmissionIsOpen,
     challengeTotalPrize,
     formatChallengeTimeLeft,
 } from './challenge-card.utils'
@@ -59,6 +60,38 @@ describe('challenge card data utilities', () => {
             status: 'ACTIVE',
         }))
             .toBe(true)
+    })
+
+    it('finds overlapping submission phases without trusting the single current phase', () => {
+        expect(challengeSubmissionIsOpen({
+            currentPhase: { isOpen: true, name: 'Registration' },
+            currentPhaseNames: ['Registration', 'Checkpoint Submission'],
+            id: 'overlapping-phases',
+            name: 'Overlapping phases',
+            status: 'ACTIVE',
+        }))
+            .toBe(true)
+        expect(challengeSubmissionIsOpen({
+            id: 'legacy-open',
+            name: 'Legacy open',
+            phases: [{ isOpen: true, name: 'Open' }],
+            status: 'ACTIVE',
+        }))
+            .toBe(true)
+        expect(challengeSubmissionIsOpen({
+            id: 'registration-only',
+            name: 'Registration only',
+            phases: [{ isOpen: true, name: 'Registration' }],
+            status: 'ACTIVE',
+        }))
+            .toBe(false)
+        expect(challengeSubmissionIsOpen({
+            currentPhaseNames: ['Submission'],
+            id: 'completed',
+            name: 'Completed',
+            status: 'COMPLETED',
+        }))
+            .toBe(false)
     })
 
     it('uses only valid PLACEMENT prizes and preserves their source positions', () => {

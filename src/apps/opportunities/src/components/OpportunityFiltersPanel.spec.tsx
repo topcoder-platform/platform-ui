@@ -16,7 +16,6 @@ jest.mock('~/libs/ui', () => {
 describe('OpportunityFiltersPanel', () => {
     it('uses the single authored competition search control and helper', () => {
         const onSearchChange = jest.fn()
-        const onSkillsChange = jest.fn()
 
         render(
             <OpportunityFiltersPanel
@@ -26,12 +25,10 @@ describe('OpportunityFiltersPanel', () => {
                 onAppliedChange={jest.fn()}
                 onReset={jest.fn()}
                 onSearchChange={onSearchChange}
-                onSkillsChange={onSkillsChange}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
-                skills='React'
                 status='ACTIVE'
                 tracks={[]}
                 types={[]}
@@ -53,11 +50,9 @@ describe('OpportunityFiltersPanel', () => {
         fireEvent.change(search, { target: { value: 'React project' } })
         expect(onSearchChange)
             .toHaveBeenCalledWith('React project')
-        expect(onSkillsChange)
-            .not.toHaveBeenCalled()
     })
 
-    it('retains the owner-specific skills field for engagements', () => {
+    it('uses the authored unified search for engagements', () => {
         render(
             <OpportunityFiltersPanel
                 applied={false}
@@ -66,21 +61,54 @@ describe('OpportunityFiltersPanel', () => {
                 onAppliedChange={jest.fn()}
                 onReset={jest.fn()}
                 onSearchChange={jest.fn()}
-                onSkillsChange={jest.fn()}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
-                skills=''
                 status='OPEN'
                 tracks={[]}
                 types={[]}
             />,
         )
 
-        expect(screen.getByText('Skills / technologies'))
-            .toBeInTheDocument()
-        expect(screen.queryByText('Search skills, technologies, projects'))
+        expect(screen.queryByText('Skills / technologies'))
             .not.toBeInTheDocument()
+        expect(screen.getByText('Search skills, technologies, projects'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Completed'))
+            .toBeInTheDocument()
+    })
+
+    it('matches the authored review track and challenge-type facets', () => {
+        render(
+            <OpportunityFiltersPanel
+                applied={false}
+                isAuthenticated
+                kind='reviews'
+                onAppliedChange={jest.fn()}
+                onReset={jest.fn()}
+                onSearchChange={jest.fn()}
+                onStatusChange={jest.fn()}
+                onTrackChange={jest.fn()}
+                onTypeChange={jest.fn()}
+                search=''
+                status='OPEN'
+                tracks={[]}
+                types={[]}
+            />,
+        )
+
+        expect(screen.getByText('My review opportunities'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Status'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Type'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Challenge'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Task'))
+            .toBeInTheDocument()
+        expect(screen.getByText('AI'))
+            .toBeInTheDocument()
     })
 })

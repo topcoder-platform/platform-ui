@@ -1,11 +1,55 @@
+.compactModal,
+.termsModal {
+    border-radius: 8px !important;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1) !important;
+    padding: 32px !important;
+
+    > hr,
+    > div:last-child > hr {
+        display: none;
+    }
+
+    > div:last-child {
+        margin-top: 24px;
+    }
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        line-height: 38px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    :global(.modal-body) {
+        margin: 24px 0 0;
+        overflow: visible !important;
+        padding: 0;
+    }
+}
+
+.compactModal {
+    max-width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    width: 600px !important;
+}
+
+.termsModal {
+    max-width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    width: 960px !important;
+}
+
 .body {
-    color: #344148;
+    color: #161616;
     display: flex;
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     gap: 16px;
-    line-height: 20px;
+    line-height: 22px;
 
     p,
     ul,
@@ -15,30 +59,53 @@
 
     ul {
         list-style: disc;
-        padding-left: 22px;
+        padding-left: 21px;
+
+        ul {
+            padding-left: 28px;
+        }
     }
 
     a {
-        color: #00797a;
-        font-weight: 700;
+        color: #007d79;
+        font-weight: 400;
     }
 
     label {
-        align-items: flex-start;
-        background: #f1f7f7;
-        border-radius: 4px;
+        align-items: center;
         cursor: pointer;
         display: flex;
-        gap: 10px;
-        padding: 14px;
+        gap: 8px;
 
         input {
-            accent-color: #008f89;
-            height: 17px;
-            margin-top: 2px;
-            width: 17px;
+            accent-color: #007d79;
+            height: 16px;
+            margin: 0;
+            width: 16px;
         }
     }
+}
+
+.compactModal .body {
+    font-size: 14px;
+    gap: 8px;
+    line-height: 20px;
+
+    label {
+        font-size: 16px;
+        line-height: 22px;
+        min-height: 32px;
+    }
+}
+
+.modalAction {
+    border-radius: 4px !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    font-size: 16px !important;
+    height: 38px;
+    line-height: 22px !important;
+    padding: 8px 24px !important;
+    text-transform: none !important;
 }
 
 .loading,
@@ -46,65 +113,95 @@
     align-items: center;
     border-radius: 4px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     padding: 12px;
 }
 
 .loading {
-    background: #f1f7f7;
+    background: #f5f7fa;
 }
 
 .error {
-    background: #fff4e5;
-    color: #7a4d00;
+    background: #fcf4d6;
+    color: #8e6a00;
     justify-content: space-between;
 
     button {
         background: none;
         border: 0;
-        color: #00797a;
+        color: #007d79;
         cursor: pointer;
         font: inherit;
         font-weight: 700;
     }
 }
 
-.term {
-    border: 1px solid #dce2e5;
-    border-radius: 4px;
+.terms {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-height: 260px;
+    gap: 32px;
+    max-height: 532px;
     overflow: auto;
-    padding: 14px;
+    padding: 24px;
+}
 
-    h3 {
-        color: #15191c;
+.term {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    h3,
+    h1,
+    h2,
+    h4 {
+        color: #161616;
         font-family: 'Figtree', sans-serif;
-        font-size: 16px;
+        font-size: 20px;
+        line-height: 32px;
+        margin: 0 0 8px;
         text-transform: none;
     }
 
+    p {
+        margin: 0 0 24px;
+    }
+
     small {
-        color: #14834a;
+        color: #137d60;
         font-weight: 700;
     }
 }
 
 .externalButton {
     align-self: flex-start;
-    background: #00797a;
+    background: #007d79;
     border: 0;
     border-radius: 4px;
     color: #fff;
     cursor: pointer;
     font: inherit;
     font-weight: 700;
-    padding: 8px 14px;
+    padding: 8px 24px;
 
     &:disabled {
         cursor: wait;
         opacity: .6;
+    }
+}
+
+@media (max-width: 700px) {
+    .compactModal,
+    .termsModal {
+        padding: 24px 16px !important;
+
+        :global(.modal-body) {
+            margin-top: 24px;
+        }
+    }
+
+    .terms {
+        padding: 16px;
     }
 }

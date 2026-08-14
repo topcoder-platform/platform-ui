@@ -1,45 +1,52 @@
 .panel {
     align-self: start;
     background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 30, 46, .08);
+    border-radius: 8px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 20px;
+    gap: 16px;
+    padding: 24px;
+    width: 100%;
 
     h3,
     legend {
-        color: #111;
+        color: #161616;
         font-family: 'Figtree', sans-serif;
         font-weight: 700;
         text-transform: none;
     }
 
     h3 {
-        font-size: 16px;
+        font-size: 18px;
+        line-height: 30px;
+        margin: 0;
     }
 
     legend {
-        font-size: 13px;
-        margin-bottom: 9px;
+        font-size: 14px;
+        line-height: 22px;
+        margin-bottom: 8px;
     }
 
     small {
-        color: #74818a;
-        font-size: 10px;
-        line-height: 14px;
-        margin-top: -7px;
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
     }
 
     fieldset {
         border: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-top: 6px;
+        gap: 2px;
+        margin: 0;
         padding: 0;
     }
+}
+
+.competitions {
+    min-height: 740px;
 }
 
 .heading {
@@ -50,11 +57,13 @@
     button {
         background: none;
         border: 0;
-        color: #008f89;
+        color: #007d79;
         cursor: pointer;
         font-family: inherit;
-        font-size: 12px;
+        font-size: 16px;
         font-weight: 700;
+        height: 24px;
+        line-height: 22px;
         padding: 0;
     }
 }
@@ -74,15 +83,14 @@
 
 .search {
     align-items: center;
-    border: 1px solid #d1d7db;
-    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
     display: flex;
     gap: 4px;
-    min-height: 38px;
+    height: 38px;
     padding: 0 16px;
 
     svg {
-        color: #34454d;
         flex: 0 0 20px;
         height: 20px;
         width: 20px;
@@ -90,6 +98,7 @@
 
     input {
         border: 0;
+        color: #161616;
         font: inherit;
         font-size: 16px;
         line-height: 22px;
@@ -97,47 +106,58 @@
         outline: none;
         padding: 7px 0;
         width: 100%;
-    }
-}
 
-.skillSearch {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-
-    > span {
-        color: #111;
-        font-size: 13px;
-        font-weight: 700;
+        &::placeholder {
+            color: #6f6f6f;
+            opacity: 1;
+        }
     }
 
-    input {
-        border: 1px solid #d1d7db;
-        border-radius: 3px;
-        font: inherit;
-        font-size: 12px;
-        padding: 8px 9px;
-    }
-
-    small {
-        margin: 0;
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
     }
 }
 
 .checkRow,
 .radioRow {
     align-items: center;
-    color: #303b40;
+    color: #161616;
     cursor: pointer;
     display: flex;
-    font-size: 13px;
+    font-size: 16px;
     gap: 8px;
+    height: 32px;
+    line-height: 22px;
 
     input {
-        accent-color: #008f89;
-        height: 15px;
+        appearance: none;
+        background: #fff;
+        border: 1px solid #a8a8a8;
+        border-radius: 4px;
+        flex: 0 0 16px;
+        height: 16px;
         margin: 0;
-        width: 15px;
+        width: 16px;
+
+        &:checked[type='checkbox'] {
+            background: url('../assets/filter-checkbox-checked.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &[type='radio'] {
+            border-radius: 50%;
+        }
+
+        &:checked[type='radio'] {
+            background: url('../assets/filter-radio-selected.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #161616;
+            outline-offset: 2px;
+        }
     }
 }
 
@@ -153,6 +173,7 @@
 
 @media (max-width: 760px) {
     .panel {
+        min-height: 0;
         position: static;
     }
 }

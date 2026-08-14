@@ -250,7 +250,7 @@ export function buildOpportunityPageUrl(
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
         appendValues(url, 'tracks', filters.tracks)
-        appendValues(url, 'opportunityTypes', filters.types)
+        appendValues(url, 'types', filters.types)
         if (filters.applied) url.searchParams.set('appliedByMe', 'true')
     }
 

@@ -1,6 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
-import { render, screen, within } from '@testing-library/react'
+import {
+    render,
+    RenderResult,
+    screen,
+    within,
+} from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 import {
@@ -324,6 +329,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             projectType: 'Design',
             skills: [{ name: 'Figma' }],
             status: 'active',
+            type: 'Challenge',
         }
         render(
             <MemoryRouter>
@@ -342,6 +348,35 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Start:'))
             .toBeInTheDocument()
+    })
+
+    it('normalizes closed and applied owner statuses to the authored pills', () => {
+        const closed: EngagementOpportunity = {
+            id: 'closed-engagement',
+            status: 'CLOSED',
+            title: 'Closed engagement',
+        }
+        const applied: CopilotOpportunity = {
+            hasApplied: true,
+            id: 'applied-copilot',
+            opportunityTitle: 'Applied copilot opportunity',
+            status: 'active',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={closed} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Application closed').className)
+            .toContain('stateClosed')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={applied} kind='copilots' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Applied').className)
+            .toContain('stateApplied')
     })
 
     it('renders Review role, start, and application metrics without a description', () => {

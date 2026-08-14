@@ -1,38 +1,150 @@
+.modal {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, .1) !important;
+    box-sizing: border-box;
+    color: #161616;
+    font-family: 'Nunito Sans', sans-serif;
+    height: auto !important;
+    max-height: calc(100vh - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    padding: 32px !important;
+    width: 600px !important;
+
+    > div:first-of-type {
+        padding: 0;
+    }
+
+    > div:last-child {
+        margin-top: 24px;
+
+        > hr {
+            display: none;
+        }
+    }
+
+}
+
+.modalHeading {
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.modalTitle {
+    color: #161616;
+    font-family: 'Figtree', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 38px;
+    margin: 0 0 24px;
+    padding-right: 40px;
+    text-transform: none;
+}
+
+.modalClose {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #161616;
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 24px;
+    height: 24px;
+    justify-content: center;
+    padding: 0;
+    width: 24px;
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: .5;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #007d79;
+        outline-offset: 2px;
+    }
+
+    svg {
+        height: 24px;
+        width: 24px;
+    }
+}
+
+.modalBody {
+    flex: 0 1 auto !important;
+    margin: 0 !important;
+    overflow: auto !important;
+    padding: 0 !important;
+}
+
 .form {
-    color: #46535a;
+    color: #161616;
     display: flex;
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
     gap: 16px;
+    width: 100%;
+}
 
-    > p {
-        margin: 0;
+.actionButton {
+    --btn-variant: #007d79 !important;
+    --btn-variant--active: #005f5c !important;
+    --btn-variant--hover: #006b68 !important;
+
+    border-radius: 4px !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    height: 38px;
+    letter-spacing: 0 !important;
+    line-height: 22px !important;
+    padding: 8px 24px !important;
+    text-transform: none !important;
+
+    &:disabled {
+        background: #f4f4f4 !important;
+        box-shadow: none !important;
+        color: #a8a8a8 !important;
     }
 }
 
 .success {
     align-items: center;
-    color: #344148;
+    color: #161616;
     display: flex;
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
-    padding: 20px;
+    padding: 24px 0;
     text-align: center;
 
     svg {
-        color: #008f89;
+        color: #007d79;
         height: 52px;
         width: 52px;
     }
 
     h3 {
+        color: #161616;
         font-family: 'Figtree', sans-serif;
         font-size: 20px;
-        margin: 14px 0 5px;
+        line-height: 32px;
+        margin: 16px 0 4px;
         text-transform: none;
     }
 
     p {
+        font-size: 14px;
+        line-height: 20px;
         margin: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .modal {
+        max-width: calc(100vw - 24px) !important;
+        padding: 24px !important;
+        width: calc(100vw - 24px) !important;
     }
 }

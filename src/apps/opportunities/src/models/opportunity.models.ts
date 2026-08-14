@@ -133,9 +133,11 @@ export interface ChallengeOpportunity {
 
 export interface ChallengeResource {
     challengeId?: string
+    created?: string
     id: string
     memberHandle?: string
     memberId?: number | string
+    rating?: number
     roleId?: string
 }
 

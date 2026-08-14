@@ -66,26 +66,64 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
 
     return (
         <BaseModal
+            ariaLabelledby='report-issue-title'
             buttons={created ? (
-                <Button label='Done' onClick={close} primary size='lg' />
+                <Button
+                    className={styles.actionButton}
+                    customRadius
+                    label='Done'
+                    noCaps
+                    onClick={close}
+                    primary
+                    uiv2
+                />
             ) : (
                 <>
-                    <Button disabled={busy} label='Cancel' onClick={close} secondary size='lg' />
                     <Button
+                        className={styles.actionButton}
+                        customRadius
                         disabled={busy}
-                        label={busy ? 'Sending…' : 'Submit issue'}
+                        label='Cancel'
+                        noCaps
+                        onClick={close}
+                        secondary
+                        uiv2
+                    />
+                    <Button
+                        className={styles.actionButton}
+                        customRadius
+                        disabled={busy || !description.trim()}
+                        label={busy ? 'Sending…' : 'Send report'}
                         loading={busy}
+                        noCaps
                         onClick={submit}
                         primary
-                        size='lg'
+                        uiv2
                     />
                 </>
             )}
+            bodyClassName={styles.modalBody}
             center
+            classNames={{ modal: styles.modal }}
             onClose={close}
             open={props.open}
-            size='body'
-            title='Report an Issue'
+            showCloseIcon={false}
+            size='md'
+            spacer={false}
+            title={(
+                <div className={styles.modalHeading}>
+                    <h2 className={styles.modalTitle} id='report-issue-title'>Report an Issue</h2>
+                    <button
+                        aria-label='Close report issue'
+                        className={styles.modalClose}
+                        disabled={busy}
+                        onClick={close}
+                        type='button'
+                    >
+                        <IconOutline.XIcon aria-hidden='true' />
+                    </button>
+                </div>
+            )}
         >
             {created ? (
                 <div className={styles.success}>
@@ -95,7 +133,6 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                 </div>
             ) : (
                 <div className={styles.form}>
-                    <p>Describe what happened and include the steps needed to reproduce it.</p>
                     <SupportMarkdownEditor
                         contextId={contextId}
                         disabled={busy}

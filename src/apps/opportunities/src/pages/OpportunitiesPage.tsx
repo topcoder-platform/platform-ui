@@ -37,8 +37,11 @@ import {
     getOpportunitySummary,
 } from '../services'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
-import { parseSkillsFilter } from '../utils'
 
+import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
+import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
+import { ReactComponent as ResetIcon } from '../assets/reset.svg'
+import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import styles from './OpportunitiesPage.module.scss'
 
 const KIND_LABELS: Record<OpportunityKind, string> = {
@@ -174,7 +177,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [applied, setApplied] = useState(false)
-    const [skills, setSkills] = useState('')
     const [tracks, setTracks] = useState<string[]>([])
     const [types, setTypes] = useState<string[]>([])
     const [status, setStatus] = useState(defaultStatus(kind))
@@ -186,12 +188,11 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         page,
         perPage,
         search: deferredSearch || undefined,
-        skills: kind !== 'competitions' && skills.trim() ? parseSkillsFilter(skills) : undefined,
         sort,
         statuses: status ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
         types: types.length ? types : undefined,
-    }), [applied, deferredSearch, kind, page, perPage, profile?.userId, skills, sort, status, tracks, types])
+    }), [applied, deferredSearch, page, perPage, profile?.userId, sort, status, tracks, types])
 
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
         'opportunities:summary',
@@ -214,7 +215,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     const resetFilters = (): void => {
         setSearch('')
         setApplied(false)
-        setSkills('')
         setTracks([])
         setTypes([])
         setStatus(defaultStatus(kind))
@@ -256,12 +256,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setPage(1)
     }
 
-    /** Updates owner-specific comma-separated skill facets and starts at page one. */
-    const updateSkills = (value: string): void => {
-        setSkills(value)
-        setPage(1)
-    }
-
     /** Updates the page size and starts again at page one. */
     const updatePerPage = (value: number): void => {
         setPerPage(value)
@@ -288,13 +282,16 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
                     <div className={styles.toolbar}>
                         <label className={styles.sort}>
-                            <IconOutline.SortDescendingIcon />
+                            <SortIcon aria-hidden='true' />
                             <strong>Sort by</strong>
-                            <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                                {kind !== 'reviews' && <option value='newest'>Newest first</option>}
-                                <option value='startingSoon'>Starting soon</option>
-                                {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
-                            </select>
+                            <span className={styles.sortSelect}>
+                                <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
+                                    {kind !== 'reviews' && <option value='newest'>Newest first</option>}
+                                    <option value='startingSoon'>Starting soon</option>
+                                    {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
+                                </select>
+                                <ChevronDownIcon aria-hidden='true' />
+                            </span>
                         </label>
                         <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
                     </div>
@@ -308,12 +305,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             onAppliedChange={updateApplied}
                             onReset={resetFilters}
                             onSearchChange={updateSearch}
-                            onSkillsChange={updateSkills}
                             onStatusChange={updateStatus}
                             onTrackChange={updateTrack}
                             onTypeChange={updateType}
                             search={search}
-                            skills={skills}
                             status={status}
                             tracks={tracks}
                             types={types}
@@ -352,10 +347,19 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             </div>
                         )}
                         {!pageResponse.error && data?.items.length === 0 && (
-                            <div className={styles.message}>
-                                <IconOutline.SearchIcon />
-                                <h3>No matching opportunities</h3>
-                                <p>Try removing a filter or changing your search.</p>
+                            <div className={styles.empty}>
+                                <span className={styles.emptyIcon}>
+                                    <EmptyInfoIcon aria-hidden='true' />
+                                </span>
+                                <h3>No results found</h3>
+                                <div className={styles.emptyCopy}>
+                                    <p>There are no matching opportunities right now.</p>
+                                    <p>Check back later for new opportunities</p>
+                                </div>
+                                <button onClick={resetFilters} type='button'>
+                                    <ResetIcon aria-hidden='true' />
+                                    Reset filter
+                                </button>
                             </div>
                         )}
                         <div className={classNames(styles.list, {

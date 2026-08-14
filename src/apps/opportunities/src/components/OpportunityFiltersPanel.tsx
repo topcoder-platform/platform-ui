@@ -1,9 +1,10 @@
 /* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
 import { ChangeEvent, FC } from 'react'
-import { IconOutline } from '~/libs/ui'
+import classNames from 'classnames'
 
 import { OpportunityKind } from '../models'
 
+import { ReactComponent as SearchIcon } from '../assets/filter-search.svg'
 import styles from './OpportunityFiltersPanel.module.scss'
 
 interface OpportunityFiltersPanelProps {
@@ -13,12 +14,10 @@ interface OpportunityFiltersPanelProps {
     onAppliedChange: (checked: boolean) => void
     onReset: () => void
     onSearchChange: (value: string) => void
-    onSkillsChange: (skills: string) => void
     onStatusChange: (status: string) => void
     onTrackChange: (track: string, checked: boolean) => void
     onTypeChange: (type: string, checked: boolean) => void
     search: string
-    skills: string
     status: string
     tracks: string[]
     types: string[]
@@ -49,6 +48,7 @@ const TRACKS: Record<OpportunityKind, FacetOption[]> = {
         { label: 'Development', value: 'Development' },
         { label: 'Data Science', value: 'Data Science' },
         { label: 'QA', value: 'Quality Assurance' },
+        { label: 'AI', value: 'AI' },
     ],
 }
 
@@ -60,11 +60,8 @@ const COMPETITION_TYPES: FacetOption[] = [
 ]
 
 const REVIEW_TYPES: FacetOption[] = [
-    { label: 'Regular review', value: 'REGULAR_REVIEW' },
-    { label: 'Iterative review', value: 'ITERATIVE_REVIEW' },
-    { label: 'Specification review', value: 'SPEC_REVIEW' },
-    { label: 'Component development', value: 'COMPONENT_DEV_REVIEW' },
-    { label: 'Scenarios review', value: 'SCENARIOS_REVIEW' },
+    { label: 'Challenge', value: 'Challenge' },
+    { label: 'Task', value: 'Task' },
 ]
 
 const MY_LABELS: Record<OpportunityKind, string> = {
@@ -118,18 +115,18 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
 export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props => {
     const tracks = TRACKS[props.kind]
     const statuses = statusOptions(props.kind)
-    const searchDescriptionId = props.kind === 'competitions'
-        ? 'competitions-search-description'
-        : undefined
+    const searchDescriptionId = `${props.kind}-search-description`
 
     /** Updates the controlled search string. */
     const handleSearch = (event: ChangeEvent<HTMLInputElement>): void => props.onSearchChange(event.target.value)
 
-    /** Retains the controlled comma-separated technology input while the member types. */
-    const handleSkills = (event: ChangeEvent<HTMLInputElement>): void => props.onSkillsChange(event.target.value)
-
     return (
-        <aside className={styles.panel} aria-label='Opportunity filters'>
+        <aside
+            aria-label='Opportunity filters'
+            className={classNames(styles.panel, {
+                [styles.competitions]: props.kind === 'competitions',
+            })}
+        >
             <div className={styles.heading}>
                 <h3>Filters</h3>
                 <button onClick={props.onReset} type='button'>Reset all</button>
@@ -137,7 +134,7 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
             <div className={styles.searchGroup}>
                 <label className={styles.search}>
                     <span className={styles.visuallyHidden}>Search opportunities</span>
-                    <IconOutline.SearchIcon />
+                    <SearchIcon aria-hidden='true' />
                     <input
                         aria-describedby={searchDescriptionId}
                         onChange={handleSearch}
@@ -146,22 +143,8 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                         value={props.search}
                     />
                 </label>
-                {searchDescriptionId && (
-                    <small id={searchDescriptionId}>Search skills, technologies, projects</small>
-                )}
+                <small id={searchDescriptionId}>Search skills, technologies, projects</small>
             </div>
-            {props.kind !== 'reviews' && props.kind !== 'competitions' && (
-                <label className={styles.skillSearch}>
-                    <span>Skills / technologies</span>
-                    <input
-                        onChange={handleSkills}
-                        placeholder='React, Figma, Python'
-                        type='text'
-                        value={props.skills}
-                    />
-                    <small>Separate multiple values with commas.</small>
-                </label>
-            )}
             {props.isAuthenticated && (
                 <label className={styles.checkRow}>
                     <input
@@ -218,7 +201,7 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
             )}
             {props.kind === 'reviews' && (
                 <fieldset>
-                    <legend>Review type</legend>
+                    <legend>Type</legend>
                     {REVIEW_TYPES.map((type: FacetOption) => (
                         <label className={styles.checkRow} key={type.value}>
                             <input
