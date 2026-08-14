@@ -308,7 +308,9 @@ function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
                 const MedalIcon = medalIcons[prize.placement - 1] ?? MedalThirdIcon
                 return (
                     <span className={styles.prize} key={`placement-${prize.placement}`}>
-                        <MedalIcon aria-hidden='true' />
+                        <span aria-hidden='true' className={styles.medalIcon}>
+                            <MedalIcon />
+                        </span>
                         <strong>{formatPrize(prize)}</strong>
                     </span>
                 )

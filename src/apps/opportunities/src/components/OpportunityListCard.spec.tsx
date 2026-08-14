@@ -98,6 +98,13 @@ describe('OpportunityListCard competition presentation', () => {
         expect(within(prizes)
             .getByText('+1'))
             .toBeInTheDocument()
+        const firstMedal = within(prizes)
+            .getByText('$1000')
+            .previousElementSibling
+        expect(firstMedal)
+            .toHaveClass('medalIcon')
+        expect(firstMedal?.querySelector('svg'))
+            .toBeInTheDocument()
         expect(screen.queryByText('Prize:'))
             .not.toBeInTheDocument()
 

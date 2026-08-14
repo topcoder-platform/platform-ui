@@ -273,17 +273,28 @@
     gap: 4px;
     white-space: nowrap;
 
-    svg {
-        flex: 0 0 16px;
-        height: 14.4px;
-        width: 11.2px;
-    }
-
     strong {
         font-family: 'Nunito Sans', sans-serif;
         font-size: 16px;
         font-weight: 700;
         line-height: 22px;
+    }
+}
+
+.medalIcon {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 16px;
+    height: 16px;
+    justify-content: center;
+    overflow: hidden;
+    width: 16px;
+
+    svg {
+        display: block;
+        flex: none;
+        height: 90%;
+        width: 70%;
     }
 }
 
