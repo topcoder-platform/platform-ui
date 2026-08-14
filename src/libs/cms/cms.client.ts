@@ -16,19 +16,16 @@ export const PAYLOAD_ASSET_ORIGIN = 'https://assets.topcoder-dev.com'
 const CMS_SPACE_IDS: Record<CmsSpace, string> = {
     default: 'b5f1djy59z3a',
     edu: 'piwi0eufbb2g',
-    website: 'xooissnm36jt',
 }
 
 const CMS_ENVIRONMENTS: Record<CmsSpace, string> = {
     default: 'master',
     edu: 'master',
-    website: 'uat',
 }
 
 const CMS_ACCESS_TOKENS: Record<CmsSpace, string> = {
     default: process.env.REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN || '',
     edu: process.env.REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN || '',
-    website: process.env.REACT_APP_PAYLOAD_CMS_WEBSITE_ACCESS_TOKEN || '',
 }
 
 /** Options accepted by a Payload CMS compatibility request. */
@@ -191,7 +188,7 @@ export function resolveCmsCollection<Fields extends Record<string, unknown>>(
 /**
  * Browser client for Payload's read-only Contentful compatibility facade.
  *
- * The client is used by Thrive and Blog pages. It never falls back to Contentful,
+ * The client is used by Thrive pages. It never falls back to Contentful,
  * Octana, or community-app proxy endpoints.
  */
 export class PayloadCmsClient {
@@ -300,7 +297,7 @@ export class PayloadCmsClient {
     }
 }
 
-/** Shared client used by the public Thrive and Blog applications. */
+/** Shared client used by the public Thrive application. */
 export const payloadCmsClient = new PayloadCmsClient()
 
 /**

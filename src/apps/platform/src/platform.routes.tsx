@@ -18,7 +18,6 @@ import { customerPortalRoutes } from '~/apps/customer-portal'
 import { procurementRoutes } from '~/apps/procurement'
 import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
-import { blogRoutes } from '~/apps/blog'
 import { thriveRoutes } from '~/apps/thrive'
 import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
 
@@ -56,7 +55,6 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...procurementRoutes,
     ...statusRoutes,
     ...supportRoutes,
-    ...blogRoutes,
     ...thriveRoutes,
     ...homeRoutes,
     ...adminRoutes,

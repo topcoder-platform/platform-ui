@@ -1,6 +1,6 @@
 # Payload CMS client
 
-This library is the browser-side CMS boundary for the migrated Thrive and Blog apps. It calls only
+This library is the browser-side CMS boundary for the migrated Thrive app. It calls only
 `https://cms.topcoder-dev.com` and accepts media only from `https://assets.topcoder-dev.com`; it has
 no Contentful, Octana, or community-app proxy fallback.
 
@@ -9,8 +9,6 @@ content can be rendered without changing its field model. Configure the per-spac
 credentials as build-time variables:
 
 - `REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN` for the `piwi0eufbb2g` Thrive space.
-- `REACT_APP_PAYLOAD_CMS_WEBSITE_ACCESS_TOKEN` for the `xooissnm36jt` website
-  space's `uat` environment used by Blog.
 - `REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN` for retained default-space content.
 
 The values are sent only in an `Authorization: Bearer` header. They are never appended to a URL.

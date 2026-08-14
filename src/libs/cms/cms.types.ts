@@ -1,5 +1,5 @@
 /** Supported Payload compatibility spaces used by platform-ui. */
-export type CmsSpace = 'default' | 'edu' | 'website'
+export type CmsSpace = 'default' | 'edu'
 
 /** Scalar values accepted by the Payload Contentful-compatible query API. */
 export type CmsQueryScalar = string | number | boolean

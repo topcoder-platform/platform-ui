@@ -88,24 +88,6 @@ describe('Payload CMS client', () => {
             .toMatchObject({ fields: { name: 'Ada' } })
     })
 
-    it('uses the website space UAT environment for Blog content', async () => {
-        const fetcher = jest.fn() as jest.MockedFunction<typeof fetch>
-        fetcher.mockResolvedValue({
-            json: async () => ({ items: [], limit: 1, skip: 0, sys: { type: 'Array' }, total: 0 }),
-            ok: true,
-            status: 200,
-        } as Response)
-        const client = new PayloadCmsClient({
-            accessTokens: { website: 'website-token' },
-            fetcher,
-        })
-
-        await client.queryEntries('website', { limit: 1 })
-
-        expect(fetcher.mock.calls[0][0])
-            .toBe(`${PAYLOAD_CMS_ORIGIN}/spaces/xooissnm36jt/environments/uat/entries?limit=1`)
-    })
-
     it('refuses to issue a request without the selected space credential', async () => {
         const fetcher = jest.fn() as jest.MockedFunction<typeof fetch>
         const client = new PayloadCmsClient({

@@ -23,7 +23,6 @@ export enum AppSubdomain {
 
 export enum ToolTitle {
     accounts = 'Account Settings',
-    blog = 'Blog',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
     profiles = 'Profiles',
