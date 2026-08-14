@@ -770,23 +770,23 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     )
     const reviewerRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredReviews, useAggregateReviewScore)
-            : filteredReviews),
-        [filteredReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
+            ? sortSubmissionsByReviewScoreDesc(resolvedReviewsWithSubmitter, useAggregateReviewScore)
+            : resolvedReviewsWithSubmitter),
+        [resolvedReviewsWithSubmitter, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const submitterRowsForReviewTab = useMemo(
         () => (shouldSortReviewTabByScore
-            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews, useAggregateReviewScore)
-            : filteredSubmitterReviews),
-        [filteredSubmitterReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
+            ? sortSubmissionsByReviewScoreDesc(resolvedSubmitterReviews, useAggregateReviewScore)
+            : resolvedSubmitterReviews),
+        [resolvedSubmitterReviews, shouldSortReviewTabByScore, useAggregateReviewScore],
     )
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
     // show loading ui when fetching data
     const reviewRows = isSubmitterView
-        ? (shouldSortReviewTabByScore ? submitterRowsForReviewTab : filteredSubmitterReviews)
-        : (shouldSortReviewTabByScore ? reviewerRowsForReviewTab : filteredReviews)
+        ? submitterRowsForReviewTab
+        : reviewerRowsForReviewTab
 
     if (props.isLoadingReview) {
         return <TableLoading />

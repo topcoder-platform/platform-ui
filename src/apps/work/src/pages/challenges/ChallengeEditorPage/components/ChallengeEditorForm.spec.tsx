@@ -660,6 +660,12 @@ jest.mock('./MaximumSubmissionsField', () => ({
     MaximumSubmissionsField: (props: {
         deferDirty?: boolean
     }) => {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const metadata = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'metadata',
+        })
+
         mockMaximumSubmissionsDeferDirtyValues.push(props.deferDirty === true)
 
         return (
@@ -667,6 +673,7 @@ jest.mock('./MaximumSubmissionsField', () => ({
                 data-defer-dirty={props.deferDirty === true
                     ? 'true'
                     : 'false'}
+                data-metadata={JSON.stringify(metadata || [])}
                 data-testid='maximum-submissions-field'
             >
                 Maximum Submissions Field
@@ -684,7 +691,10 @@ jest.mock('./ReviewCostField', () => ({
     ReviewCostField: () => <></>,
 }))
 jest.mock('./ReviewersField', () => ({
-    ReviewersField: (props: { isReadOnly?: boolean }) => {
+    ReviewersField: (props: {
+        isReadOnly?: boolean
+        screenerOnly?: boolean
+    }) => {
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
         const reviewers = reactHookForm.useWatch({
             control: reactHookForm.useFormContext().control,
@@ -695,6 +705,7 @@ jest.mock('./ReviewersField', () => ({
             <div
                 data-read-only={props.isReadOnly === true ? 'true' : 'false'}
                 data-reviewers={JSON.stringify(reviewers || [])}
+                data-screener-only={props.screenerOnly === true ? 'true' : 'false'}
                 data-testid='reviewers-field'
             >
                 Reviewers Field
@@ -858,7 +869,7 @@ describe('ChallengeEditorForm', () => {
         ...validDraftChallenge,
         status: 'NEW',
     } as Challenge
-    const designChallengeWithDeferredScreener = {
+    const designChallengeWithDeferredScreeners = {
         ...validDraftChallenge,
         approvalStatus: 'APPROVED',
         phases: [
@@ -866,6 +877,11 @@ describe('ChallengeEditorForm', () => {
                 duration: 60,
                 name: 'Screening',
                 phaseId: 'screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Checkpoint Screening',
+                phaseId: 'checkpoint-screening-phase-id',
             },
             {
                 duration: 60,
@@ -880,6 +896,14 @@ describe('ChallengeEditorForm', () => {
                 memberReviewerCount: 1,
                 phaseId: 'screening-phase-id',
                 scorecardId: 'screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                additionalMemberIds: [],
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-screening-phase-id',
+                scorecardId: 'checkpoint-screening-scorecard-id',
                 shouldOpenOpportunity: false,
             },
             {
@@ -1912,7 +1936,7 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Challenge launch is blocked until budget approval is Approved.')
     })
 
-    it('launches a design draft before a screener member is assigned', async () => {
+    it('launches a design draft before screening members are assigned', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
         mockedUseFetchChallengeTracks.mockReturnValue({
@@ -1940,14 +1964,14 @@ describe('ChallengeEditorForm', () => {
             isLoading: false,
         })
         mockedPatchChallenge.mockResolvedValue({
-            ...designChallengeWithDeferredScreener,
+            ...designChallengeWithDeferredScreeners,
             status: 'ACTIVE',
         })
 
         render(
             <MemoryRouter>
                 <ChallengeEditorForm
-                    challenge={designChallengeWithDeferredScreener}
+                    challenge={designChallengeWithDeferredScreeners}
                     isReadOnly
                     onRegisterLaunchAction={action => {
                         launchAction = action
@@ -1972,6 +1996,10 @@ describe('ChallengeEditorForm', () => {
                         expect.objectContaining({
                             phaseId: 'screening-phase-id',
                             scorecardId: 'screening-scorecard-id',
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
                         }),
                     ]),
                     status: 'ACTIVE',
@@ -3056,6 +3084,131 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByTestId('reviewers-field')
             .closest('fieldset[disabled]'))
             .toBeNull()
+    })
+
+    it('uses the simplified screener review for a copilot editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+    })
+
+    it('uses persisted Design Challenge metadata for the copilot review gate', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...designChallengeWithDeferredScreeners,
+                            track: {
+                                abbreviation: 'DESIGN',
+                                name: 'Design',
+                            },
+                        }}
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+    })
+
+    it('keeps the full review configuration for an admin editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        const adminContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isAdmin: true,
+            userRoles: ['administrator'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={adminContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'false')
+    })
+
+    it('keeps the full review configuration for a copilot editing a Design First2Finish', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm challenge={first2FinishDraftChallenge} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'false')
     })
 
     it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {
@@ -4203,7 +4356,7 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
-    it('saves a new design draft before a screener member is assigned', async () => {
+    it('saves a new design draft before screening members are assigned', async () => {
         const user = userEvent.setup()
 
         mockedUseFetchChallengeTracks.mockReturnValue({
@@ -4223,7 +4376,7 @@ describe('ChallengeEditorForm', () => {
             isLoading: false,
         })
         mockedPatchChallenge.mockResolvedValue({
-            ...designChallengeWithDeferredScreener,
+            ...designChallengeWithDeferredScreeners,
             status: 'DRAFT',
         })
 
@@ -4231,7 +4384,7 @@ describe('ChallengeEditorForm', () => {
             <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
                 <ChallengeEditorForm
                     challenge={{
-                        ...designChallengeWithDeferredScreener,
+                        ...designChallengeWithDeferredScreeners,
                         status: 'NEW',
                     }}
                     projectId='100578'
@@ -4250,12 +4403,78 @@ describe('ChallengeEditorForm', () => {
                             phaseId: 'screening-phase-id',
                             scorecardId: 'screening-scorecard-id',
                         }),
+                        expect.objectContaining({
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
+                        }),
                     ]),
                     status: 'DRAFT',
                 }))
         })
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+    })
+
+    it('keeps submission-limit metadata visible when the draft save response omits metadata', async () => {
+        const user = userEvent.setup()
+        const submissionLimitMetadata = [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count: '2',
+                limit: 'true',
+                unlimited: 'false',
+            }),
+        }]
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredScreeners,
+            metadata: [],
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...designChallengeWithDeferredScreeners,
+                        metadata: submissionLimitMetadata,
+                        status: 'NEW',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-metadata', JSON.stringify(submissionLimitMetadata))
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(mockedShowSuccessToast)
+                .toHaveBeenCalled()
+            expect(screen.getByTestId('maximum-submissions-field'))
+                .toHaveAttribute('data-metadata', JSON.stringify(submissionLimitMetadata))
+        })
     })
 
     it('reports DRAFT status when task assignee sync fails after the challenge save', async () => {

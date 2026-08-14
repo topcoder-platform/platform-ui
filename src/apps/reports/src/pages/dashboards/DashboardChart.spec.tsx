@@ -8,21 +8,23 @@ import {
 import Highcharts from 'highcharts'
 
 import {
+    ChallengeParticipationDashboard,
     MemberPaymentByCustomerDashboard,
     NewSignupsDashboard,
 } from '../../lib/services'
 
 import { DashboardChart } from './DashboardChart'
 
+let chartOptions: Highcharts.Options
+
 jest.mock('highcharts-react-official', () => ({
     __esModule: true,
-    default: (props: {
-        options: {
-            series?: Array<{ data?: number[]; name?: string }>
-            tooltip?: { pointFormat?: string }
-        }
-    }): JSX.Element => {
-        const series = props.options.series || []
+    default: (props: { options: Highcharts.Options }): JSX.Element => {
+        chartOptions = props.options
+        const series = props.options.series as Array<{
+            data?: number[]
+            name?: string
+        }> || []
 
         return (
             <div
@@ -30,7 +32,6 @@ jest.mock('highcharts-react-official', () => ({
                 data-series-names={series.map(item => item.name)
                     .join('|')}
                 data-testid='dashboard-chart'
-                data-tooltip={props.options.tooltip?.pointFormat}
             />
         )
     },
@@ -96,9 +97,60 @@ const signupResponse: NewSignupsDashboard = {
     },
 }
 
+const challengeParticipationResponse: ChallengeParticipationDashboard = {
+    dashboard: 'challenge-participation',
+    endDate: '2026-02-01T00:00:00.000Z',
+    months: [{
+        month: '2026-01-01',
+        registrants: 120,
+        submitters: 75,
+    }],
+    startDate: '2026-01-01T00:00:00.000Z',
+    summary: {
+        peakMonth: '2026-01-01',
+        peakMonthRegistrants: 120,
+        submissionRate: 62.5,
+        totalUniqueRegistrants: 120,
+        totalUniqueSubmitters: 75,
+    },
+}
 const pointValueToken = '{point.y:,.0f}'
 const countTooltipValue = `<b>${pointValueToken}</b>`
 const currencyTooltipValue = `<b>$${pointValueToken}</b>`
+
+/**
+ * Invokes the tooltip formatter captured from the rendered chart.
+ *
+ * Tests use this helper to verify totals independently of Highcharts' DOM renderer.
+ *
+ * @param values Hovered series values for one month.
+ * @returns The formatter's tooltip HTML as one string.
+ * @throws Error when the chart has no formatter or it returns no HTML.
+ */
+function formatTooltip(values: number[]): string {
+    const formatter = chartOptions.tooltip?.formatter
+    if (!formatter) {
+        throw new Error('Tooltip formatter is missing')
+    }
+
+    const context = {
+        points: values.map(y => ({ y })),
+    } as unknown as Highcharts.TooltipFormatterContextObject
+    const tooltip = {
+        defaultFormatter: () => ['<strong>Jan ’26</strong><br/>', 'series rows'],
+    } as unknown as Highcharts.Tooltip
+    const result = formatter.call(context, tooltip)
+
+    if (typeof result === 'string') {
+        return result
+    }
+
+    if (Array.isArray(result)) {
+        return result.join('')
+    }
+
+    throw new Error('Tooltip formatter did not return HTML')
+}
 
 describe('DashboardChart', () => {
     it('formats tooltip thousands with commas', () => {
@@ -126,8 +178,10 @@ describe('DashboardChart', () => {
                 'data-series-data',
                 '[[125000,140000],[80000,0],[20000,25000]]',
             )
-        expect(chart.getAttribute('data-tooltip'))
+        expect(chartOptions.tooltip?.pointFormat)
             .toContain(currencyTooltipValue)
+        expect(formatTooltip([125_000, 80_000, 20_000]))
+            .toContain('Total: <b>$225,000</b>')
         expect(within(table)
             .getByRole('columnheader', { name: 'Customer A' }))
             .toBeInTheDocument()
@@ -142,20 +196,30 @@ describe('DashboardChart', () => {
             .toBeInTheDocument()
     })
 
-    it('keeps existing count dashboards unit-free', () => {
+    it('keeps count dashboard tooltips unit-free and adds their total', () => {
         render(<DashboardChart response={signupResponse} />)
 
-        const chart = screen.getByTestId('dashboard-chart')
         const table = screen.getByRole('table', {
             name: 'New Signups by Month monthly data',
         })
 
-        expect(chart.getAttribute('data-tooltip'))
+        expect(chartOptions.tooltip?.pointFormat)
             .toContain(countTooltipValue)
-        expect(chart.getAttribute('data-tooltip'))
+        expect(chartOptions.tooltip?.pointFormat)
             .not.toContain(currencyTooltipValue)
+        expect(formatTooltip([90, 10]))
+            .toContain('Total: <b>100</b>')
+        expect(formatTooltip([90, 10]))
+            .not.toContain('$100')
         expect(within(table)
             .getByRole('cell', { name: '90' }))
             .toBeInTheDocument()
+    })
+
+    it('adds a total to grouped report tooltips', () => {
+        render(<DashboardChart response={challengeParticipationResponse} />)
+
+        expect(formatTooltip([120, 75]))
+            .toContain('Total: <b>195</b>')
     })
 })

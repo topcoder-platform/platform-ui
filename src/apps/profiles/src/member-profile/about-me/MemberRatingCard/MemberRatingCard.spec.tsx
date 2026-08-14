@@ -33,6 +33,9 @@ jest.mock('~/libs/ui', () => ({
 })
 
 jest.mock('../../../components', () => ({
+    AddButton: (props: { label: string, onClick: () => void }): JSX.Element => (
+        <button type='button' onClick={props.onClick}>{props.label}</button>
+    ),
     EditMemberPropertyBtn: () => <button type='button'>Edit</button>,
 }))
 
@@ -116,7 +119,7 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
     })
 
-    it('shows the preferred roles edit action for the profile owner when rating data is unavailable', () => {
+    it('shows the preferred roles add action for the profile owner when rating data is unavailable', () => {
         mockedUseMemberStats.mockReturnValue(undefined)
 
         render(<MemberRatingCard {...defaultProps} authProfile={profile} />)
@@ -126,7 +129,8 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Add preferred roles' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Edit' }))
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .not
             .toBeInTheDocument()
     })
 

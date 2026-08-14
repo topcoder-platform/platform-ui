@@ -1,11 +1,12 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { Params, useNavigate, useParams } from 'react-router-dom'
+import { AxiosError } from 'axios'
 import { bind } from 'lodash'
 
 import { profileGetPublicAsync, useMemberBadges, UserBadge, UserBadgesResponse, UserProfile } from '~/libs/core'
 import { Button, ContentLayout, IconSolid, LoadingSpinner } from '~/libs/ui'
 
-import { MemberBadgeModal } from '../components'
+import { MemberBadgeModal, MemberNotFound } from '../components'
 
 import styles from './MemberBadgesPage.module.scss'
 
@@ -19,6 +20,7 @@ const MemberBadgesPage: FC<{}> = () => {
     ] = useState()
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [notFound, setNotFound]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
 
     const memberBadges: UserBadgesResponse | undefined = useMemberBadges(profile?.userId as number, { limit: 100 })
 
@@ -39,12 +41,21 @@ const MemberBadgesPage: FC<{}> = () => {
 
     useEffect(() => {
         if (routeParams.memberHandle) {
+            setProfileReady(false)
+            setNotFound(false)
+            setProfile(undefined)
+
             profileGetPublicAsync(routeParams.memberHandle)
                 .then(userProfile => {
                     setProfile(userProfile)
                     setProfileReady(true)
                 })
-            // TODO: NOT FOUND PAGE redirect/dispaly via catch
+                .catch((e: AxiosError) => {
+                    if (e.code === AxiosError.ERR_BAD_REQUEST && e.response?.status === 404) {
+                        setNotFound(true)
+                        setProfileReady(true)
+                    }
+                })
         }
     }, [routeParams.memberHandle])
 
@@ -54,9 +65,13 @@ const MemberBadgesPage: FC<{}> = () => {
 
     return (
         <>
-            <LoadingSpinner hide={profileReady && !!memberBadges} />
+            <LoadingSpinner hide={profileReady && (notFound || !!memberBadges)} />
 
-            {profileReady && profile && !!memberBadges && (
+            {profileReady && notFound && (
+                <MemberNotFound memberHandle={routeParams.memberHandle} />
+            )}
+
+            {profileReady && profile && !notFound && !!memberBadges && (
                 <ContentLayout
                     outerClass={styles.container}
                 >

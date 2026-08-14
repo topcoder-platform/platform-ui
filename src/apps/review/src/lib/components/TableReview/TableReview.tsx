@@ -41,7 +41,7 @@ import {
 } from '../../models'
 import {
     aggregateSubmissionReviews,
-    challengeHasSubmissionLimit,
+    getChallengeSubmissionSelectionLimit,
     isMarathonMatchChallenge,
     isReviewPhase,
     isReviewPhaseCurrentlyOpen,
@@ -180,6 +180,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [challengeInfo, submissionTypes],
     )
 
+    const submissionSelectionLimit = useMemo<number | undefined>(
+        () => getChallengeSubmissionSelectionLimit(challengeInfo),
+        [challengeInfo],
+    )
+
     const {
         closeHistoryModal,
         historyByMember,
@@ -193,11 +198,12 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         datas: reviewPhaseDatas,
         filteredAll: filteredChallengeSubmissions,
         isSubmissionTab: true,
+        maxVisibleSubmissions: submissionSelectionLimit,
     })
 
     const restrictToLatest = useMemo<boolean>(
-        () => challengeHasSubmissionLimit(challengeInfo),
-        [challengeInfo],
+        () => submissionSelectionLimit !== undefined,
+        [submissionSelectionLimit],
     )
     const useAggregateReviewScore = useMemo<boolean>(
         () => isMarathonMatchChallenge(challengeInfo),
@@ -650,7 +656,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )
         }
 
-        const historyKeyForRow = getSubmissionHistoryKey(submission.memberId, submission.id)
+        const historyKeyForRow = getSubmissionHistoryKey(
+            submission.memberId,
+            submission.id,
+            submission.type,
+        )
         const rowHistory = historyByMember.get(historyKeyForRow) ?? []
 
         const buildHistoryAction = (): JSX.Element | undefined => {
