@@ -2017,17 +2017,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isChallengeTypeSelected = useMemo(
         (): boolean => {
-            const normalizedChallengeTypeName = (selectedChallengeType?.name || '')
+            const normalizedChallengeTypeName = (resolvedChallengeTypeName || '')
                 .trim()
                 .toUpperCase()
-            const normalizedChallengeTypeAbbreviation = (selectedChallengeType?.abbreviation || '')
+            const normalizedChallengeTypeAbbreviation = (resolvedChallengeTypeAbbreviation || '')
                 .trim()
                 .toUpperCase()
 
             return normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
                 || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
         },
-        [selectedChallengeType],
+        [resolvedChallengeTypeAbbreviation, resolvedChallengeTypeName],
     )
     const isTaskChallengeSelected = useMemo(
         (): boolean => isTaskChallengeType(selectedChallengeType)
@@ -2219,6 +2219,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
+    const shouldUseSimplifiedDesignReview = shouldUseCopilotBillingSummary
+        && isDesignTrackSelected
+        && isChallengeTypeSelected
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -3838,6 +3841,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
                             aiReviewConfigSaveControllerRef.current = controller
                         }}
+                        screenerOnly={shouldUseSimplifiedDesignReview}
                     />
                 </div>
             </section>
