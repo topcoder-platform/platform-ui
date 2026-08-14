@@ -174,6 +174,8 @@ export async function getOpportunitySummary(): Promise<OpportunitySummary> {
  * domain; copilot tracks map to its opportunity `type` enum. A competition's
  * `memberId` and `resourceRoleId` are emitted together so Challenge API can
  * apply Submitter membership before filtering, sorting, and pagination.
+ * Competition free text is emitted only through `search`; a hidden `tags`
+ * filter would turn the authored unified search into an unintended AND query.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -208,7 +210,6 @@ export function buildOpportunityPageUrl(
 
         appendValues(url, 'tracks', filters.tracks)
         appendValues(url, 'types', filters.types)
-        appendValues(url, 'tags', filters.skills)
         if (filters.applied && filters.memberId && filters.resourceRoleId) {
             url.searchParams.set('memberId', filters.memberId)
             url.searchParams.set('resourceRoleId', filters.resourceRoleId)

@@ -10,6 +10,12 @@ The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.
 
+The Competitions sidebar follows the authored Figma filter with one Search
+control and the helper text “Search skills, technologies, projects.” Its value
+is sent through the Challenge API `search` parameter; Competitions does not
+render a second skills/technologies field. Other opportunity domains retain
+their owner-specific skill facet where supported.
+
 ## Competition card contract
 
 Competition list cards consume the Challenge API v6 list response directly;

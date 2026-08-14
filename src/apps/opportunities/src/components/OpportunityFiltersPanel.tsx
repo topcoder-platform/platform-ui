@@ -112,12 +112,15 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
  * Renders the server-backed filter controls shown beside each Opportunities list.
  *
  * @param props current filters and callbacks that reset pagination before refetching.
- * @returns accessible search, skills, ownership, status, track, and type controls.
+ * @returns accessible domain-specific search, skills, ownership, status, track, and type controls.
  * @throws Does not throw.
  */
 export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props => {
     const tracks = TRACKS[props.kind]
     const statuses = statusOptions(props.kind)
+    const searchDescriptionId = props.kind === 'competitions'
+        ? 'competitions-search-description'
+        : undefined
 
     /** Updates the controlled search string. */
     const handleSearch = (event: ChangeEvent<HTMLInputElement>): void => props.onSearchChange(event.target.value)
@@ -131,17 +134,23 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                 <h3>Filters</h3>
                 <button onClick={props.onReset} type='button'>Reset all</button>
             </div>
-            <label className={styles.search}>
-                <span className={styles.visuallyHidden}>Search opportunities</span>
-                <IconOutline.SearchIcon />
-                <input
-                    onChange={handleSearch}
-                    placeholder='Search'
-                    type='search'
-                    value={props.search}
-                />
-            </label>
-            {props.kind !== 'reviews' && (
+            <div className={styles.searchGroup}>
+                <label className={styles.search}>
+                    <span className={styles.visuallyHidden}>Search opportunities</span>
+                    <IconOutline.SearchIcon />
+                    <input
+                        aria-describedby={searchDescriptionId}
+                        onChange={handleSearch}
+                        placeholder='Search'
+                        type='search'
+                        value={props.search}
+                    />
+                </label>
+                {searchDescriptionId && (
+                    <small id={searchDescriptionId}>Search skills, technologies, projects</small>
+                )}
+            </div>
+            {props.kind !== 'reviews' && props.kind !== 'competitions' && (
                 <label className={styles.skillSearch}>
                     <span>Skills / technologies</span>
                     <input

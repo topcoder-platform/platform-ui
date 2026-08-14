@@ -170,12 +170,12 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         page,
         perPage,
         search: deferredSearch || undefined,
-        skills: skills.trim() ? parseSkillsFilter(skills) : undefined,
+        skills: kind !== 'competitions' && skills.trim() ? parseSkillsFilter(skills) : undefined,
         sort,
         statuses: status ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
         types: types.length ? types : undefined,
-    }), [applied, deferredSearch, page, perPage, profile?.userId, skills, sort, status, tracks, types])
+    }), [applied, deferredSearch, kind, page, perPage, profile?.userId, skills, sort, status, tracks, types])
 
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
         'opportunities:summary',
@@ -240,7 +240,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setPage(1)
     }
 
-    /** Updates comma-separated skill/technology facets and starts at page one. */
+    /** Updates owner-specific comma-separated skill facets and starts at page one. */
     const updateSkills = (value: string): void => {
         setSkills(value)
         setPage(1)

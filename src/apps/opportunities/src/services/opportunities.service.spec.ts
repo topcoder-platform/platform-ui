@@ -60,6 +60,8 @@ describe('opportunities service normalization', () => {
         const url = new URL(buildOpportunityPageUrl('competitions', {
             page: 2,
             perPage: 10,
+            search: 'React project',
+            skills: ['React'],
             sort: 'startingSoon',
             statuses: ['REGISTRATION'],
             tracks: ['Des', 'Dev'],
@@ -74,6 +76,10 @@ describe('opportunities service normalization', () => {
             .toEqual(['Des', 'Dev'])
         expect(url.searchParams.getAll('types'))
             .toEqual(['CH', 'F2F'])
+        expect(url.searchParams.get('search'))
+            .toBe('React project')
+        expect(url.searchParams.getAll('tags'))
+            .toEqual([])
         expect(url.searchParams.get('sortBy'))
             .toBe('startDate')
         expect(url.searchParams.get('sortOrder'))
