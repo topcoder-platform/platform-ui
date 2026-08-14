@@ -14,6 +14,16 @@ export interface OpportunitySkill {
     name: string
 }
 
+/** Catalog value returned by Challenge API reference expansions. */
+export interface ChallengeCatalogEntry {
+    id?: string
+    name?: string
+    track?: string
+}
+
+/** Challenge catalog value accepted from current and legacy API responses. */
+export type ChallengeCatalogValue = string | ChallengeCatalogEntry
+
 export interface ChallengePhase {
     actualEndDate?: string
     actualStartDate?: string
@@ -32,6 +42,12 @@ export interface ChallengePrize {
 
 export interface ChallengePrizeSet {
     prizes?: ChallengePrize[]
+    type?: string
+}
+
+/** Aggregate challenge values calculated by Challenge API. */
+export interface ChallengeOverview {
+    totalPrizes?: number
     type?: string
 }
 
@@ -75,6 +91,8 @@ export interface ChallengeMetadata {
 
 export interface ChallengeOpportunity {
     attachments?: ChallengeAttachment[]
+    currentPhase?: ChallengePhase
+    currentPhaseNames?: string[]
     description?: string
     descriptionFormat?: string
     discussions?: ChallengeDiscussion[]
@@ -86,10 +104,10 @@ export interface ChallengeOpportunity {
     legacy?: ChallengeLegacy
     metadata?: ChallengeMetadata[]
     name: string
+    numOfPosts?: number
     numOfRegistrants?: number
     numOfSubmissions?: number
-    overview?: string
-    overviewTotalPrizes?: number
+    overview?: ChallengeOverview
     phases?: ChallengePhase[]
     privateDescription?: string
     prizeSets?: ChallengePrizeSet[]
@@ -100,8 +118,8 @@ export interface ChallengeOpportunity {
     status?: string
     tags?: string[]
     terms?: ChallengeTerm[]
-    track?: string | { id?: string; name?: string }
-    type?: string | { id?: string; name?: string }
+    track?: ChallengeCatalogValue
+    type?: ChallengeCatalogValue
     winners?: Array<{
         handle?: string
         placement?: number

@@ -260,7 +260,8 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 
 /** Renders format-aware requirements and a Markdown-only table of contents. */
 const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
-    const description = props.challenge.description || props.challenge.overview || 'Requirements are not available yet.'
+    const description = props.challenge.description
+        || 'Requirements are not available yet.'
     const htmlFormat = isHtmlDescriptionFormat(props.challenge.descriptionFormat)
     const toc = useMemo(
         () => (htmlFormat ? [] : extractTableOfContents(description)),

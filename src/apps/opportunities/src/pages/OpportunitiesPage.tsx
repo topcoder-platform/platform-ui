@@ -50,6 +50,8 @@ const VALID_KINDS = new Set<OpportunityKind>([
     'reviews',
 ])
 
+const COMPETITION_REFRESH_INTERVAL_MS = 60 * 1000
+
 /**
  * Resolves an optional route segment to a supported opportunity domain.
  *
@@ -183,7 +185,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     const pageResponse: SWRResponse<OpportunityPage<OpportunityItem>, Error> = useSWR(
         ['opportunities:list', kind, filters],
         () => getOpportunityPage(kind, filters),
-        { revalidateOnFocus: false },
+        {
+            refreshInterval: kind === 'competitions' ? COMPETITION_REFRESH_INTERVAL_MS : 0,
+            revalidateOnFocus: kind === 'competitions',
+        },
     )
     const data = pageResponse.data
     const isReviewer = hasRole(profile?.roles, 'reviewer')
@@ -336,7 +341,12 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         )}
                         <div className={styles.list}>
                             {data?.items.map((item: OpportunityItem) => (
-                                <OpportunityListCard item={item} key={item.id} kind={kind} />
+                                <OpportunityListCard
+                                    item={item}
+                                    key={item.id}
+                                    kind={kind}
+                                    registered={kind === 'competitions' && applied}
+                                />
                             ))}
                         </div>
                         {(data?.items.length ?? 0) > 0 && (

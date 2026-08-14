@@ -1,61 +1,69 @@
 .hero {
-    background: #002a3a;
+    background: #001e2e;
     color: #fff;
-    min-height: 216px;
+    height: 246px;
+    min-height: 246px;
     overflow: visible;
     position: relative;
 }
 
 .inner {
     margin: 0 auto;
-    max-width: 1120px;
-    padding: 25px 24px 0;
+    max-width: 1248px;
+    padding: 0 24px;
     position: relative;
     z-index: 1;
 
     h1 {
+        color: #fff;
         font-family: 'Figtree', sans-serif;
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 700;
-        line-height: 34px;
+        line-height: 40px;
+        margin: 0;
         text-transform: none;
 
         span {
-            color: #2ed8cf;
+            color: #3ddbd9;
         }
     }
 }
 
 .map {
-    background-image: radial-gradient(circle, rgba(101, 153, 163, .42) 1.8px, transparent 2px);
-    background-size: 9px 9px;
-    clip-path: polygon(42% 0, 100% 0, 100% 80%, 85% 70%, 74% 95%, 56% 72%, 36% 86%, 18% 55%);
-    height: 180px;
-    opacity: .6;
+    background: url('../assets/opportunity-map.svg') center / contain no-repeat;
+    height: 420px;
+    left: calc(50% + 360.5px);
+    pointer-events: none;
     position: absolute;
-    right: 5%;
-    top: 0;
-    width: 50%;
+    top: -23px;
+    transform: translateX(-50%);
+    width: 753px;
 }
 
 .breadcrumbs {
     align-items: center;
-    color: #9bb2bb;
+    color: rgba(255, 255, 255, .6);
     display: flex;
-    font-size: 12px;
+    font-size: 14px;
     gap: 8px;
-    margin-bottom: 20px;
+    height: 66px;
+    line-height: 20px;
 
-    a {
-        color: inherit;
+    > a {
+        color: rgba(255, 255, 255, .6);
         text-decoration: none;
+    }
+
+    > span:last-child {
+        color: #fff;
     }
 }
 
 .subtitle {
-    color: #d8e2e6;
-    font-size: 16px;
-    margin: 5px 0 29px;
+    color: #fff;
+    font-size: 20px;
+    line-height: 28px;
+    margin: 8px 0 40px;
 }
 
 .summaryError {
@@ -66,9 +74,12 @@
     display: flex;
     font-size: 12px;
     gap: 12px;
-    margin: -18px 0 12px;
+    left: 24px;
+    margin: 0;
     max-width: max-content;
     padding: 7px 10px;
+    position: absolute;
+    top: 146px;
 
     button {
         background: none;
@@ -83,81 +94,111 @@
 
 .cells {
     display: grid;
-    gap: 20px;
+    gap: 24px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .cell {
     align-items: flex-start;
-    background: #0d3445;
-    border: 1px dashed #708d98;
-    border-radius: 6px;
+    backdrop-filter: blur(2px);
+    background:
+        linear-gradient(rgba(255, 255, 255, .05), rgba(255, 255, 255, .05)),
+        #001e2e;
+    border: 1px dashed rgba(255, 255, 255, .4);
+    border-radius: 8px;
     color: #fff;
     display: flex;
-    gap: 13px;
-    min-height: 86px;
-    padding: 18px;
+    gap: 8px;
+    height: 106px;
+    justify-content: center;
+    padding: 16px;
     text-decoration: none;
-    transition: background .15s ease, transform .15s ease;
+    transition: background .15s ease;
 
     > svg {
-        flex: 0 0 28px;
-        height: 28px;
-        width: 28px;
+        flex: 0 0 32px;
+        height: 32px;
+        width: 32px;
     }
 
     &:hover {
-        background: #125064;
-        transform: translateY(-2px);
+        background:
+            linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1)),
+            #001e2e;
     }
 }
 
 .active {
-    background: #07968f;
-    border-color: transparent;
+    background: #007d79;
+    border: 0;
 
     &:hover {
-        background: #07857f;
+        background: #007d79;
     }
 }
 
 .cellCopy {
+    color: #fff;
     display: flex;
     flex-direction: column;
-    font-size: 11px;
-    line-height: 16px;
+    flex: 1 0 0;
+    height: 74px;
     min-width: 0;
 
     strong {
+        color: #fff;
         font-family: 'Figtree', sans-serif;
-        font-size: 15px;
-        line-height: 20px;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 30px;
+        white-space: nowrap;
+    }
+
+    > span:not(.metrics) {
+        color: #fff;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
         white-space: nowrap;
     }
 }
 
 .metrics {
+    align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 5px;
+    gap: 8px;
+    margin-top: 8px;
 
     small {
-        background: rgba(255, 255, 255, .16);
+        align-items: center;
+        background: rgba(255, 255, 255, .2);
         border-radius: 2px;
-        font-size: 9px;
-        line-height: 15px;
-        padding: 0 5px;
+        color: #fff;
+        display: inline-flex;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        height: 20px;
+        line-height: 12px;
+        padding: 4px;
+        white-space: nowrap;
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1199px) {
     .hero {
+        height: auto;
         padding-bottom: 18px;
     }
 
     .cells {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .map {
+        display: none;
     }
 }
 
@@ -171,6 +212,10 @@
     }
 
     .cellCopy strong {
+        white-space: normal;
+    }
+
+    .cellCopy > span:not(.metrics) {
         white-space: normal;
     }
 }

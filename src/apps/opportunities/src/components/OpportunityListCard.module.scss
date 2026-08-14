@@ -1,8 +1,9 @@
 .card {
     background: #fff;
-    border: 1px solid #dce2e5;
-    border-radius: 6px;
-    color: #13191d;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: #161616;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 230px;
     min-height: 130px;
@@ -10,9 +11,14 @@
     text-decoration: none;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 
+    &:link,
+    &:visited {
+        color: #161616;
+    }
+
     &:hover {
-        border-color: #008f89;
-        box-shadow: 0 5px 18px rgba(0, 42, 58, .1);
+        border-color: #007d79;
+        box-shadow: 0 5px 18px rgba(0, 30, 46, .1);
         transform: translateY(-1px);
     }
 }
@@ -22,7 +28,7 @@
     padding: 20px 22px;
 
     h3 {
-        color: #15191c;
+        color: #161616;
         font-family: 'Figtree', sans-serif;
         font-size: 20px;
         font-weight: 700;
@@ -32,7 +38,7 @@
     }
 
     p {
-        color: #3f4a50;
+        color: #26353c;
         font-size: 13px;
         line-height: 19px;
         margin: 11px 0 0;
@@ -41,42 +47,52 @@
 
 .eyebrow {
     align-items: center;
-    color: #303b40;
+    color: #161616;
     display: flex;
-    font-size: 10px;
-    gap: 7px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 4px;
+    line-height: 12px;
+    min-height: 20px;
 }
 
 .badge {
-    background: #c8f5d6;
-    color: #137d60;
-    padding: 2px 5px;
+    background: #a7f0ba;
+    border-radius: 2px;
+    color: #044317;
+    line-height: 12px;
+    padding: 4px;
 }
 
 .state {
-    border: 1px solid #7fa08e;
-    color: #137d60;
+    border: 1px solid #a8a8a8;
+    color: #161616;
     margin-left: auto;
-    padding: 2px 6px;
+    padding: 3px 5px;
 }
 
 .skills {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 4px;
 
     span {
-        background: #edf0f2;
-        color: #30383d;
-        font-size: 9px;
-        line-height: 16px;
-        padding: 0 5px;
+        background: #e9ecef;
+        border-radius: 2px;
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 12px;
+        padding: 4px;
     }
 }
 
 .meta {
     align-content: center;
-    border-left: 1px solid #dce2e5;
+    border-left: 1px solid #e0e0e0;
+    color: #161616;
     display: grid;
     gap: 12px;
     margin: 0;
@@ -91,16 +107,18 @@
     }
 
     svg {
-        color: #008f89;
+        color: #007d79;
         height: 17px;
         width: 17px;
     }
 
     dt {
+        color: #161616;
         font-weight: 700;
     }
 
     dd {
+        color: #161616;
         margin: 0;
         min-width: 0;
         overflow: hidden;
@@ -109,25 +127,324 @@
     }
 }
 
-@media (max-width: 800px) {
-    .card {
-        grid-template-columns: 1fr;
-    }
+.competitionCard {
+    grid-template-columns: minmax(0, 1fr) 195px;
+    min-height: 212px;
+}
 
-    .meta {
-        border-left: 0;
-        border-top: 1px solid #dce2e5;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+.competitionMain {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 0;
+    padding: 24px;
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 28px;
+        margin: 0;
+        text-transform: none;
     }
 }
 
-@media (max-width: 480px) {
+.competitionCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.competitionCard .eyebrow {
+    align-items: flex-start;
+    height: 24px;
+}
+
+.competitionCard .skills {
+    gap: 8px;
+
+    .primarySkill {
+        background: #fff;
+        border: 1px solid #a8a8a8;
+        padding: 3px;
+    }
+}
+
+.trackBadge {
+    box-sizing: border-box;
+    height: 20px;
+}
+
+.designBadge {
+    background: #d0e2ff;
+    color: #002d9c;
+}
+
+.developmentBadge {
+    background: #a7f0ba;
+    color: #044317;
+}
+
+.dataScienceBadge {
+    background: #ffd9be;
+    color: #5e2900;
+}
+
+.artificialIntelligenceBadge {
+    background: #e8daff;
+    color: #491d8b;
+}
+
+.qualityAssuranceBadge {
+    background: #ffd6e8;
+    color: #740937;
+}
+
+.competitionBadge {
+    background: #e9ecef;
+    color: #161616;
+}
+
+.challengeType,
+.registrationState {
+    align-items: center;
+    border-radius: 2px;
+    box-sizing: border-box;
+    color: #161616;
+    display: inline-flex;
+    gap: 2px;
+    height: 20px;
+    padding: 4px;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 14px;
+        height: 14px;
+        width: 14px;
+    }
+}
+
+.registrationState {
+    border: 1px solid #a8a8a8;
+    margin-left: auto;
+
+    svg {
+        flex-basis: 16px;
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.registrationClosed {
+    border-color: #c1294f;
+    color: #c1294f;
+}
+
+.registrationRegistered {
+    border-color: #198038;
+    color: #198038;
+}
+
+.competitionFooter {
+    align-items: center;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.prizes {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-height: 28px;
+    min-width: 0;
+}
+
+.prize {
+    align-items: center;
+    color: #161616;
+    display: inline-flex;
+    gap: 4px;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 16px;
+        height: 14.4px;
+        width: 11.2px;
+    }
+
+    strong {
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 22px;
+    }
+}
+
+.morePrizes {
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 50%;
+    color: #161616;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.prizeUnavailable {
+    color: #617178;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.phase {
+    display: flex;
+    flex: 0 1 255px;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 255px;
+    min-width: 220px;
+}
+
+.phaseHeading {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.phaseLabel {
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 4px;
+    color: #161616;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 4px;
+    line-height: 20px;
+    min-width: 0;
+    padding: 2px 4px;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.timeLeft {
+    color: #161616;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 12px;
+    white-space: nowrap;
+}
+
+.progress {
+    background: #e0e0e0;
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+    width: 100%;
+
+    span {
+        background: #007d79;
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        transition: width .2s ease;
+    }
+}
+
+.competitionMeta {
+    align-content: center;
+    gap: 16px;
+    padding: 32px;
+
+    div {
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        grid-template-columns: 20px auto 1fr;
+        line-height: 20px;
+    }
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+@media (max-width: 900px) {
+    .competitionFooter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .phase {
+        flex-basis: auto;
+        max-width: none;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 800px) {
+    .card,
+    .competitionCard {
+        grid-template-columns: 1fr;
+    }
+
+    .meta,
+    .competitionMeta {
+        border-left: 0;
+        border-top: 1px solid #e0e0e0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .competitionMeta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 24px;
+    }
+}
+
+@media (max-width: 520px) {
+    .competitionMain,
     .main {
         padding: 16px;
     }
 
+    .eyebrow {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .competitionCard .eyebrow {
+        height: auto;
+    }
+
+    .registrationState {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .competitionMeta,
     .meta {
         grid-template-columns: 1fr;
         padding: 16px;
+    }
+
+    .phaseHeading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

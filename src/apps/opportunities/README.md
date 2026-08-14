@@ -10,6 +10,30 @@ The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.
 
+## Competition card contract
+
+Competition list cards consume the Challenge API v6 list response directly;
+they do not make per-card follow-up requests. Track catalog values drive the
+Figma Design, Development, Data Science, AI, and QA pill palettes. Challenge,
+First2Finish, Marathon Match, and Task catalog values map to their authored
+subtype icons and member-facing labels.
+
+- “Open for registration” requires an `ACTIVE` challenge and an open
+  `Registration` phase (or legacy combined `Open` phase). `ACTIVE` by itself
+  is not treated as an open registration window. The server-filtered “My
+  competitions” result marks those cards Registered without per-card calls.
+- The prize footer uses only the `PLACEMENT` prize set and preserves its API
+  order as first, second, and third place. Checkpoint, copilot, and reviewer
+  payments are not mixed into competitor prizes.
+- `currentPhase` is preferred for the phase chip. Older responses fall back to
+  the latest-started open phase. Progress uses actual then scheduled dates,
+  clamps to 0–100%, and may derive the end from the phase duration in seconds.
+  Competition pages revalidate once a minute and when focus returns; cards
+  with no open phase omit the phase display instead of inventing one.
+- The right rail shows submissions and registrants from Challenge API. It also
+  reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
+  value is an em dash rather than a fabricated discussion or forum count.
+
 ## Challenge Markdown table of contents
 
 Challenge descriptions are safe Markdown. Authors create the generated table
@@ -41,8 +65,9 @@ field is present for the caller.
 
 ## Owning API contracts
 
-- Competitions: Challenge API, including `currentPhaseName`, plural `tracks`
-  and `types`, and canonical Challenge catalog abbreviations.
+- Competitions: Challenge API, including `currentPhase`,
+  `currentPhaseNames`, phase schedules, `PLACEMENT` prize sets, plural
+  `tracks` and `types`, and canonical Challenge catalog values.
 - Engagements: Engagements API, including top-level `durationWeeks` or
   `durationMonths` and `IMMEDIATE`, `FEW_DAYS`, or `FEW_WEEKS` anticipated
   start values. Cards display hydrated `skills[].name` values and retain

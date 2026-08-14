@@ -7,8 +7,8 @@
 
 .content {
     margin: 0 auto;
-    max-width: 1120px;
-    padding: 66px 24px 72px;
+    max-width: 1248px;
+    padding: 72px 24px;
 }
 
 .titleRow {
@@ -16,12 +16,13 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 32px;
+    min-height: 52px;
 
     h2 {
         font-family: 'Figtree', sans-serif;
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 700;
-        line-height: 28px;
+        line-height: 38px;
         text-transform: none;
     }
 }
@@ -29,12 +30,13 @@
 .sort {
     align-items: center;
     display: flex;
-    font-size: 12px;
+    font-size: 14px;
     gap: 6px;
+    line-height: 20px;
 
     svg {
-        height: 16px;
-        width: 16px;
+        height: 20px;
+        width: 20px;
     }
 
     select {
@@ -49,7 +51,7 @@
     align-items: start;
     display: grid;
     gap: 24px;
-    grid-template-columns: 245px minmax(0, 1fr);
+    grid-template-columns: 282px minmax(0, 1fr);
 }
 
 .sidebar,
@@ -70,7 +72,7 @@
 }
 
 .list {
-    gap: 14px;
+    gap: 16px;
 }
 
 .learning {
@@ -159,7 +161,7 @@
         background: linear-gradient(90deg, #e7ecef, #f7f9fa, #e7ecef);
         border: 1px solid #dce2e5;
         border-radius: 6px;
-        height: 130px;
+        height: 212px;
     }
 }
 
@@ -168,7 +170,7 @@
     to { opacity: 1; }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 960px) {
     .content {
         padding-top: 40px;
     }

@@ -1,6 +1,7 @@
 /* eslint-disable ordered-imports/ordered-imports */
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -13,11 +14,41 @@ import {
     ReviewOpportunity,
 } from '../models'
 
+import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
+import { ReactComponent as First2FinishTypeIcon } from '../assets/first2finish-type.svg'
+import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
+import { ReactComponent as MedalFirstIcon } from '../assets/medal-1.svg'
+import { ReactComponent as MedalSecondIcon } from '../assets/medal-2.svg'
+import { ReactComponent as MedalThirdIcon } from '../assets/medal-3.svg'
+import { ReactComponent as PostsMetricIcon } from '../assets/metric-posts.svg'
+import { ReactComponent as RegistrantsMetricIcon } from '../assets/metric-registrants.svg'
+import { ReactComponent as SubmissionsMetricIcon } from '../assets/metric-submissions.svg'
+import { ReactComponent as PhaseRegistrationIcon } from '../assets/phase-registration.svg'
+import { ReactComponent as PhaseSubmissionIcon } from '../assets/phase-submission.svg'
+import { ReactComponent as RegistrationClosedIcon } from '../assets/registration-closed.svg'
+import { ReactComponent as RegistrationOpenIcon } from '../assets/registration-open.svg'
+import { ReactComponent as TaskTypeIcon } from '../assets/task-type.svg'
+import {
+    ChallengePlacementPrize,
+    challengeCatalogKey,
+    challengeCatalogName,
+    challengeCurrentPhase,
+    challengePhaseTiming,
+    challengePlacementPrizes,
+    challengeRegistrationIsOpen,
+    formatChallengeTimeLeft,
+} from './challenge-card.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
     item: OpportunityItem
     kind: OpportunityKind
+    registered?: boolean
+}
+
+interface CompetitionListCardProps {
+    item: ChallengeOpportunity
+    registered?: boolean
 }
 
 interface CardViewModel {
@@ -31,18 +62,19 @@ interface CardViewModel {
     type?: string
 }
 
-/**
- * Returns a useful string from an API value that can be a name object.
- *
- * @param value string or catalog object.
- * @param fallback text used when no name exists.
- * @returns display name.
- * @throws Does not throw.
- */
-function catalogName(value: string | { name?: string } | undefined, fallback: string): string {
-    if (typeof value === 'string') return value
-    return value?.name || fallback
+interface ChallengeTypePresentation {
+    icon: FC<SVGProps<SVGSVGElement>>
+    label: string
 }
+
+const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
+    challenge: { icon: ChallengeTypeIcon, label: 'Challenge' },
+    first2finish: { icon: First2FinishTypeIcon, label: 'First 2 Finish' },
+    marathonmatch: { icon: MarathonTypeIcon, label: 'Marathon Match' },
+    task: { icon: TaskTypeIcon, label: 'Task' },
+}
+
+const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
 
 /**
  * Formats a date for compact card metadata.
@@ -141,19 +173,39 @@ function enumLabel(value?: string): string | undefined {
 }
 
 /**
- * Formats a dollar amount without unnecessary decimal places.
+ * Formats a Challenge API prize without mislabeling point or non-USD values.
  *
- * @param value dollar value.
- * @returns US currency text.
+ * @param prize typed placement prize.
+ * @returns compact currency, points, or typed-value text.
  * @throws Does not throw.
  */
-function formatMoney(value?: number): string {
-    return new Intl.NumberFormat('en-US', {
-        currency: 'USD',
-        maximumFractionDigits: 0,
-        style: 'currency',
+function formatPrize(prize: ChallengePlacementPrize): string {
+    const type = prize.type?.trim()
+        .toUpperCase()
+    const number = new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 2,
+        useGrouping: false,
     })
-        .format(value ?? 0)
+        .format(prize.value)
+    if (type === 'POINT' || type === 'POINTS') return `${number} pts`
+
+    const currency = type || 'USD'
+    if (/^[A-Z]{3}$/.test(currency)) {
+        try {
+            return new Intl.NumberFormat('en-US', {
+                currency,
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 0,
+                style: 'currency',
+                useGrouping: false,
+            })
+                .format(prize.value)
+        } catch {
+            // Fall through to the explicit typed-value treatment below.
+        }
+    }
+
+    return type ? `${number} ${type}` : number
 }
 
 /**
@@ -175,35 +227,95 @@ function descriptionExcerpt(value?: string): string | undefined {
     return plain.length > 180 ? `${plain.slice(0, 177)}…` : plain
 }
 
-/** Converts challenge data to the shared card presentation model. */
-function challengeView(item: ChallengeOpportunity): CardViewModel {
-    const prize = item.overviewTotalPrizes
-        ?? item.prizeSets?.flatMap(set => set.prizes ?? [])
-            .reduce((sum, current) => sum + (current.value ?? 0), 0)
-        ?? 0
-    const track = catalogName(item.track, 'Competition')
-    return {
-        badge: track,
-        description: descriptionExcerpt(item.description ?? item.overview),
-        href: `/opportunities/challenge/${item.id}`,
-        meta: [
-            { icon: <IconOutline.CurrencyDollarIcon />, label: 'Prize', value: formatMoney(prize) },
-            {
-                icon: <IconOutline.UserGroupIcon />,
-                label: 'Registrants',
-                value: String(item.numOfRegistrants ?? 0),
-            },
-            {
-                icon: <IconOutline.DocumentTextIcon />,
-                label: 'Submissions',
-                value: String(item.numOfSubmissions ?? 0),
-            },
-        ],
-        skills: [...(item.skills ?? []).map(skill => skill.name), ...(item.tags ?? [])],
-        state: item.status === 'ACTIVE' ? 'Open for registration' : item.status,
-        title: item.name,
-        type: catalogName(item.type, 'Challenge'),
+/**
+ * Resolves the Figma track-pill label for current and legacy Challenge API values.
+ *
+ * @param item Challenge API list item.
+ * @returns abbreviated QA label or the owning catalog display name.
+ * @throws Does not throw.
+ */
+function challengeTrackLabel(item: ChallengeOpportunity): string {
+    const trackKey = challengeCatalogKey(item.track)
+    if (trackKey === 'qualityassurance') return 'QA'
+    if (trackKey === 'ai' || trackKey === 'artificialintelligence') return 'AI'
+    return challengeCatalogName(item.track, 'Competition')
+}
+
+/**
+ * Selects the Figma subtype label and icon for a Challenge API type.
+ *
+ * @param item Challenge API list item.
+ * @returns mapped Challenge, First 2 Finish, Marathon Match, or Task presentation.
+ * @throws Does not throw; unknown types use the Challenge icon and API label.
+ */
+function challengeTypePresentation(item: ChallengeOpportunity): ChallengeTypePresentation {
+    const typeKey = challengeCatalogKey(item.type)
+    return challengeTypePresentations[typeKey] ?? {
+        icon: ChallengeTypeIcon,
+        label: challengeCatalogName(item.type, 'Challenge'),
     }
+}
+
+/**
+ * Deduplicates Challenge API skill and tag labels while retaining source order.
+ *
+ * @param item Challenge API list item.
+ * @returns non-empty card labels in stable source order.
+ * @throws Does not throw.
+ */
+function challengeSkillLabels(item: ChallengeOpportunity): string[] {
+    return Array.from(new Set([
+        ...(item.skills ?? []).map(skill => skill.name),
+        ...(item.tags ?? []),
+    ].map(label => label.trim())
+        .filter(Boolean)))
+}
+
+/**
+ * Returns the scoped CSS class for a Challenge API track pill.
+ *
+ * @param trackKey normalized catalog track key.
+ * @returns matching Figma track color class or the neutral fallback class.
+ * @throws Does not throw.
+ */
+function challengeTrackClass(trackKey: string): string {
+    const trackClasses: Record<string, string> = {
+        ai: styles.artificialIntelligenceBadge,
+        artificialintelligence: styles.artificialIntelligenceBadge,
+        datascience: styles.dataScienceBadge,
+        design: styles.designBadge,
+        development: styles.developmentBadge,
+        qualityassurance: styles.qualityAssuranceBadge,
+    }
+    return trackClasses[trackKey] ?? styles.competitionBadge
+}
+
+/**
+ * Renders the visible placement prizes from the Challenge API PLACEMENT set.
+ *
+ * @param prizes placement prizes with stable source-order positions.
+ * @returns Figma medal/value row with an overflow count when required.
+ * @throws Does not throw.
+ */
+function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
+    if (!prizes.length) return <span className={styles.prizeUnavailable}>Prize details coming soon</span>
+
+    const visiblePrizes = prizes.slice(0, medalIcons.length)
+    const remaining = prizes.length - visiblePrizes.length
+    return (
+        <>
+            {visiblePrizes.map(prize => {
+                const MedalIcon = medalIcons[prize.placement - 1] ?? MedalThirdIcon
+                return (
+                    <span className={styles.prize} key={`placement-${prize.placement}`}>
+                        <MedalIcon aria-hidden='true' />
+                        <strong>{formatPrize(prize)}</strong>
+                    </span>
+                )
+            })}
+            {remaining > 0 && <span className={styles.morePrizes}>{`+${remaining}`}</span>}
+        </>
+    )
 }
 
 /** Converts engagement data to the shared card presentation model. */
@@ -303,10 +415,145 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
  * @throws Does not throw when called with matching kind/item data.
  */
 function toViewModel(kind: OpportunityKind, item: OpportunityItem): CardViewModel {
-    if (kind === 'competitions') return challengeView(item as ChallengeOpportunity)
     if (kind === 'engagements') return engagementView(item as EngagementOpportunity)
     if (kind === 'copilots') return copilotView(item as CopilotOpportunity)
     return reviewView(item as ReviewOpportunity)
+}
+
+/**
+ * Renders the Figma competition card using Challenge API placement and phase data.
+ *
+ * @param item Challenge API list item.
+ * @returns linked competition card with catalog tags, placement prizes, phase progress, and metrics.
+ * @throws Does not throw; absent API fields use explicit pending placeholders.
+ */
+const CompetitionListCard: FC<CompetitionListCardProps> = props => {
+    const item = props.item
+    const type = challengeTypePresentation(item)
+    const TypeIcon = type.icon
+    const trackKey = challengeCatalogKey(item.track)
+    const skillLabels = challengeSkillLabels(item)
+    const visibleSkills = skillLabels.slice(0, 5)
+    const remainingSkills = skillLabels.length - visibleSkills.length
+    const placementPrizes = challengePlacementPrizes(item)
+    const phase = challengeCurrentPhase(item)
+    const phaseKey = challengeCatalogKey(phase?.name)
+    const PhaseIcon = phaseKey === 'registration' || phaseKey === 'open'
+        ? PhaseRegistrationIcon
+        : PhaseSubmissionIcon
+    const phaseLabel = phaseKey === 'open' ? 'Registration & Submission' : phase?.name || 'Schedule'
+    const phaseTiming = challengePhaseTiming(phase)
+    const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
+    const progress = Math.round(phaseTiming.progressPercent)
+    const registrationOpen = challengeRegistrationIsOpen(item)
+    const metrics = [
+        {
+            icon: <SubmissionsMetricIcon aria-hidden='true' />,
+            label: 'Submissions',
+            value: item.numOfSubmissions === undefined ? '—' : String(item.numOfSubmissions),
+        },
+        {
+            icon: <RegistrantsMetricIcon aria-hidden='true' />,
+            label: 'Registrants',
+            value: item.numOfRegistrants === undefined ? '—' : String(item.numOfRegistrants),
+        },
+        {
+            icon: <PostsMetricIcon aria-hidden='true' />,
+            label: 'Posts',
+            value: item.numOfPosts === undefined ? '—' : String(item.numOfPosts),
+        },
+    ]
+
+    return (
+        <Link
+            className={classNames(styles.card, styles.competitionCard)}
+            to={`/opportunities/challenge/${item.id}`}
+        >
+            <div className={styles.competitionMain}>
+                <div className={styles.competitionCopy}>
+                    <div className={styles.eyebrow}>
+                        <span className={classNames(
+                            styles.badge,
+                            styles.trackBadge,
+                            challengeTrackClass(trackKey),
+                        )}
+                        >
+                            {challengeTrackLabel(item)}
+                        </span>
+                        <span className={styles.challengeType}>
+                            <TypeIcon aria-hidden='true' />
+                            {type.label}
+                        </span>
+                        <span className={classNames(styles.registrationState, {
+                            [styles.registrationClosed]: !props.registered && !registrationOpen,
+                            [styles.registrationRegistered]: props.registered,
+                        })}
+                        >
+                            {props.registered
+                                ? <IconOutline.CheckIcon aria-hidden='true' />
+                                : registrationOpen
+                                    ? <RegistrationOpenIcon aria-hidden='true' />
+                                    : <RegistrationClosedIcon aria-hidden='true' />}
+                            {props.registered
+                                ? 'Registered'
+                                : registrationOpen ? 'Open for registration' : 'Registration closed'}
+                        </span>
+                    </div>
+                    <h3>{item.name}</h3>
+                    {visibleSkills.length > 0 && (
+                        <div className={styles.skills}>
+                            {visibleSkills.map((skill, index) => (
+                                <span
+                                    className={classNames({
+                                        [styles.primarySkill]: trackKey === 'design' && index === 0,
+                                    })}
+                                    key={skill}
+                                >
+                                    {skill}
+                                </span>
+                            ))}
+                            {remainingSkills > 0 && <span>{`+${remainingSkills}`}</span>}
+                        </div>
+                    )}
+                </div>
+                <div className={styles.competitionFooter}>
+                    <div aria-label='Placement prizes' className={styles.prizes}>
+                        {renderChallengePrizes(placementPrizes)}
+                    </div>
+                    {phase && (
+                        <div className={styles.phase}>
+                            <div className={styles.phaseHeading}>
+                                <span className={styles.phaseLabel}>
+                                    <PhaseIcon aria-hidden='true' />
+                                    {phaseLabel}
+                                </span>
+                                <span className={styles.timeLeft}>{timeLeft}</span>
+                            </div>
+                            <div
+                                aria-label={`${phaseLabel} phase progress`}
+                                aria-valuemax={100}
+                                aria-valuemin={0}
+                                aria-valuenow={progress}
+                                className={styles.progress}
+                                role='progressbar'
+                            >
+                                <span style={{ width: `${progress}%` }} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+            <dl className={classNames(styles.meta, styles.competitionMeta)}>
+                {metrics.map(row => (
+                    <div key={row.label}>
+                        {row.icon}
+                        <dt>{`${row.label}:`}</dt>
+                        <dd>{row.value}</dd>
+                    </div>
+                ))}
+            </dl>
+        </Link>
+    )
 }
 
 /**
@@ -317,6 +564,15 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem): CardViewMode
  * @throws Does not throw.
  */
 export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
+    if (props.kind === 'competitions') {
+        return (
+            <CompetitionListCard
+                item={props.item as ChallengeOpportunity}
+                registered={props.registered}
+            />
+        )
+    }
+
     const card = toViewModel(props.kind, props.item)
     const visibleSkills = card.skills.filter(Boolean)
         .slice(0, 5)
