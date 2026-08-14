@@ -15,6 +15,7 @@ import { TabContentReview } from './TabContentReview'
 const mockUseRole = jest.fn()
 const mockTableAppealsForSubmitter = jest.fn()
 const mockTableAppealsResponse = jest.fn()
+const mockTableReview = jest.fn()
 const mockTableReviewForSubmitter = jest.fn()
 
 jest.mock('~/config', () => ({
@@ -78,7 +79,15 @@ jest.mock('../TableNoRecord', () => ({
 }))
 
 jest.mock('../TableReview', () => ({
-    TableReview: () => <div>Reviewer reviews</div>,
+    TableReview: (props: { datas: SubmissionInfo[] }) => {
+        mockTableReview(props)
+        return (
+            <div>
+                {props.datas.map(submission => submission.id)
+                    .join(',')}
+            </div>
+        )
+    },
 }))
 
 jest.mock('../TableReviewForSubmitter', () => ({
@@ -206,6 +215,65 @@ describe('TabContentReview submitter Appeals ownership', () => {
                     ownSubmission,
                     foreignSubmission,
                 ],
+            }))
+    })
+
+    it('passes both finite-limit Design reviews for one member to the reviewer table', () => {
+        const olderSubmission = {
+            id: 'member-submission-older',
+            isLatest: false,
+            memberId: 'member-shared',
+            review: {
+                phaseName: 'Review',
+                reviewType: 'Review',
+            },
+            submittedDate: '2026-08-12T10:00:00Z',
+            type: 'CONTEST_SUBMISSION',
+        } as SubmissionInfo
+        const latestSubmission = {
+            ...olderSubmission,
+            id: 'member-submission-latest',
+            isLatest: true,
+            submittedDate: '2026-08-12T11:00:00Z',
+        }
+        const reviewerChallengeInfo = {
+            ...challengeInfo,
+            metadata: [{
+                name: 'submissionLimit',
+                value: JSON.stringify({ count: '2', limit: 'true', unlimited: 'false' }),
+            }],
+            submissions: [olderSubmission, latestSubmission],
+            track: {
+                id: 'design-track',
+                name: 'Design',
+            },
+        } as ChallengeInfo
+        const reviewerContext = {
+            ...challengeContext,
+            challengeInfo: reviewerChallengeInfo,
+            myResources: [],
+            myRoles: ['Reviewer'],
+        } as unknown as ChallengeDetailContextModel
+        mockUseRole.mockReturnValue({
+            actionChallengeRole: 'Reviewer',
+            hasApproverRole: false,
+            isPrivilegedRole: true,
+        })
+
+        render(
+            <ChallengeDetailContext.Provider value={reviewerContext}>
+                <TabContentReview
+                    {...commonProps}
+                    isActiveChallenge
+                    reviews={[olderSubmission, latestSubmission]}
+                    selectedTab='Review'
+                />
+            </ChallengeDetailContext.Provider>,
+        )
+
+        expect(mockTableReview)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                datas: [olderSubmission, latestSubmission],
             }))
     })
 })

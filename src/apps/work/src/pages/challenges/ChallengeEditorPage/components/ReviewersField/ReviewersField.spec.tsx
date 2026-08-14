@@ -29,7 +29,14 @@ jest.mock('../../../../../lib/services', () => ({
 
 jest.mock('./HumanReviewTab', () => ({
     __esModule: true,
-    default: () => <div data-testid='human-review-tab'>Human review content</div>,
+    default: (props: { screenerOnly?: boolean }) => (
+        <div
+            data-screener-only={props.screenerOnly === true ? 'true' : 'false'}
+            data-testid='human-review-tab'
+        >
+            Human review content
+        </div>
+    ),
 }))
 jest.mock('./AiReviewTab', () => ({
     __esModule: true,
@@ -89,11 +96,13 @@ jest.mock('./ReviewContextTab', () => ({
 
 const mockedPatchChallenge = jest.spyOn(services, 'patchChallenge')
     .mockResolvedValue({} as any)
+const mockedFetchAiReviewConfigByChallenge = services.fetchAiReviewConfigByChallenge as jest.Mock
 
 interface TestHarnessProps {
     isReadOnly?: boolean
     numOfSubmissions?: number
     reviewers: Reviewer[]
+    screenerOnly?: boolean
 }
 
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
@@ -107,7 +116,12 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             typeId: 'type-id',
         },
     })
-    const reviewersField = <ReviewersField isReadOnly={props.isReadOnly} />
+    const reviewersField = (
+        <ReviewersField
+            isReadOnly={props.isReadOnly}
+            screenerOnly={props.screenerOnly}
+        />
+    )
 
     return (
         <FormProvider {...formMethods}>
@@ -119,7 +133,31 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 describe('ReviewersField', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
         mockedPatchChallenge.mockResolvedValue({} as Challenge)
+    })
+
+    it('renders only the screener assignment in editable screener-only mode', () => {
+        render(
+            <TestHarness
+                reviewers={[]}
+                screenerOnly
+            />,
+        )
+
+        expect(screen.getByTestId('human-review-tab')
+            .getAttribute('data-screener-only'))
+            .toBe('true')
+        expect(screen.queryByRole('tablist'))
+            .toBeNull()
+        expect(screen.queryByTestId('ai-review-tab'))
+            .toBeNull()
+        expect(screen.queryByTestId('review-context-tab'))
+            .toBeNull()
+        expect(screen.queryByTestId('review-summary'))
+            .toBeNull()
+        expect(screen.queryByText('Manual review configuration is required.'))
+            .toBeNull()
     })
 
     it('uses tab labels with reviewer counts and toggles between human and AI content', async () => {

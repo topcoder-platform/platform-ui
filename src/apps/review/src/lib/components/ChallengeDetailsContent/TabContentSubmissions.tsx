@@ -204,7 +204,8 @@ export const TabContentSubmissions: FC<Props> = props => {
                 return
             }
 
-            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const submissionType = submissionInfoById.get(submissionId)?.type
+            const key = getSubmissionHistoryKey(memberId, submissionId, submissionType)
             const entries = historyByMember.get(key) ?? []
             if (!entries.length) {
                 return
@@ -212,7 +213,7 @@ export const TabContentSubmissions: FC<Props> = props => {
 
             setHistoryKey(key)
         },
-        [historyByMember],
+        [historyByMember, submissionInfoById],
     )
 
     const handleHistoryButtonClick = useCallback(
@@ -524,7 +525,11 @@ export const TabContentSubmissions: FC<Props> = props => {
                             return <span>-</span>
                         }
 
-                        const key = getSubmissionHistoryKey(submission.memberId, submission.id)
+                        const key = getSubmissionHistoryKey(
+                            submission.memberId,
+                            submission.id,
+                            submission.type,
+                        )
                         const historyEntries = historyByMember.get(key) ?? []
                         if (!historyEntries.length) {
                             return <span>-</span>
