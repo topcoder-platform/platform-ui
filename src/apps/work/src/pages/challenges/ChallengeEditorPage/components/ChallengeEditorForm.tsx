@@ -2223,8 +2223,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
-    const shouldUseSimplifiedDesignReview = shouldUseCopilotBillingSummary
-        && isDesignTrackSelected
+    const shouldUseSimplifiedDesignReview = isDesignTrackSelected
         && isChallengeTypeSelected
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
@@ -3861,6 +3860,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 <h3 className={styles.sectionTitle}>Review</h3>
                 <div className={styles.block}>
                     <ReviewersField
+                        canConfigureFullReview={workAppContext.isAdmin}
                         isReadOnly={isReadOnly}
                         onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
                             aiReviewConfigSaveControllerRef.current = controller
