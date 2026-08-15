@@ -119,6 +119,59 @@
     }
 }
 
+.selectGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    > strong {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        line-height: 22px;
+    }
+}
+
+.select {
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    height: 38px;
+    position: relative;
+
+    select {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        font: inherit;
+        font-size: 16px;
+        height: 100%;
+        line-height: 22px;
+        outline: 0;
+        padding: 0 44px 0 16px;
+        width: 100%;
+    }
+
+    .placeholder {
+        color: #6f6f6f;
+    }
+
+    svg {
+        height: 20px;
+        pointer-events: none;
+        position: absolute;
+        right: 16px;
+        width: 20px;
+    }
+
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
 .checkRow,
 .radioRow {
     align-items: center;

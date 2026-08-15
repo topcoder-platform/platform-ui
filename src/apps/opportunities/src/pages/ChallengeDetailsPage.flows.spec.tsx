@@ -1,0 +1,503 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import '@testing-library/jest-dom'
+import {
+    fireEvent,
+    render,
+    screen,
+    within,
+    waitFor,
+} from '@testing-library/react'
+import {
+    MemoryRouter,
+    Route,
+    Routes,
+} from 'react-router-dom'
+
+import { ChallengeDetailsPage } from './ChallengeDetailsPage'
+
+const mockUseSWR = jest.fn()
+const mockUnregister = jest.fn()
+let mockProfile: { handle: string; userId: number } | undefined
+let mockRegistration: { id: string } | undefined
+let mockChallenge: Record<string, unknown>
+let mockMemberProfiles: Record<string, unknown>[]
+let mockRegistrants: Record<string, unknown>[]
+let mockReviewSummations: Record<string, unknown>[]
+let mockSubmissions: Record<string, unknown>[]
+let mockWinnerStats: Record<string, unknown>[]
+let mockWinnerSubmissions: Record<string, unknown>[]
+
+jest.mock('../assets/medal-1.svg', () => 'medal-1')
+jest.mock('../assets/medal-2.svg', () => 'medal-2')
+jest.mock('../assets/medal-3.svg', () => 'medal-3')
+jest.mock('./ChallengeDetailsPage.module.scss', () => new Proxy({}, {
+    get: (_target, property: string): string => property,
+}))
+
+jest.mock('swr', () => ({
+    __esModule: true,
+    default: (...args: unknown[]) => mockUseSWR(...args),
+}))
+
+jest.mock('react-toastify', () => ({
+    toast: { error: jest.fn(), success: jest.fn() },
+}))
+
+jest.mock('~/libs/core', () => ({
+    authUrlLogin: (url: string): string => url,
+    getMemberStatsAsync: jest.fn(),
+    useProfileContext: () => ({ profile: mockProfile }),
+}), { virtual: true })
+
+jest.mock('~/libs/ui', () => {
+    const Icon = (): JSX.Element => <svg />
+    return {
+        IconOutline: new Proxy({}, { get: () => Icon }),
+        LoadingSpinner: (): JSX.Element => <span>Loading</span>,
+    }
+}, { virtual: true })
+
+jest.mock('../components', () => ({
+    ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
+    ChallengeDetailHeader: (props: {
+        isRegistered: boolean
+        onUnregister: () => Promise<void>
+    }): JSX.Element => (
+        <header>
+            Challenge header
+            {props.isRegistered && (
+                <button onClick={props.onUnregister} type='button'>Unregister</button>
+            )}
+        </header>
+    ),
+    ChallengeForum: (): JSX.Element => <div>Forum content</div>,
+    ChallengeSidebar: (): JSX.Element => <aside />,
+    ChallengeTermsModal: (): JSX.Element => <></>,
+    extractTableOfContents: (): [] => [],
+    isHtmlDescriptionFormat: (): boolean => false,
+    MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
+    OpportunityPagination: (): JSX.Element => <div>Pagination</div>,
+    ReportIssueModal: (): JSX.Element => <></>,
+    SubmissionHistoryModal: (props: {
+        open: boolean
+        submission?: { id: string }
+    }): JSX.Element => (
+        <div>{props.open ? `History modal ${props.submission?.id}` : ''}</div>
+    ),
+}))
+
+jest.mock('../components/challenge-card.utils', () => ({
+    challengeCatalogKey: (): string => '',
+    challengePlacementPrizes: (challenge: {
+        prizeSets?: Array<{ prizes?: Array<{ type?: string; value?: number }> }>
+    }): Array<{ placement: number; type?: string; value?: number }> => (
+        challenge.prizeSets?.[0]?.prizes?.map((prize, index) => ({
+            ...prize,
+            placement: index + 1,
+        })) ?? []
+    ),
+}))
+
+jest.mock('../services', () => ({
+    agreeToChallengeTerms: jest.fn(),
+    getChallengeOpportunity: jest.fn(),
+    getChallengeRegistration: jest.fn(),
+    getChallengeReviewSummations: jest.fn(),
+    getChallengeSubmissionDownloadUrl: jest.fn(),
+    getChallengeSubmissionPreviews: jest.fn(),
+    getChallengeSubmissions: jest.fn(),
+    getChallengeSubmitters: jest.fn(),
+    getMemberProfilesByUserIds: jest.fn(),
+    registerForChallenge: jest.fn(),
+    unregisterFromChallenge: (...args: unknown[]) => mockUnregister(...args),
+}))
+
+jest.mock('../utils', () => ({
+    attachMarathonReviewSummations: (submissions: unknown[]): unknown[] => submissions,
+    challengeTrackLabel: (track?: string): string => track ?? 'challenge',
+    challengeTrackWins: (stats?: {
+        DEVELOP?: { wins?: number }
+        wins?: number
+    }): number | undefined => stats?.DEVELOP?.wins ?? stats?.wins,
+    formatMarathonScore: (score: number | undefined, fallback: string): string => (
+        score === undefined ? fallback : String(score)
+    ),
+    isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
+    marathonDashboardIsEnabled: (challenge: {
+        metadata?: { name: string; value: unknown }[]
+        type?: string
+    }): boolean => challenge.type === 'Marathon Match'
+        && challenge.metadata?.some(item => item.name === 'show_data_dashboard' && item.value === true) === true,
+    marathonSubmissionScores: (submission: {
+        finalScore?: number
+        provisionalScore?: number
+    }): { finalScore?: number; provisionalScore?: number } => ({
+        finalScore: submission.finalScore,
+        provisionalScore: submission.provisionalScore,
+    }),
+    marathonSubmissionTestProgress: (): {
+        process: string
+        progress: number
+        status: string
+    } => ({ process: 'System', progress: 50, status: 'In progress' }),
+    memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,
+    winnerFinalScore: (
+        winner: { handle?: string; userId?: string },
+        submissions: Array<{ finalScore?: number; memberId?: string }>,
+        summations: Array<{
+            aggregateScore?: number
+            submitterHandle?: string
+            submitterId?: string
+        }>,
+    ): number | undefined => submissions.find(item => item.memberId === winner.userId)?.finalScore
+        ?? summations.find(item => item.submitterId === winner.userId
+            || item.submitterHandle?.toLowerCase() === winner.handle?.toLowerCase())?.aggregateScore,
+}))
+
+function swrResponse(data: unknown): Record<string, unknown> {
+    return {
+        data,
+        error: undefined,
+        isValidating: false,
+        mutate: jest.fn()
+            .mockResolvedValue(data),
+    }
+}
+
+function renderPage(): void {
+    render(
+        <MemoryRouter initialEntries={['/opportunities/challenge/challenge-id']}>
+            <Routes>
+                <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+            </Routes>
+        </MemoryRouter>,
+    )
+}
+
+function submissionPage(items: Record<string, unknown>[]): Record<string, unknown> {
+    return {
+        items,
+        page: 1,
+        perPage: 10,
+        total: items.length,
+        totalPages: 1,
+    }
+}
+
+describe('ChallengeDetailsPage member flows', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockProfile = undefined
+        mockRegistration = undefined
+        mockMemberProfiles = []
+        mockRegistrants = []
+        mockReviewSummations = []
+        mockSubmissions = []
+        mockWinnerStats = []
+        mockWinnerSubmissions = []
+        mockChallenge = {
+            description: 'Challenge requirements',
+            id: 'challenge-id',
+            name: 'Challenge',
+            numOfPosts: 3,
+            numOfRegistrants: 8,
+            numOfSubmissions: 5,
+            track: 'Development',
+            type: 'Challenge',
+        }
+        mockUnregister.mockResolvedValue(undefined)
+        mockUseSWR.mockImplementation((key: unknown) => {
+            if (typeof key === 'string' && key.startsWith('opportunities:challenge:')) {
+                return swrResponse(mockChallenge)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:registration') {
+                return swrResponse(mockRegistration)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
+                return swrResponse(submissionPage(mockSubmissions))
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:mm-review-summations') {
+                return swrResponse(mockReviewSummations)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:registrants') {
+                return swrResponse(submissionPage(mockRegistrants))
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:member-profiles') {
+                return swrResponse(mockMemberProfiles)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-member-profiles') {
+                return swrResponse(mockMemberProfiles)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-member-stats') {
+                return swrResponse(mockWinnerStats)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-submissions') {
+                return swrResponse(submissionPage(mockWinnerSubmissions))
+            }
+
+            return swrResponse(undefined)
+        })
+    })
+
+    it('shows only public tabs until the member is registered', () => {
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Winners'])
+        expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps the release-gated Design submissions gallery public', () => {
+        mockChallenge = { ...mockChallenge, track: 'Design' }
+
+        renderPage()
+
+        expect(screen.getByRole('tab', { name: /^Submissions/ }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'show_data_dashboard', value: true }],
+            type: 'Marathon Match',
+        }
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual([
+                'Requirements',
+                'Registrants8',
+                'Submissions5',
+                'My Submissions',
+                'Dashboard',
+                'Forum3',
+                'Winners',
+            ])
+    })
+
+    it('resets the selected member tab when unregistering', async () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        jest.spyOn(window, 'confirm')
+            .mockReturnValue(true)
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .toHaveAttribute('aria-selected', 'true')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Unregister' }))
+
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true'))
+        expect(mockUnregister)
+            .toHaveBeenCalledWith('challenge-id', 'coder')
+    })
+
+    it('opens History in a modal instead of navigating to Review App', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            rating: 1450,
+            submitterHandle: 'coder',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        fireEvent.click(screen.getByRole('button', { name: 'History' }))
+
+        expect(screen.getByText('History modal submission-1'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'History' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('renders the Development My Submissions fields and authored actions', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }));
+        ['Submission ID', 'Type', 'Submission Date', 'Current Status', 'Score', 'Actions']
+            .forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+                .toBeInTheDocument())
+        expect(screen.getByText('Contest Submission'))
+            .toBeInTheDocument()
+        expect(screen.getByText('In Review'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /Open Review App/ }))
+            .toHaveAttribute('href', '/review/active-challenges/challenge-id/challenge-details?tab=submission')
+        expect(screen.getByRole('button', { name: 'Download submission submission-1' }))
+            .toBeInTheDocument()
+    })
+
+    it('renders Marathon Match testing progress and both score phases', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            finalScore: 99.5,
+            id: 'submission-1',
+            provisionalScore: 98.5,
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }));
+        [
+            'Current Test Process',
+            'Test Status',
+            'Test Progress',
+            'Final Score',
+            'Provisional Score',
+        ].forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
+        expect(screen.getByText('System'))
+            .toBeInTheDocument()
+        expect(screen.getByText('In progress'))
+            .toBeInTheDocument()
+        expect(screen.getByText('50%'))
+            .toBeInTheDocument()
+        expect(screen.getByText('99.5'))
+            .toBeInTheDocument()
+        expect(screen.getByText('98.5'))
+            .toBeInTheDocument()
+    })
+
+    it('uses batched member photos and ratings in registrant and submission rows', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockMemberProfiles = [{
+            handle: 'enriched',
+            maxRating: 1800,
+            photoURL: 'https://images.example/enriched.png',
+            userId: '42',
+        }]
+        mockRegistrants = [{
+            id: 'resource-42',
+            memberHandle: 'fallback',
+            memberId: 42,
+            rating: 900,
+        }]
+        mockSubmissions = [{
+            id: 'submission-42',
+            memberId: '42',
+            submitterHandle: 'fallback',
+            submitterMaxRating: 900,
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+
+        expect(screen.getByRole('link', { name: 'enriched' }))
+            .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/enriched')
+        expect(screen.getByRole('cell', { name: '1800' }))
+            .toBeInTheDocument()
+        expect(document.querySelector('img[src="https://images.example/enriched.png"]'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        expect(screen.getByRole('cell', { name: '1800' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'enriched' }))
+            .toBeInTheDocument()
+    })
+
+    it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            prizeSets: [{
+                prizes: [
+                    { type: 'USD', value: 400 },
+                    { type: 'USD', value: 200 },
+                    { type: 'USD', value: 100 },
+                    { type: 'USD', value: 50 },
+                ],
+                type: 'PLACEMENT',
+            }],
+            winners: [
+                { handle: 'second-fallback', placement: 2, userId: '2' },
+                { handle: 'first-fallback', placement: 1, userId: '1' },
+                { handle: 'fourth-fallback', placement: 4, userId: '4' },
+                { handle: 'third-fallback', placement: 3, userId: '3' },
+            ],
+        }
+        mockMemberProfiles = [
+            {
+                handle: 'first',
+                maxRating: 1600,
+                photoURL: 'https://images.example/first.png',
+                userId: '1',
+            },
+            { handle: 'second', maxRating: 1500, userId: '2' },
+            { handle: 'third', maxRating: 1400, userId: '3' },
+            { handle: 'fourth', maxRating: 1300, userId: '4' },
+        ]
+        mockWinnerStats = [
+            { handle: 'first', stats: { DEVELOP: { wins: 7 }, wins: 9 } },
+            { handle: 'second', stats: { DEVELOP: { wins: 6 }, wins: 8 } },
+            { handle: 'third', stats: { DEVELOP: { wins: 5 }, wins: 7 } },
+            { handle: 'fourth', stats: { DEVELOP: { wins: 4 }, wins: 6 } },
+        ]
+        mockWinnerSubmissions = [{ finalScore: 98.98, id: 'first-score', memberId: '1' }]
+        mockReviewSummations = [{
+            aggregateScore: 98.88,
+            isFinal: true,
+            submitterHandle: 'second-fallback',
+            submitterId: '2',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        const cards = screen.getAllByRole('article')
+        expect(cards.map(card => within(card)
+            .getByText(/Place$/).textContent))
+            .toEqual(['1st Place', '2nd Place', '3rd Place', '4th Place'])
+        expect(cards[0])
+            .toHaveTextContent('with a final score of 98.98')
+        expect(cards[1])
+            .toHaveTextContent('with a final score of 98.88')
+        expect(cards[0])
+            .toHaveTextContent('$400')
+        expect(cards[3])
+            .toHaveTextContent('$50')
+        expect(cards[0])
+            .toHaveTextContent('7 development wins1600 rating')
+        expect(within(cards[0])
+            .getByRole('link', { name: 'first' }))
+            .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/first')
+        expect(cards[0].querySelector('img[src="https://images.example/first.png"]'))
+            .toBeInTheDocument()
+    })
+})

@@ -66,6 +66,7 @@
 .summary {
     align-items: center;
     display: flex;
+    font-family: 'Nunito Sans', sans-serif;
     font-size: 12px;
     gap: 16px;
     line-height: 16px;
@@ -73,7 +74,7 @@
     label {
         align-items: center;
         display: flex;
-        gap: 4px;
+        gap: 8px;
         white-space: nowrap;
     }
 }
@@ -91,9 +92,9 @@
         border: 0;
         color: #161616;
         font: inherit;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
-        line-height: 20px;
+        line-height: 16px;
         outline-offset: 2px;
         padding: 0 20px 0 0;
         width: 100%;
@@ -110,7 +111,7 @@
 
 .divider {
     background: #e0e0e0;
-    height: 16px;
+    height: 32px;
     width: 1px;
 }
 

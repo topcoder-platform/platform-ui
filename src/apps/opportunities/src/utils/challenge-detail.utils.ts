@@ -12,6 +12,21 @@ export interface ChallengeSidebarLink {
 }
 
 /**
+ * Builds a member profile URL on the environment-specific Profiles app.
+ *
+ * @param handle public Topcoder handle.
+ * @param profileBaseUrl configured Profiles app origin, optionally overridden by tests.
+ * @returns absolute, safely encoded member profile URL.
+ * @throws Does not throw.
+ */
+export function memberProfileUrl(
+    handle: string,
+    profileBaseUrl: string = EnvironmentConfig.URLS.USER_PROFILE,
+): string {
+    return `${profileBaseUrl.replace(/\/+$/, '')}/${encodeURIComponent(handle)}`
+}
+
+/**
  * Returns a case-insensitive Challenge API metadata value.
  *
  * @param metadata arbitrary metadata list from Challenge API.

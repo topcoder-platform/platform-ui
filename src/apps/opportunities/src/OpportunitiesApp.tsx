@@ -33,14 +33,16 @@ const OpportunitiesApp: FC = () => {
     }), [view])
 
     useEffect(() => {
-        document.body.classList.add('opportunities-app', 'tc-2026')
-        return () => document.body.classList.remove('opportunities-app', 'tc-2026')
+        document.body.classList.add('opportunities-page')
+        return () => document.body.classList.remove('opportunities-page')
     }, [])
 
     return (
         <opportunityViewContext.Provider value={viewContext}>
-            <Outlet />
-            <Routes>{childRoutes}</Routes>
+            <div className='opportunities-app tc-2026'>
+                <Outlet />
+                <Routes>{childRoutes}</Routes>
+            </div>
         </opportunityViewContext.Provider>
     )
 }

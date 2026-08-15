@@ -36,6 +36,10 @@ import {
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
+import {
+    defaultSort,
+    opportunitySortOptions,
+} from '../utils/opportunity-listing.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 
 import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
@@ -94,19 +98,6 @@ function defaultStatus(kind: OpportunityKind): string {
     if (kind === 'competitions') return 'ACTIVE'
     if (kind === 'copilots') return 'active'
     return 'OPEN'
-}
-
-/**
- * Returns the semantic sort that accurately describes each domain's API.
- * Review opportunities do not expose a creation-date sort, so they begin with
- * the soonest review period instead of claiming to show the newest records.
- *
- * @param kind active opportunity domain.
- * @returns semantic sort choice consumed by the owning API adapter.
- * @throws Does not throw.
- */
-export function defaultSort(kind: OpportunityKind): string {
-    return kind === 'reviews' ? 'startingSoon' : 'newest'
 }
 
 interface LearningCardProps {
@@ -179,20 +170,22 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     const [applied, setApplied] = useState(false)
     const [tracks, setTracks] = useState<string[]>([])
     const [types, setTypes] = useState<string[]>([])
+    const [role, setRole] = useState('')
     const [status, setStatus] = useState(defaultStatus(kind))
-    const [sort, setSort] = useState(defaultSort(kind))
+    const [sort, setSort] = useState(defaultSort())
 
     const filters = useMemo<OpportunityFilters>(() => ({
         applied,
         memberId: profile?.userId === undefined ? undefined : String(profile.userId),
         page,
         perPage,
+        role: role || undefined,
         search: deferredSearch || undefined,
         sort,
         statuses: status ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
         types: types.length ? types : undefined,
-    }), [applied, deferredSearch, page, perPage, profile?.userId, sort, status, tracks, types])
+    }), [applied, deferredSearch, page, perPage, profile?.userId, role, sort, status, tracks, types])
 
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
         'opportunities:summary',
@@ -217,8 +210,9 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setApplied(false)
         setTracks([])
         setTypes([])
+        setRole('')
         setStatus(defaultStatus(kind))
-        setSort(defaultSort(kind))
+        setSort(defaultSort())
         setPage(1)
     }
 
@@ -235,6 +229,18 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setTypes(current => (checked
             ? Array.from(new Set([...current, type]))
             : current.filter(value => value !== type)))
+        setPage(1)
+    }
+
+    /**
+     * Updates the single engagement-role facet and starts again at page one.
+     *
+     * @param value Engagement API role enum, or an empty string to clear it.
+     * @returns void.
+     * @throws Does not throw.
+     */
+    const updateRole = (value: string): void => {
+        setRole(value)
         setPage(1)
     }
 
@@ -286,9 +292,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             <strong>Sort by</strong>
                             <span className={styles.sortSelect}>
                                 <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                                    {kind !== 'reviews' && <option value='newest'>Newest first</option>}
-                                    <option value='startingSoon'>Starting soon</option>
-                                    {kind === 'reviews' && <option value='highestPayment'>Highest payment</option>}
+                                    {opportunitySortOptions(kind)
+                                        .map(option => (
+                                            <option key={option.value} value={option.value}>{option.label}</option>
+                                        ))}
                                 </select>
                                 <ChevronDownIcon aria-hidden='true' />
                             </span>
@@ -304,11 +311,13 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             kind={kind}
                             onAppliedChange={updateApplied}
                             onReset={resetFilters}
+                            onRoleChange={updateRole}
                             onSearchChange={updateSearch}
                             onStatusChange={updateStatus}
                             onTrackChange={updateTrack}
                             onTypeChange={updateType}
                             search={search}
+                            selectedRole={role}
                             status={status}
                             tracks={tracks}
                             types={types}

@@ -24,11 +24,13 @@ describe('OpportunityFiltersPanel', () => {
                 kind='competitions'
                 onAppliedChange={jest.fn()}
                 onReset={jest.fn()}
+                onRoleChange={jest.fn()}
                 onSearchChange={onSearchChange}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
+                selectedRole=''
                 status='ACTIVE'
                 tracks={[]}
                 types={[]}
@@ -46,25 +48,32 @@ describe('OpportunityFiltersPanel', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByPlaceholderText('React, Figma, Python'))
             .not.toBeInTheDocument()
+        expect(screen.getByText('AI'))
+            .toBeInTheDocument()
 
         fireEvent.change(search, { target: { value: 'React project' } })
         expect(onSearchChange)
             .toHaveBeenCalledWith('React project')
     })
 
-    it('uses the authored unified search for engagements', () => {
+    it('uses the authored unified search and supported My engagements filter', () => {
+        const onAppliedChange = jest.fn()
+        const onRoleChange = jest.fn()
+
         render(
             <OpportunityFiltersPanel
                 applied={false}
-                isAuthenticated={false}
+                isAuthenticated
                 kind='engagements'
-                onAppliedChange={jest.fn()}
+                onAppliedChange={onAppliedChange}
                 onReset={jest.fn()}
+                onRoleChange={onRoleChange}
                 onSearchChange={jest.fn()}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
+                selectedRole=''
                 status='OPEN'
                 tracks={[]}
                 types={[]}
@@ -77,9 +86,20 @@ describe('OpportunityFiltersPanel', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Completed'))
             .toBeInTheDocument()
+        const myEngagements = screen.getByRole('checkbox', { name: 'My engagements' })
+        fireEvent.click(myEngagements)
+        expect(onAppliedChange)
+            .toHaveBeenCalledWith(true)
+        fireEvent.change(screen.getByRole('combobox', { name: 'Role' }), {
+            target: { value: 'SOFTWARE_DEVELOPER' },
+        })
+        expect(onRoleChange)
+            .toHaveBeenCalledWith('SOFTWARE_DEVELOPER')
+        expect(screen.getByText('Select e.g. “Software Engineer”'))
+            .toHaveAttribute('id', 'engagements-role-description')
     })
 
-    it('matches the authored review track and challenge-type facets', () => {
+    it('matches the authored review track facets without an extra Type section', () => {
         render(
             <OpportunityFiltersPanel
                 applied={false}
@@ -87,11 +107,13 @@ describe('OpportunityFiltersPanel', () => {
                 kind='reviews'
                 onAppliedChange={jest.fn()}
                 onReset={jest.fn()}
+                onRoleChange={jest.fn()}
                 onSearchChange={jest.fn()}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
+                selectedRole=''
                 status='OPEN'
                 tracks={[]}
                 types={[]}
@@ -102,12 +124,12 @@ describe('OpportunityFiltersPanel', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Status'))
             .toBeInTheDocument()
-        expect(screen.getByText('Type'))
-            .toBeInTheDocument()
-        expect(screen.getByText('Challenge'))
-            .toBeInTheDocument()
-        expect(screen.getByText('Task'))
-            .toBeInTheDocument()
+        expect(screen.queryByText('Type'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Challenge'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Task'))
+            .not.toBeInTheDocument()
         expect(screen.getByText('AI'))
             .toBeInTheDocument()
     })

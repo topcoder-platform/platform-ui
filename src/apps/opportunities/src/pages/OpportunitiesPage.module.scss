@@ -1,5 +1,5 @@
 .page {
-    background: #f4f7f9;
+    background: #f5f7fa;
     color: #161616;
     font-family: 'Nunito Sans', sans-serif;
     min-height: 70vh;
@@ -170,7 +170,7 @@
 .message {
     align-items: center;
     background: #fff;
-    border: 1px solid #dce2e5;
+    border: 1px solid #e0e0e0;
     border-radius: 6px;
     display: flex;
     flex-direction: column;
@@ -192,7 +192,7 @@
     }
 
     p {
-        color: #59666c;
+        color: #6f6f6f;
         margin: 0;
     }
 
@@ -284,7 +284,7 @@
     span {
         animation: pulse 1.2s ease-in-out infinite alternate;
         background: linear-gradient(90deg, #e7ecef, #f7f9fa, #e7ecef);
-        border: 1px solid #dce2e5;
+        border: 1px solid #e0e0e0;
         border-radius: 6px;
         height: 212px;
     }

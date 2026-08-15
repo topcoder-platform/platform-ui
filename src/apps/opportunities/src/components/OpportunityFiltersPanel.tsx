@@ -4,6 +4,7 @@ import classNames from 'classnames'
 
 import { OpportunityKind } from '../models'
 
+import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as SearchIcon } from '../assets/filter-search.svg'
 import styles from './OpportunityFiltersPanel.module.scss'
 
@@ -13,11 +14,13 @@ interface OpportunityFiltersPanelProps {
     kind: OpportunityKind
     onAppliedChange: (checked: boolean) => void
     onReset: () => void
+    onRoleChange: (role: string) => void
     onSearchChange: (value: string) => void
     onStatusChange: (status: string) => void
     onTrackChange: (track: string, checked: boolean) => void
     onTypeChange: (type: string, checked: boolean) => void
     search: string
+    selectedRole: string
     status: string
     tracks: string[]
     types: string[]
@@ -34,6 +37,7 @@ const TRACKS: Record<OpportunityKind, FacetOption[]> = {
         { label: 'Development', value: 'Dev' },
         { label: 'Data Science', value: 'DS' },
         { label: 'QA', value: 'QA' },
+        { label: 'AI', value: 'AI' },
     ],
     copilots: [
         { label: 'Design', value: 'design' },
@@ -59,9 +63,11 @@ const COMPETITION_TYPES: FacetOption[] = [
     { label: 'Task', value: 'TSK' },
 ]
 
-const REVIEW_TYPES: FacetOption[] = [
-    { label: 'Challenge', value: 'Challenge' },
-    { label: 'Task', value: 'Task' },
+const ENGAGEMENT_ROLES: FacetOption[] = [
+    { label: 'Designer', value: 'DESIGNER' },
+    { label: 'Software Developer', value: 'SOFTWARE_DEVELOPER' },
+    { label: 'Data Scientist', value: 'DATA_SCIENTIST' },
+    { label: 'Data Engineer', value: 'DATA_ENGINEER' },
 ]
 
 const MY_LABELS: Record<OpportunityKind, string> = {
@@ -109,13 +115,14 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
  * Renders the server-backed filter controls shown beside each Opportunities list.
  *
  * @param props current filters and callbacks that reset pagination before refetching.
- * @returns accessible domain-specific search, skills, ownership, status, track, and type controls.
+ * @returns accessible domain-specific search, ownership, status, track, type, and role controls.
  * @throws Does not throw.
  */
 export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props => {
     const tracks = TRACKS[props.kind]
     const statuses = statusOptions(props.kind)
     const searchDescriptionId = `${props.kind}-search-description`
+    const roleDescriptionId = `${props.kind}-role-description`
 
     /** Updates the controlled search string. */
     const handleSearch = (event: ChangeEvent<HTMLInputElement>): void => props.onSearchChange(event.target.value)
@@ -199,20 +206,26 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                     ))}
                 </fieldset>
             )}
-            {props.kind === 'reviews' && (
-                <fieldset>
-                    <legend>Type</legend>
-                    {REVIEW_TYPES.map((type: FacetOption) => (
-                        <label className={styles.checkRow} key={type.value}>
-                            <input
-                                checked={props.types.includes(type.value)}
-                                onChange={event => props.onTypeChange(type.value, event.target.checked)}
-                                type='checkbox'
-                            />
-                            <span>{type.label}</span>
-                        </label>
-                    ))}
-                </fieldset>
+            {props.kind === 'engagements' && (
+                <label className={styles.selectGroup}>
+                    <strong>Role</strong>
+                    <span className={styles.select}>
+                        <select
+                            aria-label='Role'
+                            aria-describedby={roleDescriptionId}
+                            className={props.selectedRole ? undefined : styles.placeholder}
+                            onChange={event => props.onRoleChange(event.target.value)}
+                            value={props.selectedRole}
+                        >
+                            <option value=''>Select option</option>
+                            {ENGAGEMENT_ROLES.map(role => (
+                                <option key={role.value} value={role.value}>{role.label}</option>
+                            ))}
+                        </select>
+                        <ChevronDownIcon aria-hidden='true' />
+                    </span>
+                    <small id={roleDescriptionId}>Select e.g. “Software Engineer”</small>
+                </label>
             )}
         </aside>
     )

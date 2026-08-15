@@ -141,7 +141,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     </Link>
                 </div>
             </section>
-            <SidebarCard icon={<IconOutline.ClipboardCheckIcon />} title='Review App'>
+            <SidebarCard icon={<IconOutline.DocumentSearchIcon />} title='Review App'>
                 <p>The place to track your scores and feedback, and where to follow the final review.</p>
                 <Link to={`/review/active-challenges/${props.challenge.id}/challenge-details`}>
                     View Review App

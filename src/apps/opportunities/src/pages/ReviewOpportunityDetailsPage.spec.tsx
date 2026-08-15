@@ -35,6 +35,16 @@ jest.mock('~/libs/core', () => ({
     useProfileContext: () => ({ profile: mockProfile }),
 }), { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        URLS: { USER_PROFILE: 'https://profiles.topcoder-dev.com' },
+    },
+}), { virtual: true })
+
+jest.mock('~/libs/cms', () => ({
+    getSafeCmsLink: (value?: string): string | undefined => value,
+}), { virtual: true })
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
@@ -165,6 +175,8 @@ describe('ReviewOpportunityDetailsPage', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText('12 June, 2026, 9:35'))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'DaraK' }))
+            .toHaveAttribute('href', expect.stringMatching(/\/DaraK$/))
         expect(screen.queryByText('cancelled-member'))
             .not.toBeInTheDocument()
         expect(screen.getByText('1 - 2 of 2 items'))

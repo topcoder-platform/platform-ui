@@ -2,10 +2,10 @@ import { AxiosHeaders, AxiosResponse } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
 import {
-    xhrDeleteAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
+    xhrRequestAsync,
 } from '~/libs/core'
 
 import {
@@ -14,6 +14,7 @@ import {
     ChallengeOpportunity,
     ChallengeResource,
     ChallengeResourceRole,
+    ChallengeReviewSummation,
     ChallengeSubmission,
     ChallengeTerm,
     CopilotOpportunity,
@@ -27,6 +28,12 @@ import {
 } from '../models'
 
 const V6_URL = EnvironmentConfig.API.V6
+const LEGACY_COPILOT_PAGE_SIZE = 1000
+const MAX_LEGACY_COPILOT_PAGES = 20
+const SUBMISSION_HISTORY_PAGE_SIZE = 200
+const REVIEW_SUMMATIONS_PAGE_SIZE = 500
+const MAX_DETAIL_PAGES = 100
+const PAGE_REQUEST_BATCH_SIZE = 4
 
 const DEFAULT_SUMMARY: OpportunitySummary = {
     competitions: { amount: 0, count: 0 },
@@ -46,6 +53,28 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
 function toNumber(value: unknown, fallback: number = 0): number {
     const converted = Number(value)
     return Number.isFinite(converted) && converted >= 0 ? converted : fallback
+}
+
+/**
+ * Resolves page loaders in small batches while preserving page order.
+ *
+ * @param pageNumbers ordered page numbers to request.
+ * @param loader API-specific page loader.
+ * @returns one result per page in the same order.
+ * @throws Propagates the first page-loader failure.
+ */
+async function loadPagesInBatches<T>(
+    pageNumbers: number[],
+    loader: (page: number) => Promise<T>,
+): Promise<T[]> {
+    const results: T[] = []
+    for (let offset = 0; offset < pageNumbers.length; offset += PAGE_REQUEST_BATCH_SIZE) {
+        const batch = pageNumbers.slice(offset, offset + PAGE_REQUEST_BATCH_SIZE)
+        // eslint-disable-next-line no-await-in-loop
+        results.push(...await Promise.all(batch.map(loader)))
+    }
+
+    return results
 }
 
 /**
@@ -208,8 +237,10 @@ export function buildOpportunityPageUrl(
             url.searchParams.set('currentPhaseName', 'Registration')
         }
 
-        appendValues(url, 'tracks', filters.tracks)
-        appendValues(url, 'types', filters.types)
+        // Challenge API's query parser only coerces bracketed keys into arrays;
+        // even a single facet must be sent as `tracks[]=Dev` / `types[]=MM`.
+        appendValues(url, 'tracks[]', filters.tracks)
+        appendValues(url, 'types[]', filters.types)
         if (filters.applied && filters.memberId && filters.resourceRoleId) {
             url.searchParams.set('memberId', filters.memberId)
             url.searchParams.set('resourceRoleId', filters.resourceRoleId)
@@ -225,6 +256,7 @@ export function buildOpportunityPageUrl(
         if (filters.search) url.searchParams.set('search', filters.search)
         if (filters.statuses?.[0]) url.searchParams.set('status', filters.statuses[0])
         appendValues(url, 'requiredSkills', filters.skills)
+        if (filters.role) url.searchParams.set('role', filters.role)
         if (filters.applied) url.searchParams.set('appliedByMe', 'true')
     } else if (kind === 'copilots') {
         endpoint = `${V6_URL}/projects/copilots/opportunities`
@@ -245,8 +277,11 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('offset', String((page - 1) * perPage))
         url.searchParams.set('limit', String(perPage))
         const highestPayment = filters.sort === 'highestPayment'
-        url.searchParams.set('sortBy', highestPayment ? 'basePayment' : 'startDate')
-        url.searchParams.set('sortOrder', highestPayment ? 'desc' : 'asc')
+        const startingSoon = filters.sort === 'startingSoon'
+        url.searchParams.set('sortBy', highestPayment
+            ? 'basePayment'
+            : startingSoon ? 'startDate' : 'createdAt')
+        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
         appendValues(url, 'tracks', filters.tracks)
@@ -258,9 +293,183 @@ export function buildOpportunityPageUrl(
 }
 
 /**
+ * Flattens legacy copilot records whose request fields live under `data` into
+ * the list-card model used by Opportunities.
+ *
+ * @param item raw Projects API copilot opportunity.
+ * @returns normalized copilot opportunity with a stable project name.
+ * @throws Does not throw; absent legacy data is treated as an empty object.
+ */
+function normalizeCopilotOpportunity(item: any): CopilotOpportunity {
+    const requestData = item?.data && typeof item.data === 'object' ? item.data : {}
+    return {
+        ...item,
+        ...requestData,
+        projectName: requestData.projectName ?? item.projectName ?? item.project?.name,
+    }
+}
+
+/**
+ * Identifies the validation response returned by the previously deployed
+ * Projects API when it receives the newer discovery filters.
+ *
+ * @param error rejected Projects API request in either Axios or shared-XHR form.
+ * @returns true only for a 400 response that rejects an unknown query property.
+ * @throws Does not throw.
+ */
+function isLegacyCopilotQueryError(error: unknown): boolean {
+    const failure = error as {
+        data?: { message?: unknown }
+        message?: unknown
+        response?: { data?: { message?: unknown }; status?: number }
+        status?: number
+    }
+    const status = failure.status ?? failure.response?.status
+    const values = [failure.message, failure.data?.message, failure.response?.data?.message]
+        .flatMap(value => (Array.isArray(value) ? value : [value]))
+        .filter((value): value is string => typeof value === 'string')
+    return status === 400 && values.some(value => /property \S+ should not exist/i.test(value))
+}
+
+/**
+ * Builds the limited list query understood by the legacy Projects API.
+ *
+ * @param page one-based legacy API page.
+ * @returns absolute copilot opportunity URL without unsupported discovery filters.
+ * @throws Does not throw.
+ */
+function buildLegacyCopilotPageUrl(page: number): string {
+    const url = new URL(`${V6_URL}/projects/copilots/opportunities`)
+    url.searchParams.set('page', String(page))
+    url.searchParams.set('pageSize', String(LEGACY_COPILOT_PAGE_SIZE))
+    // The pre-discovery deployment rejects startDate; fetch with its supported
+    // creation-date sort and apply the selected semantic sort after aggregation.
+    url.searchParams.set('sort', 'createdAt desc')
+    url.searchParams.set('noGrouping', 'true')
+    return url.toString()
+}
+
+/**
+ * Applies a stable semantic sort after legacy pages have been aggregated.
+ *
+ * @param items filtered legacy copilot opportunities.
+ * @param sort semantic Opportunities sort selection.
+ * @returns a new starting-soon array, or the already-newest API ordering.
+ * @throws Does not throw.
+ */
+function sortLegacyCopilotOpportunities(
+    items: CopilotOpportunity[],
+    sort?: string,
+): CopilotOpportunity[] {
+    if (sort !== 'startingSoon') return items
+    return [...items].sort((first, second) => {
+        const firstDate = Date.parse(first.startDate ?? '')
+        const secondDate = Date.parse(second.startDate ?? '')
+        const firstValue = Number.isFinite(firstDate) ? firstDate : Number.POSITIVE_INFINITY
+        const secondValue = Number.isFinite(secondDate) ? secondDate : Number.POSITIVE_INFINITY
+        return firstValue - secondValue
+            || String(first.id)
+                .localeCompare(String(second.id))
+    })
+}
+
+/**
+ * Applies the current discovery controls after fetching legacy copilot rows.
+ * This is used only when the deployed Projects API rejects server-side filters.
+ *
+ * @param items normalized legacy copilot opportunities.
+ * @param filters active Opportunities search and facet values.
+ * @returns rows matching every active filter.
+ * @throws Does not throw.
+ */
+function filterLegacyCopilotOpportunities(
+    items: CopilotOpportunity[],
+    filters: OpportunityFilters,
+): CopilotOpportunity[] {
+    const statuses = new Set((filters.statuses ?? []).map(value => value.toLowerCase()))
+    const types = new Set([...(filters.tracks ?? []), ...(filters.types ?? [])]
+        .map(value => value.toLowerCase()))
+    const skills = (filters.skills ?? []).map(value => value.toLowerCase())
+    const search = filters.search?.trim()
+        .toLowerCase()
+
+    return items.filter(item => {
+        const itemType = String(item.projectType ?? item.type ?? '')
+            .toLowerCase()
+        const itemSkills = (item.skills ?? []).map(skill => `${skill.id ?? ''} ${skill.name}`.toLowerCase())
+        const itemStatus = String(item.status ?? '')
+            .toLowerCase()
+        if (statuses.size && !statuses.has(itemStatus)) return false
+        if (types.size && !types.has(itemType)) return false
+        if (skills.length && !skills.some(skill => itemSkills.some(value => value.includes(skill)))) return false
+        if (filters.applied && !item.hasApplied && !item.currentUserApplication) return false
+        if (!search) return true
+
+        return [
+            item.opportunityTitle,
+            item.overview,
+            item.projectName,
+            item.project?.name,
+            item.projectType,
+            item.type,
+            ...itemSkills,
+        ].filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+            .includes(search)
+    })
+}
+
+/**
+ * Keeps Copilot Opportunities usable while an older Projects API deployment
+ * is rolling forward to the server-side discovery contract.
+ *
+ * @param filters active discovery, sorting, and pagination values.
+ * @returns the requested in-memory page after all legacy pages are normalized and filtered.
+ * @throws Propagates Projects API and network errors.
+ */
+async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<OpportunityPage<CopilotOpportunity>> {
+    const firstResponse = await xhrGlobalInstance.get(
+        buildLegacyCopilotPageUrl(1),
+    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+    const firstPage = normalizePage(firstResponse, 1, LEGACY_COPILOT_PAGE_SIZE)
+    const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildLegacyCopilotPageUrl(page)),
+        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
+        : []
+    const allItems = [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            LEGACY_COPILOT_PAGE_SIZE,
+        ).items),
+    ].map(normalizeCopilotOpportunity)
+    const filtered = sortLegacyCopilotOpportunities(
+        filterLegacyCopilotOpportunities(allItems, filters),
+        filters.sort,
+    )
+    const page = Math.max(1, filters.page)
+    const perPage = Math.max(1, filters.perPage)
+    const offset = (page - 1) * perPage
+    return {
+        items: filtered.slice(offset, offset + perPage),
+        page,
+        perPage,
+        total: filtered.length,
+        totalPages: filtered.length ? Math.ceil(filtered.length / perPage) : 0,
+    }
+}
+
+/**
  * Loads one filtered page from the owning domain API. For “My competitions,”
  * this first resolves the canonical Submitter role and then performs one
- * globally filtered, sorted, and paginated Challenge API request.
+ * globally filtered, sorted, and paginated Challenge API request. Copilot
+ * validation failures from an older Projects API use the bounded legacy
+ * fetch-and-filter fallback until that deployment supports discovery filters.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -285,10 +494,18 @@ export async function getOpportunityPage(
         return normalizePage(response, page, perPage)
     }
 
-    const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
-        any[] | ApiEnvelope<any[]> | ApiListResponse<any>
-    >
-    return normalizePage(response, page, perPage)
+    try {
+        const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
+            any[] | ApiEnvelope<any[]> | ApiListResponse<any>
+        >
+        const normalized = normalizePage(response, page, perPage)
+        return kind === 'copilots'
+            ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
+            : normalized
+    } catch (error) {
+        if (kind !== 'copilots' || !isLegacyCopilotQueryError(error)) throw error
+        return getLegacyCopilotPage(filters)
+    }
 }
 
 /**
@@ -359,27 +576,35 @@ interface SubmissionApiResponse {
     }
 }
 
+interface ReviewSummationApiResponse {
+    data?: ChallengeReviewSummation[]
+    meta?: {
+        page?: number
+        perPage?: number
+        total?: number
+        totalCount?: number
+        totalPages?: number
+    }
+    result?: {
+        content?: ChallengeReviewSummation[]
+        metadata?: Record<string, any>
+    }
+}
+
 /**
- * Loads one submissions page for a challenge detail tab.
+ * Converts supported Review API submission response shapes into the shared page model.
  *
- * @param challengeId challenge UUID.
- * @param page one-based page.
- * @param perPage page size.
- * @returns normalized submissions page.
- * @throws Propagates Review API and network errors.
+ * @param response bare submissions or an API envelope with pagination metadata.
+ * @param page requested page used when metadata is absent.
+ * @param perPage requested page size used when metadata is absent.
+ * @returns normalized submission items and pagination values.
+ * @throws Does not throw.
  */
-export async function getChallengeSubmissions(
-    challengeId: string,
+function normalizeSubmissionPage(
+    response: SubmissionApiResponse | ChallengeSubmission[],
     page: number,
     perPage: number,
-    memberId?: string,
-): Promise<OpportunityPage<ChallengeSubmission>> {
-    const url = new URL(`${V6_URL}/submissions`)
-    url.searchParams.set('challengeId', challengeId)
-    url.searchParams.set('page', String(page))
-    url.searchParams.set('perPage', String(perPage))
-    if (memberId) url.searchParams.set('memberId', memberId)
-    const response = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(url.toString())
+): OpportunityPage<ChallengeSubmission> {
     if (Array.isArray(response)) {
         return {
             items: response,
@@ -404,6 +629,152 @@ export async function getChallengeSubmissions(
             normalizedPerPage > 0 ? Math.ceil(total / normalizedPerPage) : 0,
         ),
     }
+}
+
+/**
+ * Loads one submissions page for a challenge detail tab.
+ *
+ * @param challengeId challenge UUID.
+ * @param page one-based page.
+ * @param perPage page size.
+ * @param memberId optional member filter for the My Submissions tab.
+ * @param latestOnly whether to retain only the newest attempt per member.
+ * @returns normalized submissions page.
+ * @throws Propagates Review API and network errors.
+ */
+export async function getChallengeSubmissions(
+    challengeId: string,
+    page: number,
+    perPage: number,
+    memberId?: string,
+    latestOnly: boolean = true,
+): Promise<OpportunityPage<ChallengeSubmission>> {
+    const url = new URL(`${V6_URL}/submissions`)
+    url.searchParams.set('challengeId', challengeId)
+    url.searchParams.set('page', String(page))
+    url.searchParams.set('perPage', String(perPage))
+    if (latestOnly) url.searchParams.set('isLatest', 'true')
+    url.searchParams.set('sortBy', 'submittedDate')
+    url.searchParams.set('orderBy', 'desc')
+    if (memberId) url.searchParams.set('memberId', memberId)
+    const response = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(url.toString())
+    return normalizeSubmissionPage(response, page, perPage)
+}
+
+/**
+ * Requests the authorized short-lived URL for a submission download action.
+ *
+ * @param submissionId Review API submission identifier.
+ * @returns signed clean-storage URL.
+ * @throws Error when Review API omits the URL; otherwise propagates API errors.
+ */
+export async function getChallengeSubmissionDownloadUrl(submissionId: string): Promise<string> {
+    const response = await xhrGetAsync<{ url?: string }>(
+        `${V6_URL}/submissions/${encodeURIComponent(submissionId)}/download-url`,
+    )
+    if (!response.url) throw new Error('Review API did not return a submission download URL.')
+    return response.url
+}
+
+/**
+ * Loads every submission attempt for one challenge member for the History
+ * dialog. The latest-only flag is deliberately omitted on this request.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberId submitter member ID from the selected latest submission.
+ * @param submissionType optional submission type to prevent checkpoint/final-fix rows mixing.
+ * @returns all matching attempts, newest first.
+ * @throws Propagates Review API and network errors.
+ */
+export async function getChallengeSubmissionHistory(
+    challengeId: string,
+    memberId: string,
+    submissionType?: string,
+): Promise<ChallengeSubmission[]> {
+    /**
+     * Builds one non-latest submission-history request.
+     *
+     * @param page one-based Review API page.
+     * @returns absolute submissions URL for the selected member and type.
+     */
+    const makeUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}/submissions`)
+        url.searchParams.set('challengeId', challengeId)
+        url.searchParams.set('memberId', memberId)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(SUBMISSION_HISTORY_PAGE_SIZE))
+        url.searchParams.set('sortBy', 'submittedDate')
+        url.searchParams.set('orderBy', 'desc')
+        if (submissionType) url.searchParams.set('type', submissionType)
+        return url.toString()
+    }
+
+    const firstResponse = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(makeUrl(1))
+    const firstPage = normalizeSubmissionPage(firstResponse, 1, SUBMISSION_HISTORY_PAGE_SIZE)
+    const totalPages = Math.min(MAX_DETAIL_PAGES, Math.max(1, firstPage.totalPages))
+    const additionalPages = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            async page => {
+                const response = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(makeUrl(page))
+                return normalizeSubmissionPage(response, page, SUBMISSION_HISTORY_PAGE_SIZE).items
+            },
+        )
+        : []
+    return [...firstPage.items, ...additionalPages.flat()]
+        .sort((first, second) => {
+            const firstDate = Date.parse(first.submittedDate ?? first.createdAt ?? '')
+            const secondDate = Date.parse(second.submittedDate ?? second.createdAt ?? '')
+            return (Number.isFinite(secondDate) ? secondDate : 0)
+                - (Number.isFinite(firstDate) ? firstDate : 0)
+        })
+}
+
+/**
+ * Loads all Review API aggregate scores needed by Marathon Match submissions
+ * and the legacy score-over-time dashboard.
+ *
+ * @param challengeId Marathon Match challenge UUID.
+ * @returns all review summations visible to the authenticated challenge member.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function getChallengeReviewSummations(
+    challengeId: string,
+): Promise<ChallengeReviewSummation[]> {
+    /**
+     * Builds one paginated review-summation request for the selected challenge.
+     *
+     * @param page one-based Review API page.
+     * @returns absolute review-summations URL.
+     */
+    const makeUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}/reviewSummations`)
+        url.searchParams.set('challengeId', challengeId)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(REVIEW_SUMMATIONS_PAGE_SIZE))
+        return url.toString()
+    }
+
+    const firstResponse = await xhrGetAsync<ReviewSummationApiResponse | ChallengeReviewSummation[]>(makeUrl(1))
+    if (Array.isArray(firstResponse)) return firstResponse
+    const firstItems = firstResponse.data ?? firstResponse.result?.content ?? []
+    const metadata = firstResponse.meta ?? firstResponse.result?.metadata ?? {}
+    const totalPages = Math.min(MAX_DETAIL_PAGES, Math.max(
+        1,
+        toNumber(metadata.totalPages, 1),
+    ))
+    if (totalPages === 1) return firstItems
+    const additionalPages = await loadPagesInBatches(
+        Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+        async page => {
+            const response = await xhrGetAsync<ReviewSummationApiResponse | ChallengeReviewSummation[]>(
+                makeUrl(page),
+            )
+            if (Array.isArray(response)) return response
+            return response.data ?? response.result?.content ?? []
+        },
+    )
+    return [...firstItems, ...additionalPages.flat()]
 }
 
 /**
@@ -482,7 +853,7 @@ export async function getChallengeResources(
  */
 export async function getSubmitterRole(): Promise<ChallengeResourceRole> {
     const response = await xhrGetAsync<ChallengeResourceRole[] | ApiEnvelope<ChallengeResourceRole[]>>(
-        `${V6_URL}/resource-roles?page=1&perPage=500`,
+        `${V6_URL}/resource-roles`,
     )
     const role = unwrap(response)
         .find(item => item.name.trim()
@@ -558,14 +929,28 @@ export async function registerForChallenge(
 }
 
 /**
- * Removes an authenticated member's submitter resource.
+ * Removes an authenticated member's Submitter resource using Resource API's
+ * body-based delete contract.
  *
- * @param resourceId resource UUID resolved from the member-scoped list.
+ * @param challengeId challenge UUID owning the registration.
+ * @param memberHandle authenticated member handle.
  * @returns void after deletion.
- * @throws Propagates Resource API authorization and network errors.
+ * @throws Propagates role resolution, Resource API authorization, and network errors.
  */
-export async function unregisterFromChallenge(resourceId: string): Promise<void> {
-    await xhrDeleteAsync(`${V6_URL}/resources/${encodeURIComponent(resourceId)}`)
+export async function unregisterFromChallenge(
+    challengeId: string,
+    memberHandle: string,
+): Promise<void> {
+    const role = await getSubmitterRole()
+    await xhrRequestAsync({
+        data: {
+            challengeId,
+            memberHandle,
+            roleId: role.id,
+        },
+        method: 'DELETE',
+        url: `${V6_URL}/resources`,
+    })
 }
 
 /**

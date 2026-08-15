@@ -263,6 +263,7 @@ export interface OpportunityFilters {
     page: number
     perPage: number
     resourceRoleId?: string
+    role?: string
     search?: string
     skills?: string[]
     sort?: string
@@ -293,19 +294,61 @@ export interface ApiListResponse<T> {
     }
 }
 
+/** Review API aggregate score attached to a Marathon Match submission. */
+export interface ChallengeReviewSummation {
+    aggregateScore?: number | string | null
+    created?: string
+    createdAt?: string
+    id?: string
+    isExample?: boolean | null
+    isFinal?: boolean | null
+    isPassing?: boolean | null
+    isProvisional?: boolean | null
+    is_example?: boolean | null
+    is_final?: boolean | null
+    is_provisional?: boolean | null
+    memberId?: number | string | null
+    metadata?: Record<string, unknown> | null
+    reviewedDate?: string
+    submissionId?: string
+    submitterHandle?: string | null
+    submitterId?: number | string | null
+    submitterMaxRating?: number | null
+    type?: string
+    updatedAt?: string
+}
+
 export interface ChallengeSubmission {
+    challengeId?: string
     createdAt?: string
     createdBy?: string
+    finalScore?: number | string | null
     id: string
+    initialScore?: number | string | null
+    isLatest?: boolean
     memberHandle?: string
     memberId?: string
+    placement?: number
     previewUrl?: string
+    provisionalScore?: number | string | null
+    rating?: number | null
     registrant?: {
         handle?: string
         memberHandle?: string
         userId?: string
     }
+    review?: Array<{
+        finalScore?: number | string | null
+        initialScore?: number | string | null
+        score?: number | string | null
+        status?: string
+    }>
+    reviewSummation?: ChallengeReviewSummation[]
+    reviewSummations?: ChallengeReviewSummation[]
+    status?: string
+    submissionCount?: number
     submittedDate?: string
     submitterHandle?: string
+    submitterMaxRating?: number | null
     type?: string
 }

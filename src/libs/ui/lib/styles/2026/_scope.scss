@@ -1,7 +1,8 @@
 @import 'tokens';
 
 // This selector list is intentionally explicit. Do not add a generic `body`
-// selector: non-migrated platform-ui apps must retain the legacy design system.
+// selector: non-migrated platform-ui apps and universal navigation must retain
+// the legacy design system.
 $tc-2026-apps:
     'body.work-app',
     'body.review-app',
@@ -12,7 +13,9 @@ $tc-2026-apps:
     'body.engagements-app',
     'body.procurement-app',
     'body.reports-app',
-    'body.opportunities-app';
+    // Keep Opportunities isolated from universal navigation while allowing
+    // CSS-module component colors to override these low-specificity defaults.
+    ':where(.opportunities-app)';
 
 @each $app in $tc-2026-apps {
     #{$app} {

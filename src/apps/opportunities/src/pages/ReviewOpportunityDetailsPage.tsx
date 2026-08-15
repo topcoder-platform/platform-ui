@@ -23,6 +23,7 @@ import metricSubmissionsIcon from '../assets/metric-submissions.svg'
 import { ChallengeMarkdown, ReportIssueModal } from '../components'
 import { ReviewApplicationSummary, ReviewOpportunity } from '../models'
 import { applyToReviewOpportunity, getReviewOpportunity } from '../services'
+import { memberProfileUrl } from '../utils'
 
 import styles from './ReviewOpportunityDetailsPage.module.scss'
 
@@ -37,7 +38,15 @@ const REASON_LABELS: Record<string, string> = {
     OPPORTUNITY_CLOSED: 'Applications are closed',
 }
 
-/** Returns challenge data as a safely displayable string. */
+/**
+ * Reads an embedded challenge field as displayable text.
+ *
+ * @param opportunity review opportunity containing a challenge snapshot.
+ * @param key challenge-data property name.
+ * @param fallback text returned for missing or unsupported values.
+ * @returns scalar value, expanded catalog name, or fallback.
+ * @throws Does not throw.
+ */
 function challengeField(opportunity: ReviewOpportunity, key: string, fallback: string): string {
     const value = opportunity.challengeData?.[key]
     if (typeof value === 'string' || typeof value === 'number') return String(value)
@@ -574,10 +583,8 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                     </td>
                                 </tr>
                             ) : visibleApplications.map(application => {
-                                const handle = application.handle
-                                    || application.userHandle
-                                    || application.userId
-                                    || 'Member'
+                                const profileHandle = application.handle || application.userHandle
+                                const handle = profileHandle || application.userId || 'Member'
                                 return (
                                     <tr
                                         key={application.id
@@ -587,7 +594,11 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                         <td>
                                             <span className={styles.member}>
                                                 <i><DefaultMemberIcon /></i>
-                                                <strong>{handle}</strong>
+                                                {profileHandle ? (
+                                                    <a href={memberProfileUrl(profileHandle)}>
+                                                        <strong>{handle}</strong>
+                                                    </a>
+                                                ) : <strong>{handle}</strong>}
                                             </span>
                                         </td>
                                         <td>{reviewRoleLabel(application.role)}</td>

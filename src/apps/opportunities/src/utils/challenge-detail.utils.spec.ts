@@ -5,11 +5,13 @@ import {
     challengeScorecardUrl,
     challengeSidebarLinks,
     challengeSubmissionLimit,
+    memberProfileUrl,
 } from './challenge-detail.utils'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         ADMIN: { ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review' },
+        URLS: { USER_PROFILE: 'https://profiles.topcoder-dev.com' },
         VANILLA_FORUM: { V2_URL: 'https://vanilla.topcoder-dev.com/api/v2' },
     },
 }), { virtual: true })
@@ -33,6 +35,13 @@ jest.mock('~/libs/cms', () => ({
 }), { virtual: true })
 
 describe('challenge detail utilities', () => {
+    it('builds encoded links on the configured Profiles app host', () => {
+        expect(memberProfileUrl('handle with/slash'))
+            .toBe('https://profiles.topcoder-dev.com/handle%20with%2Fslash')
+        expect(memberProfileUrl('coder', 'https://profiles.topcoder.com/'))
+            .toBe('https://profiles.topcoder.com/coder')
+    })
+
     it('parses case-insensitive file types and active submission limits', () => {
         const challenge = {
             id: 'challenge',

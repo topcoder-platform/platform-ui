@@ -726,6 +726,11 @@
     display: flex;
     gap: 8px;
 
+    > a {
+        min-width: 0;
+        text-decoration: none;
+    }
+
     > i {
         border-radius: 999px;
         display: block;
