@@ -206,7 +206,7 @@ export class PayloadCmsClient {
      */
     constructor(options: PayloadCmsClientOptions = {}) {
         this.origin = PAYLOAD_CMS_ORIGIN
-        this.fetcher = options.fetcher || fetch
+        this.fetcher = options.fetcher || fetch.bind(globalThis)
         this.accessTokens = {
             ...CMS_ACCESS_TOKENS,
             ...options.accessTokens,

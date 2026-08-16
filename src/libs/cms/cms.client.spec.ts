@@ -88,6 +88,39 @@ describe('Payload CMS client', () => {
             .toMatchObject({ fields: { name: 'Ada' } })
     })
 
+    it('binds the browser fetch implementation to the global scope', async () => {
+        const previousFetch = globalThis.fetch
+        const fetcher = jest.fn(function browserFetch(this: unknown) {
+            expect(this)
+                .toBe(globalThis)
+            return Promise.resolve({
+                json: async () => ({
+                    items: [],
+                    limit: 1,
+                    skip: 0,
+                    sys: { type: 'Array' },
+                    total: 0,
+                }),
+                ok: true,
+                status: 200,
+            } as Response)
+        }) as unknown as typeof fetch
+        globalThis.fetch = fetcher
+
+        try {
+            const client = new PayloadCmsClient({
+                accessTokens: { edu: 'delivery-token' },
+            })
+
+            await expect(client.queryEntries('edu', { limit: 1 }))
+                .resolves.toMatchObject({ items: [], total: 0 })
+            expect(fetcher)
+                .toHaveBeenCalledTimes(1)
+        } finally {
+            globalThis.fetch = previousFetch
+        }
+    })
+
     it('refuses to issue a request without the selected space credential', async () => {
         const fetcher = jest.fn() as jest.MockedFunction<typeof fetch>
         const client = new PayloadCmsClient({
