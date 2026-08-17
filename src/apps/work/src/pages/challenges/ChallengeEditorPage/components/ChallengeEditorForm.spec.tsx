@@ -692,6 +692,7 @@ jest.mock('./ReviewCostField', () => ({
 }))
 jest.mock('./ReviewersField', () => ({
     ReviewersField: (props: {
+        canConfigureFullReview?: boolean
         isReadOnly?: boolean
         screenerOnly?: boolean
     }) => {
@@ -703,6 +704,7 @@ jest.mock('./ReviewersField', () => ({
 
         return (
             <div
+                data-can-configure-full-review={props.canConfigureFullReview === true ? 'true' : 'false'}
                 data-read-only={props.isReadOnly === true ? 'true' : 'false'}
                 data-reviewers={JSON.stringify(reviewers || [])}
                 data-screener-only={props.screenerOnly === true ? 'true' : 'false'}
@@ -3146,7 +3148,7 @@ describe('ChallengeEditorForm', () => {
             .toHaveAttribute('data-screener-only', 'true')
     })
 
-    it('keeps the full review configuration for an admin editing a Design Challenge', () => {
+    it('uses the simplified screener review for an admin editing a Design Challenge', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
             tracks: [{
@@ -3178,7 +3180,47 @@ describe('ChallengeEditorForm', () => {
         )
 
         expect(screen.getByTestId('reviewers-field'))
-            .toHaveAttribute('data-screener-only', 'false')
+            .toHaveAttribute('data-screener-only', 'true')
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-can-configure-full-review', 'true')
+    })
+
+    it('uses the simplified screener review for a manager editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isCopilot: false,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-can-configure-full-review', 'false')
     })
 
     it('keeps the full review configuration for a copilot editing a Design First2Finish', () => {
