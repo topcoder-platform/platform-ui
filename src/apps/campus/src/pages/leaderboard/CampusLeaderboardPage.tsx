@@ -47,10 +47,6 @@ const RANK_MEDAL_CLASSES: { [rank: number]: string } = {
  * @param member leaderboard row.
  * @returns row class name, when the row is clickable.
  */
-function rowClassName(member: CampusLeaderboardMember): string | undefined {
-    return member.hasActivity ? styles.clickableRow : undefined
-}
-
 /**
  * Renders a rank badge, medal-styled for the top three ranks.
  *
@@ -120,7 +116,7 @@ export const CampusLeaderboardPage: FC = () => {
         setVisibleCount(PAGE_SIZE)
     }, [searchParams, setSearchParams])
 
-    const onRowClick = useCallback((member: CampusLeaderboardMember): void => {
+    const openParticipationHistory = useCallback((member: CampusLeaderboardMember): void => {
         if (!member.hasActivity) {
             return
         }
@@ -175,11 +171,18 @@ export const CampusLeaderboardPage: FC = () => {
             columnId: 'open',
             label: '',
             renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (
-                <IconOutline.ChevronRightIcon className={styles.chevron} />
+                <button
+                    className={styles.chevronButton}
+                    onClick={(): void => openParticipationHistory(member)}
+                    type='button'
+                    aria-label={`View participation history for ${member.handle ?? member.userId}`}
+                >
+                    <IconOutline.ChevronRightIcon className={styles.chevron} />
+                </button>
             ) : <span />),
             type: 'element',
         },
-    ], [])
+    ], [openParticipationHistory])
 
     const members: ReadonlyArray<CampusLeaderboardMember> = data?.members ?? []
     const visibleMembers = useMemo(
@@ -283,9 +286,7 @@ export const CampusLeaderboardPage: FC = () => {
                             disableSorting
                             moreToLoad={visibleCount < members.length}
                             onLoadMoreClick={onLoadMoreClick}
-                            onRowClick={onRowClick}
                             removeDefaultSort
-                            rowClassName={rowClassName}
                         />
                     </div>
 

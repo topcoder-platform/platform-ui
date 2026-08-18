@@ -158,14 +158,21 @@
     font-weight: 500;
 }
 
+.chevronButton {
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+}
+
 .chevron {
     color: $black-60;
     height: 20px;
     width: 20px;
-}
-
-.clickableRow {
-    cursor: pointer;
 }
 
 .empty,

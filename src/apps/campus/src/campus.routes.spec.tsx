@@ -42,7 +42,7 @@ describe('campus routes', () => {
         const fallbackRoute = campusChildRoutes.find(route => route.route === '')
 
         render(
-            <MemoryRouter initialEntries={[rootRoute || '/']}> 
+            <MemoryRouter initialEntries={[rootRoute || '/']}>
                 <Routes>
                     <Route element={<LocationViewer />} path={`${rootRoute}/mecw`} />
                     <Route element={fallbackRoute?.element} path={rootRoute || '/'} />

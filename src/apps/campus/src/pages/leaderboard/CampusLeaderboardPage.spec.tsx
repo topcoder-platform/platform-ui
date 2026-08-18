@@ -196,13 +196,16 @@ describe('CampusLeaderboardPage', () => {
             .toBeInTheDocument()
     })
 
-    it('opens the participation history only for members with activity', () => {
+    it('opens the participation history only when the chevron is clicked for active members', () => {
         renderPage()
 
-        fireEvent.click(screen.getByText('quiet_member'))
-        expect(screen.queryByText(/Participation History/)).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', {
+            name: /View participation history for quiet_member/i,
+        })).not.toBeInTheDocument()
 
-        fireEvent.click(screen.getByText('testaws1'))
+        fireEvent.click(screen.getByRole('button', {
+            name: /View participation history for testaws1/i,
+        }))
         expect(screen.getByText(/testaws1 — Participation History/))
             .toBeInTheDocument()
         expect(screen.getByText('Campus Sprint'))
