@@ -918,13 +918,18 @@ describe('HumanReviewTab', () => {
             <TestHarness
                 defaultValues={{
                     reviewers: [],
+                    timelineTemplateId: 'timeline-template-1',
                 }}
             />,
         )
 
         await waitFor(() => {
             expect(mockedFetchDefaultReviewers)
-                .toHaveBeenCalledWith('type-1', 'track-1')
+                .toHaveBeenCalledWith({
+                    timelineTemplateId: 'timeline-template-1',
+                    trackId: 'track-1',
+                    typeId: 'type-1',
+                })
         })
         await waitFor(() => {
             expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
@@ -1013,43 +1018,47 @@ describe('HumanReviewTab', () => {
             isLoading: false,
             resourceRoles: [],
         })
-        mockedFetchDefaultReviewers.mockResolvedValue([
-            {
-                isMemberReview: true,
-                memberReviewerCount: 1,
-                phaseId: 'checkpoint-review-phase-id',
-                scorecardId: 'checkpoint-review-scorecard-id',
-                shouldOpenOpportunity: false,
-            },
-            {
-                isMemberReview: true,
-                memberReviewerCount: 1,
-                phaseId: 'review-phase-id',
-                scorecardId: 'review-scorecard-id',
-                shouldOpenOpportunity: false,
-            },
-            {
-                isMemberReview: true,
-                memberReviewerCount: 1,
-                phaseId: 'checkpoint-screening-phase-id',
-                scorecardId: 'checkpoint-screening-scorecard-id',
-                shouldOpenOpportunity: false,
-            },
-            {
-                isMemberReview: true,
-                memberReviewerCount: 1,
-                phaseId: 'screening-phase-id',
-                scorecardId: 'screening-scorecard-id',
-                shouldOpenOpportunity: false,
-            },
-            {
-                isMemberReview: true,
-                memberReviewerCount: 1,
-                phaseId: 'approval-phase-id',
-                scorecardId: 'approval-scorecard-id',
-                shouldOpenOpportunity: false,
-            },
-        ])
+        mockedFetchDefaultReviewers.mockImplementation(filters => Promise.resolve(
+            filters?.timelineTemplateId === 'two-round-timeline-template-id'
+                ? [
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'checkpoint-review-phase-id',
+                        scorecardId: 'checkpoint-review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'review-phase-id',
+                        scorecardId: 'review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'checkpoint-screening-phase-id',
+                        scorecardId: 'checkpoint-screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'screening-phase-id',
+                        scorecardId: 'screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'approval-phase-id',
+                        scorecardId: 'approval-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ]
+                : [],
+        ))
         mockedFetchScorecards.mockResolvedValue([
             {
                 id: 'checkpoint-review-scorecard-id',
@@ -1141,6 +1150,7 @@ describe('HumanReviewTab', () => {
                             shouldOpenOpportunity: true,
                         },
                     ],
+                    timelineTemplateId: 'two-round-timeline-template-id',
                 }}
                 screenerOnly
                 showReviewersValue
@@ -1149,6 +1159,14 @@ describe('HumanReviewTab', () => {
 
         expect(screen.getByLabelText('Screener'))
             .not.toBeNull()
+        await waitFor(() => {
+            expect(mockedFetchDefaultReviewers)
+                .toHaveBeenCalledWith({
+                    timelineTemplateId: 'two-round-timeline-template-id',
+                    trackId: 'track-1',
+                    typeId: 'type-1',
+                })
+        })
         await waitFor(() => {
             const reconciledReviewers = JSON.parse(
                 screen.getByTestId('reviewers-value').textContent || '[]',
