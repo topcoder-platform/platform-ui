@@ -173,7 +173,7 @@ export const CampusLeaderboardPage: FC = () => {
             renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (
                 <button
                     className={styles.chevronButton}
-                    onClick={(): void => openParticipationHistory(member)}
+                    onClick={function() { openParticipationHistory(member) }}
                     type='button'
                     aria-label={`View participation history for ${member.handle ?? member.userId}`}
                 >

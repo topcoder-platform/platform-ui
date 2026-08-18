@@ -1,5 +1,6 @@
-import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { Navigate } from 'react-router-dom'
+
+import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
 const CampusApp: LazyLoadedComponent = lazyLoad(() => import('./CampusApp'))
