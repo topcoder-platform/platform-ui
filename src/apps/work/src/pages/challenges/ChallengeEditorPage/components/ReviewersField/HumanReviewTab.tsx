@@ -94,6 +94,11 @@ const SCREENER_ROLE_NAME_BY_PHASE_KEY: Record<string, string> = {
     checkpointscreening: 'Checkpoint Screener',
     screening: 'Screener',
 }
+const DESIGN_COPILOT_REVIEW_PHASE_KEYS = new Set([
+    'approval',
+    'checkpointreview',
+    'review',
+])
 const REVIEW_OPPORTUNITY_TYPES = {
     COMPONENT_DEV_REVIEW: 'COMPONENT_DEV_REVIEW',
     ITERATIVE_REVIEW: 'ITERATIVE_REVIEW',
@@ -815,6 +820,162 @@ function mapDefaultReviewerToReviewer(
 }
 
 /**
+ * Reconciles the hidden reviewer matrix used by the simplified Design Challenge editor.
+ *
+ * @param params current manual reviewer rows, active defaults and scorecards, challenge phases,
+ * and the selected copilot identity.
+ * @returns one valid reviewer row for every configured reviewer phase, preserving screener
+ * assignments and valid custom selections while repairing missing, duplicate, or stale rows.
+ * @remarks Checkpoint Review, Review, and Approval are always private and assigned to the selected
+ * copilot. The helper is used before save validation because those rows are hidden in simplified
+ * mode and cannot be repaired manually by the user.
+ * @throws Does not throw.
+ */
+function reconcileSimplifiedDesignReviewerDefaults(params: {
+    copilot?: string
+    defaultReviewers: DefaultReviewer[]
+    phases: ChallengeEditorFormData['phases']
+    reviewers: Reviewer[]
+    scorecards: Scorecard[]
+}): Reviewer[] {
+    const phaseRows = Array.isArray(params.phases)
+        ? params.phases
+        : []
+    const expectedPhaseIds = phaseRows
+        .filter(phase => isSelectableReviewerPhaseName(phase.name, false))
+        .map(phase => getChallengePhaseId(phase))
+        .filter((phaseId): phaseId is string => !!phaseId)
+    const phaseNameById = new Map(
+        phaseRows
+            .map(phase => {
+                const phaseId = getChallengePhaseId(phase)
+                const phaseName = normalizeText(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const defaultReviewerByPhaseId = new Map<string, Reviewer>()
+
+    params.defaultReviewers
+        .filter(defaultReviewer => isMemberReviewer(defaultReviewer))
+        .forEach(defaultReviewer => {
+            const reviewer = mapDefaultReviewerToReviewer(defaultReviewer, params.phases)
+            const phaseId = normalizeText(reviewer.phaseId)
+            const phaseName = phaseNameById.get(phaseId)
+            const scorecardId = normalizeText(reviewer.scorecardId)
+            const hasValidDefaultScorecard = getPhaseMatchedScorecards(
+                params.scorecards,
+                phaseId,
+                phaseNameById,
+            )
+                .some(scorecard => hasSameNormalizedText(scorecard.id, scorecardId))
+
+            if (
+                !phaseId
+                || !phaseName
+                || !isSelectableReviewerPhaseName(phaseName, false)
+                || !scorecardId
+                || !hasValidDefaultScorecard
+                || defaultReviewerByPhaseId.has(phaseId)
+            ) {
+                return
+            }
+
+            defaultReviewerByPhaseId.set(phaseId, reviewer)
+        })
+
+    if (
+        !expectedPhaseIds.length
+        || expectedPhaseIds.some(phaseId => !defaultReviewerByPhaseId.has(phaseId))
+    ) {
+        return params.reviewers
+    }
+
+    const selectedCopilot = normalizeText(params.copilot)
+    const selectedCopilotIsMemberId = /^\d+$/.test(selectedCopilot)
+    const reconciledReviewers = expectedPhaseIds.map(phaseId => {
+        const defaultReviewer = defaultReviewerByPhaseId.get(phaseId) as Reviewer
+        const phaseScorecardIds = new Set(
+            getPhaseMatchedScorecards(params.scorecards, phaseId, phaseNameById)
+                .map(scorecard => normalizeText(scorecard.id))
+                .filter(Boolean),
+        )
+        const candidates = params.reviewers.filter(reviewer => (
+            normalizeText(reviewer.phaseId) === phaseId
+        ))
+        const candidate = candidates.find(reviewer => (
+            phaseScorecardIds.has(normalizeText(reviewer.scorecardId))
+            && getAssignedMemberIds(reviewer)
+                .some(Boolean)
+        ))
+            || candidates.find(reviewer => (
+                phaseScorecardIds.has(normalizeText(reviewer.scorecardId))
+                && isPublicOpportunityOpen(reviewer)
+            ))
+            || candidates.find(reviewer => (
+                phaseScorecardIds.has(normalizeText(reviewer.scorecardId))
+            ))
+            || candidates.find(reviewer => getAssignedMemberIds(reviewer)
+                .some(Boolean))
+            || candidates[0]
+        const candidateHasValidScorecard = !!candidate
+            && phaseScorecardIds.has(normalizeText(candidate.scorecardId))
+        const nextReviewer: Reviewer = candidateHasValidScorecard
+            ? {
+                ...candidate,
+            }
+            : {
+                ...defaultReviewer,
+                additionalMemberIds: candidate?.additionalMemberIds,
+                handle: candidate?.handle,
+                memberId: candidate?.memberId,
+                resourceId: candidate?.resourceId,
+                roleId: candidate?.roleId || defaultReviewer.roleId,
+            }
+
+        nextReviewer.phaseId = phaseId
+        nextReviewer.scorecardId = candidateHasValidScorecard
+            ? candidate?.scorecardId
+            : defaultReviewer.scorecardId
+        nextReviewer.isMemberReview = true
+        nextReviewer.memberReviewerCount = Math.max(
+            1,
+            getAssignedMemberIds(nextReviewer)
+                .filter(Boolean).length,
+        )
+        nextReviewer.type = normalizeText(nextReviewer.type)
+            || defaultReviewer.type
+            || REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+
+        if (DESIGN_COPILOT_REVIEW_PHASE_KEYS.has(normalizeKey(phaseNameById.get(phaseId)))) {
+            nextReviewer.additionalMemberIds = undefined
+            nextReviewer.handle = selectedCopilot && !selectedCopilotIsMemberId
+                ? selectedCopilot
+                : undefined
+            nextReviewer.memberId = selectedCopilotIsMemberId
+                ? selectedCopilot
+                : undefined
+            nextReviewer.memberReviewerCount = 1
+            nextReviewer.shouldOpenOpportunity = false
+        }
+
+        return nextReviewer
+    })
+    const expectedPhaseIdSet = new Set(expectedPhaseIds)
+    const unmatchedReviewers = params.reviewers.filter(reviewer => (
+        !expectedPhaseIdSet.has(normalizeText(reviewer.phaseId))
+    ))
+
+    return [
+        ...reconciledReviewers,
+        ...unmatchedReviewers,
+    ]
+}
+
+/**
  * Selects the default reviewer metadata used when adding the next manual
  * reviewer card.
  *
@@ -1001,6 +1162,10 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
     const challengeId = useWatch({
         control: formContext.control,
         name: 'id',
+    }) as string | undefined
+    const copilot = useWatch({
+        control: formContext.control,
+        name: 'copilot',
     }) as string | undefined
     const normalizedChallengeId = normalizeText(challengeId)
     const challengeResourcesResult = useFetchResources(normalizedChallengeId || undefined)
@@ -1499,7 +1664,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
     ])
 
     useEffect(() => {
-        if (!isDesignTrackSelected || props.screenerOnly) {
+        if (!isDesignTrackSelected) {
             return
         }
 
@@ -1526,7 +1691,6 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         formContext,
         getReviewerFieldIndex,
         isDesignTrackSelected,
-        props.screenerOnly,
         reviewerRows,
     ])
 
@@ -1593,6 +1757,52 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         isScorecardsLoading,
         loadError,
         reviewerRows,
+    ])
+
+    useEffect(() => {
+        if (
+            !props.screenerOnly
+            || !isDesignTrackSelected
+            || isScorecardsLoading
+            || loadError
+            || !defaultReviewers.length
+        ) {
+            return
+        }
+
+        const reconciledManualReviewers = reconcileSimplifiedDesignReviewerDefaults({
+            copilot,
+            defaultReviewers,
+            phases,
+            reviewers: reviewerRows,
+            scorecards,
+        })
+        const aiReviewers = allReviewerRows.filter(reviewer => isAiReviewer(reviewer))
+        const nextReviewers = [
+            ...reconciledManualReviewers,
+            ...aiReviewers,
+        ]
+
+        if (JSON.stringify(nextReviewers) === JSON.stringify(allReviewerRows)) {
+            return
+        }
+
+        formContext.setValue('reviewers', nextReviewers, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        allReviewerRows,
+        copilot,
+        defaultReviewers,
+        formContext,
+        isDesignTrackSelected,
+        isScorecardsLoading,
+        loadError,
+        phases,
+        props.screenerOnly,
+        reviewerRows,
+        scorecards,
     ])
 
     useEffect(() => {
