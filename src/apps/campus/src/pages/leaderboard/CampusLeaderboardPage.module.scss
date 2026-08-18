@@ -1,0 +1,172 @@
+@import '@libs/ui/styles/includes';
+
+.header {
+    margin-top: $sp-8;
+    margin-bottom: $sp-6;
+
+    h1 {
+        margin-bottom: $sp-2;
+    }
+}
+
+.subtitle {
+    color: $black-60;
+}
+
+.stats {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-bottom: $sp-6;
+}
+
+.statCard {
+    align-items: center;
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: flex;
+    gap: $sp-4;
+    padding: $sp-4;
+}
+
+.statIcon {
+    align-items: center;
+    border-radius: 50%;
+    display: flex;
+    flex: 0 0 auto;
+    height: 48px;
+    justify-content: center;
+    width: 48px;
+
+    svg {
+        height: 24px;
+        width: 24px;
+    }
+}
+
+.statIconMembers {
+    background: #e6f7f0;
+    color: #0ab88a;
+}
+
+.statIconRegistered {
+    background: #e9f2fe;
+    color: #2a8ded;
+}
+
+.statIconSubmitted {
+    background: #f0eafc;
+    color: #7b61ff;
+}
+
+.statLabel {
+    color: $black-80;
+    margin-bottom: $sp-1;
+}
+
+.statValue {
+    @include font-barlow-condensed;
+
+    font-size: 28px;
+    font-weight: 500;
+}
+
+.toolbar {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-4;
+    margin-bottom: $sp-4;
+}
+
+.filter {
+    max-width: 320px;
+    min-width: 220px;
+    width: 100%;
+}
+
+.lbTable {
+    tbody td {
+        vertical-align: middle;
+    }
+}
+
+.rulesLink {
+    align-items: center;
+    background: none;
+    border: none;
+    color: $turq-160;
+    cursor: pointer;
+    display: flex;
+    gap: $sp-2;
+    padding: 0;
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.rank {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    font-weight: 700;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.gold {
+    background: #f5c344;
+    color: $tc-white;
+}
+
+.silver {
+    background: $black-20;
+    color: $black-100;
+}
+
+.bronze {
+    background: #d9a48f;
+    color: $tc-white;
+}
+
+.handleCell {
+    align-items: center;
+    display: flex;
+    gap: $sp-3;
+}
+
+.avatar {
+    flex: 0 0 auto;
+    height: 40px;
+    width: 40px;
+}
+
+.handle {
+    font-weight: 500;
+}
+
+.wins {
+    color: #0ab88a;
+    font-weight: 500;
+}
+
+.chevron {
+    color: $black-60;
+    height: 20px;
+    width: 20px;
+}
+
+.clickableRow {
+    cursor: pointer;
+}
+
+.empty,
+.error {
+    color: $black-60;
+    padding: $sp-6 0;
+    text-align: center;
+}

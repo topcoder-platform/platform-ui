@@ -1,1 +1,1 @@
-export * from './src'
+export { campusRoutes } from './src'

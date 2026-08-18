@@ -1,0 +1,14 @@
+@import '@libs/ui/styles/includes';
+
+.rules {
+    list-style: decimal outside;
+    margin: $sp-3 0 $sp-4 $sp-5;
+
+    li {
+        margin-bottom: $sp-1;
+    }
+}
+
+.note {
+    color: $black-60;
+}

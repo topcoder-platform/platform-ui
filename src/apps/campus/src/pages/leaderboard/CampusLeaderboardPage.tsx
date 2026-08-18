@@ -1,0 +1,301 @@
+/**
+ * Campus program leaderboard for a single group (`/:groupName`).
+ */
+import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import classNames from 'classnames'
+
+import {
+    ContentLayout,
+    IconOutline,
+    InputSelect,
+    InputSelectOption,
+    LoadingSpinner,
+    PageTitle,
+    Table,
+    TableColumn,
+} from '~/libs/ui'
+import { ProfilePicture } from '~/libs/shared'
+
+import {
+    CampusChallengeFilter,
+    CampusLeaderboardMember,
+} from '../../lib/models'
+import { CampusLeaderboardResource, useCampusLeaderboard } from '../../lib/hooks'
+
+import { ParticipationHistoryModal } from './ParticipationHistoryModal'
+import { RankingRulesModal } from './RankingRulesModal'
+import styles from './CampusLeaderboardPage.module.scss'
+
+const PAGE_SIZE: number = 50
+
+const CHALLENGE_FILTER_OPTIONS: ReadonlyArray<InputSelectOption> = [
+    { label: 'All Challenges', value: 'all' },
+    { label: 'Public Challenges', value: 'public' },
+    { label: 'Campus Challenges', value: 'campus' },
+]
+
+const RANK_MEDAL_CLASSES: { [rank: number]: string } = {
+    1: styles.gold,
+    2: styles.silver,
+    3: styles.bronze,
+}
+
+/**
+ * Marks rows that open the participation history modal.
+ *
+ * @param member leaderboard row.
+ * @returns row class name, when the row is clickable.
+ */
+function rowClassName(member: CampusLeaderboardMember): string | undefined {
+    return member.hasActivity ? styles.clickableRow : undefined
+}
+
+/**
+ * Renders a rank badge, medal-styled for the top three ranks.
+ *
+ * @param member leaderboard row.
+ * @returns rank cell.
+ */
+function renderRank(member: CampusLeaderboardMember): JSX.Element {
+    return (
+        <span className={classNames(styles.rank, RANK_MEDAL_CLASSES[member.rank])}>
+            {member.rank}
+        </span>
+    )
+}
+
+/**
+ * Renders the member avatar and rating-colored handle.
+ *
+ * @param member leaderboard row.
+ * @returns handle cell.
+ */
+function renderHandle(member: CampusLeaderboardMember): JSX.Element {
+    return (
+        <div className={styles.handleCell}>
+            <ProfilePicture
+                className={styles.avatar}
+                member={{
+                    firstName: member.firstName ?? '',
+                    lastName: member.lastName ?? '',
+                    photoURL: member.photoURL ?? undefined,
+                }}
+            />
+            <span
+                className={styles.handle}
+                style={member.ratingColor ? { color: member.ratingColor } : undefined}
+            >
+                {member.handle ?? member.userId}
+            </span>
+        </div>
+    )
+}
+
+export const CampusLeaderboardPage: FC = () => {
+    const groupName: string | undefined = useParams<{ groupName: string }>().groupName
+    const [challengeFilter, setChallengeFilter] = useState<CampusChallengeFilter>('all')
+    const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE)
+    const [selectedMember, setSelectedMember] = useState<CampusLeaderboardMember | undefined>()
+    const [rulesVisible, setRulesVisible] = useState<boolean>(false)
+
+    const { data, error, isLoading }: CampusLeaderboardResource
+        = useCampusLeaderboard(groupName, challengeFilter)
+
+    const displayGroupName: string = data?.group.name ?? groupName ?? ''
+
+    const onFilterChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+        setChallengeFilter(event.target.value as CampusChallengeFilter)
+        setVisibleCount(PAGE_SIZE)
+    }, [])
+
+    const onRowClick = useCallback((member: CampusLeaderboardMember): void => {
+        if (!member.hasActivity) {
+            return
+        }
+
+        setSelectedMember(member)
+    }, [])
+
+    const columns = useMemo<ReadonlyArray<TableColumn<CampusLeaderboardMember>>>(() => [
+        {
+            columnId: 'rank',
+            label: 'Rank',
+            renderer: renderRank,
+            type: 'element',
+        },
+        {
+            columnId: 'handle',
+            label: 'Handle',
+            renderer: renderHandle,
+            type: 'element',
+        },
+        {
+            columnId: 'registrations',
+            label: 'Number of Registrations',
+            propertyName: 'registrations',
+            tooltip: 'Challenges the member registered for.',
+            type: 'number',
+        },
+        {
+            columnId: 'submissions',
+            label: 'Number of Submissions',
+            propertyName: 'submissions',
+            tooltip: 'Challenges the member submitted to. At most one submission is counted per challenge.',
+            type: 'number',
+        },
+        {
+            columnId: 'passingSubmissions',
+            label: 'Number of Passing Submissions',
+            propertyName: 'passingSubmissions',
+            tooltip: 'Challenges where a submission passed review. '
+                + 'At most one passing submission is counted per challenge.',
+            type: 'number',
+        },
+        {
+            columnId: 'wins',
+            label: 'Number of Wins',
+            renderer: (member: CampusLeaderboardMember) => (
+                <span className={styles.wins}>{member.wins}</span>
+            ),
+            type: 'numberElement',
+        },
+        {
+            columnId: 'open',
+            label: '',
+            renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (
+                <IconOutline.ChevronRightIcon className={styles.chevron} />
+            ) : <span />),
+            type: 'element',
+        },
+    ], [])
+
+    const members: ReadonlyArray<CampusLeaderboardMember> = data?.members ?? []
+    const visibleMembers = useMemo(
+        () => members.slice(0, visibleCount),
+        [members, visibleCount],
+    )
+
+    const onLoadMoreClick = useCallback((): void => {
+        setVisibleCount(count => count + PAGE_SIZE)
+    }, [])
+
+    return (
+        <ContentLayout>
+            <PageTitle>Campus Program Leaderboard</PageTitle>
+
+            <div className={styles.header}>
+                <h1>Campus Program Leaderboard</h1>
+                <p className={styles.subtitle}>
+                    {`Track participation and performance of members in the ${displayGroupName} `}
+                    group across challenges.
+                </p>
+            </div>
+
+            <LoadingSpinner hide={!isLoading} />
+
+            {!!error && (
+                <div className={styles.error}>
+                    {error.response?.status === 403
+                        ? 'You do not have access to this leaderboard.'
+                        : `The leaderboard for "${displayGroupName}" could not be loaded.`}
+                </div>
+            )}
+
+            {!!data && (
+                <>
+                    <div className={styles.stats}>
+                        <div className={styles.statCard}>
+                            <span className={classNames(styles.statIcon, styles.statIconMembers)}>
+                                <IconOutline.UsersIcon />
+                            </span>
+                            <div>
+                                <div className={styles.statLabel}>Total Members in Group</div>
+                                <div className={styles.statValue}>
+                                    {data.summary.totalMembers.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.statCard}>
+                            <span className={classNames(styles.statIcon, styles.statIconRegistered)}>
+                                <IconOutline.UserAddIcon />
+                            </span>
+                            <div>
+                                <div className={styles.statLabel}>
+                                    <strong>Members</strong>
+                                    {' Registered to Any Challenge'}
+                                </div>
+                                <div className={styles.statValue}>
+                                    {data.summary.membersRegistered.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.statCard}>
+                            <span className={classNames(styles.statIcon, styles.statIconSubmitted)}>
+                                <IconOutline.DocumentTextIcon />
+                            </span>
+                            <div>
+                                <div className={styles.statLabel}>
+                                    <strong>Members</strong>
+                                    {' Submitted to Any Challenge'}
+                                </div>
+                                <div className={styles.statValue}>
+                                    {data.summary.membersSubmitted.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles.toolbar}>
+                        <div className={styles.filter}>
+                            <InputSelect
+                                name='challengeFilter'
+                                onChange={onFilterChange}
+                                options={CHALLENGE_FILTER_OPTIONS}
+                                value={challengeFilter}
+                            />
+                        </div>
+                        <button
+                            className={styles.rulesLink}
+                            onClick={function onRulesClick() { setRulesVisible(true) }}
+                            type='button'
+                        >
+                            <IconOutline.QuestionMarkCircleIcon />
+                            How rankings are calculated
+                        </button>
+                    </div>
+
+                    <Table
+                        className={styles.lbTable}
+                        columns={columns}
+                        data={visibleMembers}
+                        disableSorting
+                        moreToLoad={visibleCount < members.length}
+                        onLoadMoreClick={onLoadMoreClick}
+                        onRowClick={onRowClick}
+                        removeDefaultSort
+                        rowClassName={rowClassName}
+                    />
+
+                    {!members.length && (
+                        <div className={styles.empty}>
+                            {`No members were found in the ${displayGroupName} group.`}
+                        </div>
+                    )}
+                </>
+            )}
+
+            <ParticipationHistoryModal
+                member={selectedMember}
+                onClose={function onModalClose() { setSelectedMember(undefined) }}
+            />
+
+            <RankingRulesModal
+                onClose={function onRulesClose() { setRulesVisible(false) }}
+                open={rulesVisible}
+            />
+        </ContentLayout>
+    )
+}
+
+export default CampusLeaderboardPage

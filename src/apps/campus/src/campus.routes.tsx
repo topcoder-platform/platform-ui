@@ -6,6 +6,10 @@ const CampusHomePage: LazyLoadedComponent = lazyLoad(
     () => import('./home'),
     'CampusHomePage',
 )
+const CampusLeaderboardPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/leaderboard'),
+    'CampusLeaderboardPage',
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.campus ? '' : `/${AppSubdomain.campus}`
@@ -22,6 +26,13 @@ export const campusRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <CampusHomePage />,
                 id: 'Campus Home',
                 route: '',
+            },
+            {
+                // Campus program leaderboard, eg. https://campus.topcoder-dev.com/mecw
+                children: [],
+                element: <CampusLeaderboardPage />,
+                id: 'Campus Leaderboard',
+                route: ':groupName',
             },
         ],
         domain: AppSubdomain.campus,
