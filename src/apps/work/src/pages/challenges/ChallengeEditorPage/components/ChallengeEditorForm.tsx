@@ -189,6 +189,10 @@ import {
     RoundTypeField,
 } from './RoundTypeField'
 import {
+    ShowDashboardField,
+    SHOW_DATA_DASHBOARD_METADATA_FIELD,
+} from './ShowDashboardField'
+import {
     StockArtsField,
 } from './StockArtsField'
 import {
@@ -2192,6 +2196,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
+    const showDashboardField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showRateChallengeField = isMarathonMatchChallengeSelected || isDevelopmentChallengeSelected
     const showPrizesAndBillingSection = !isFunChallengeSelected
@@ -3070,7 +3075,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     discussionForum: formData.discussionForum,
                     selectedChallengeType,
                 })
-                const metadata = booleanToMetadata(
+                const baseMetadata = booleanToMetadata(
                     booleanToMetadata(
                         formData.metadata,
                         REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
@@ -3079,6 +3084,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     IS_TEST_CHALLENGE_METADATA_FIELD,
                     formData.isTestChallenge === true,
                 )
+                // Marathon Match fun challenges are created with the data dashboard enabled.
+                const metadata = isMarathonMatchChallengeSelected
+                    ? booleanToMetadata(
+                        baseMetadata,
+                        SHOW_DATA_DASHBOARD_METADATA_FIELD,
+                        formData.funChallenge === true,
+                    )
+                    : baseMetadata
                 const createdChallenge = await createChallenge({
                     discussions,
                     funChallenge: formData.funChallenge === true,
@@ -3166,6 +3179,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fallbackProjectId,
             getValues,
             isDevelopmentTrackSelected,
+            isMarathonMatchChallengeSelected,
             isTaskSingleAssignmentChallenge,
             reset,
             onChallengeCreated,
@@ -4210,6 +4224,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         />
                                         {showRateChallengeField
                                             ? <RateChallengeField />
+                                            : undefined}
+                                        {showDashboardField
+                                            ? <ShowDashboardField disabled={isReadOnly} />
                                             : undefined}
                                         <TestChallengeField disabled={isReadOnly} />
                                     </div>

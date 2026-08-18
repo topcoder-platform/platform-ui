@@ -651,7 +651,22 @@ jest.mock('./FinalDeliverablesField', () => ({
     FinalDeliverablesField: () => <>Final Deliverables Field</>,
 }))
 jest.mock('./FunChallengeField', () => ({
-    FunChallengeField: () => <></>,
+    FunChallengeField: function MockFunChallengeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'funChallenge',
+        })
+
+        return (
+            <input
+                aria-label='Fun Challenge'
+                checked={controller.field.value === true}
+                onChange={event => controller.field.onChange(event.target.checked)}
+                type='checkbox'
+            />
+        )
+    },
 }))
 jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
@@ -720,6 +735,10 @@ jest.mock('./ReviewTypeField', () => ({
 }))
 jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
+}))
+jest.mock('./ShowDashboardField', () => ({
+    SHOW_DATA_DASHBOARD_METADATA_FIELD: 'show_data_dashboard',
+    ShowDashboardField: () => <>Show Dashboard Field</>,
 }))
 jest.mock('./StockArtsField', () => ({
     StockArtsField: function StockArtsField() {
@@ -4998,6 +5017,73 @@ describe('ChallengeEditorForm', () => {
                         name: 'is_test_challenge',
                         value: 'false',
                     }],
+                }))
+        })
+    })
+
+    it.each([
+        {
+            expectedShowDataDashboard: 'true',
+            isFunChallenge: true,
+        },
+        {
+            expectedShowDataDashboard: 'false',
+            isFunChallenge: false,
+        },
+    ])('creates a Marathon Match with show_data_dashboard $expectedShowDataDashboard', async ({
+        expectedShowDataDashboard,
+        isFunChallenge,
+    }: {
+        expectedShowDataDashboard: string
+        isFunChallenge: boolean
+    }) => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                isActive: true,
+                isTask: false,
+                name: 'Marathon Match',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Marathon Match challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Marathon Match challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Marathon Match challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'marathon-match-id')
+
+        if (isFunChallenge) {
+            await user.click(screen.getByRole('checkbox', { name: 'Fun Challenge' }))
+        }
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    funChallenge: isFunChallenge,
+                    metadata: expect.arrayContaining([{
+                        name: 'show_data_dashboard',
+                        value: expectedShowDataDashboard,
+                    }]),
                 }))
         })
     })
