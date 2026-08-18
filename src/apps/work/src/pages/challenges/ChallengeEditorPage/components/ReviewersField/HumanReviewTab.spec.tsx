@@ -992,6 +992,65 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
     })
 
+    it('preserves hidden public reviewer defaults in simplified design review', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [{
+                id: 'screener-role-id',
+                name: 'Screener',
+            }],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: true,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'screening-phase-id',
+                            scorecardId: 'screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+                screenerOnly
+                showPublicOpportunityValue
+            />,
+        )
+
+        expect(screen.getByLabelText('Screener'))
+            .not.toBeNull()
+        await waitFor(() => {
+            expect(screen.getByTestId('public-opportunity-value').textContent)
+                .toBe('true')
+        })
+    })
+
     it('marks Screening and Checkpoint Screening member assignments optional', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             tracks: [

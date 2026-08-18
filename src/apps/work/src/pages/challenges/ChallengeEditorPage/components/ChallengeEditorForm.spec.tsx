@@ -925,6 +925,81 @@ describe('ChallengeEditorForm', () => {
         },
         typeId: 'design-challenge-type-id',
     } as Challenge
+    const twoRoundDesignChallengeWithDeferredReviewers = {
+        ...validDraftChallenge,
+        phases: [
+            {
+                duration: 60,
+                name: 'Checkpoint Screening',
+                phaseId: 'checkpoint-screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Checkpoint Review',
+                phaseId: 'checkpoint-review-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Screening',
+                phaseId: 'screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Approval',
+                phaseId: 'approval-phase-id',
+            },
+        ],
+        reviewers: [
+            {
+                isMemberReview: true,
+                memberId: 'screener-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-screening-phase-id',
+                scorecardId: 'checkpoint-screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-review-phase-id',
+                scorecardId: 'checkpoint-review-scorecard-id',
+                shouldOpenOpportunity: true,
+            },
+            {
+                isMemberReview: true,
+                memberId: 'screener-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'screening-phase-id',
+                scorecardId: 'screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: true,
+            },
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'approval-phase-id',
+                scorecardId: 'approval-scorecard-id',
+                shouldOpenOpportunity: true,
+            },
+        ],
+        trackId: 'design-track-id',
+        type: {
+            abbreviation: 'CH',
+            name: 'Challenge',
+        },
+        typeId: 'design-challenge-type-id',
+    } as Challenge
     const taskDraftChallenge = {
         ...draftChallenge,
         task: {
@@ -4453,6 +4528,81 @@ describe('ChallengeEditorForm', () => {
                     status: 'DRAFT',
                 }))
         })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+    })
+
+    it('saves a two-round design draft with shared screeners and deferred hidden reviewers', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...twoRoundDesignChallengeWithDeferredReviewers,
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...twoRoundDesignChallengeWithDeferredReviewers,
+                            status: 'NEW',
+                        }}
+                        projectId='100578'
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            memberId: 'screener-member-id',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'checkpoint-review-phase-id',
+                            shouldOpenOpportunity: true,
+                        }),
+                        expect.objectContaining({
+                            memberId: 'screener-member-id',
+                            phaseId: 'screening-phase-id',
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'review-phase-id',
+                            shouldOpenOpportunity: true,
+                        }),
+                        expect.objectContaining({
+                            phaseId: 'approval-phase-id',
+                            shouldOpenOpportunity: true,
+                        }),
+                    ]),
+                    status: 'DRAFT',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith(expect.stringContaining('validation'))
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
     })
