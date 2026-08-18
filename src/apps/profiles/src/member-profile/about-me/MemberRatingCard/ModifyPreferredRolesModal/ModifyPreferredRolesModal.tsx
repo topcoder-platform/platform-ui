@@ -134,6 +134,7 @@ const ModifyPreferredRolesModal: FC<ModifyPreferredRolesModalProps> = (props: Mo
                     label='Preferred Roles'
                     name='preferredRoles'
                     onFetchOptions={fetchPreferredRoles}
+                    openMenuOnClick
                     options={preferredRoleOptions}
                     onChange={handlePreferredRolesChange}
                     placeholder='Select preferred roles'

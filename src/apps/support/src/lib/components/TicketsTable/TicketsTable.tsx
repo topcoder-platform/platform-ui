@@ -70,11 +70,11 @@ const Assignees = ({ ticket }: { ticket: SupportTicketSummary }): JSX.Element =>
 /**
  * Renders an accessible unread indicator that does not rely on color.
  *
- * @param ticket ticket summary.
+ * @param unread whether the ticket should appear unread to the current viewer.
  * @returns unread badge when required.
  * @throws Does not throw.
  */
-const UnreadBadge = ({ ticket }: { ticket: SupportTicketSummary }): JSX.Element => (ticket.hasUnread
+const UnreadBadge = ({ unread }: { unread: boolean }): JSX.Element => (unread
     ? (
         <span className={styles.unreadBadge}>
             <span aria-hidden='true'>●</span>
@@ -189,17 +189,18 @@ export const TicketsTable: FC<TicketsTableProps> = props => {
                     <tbody>
                         {props.tickets.map(ticket => {
                             const assigned = isTicketAssignedToUser(ticket, props.currentUserId)
+                            const unread = ticket.hasUnread && (!props.isSupportTeam || assigned)
                             return (
                                 <tr
-                                    aria-label={`${ticket.hasUnread ? 'Unread' : 'Read'} ticket: ${preview(ticket)}`}
-                                    className={classNames(ticket.hasUnread && styles.unread)}
+                                    aria-label={`${unread ? 'Unread' : 'Read'} ticket: ${preview(ticket)}`}
+                                    className={classNames(unread && styles.unread)}
                                     key={ticket.id}
                                     onClick={() => props.onOpen(ticket)}
                                     onKeyDown={event => handleKeyDown(event, ticket)}
                                     tabIndex={0}
                                 >
                                     <td>
-                                        <UnreadBadge ticket={ticket} />
+                                        <UnreadBadge unread={unread} />
                                         <span>{preview(ticket)}</span>
                                     </td>
                                     {props.isSupportTeam && (
@@ -236,12 +237,13 @@ export const TicketsTable: FC<TicketsTableProps> = props => {
             <div className={styles.mobile}>
                 {props.tickets.map(ticket => {
                     const assigned = isTicketAssignedToUser(ticket, props.currentUserId)
+                    const unread = ticket.hasUnread && (!props.isSupportTeam || assigned)
                     return (
                         <article
-                            className={classNames(styles.card, ticket.hasUnread && styles.unread)}
+                            className={classNames(styles.card, unread && styles.unread)}
                             key={ticket.id}
                         >
-                            <UnreadBadge ticket={ticket} />
+                            <UnreadBadge unread={unread} />
                             <h2>{preview(ticket)}</h2>
                             {props.isSupportTeam && (
                                 <p>

@@ -180,56 +180,159 @@ const getDistributionRanges = (
 )
 
 /**
- * Returns the chart end rating used for marker and axis positioning.
- *
- * Used by MemberRatingInfoModal to align labels with the rendered distribution range.
+ * Trims trailing empty rating buckets so the histogram can span the chart width.
  *
  * @param {RatingDistributionRange[]} ranges - Parsed rating distribution ranges.
- * @returns {number} The maximum rating represented by the chart.
+ * @returns {RatingDistributionRange[]} Ranges through the last populated bucket.
  */
-const getChartEndRating = (ranges: RatingDistributionRange[]): number => {
+const getVisibleDistributionRanges = (
+    ranges: RatingDistributionRange[],
+): RatingDistributionRange[] => {
     if (ranges.length === 0) {
-        return 3999
+        return ranges
     }
 
-    return ranges[ranges.length - 1].end
+    let lastPopulatedIndex = -1
+    for (let index = ranges.length - 1; index >= 0; index -= 1) {
+        if (ranges[index].value > 0) {
+            lastPopulatedIndex = index
+            break
+        }
+    }
+
+    if (lastPopulatedIndex < 0) {
+        return ranges
+    }
+
+    return ranges.slice(0, lastPopulatedIndex + 1)
 }
 
 /**
- * Calculates a horizontal chart position for a rating value.
+ * Returns the histogram bar index for a rating value.
  *
- * Used by MemberRatingInfoModal for the member marker and static x-axis labels.
- *
- * @param {number} rating - The rating value to position.
- * @param {RatingDistributionRange[]} ranges - Parsed rating distribution ranges.
- * @returns {number} A clamped percentage from 0 to 100.
+ * @param {number} rating - The rating value to locate.
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {number} Zero-based bar index, clamped to the visible range.
  */
-const getChartPosition = (rating: number, ranges: RatingDistributionRange[]): number => {
-    const chartStart = ranges[0]?.start ?? 0
-    const chartEnd = getChartEndRating(ranges)
-    const chartSpan = chartEnd - chartStart
-
-    if (chartSpan <= 0) {
+const getBarIndexForRating = (
+    rating: number,
+    ranges: RatingDistributionRange[],
+): number => {
+    if (ranges.length === 0) {
         return 0
     }
 
-    const clampedRating = Math.max(chartStart, Math.min(rating, chartEnd))
+    const matchingIndex = ranges.findIndex((range: RatingDistributionRange) => (
+        rating >= range.start && rating <= range.end
+    ))
 
-    return ((clampedRating - chartStart) / chartSpan) * 100
+    if (matchingIndex >= 0) {
+        return matchingIndex
+    }
+
+    if (rating < ranges[0].start) {
+        return 0
+    }
+
+    return ranges.length - 1
+}
+
+/**
+ * Returns the horizontal center position of the histogram bar for a rating.
+ *
+ * Used by MemberRatingInfoModal so the marker sits on the module bar itself
+ * instead of interpolating across a separate rating-percentage scale.
+ *
+ * @param {number} rating - The rating value to position.
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {number} Center position of the matching bar as a percentage from 0 to 100.
+ */
+const getMarkerPosition = (
+    rating: number,
+    ranges: RatingDistributionRange[],
+): number => {
+    if (ranges.length === 0) {
+        return 0
+    }
+
+    const barIndex = getBarIndexForRating(rating, ranges)
+
+    return ((barIndex + 0.5) / ranges.length) * 100
+}
+
+/**
+ * Returns the horizontal start position of the histogram bar for an axis label.
+ *
+ * @param {number} rating - The axis label rating value.
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {number} Start position of the matching bar as a percentage from 0 to 100.
+ */
+const getAxisLabelPosition = (
+    rating: number,
+    ranges: RatingDistributionRange[],
+): number => {
+    if (ranges.length === 0) {
+        return 0
+    }
+
+    const matchingIndex = ranges.findIndex((range: RatingDistributionRange) => (
+        rating >= range.start && rating <= range.end
+    ))
+
+    if (matchingIndex >= 0) {
+        return (matchingIndex / ranges.length) * 100
+    }
+
+    const nextIndex = ranges.findIndex((range: RatingDistributionRange) => range.start >= rating)
+
+    if (nextIndex >= 0) {
+        return (nextIndex / ranges.length) * 100
+    }
+
+    return 100
+}
+
+/**
+ * Returns axis labels that fall within the visible distribution ranges.
+ *
+ * Hides labels such as `2200+` when the trimmed histogram has no elite buckets,
+ * which otherwise stack on top of the final label (e.g. `1500`).
+ *
+ * @param {RatingDistributionRange[]} ranges - Visible rating distribution ranges.
+ * @returns {Array<{ label: string, value: number }>} Axis labels to render.
+ */
+const getVisibleAxisLabels = (
+    ranges: RatingDistributionRange[],
+): Array<{ label: string, value: number }> => {
+    if (ranges.length === 0) {
+        return chartAxisLabels
+    }
+
+    const chartEnd = ranges[ranges.length - 1].end
+
+    return chartAxisLabels.filter((axisLabel: { label: string, value: number }) => (
+        axisLabel.value <= chartEnd
+    ))
 }
 
 /**
  * Calculates a bar height for a histogram count.
  *
- * Used by MemberRatingInfoModal to preserve visible bars for low non-zero ranges.
+ * Empty buckets still get a short stub so the chart baseline stays visible,
+ * especially at the low end of the distribution (0 to the first populated range).
+ * Populated buckets use a slightly taller minimum so small counts remain readable.
  *
  * @param {number} value - Number of members in the rating range.
  * @param {number} maxValue - Highest count in the distribution.
  * @returns {number} A percentage height for CSS rendering.
  */
 const getBarHeight = (value: number, maxValue: number): number => {
-    if (value <= 0 || maxValue <= 0) {
+    if (maxValue <= 0) {
         return 0
+    }
+
+    if (value <= 0) {
+        return 1
     }
 
     return Math.max(4, Math.round((value / maxValue) * 100))
@@ -268,15 +371,20 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
     const ratingColor: string = getRatingColor(props.rating)
     const selectedRatingTier: RatingTier = getRatingTier(props.rating)
     const distributionRanges: RatingDistributionRange[] = useMemo(() => (
-        getDistributionRanges(props.ratingDistribution?.distribution)
+        getVisibleDistributionRanges(
+            getDistributionRanges(props.ratingDistribution?.distribution),
+        )
     ), [props.ratingDistribution])
     const maxDistributionValue: number = Math.max(
         1,
         ...distributionRanges.map((range: RatingDistributionRange) => range.value),
     )
     const markerPosition: number = props.rating !== undefined
-        ? getChartPosition(props.rating, distributionRanges)
+        ? getMarkerPosition(props.rating, distributionRanges)
         : 0
+    const visibleAxisLabels: Array<{ label: string, value: number }> = useMemo(() => (
+        getVisibleAxisLabels(distributionRanges)
+    ), [distributionRanges])
     const shouldStackMarkerRating: boolean = props.rating !== undefined && (
         markerPosition >= stackedMarkerPositionThreshold
         || props.rating >= stackedMarkerRatingThreshold
@@ -394,10 +502,15 @@ const MemberRatingInfoModal: FC<MemberRatingInfoModalProps> = (props: MemberRati
                             )}
 
                             <div className={styles.axisLabels}>
-                                {chartAxisLabels.map((axisLabel: { label: string, value: number }) => (
+                                {visibleAxisLabels.map((axisLabel: { label: string, value: number }) => (
                                     <span
                                         key={axisLabel.label}
-                                        style={{ left: `${getChartPosition(axisLabel.value, distributionRanges)}%` }}
+                                        style={{
+                                            left: `${getAxisLabelPosition(
+                                                axisLabel.value,
+                                                distributionRanges,
+                                            )}%`,
+                                        }}
                                     >
                                         {axisLabel.label}
                                     </span>

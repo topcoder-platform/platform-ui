@@ -17,6 +17,7 @@ import {
 import classNames from 'classnames'
 
 import { ChallengeStatus } from '~/apps/admin/src/lib/models'
+import { Button } from '~/libs/ui'
 
 import * as services from '../../../../../lib/services'
 import {
@@ -40,8 +41,10 @@ const REVIEW_TAB = ['ai', 'human', 'context'] as const
 type ReviewTab = typeof REVIEW_TAB[number]
 
 interface ReviewersFieldProps {
+    canConfigureFullReview?: boolean
     isReadOnly?: boolean
     onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | undefined) => void
+    screenerOnly?: boolean
 }
 
 function hasReviewerChanges(
@@ -58,6 +61,7 @@ function hasReviewerChanges(
 export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
+    const [isFullReviewExpanded, setIsFullReviewExpanded] = useState<boolean>(false)
     const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>()
     const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
     const [reviewContextRequirementCount, setReviewContextRequirementCount] = useState<number | undefined>(undefined)
@@ -159,11 +163,17 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const reviewContextLabel = reviewContextRequirementCount
         ? `Review Context (${reviewContextRequirementCount})`
         : 'Review Context'
+    /**
+     * The simplified Design review section exposes the screener assignment only.
+     * Administrators keep access to the complete configuration behind a toggle.
+     */
+    const showScreenerOnlyView = !!props.screenerOnly && !isFullReviewExpanded
+    const showFullReviewToggle = !!props.screenerOnly && !!props.canConfigureFullReview
     const aiGatingManualReviewError = useMemo(
-        () => (aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+        () => (!showScreenerOnlyView && aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
             : undefined),
-        [aiReviewMode, humanReviewersCount],
+        [aiReviewMode, humanReviewersCount, showScreenerOnlyView],
     )
 
     useEffect(() => {
@@ -187,6 +197,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     )
     const handleTabChange = useCallback((tab: ReviewTab): void => {
         setActiveTab(tab)
+    }, [])
+    const handleFullReviewToggle = useCallback((): void => {
+        setIsFullReviewExpanded(previousValue => !previousValue)
     }, [])
     const focusTab = useCallback((tab: ReviewTab): void => {
         handleTabChange(tab)
@@ -324,7 +337,25 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 )
                 : undefined}
 
-            {!props.isReadOnly
+            {!props.isReadOnly && showFullReviewToggle
+                ? (
+                    <div className={styles.fullReviewToggle}>
+                        <Button
+                            label={isFullReviewExpanded
+                                ? 'Hide advanced review configuration'
+                                : 'Show advanced review configuration'}
+                            onClick={handleFullReviewToggle}
+                            secondary
+                        />
+                    </div>
+                )
+                : undefined}
+
+            {!props.isReadOnly && showScreenerOnlyView
+                ? <HumanReviewTab screenerOnly />
+                : undefined}
+
+            {!props.isReadOnly && !showScreenerOnlyView
                 ? (
                     <>
                         <div
@@ -395,9 +426,9 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         </div>
 
                         <fieldset className={styles.tabPanels}>
-                            {aiGatingManualReviewError && !errors.reviewers && (
-                                <p className={styles.error}>{aiGatingManualReviewError}</p>
-                            )}
+                            {aiGatingManualReviewError && !errors.reviewers
+                                ? <p className={styles.error}>{aiGatingManualReviewError}</p>
+                                : undefined}
                             <div
                                 aria-labelledby='reviewers-human-tab'
                                 className={classNames(

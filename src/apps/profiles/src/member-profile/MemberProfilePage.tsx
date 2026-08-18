@@ -5,7 +5,7 @@ import { AxiosError } from 'axios'
 import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
 
-import { rootRoute } from '../profiles.routes'
+import { MemberNotFound } from '../components'
 import { notifyUniNavi } from '../lib'
 
 import { ProfilePageLayout } from './page-layout'
@@ -21,6 +21,7 @@ const MemberProfilePage: FC<{}> = () => {
     ] = useState()
 
     const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [notFound, setNotFound]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
     const { isTalentSearch }: MemberProfileContextValue = useMemberProfileContext()
 
     const { profile: authProfile }: ProfileContextData = useContext(profileContext)
@@ -31,6 +32,10 @@ const MemberProfilePage: FC<{}> = () => {
 
     useEffect(() => {
         if (routeParams.memberHandle) {
+            setProfileReady(false)
+            setNotFound(false)
+            setProfile(undefined)
+
             profileGetPublicAsync(routeParams.memberHandle)
                 .then(userProfile => {
                     setProfile({ ...userProfile } as UserProfile)
@@ -38,7 +43,8 @@ const MemberProfilePage: FC<{}> = () => {
                 })
                 .catch((e: AxiosError) => {
                     if (e.code === AxiosError.ERR_BAD_REQUEST && e.response?.status === 404) {
-                        navigate(rootRoute)
+                        setNotFound(true)
+                        setProfileReady(true)
                     }
                 })
         }
@@ -58,7 +64,11 @@ const MemberProfilePage: FC<{}> = () => {
         <>
             <LoadingSpinner hide={profileReady} />
 
-            {profileReady && profile && (
+            {profileReady && notFound && (
+                <MemberNotFound memberHandle={routeParams.memberHandle} />
+            )}
+
+            {profileReady && profile && !notFound && (
                 <ProfilePageLayout
                     handleBackBtn={handleBackBtn}
                     isTalentSearch={isTalentSearch}

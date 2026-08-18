@@ -148,4 +148,25 @@ describe('ReviewContextTab', () => {
         expect(screen.getByText('This will delete the existing review context and generate a new one.'))
             .toBeInTheDocument()
     })
+
+    it('renders the manual manage button when no context exists', () => {
+        mockUseFetchChallengeReviewContext.mockReturnValue({
+            context: undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        render(
+            <ReviewContextTab
+                challengeId='challenge-1'
+                challengeDescription={'A'.repeat(120)}
+                challengeStatus={undefined}
+            />,
+        )
+
+        expect(screen.getByRole('button', { name: 'Manage Review Context' }))
+            .toBeInTheDocument()
+    })
 })

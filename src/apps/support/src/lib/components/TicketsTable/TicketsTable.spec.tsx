@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import '@testing-library/jest-dom'
 import {
     fireEvent,
     render,
@@ -108,5 +109,68 @@ describe('TicketsTable challenge links', () => {
 
         expect(screen.queryByRole('link', { name: 'View challenge' }))
             .toBeNull()
+    })
+})
+
+describe('TicketsTable unread indicators', () => {
+    const unreadTicket: SupportTicketSummary = {
+        ...baseTicket,
+        assignees: [{
+            assignedAt: '2026-08-07T00:00:00.000Z',
+            handle: 'support-member',
+            userId: 'staff-1',
+        }],
+        hasUnread: true,
+        status: 'CLOSED',
+    }
+
+    it('shows unread indicators to the assigned support team member', () => {
+        render(
+            <TicketsTable
+                currentUserId='staff-1'
+                isSupportTeam
+                onAssign={jest.fn()}
+                onOpen={jest.fn()}
+                tickets={[unreadTicket]}
+            />,
+        )
+
+        expect(screen.getAllByText('Unread'))
+            .toHaveLength(2)
+        expect(screen.getByLabelText('Unread ticket: Unable to submit'))
+            .toHaveClass('unread')
+    })
+
+    it('hides unread indicators from support team members who are not assigned', () => {
+        render(
+            <TicketsTable
+                currentUserId='staff-2'
+                isSupportTeam
+                onAssign={jest.fn()}
+                onOpen={jest.fn()}
+                tickets={[unreadTicket]}
+            />,
+        )
+
+        expect(screen.queryByText('Unread'))
+            .toBeNull()
+        expect(screen.getByLabelText('Read ticket: Unable to submit'))
+            .not.toHaveClass('unread')
+    })
+
+    it('preserves unread indicators for an ordinary member', () => {
+        render(
+            <TicketsTable
+                isSupportTeam={false}
+                onAssign={jest.fn()}
+                onOpen={jest.fn()}
+                tickets={[{ ...unreadTicket, assignees: [] }]}
+            />,
+        )
+
+        expect(screen.getAllByText('Unread'))
+            .toHaveLength(2)
+        expect(screen.getByLabelText('Unread ticket: Unable to submit'))
+            .toHaveClass('unread')
     })
 })

@@ -592,6 +592,41 @@ describe('ChallengeEditorPage', () => {
             .toBe(true)
     })
 
+    it('keeps launch enabled for a fun challenge without budget approval', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                approvalStatus: 'PENDING_APPROVAL',
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                funChallenge: true,
+                id: '456',
+                name: 'Fun challenge',
+                prizeSets: [],
+                status: 'DRAFT',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(screen.getAllByRole('button', { name: 'Launch' }))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Launch' })
+            .every(button => !(button as HTMLButtonElement).disabled))
+            .toBe(true)
+    })
+
     it('keeps launch enabled when challenge budget is approved', async () => {
         mockedUseFetchChallenge.mockReturnValue({
             challenge: {

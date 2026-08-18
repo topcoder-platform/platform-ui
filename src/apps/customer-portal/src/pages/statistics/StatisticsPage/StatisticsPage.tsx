@@ -237,7 +237,7 @@ const StatisticsPage: FC = () => {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <div>
+                                                        <div title={country.name}>
                                                             {country.code && (
                                                                 <span
                                                                     aria-hidden='true'

@@ -441,11 +441,10 @@ export const challengeAdvancedOptionsSchema = yup.object({
                             ? reviewer.additionalMemberIds
                             : []
                         const normalizedAssignedMemberSlots = [
-                            reviewer.memberId,
-                            ...additionalMemberIds,
+                            toNormalizedText(reviewer.memberId) || toNormalizedText(reviewer.handle),
+                            ...additionalMemberIds.map(memberId => toNormalizedText(memberId)),
                         ]
                             .slice(0, reviewerSlots)
-                            .map(memberId => toNormalizedText(memberId))
                         const missingSlotIndex = normalizedAssignedMemberSlots.findIndex(memberId => !memberId)
                         const hasAllAssignments = normalizedAssignedMemberSlots.length === reviewerSlots
                             && missingSlotIndex === -1

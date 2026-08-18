@@ -332,11 +332,12 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
             .toBeTruthy()
     })
 
-    it('still requires an assigned checkpoint screener', async () => {
+    it('accepts an unassigned checkpoint screener for the Checkpoint Screening phase', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
                 ...baseFormData,
                 phases: [{
+                    id: 'checkpoint-screening-phase-instance-id',
                     name: 'Checkpoint Screening',
                     phaseId: 'checkpoint-screening-phase-id',
                 }],
@@ -344,17 +345,15 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'checkpoint-screening-phase-id',
+                        phaseId: 'checkpoint-screening-phase-instance-id',
                         scorecardId: 'checkpoint-screening-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
                 ],
             }),
         )
-            .rejects
-            .toMatchObject({
-                path: 'reviewers[0].memberId',
-            })
+            .resolves
+            .toBeTruthy()
     })
 
     it('accepts required reviewer slot assignments when opportunity is closed', async () => {
@@ -367,6 +366,25 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
                         isMemberReview: true,
                         memberId: '1111',
                         memberReviewerCount: 2,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('accepts a persisted member handle while its member id is resolved during save', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        handle: 'TCConnCopilot',
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
                         scorecardId: 'scorecard-id',
                         shouldOpenOpportunity: false,
                     },

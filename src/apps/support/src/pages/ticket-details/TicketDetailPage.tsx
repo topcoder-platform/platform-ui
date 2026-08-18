@@ -43,7 +43,7 @@ import {
 import styles from './TicketDetailPage.module.scss'
 
 /**
- * Renders the original request followed by ascending replies and authorized actions.
+ * Renders the original request followed by ascending, role-labelled replies and authorized actions.
  *
  * @returns support ticket detail page.
  * @throws Does not throw; request failures are shown with recovery actions.
@@ -67,7 +67,7 @@ export const TicketDetailPage: FC = () => {
     const { data, error, isValidating, mutate } = useSWR<SupportTicketDetail>(
         requestKey,
         () => getSupportTicket(ticketId as string),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
+        { revalidateOnFocus: true, shouldRetryOnError: false },
     )
 
     useEffect(() => {
@@ -75,7 +75,7 @@ export const TicketDetailPage: FC = () => {
 
         markedReadTicket.current = data.id
         markSupportTicketRead(data.id)
-            .then(() => mutate({ ...data, hasUnread: false }, false))
+            .then(() => mutate())
             .catch(() => undefined)
     }, [data, mutate])
 
@@ -104,8 +104,11 @@ export const TicketDetailPage: FC = () => {
         assignee => String(assignee.userId) === currentUserId,
     ))
     const closed = data.status === 'CLOSED'
+    const closedByAssignee = data.closedByUserId
+        ? data.assignees.find(assignee => String(assignee.userId) === String(data.closedByUserId))
+        : undefined
     const ticketOwner = Boolean(currentUserId && String(data.memberUserId) === currentUserId)
-    const canReply = !closed || ticketOwner
+    const canReply = ticketOwner || (!closed && (!supportTeam || assignedToCurrentUser))
     const replyContext = `${data.id}-reply-${replyRevision}`
 
     /**
@@ -232,6 +235,21 @@ export const TicketDetailPage: FC = () => {
                             Closed
                             {' '}
                             {formatSupportDate(data.closedAt)}
+                            {data.closedByUserId && (
+                                <>
+                                    {' '}
+                                    by
+                                    {' '}
+                                    <span>
+                                        {closedByAssignee ? (
+                                            <MemberHandle
+                                                color={closedByAssignee.handleColor}
+                                                handle={closedByAssignee.handle}
+                                            />
+                                        ) : data.closedByUserId}
+                                    </span>
+                                </>
+                            )}
                         </p>
                     )}
                 </div>
@@ -245,6 +263,7 @@ export const TicketDetailPage: FC = () => {
                             size='md'
                         />
                         <Button
+                            disabled={updatingAssignment || !assignedToCurrentUser}
                             label='Close support ticket'
                             onClick={() => setConfirmClose(true)}
                             primary
@@ -295,6 +314,7 @@ export const TicketDetailPage: FC = () => {
                                             color={response.userHandleColor}
                                             handle={response.userHandle}
                                         />
+                                        {response.userId !== data.memberUserId && ' (Support Team)'}
                                     </span>
                                     <time dateTime={response.createdAt}>{formatSupportDate(response.createdAt)}</time>
                                 </header>
@@ -332,7 +352,11 @@ export const TicketDetailPage: FC = () => {
                     </div>
                 </section>
             ) : (
-                <p className={styles.closedNotice}>This ticket is closed and cannot receive more replies.</p>
+                <p className={styles.closedNotice}>
+                    {closed
+                        ? 'This ticket is closed and cannot receive more replies.'
+                        : 'Assign this ticket to yourself before replying.'}
+                </p>
             )}
 
             <BaseModal
