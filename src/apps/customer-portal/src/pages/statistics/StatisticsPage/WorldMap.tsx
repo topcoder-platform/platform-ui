@@ -113,7 +113,7 @@ function renderWinnersTooltip(point: StatisticsMapPoint): string {
                     ${flag}
                     <strong>${escapeHtml(point.name)}</strong>
                 </div>
-                <span>Winners: ${NUMBER_FORMATTER.format(point.value)}</span>
+                <span># of 1st place Wins: ${NUMBER_FORMATTER.format(point.value)}</span>
             </div>
             <span class="${styles.tooltipSectionTitle}">Top Winners</span>
             <div class="${styles.tooltipWinners}">
