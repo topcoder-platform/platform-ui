@@ -283,6 +283,7 @@
         :global(.highcharts-container),
         :global(.highcharts-root) {
             height: 370px !important;
+            z-index: unset !important;
         }
     }
 
