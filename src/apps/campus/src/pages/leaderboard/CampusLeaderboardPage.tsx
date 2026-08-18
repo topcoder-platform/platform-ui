@@ -2,7 +2,7 @@
  * Campus program leaderboard for a single group (`/:groupName`).
  */
 import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
@@ -94,7 +94,12 @@ function renderHandle(member: CampusLeaderboardMember): JSX.Element {
 
 export const CampusLeaderboardPage: FC = () => {
     const groupName: string | undefined = useParams<{ groupName: string }>().groupName
-    const [challengeFilter, setChallengeFilter] = useState<CampusChallengeFilter>('all')
+    const [searchParams, setSearchParams] = useSearchParams()
+    const searchChallengeFilter: string | null = searchParams.get('type')
+    const challengeFilter: CampusChallengeFilter = (
+        searchChallengeFilter === 'public' || searchChallengeFilter === 'campus'
+    ) ? searchChallengeFilter : 'all'
+
     const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE)
     const [selectedMember, setSelectedMember] = useState<CampusLeaderboardMember | undefined>()
     const [rulesVisible, setRulesVisible] = useState<boolean>(false)
@@ -105,9 +110,15 @@ export const CampusLeaderboardPage: FC = () => {
     const displayGroupName: string = data?.group.name ?? groupName ?? ''
 
     const onFilterChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setChallengeFilter(event.target.value as CampusChallengeFilter)
+        const value = event.target.value as CampusChallengeFilter
+
+        setSearchParams({
+            ...Object.fromEntries(searchParams.entries()),
+            type: value,
+        }, { replace: true })
+
         setVisibleCount(PAGE_SIZE)
-    }, [])
+    }, [searchParams, setSearchParams])
 
     const onRowClick = useCallback((member: CampusLeaderboardMember): void => {
         if (!member.hasActivity) {
@@ -192,8 +203,6 @@ export const CampusLeaderboardPage: FC = () => {
                 </p>
             </div>
 
-            <LoadingSpinner hide={!isLoading} />
-
             {!!error && (
                 <div className={styles.error}>
                     {error.response?.status === 403
@@ -202,7 +211,7 @@ export const CampusLeaderboardPage: FC = () => {
                 </div>
             )}
 
-            {!!data && (
+            {(!!data || isLoading) && (
                 <>
                     <div className={styles.stats}>
                         <div className={styles.statCard}>
@@ -212,7 +221,7 @@ export const CampusLeaderboardPage: FC = () => {
                             <div>
                                 <div className={styles.statLabel}>Total Members in Group</div>
                                 <div className={styles.statValue}>
-                                    {data.summary.totalMembers.toLocaleString()}
+                                    {data?.summary.totalMembers.toLocaleString() ?? '-'}
                                 </div>
                             </div>
                         </div>
@@ -226,7 +235,7 @@ export const CampusLeaderboardPage: FC = () => {
                                     {' Registered to Any Challenge'}
                                 </div>
                                 <div className={styles.statValue}>
-                                    {data.summary.membersRegistered.toLocaleString()}
+                                    {data?.summary.membersRegistered.toLocaleString() ?? '-'}
                                 </div>
                             </div>
                         </div>
@@ -240,7 +249,7 @@ export const CampusLeaderboardPage: FC = () => {
                                     {' Submitted to Any Challenge'}
                                 </div>
                                 <div className={styles.statValue}>
-                                    {data.summary.membersSubmitted.toLocaleString()}
+                                    {data?.summary.membersSubmitted.toLocaleString() ?? '-'}
                                 </div>
                             </div>
                         </div>
@@ -265,19 +274,22 @@ export const CampusLeaderboardPage: FC = () => {
                         </button>
                     </div>
 
-                    <Table
-                        className={styles.lbTable}
-                        columns={columns}
-                        data={visibleMembers}
-                        disableSorting
-                        moreToLoad={visibleCount < members.length}
-                        onLoadMoreClick={onLoadMoreClick}
-                        onRowClick={onRowClick}
-                        removeDefaultSort
-                        rowClassName={rowClassName}
-                    />
+                    <div className={styles.tableWrapper}>
+                        <LoadingSpinner hide={!isLoading} />
+                        <Table
+                            className={styles.lbTable}
+                            columns={columns}
+                            data={visibleMembers}
+                            disableSorting
+                            moreToLoad={visibleCount < members.length}
+                            onLoadMoreClick={onLoadMoreClick}
+                            onRowClick={onRowClick}
+                            removeDefaultSort
+                            rowClassName={rowClassName}
+                        />
+                    </div>
 
-                    {!members.length && (
+                    {!isLoading && !members.length && (
                         <div className={styles.empty}>
                             {`No members were found in the ${displayGroupName} group.`}
                         </div>
