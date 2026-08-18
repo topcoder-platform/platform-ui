@@ -688,10 +688,19 @@ export async function deleteChallenge(challengeId: string): Promise<void> {
 }
 
 /**
- * Fetch default reviewers metadata.
+ * Fetches default reviewer metadata for a challenge configuration.
+ *
+ * @param typeIdOrFilters challenge type id for the legacy positional call, or type, track,
+ * and timeline-template filters for a template-specific lookup.
+ * @param trackId challenge track id used with the legacy positional call.
+ * @returns the normalized default reviewer rows matching the supplied configuration.
+ * @remarks The reviewer editor uses the filter-object form so challenges with multiple timeline
+ * templates receive the scorecards and reviewer phases configured for the selected template.
+ * @throws a normalized request error when the default-reviewer endpoint cannot be reached.
  */
 export async function fetchDefaultReviewers(
     typeIdOrFilters: string | {
+        timelineTemplateId?: string
         trackId?: string
         typeId?: string
     } | undefined,
@@ -711,6 +720,10 @@ export async function fetchDefaultReviewers(
 
     if (filters.trackId?.trim()) {
         query.set('trackId', filters.trackId.trim())
+    }
+
+    if (filters.timelineTemplateId?.trim()) {
+        query.set('timelineTemplateId', filters.timelineTemplateId.trim())
     }
 
     try {
