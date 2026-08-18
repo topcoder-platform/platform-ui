@@ -1499,7 +1499,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
     ])
 
     useEffect(() => {
-        if (!isDesignTrackSelected) {
+        if (!isDesignTrackSelected || props.screenerOnly) {
             return
         }
 
@@ -1526,6 +1526,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         formContext,
         getReviewerFieldIndex,
         isDesignTrackSelected,
+        props.screenerOnly,
         reviewerRows,
     ])
 
