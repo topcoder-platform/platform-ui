@@ -495,6 +495,45 @@ function normalizeTextValue(value: unknown): string {
 }
 
 /**
+ * Finds the first user-facing message in React Hook Form's nested validation errors.
+ *
+ * @param errors field-error tree supplied to the invalid-submit callback.
+ * @returns the first non-empty validation message, or `undefined` when none is available.
+ * @remarks Nested and array fields, including hidden reviewer rows, do not expose a root-level
+ * message. The save footer uses this helper so every rejected submit explains what must be fixed.
+ * @throws Does not throw; cyclic field references are ignored.
+ */
+function getFirstFormValidationMessage(errors: unknown): string | undefined {
+    const visitedValues = new Set<object>()
+
+    function findMessage(value: unknown): string | undefined {
+        if (!value || typeof value !== 'object' || visitedValues.has(value)) {
+            return undefined
+        }
+
+        visitedValues.add(value)
+
+        const message = normalizeTextValue((value as { message?: unknown }).message)
+        if (message) {
+            return message
+        }
+
+        for (const [key, childValue] of Object.entries(value)) {
+            if (key !== 'ref') {
+                const childMessage = findMessage(childValue)
+                if (childMessage) {
+                    return childMessage
+                }
+            }
+        }
+
+        return undefined
+    }
+
+    return findMessage(errors)
+}
+
+/**
  * Normalizes challenge term form values into term ids.
  *
  * The challenge editor usually stores terms as string ids, but persisted challenge payloads may
@@ -3967,13 +4006,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         ],
     )
 
-    const onInvalidSubmit = useCallback((): void => {
+    const onInvalidSubmit = useCallback((errors: unknown): void => {
         if (!validateDesignReviewCopilotSelection(getValues())) {
             return
         }
 
         setSaveStatus('idle')
-        setSaveValidationError(SAVE_VALIDATION_ERROR_MESSAGE)
+        setSaveValidationError(
+            getFirstFormValidationMessage(errors) || SAVE_VALIDATION_ERROR_MESSAGE,
+        )
     }, [
         getValues,
         validateDesignReviewCopilotSelection,

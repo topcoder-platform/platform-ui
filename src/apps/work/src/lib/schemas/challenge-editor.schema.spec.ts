@@ -376,6 +376,25 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
             .toBeTruthy()
     })
 
+    it('accepts a persisted member handle while its member id is resolved during save', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        handle: 'TCConnCopilot',
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
     it('rejects reviewer counts above the manual reviewer limit', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
