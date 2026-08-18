@@ -988,8 +988,8 @@ describe('ChallengeEditorForm', () => {
                 shouldOpenOpportunity: false,
             },
             {
+                handle: 'TCConnCopilot',
                 isMemberReview: true,
-                memberId: '40158994',
                 memberReviewerCount: 1,
                 phaseId: 'checkpoint-review-phase-id',
                 scorecardId: 'checkpoint-review-scorecard-id',
@@ -1004,16 +1004,16 @@ describe('ChallengeEditorForm', () => {
                 shouldOpenOpportunity: false,
             },
             {
+                handle: 'TCConnCopilot',
                 isMemberReview: true,
-                memberId: '40158994',
                 memberReviewerCount: 1,
                 phaseId: 'review-phase-id',
                 scorecardId: 'review-scorecard-id',
                 shouldOpenOpportunity: false,
             },
             {
+                handle: 'TCConnCopilot',
                 isMemberReview: true,
-                memberId: '40158994',
                 memberReviewerCount: 1,
                 phaseId: 'approval-phase-id',
                 scorecardId: 'approval-scorecard-id',
@@ -4518,6 +4518,30 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByTestId('location-display'))
                 .toHaveTextContent('/projects/100578/challenges/12345/view')
         })
+    })
+
+    it('shows the concrete schema error when saving an invalid draft', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validNewChallenge,
+                        description: '',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        expect(await screen.findByText('Public specification must be at least 10 characters'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Please fix validation errors before saving.'))
+            .not.toBeInTheDocument()
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
     })
 
     it('saves a new design draft before screening members are assigned', async () => {
