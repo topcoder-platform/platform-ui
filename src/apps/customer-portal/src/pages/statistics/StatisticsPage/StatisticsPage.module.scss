@@ -283,6 +283,7 @@
         :global(.highcharts-container),
         :global(.highcharts-root) {
             height: 370px !important;
+            z-index: unset !important;
         }
     }
 
@@ -502,6 +503,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    color: #3877EA!important;
 }
 
 .tooltipWins {

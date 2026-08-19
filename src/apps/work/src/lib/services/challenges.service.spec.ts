@@ -126,6 +126,25 @@ describe('fetchDefaultReviewers', () => {
                 },
             ])
     })
+
+    it('requests defaults for the selected timeline template', async () => {
+        const mockedGet = xhrGetAsync as jest.Mock
+
+        mockedGet.mockResolvedValue([])
+
+        await fetchDefaultReviewers({
+            timelineTemplateId: ' timeline-template-1 ',
+            trackId: ' track-1 ',
+            typeId: ' type-1 ',
+        })
+
+        expect(mockedGet)
+            .toHaveBeenCalledWith(
+                'https://example.com/default-reviewers'
+                + '?typeId=type-1&trackId=track-1&timelineTemplateId=timeline-template-1',
+                expect.any(Object),
+            )
+    })
 })
 
 describe('patchChallenge', () => {

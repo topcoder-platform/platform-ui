@@ -1186,6 +1186,10 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         control: formContext.control,
         name: 'typeId',
     }) as string | undefined
+    const timelineTemplateId = useWatch({
+        control: formContext.control,
+        name: 'timelineTemplateId',
+    }) as string | undefined
     const prizeSets = useWatch({
         control: formContext.control,
         name: 'prizeSets',
@@ -1564,6 +1568,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
     }, [selectedScorecardTrack, selectedScorecardType])
 
     useEffect(() => {
+        const selectedTimelineTemplateId = timelineTemplateId?.trim() || ''
         const selectedTypeId = typeId?.trim() || ''
         const selectedTrackId = trackId?.trim() || ''
 
@@ -1574,7 +1579,11 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
 
         let mounted = true
 
-        fetchDefaultReviewers(selectedTypeId, selectedTrackId)
+        fetchDefaultReviewers({
+            timelineTemplateId: selectedTimelineTemplateId || undefined,
+            trackId: selectedTrackId,
+            typeId: selectedTypeId,
+        })
             .then(fetchedDefaultReviewers => {
                 if (!mounted) {
                     return
@@ -1591,7 +1600,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         return () => {
             mounted = false
         }
-    }, [trackId, typeId])
+    }, [timelineTemplateId, trackId, typeId])
 
     useEffect(() => {
         const activeReviewerTypeFieldNames = new Set<string>()
