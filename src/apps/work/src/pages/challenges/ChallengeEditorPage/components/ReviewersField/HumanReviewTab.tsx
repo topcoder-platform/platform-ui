@@ -546,21 +546,43 @@ function getFallbackReviewerPhaseId(
         || getChallengePhaseId(phases[0])
 }
 
+/**
+ * Resolves the challenge phase targeted by a default reviewer row.
+ *
+ * @param defaultReviewer default reviewer configuration returned by the challenge API.
+ * @param phases current challenge phases used to validate ids and resolve phase-name-only defaults.
+ * @returns the matching challenge phase template id, or a selectable fallback when no match exists.
+ * @remarks Timeline-specific reviewer defaults commonly provide `phaseName` with a null `phaseId`,
+ * so the name must be resolved before using the legacy fallback.
+ * @throws Does not throw.
+ */
 function getReviewerPhaseId(
     defaultReviewer: DefaultReviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
 ): string | undefined {
+    const phaseRows = Array.isArray(phases)
+        ? phases
+        : []
     const defaultPhaseId = normalizeText(defaultReviewer?.phaseId)
 
     if (defaultPhaseId) {
-        const phaseRows = Array.isArray(phases)
-            ? phases
-            : []
         const hasMatchingPhase = !phaseRows.length
             || phaseRows.some(phase => getChallengePhaseId(phase) === defaultPhaseId)
 
         if (hasMatchingPhase) {
             return defaultPhaseId
+        }
+    }
+
+    const defaultPhaseName = normalizeKey(defaultReviewer?.phaseName)
+    if (defaultPhaseName) {
+        const matchingPhase = phaseRows.find(phase => (
+            normalizeKey(phase?.name) === defaultPhaseName
+        ))
+        const matchingPhaseId = getChallengePhaseId(matchingPhase)
+
+        if (matchingPhaseId) {
+            return matchingPhaseId
         }
     }
 

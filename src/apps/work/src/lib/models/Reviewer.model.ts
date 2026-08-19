@@ -44,6 +44,7 @@ export interface DefaultReviewer {
     memberReviewerCount?: number
     opportunityType?: string
     phaseId?: string
+    phaseName?: string
     roleId?: string
     scorecardId?: string
     shouldOpenOpportunity?: boolean
