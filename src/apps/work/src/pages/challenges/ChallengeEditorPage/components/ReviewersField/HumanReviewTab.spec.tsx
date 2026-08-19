@@ -1006,7 +1006,7 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
     })
 
-    it('repairs hidden legacy rows and assigns private reviewers to the copilot', async () => {
+    it('resolves phase-name-only defaults and assigns private reviewers to the copilot', async () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             tracks: [{
                 id: 'track-1',
@@ -1024,35 +1024,35 @@ describe('HumanReviewTab', () => {
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'checkpoint-review-phase-id',
+                        phaseName: 'Checkpoint Review',
                         scorecardId: 'checkpoint-review-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'review-phase-id',
+                        phaseName: 'Review',
                         scorecardId: 'review-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'checkpoint-screening-phase-id',
+                        phaseName: 'Checkpoint Screening',
                         scorecardId: 'checkpoint-screening-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'screening-phase-id',
+                        phaseName: 'Screening',
                         scorecardId: 'screening-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
                     {
                         isMemberReview: true,
                         memberReviewerCount: 1,
-                        phaseId: 'approval-phase-id',
+                        phaseName: 'Approval',
                         scorecardId: 'approval-scorecard-id',
                         shouldOpenOpportunity: false,
                     },
@@ -1063,27 +1063,27 @@ describe('HumanReviewTab', () => {
             {
                 id: 'checkpoint-review-scorecard-id',
                 name: 'Checkpoint Review Scorecard',
-                phaseId: 'checkpoint-review-phase-id',
+                type: 'CHECKPOINT_REVIEW',
             },
             {
                 id: 'review-scorecard-id',
                 name: 'Review Scorecard',
-                phaseId: 'review-phase-id',
+                type: 'REVIEW',
             },
             {
                 id: 'checkpoint-screening-scorecard-id',
                 name: 'Checkpoint Screening Scorecard',
-                phaseId: 'checkpoint-screening-phase-id',
+                type: 'CHECKPOINT_SCREENING',
             },
             {
                 id: 'screening-scorecard-id',
                 name: 'Screening Scorecard',
-                phaseId: 'screening-phase-id',
+                type: 'SCREENING',
             },
             {
                 id: 'approval-scorecard-id',
                 name: 'Approval Scorecard',
-                phaseId: 'approval-phase-id',
+                type: 'APPROVAL',
             },
         ])
 
