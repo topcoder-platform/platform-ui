@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.summary {
+    color: $black-80;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-5;
+    margin-bottom: $sp-4;
+}
+
+.challengeCell {
+    display: flex;
+    flex-direction: column;
+}
+
+.challengeName {
+    font-weight: 500;
+}
+
+.challengeMeta {
+    color: $black-60;
+    font-size: 12px;
+}
