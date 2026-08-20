@@ -16,7 +16,6 @@ import fullscreenIcon from './assets/fullscreen.svg'
 import memberGroupIcon from './assets/member-group.svg'
 import skillCognitionIcon from './assets/skill-cognition.svg'
 import styles from './StatisticsPage.module.scss'
-import { getName } from 'i18n-iso-countries'
 
 interface WorldMapProps {
     countries: StatisticsCountry[]
