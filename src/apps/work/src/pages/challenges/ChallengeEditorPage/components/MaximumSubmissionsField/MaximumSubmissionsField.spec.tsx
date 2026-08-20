@@ -46,7 +46,10 @@ interface TestHarnessProps {
         value: string
     }>
     deferDirty?: boolean
+    numOfCheckpointSubmissions?: number
+    numOfSubmissions?: number
     onMetadataWrite?: () => void
+    staleSubmissionLimitMode?: string
 }
 
 const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
@@ -55,12 +58,30 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
             description: 'Public challenge specification',
             metadata: props.defaultMetadata,
             name: 'Design challenge',
+            numOfCheckpointSubmissions: props.numOfCheckpointSubmissions,
+            numOfSubmissions: props.numOfSubmissions,
             skills: [],
             tags: [],
             trackId: 'design-track',
             typeId: 'design-type',
-        },
+            ...(props.staleSubmissionLimitMode
+                ? { submissionLimitCount: '', submissionLimitMode: props.staleSubmissionLimitMode }
+                : {}),
+        } as ChallengeEditorFormData,
     })
+    const resetToPersistedValues = useCallback(() => {
+        // Mirrors the editor resetting the form from saved challenge data, which drops the
+        // display-only submission-limit fields.
+        formMethods.reset({
+            description: 'Public challenge specification',
+            metadata: props.defaultMetadata,
+            name: 'Design challenge',
+            skills: [],
+            tags: [],
+            trackId: 'design-track',
+            typeId: 'design-type',
+        } as ChallengeEditorFormData)
+    }, [formMethods, props.defaultMetadata])
     const setValue = useCallback<typeof formMethods.setValue>((
         name,
         value,
@@ -83,6 +104,7 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
             setValue={setValue}
         >
             <MaximumSubmissionsField deferDirty={props.deferDirty} />
+            <button onClick={resetToPersistedValues} type='button'>Reset form</button>
             <output data-testid='dirty-value'>{String(formMethods.formState.isDirty)}</output>
             <output data-testid='metadata-value'>{JSON.stringify(values.metadata || [])}</output>
         </FormProvider>
@@ -360,5 +382,150 @@ describe('MaximumSubmissionsField', () => {
         })
         expect(onMetadataWrite)
             .toHaveBeenCalledTimes(1)
+    })
+    it('restores the persisted limit when the editor resets the form', async () => {
+        const user = userEvent.setup()
+        const limitedMetadata = [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count: '2',
+                limit: 'true',
+                unlimited: 'false',
+            }),
+        }]
+
+        render(<TestHarness defaultMetadata={limitedMetadata} />)
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        await user.click(screen.getByRole('button', { name: 'Reset form' }))
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+            expect((screen.getByRole('spinbutton', { name: 'Limit count' }) as HTMLInputElement).value)
+                .toBe('2')
+        })
+    })
+
+    it('replaces a stale selection with the persisted submission limit', async () => {
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '3',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]}
+                staleSubmissionLimitMode='unlimited'
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+            expect((screen.getByRole('spinbutton', { name: 'Limit count' }) as HTMLInputElement).value)
+                .toBe('3')
+        })
+        expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+            .toBe(false)
+    })
+
+    it('locks the submission limit once a submission has been uploaded', async () => {
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '2',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]}
+                numOfSubmissions={1}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).disabled)
+            .toBe(true)
+        expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).disabled)
+            .toBe(true)
+        expect((screen.getByRole('spinbutton', { name: 'Limit count' }) as HTMLInputElement).disabled)
+            .toBe(true)
+        expect(screen.getByText(
+            'The submission limit cannot be changed after the first submission is uploaded.',
+        ))
+            .toBeTruthy()
+    })
+
+    it('locks the submission limit once a checkpoint submission has been uploaded', async () => {
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]}
+                numOfCheckpointSubmissions={2}
+                numOfSubmissions={0}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).disabled)
+            .toBe(true)
+        expect(screen.getByText(
+            'The submission limit cannot be changed after the first submission is uploaded.',
+        ))
+            .toBeTruthy()
+    })
+
+    it('keeps the submission limit editable while no submission exists', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]}
+                numOfCheckpointSubmissions={0}
+                numOfSubmissions={0}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('radio', { name: 'Unlimited' }) as HTMLInputElement).checked)
+                .toBe(true)
+        })
+        expect((screen.getByRole('radio', { name: 'Limited' }) as HTMLInputElement).disabled)
+            .toBe(false)
+        expect(screen.queryByText(
+            'The submission limit cannot be changed after the first submission is uploaded.',
+        ))
+            .toBeNull()
+
+        await user.click(screen.getByRole('radio', { name: 'Limited' }))
+
+        expect(await screen.findByRole('spinbutton', { name: 'Limit count' }))
+            .toBeTruthy()
     })
 })
