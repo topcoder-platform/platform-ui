@@ -32,7 +32,12 @@ interface StubSelectProps {
 
 jest.mock('~/config', () => ({
     AppSubdomain: { campus: 'campus' },
-    EnvironmentConfig: { REPORTS_API: 'https://api.example.com/v6/reports', SUBDOMAIN: 'campus' },
+    EnvironmentConfig: {
+        REPORTS_API: 'https://api.example.com/v6/reports',
+        REVIEW: { CHALLENGE_PAGE_URL: 'https://review.example.test' },
+        SUBDOMAIN: 'campus',
+        URLS: { USER_PROFILE: 'https://profiles.example.test' },
+    },
 }), { virtual: true })
 
 jest.mock('~/libs/shared', () => ({
