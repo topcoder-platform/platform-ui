@@ -3,6 +3,16 @@ import type {
     ChallengeReviewer,
 } from '../models'
 
+const SCREENER_PHASE_NAMES = new Set([
+    'checkpoint screening',
+    'screening',
+])
+const DESIGN_COPILOT_ASSIGNED_PHASE_NAMES = new Set([
+    'approval',
+    'checkpoint review',
+    'review',
+])
+
 /**
  * Normalizes a reviewer or phase value for exact identifier and name comparisons.
  *
@@ -22,14 +32,18 @@ function normalizeReviewerValue(value: unknown): string {
  *
  * @param reviewer reviewer configuration whose phase should be inspected.
  * @param phases challenge phases used to resolve the reviewer's phase name.
- * @returns `true` for a human reviewer configured on Screening or Checkpoint Screening.
+ * @param isDesignChallenge whether the editor is configuring a Design `Challenge`, where the
+ * selected copilot is assigned to the private review phases during save.
+ * @returns `true` for a human reviewer configured on Screening or Checkpoint Screening, and for a
+ * human reviewer configured on Checkpoint Review, Review, or Approval of a Design `Challenge`.
  * @remarks Form validation and reviewer fields use this exception; every other reviewer phase
  * still requires assignments up front.
  * @throws Does not throw.
  */
-export function isScreenerAssignmentOptional(
+export function isReviewerAssignmentOptional(
     reviewer: ChallengeReviewer | undefined,
     phases: ChallengePhase[] | undefined,
+    isDesignChallenge: boolean = false,
 ): boolean {
     if (reviewer?.isMemberReview === false || !Array.isArray(phases)) {
         return false
@@ -51,8 +65,11 @@ export function isScreenerAssignmentOptional(
 
         return matchesPhase
             && (
-                normalizedPhaseName === 'screening'
-                || normalizedPhaseName === 'checkpoint screening'
+                SCREENER_PHASE_NAMES.has(normalizedPhaseName)
+                || (
+                    isDesignChallenge
+                    && DESIGN_COPILOT_ASSIGNED_PHASE_NAMES.has(normalizedPhaseName)
+                )
             )
     })
 }

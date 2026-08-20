@@ -18,7 +18,19 @@ import {
 import {
     isSkillsRequired,
 } from '../utils/challenge-editor.utils'
-import { isScreenerAssignmentOptional } from '../utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../utils/reviewer.utils'
+
+/**
+ * Validation context supplied to the challenge editor schema by the challenge editor form.
+ *
+ * @remarks The schema only receives form values, so track and type driven rules such as the
+ * Design `Challenge` reviewer assignment exception are provided through the resolver context.
+ */
+export interface ChallengeEditorValidationContext {
+    /** Whether the edited challenge is a Design `Challenge`, whose private reviewers are
+     * automatically assigned to the selected copilot during save. */
+    isDesignChallenge?: boolean
+}
 
 function isSchedulingApiEnabled(value: unknown): boolean {
     return value !== false
@@ -425,6 +437,9 @@ export const challengeAdvancedOptionsSchema = yup.object({
                 }
 
                 const phases = (this.parent as Partial<ChallengeEditorFormData>)?.phases
+                const isDesignChallenge = (
+                    this.options.context as ChallengeEditorValidationContext | undefined
+                )?.isDesignChallenge === true
 
                 for (let reviewerIndex = 0; reviewerIndex < value.length; reviewerIndex += 1) {
                     const reviewer = value[reviewerIndex] as ChallengeReviewer | undefined
@@ -433,7 +448,7 @@ export const challengeAdvancedOptionsSchema = yup.object({
                     const requiresMemberAssignments = !!reviewer
                         && isMemberReview
                         && !shouldOpenOpportunity
-                        && !isScreenerAssignmentOptional(reviewer, phases)
+                        && !isReviewerAssignmentOptional(reviewer, phases, isDesignChallenge)
 
                     if (requiresMemberAssignments) {
                         const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)

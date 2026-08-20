@@ -53,7 +53,7 @@ import {
     calculateEstimatedReviewerCost,
     getFirstPlacePrizeValue,
 } from '../../../../../lib/utils'
-import { isScreenerAssignmentOptional } from '../../../../../lib/utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../../../../../lib/utils/reviewer.utils'
 
 import { isAiReviewer } from './reviewers-field.utils'
 import {
@@ -94,6 +94,7 @@ const SCREENER_ROLE_NAME_BY_PHASE_KEY: Record<string, string> = {
     checkpointscreening: 'Checkpoint Screener',
     screening: 'Screener',
 }
+const CHALLENGE_TYPE_CHALLENGE_KEY = 'challenge'
 const DESIGN_COPILOT_REVIEW_PHASE_KEYS = new Set([
     'approval',
     'checkpointreview',
@@ -1493,6 +1494,8 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         },
         [challengeTypes, normalizedTypeId],
     )
+    const isDesignChallengeSelected = isDesignTrackSelected
+        && normalizeKey(selectedScorecardType) === CHALLENGE_TYPE_CHALLENGE_KEY
     const isLoading = isScorecardsLoading
     const reviewersValidationError = typeof reviewersFieldState.error?.message === 'string'
         ? reviewersFieldState.error.message
@@ -2591,7 +2594,7 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
 
     if (props.screenerOnly) {
         const isScreenerAssignmentRequired = screenerReviewerEntries.some(entry => (
-            !isScreenerAssignmentOptional(entry.reviewer, phases)
+            !isReviewerAssignmentOptional(entry.reviewer, phases, isDesignChallengeSelected)
         ))
         const isScreenerFieldLoading = resourceRolesResult.isLoading
             || challengeResourcesResult.isLoading
@@ -2682,7 +2685,11 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
                         || index
                     const reviewerKey = `${reviewerPrefix}-${reviewerIdentity}`
                     const shouldDisablePublicOpportunity = isDesignTrackSelected
-                    const isMemberAssignmentOptional = isScreenerAssignmentOptional(reviewer, phases)
+                    const isMemberAssignmentOptional = isReviewerAssignmentOptional(
+                        reviewer,
+                        phases,
+                        isDesignChallengeSelected,
+                    )
 
                     return (
                         <div

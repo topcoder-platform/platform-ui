@@ -948,6 +948,13 @@ describe('ChallengeEditorForm', () => {
         },
         typeId: 'design-challenge-type-id',
     } as Challenge
+    const designChallengeWithDeferredReviewers = {
+        ...designChallengeWithDeferredScreeners,
+        reviewers: designChallengeWithDeferredScreeners.reviewers?.map(reviewer => ({
+            ...reviewer,
+            memberId: undefined,
+        })),
+    } as Challenge
     const twoRoundDesignChallengeWithCopilotReviewers = {
         ...validDraftChallenge,
         copilot: 'TCConnCopilot',
@@ -2124,6 +2131,75 @@ describe('ChallengeEditorForm', () => {
                         expect.objectContaining({
                             phaseId: 'checkpoint-screening-phase-id',
                             scorecardId: 'checkpoint-screening-scorecard-id',
+                        }),
+                    ]),
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
+    it('launches a design draft before copilot assigned review members exist', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredReviewers,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={designChallengeWithDeferredReviewers}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
                         }),
                     ]),
                     status: 'ACTIVE',
