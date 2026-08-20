@@ -16,6 +16,7 @@ import {
     TableColumn,
 } from '~/libs/ui'
 import { ProfilePicture } from '~/libs/shared'
+import { EnvironmentConfig } from '~/config'
 
 import {
     CampusChallengeFilter,
@@ -68,6 +69,10 @@ function renderRank(member: CampusLeaderboardMember): JSX.Element {
  * @returns handle cell.
  */
 function renderHandle(member: CampusLeaderboardMember): JSX.Element {
+    const profileUrl: string | undefined = member.handle
+        ? `${EnvironmentConfig.URLS.USER_PROFILE}/${encodeURIComponent(member.handle)}`
+        : undefined
+
     return (
         <div className={styles.handleCell}>
             <ProfilePicture
@@ -78,12 +83,25 @@ function renderHandle(member: CampusLeaderboardMember): JSX.Element {
                     photoURL: member.photoURL ?? undefined,
                 }}
             />
-            <span
-                className={styles.handle}
-                style={member.ratingColor ? { color: member.ratingColor } : undefined}
-            >
-                {member.handle ?? member.userId}
-            </span>
+            {profileUrl ? (
+                <a
+                    className={styles.handle}
+                    href={profileUrl}
+                    rel='noopener noreferrer'
+                    style={member.ratingColor ? { color: member.ratingColor } : undefined}
+                    target='_blank'
+                    onClick={function (event: any) { event.stopPropagation() }}
+                >
+                    {member.handle}
+                </a>
+            ) : (
+                <span
+                    className={styles.handle}
+                    style={member.ratingColor ? { color: member.ratingColor } : undefined}
+                >
+                    {member.userId}
+                </span>
+            )}
         </div>
     )
 }
