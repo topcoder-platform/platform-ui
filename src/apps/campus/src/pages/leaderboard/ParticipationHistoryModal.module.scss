@@ -14,7 +14,16 @@
 }
 
 .challengeName {
+    align-items: center;
+    display: inline-flex;
     font-weight: 500;
+    gap: $sp-1;
+}
+
+.externalIcon {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
 }
 
 .challengeMeta {

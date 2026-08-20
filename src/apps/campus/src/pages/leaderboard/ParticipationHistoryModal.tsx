@@ -3,8 +3,9 @@
  */
 import { FC, useMemo } from 'react'
 
-import { BaseModal, Table, TableColumn } from '~/libs/ui'
+import { BaseModal, IconOutline, Table, TableColumn } from '~/libs/ui'
 import { textFormatDateLocaleShortString } from '~/libs/shared'
+import { EnvironmentConfig } from '~/config'
 
 import { CampusLeaderboardMember, CampusParticipation } from '../../lib/models'
 
@@ -36,6 +37,12 @@ function formatResult(entry: CampusParticipation): string {
         return entry.placement ? `Won (place ${entry.placement})` : 'Won'
     }
 
+    if (entry.challengeStatus !== 'COMPLETED') {
+        if (entry.challengeStatus === 'ACTIVE') {
+            return 'Challenge is in progress'
+        }
+    }
+
     if (entry.passedReview) {
         return 'Passed review'
     }
@@ -54,15 +61,27 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
         {
             columnId: 'challenge',
             label: 'Challenge',
-            renderer: (entry: CampusParticipation) => (
-                <div className={styles.challengeCell}>
-                    <span className={styles.challengeName}>{entry.challengeName ?? entry.challengeId}</span>
-                    <span className={styles.challengeMeta}>
-                        {[entry.challengeTrack, entry.challengeType].filter(Boolean)
-                            .join(' • ')}
-                    </span>
-                </div>
-            ),
+            renderer: (entry: CampusParticipation) => {
+                const challengePath = `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${encodeURIComponent(entry.challengeId)}`
+
+                return (
+                    <div className={styles.challengeCell}>
+                        <a
+                            className={styles.challengeName}
+                            href={challengePath}
+                            rel='noopener noreferrer'
+                            target='_blank'
+                        >
+                            {entry.challengeName ?? entry.challengeId}
+                            <IconOutline.ExternalLinkIcon className={styles.externalIcon} />
+                        </a>
+                        <span className={styles.challengeMeta}>
+                            {[entry.challengeTrack, entry.challengeType].filter(Boolean)
+                                .join(' • ')}
+                        </span>
+                    </div>
+                )
+            },
             type: 'element',
         },
         {
@@ -93,7 +112,7 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
         <BaseModal
             onClose={props.onClose}
             open
-            size='lg'
+            size='body'
             title={`${member.handle ?? member.userId} — Participation History`}
         >
             <div className={styles.summary}>
