@@ -32,9 +32,26 @@ function formatDate(value: string | null): string {
  * @param entry participation entry.
  * @returns human readable result.
  */
+function formatPlacement(placement: number | null): string | undefined {
+    if (placement === 2) {
+        return '2nd place'
+    }
+
+    if (placement === 3) {
+        return '3rd place'
+    }
+
+    return placement && placement > 1 ? `Place ${placement}` : undefined
+}
+
 function formatResult(entry: CampusParticipation): string {
     if (entry.won) {
         return entry.placement ? `Won (place ${entry.placement})` : 'Won'
+    }
+
+    const placement = formatPlacement(entry.placement)
+    if (placement) {
+        return placement
     }
 
     if (entry.challengeStatus !== 'COMPLETED') {
