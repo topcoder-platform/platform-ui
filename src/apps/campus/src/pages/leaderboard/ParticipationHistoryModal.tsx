@@ -62,7 +62,8 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
             columnId: 'challenge',
             label: 'Challenge',
             renderer: (entry: CampusParticipation) => {
-                const challengePath = `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${encodeURIComponent(entry.challengeId)}`
+                const challengePath
+                    = `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${encodeURIComponent(entry.challengeId)}`
 
                 return (
                     <div className={styles.challengeCell}>
