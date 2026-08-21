@@ -26,6 +26,9 @@ import { CampusLeaderboardResource, useCampusLeaderboard } from '../../lib/hooks
 
 import { ParticipationHistoryModal } from './ParticipationHistoryModal'
 import { RankingRulesModal } from './RankingRulesModal'
+import { ReactComponent as RankMedal1Icon } from './assets/ic-rank-medal-1.svg'
+import { ReactComponent as RankMedal2Icon } from './assets/ic-rank-medal-2.svg'
+import { ReactComponent as RankMedal3Icon } from './assets/ic-rank-medal-3.svg'
 import styles from './CampusLeaderboardPage.module.scss'
 
 const PAGE_SIZE: number = 50
@@ -36,28 +39,26 @@ const CHALLENGE_FILTER_OPTIONS: ReadonlyArray<InputSelectOption> = [
     { label: 'Campus Challenges', value: 'campus' },
 ]
 
-const RANK_MEDAL_CLASSES: { [rank: number]: string } = {
-    1: styles.gold,
-    2: styles.silver,
-    3: styles.bronze,
+const RANK_MEDAL_ICONS: { [rank: number]: FC<{ className?: string }> } = {
+    1: RankMedal1Icon,
+    2: RankMedal2Icon,
+    3: RankMedal3Icon,
 }
 
 /**
- * Marks rows that open the participation history modal.
- *
- * @param member leaderboard row.
- * @returns row class name, when the row is clickable.
- */
-/**
- * Renders a rank badge, medal-styled for the top three ranks.
+ * Renders a rank, as a medal for the top three ranks.
  *
  * @param member leaderboard row.
  * @returns rank cell.
  */
 function renderRank(member: CampusLeaderboardMember): JSX.Element {
+    const MedalIcon: FC<{ className?: string }> | undefined = RANK_MEDAL_ICONS[member.rank]
+
     return (
-        <span className={classNames(styles.rank, RANK_MEDAL_CLASSES[member.rank])}>
-            {member.rank}
+        <span className={styles.placement}>
+            {MedalIcon
+                ? <MedalIcon className={styles.medal} />
+                : <span className={styles.rank}>{member.rank}</span>}
         </span>
     )
 }
@@ -144,18 +145,21 @@ export const CampusLeaderboardPage: FC = () => {
 
     const columns = useMemo<ReadonlyArray<TableColumn<CampusLeaderboardMember>>>(() => [
         {
+            className: styles.colRank,
             columnId: 'rank',
             label: 'Rank',
             renderer: renderRank,
             type: 'element',
         },
         {
+            className: styles.colHandle,
             columnId: 'handle',
             label: 'Handle',
             renderer: renderHandle,
             type: 'element',
         },
         {
+            className: styles.colNumber,
             columnId: 'registrations',
             label: 'Number of Registrations',
             propertyName: 'registrations',
@@ -163,6 +167,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'number',
         },
         {
+            className: styles.colNumber,
             columnId: 'submissions',
             label: 'Number of Submissions',
             propertyName: 'submissions',
@@ -170,6 +175,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'number',
         },
         {
+            className: styles.colNumber,
             columnId: 'passingSubmissions',
             label: 'Number of Passing Submissions',
             propertyName: 'passingSubmissions',
@@ -178,6 +184,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'number',
         },
         {
+            className: styles.colNumber,
             columnId: 'wins',
             label: 'Number of Wins',
             renderer: (member: CampusLeaderboardMember) => (
@@ -186,6 +193,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'numberElement',
         },
         {
+            className: styles.colChevron,
             columnId: 'open',
             label: '',
             renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (
@@ -215,14 +223,6 @@ export const CampusLeaderboardPage: FC = () => {
     return (
         <ContentLayout>
             <PageTitle>Campus Program Leaderboard</PageTitle>
-
-            <div className={styles.header}>
-                <h1>Campus Program Leaderboard</h1>
-                <p className={styles.subtitle}>
-                    {`Track participation and performance of members in the ${displayGroupName} `}
-                    group across challenges.
-                </p>
-            </div>
 
             {!!error && (
                 <div className={styles.error}>
@@ -276,43 +276,51 @@ export const CampusLeaderboardPage: FC = () => {
                         </div>
                     </div>
 
-                    <div className={styles.toolbar}>
-                        <div className={styles.filter}>
-                            <InputSelect
-                                name='challengeFilter'
-                                onChange={onFilterChange}
-                                options={CHALLENGE_FILTER_OPTIONS}
-                                value={challengeFilter}
+                    <div className={styles.card}>
+                        <h1 className={styles.title}>Campus Program Leaderboard</h1>
+                        <p className={styles.subtitle}>
+                            {`Track participation and performance of members in the ${displayGroupName} `}
+                            group across challenges.
+                        </p>
+
+                        <div className={styles.toolbar}>
+                            <div className={styles.filter}>
+                                <InputSelect
+                                    name='challengeFilter'
+                                    onChange={onFilterChange}
+                                    options={CHALLENGE_FILTER_OPTIONS}
+                                    value={challengeFilter}
+                                />
+                            </div>
+                            <button
+                                className={styles.rulesLink}
+                                onClick={function onRulesClick() { setRulesVisible(true) }}
+                                type='button'
+                            >
+                                <IconOutline.QuestionMarkCircleIcon />
+                                How rankings are calculated
+                            </button>
+                        </div>
+
+                        <div className={styles.tableWrapper}>
+                            <LoadingSpinner hide={!isLoading} />
+                            <Table
+                                className={styles.lbTable}
+                                columns={columns}
+                                data={visibleMembers}
+                                disableSorting
+                                moreToLoad={visibleCount < members.length}
+                                onLoadMoreClick={onLoadMoreClick}
+                                removeDefaultSort
                             />
                         </div>
-                        <button
-                            className={styles.rulesLink}
-                            onClick={function onRulesClick() { setRulesVisible(true) }}
-                            type='button'
-                        >
-                            <IconOutline.QuestionMarkCircleIcon />
-                            How rankings are calculated
-                        </button>
-                    </div>
 
-                    <div className={styles.tableWrapper}>
-                        <LoadingSpinner hide={!isLoading} />
-                        <Table
-                            className={styles.lbTable}
-                            columns={columns}
-                            data={visibleMembers}
-                            disableSorting
-                            moreToLoad={visibleCount < members.length}
-                            onLoadMoreClick={onLoadMoreClick}
-                            removeDefaultSort
-                        />
+                        {!isLoading && !members.length && (
+                            <div className={styles.empty}>
+                                {`No members were found in the ${displayGroupName} group.`}
+                            </div>
+                        )}
                     </div>
-
-                    {!isLoading && !members.length && (
-                        <div className={styles.empty}>
-                            {`No members were found in the ${displayGroupName} group.`}
-                        </div>
-                    )}
                 </>
             )}
 
