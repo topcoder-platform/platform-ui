@@ -62,6 +62,7 @@ import {
 } from '../../../../lib/models'
 import {
     challengeEditorSchema,
+    ChallengeEditorValidationContext,
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
@@ -91,7 +92,7 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../lib/utils/metadata.utils'
-import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
@@ -1402,6 +1403,7 @@ async function hydratePersistedManualReviewerAssignments(
 function getReviewerEntryValidationError(
     reviewer: Reviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
+    isDesignChallenge: boolean,
 ): string | undefined {
     if (!reviewer) {
         return undefined
@@ -1424,7 +1426,7 @@ function getReviewerEntryValidationError(
 
         if (
             reviewer.shouldOpenOpportunity !== true
-            && !isScreenerAssignmentOptional(reviewer, phases)
+            && !isReviewerAssignmentOptional(reviewer, phases, isDesignChallenge)
         ) {
             const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
@@ -1466,6 +1468,7 @@ interface ReviewerValidationOptions {
     challengeTypeAbbreviation?: string
     challengeTypeName?: string
     requiredReviewersErrorMessage: string
+    isDesignChallenge: boolean
     isTaskChallenge: boolean
 }
 
@@ -1494,7 +1497,11 @@ function getReviewerValidationError(
     }
 
     const invalidReviewer = reviewers
-        .map(reviewer => getReviewerEntryValidationError(reviewer, formData.phases))
+        .map(reviewer => getReviewerEntryValidationError(
+            reviewer,
+            formData.phases,
+            options.isDesignChallenge,
+        ))
         .find(Boolean)
     if (invalidReviewer) {
         return invalidReviewer
@@ -2079,7 +2086,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
+    const validationContextRef = useRef<ChallengeEditorValidationContext>({
+        isDesignChallenge: false,
+    })
     const formMethods = useForm<ChallengeEditorFormData>({
+        context: validationContextRef.current,
         defaultValues: applyProjectBillingToChallengeFormData(
             transformChallengeToFormData(props.challenge),
             projectBillingAccount,
@@ -2403,6 +2414,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         && !workAppContext.isManager
     const shouldUseSimplifiedDesignReview = isDesignTrackSelected
         && isChallengeTypeSelected
+
+    useEffect(() => {
+        if (validationContextRef.current.isDesignChallenge === shouldUseSimplifiedDesignReview) {
+            return
+        }
+
+        validationContextRef.current.isDesignChallenge = shouldUseSimplifiedDesignReview
+        trigger('reviewers')
+            .catch(() => undefined)
+    }, [
+        shouldUseSimplifiedDesignReview,
+        trigger,
+    ])
     /**
      * Validates the copilot required for hidden private Design reviewer assignments.
      *
@@ -3990,6 +4014,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
+                    isDesignChallenge: shouldUseSimplifiedDesignReview,
                     isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',

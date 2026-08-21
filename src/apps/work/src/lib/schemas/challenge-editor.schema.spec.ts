@@ -356,6 +356,81 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
             .toBeTruthy()
     })
 
+    it('accepts unassigned Design copilot review phases', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    phases: [
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                },
+                {
+                    context: {
+                        isDesignChallenge: true,
+                    },
+                },
+            ),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('still requires review assignments outside Design challenges', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    phases: [{
+                        name: 'Review',
+                        phaseId: 'review-phase-id',
+                    }],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                },
+                {
+                    context: {
+                        isDesignChallenge: false,
+                    },
+                },
+            ),
+        )
+            .rejects
+            .toMatchObject({
+                path: 'reviewers[0].memberId',
+            })
+    })
+
     it('accepts required reviewer slot assignments when opportunity is closed', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
