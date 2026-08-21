@@ -21,6 +21,7 @@ export interface FormRadioOption<T extends boolean | string = string> {
 
 interface FormRadioGroupProps {
     disabled?: boolean
+    hint?: string
     label: string
     name: string
     onChange?: (value: boolean | string) => void
@@ -66,6 +67,7 @@ export const FormRadioGroup: FC<FormRadioGroupProps> = (props: FormRadioGroupPro
     return (
         <FormFieldWrapper
             error={fieldState.error?.message}
+            hint={props.hint}
             label={props.label}
             name={props.name}
             required={props.required}

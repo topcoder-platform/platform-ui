@@ -30,6 +30,8 @@ const SUBMISSION_LIMIT_COUNT_FIELD = 'submissionLimitCount'
 const SUBMISSION_LIMIT_MODE_FIELD = 'submissionLimitMode'
 const LIMITED_MODE = 'limited'
 const UNLIMITED_MODE = 'unlimited'
+const SUBMITTED_LIMIT_LOCK_HINT
+    = 'The submission limit cannot be changed after the first submission is uploaded.'
 
 type SubmissionLimitMode = typeof LIMITED_MODE | typeof UNLIMITED_MODE
 
@@ -196,7 +198,16 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         control,
         name: SUBMISSION_LIMIT_COUNT_FIELD,
     }) as string | undefined
+    const numOfSubmissions = useWatch({
+        control,
+        name: 'numOfSubmissions',
+    }) as number | string | undefined
+    const numOfCheckpointSubmissions = useWatch({
+        control,
+        name: 'numOfCheckpointSubmissions',
+    }) as number | string | undefined
     const submissionLimitValue = getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD)
+    const isLocked = Number(numOfSubmissions || 0) + Number(numOfCheckpointSubmissions || 0) > 0
 
     const persistSubmissionLimitMetadata = useCallback((
         mode: SubmissionLimitMode,
@@ -226,43 +237,41 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         setValue,
     ])
 
+    /*
+     * The selection and count are display-only fields, so every editor form reset drops them
+     * without changing any value this component watches. Running on each render re-seeds them
+     * from the current challenge metadata, which keeps the saved limit visible after the
+     * challenge loads and after a draft save resets the form.
+     */
     useEffect(() => {
-        if (submissionLimitMode !== undefined && submissionLimitCount !== undefined) {
-            return
-        }
-
-        const currentSubmissionLimitMetadata = parseSubmissionLimitMetadata(
+        const currentSubmissionLimit = parseSubmissionLimitMetadata(
             getMetadataValue(getValues('metadata'), SUBMISSION_LIMIT_FIELD),
         )
 
-        if (submissionLimitMode === undefined) {
-            setValue(
-                SUBMISSION_LIMIT_MODE_FIELD,
-                currentSubmissionLimitMetadata.mode,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
+        if (
+            submissionLimitMode === currentSubmissionLimit.mode
+            && (submissionLimitCount || '') === currentSubmissionLimit.count
+        ) {
+            return
         }
 
-        if (submissionLimitCount === undefined) {
-            setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD,
-                currentSubmissionLimitMetadata.count,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-    }, [
-        getValues,
-        setValue,
-        submissionLimitCount,
-        submissionLimitMode,
-        submissionLimitValue,
-    ])
+        setValue(
+            SUBMISSION_LIMIT_MODE_FIELD,
+            currentSubmissionLimit.mode,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+        setValue(
+            SUBMISSION_LIMIT_COUNT_FIELD,
+            currentSubmissionLimit.count,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+    })
 
     useEffect(() => {
         if (props.deferDirty) {
@@ -332,6 +341,10 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
     return (
         <div className={styles.container}>
             <FormRadioGroup
+                disabled={isLocked}
+                hint={isLocked
+                    ? SUBMITTED_LIMIT_LOCK_HINT
+                    : undefined}
                 label='Submission limit'
                 name={SUBMISSION_LIMIT_MODE_FIELD}
                 onChange={handleModeChange}
@@ -342,6 +355,7 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
                 ? (
                     <FormTextField
                         className={styles.countField}
+                        disabled={isLocked}
                         label='Limit count'
                         min={1}
                         name={SUBMISSION_LIMIT_COUNT_FIELD}

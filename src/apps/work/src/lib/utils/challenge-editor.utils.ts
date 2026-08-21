@@ -1046,6 +1046,7 @@ export function transformChallengeToFormData(
             milestoneDurationDays: normalizeOptionalNumber(milestoneConfiguration.milestoneDurationDays),
         },
         name,
+        numOfCheckpointSubmissions: normalizeOptionalNumber(challenge?.numOfCheckpointSubmissions),
         numOfSubmissions: normalizeOptionalNumber(challenge?.numOfSubmissions),
         phases,
         privateDescription,
