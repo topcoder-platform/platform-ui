@@ -83,7 +83,10 @@ import {
     isSubmissionReviewerActionRow,
     resolveSubmissionReviewResult,
 } from '../common/reviewResult'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import {
+    isAiFailedReviewSubmission,
+    shouldIncludeInReviewPhase,
+} from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import { EscalationModals } from './EscalationModals'
@@ -149,9 +152,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const isTablet = useMemo<boolean>(() => screenWidth <= 744, [screenWidth])
     const reviewPhaseDatas = useMemo<SubmissionInfo[]>(
-        () => datas.filter(submission => shouldIncludeInReviewPhase(
-            submission,
-            challengeInfo?.phases,
+        () => datas.filter(submission => (
+            // AI-locked submissions may carry no Review-phase review yet, but reviewers and
+            // copilots still need the row to escalate, verify, or unlock them.
+            isAiFailedReviewSubmission(submission)
+            || shouldIncludeInReviewPhase(submission, challengeInfo?.phases)
         )),
         [challengeInfo?.phases, datas],
     )
@@ -278,7 +283,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     return true
                 }
 
-                return (submission.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
+                return isAiFailedReviewSubmission(submission)
             },
         ),
         [props.screeningOutcome.failingSubmissionIds],
@@ -370,7 +375,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         submission: SubmissionReviewerRow,
         decision?: AiReviewEscalationDecision,
     ): boolean => {
-        if (submission.status !== 'AI_FAILED_REVIEW') {
+        if (!isAiFailedReviewSubmission(submission)) {
             return false
         }
 
@@ -839,15 +844,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )
         }
 
-        appendAction(buildPrimaryAction(), 'primary')
         if (submission.isFirstReviewerRow) {
+            appendAction(buildPrimaryAction(), 'primary')
             appendAction(buildEscalateAction(), 'escalate')
             appendAction(buildVerifyAction(), 'verify')
             appendAction(buildUnlockAction(), 'unlock')
             appendAction(buildHistoryAction(), 'history')
+            appendAction(buildReopenAction(), 'reopen')
         }
-
-        appendAction(buildReopenAction(), 'reopen')
 
         if (!actionEntries.length) {
             return (
