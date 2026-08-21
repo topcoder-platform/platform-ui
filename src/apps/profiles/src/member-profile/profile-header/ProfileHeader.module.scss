@@ -29,6 +29,10 @@
             border: 12px solid $tc-white;
             border-radius: 50%;
 
+            img {
+                min-width: 150px;
+            }
+
             @include ltelg {
                 width: 250px;
                 height: 250px;
@@ -166,7 +170,7 @@
   white-space: normal;
   max-width: 240px;
   word-wrap: break-word;
-  font-size: 14px; 
+  font-size: 14px;
 }
 
 .statusRow {
