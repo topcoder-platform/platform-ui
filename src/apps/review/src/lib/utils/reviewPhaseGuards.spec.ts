@@ -1,6 +1,10 @@
 import type { BackendPhase, SubmissionInfo } from '../models'
 
-import { isContestReviewPhaseSubmission } from './reviewPhaseGuards'
+import {
+    isAiFailedReviewSubmission,
+    isContestReviewPhaseSubmission,
+    shouldIncludeInReviewPhase,
+} from './reviewPhaseGuards'
 
 const reviewPhase: BackendPhase = {
     constraints: [],
@@ -91,5 +95,36 @@ describe('isContestReviewPhaseSubmission', () => {
             'Review',
         ))
             .toBe(false)
+    })
+})
+
+describe('isAiFailedReviewSubmission', () => {
+    it('detects AI-locked submissions regardless of status casing', () => {
+        expect(isAiFailedReviewSubmission({ status: 'AI_FAILED_REVIEW' } as SubmissionInfo))
+            .toBe(true)
+        expect(isAiFailedReviewSubmission({ status: 'ai_failed_review' } as SubmissionInfo))
+            .toBe(true)
+    })
+
+    it('ignores other submission statuses', () => {
+        expect(isAiFailedReviewSubmission({ status: 'ACTIVE' } as SubmissionInfo))
+            .toBe(false)
+        expect(isAiFailedReviewSubmission(undefined))
+            .toBe(false)
+    })
+
+    it('keeps AI-failed submissions visible even when the phase guard excludes them', () => {
+        const aiFailedSubmission = {
+            id: 'submission-ai-failed',
+            memberId: '1001',
+            status: 'AI_FAILED_REVIEW',
+            type: 'Contest Submission',
+        } as SubmissionInfo
+
+        // No review-phase hints, so the phase guard alone would drop the row.
+        expect(shouldIncludeInReviewPhase(aiFailedSubmission, [reviewPhase]))
+            .toBe(false)
+        expect(isAiFailedReviewSubmission(aiFailedSubmission))
+            .toBe(true)
     })
 })
