@@ -844,12 +844,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )
         }
 
-        appendAction(buildPrimaryAction(), 'primary')
-        appendAction(buildEscalateAction(), 'escalate')
-        appendAction(buildVerifyAction(), 'verify')
-        appendAction(buildUnlockAction(), 'unlock')
-        appendAction(buildHistoryAction(), 'history')
-        appendAction(buildReopenAction(), 'reopen')
+        if (submission.isFirstReviewerRow) {
+            appendAction(buildPrimaryAction(), 'primary')
+            appendAction(buildEscalateAction(), 'escalate')
+            appendAction(buildVerifyAction(), 'verify')
+            appendAction(buildUnlockAction(), 'unlock')
+            appendAction(buildHistoryAction(), 'history')
+            appendAction(buildReopenAction(), 'reopen')
+        }
 
         if (!actionEntries.length) {
             return (
