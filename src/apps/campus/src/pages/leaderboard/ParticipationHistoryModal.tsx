@@ -89,6 +89,7 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
                             href={challengePath}
                             rel='noopener noreferrer'
                             target='_blank'
+                            onClick={function (event: any) { event.stopPropagation() }}
                         >
                             {entry.challengeName ?? entry.challengeId}
                             <IconOutline.ExternalLinkIcon className={styles.externalIcon} />
