@@ -512,9 +512,36 @@ jest.mock('./ChallengePrivateDescriptionField', () => ({
         />
     ),
 }))
-jest.mock('./ChallengePrizesField', () => ({
-    ChallengePrizesField: () => <></>,
-}))
+jest.mock('./ChallengePrizesField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        ChallengePrizesField: function ChallengePrizesField() {
+            const formContext = reactHookForm.useFormContext()
+            const handleSetPlacementPrize = (): void => {
+                formContext.setValue('prizeSets', [{
+                    prizes: [{
+                        type: 'USD',
+                        value: 500,
+                    }],
+                    type: 'PLACEMENT',
+                }], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+
+            return (
+                <button
+                    onClick={handleSetPlacementPrize}
+                    type='button'
+                >
+                    Mock Set Placement Prize
+                </button>
+            )
+        },
+    }
+})
 jest.mock('./ChallengeSkillsField', () => ({
     ChallengeSkillsField: () => <></>,
 }))
@@ -1428,6 +1455,59 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Reject Budget' }))
             .toBeNull()
+    })
+
+    it('shows budget approval actions after saving a new challenge without persisted prizes', async () => {
+        const user = userEvent.setup()
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['manager'],
+        }
+        // Challenges in 'New' status are created before the prizes section is available, so the
+        // fetched challenge snapshot still has no persisted prize sets while the form is edited.
+        const newChallengeWithoutPrizes = {
+            ...validNewChallenge,
+            approvalStatus: 'PENDING_APPROVAL',
+            prizeSets: undefined,
+        } as Challenge
+        const renderForm = (isReadOnly: boolean): React.ReactElement => (
+            <MemoryRouter initialEntries={['/projects/3001/challenges/12345/edit']}>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={newChallengeWithoutPrizes}
+                        isEditMode={!isReadOnly}
+                        isReadOnly={isReadOnly}
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>
+        )
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validNewChallenge,
+            approvalStatus: 'PENDING_APPROVAL',
+            status: 'DRAFT',
+        })
+
+        const renderResult = render(renderForm(false))
+
+        await user.click(screen.getByRole('button', { name: 'Mock Set Placement Prize' }))
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'DRAFT',
+                }))
+        })
+
+        // The saved form stays mounted while the successful save redirects to the read-only view.
+        renderResult.rerender(renderForm(true))
+
+        expect(screen.getByRole('button', { name: 'Approve Budget' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Reject Budget' }))
+            .toBeInTheDocument()
     })
 
     it('hides the editable timeline section for task challenges in edit mode', () => {

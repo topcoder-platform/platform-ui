@@ -54,6 +54,7 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    PrizeSet,
     Resource,
     ResourceRole,
     Reviewer,
@@ -1887,6 +1888,19 @@ function getApprovalStatusText(approvalStatus: string | undefined): string {
     return 'Pending Approval'
 }
 
+/**
+ * Detects whether a persisted challenge snapshot already stores at least one prize.
+ *
+ * @param prizeSets prize sets returned by challenge-api for the challenge.
+ * @returns `true` when any prize set contains at least one prize.
+ * @remarks Used by the budget approval actions so approvers only act on prizes
+ * that challenge-api already persisted.
+ */
+function hasPrizeSetWithPrizes(prizeSets: PrizeSet[] | undefined): boolean {
+    return Array.isArray(prizeSets)
+        && prizeSets.some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0)
+}
+
 interface TaskLaunchValidationParams {
     assignedMemberId?: unknown
     currentStatus?: unknown
@@ -2056,6 +2070,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
     const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    // Tracks the prize sets challenge-api has stored so budget approval actions can appear
+    // right after a save instead of waiting for the challenge prop to be refetched.
+    const [persistedPrizeSets, setPersistedPrizeSets] = useState<PrizeSet[] | undefined>(
+        props.challenge?.prizeSets,
+    )
     const [showApproveBudgetModal, setShowApproveBudgetModal] = useState<boolean>(false)
     const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
@@ -2316,10 +2335,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         projectResult.project,
     )
     const hasPersistedPrizeSets = useMemo(
-        () => Array.isArray(props.challenge?.prizeSets)
-            && props.challenge?.prizeSets
-                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
-        [props.challenge?.prizeSets],
+        () => hasPrizeSetWithPrizes(persistedPrizeSets),
+        [persistedPrizeSets],
     )
     const hasUnsavedPrizeSetChanges = useMemo(
         () => {
@@ -2908,6 +2925,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         challengeRef.current = props.challenge
     }, [props.challenge])
+
+    useEffect(() => {
+        setPersistedPrizeSets(props.challenge?.prizeSets)
+    }, [props.challenge?.prizeSets])
 
     useEffect(() => {
         currentChallengeIdRef.current = currentChallengeId
@@ -3611,6 +3632,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         savedChallengeSnapshot = savedChallenge
                     }
                 }
+
+                setPersistedPrizeSets(savedChallengeSnapshot.prizeSets)
 
                 const persistedFormData = applyProjectBillingToChallengeFormData(
                     transformChallengeToFormData(savedChallengeSnapshot),
