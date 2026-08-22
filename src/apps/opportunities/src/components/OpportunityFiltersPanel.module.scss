@@ -1,0 +1,232 @@
+.panel {
+    align-self: start;
+    background: #fff;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    width: 100%;
+
+    h3,
+    legend {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-weight: 700;
+        text-transform: none;
+    }
+
+    h3 {
+        font-size: 18px;
+        line-height: 30px;
+        margin: 0;
+    }
+
+    legend {
+        font-size: 14px;
+        line-height: 22px;
+        margin-bottom: 8px;
+    }
+
+    small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    fieldset {
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.competitions {
+    min-height: 740px;
+}
+
+.heading {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+
+    button {
+        background: none;
+        border: 0;
+        color: #007d79;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 700;
+        height: 24px;
+        line-height: 22px;
+        padding: 0;
+    }
+}
+
+.searchGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+        margin: 0;
+    }
+}
+
+.search {
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    gap: 4px;
+    height: 38px;
+    padding: 0 16px;
+
+    svg {
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
+    }
+
+    input {
+        border: 0;
+        color: #161616;
+        font: inherit;
+        font-size: 16px;
+        line-height: 22px;
+        min-width: 0;
+        outline: none;
+        padding: 7px 0;
+        width: 100%;
+
+        &::placeholder {
+            color: #6f6f6f;
+            opacity: 1;
+        }
+    }
+
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
+.selectGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    > strong {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        line-height: 22px;
+    }
+}
+
+.select {
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    height: 38px;
+    position: relative;
+
+    select {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        font: inherit;
+        font-size: 16px;
+        height: 100%;
+        line-height: 22px;
+        outline: 0;
+        padding: 0 44px 0 16px;
+        width: 100%;
+    }
+
+    .placeholder {
+        color: #6f6f6f;
+    }
+
+    svg {
+        height: 20px;
+        pointer-events: none;
+        position: absolute;
+        right: 16px;
+        width: 20px;
+    }
+
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
+.checkRow,
+.radioRow {
+    align-items: center;
+    color: #161616;
+    cursor: pointer;
+    display: flex;
+    font-size: 16px;
+    gap: 8px;
+    height: 32px;
+    line-height: 22px;
+
+    input {
+        appearance: none;
+        background: #fff;
+        border: 1px solid #a8a8a8;
+        border-radius: 4px;
+        flex: 0 0 16px;
+        height: 16px;
+        margin: 0;
+        width: 16px;
+
+        &:checked[type='checkbox'] {
+            background: url('../assets/filter-checkbox-checked.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &[type='radio'] {
+            border-radius: 50%;
+        }
+
+        &:checked[type='radio'] {
+            background: url('../assets/filter-radio-selected.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #161616;
+            outline-offset: 2px;
+        }
+    }
+}
+
+.visuallyHidden {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+@media (max-width: 760px) {
+    .panel {
+        min-height: 0;
+        position: static;
+    }
+}

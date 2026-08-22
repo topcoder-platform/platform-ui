@@ -1,0 +1,221 @@
+.hero {
+    background: #001e2e;
+    color: #fff;
+    height: 246px;
+    min-height: 246px;
+    overflow: visible;
+    position: relative;
+}
+
+.inner {
+    margin: 0 auto;
+    max-width: 1248px;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+
+    h1 {
+        color: #fff;
+        font-family: 'Figtree', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 40px;
+        margin: 0;
+        text-transform: none;
+
+        span {
+            color: #3ddbd9;
+        }
+    }
+}
+
+.map {
+    background: url('../assets/opportunity-map.svg') center / contain no-repeat;
+    height: 420px;
+    left: calc(50% + 360.5px);
+    pointer-events: none;
+    position: absolute;
+    top: -23px;
+    transform: translateX(-50%);
+    width: 753px;
+}
+
+.breadcrumbs {
+    align-items: center;
+    color: rgba(255, 255, 255, .6);
+    display: flex;
+    font-size: 14px;
+    gap: 8px;
+    height: 66px;
+    line-height: 20px;
+
+    > a {
+        color: rgba(255, 255, 255, .6);
+        text-decoration: none;
+    }
+
+    > span:last-child {
+        color: #fff;
+    }
+}
+
+.subtitle {
+    color: #fff;
+    font-size: 20px;
+    line-height: 28px;
+    margin: 8px 0 40px;
+}
+
+.summaryError {
+    align-items: center;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 4px;
+    display: flex;
+    font-size: 12px;
+    gap: 12px;
+    left: 24px;
+    margin: 0;
+    max-width: max-content;
+    padding: 7px 10px;
+    position: absolute;
+    top: 146px;
+
+    button {
+        background: none;
+        border: 0;
+        color: #72f2ec;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        padding: 0;
+    }
+}
+
+.cells {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cell {
+    align-items: flex-start;
+    backdrop-filter: blur(2px);
+    background:
+        linear-gradient(rgba(255, 255, 255, .05), rgba(255, 255, 255, .05)),
+        #001e2e;
+    border: 1px dashed rgba(255, 255, 255, .4);
+    border-radius: 8px;
+    color: #fff;
+    display: flex;
+    gap: 8px;
+    height: 106px;
+    justify-content: center;
+    padding: 16px;
+    text-decoration: none;
+    transition: background .15s ease;
+
+    > svg {
+        flex: 0 0 32px;
+        height: 32px;
+        width: 32px;
+    }
+
+    &:hover {
+        background:
+            linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1)),
+            #001e2e;
+    }
+}
+
+.active {
+    background: #007d79;
+    border: 0;
+
+    &:hover {
+        background: #007d79;
+    }
+}
+
+.cellCopy {
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 0;
+    height: 74px;
+    min-width: 0;
+
+    strong {
+        color: #fff;
+        font-family: 'Figtree', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 30px;
+        white-space: nowrap;
+    }
+
+    > span:not(.metrics) {
+        color: #fff;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        white-space: nowrap;
+    }
+}
+
+.metrics {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+
+    small {
+        align-items: center;
+        background: rgba(255, 255, 255, .2);
+        border-radius: 2px;
+        color: #fff;
+        display: inline-flex;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        height: 20px;
+        line-height: 12px;
+        padding: 4px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 1199px) {
+    .hero {
+        height: auto;
+        padding-bottom: 18px;
+    }
+
+    .cells {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .map {
+        display: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .inner {
+        padding-inline: 16px;
+    }
+
+    .cells {
+        grid-template-columns: 1fr;
+    }
+
+    .cellCopy strong {
+        white-space: normal;
+    }
+
+    .cellCopy > span:not(.metrics) {
+        white-space: normal;
+    }
+}

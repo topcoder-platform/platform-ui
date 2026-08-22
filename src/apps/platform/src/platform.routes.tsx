@@ -19,6 +19,8 @@ import { customerPortalRoutes } from '~/apps/customer-portal'
 import { procurementRoutes } from '~/apps/procurement'
 import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
+import { thriveRoutes } from '~/apps/thrive'
+import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
@@ -38,6 +40,8 @@ export const platformRoutes: Array<PlatformRoute> = [
     // is determined by finding the first route
     // that matches the current path
     ...onboardingRoutes,
+    ...legacyOpportunityRoutes,
+    ...opportunitiesRoutes,
     ...devCenterRoutes,
     ...campusRoutes,
     ...copilotsRoutes,
@@ -53,6 +57,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...procurementRoutes,
     ...statusRoutes,
     ...supportRoutes,
+    ...thriveRoutes,
     ...homeRoutes,
     ...adminRoutes,
     ...reportsRoutes,
