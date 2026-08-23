@@ -120,7 +120,8 @@ export const getSubTrackDisplaySubmissionCount = (subTrack?: MemberStats): numbe
  * Some unified stats rows currently include challenge/rating history while the
  * aggregate win or submission counters are stale, omitted, or left at zero. In
  * that case, placement-bearing history is used for wins and history/challenge
- * count is used as the minimum visible submission count.
+ * count is used as the minimum visible submission count. Legacy Marathon Match
+ * history is partial, so its explicit aggregate win counter remains authoritative.
  *
  * @param {MemberStats | undefined} subTrack - The subtrack to summarize.
  * @param {StatsHistory[]} trackHistory - Optional history rows for the same subtrack.
@@ -130,16 +131,21 @@ export const getSubTrackSummaryStats = (
     subTrack?: MemberStats,
     trackHistory: StatsHistory[] = [],
 ): SubTrackSummaryStats => {
-    const statWins = getFiniteNumber(subTrack?.wins) ?? 0
+    const aggregateWins = getFiniteNumber(subTrack?.wins)
+    const statWins = aggregateWins ?? 0
     const historyWithPlacements = trackHistory
         .filter(history => getFiniteNumber(history.placement) !== undefined)
     const historyWins = historyWithPlacements.filter(history => history.placement === 1).length
     const displaySubmissions = getSubTrackDisplaySubmissionCount(subTrack) ?? 0
     const historySubmissions = trackHistory.length
+    const hasAuthoritativeAggregateWins = subTrack?.name === 'MARATHON_MATCH'
+        && aggregateWins !== undefined
 
     return {
         submissions: Math.max(displaySubmissions, historySubmissions),
-        wins: historyWithPlacements.length > 0 ? historyWins : statWins,
+        wins: historyWithPlacements.length > 0 && !hasAuthoritativeAggregateWins
+            ? historyWins
+            : statWins,
     }
 }
 
