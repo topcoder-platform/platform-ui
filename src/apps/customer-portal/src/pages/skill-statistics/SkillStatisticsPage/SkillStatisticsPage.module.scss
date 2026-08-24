@@ -1,0 +1,50 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    color: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    overflow-x: hidden;
+    padding: 8px 0 0;
+}
+
+.header {
+    h1 {
+        color: #151515;
+        font-family: 'Figtree', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 38px;
+        margin-top: 20px;
+        text-transform: none;
+    }
+}
+
+.subtitle {
+    color: #0a0a0a;
+    font-size: 18px;
+    line-height: 25px;
+    margin: 4px 0 0;
+}
+
+.chartPanel {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    left: 50%;
+    margin-top: 16px;
+    max-width: 100vw;
+    padding: 0 32px;
+    position: relative;
+    transform: translateX(-50%);
+    width: 100vw;
+}
+
+.hint {
+    color: #0a0a0a;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 20px 0 8px;
+    text-align: center;
+}
