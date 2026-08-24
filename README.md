@@ -17,6 +17,7 @@ All future user interfaces at Topcoder will be implemented here. Pre-existing us
 # Source Control & CI/CD
 
 - [Deployments](#deployments)
+- [Repository Backup](#repository-backup)
 - [Pull Requests](#pull-requests)
 - [Branching](#branching)
 - [Commits](#commits)
@@ -28,6 +29,10 @@ The app uses CircleCI for CI/CD.
 The `dev` branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
 
 The `master` branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
+
+## Repository Backup
+
+Git branches, tags, and their reachable history can be mirrored from GitHub to AWS CodeCommit by the `Mirror GitHub to AWS CodeCommit` workflow. See the [CodeCommit mirror setup and operations guide](docs/github-codecommit-mirror.md) for its behavior, limitations, and the one-time AWS and GitHub administrator setup.
 
 ## Pull Requests
 
