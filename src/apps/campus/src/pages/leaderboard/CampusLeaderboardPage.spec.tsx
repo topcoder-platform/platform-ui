@@ -91,6 +91,9 @@ jest.mock('~/libs/ui', () => {
                 </tbody>
             </table>
         ),
+        Tooltip: (props: PropsWithChildren<{ content?: ReactNode }>): JSX.Element => (
+            <>{props.children}</>
+        ),
     }
 }, { virtual: true })
 
@@ -211,11 +214,11 @@ describe('CampusLeaderboardPage', () => {
         fireEvent.click(screen.getByRole('button', {
             name: /View participation history for testaws1/i,
         }))
-        expect(screen.getByText(/testaws1 — Participation History/))
+        expect(screen.getByText('testaws1 Participation History'))
             .toBeInTheDocument()
         expect(screen.getByText('Campus Sprint'))
             .toBeInTheDocument()
-        expect(screen.getByText('Won (place 1)'))
+        expect(screen.getByLabelText('1st place'))
             .toBeInTheDocument()
     })
 

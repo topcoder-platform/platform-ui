@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+.statCard {
+    align-items: center;
+    border: 1px solid var(--TableBorderColor);
+    border-radius: 8px;
+    display: flex;
+    flex: 1 0 0;
+    gap: $sp-2;
+    min-width: 0;
+    padding: $sp-4 $sp-6;
+}
+
+.icon {
+    flex: 0 0 auto;
+    height: 50px;
+    width: 50px;
+}
+
+.stat {
+    color: var(--FontColor);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.value {
+    font-family: 'Figtree', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 30px;
+}
+
+.label {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+
+    // single line at the design width; wraps on narrower viewports
+    @media (min-width: 1280px) {
+        white-space: nowrap;
+    }
+}

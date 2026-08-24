@@ -4,6 +4,7 @@ import { Outlet, Routes } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { toolTitle } from './campus.routes'
+import './lib/styles/index.scss'
 
 const CampusApp: FC = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)

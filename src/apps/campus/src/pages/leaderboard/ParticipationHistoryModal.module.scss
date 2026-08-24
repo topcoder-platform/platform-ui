@@ -1,32 +1,110 @@
 @import '@libs/ui/styles/includes';
 
-.summary {
-    color: $black-80;
-    display: flex;
-    flex-wrap: wrap;
-    gap: $sp-5;
-    margin-bottom: $sp-4;
+$box-padding: 40px;
+$box-width: 1080px;
+
+.modal {
+    border-radius: 8px !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    padding: $box-padding !important;
+    width: $box-width !important;
+
+    @include ltemd {
+        padding: $sp-4 !important;
+        width: calc(100vw - #{$sp-4}) !important;
+    }
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-2;
+        top: $sp-2;
+
+        svg {
+            height: 22px;
+            width: 22px;
+        }
+    }
+
+    // the shared modal header pads its top by 5px, the design does not
+    div:has(> h3) {
+        padding-top: 0;
+    }
+
+    h3 {
+        color: var(--FontColor);
+        font-family: 'Figtree', sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: normal;
+        line-height: 30px;
+        text-transform: none;
+    }
+
+    :global(.modal-body) {
+        margin: 0;
+        padding: 0;
+    }
 }
 
-.challengeCell {
+.body {
     display: flex;
     flex-direction: column;
+    gap: $box-padding;
+    margin-top: $box-padding;
+
+    // nested to win over the shared modal body link styling
+    .workLink {
+        color: var(--Link);
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 22px;
+        text-decoration: none;
+
+        &:hover,
+        &:focus {
+            text-decoration: underline;
+        }
+    }
 }
 
-.challengeName {
+.stats {
+    align-items: center;
+    display: flex;
+    gap: $sp-6;
+
+    @include ltemd {
+        align-items: stretch;
+        flex-direction: column;
+        gap: $sp-4;
+    }
+}
+
+.historyTable {
+    table {
+        th:global(.column-id-track-) {
+            width: 140px;
+        }
+
+        th:global(.column-id-registrationDate-),
+        th:global(.column-id-submissionDate-) {
+            width: 150px;
+        }
+
+        th:global(.column-id-result-) {
+            width: 160px;
+        }
+    }
+}
+
+.result {
     align-items: center;
     display: inline-flex;
-    font-weight: 500;
-    gap: $sp-1;
+    gap: $sp-2;
 }
 
-.externalIcon {
-    width: 1rem;
-    height: 1rem;
-    flex: none;
-}
-
-.challengeMeta {
-    color: $black-60;
-    font-size: 12px;
+.resultIcon,
+.medal {
+    flex: 0 0 auto;
+    height: 20px;
+    width: 20px;
 }
