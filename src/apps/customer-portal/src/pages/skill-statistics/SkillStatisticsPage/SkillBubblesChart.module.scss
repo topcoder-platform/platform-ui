@@ -17,24 +17,18 @@
     align-items: center;
     border: 0;
     border-radius: 50%;
+    box-sizing: border-box;
     color: #fff;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     overflow: hidden;
-    padding: 8px;
+    padding: 0;
     position: absolute;
     text-align: center;
     transform: translate(-50%, -50%);
     transition: box-shadow 160ms ease, transform 160ms ease;
     z-index: 1;
-
-    svg {
-        color: #fff;
-        flex: 0 0 auto;
-        margin-bottom: 4px;
-    }
 
     &:hover,
     &:focus-visible,
@@ -54,12 +48,31 @@
     z-index: 4;
 }
 
+.bubbleInner {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    width: 80%;
+
+    svg {
+        color: #fff;
+        flex: 0 0 auto;
+        margin-bottom: 4px;
+    }
+}
+
 .label {
     display: -webkit-box;
     font-family: 'Nunito Sans', sans-serif;
     font-weight: 700;
     line-height: 1.15;
+    max-width: 100%;
     overflow: hidden;
+    overflow-wrap: anywhere;
+    width: 100%;
+    word-break: break-word;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
 }

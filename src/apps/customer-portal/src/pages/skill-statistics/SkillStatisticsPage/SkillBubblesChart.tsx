@@ -37,8 +37,8 @@ const POPOVER_GAP = 12
 const POPOVER_ESTIMATED_HEIGHT = 340
 const POPOVER_WIDTH = 320
 const VIEW_PAD = 8
-const MIN_BUBBLE_FONT_SIZE = 12
-const MAX_BUBBLE_FONT_SIZE = 20
+const MIN_BUBBLE_FONT_SIZE = 10
+const MAX_BUBBLE_FONT_SIZE = 16
 
 type PopoverPlacement = 'top' | 'bottom' | 'left' | 'right'
 
@@ -258,7 +258,8 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                     minPackedRadius,
                     maxPackedRadius,
                 )
-                const iconSize = Math.max(14, Math.min(28, circle.r / 4.6))
+                const innerSize = circle.r * 1.16
+                const iconSize = Math.max(12, Math.min(22, innerSize / 5.5))
 
                 return (
                     <button
@@ -287,8 +288,10 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                         }}
                         type='button'
                     >
-                        <Icon aria-hidden='true' height={iconSize} width={iconSize} />
-                        <span className={styles.label}>{category.name}</span>
+                        <span className={styles.bubbleInner}>
+                            <Icon aria-hidden='true' height={iconSize} width={iconSize} />
+                            <span className={styles.label}>{category.name}</span>
+                        </span>
                     </button>
                 )
             })}
