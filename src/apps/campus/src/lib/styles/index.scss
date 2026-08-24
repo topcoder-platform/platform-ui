@@ -1,0 +1,67 @@
+@import '@libs/ui/styles/includes';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap');
+
+:root {
+    --Link: #0d61bf;
+    --FontColor: #0a0a0a;
+    --SubtitleColor: #202020;
+    --GrayFontColor: #767676;
+    --TableBorderColor: #a8a8a8;
+    --TableRowBorderColor: #e0e0e0;
+    --TableTextColor: #161616;
+    --TooltipColor: #0f172a;
+}
+
+// Reskin of the shared ~/libs/ui Table to the campus design:
+// Nunito Sans header and cells, 52px rows, square cells, gray rules.
+.campus-table {
+    table {
+        border-collapse: collapse;
+        table-layout: fixed;
+        width: 100%;
+
+        thead th {
+            border-bottom: 1px solid var(--TableBorderColor);
+            height: 52px;
+            padding: 0 $sp-4 !important;
+            vertical-align: middle;
+
+            > div {
+                align-items: center;
+                color: var(--TableTextColor) !important;
+                font-family: 'Nunito Sans', sans-serif;
+                font-size: 14px;
+                font-weight: 700;
+                gap: $sp-1;
+                letter-spacing: normal;
+                line-height: 20px;
+                text-transform: none;
+            }
+        }
+
+        td {
+            border-bottom: 1px solid var(--TableRowBorderColor);
+            color: var(--TableTextColor);
+            font-family: 'Nunito Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            height: 52px;
+            letter-spacing: normal;
+            line-height: 20px;
+            max-width: none;
+            padding: 0 $sp-4;
+            vertical-align: middle;
+
+            &:first-child,
+            &:last-child {
+                border-radius: 0;
+            }
+
+            // the shared table centers the second to last column
+            &:nth-last-child(2) {
+                text-align: left;
+            }
+        }
+    }
+}

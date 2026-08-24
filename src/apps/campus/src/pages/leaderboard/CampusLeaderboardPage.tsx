@@ -14,6 +14,7 @@ import {
     PageTitle,
     Table,
     TableColumn,
+    Tooltip,
 } from '~/libs/ui'
 import { ProfilePicture } from '~/libs/shared'
 import { EnvironmentConfig } from '~/config'
@@ -23,6 +24,15 @@ import {
     CampusLeaderboardMember,
 } from '../../lib/models'
 import { CampusLeaderboardResource, useCampusLeaderboard } from '../../lib/hooks'
+import {
+    IconHelp,
+    IconInfo,
+    IconStatMembers,
+    IconStatRegistered,
+    IconStatSubmitted,
+    placementIcons,
+} from '../../lib/assets/icons'
+import { StatCard } from '../../lib/components'
 
 import { ParticipationHistoryModal } from './ParticipationHistoryModal'
 import { RankingRulesModal } from './RankingRulesModal'
@@ -36,30 +46,45 @@ const CHALLENGE_FILTER_OPTIONS: ReadonlyArray<InputSelectOption> = [
     { label: 'Campus Challenges', value: 'campus' },
 ]
 
-const RANK_MEDAL_CLASSES: { [rank: number]: string } = {
-    1: styles.gold,
-    2: styles.silver,
-    3: styles.bronze,
+/**
+ * Renders a column header with an info tooltip, as designed.
+ *
+ * @param label column header text.
+ * @param tooltip tooltip copy.
+ * @returns header renderer.
+ */
+function headerWithTooltip(label: string, tooltip: string): () => JSX.Element {
+    return function renderHeader(): JSX.Element {
+        return (
+            <>
+                {label}
+                <Tooltip
+                    className={styles.tooltip}
+                    content={tooltip}
+                    place='top'
+                    triggerOn='click-hover'
+                >
+                    <span className={styles.infoIcon}>
+                        <IconInfo />
+                    </span>
+                </Tooltip>
+            </>
+        )
+    }
 }
 
 /**
- * Marks rows that open the participation history modal.
- *
- * @param member leaderboard row.
- * @returns row class name, when the row is clickable.
- */
-/**
- * Renders a rank badge, medal-styled for the top three ranks.
+ * Renders the placement: a medal for the top three ranks, the number otherwise.
  *
  * @param member leaderboard row.
  * @returns rank cell.
  */
 function renderRank(member: CampusLeaderboardMember): JSX.Element {
-    return (
-        <span className={classNames(styles.rank, RANK_MEDAL_CLASSES[member.rank])}>
-            {member.rank}
-        </span>
-    )
+    const Medal = placementIcons[member.rank]
+
+    return Medal
+        ? <Medal className={styles.medal} />
+        : <span className={styles.rank}>{member.rank}</span>
 }
 
 /**
@@ -150,40 +175,48 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'element',
         },
         {
-            columnId: 'handle',
-            label: 'Handle',
+            columnId: 'member',
+            label: 'Member',
             renderer: renderHandle,
             type: 'element',
         },
         {
-            columnId: 'registrations',
-            label: 'Number of Registrations',
-            propertyName: 'registrations',
-            tooltip: 'Challenges the member registered for.',
-            type: 'number',
-        },
-        {
-            columnId: 'submissions',
-            label: 'Number of Submissions',
-            propertyName: 'submissions',
-            tooltip: 'Challenges the member submitted to. At most one submission is counted per challenge.',
-            type: 'number',
-        },
-        {
-            columnId: 'passingSubmissions',
-            label: 'Number of Passing Submissions',
-            propertyName: 'passingSubmissions',
-            tooltip: 'Challenges where a submission passed review. '
-                + 'At most one passing submission is counted per challenge.',
-            type: 'number',
-        },
-        {
+            className: styles.numberCell,
             columnId: 'wins',
-            label: 'Number of Wins',
-            renderer: (member: CampusLeaderboardMember) => (
-                <span className={styles.wins}>{member.wins}</span>
+            label: '# of Wins',
+            propertyName: 'wins',
+            type: 'number',
+        },
+        {
+            className: styles.numberCell,
+            columnId: 'passingSubmissions',
+            label: headerWithTooltip(
+                '# of Passing Submissions',
+                'Challenges where a submission passed review. '
+                    + 'At most one passing submission is counted per challenge.',
             ),
-            type: 'numberElement',
+            propertyName: 'passingSubmissions',
+            type: 'number',
+        },
+        {
+            className: styles.numberCell,
+            columnId: 'submissions',
+            label: headerWithTooltip(
+                '# of Submissions',
+                'Challenges the member submitted to. At most one submission is counted per challenge.',
+            ),
+            propertyName: 'submissions',
+            type: 'number',
+        },
+        {
+            className: styles.numberCell,
+            columnId: 'registrations',
+            label: headerWithTooltip(
+                '# of Registrations',
+                'Challenges the member registered for.',
+            ),
+            propertyName: 'registrations',
+            type: 'number',
         },
         {
             columnId: 'open',
@@ -217,7 +250,7 @@ export const CampusLeaderboardPage: FC = () => {
             <PageTitle>Campus Program Leaderboard</PageTitle>
 
             <div className={styles.header}>
-                <h1>Campus Program Leaderboard</h1>
+                <h1 className={styles.title}>Campus Program Leaderboard</h1>
                 <p className={styles.subtitle}>
                     {`Track participation and performance of members in the ${displayGroupName} `}
                     group across challenges.
@@ -235,45 +268,21 @@ export const CampusLeaderboardPage: FC = () => {
             {(!!data || isLoading) && (
                 <>
                     <div className={styles.stats}>
-                        <div className={styles.statCard}>
-                            <span className={classNames(styles.statIcon, styles.statIconMembers)}>
-                                <IconOutline.UsersIcon />
-                            </span>
-                            <div>
-                                <div className={styles.statLabel}>Total Members in Group</div>
-                                <div className={styles.statValue}>
-                                    {data?.summary.totalMembers.toLocaleString() ?? '-'}
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.statCard}>
-                            <span className={classNames(styles.statIcon, styles.statIconRegistered)}>
-                                <IconOutline.UserAddIcon />
-                            </span>
-                            <div>
-                                <div className={styles.statLabel}>
-                                    <strong>Members</strong>
-                                    {' Registered to Any Challenge'}
-                                </div>
-                                <div className={styles.statValue}>
-                                    {data?.summary.membersRegistered.toLocaleString() ?? '-'}
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.statCard}>
-                            <span className={classNames(styles.statIcon, styles.statIconSubmitted)}>
-                                <IconOutline.DocumentTextIcon />
-                            </span>
-                            <div>
-                                <div className={styles.statLabel}>
-                                    <strong>Members</strong>
-                                    {' Submitted to Any Challenge'}
-                                </div>
-                                <div className={styles.statValue}>
-                                    {data?.summary.membersSubmitted.toLocaleString() ?? '-'}
-                                </div>
-                            </div>
-                        </div>
+                        <StatCard
+                            icon={IconStatMembers}
+                            label='Total Members in the Group'
+                            value={data?.summary.totalMembers}
+                        />
+                        <StatCard
+                            icon={IconStatRegistered}
+                            label='Members Who Registered to Any Challenge'
+                            value={data?.summary.membersRegistered}
+                        />
+                        <StatCard
+                            icon={IconStatSubmitted}
+                            label='Members Who Submitted to Any Challenge'
+                            value={data?.summary.membersSubmitted}
+                        />
                     </div>
 
                     <div className={styles.toolbar}>
@@ -290,15 +299,15 @@ export const CampusLeaderboardPage: FC = () => {
                             onClick={function onRulesClick() { setRulesVisible(true) }}
                             type='button'
                         >
-                            <IconOutline.QuestionMarkCircleIcon />
-                            How rankings are calculated
+                            <IconHelp />
+                            How ratings are calculated
                         </button>
                     </div>
 
                     <div className={styles.tableWrapper}>
                         <LoadingSpinner hide={!isLoading} />
                         <Table
-                            className={styles.lbTable}
+                            className={classNames('campus-table', styles.lbTable)}
                             columns={columns}
                             data={visibleMembers}
                             disableSorting

@@ -2,12 +2,24 @@
  * Participation history for one leaderboard member.
  */
 import { FC, useMemo } from 'react'
+import classNames from 'classnames'
 
-import { BaseModal, IconOutline, Table, TableColumn } from '~/libs/ui'
+import { BaseModal, Table, TableColumn } from '~/libs/ui'
 import { textFormatDateLocaleShortString } from '~/libs/shared'
 import { EnvironmentConfig } from '~/config'
 
 import { CampusLeaderboardMember, CampusParticipation } from '../../lib/models'
+import {
+    IconResultFailed,
+    IconResultPassed,
+    IconStatPassed,
+    IconStatRegistered,
+    IconStatSubmitted,
+    IconStatWins,
+    placementIcons,
+    placementLabels,
+} from '../../lib/assets/icons'
+import { StatCard } from '../../lib/components'
 
 import styles from './ParticipationHistoryModal.module.scss'
 
@@ -27,48 +39,51 @@ function formatDate(value: string | null): string {
 }
 
 /**
- * Describes the outcome of a member's participation in a challenge.
+ * Renders the outcome of a member's participation: a medal for a top three
+ * placement, a pass or fail tag once the submission was reviewed.
  *
  * @param entry participation entry.
- * @returns human readable result.
+ * @returns result cell.
  */
-function formatPlacement(placement: number | null): string | undefined {
-    if (placement === 2) {
-        return '2nd place'
-    }
+function renderResult(entry: CampusParticipation): JSX.Element {
+    const placement: number | null = entry.placement
+    const Medal = placement ? placementIcons[placement] : undefined
 
-    if (placement === 3) {
-        return '3rd place'
-    }
-
-    return placement && placement > 1 ? `Place ${placement}` : undefined
-}
-
-function formatResult(entry: CampusParticipation): string {
-    if (entry.won) {
-        return entry.placement ? `Won (place ${entry.placement})` : 'Won'
-    }
-
-    const placement = formatPlacement(entry.placement)
-    if (placement) {
-        return placement
-    }
-
-    if (entry.challengeStatus !== 'COMPLETED') {
-        if (entry.challengeStatus === 'ACTIVE') {
-            return 'Challenge is in progress'
-        }
+    if (Medal) {
+        return (
+            <span
+                aria-label={placementLabels[placement as number]}
+                className={styles.result}
+                role='img'
+            >
+                <Medal className={styles.medal} />
+            </span>
+        )
     }
 
     if (entry.passedReview) {
-        return 'Passed review'
+        return (
+            <span className={styles.result}>
+                <IconResultPassed className={styles.resultIcon} />
+                Passed Review
+            </span>
+        )
     }
 
     if (entry.submitted) {
-        return 'Did not pass review'
+        return (
+            <span className={styles.result}>
+                <IconResultFailed className={styles.resultIcon} />
+                Failed Review
+            </span>
+        )
     }
 
-    return 'No submission'
+    return (
+        <span className={styles.result}>
+            {entry.challengeStatus === 'ACTIVE' ? 'Challenge is in progress' : 'No submission'}
+        </span>
+    )
 }
 
 export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = props => {
@@ -76,49 +91,48 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
 
     const columns = useMemo<ReadonlyArray<TableColumn<CampusParticipation>>>(() => [
         {
-            columnId: 'challenge',
-            label: 'Challenge',
+            columnId: 'work',
+            label: 'Work',
             renderer: (entry: CampusParticipation) => {
                 const challengePath
                     = `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${encodeURIComponent(entry.challengeId)}`
 
                 return (
-                    <div className={styles.challengeCell}>
-                        <a
-                            className={styles.challengeName}
-                            href={challengePath}
-                            rel='noopener noreferrer'
-                            target='_blank'
-                            onClick={function (event: any) { event.stopPropagation() }}
-                        >
-                            {entry.challengeName ?? entry.challengeId}
-                            <IconOutline.ExternalLinkIcon className={styles.externalIcon} />
-                        </a>
-                        <span className={styles.challengeMeta}>
-                            {[entry.challengeTrack, entry.challengeType].filter(Boolean)
-                                .join(' • ')}
-                        </span>
-                    </div>
+                    <a
+                        className={styles.workLink}
+                        href={challengePath}
+                        rel='noopener noreferrer'
+                        target='_blank'
+                        onClick={function (event: any) { event.stopPropagation() }}
+                    >
+                        {entry.challengeName ?? entry.challengeId}
+                    </a>
                 )
             },
             type: 'element',
         },
         {
-            columnId: 'registeredAt',
-            label: 'Registered',
+            columnId: 'track',
+            label: 'Track',
+            propertyName: 'challengeTrack',
+            type: 'text',
+        },
+        {
+            columnId: 'registrationDate',
+            label: 'Registration Date',
             renderer: (entry: CampusParticipation) => <span>{formatDate(entry.registeredAt)}</span>,
             type: 'element',
         },
         {
-            columnId: 'submittedDate',
-            label: 'Submitted',
+            columnId: 'submissionDate',
+            label: 'Submission Date',
             renderer: (entry: CampusParticipation) => <span>{formatDate(entry.submittedDate)}</span>,
             type: 'element',
         },
         {
             columnId: 'result',
             label: 'Result',
-            renderer: (entry: CampusParticipation) => <span>{formatResult(entry)}</span>,
+            renderer: renderResult,
             type: 'element',
         },
     ], [])
@@ -129,32 +143,45 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
 
     return (
         <BaseModal
+            classNames={{ modal: styles.modal }}
             onClose={props.onClose}
             open
             size='body'
-            title={`${member.handle ?? member.userId} — Participation History`}
+            spacer={false}
+            title={`${member.handle ?? member.userId} Participation History`}
         >
-            <div className={styles.summary}>
-                <span>
-                    {`${member.registrations} registrations`}
-                </span>
-                <span>
-                    {`${member.submissions} submissions`}
-                </span>
-                <span>
-                    {`${member.passingSubmissions} passing`}
-                </span>
-                <span>
-                    {`${member.wins} wins`}
-                </span>
-            </div>
+            <div className={styles.body}>
+                <div className={styles.stats}>
+                    <StatCard
+                        icon={IconStatRegistered}
+                        label='Registrations'
+                        value={member.registrations}
+                    />
+                    <StatCard
+                        icon={IconStatSubmitted}
+                        label='Submissions'
+                        value={member.submissions}
+                    />
+                    <StatCard
+                        icon={IconStatPassed}
+                        label='Passed Review'
+                        value={member.passingSubmissions}
+                    />
+                    <StatCard
+                        icon={IconStatWins}
+                        label='Wins'
+                        value={member.wins}
+                    />
+                </div>
 
-            <Table
-                columns={columns}
-                data={member.challenges}
-                disableSorting
-                removeDefaultSort
-            />
+                <Table
+                    className={classNames('campus-table', styles.historyTable)}
+                    columns={columns}
+                    data={member.challenges}
+                    disableSorting
+                    removeDefaultSort
+                />
+            </div>
         </BaseModal>
     )
 }
