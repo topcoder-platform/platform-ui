@@ -4,6 +4,7 @@ import {
     FC,
     KeyboardEvent,
     RefObject,
+    SVGProps,
     useCallback,
     useEffect,
     useLayoutEffect,
@@ -13,17 +14,20 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
+import useSWR, { SWRResponse } from 'swr'
 
 import { getRatingColor } from '~/libs/core'
+import { IconOutline } from '~/libs/ui'
 
+import {
+    ExpertSkillCategory,
+    ExpertSkillCategoryMember,
+    expertSkillCategoryMembersCacheKey,
+    fetchExpertSkillCategoryMembers,
+} from '../../../lib'
 import memberGroupIcon from '../../statistics/StatisticsPage/assets/member-group.svg'
 import skillCognitionIcon from '../../statistics/StatisticsPage/assets/skill-cognition.svg'
 
-import {
-    getTopMemberForCategory,
-    SkillCategoryMock,
-    SkillMemberMock,
-} from './mock'
 import { packCircles, PackedCircle } from './packCircles'
 import styles from './SkillBubblesChart.module.scss'
 
@@ -118,10 +122,19 @@ function getPopoverLayout(
     }
 }
 
+type SkillCategoryIcon = FC<SVGProps<SVGSVGElement>>
+
 interface SkillBubblesChartProps {
-    categories: SkillCategoryMock[]
+    categories: ExpertSkillCategory[]
     onSelect: (categoryId: string) => void
     selectedCategoryId?: string
+}
+
+function getCategoryIcon(iconName?: string): SkillCategoryIcon {
+    const icons = IconOutline as Record<string, SkillCategoryIcon | undefined>
+    const icon = iconName ? icons[iconName] : undefined
+
+    return icon || IconOutline.CodeIcon
 }
 
 function radiusForSize(size: number): number {
@@ -207,9 +220,13 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
     const hoveredCircle = hoveredCategory
         ? packedById.get(hoveredCategory.id)
         : undefined
-    const topMember = hoveredCategory
-        ? getTopMemberForCategory(hoveredCategory.id)
-        : undefined
+    const { data: hoveredMembers }: SWRResponse<ExpertSkillCategoryMember[], Error> = useSWR(
+        hoveredCategory
+            ? expertSkillCategoryMembersCacheKey(hoveredCategory.name)
+            : undefined,
+        () => fetchExpertSkillCategoryMembers(hoveredCategory?.name || ''),
+    )
+    const topMember = hoveredMembers?.[0]
 
     const handleKeyDown = useCallback((
         event: KeyboardEvent<HTMLButtonElement>,
@@ -234,7 +251,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                     return undefined
                 }
 
-                const Icon = category.icon
+                const Icon = getCategoryIcon(category.icon)
                 const isSelected = category.id === props.selectedCategoryId
                 const fontSize = fontSizeForRadius(
                     circle.r,
@@ -291,12 +308,12 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
 }
 
 interface SkillCategoryPopoverProps {
-    category: SkillCategoryMock
+    category: ExpertSkillCategory
     chartHeight: number
     chartRef: RefObject<HTMLDivElement>
     chartWidth: number
     circle: PackedCircle
-    topMember?: SkillMemberMock
+    topMember?: ExpertSkillCategoryMember
 }
 
 const SkillCategoryPopover = (props: SkillCategoryPopoverProps): JSX.Element => {

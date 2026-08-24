@@ -7,21 +7,21 @@ import { getRatingColor } from '~/libs/core'
 import { ProfilePicture } from '~/libs/shared'
 import { IconOutline } from '~/libs/ui'
 
+import { ExpertSkillCategory, ExpertSkillCategoryMember } from '../../../lib'
 import {
     IconFirstPlace,
     IconSecondPlace,
     IconThirdPlace,
 } from '../../statistics/StatisticsPage/assets'
 
-import { SkillCategoryMock, SkillMemberMock } from './mock'
 import styles from './SkillMembersPanel.module.scss'
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('en-US')
 
 interface SkillMembersPanelProps {
-    category: SkillCategoryMock
+    category: ExpertSkillCategory
     countryFilter: string
-    members: SkillMemberMock[]
+    members: ExpertSkillCategoryMember[]
     onCountryChange: (countryCode: string) => void
     onSearchChange: (value: string) => void
     search: string

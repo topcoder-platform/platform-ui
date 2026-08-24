@@ -48,3 +48,17 @@
     margin: 20px 0 8px;
     text-align: center;
 }
+
+.status {
+    align-items: center;
+    color: #545f71;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    min-height: 240px;
+
+    button {
+        color: #0d61bf;
+        text-decoration: underline;
+    }
+}
