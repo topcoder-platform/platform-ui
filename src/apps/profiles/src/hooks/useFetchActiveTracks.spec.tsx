@@ -595,6 +595,38 @@ describe('getSubTrackSummaryStats', () => {
                 wins: 2,
             })
     })
+
+    it('keeps aggregate Marathon Match wins when legacy placement history is partial', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 225,
+            name: 'MARATHON_MATCH',
+            submissions: {
+                submissions: 7,
+            },
+            wins: 76,
+        } as MemberStats, [
+            {
+                challengeId: 'legacy-mm-1',
+                challengeName: 'Legacy Marathon Match 1',
+                newRating: 1210,
+                placement: 122,
+                ratingDate: 1301961600000,
+            },
+            {
+                challengeId: 'legacy-mm-2',
+                challengeName: 'Legacy Marathon Match 2',
+                newRating: 1218,
+                placement: 145,
+                ratingDate: 1302652800000,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 7,
+                wins: 76,
+            })
+    })
 })
 
 describe('getTrackSummaryStats', () => {
