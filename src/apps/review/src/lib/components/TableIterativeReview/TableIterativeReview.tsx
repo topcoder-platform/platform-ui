@@ -54,6 +54,7 @@ import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
 import { TableWrapper } from '../TableWrapper'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 import { EscalationModals } from '../TableReview/EscalationModals'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
@@ -895,6 +896,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                         >
                             <IconOutline.DocumentDuplicateIcon />
                         </button>
+                        <SubmissionDuplicatesBadge submissionId={data.id} />
                     </span>
                 )
             },

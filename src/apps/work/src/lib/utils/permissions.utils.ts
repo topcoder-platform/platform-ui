@@ -221,6 +221,19 @@ export function canViewMarathonMatchRunnerLogs(userRoles: string[]): boolean {
         || hasCopilotRole(userRoles)
 }
 
+/**
+ * Returns whether the supplied roles can query submission duplicate detection.
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` for admins, project managers, and copilots; otherwise `false`.
+ * Used by `SubmissionsSection` so only callers the review API answers for issue
+ * the duplicates request; everyone else would collect a 403.
+ */
+export function canViewSubmissionDuplicates(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles)
+        || hasManagerRole(userRoles)
+        || hasCopilotRole(userRoles)
+}
+
 export function canCreateTaasProject(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || hasCopilotRole(userRoles)
 }
