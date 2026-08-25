@@ -40,9 +40,35 @@ jest.mock('~/config', () => ({
     },
 }), { virtual: true })
 
+let mockWindowWidth = 1280
+
 jest.mock('~/libs/shared', () => ({
     ProfilePicture: (): JSX.Element => <span />,
     textFormatDateLocaleShortString: (date?: Date): string | undefined => date?.toISOString(),
+    useWindowSize: () => ({ height: 800, width: mockWindowWidth }),
+}), { virtual: true })
+
+jest.mock('~/apps/admin/src/lib/components/common/TableMobile', () => ({
+    TableMobile: <T, >(props: {
+        columns: ReadonlyArray<StubColumn<T>[]>,
+        data: ReadonlyArray<T>,
+    }): JSX.Element => (
+        <table>
+            <tbody>
+                {props.data.map((row, rowIndex) => props.columns.map((group, groupIndex) => (
+                    <tr key={`${rowIndex}-${groupIndex}`}>
+                        {group.map((column, cellIndex) => (
+                            <td key={cellIndex}>
+                                {column.renderer
+                                    ? column.renderer(row)
+                                    : String((row as Record<string, unknown>)[column.propertyName ?? ''])}
+                            </td>
+                        ))}
+                    </tr>
+                )))}
+            </tbody>
+        </table>
+    ),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
@@ -175,6 +201,7 @@ function renderPage(): void {
 
 describe('CampusLeaderboardPage', () => {
     beforeEach(() => {
+        mockWindowWidth = 1280
         mockUseCampusLeaderboard.mockReturnValue({ data: leaderboard(), isLoading: false })
     })
 
@@ -219,6 +246,20 @@ describe('CampusLeaderboardPage', () => {
         expect(screen.getByText('Campus Sprint'))
             .toBeInTheDocument()
         expect(screen.getByLabelText('1st place'))
+            .toBeInTheDocument()
+    })
+
+    it('stacks the participation history into labelled rows on small screens', () => {
+        mockWindowWidth = 375
+        renderPage()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: /View participation history for testaws1/i,
+        }))
+
+        expect(screen.getByText('Registration Date:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Campus Sprint'))
             .toBeInTheDocument()
     })
 

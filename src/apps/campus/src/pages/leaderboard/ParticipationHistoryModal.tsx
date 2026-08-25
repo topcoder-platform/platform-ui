@@ -5,7 +5,9 @@ import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { BaseModal, Table, TableColumn } from '~/libs/ui'
-import { textFormatDateLocaleShortString } from '~/libs/shared'
+import { textFormatDateLocaleShortString, useWindowSize, WindowSize } from '~/libs/shared'
+import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
+import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { EnvironmentConfig } from '~/config'
 
 import { CampusLeaderboardMember, CampusParticipation } from '../../lib/models'
@@ -88,6 +90,10 @@ function renderResult(entry: CampusParticipation): JSX.Element {
 
 export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = props => {
     const member: CampusLeaderboardMember | undefined = props.member
+    const { width: screenWidth }: WindowSize = useWindowSize()
+    // five columns need more room than a tablet viewport offers, so anything
+    // narrower falls back to the stacked label/value layout
+    const isStacked: boolean = useMemo(() => screenWidth <= 984, [screenWidth])
 
     const columns = useMemo<ReadonlyArray<TableColumn<CampusParticipation>>>(() => [
         {
@@ -137,6 +143,24 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
         },
     ], [])
 
+    // one "Label: value" row per column, stacked into a block per challenge
+    const stackedColumns = useMemo<MobileTableColumn<CampusParticipation>[][]>(
+        () => columns.map(column => [
+            {
+                ...column,
+                className: '',
+                mobileType: 'label',
+                renderer: () => <div>{`${column.label as string}:`}</div>,
+                type: 'element',
+            },
+            {
+                ...column,
+                mobileType: 'last-value',
+            },
+        ] as MobileTableColumn<CampusParticipation>[]),
+        [columns],
+    )
+
     if (!member) {
         return <></>
     }
@@ -174,13 +198,21 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
                     />
                 </div>
 
-                <Table
-                    className={classNames('campus-table', styles.historyTable)}
-                    columns={columns}
-                    data={member.challenges}
-                    disableSorting
-                    removeDefaultSort
-                />
+                {isStacked ? (
+                    <TableMobile
+                        className={styles.stackedTable}
+                        columns={stackedColumns}
+                        data={member.challenges}
+                    />
+                ) : (
+                    <Table
+                        className={classNames('campus-table', styles.historyTable)}
+                        columns={columns}
+                        data={member.challenges}
+                        disableSorting
+                        removeDefaultSort
+                    />
+                )}
             </div>
         </BaseModal>
     )

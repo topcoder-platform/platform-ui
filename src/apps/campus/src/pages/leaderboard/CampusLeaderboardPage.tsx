@@ -219,6 +219,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'number',
         },
         {
+            className: styles.actionCell,
             columnId: 'open',
             label: '',
             renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (
