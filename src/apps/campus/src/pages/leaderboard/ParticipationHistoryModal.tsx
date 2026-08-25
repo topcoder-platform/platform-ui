@@ -41,8 +41,35 @@ function formatDate(value: string | null): string {
 }
 
 /**
+ * Reads an api date as a sortable timestamp. Missing dates sort last.
+ *
+ * @param value iso date string.
+ * @returns timestamp, or -Infinity when there is no usable date.
+ */
+function toTime(value: string | null): number {
+    const time: number = value ? Date.parse(value) : NaN
+
+    return Number.isFinite(time) ? time : -Infinity
+}
+
+/**
+ * Orders two api dates, most recent first.
+ *
+ * @param left first date.
+ * @param right second date.
+ * @returns comparator result.
+ */
+function compareDatesDesc(left: string | null, right: string | null): number {
+    const leftTime: number = toTime(left)
+    const rightTime: number = toTime(right)
+
+    return leftTime === rightTime ? 0 : rightTime - leftTime
+}
+
+/**
  * Renders the outcome of a member's participation: a medal for a top three
- * placement, a pass or fail tag once the submission was reviewed.
+ * placement, a pass or fail tag once the submission was reviewed, and the
+ * pending state while the review is still running.
  *
  * @param entry participation entry.
  * @returns result cell.
@@ -70,6 +97,11 @@ function renderResult(entry: CampusParticipation): JSX.Element {
                 Passed Review
             </span>
         )
+    }
+
+    // a review that has not finished yet is not a failed review
+    if (entry.submitted && !entry.reviewed) {
+        return <span className={styles.result}>In Review</span>
     }
 
     if (entry.submitted) {
@@ -143,6 +175,15 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
         },
     ], [])
 
+    // most recently submitted first, then most recently registered
+    const challenges = useMemo<ReadonlyArray<CampusParticipation>>(
+        () => [...member?.challenges ?? []].sort((left, right) => (
+            compareDatesDesc(left.submittedDate, right.submittedDate)
+                || compareDatesDesc(left.registeredAt, right.registeredAt)
+        )),
+        [member?.challenges],
+    )
+
     // one "Label: value" row per column, stacked into a block per challenge
     const stackedColumns = useMemo<MobileTableColumn<CampusParticipation>[][]>(
         () => columns.map(column => [
@@ -202,13 +243,13 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
                     <TableMobile
                         className={styles.stackedTable}
                         columns={stackedColumns}
-                        data={member.challenges}
+                        data={challenges}
                     />
                 ) : (
                     <Table
                         className={classNames('campus-table', styles.historyTable)}
                         columns={columns}
-                        data={member.challenges}
+                        data={challenges}
                         disableSorting
                         removeDefaultSort
                     />

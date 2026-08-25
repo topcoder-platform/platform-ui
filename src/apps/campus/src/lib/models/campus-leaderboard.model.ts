@@ -17,6 +17,7 @@ export interface CampusParticipation {
     placement: number | null
     registered: boolean
     registeredAt: string | null
+    reviewed: boolean
     score: number | null
     submitted: boolean
     submittedDate: string | null
