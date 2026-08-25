@@ -46,6 +46,7 @@ import { ConfirmModal } from '../ConfirmModal'
 import { useRolePermissions, UseRolePermissionsResult, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableCheckpointSubmissions.module.scss'
@@ -329,6 +330,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                             >
                                 <IconOutline.DocumentDuplicateIcon />
                             </button>
+                            <SubmissionDuplicatesBadge submissionId={data.submissionId} />
                         </span>
                     )
                 },

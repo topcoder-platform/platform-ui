@@ -18,6 +18,8 @@ const mockUseDownloadSubmission = jest.fn()
 const mockUseFetchSubmissions = jest.fn()
 const mockFetchMembersByUserIds = jest.fn()
 const mockIsMarathonMatchChallenge = jest.fn()
+const mockCanViewSubmissionDuplicates = jest.fn()
+const mockUseFetchSubmissionDuplicates = jest.fn()
 
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
@@ -82,6 +84,9 @@ jest.mock('../../../../../lib/contexts', () => {
 jest.mock('../../../../../lib/hooks', () => ({
     useDownloadAllSubmissions: (): unknown => mockUseDownloadAllSubmissions(),
     useDownloadSubmission: (): unknown => mockUseDownloadSubmission(),
+    useFetchSubmissionDuplicates: (...args: unknown[]): unknown => (
+        mockUseFetchSubmissionDuplicates(...args)
+    ),
     useFetchSubmissions: (...args: unknown[]): unknown => mockUseFetchSubmissions(...args),
 }))
 
@@ -92,6 +97,7 @@ jest.mock('../../../../../lib/services', () => ({
 jest.mock('../../../../../lib/utils', () => ({
     canDownloadSubmissions: (): boolean => false,
     canViewMarathonMatchRunnerLogs: (): boolean => false,
+    canViewSubmissionDuplicates: (...args: unknown[]): unknown => mockCanViewSubmissionDuplicates(...args),
     getSubmissionFinalScore: (): number => 0,
     getSubmissionInitialScore: (): number => 0,
     getSubmissionProvisionalScore: (): number => 0,
@@ -180,6 +186,11 @@ describe('SubmissionsSection', () => {
         jest.clearAllMocks()
 
         mockIsMarathonMatchChallenge.mockReturnValue(true)
+        mockCanViewSubmissionDuplicates.mockReturnValue(true)
+        mockUseFetchSubmissionDuplicates.mockReturnValue({
+            duplicatesBySubmissionId: {},
+            isLoading: false,
+        })
         mockUseDownloadAllSubmissions.mockReturnValue({
             downloadAll: jest.fn(),
             isDownloading: false,
@@ -272,5 +283,40 @@ describe('SubmissionsSection', () => {
             .toBeNull()
         expect(screen.queryByText('bravo-provisional-submission'))
             .toBeNull()
+    })
+    describe('duplicate detection', () => {
+        it('requests duplicates for the visible submissions when the role allows it', () => {
+            render(
+                <SubmissionsSection
+                    challenge={baseChallenge}
+                    challengeId='challenge-1'
+                />,
+            )
+
+            expect(mockUseFetchSubmissionDuplicates)
+                .toHaveBeenCalledWith(
+                    'challenge-1',
+                    expect.arrayContaining([
+                        'alpha-system-submission',
+                        'bravo-provisional-submission',
+                        'charlie-example-submission',
+                    ]),
+                    true,
+                )
+        })
+
+        it('disables the duplicates request for roles the API rejects', () => {
+            mockCanViewSubmissionDuplicates.mockReturnValue(false)
+
+            render(
+                <SubmissionsSection
+                    challenge={baseChallenge}
+                    challengeId='challenge-1'
+                />,
+            )
+
+            expect(mockUseFetchSubmissionDuplicates)
+                .toHaveBeenCalledWith('challenge-1', expect.any(Array), false)
+        })
     })
 })
