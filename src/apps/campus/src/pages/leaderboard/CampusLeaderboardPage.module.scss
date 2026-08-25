@@ -188,14 +188,8 @@ $card-gap: 35px;
 }
 
 .avatar {
-    flex: 0 0 auto;
     height: 32px;
     width: 32px;
-
-    // doubled to win over the shared avatar's responsive min-width
-    &.avatar img {
-        min-width: 0;
-    }
 }
 
 .handle {
