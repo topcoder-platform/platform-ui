@@ -263,6 +263,8 @@ describe('ChallengeForum', () => {
     it('creates a challenge topic without leaving Opportunities', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        expect(screen.queryByRole('checkbox', { name: /Post as announcement/ }))
+            .not.toBeInTheDocument()
         fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
             target: { value: 'Clarify the API contract' },
         })
@@ -276,6 +278,33 @@ describe('ChallengeForum', () => {
                 challengeId: 'challenge-id',
                 content: 'Can the maintainers clarify the response type?',
                 title: 'Clarify the API contract',
+            }))
+    })
+
+    it('lets an administrator create a challenge announcement', async () => {
+        render(
+            <ChallengeForum
+                canCreateAnnouncements
+                challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                memberId='10'
+            />,
+        )
+        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
+            target: { value: 'Submission deadline extended' },
+        })
+        fireEvent.change(screen.getByPlaceholderText(/Describe your question/), {
+            target: { value: 'The submission deadline is now Friday at 18:00 UTC.' },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: /Post as announcement/ }))
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create topic' })))
+
+        await waitFor(() => expect(mockCreateForumTopic)
+            .toHaveBeenCalledWith({
+                challengeId: 'challenge-id',
+                content: 'The submission deadline is now Friday at 18:00 UTC.',
+                isAnnouncement: true,
+                title: 'Submission deadline extended',
             }))
     })
 

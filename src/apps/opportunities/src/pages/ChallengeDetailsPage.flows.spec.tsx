@@ -18,7 +18,7 @@ import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 const mockUseSWR = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockUnregister = jest.fn()
-let mockProfile: { handle: string; userId: number } | undefined
+let mockProfile: { handle: string; roles?: string[]; userId: number } | undefined
 let mockRegistration: { id: string } | undefined
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
@@ -76,7 +76,9 @@ jest.mock('../components', () => ({
             )}
         </header>
     ),
-    ChallengeForum: (): JSX.Element => <div>Forum content</div>,
+    ChallengeForum: (props: { canCreateAnnouncements?: boolean }): JSX.Element => (
+        <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
+    ),
     ChallengeSidebar: (): JSX.Element => <aside />,
     ChallengeSubmissionUpload: (props: { onBack: () => void }): JSX.Element => (
         <div>
@@ -279,6 +281,36 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
             .not.toBeInTheDocument()
+    })
+
+    it('gives an unregistered administrator member tabs without the submission flow', () => {
+        mockProfile = { handle: 'admin', roles: ['Administrator'], userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'show_data_dashboard', value: true }],
+            type: 'Marathon Match',
+        }
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual([
+                'Requirements',
+                'Registrants8',
+                'Submissions5',
+                'Dashboard',
+                'Forum3',
+                'Winners',
+            ])
+        expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Submit a solution' }))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
+        expect(screen.getByText('Administrator forum content'))
+            .toBeInTheDocument()
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {

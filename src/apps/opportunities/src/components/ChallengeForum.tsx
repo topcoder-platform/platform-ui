@@ -45,6 +45,7 @@ type ForumSort = 'active' | 'oldest' | 'recent'
 type ForumRatingClass = 'ratingBlue' | 'ratingGray' | 'ratingGreen' | 'ratingRed' | 'ratingYellow'
 
 interface ChallengeForumProps {
+    canCreateAnnouncements?: boolean
     challenge: ChallengeOpportunity
     memberId?: string
 }
@@ -712,12 +713,14 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
  * @throws Does not throw; command errors render in the form.
  */
 const ForumCreateTopicView: FC<{
+    canCreateAnnouncements: boolean
     challenge: ChallengeOpportunity
     onBack: () => void
-    onCreate: (title: string, content: string) => Promise<boolean>
+    onCreate: (title: string, content: string, isAnnouncement: boolean) => Promise<boolean>
 }> = props => {
     const [content, setContent] = useState('')
     const [error, setError] = useState<string>()
+    const [isAnnouncement, setIsAnnouncement] = useState(false)
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
     const [title, setTitle] = useState('')
@@ -732,7 +735,7 @@ const ForumCreateTopicView: FC<{
 
         setError(undefined)
         setPending(true)
-        const created = await props.onCreate(title.trim(), content.trim())
+        const created = await props.onCreate(title.trim(), content.trim(), isAnnouncement)
         setPending(false)
         if (!created) setError('The topic could not be created. Review the message above and try again.')
     }
@@ -785,6 +788,21 @@ const ForumCreateTopicView: FC<{
                         preview={preview}
                         value={content}
                     />
+                    {props.canCreateAnnouncements && (
+                        <label className={styles.announcementOption}>
+                            <input
+                                checked={isAnnouncement}
+                                onChange={event => setIsAnnouncement(event.target.checked)}
+                                type='checkbox'
+                            />
+                            <span>
+                                <strong>Post as announcement</strong>
+                                <small>
+                                    Highlight this topic as an official challenge update for every participant.
+                                </small>
+                            </span>
+                        </label>
+                    )}
                     {error && <p className={styles.actionError} role='alert'>{error}</p>}
                     <div className={styles.formActions}>
                         <button disabled={pending} type='submit'>
@@ -1154,7 +1172,7 @@ const ForumTopicView: FC<{
  * read state. A legacy link is retained only as recovery when the v6 API cannot
  * be reached or the member is signed out.
  *
- * @param props challenge context and optional authenticated member ID.
+ * @param props challenge context, optional authenticated member ID, and administrator announcement access.
  * @returns embedded topic list, creation form, detail discussion, or recovery state.
  * @throws Does not throw; API failures render stable, actionable UI states.
  */
@@ -1265,12 +1283,17 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     }
 
     /** Creates a challenge topic and opens its new detail view. */
-    const createTopic = async (title: string, content: string): Promise<boolean> => {
+    const createTopic = async (
+        title: string,
+        content: string,
+        isAnnouncement: boolean,
+    ): Promise<boolean> => {
         setMutationError(undefined)
         try {
             const created = await createForumTopic({
                 challengeId: props.challenge.id,
                 content,
+                ...(isAnnouncement ? { isAnnouncement: true } : {}),
                 title,
             })
             await response.mutate()
@@ -1356,6 +1379,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             <>
                 {mutationError && <p className={styles.actionError} role='alert'>{mutationError}</p>}
                 <ForumCreateTopicView
+                    canCreateAnnouncements={!!props.canCreateAnnouncements}
                     challenge={props.challenge}
                     onBack={() => setCreatingTopic(false)}
                     onCreate={createTopic}

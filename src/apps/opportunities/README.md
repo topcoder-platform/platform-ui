@@ -164,7 +164,11 @@ soft deletes, watch state, and read state remain inside the challenge detail
 page. Topic summaries expose bounded starter excerpts, participant snapshots,
 unique authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
-v6 API is unavailable or the member is signed out.
+v6 API is unavailable or the member is signed out. Unregistered administrators
+receive the registered read and monitoring tabs, including Submissions, the
+metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
+actions remain registration-only. Administrators may create ordinary topics or
+official announcements and can reply throughout every challenge forum.
 
 The Report an Issue dialog preserves the Figma subject, category,
 1000-character description, and required attachment fields. Files upload

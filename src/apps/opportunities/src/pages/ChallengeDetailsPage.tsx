@@ -220,31 +220,33 @@ export const ChallengeDetailsPage: FC = () => {
     )
     const registration = registrationResponse.data
     const challenge = challengeResponse.data
+    const isAdministrator = profile?.roles?.some(role => role.trim()
+        .toLowerCase() === 'administrator') ?? false
+    const isRegistered = !!registration
+    const hasMemberTabAccess = isRegistered || isAdministrator
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(registration || designChallenge
+            ...(hasMemberTabAccess || designChallenge
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
                     label: 'Submissions',
                 }]
                 : []),
-            ...(registration
-                ? [
-                    { id: 'mine' as ChallengeTab, label: 'My Submissions' },
-                    ...(challenge && marathonDashboardIsEnabled(challenge)
-                        ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
-                        : []),
-                    { count: challenge?.numOfPosts, id: 'forum' as ChallengeTab, label: 'Forum' },
-                ]
+            ...(isRegistered ? [{ id: 'mine' as ChallengeTab, label: 'My Submissions' }] : []),
+            ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
+                ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
+                : []),
+            ...(hasMemberTabAccess
+                ? [{ count: challenge?.numOfPosts, id: 'forum' as ChallengeTab, label: 'Forum' }]
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
-    }, [challenge, registration])
+    }, [challenge, hasMemberTabAccess, isRegistered])
 
     /**
      * Selects a challenge tab and closes the transient in-tab submission form.
@@ -395,7 +397,7 @@ export const ChallengeDetailsPage: FC = () => {
             <ChallengeDetailHeader
                 busy={registrationBusy}
                 challenge={challenge}
-                isRegistered={!!registration}
+                isRegistered={isRegistered}
                 onRegister={startRegistration}
                 onSubmit={startSubmission}
                 onUnregister={unregister}
@@ -438,6 +440,7 @@ export const ChallengeDetailsPage: FC = () => {
                     <ChallengeTabContent
                         activeTab={activeTab}
                         challenge={challenge}
+                        isAdministrator={isAdministrator}
                         memberId={memberId}
                         onCloseSubmission={closeSubmission}
                         onContactSupport={() => setIssueOpen(true)}
@@ -479,6 +482,7 @@ export const ChallengeDetailsPage: FC = () => {
 interface ChallengeTabContentProps {
     activeTab: ChallengeTab
     challenge: ChallengeOpportunity
+    isAdministrator: boolean
     memberId?: string
     onCloseSubmission: () => void
     onContactSupport: () => void
@@ -540,7 +544,13 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     }
 
     if (props.activeTab === 'forum') {
-        return <ForumTab challenge={props.challenge} memberId={props.memberId} />
+        return (
+            <ForumTab
+                canCreateAnnouncements={props.isAdministrator}
+                challenge={props.challenge}
+                memberId={props.memberId}
+            />
+        )
     }
 
     return <WinnersTab challenge={props.challenge} memberId={props.memberId} />
@@ -1366,12 +1376,20 @@ const SubmissionPreview: FC<{
 /**
  * Renders the authenticated in-page Challenge Discussion workflow.
  *
- * @param props challenge context and optional authenticated member ID.
+ * @param props challenge context, administrator announcement access, and optional authenticated member ID.
  * @returns topic list, creation, threaded detail, and mutation workflows.
  * @throws Does not throw.
  */
-const ForumTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = props => (
-    <ChallengeForum challenge={props.challenge} memberId={props.memberId} />
+const ForumTab: FC<{
+    canCreateAnnouncements: boolean
+    challenge: ChallengeOpportunity
+    memberId?: string
+}> = props => (
+    <ChallengeForum
+        canCreateAnnouncements={props.canCreateAnnouncements}
+        challenge={props.challenge}
+        memberId={props.memberId}
+    />
 )
 
 type ChallengeWinner = NonNullable<ChallengeOpportunity['winners']>[number]

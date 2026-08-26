@@ -1081,6 +1081,48 @@
     }
 }
 
+.announcementOption {
+    align-items: flex-start;
+    background: #f4f4f4;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    color: #161616;
+    cursor: pointer;
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+
+    input {
+        accent-color: #007d79;
+        flex: 0 0 auto;
+        height: 16px;
+        margin: 2px 0 0;
+        width: 16px;
+    }
+
+    span {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    strong {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
 .editorShell {
     border: 1px solid #a8a8a8;
     border-radius: 4px;

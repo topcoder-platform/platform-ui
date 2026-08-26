@@ -84,6 +84,7 @@ export interface ForumTopicDetail {
 export interface CreateForumTopicRequest {
     challengeId: string
     content: string
+    isAnnouncement?: boolean
     title: string
 }
 
