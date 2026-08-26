@@ -16,11 +16,13 @@ import {
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 
 const mockUseSWR = jest.fn()
+const mockDeleteSubmission = jest.fn()
 const mockUnregister = jest.fn()
 let mockProfile: { handle: string; userId: number } | undefined
 let mockRegistration: { id: string } | undefined
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
+let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
 let mockReviewSummations: Record<string, unknown>[]
 let mockSubmissions: Record<string, unknown>[]
@@ -61,17 +63,27 @@ jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
         isRegistered: boolean
+        onSubmit: () => void
         onUnregister: () => Promise<void>
     }): JSX.Element => (
         <header>
             Challenge header
             {props.isRegistered && (
-                <button onClick={props.onUnregister} type='button'>Unregister</button>
+                <>
+                    <button onClick={props.onUnregister} type='button'>Unregister</button>
+                    <button onClick={props.onSubmit} type='button'>Submit a solution</button>
+                </>
             )}
         </header>
     ),
     ChallengeForum: (): JSX.Element => <div>Forum content</div>,
     ChallengeSidebar: (): JSX.Element => <aside />,
+    ChallengeSubmissionUpload: (props: { onBack: () => void }): JSX.Element => (
+        <div>
+            Submission upload form
+            <button onClick={props.onBack} type='button'>Back to submissions</button>
+        </div>
+    ),
     ChallengeTermsModal: (): JSX.Element => <></>,
     extractTableOfContents: (): [] => [],
     isHtmlDescriptionFormat: (): boolean => false,
@@ -87,7 +99,9 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
-    challengeCatalogKey: (): string => '',
+    challengeCatalogKey: (track?: string): string => (track ?? '')
+        .toLowerCase()
+        .replace(/[^a-z]/g, ''),
     challengePlacementPrizes: (challenge: {
         prizeSets?: Array<{ prizes?: Array<{ type?: string; value?: number }> }>
     }): Array<{ placement: number; type?: string; value?: number }> => (
@@ -100,6 +114,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 
 jest.mock('../services', () => ({
     agreeToChallengeTerms: jest.fn(),
+    deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
     getChallengeOpportunity: jest.fn(),
     getChallengeRegistration: jest.fn(),
     getChallengeReviewSummations: jest.fn(),
@@ -186,10 +201,12 @@ function submissionPage(items: Record<string, unknown>[]): Record<string, unknow
 
 describe('ChallengeDetailsPage member flows', () => {
     beforeEach(() => {
+        jest.restoreAllMocks()
         jest.clearAllMocks()
         mockProfile = undefined
         mockRegistration = undefined
         mockMemberProfiles = []
+        mockPreviewSubmissions = []
         mockRegistrants = []
         mockReviewSummations = []
         mockSubmissions = []
@@ -206,6 +223,7 @@ describe('ChallengeDetailsPage member flows', () => {
             type: 'Challenge',
         }
         mockUnregister.mockResolvedValue(undefined)
+        mockDeleteSubmission.mockResolvedValue(undefined)
         mockUseSWR.mockImplementation((key: unknown) => {
             if (typeof key === 'string' && key.startsWith('opportunities:challenge:')) {
                 return swrResponse(mockChallenge)
@@ -217,6 +235,10 @@ describe('ChallengeDetailsPage member flows', () => {
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
                 return swrResponse(submissionPage(mockSubmissions))
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:submission-previews') {
+                return swrResponse(submissionPage(mockPreviewSubmissions))
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:mm-review-summations') {
@@ -259,8 +281,17 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('keeps the release-gated Design submissions gallery public', () => {
-        mockChallenge = { ...mockChallenge, track: 'Design' }
+    it('keeps the metadata-gated Design submissions gallery public', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'submissionsViewable', value: 'true' }],
+            track: 'Design',
+        }
+        mockPreviewSubmissions = [{
+            id: 'released-preview',
+            previewUrl: 'https://images.example/released-preview.png',
+            submitterHandle: 'designer',
+        }]
 
         renderPage()
 
@@ -269,6 +300,30 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: 'My Submissions' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('img', { name: 'Submission preview by designer' }))
+            .toHaveAttribute('src', 'https://images.example/released-preview.png')
+        expect(screen.queryByRole('table'))
+            .not.toBeInTheDocument()
+    })
+
+    it('uses the Design submission table when private previews are disabled', () => {
+        mockChallenge = { ...mockChallenge, track: 'Design' }
+        mockSubmissions = [{
+            id: 'submission-1',
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'designer',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        const headers = ['Handle', 'Submission Date', 'Action']
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
+        expect(screen.queryByRole('columnheader', { name: 'Rating' }))
             .not.toBeInTheDocument()
     })
 
@@ -294,6 +349,22 @@ describe('ChallengeDetailsPage member flows', () => {
                 'Forum3',
                 'Winners',
             ])
+    })
+
+    it('opens the in-tab upload workflow from the registered header action', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
+
+        expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .toHaveAttribute('aria-selected', 'true')
+        expect(screen.getByText('Submission upload form'))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Back to submissions' }))
+        expect(screen.getByText('You have no submissions yet'))
+            .toBeInTheDocument()
     })
 
     it('resets the selected member tab when unregistering', async () => {
@@ -346,18 +417,80 @@ describe('ChallengeDetailsPage member flows', () => {
         }]
 
         renderPage()
-        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }));
-        ['Submission ID', 'Type', 'Submission Date', 'Current Status', 'Score', 'Actions']
-            .forEach(header => expect(screen.getByRole('columnheader', { name: header }))
-                .toBeInTheDocument())
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        const headers = ['Submission ID', 'Type', 'Submission Date', 'Current Status', 'Score', 'Actions']
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
         expect(screen.getByText('Contest Submission'))
             .toBeInTheDocument()
         expect(screen.getByText('In Review'))
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: /Open Review App/ }))
             .toHaveAttribute('href', '/review/active-challenges/challenge-id/challenge-details?tab=submission')
+        expect(screen.queryByRole('button', { name: 'Download submission submission-1' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'View history for submission submission-1' }))
+            .toBeInTheDocument()
+    })
+
+    it('renders and deletes the compact Design My Submissions actions', async () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, track: 'Design' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        jest.spyOn(window, 'confirm')
+            .mockReturnValue(true)
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const headers = ['Submission ID', 'Type', 'Submission Date', 'Actions']
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
+        expect(screen.queryByRole('columnheader', { name: 'Current Status' }))
+            .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Download submission submission-1' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open submission submission-1 in Review App' }))
+            .toBeInTheDocument()
+
+        const deleteButton = screen.getByRole('button', { name: 'Delete submission submission-1' })
+        fireEvent.click(deleteButton)
+
+        await waitFor(() => expect(mockDeleteSubmission)
+            .toHaveBeenCalledWith('submission-1'))
+        await waitFor(() => expect(deleteButton)
+            .not.toBeDisabled())
+    })
+
+    it('renders the compact QA My Submissions columns and authored actions', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, track: 'Quality Assurance' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-qa',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const headers = ['Submission ID', 'Type', 'Submission Date', 'Actions']
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
+        expect(screen.queryByRole('columnheader', { name: 'Current Status' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Download submission submission-qa' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open submission submission-qa in Review App' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete submission submission-qa' }))
+            .not.toBeInTheDocument()
     })
 
     it('renders Marathon Match testing progress and both score phases', () => {
@@ -372,14 +505,15 @@ describe('ChallengeDetailsPage member flows', () => {
         }]
 
         renderPage()
-        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }));
-        [
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        const headers = [
             'Current Test Process',
             'Test Status',
             'Test Progress',
             'Final Score',
-            'Provisional Score',
-        ].forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            'Provision Score',
+        ]
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
             .toBeInTheDocument())
         expect(screen.getByText('System'))
             .toBeInTheDocument()
@@ -390,6 +524,53 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByText('99.5'))
             .toBeInTheDocument()
         expect(screen.getByText('98.5'))
+            .toBeInTheDocument()
+    })
+
+    it('matches the Design Registrants columns and the QA submission score columns', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, track: 'Design' }
+        mockRegistrants = [{
+            created: '2026-06-03T09:30:00.000Z',
+            id: 'resource-42',
+            memberHandle: 'designer',
+            memberId: 42,
+            rating: 1800,
+        }]
+
+        const rendered: ReturnType<typeof render> = render(
+            <MemoryRouter initialEntries={['/opportunities/challenge/challenge-id']}>
+                <Routes>
+                    <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+        expect(screen.getByRole('columnheader', { name: 'Handle' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'Registration Date' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Rating' }))
+            .not.toBeInTheDocument()
+
+        rendered.unmount()
+        mockChallenge = { ...mockChallenge, track: 'Quality Assurance' }
+        mockSubmissions = [{
+            finalScore: 91,
+            id: 'submission-qa',
+            provisionalScore: 88.5,
+            submitterHandle: 'tester',
+        }]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        const headers = ['Handle', 'Rating', 'Submission Date', 'Initial Score', 'Final Score', 'Action']
+        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
+            .toBeInTheDocument())
+        expect(screen.getByRole('cell', { name: '88.5' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '91' }))
             .toBeInTheDocument()
     })
 
@@ -434,6 +615,7 @@ describe('ChallengeDetailsPage member flows', () => {
     })
 
     it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
+        mockProfile = { handle: 'fourth', userId: 4 }
         mockChallenge = {
             ...mockChallenge,
             prizeSets: [{
@@ -483,21 +665,82 @@ describe('ChallengeDetailsPage member flows', () => {
         const cards = screen.getAllByRole('article')
         expect(cards.map(card => within(card)
             .getByText(/Place$/).textContent))
-            .toEqual(['1st Place', '2nd Place', '3rd Place', '4th Place'])
+            .toEqual(['1st Place', '2nd Place', '3rd Place'])
         expect(cards[0])
             .toHaveTextContent('with a final score of 98.98')
         expect(cards[1])
             .toHaveTextContent('with a final score of 98.88')
         expect(cards[0])
             .toHaveTextContent('$400')
-        expect(cards[3])
-            .toHaveTextContent('$50')
         expect(cards[0])
-            .toHaveTextContent('7 development wins1600 rating')
+            .toHaveTextContent('7 development wins')
+        expect(cards[0])
+            .toHaveTextContent('1600 rating')
         expect(within(cards[0])
             .getByRole('link', { name: 'first' }))
             .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/first')
         expect(cards[0].querySelector('img[src="https://images.example/first.png"]'))
             .toBeInTheDocument()
+
+        const remainingWinners = screen.getByRole('table', { name: 'Remaining winners' })
+        expect(within(remainingWinners)
+            .getByRole('columnheader', { name: 'Development Wins' }))
+            .toBeInTheDocument()
+        const fourthRow = within(remainingWinners)
+            .getByRole('row', { name: /^4th fourth You/ })
+        expect(fourthRow)
+            .toHaveTextContent('4th')
+        expect(fourthRow)
+            .toHaveTextContent('$50')
+        expect(fourthRow)
+            .toHaveTextContent('4')
+        expect(within(fourthRow as HTMLElement)
+            .getByText('You'))
+            .toBeInTheDocument()
+    })
+
+    it('omits ratings from the exact three-winner podium state', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            winners: [
+                { handle: 'first', placement: 1, userId: '1' },
+                { handle: 'second', placement: 2, userId: '2' },
+                { handle: 'third', placement: 3, userId: '3' },
+            ],
+        }
+        mockMemberProfiles = [
+            { handle: 'first', maxRating: 1600, userId: '1' },
+            { handle: 'second', maxRating: 1500, userId: '2' },
+            { handle: 'third', maxRating: 1400, userId: '3' },
+        ]
+        mockWinnerStats = [
+            { handle: 'first', stats: { DEVELOP: { wins: 7 } } },
+            { handle: 'second', stats: { DEVELOP: { wins: 6 } } },
+            { handle: 'third', stats: { DEVELOP: { wins: 5 } } },
+        ]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        screen.getAllByRole('article')
+            .forEach(card => expect(card)
+                .not.toHaveTextContent('rating'))
+        expect(screen.queryByRole('table', { name: 'Remaining winners' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows the rating in the exact one-winner podium state', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            winners: [{ handle: 'first', placement: 1, userId: '1' }],
+        }
+        mockMemberProfiles = [{ handle: 'first', maxRating: 1600, userId: '1' }]
+        mockWinnerStats = [{ handle: 'first', stats: { DEVELOP: { wins: 7 } } }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByRole('article'))
+            .toHaveTextContent('1600 rating')
     })
 })

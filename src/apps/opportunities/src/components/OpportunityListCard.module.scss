@@ -30,6 +30,24 @@
     }
 }
 
+.cardTooltip {
+    background: #001e2e !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+    color: #fff !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
+    max-width: 237px !important;
+    padding: 16px !important;
+
+    ul {
+        margin: 0;
+        padding-left: 16px;
+    }
+}
+
 .main {
     display: flex;
     flex-direction: column;
@@ -102,6 +120,12 @@
 .stateApplied {
     border-color: #198038;
     color: #198038;
+}
+
+.stateAccepted {
+    background: #198038;
+    border-color: #198038;
+    color: #fff;
 }
 
 .stateClosed {
@@ -567,8 +591,13 @@
     }
 
     .competitionMeta {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, max-content);
+        justify-content: space-between;
         padding: 24px;
+
+        dd {
+            overflow: visible;
+        }
     }
 }
 

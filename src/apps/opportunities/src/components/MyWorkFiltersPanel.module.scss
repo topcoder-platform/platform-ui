@@ -6,24 +6,26 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-height: 906px;
     padding: 24px;
     width: 100%;
 
     h3,
     legend {
         color: #161616;
-        font-family: 'Figtree', sans-serif;
         font-weight: 700;
         text-transform: none;
     }
 
     h3 {
+        font-family: 'Figtree', sans-serif;
         font-size: 18px;
         line-height: 30px;
         margin: 0;
     }
 
     legend {
+        font-family: 'Nunito Sans', sans-serif;
         font-size: 14px;
         line-height: 22px;
         margin-bottom: 8px;
@@ -43,10 +45,6 @@
         margin: 0;
         padding: 0;
     }
-}
-
-.competitions {
-    min-height: 706px;
 }
 
 .heading {
@@ -72,13 +70,6 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-
-    small {
-        color: #6f6f6f;
-        font-size: 12px;
-        line-height: 16px;
-        margin: 0;
-    }
 }
 
 .search {
@@ -117,90 +108,6 @@
         border-color: #007d79;
         box-shadow: 0 0 0 1px #007d79;
     }
-}
-
-.selectGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    > strong {
-        color: #161616;
-        font-family: 'Nunito Sans', sans-serif;
-        font-size: 14px;
-        line-height: 22px;
-    }
-}
-
-.select {
-    position: relative;
-}
-
-.selectControl {
-    align-items: center;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    display: flex;
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 16px;
-    height: 38px;
-    justify-content: space-between;
-    line-height: 22px;
-    padding: 0 16px;
-    text-align: left;
-    width: 100%;
-
-    svg {
-        height: 20px;
-        width: 20px;
-    }
-
-    &:focus-visible {
-        border-color: #007d79;
-        box-shadow: 0 0 0 1px #007d79;
-        outline: 0;
-    }
-}
-
-.placeholder {
-    color: #6f6f6f;
-}
-
-.roleMenu {
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 2px 6px rgba(22, 22, 22, .3);
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    height: 160px;
-    left: 0;
-    padding: 8px 0;
-    position: absolute;
-    top: 42px;
-    width: 234px;
-    z-index: 20;
-}
-
-.roleOption {
-    background: #fff;
-    border: 0;
-    color: #161616;
-    cursor: pointer;
-    flex: 0 0 36px;
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 16px;
-    line-height: 22px;
-    padding: 7px 16px;
-    text-align: left;
-}
-
-.activeRoleOption,
-.roleOption:hover,
-.roleOption:focus-visible {
-    background: #f5f7fa;
-    outline: 0;
 }
 
 .checkRow,
@@ -258,6 +165,5 @@
 @media (max-width: 760px) {
     .panel {
         min-height: 0;
-        position: static;
     }
 }

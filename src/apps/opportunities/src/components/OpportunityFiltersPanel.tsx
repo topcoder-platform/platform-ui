@@ -4,8 +4,8 @@ import classNames from 'classnames'
 
 import { OpportunityKind } from '../models'
 
-import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as SearchIcon } from '../assets/filter-search.svg'
+import { OpportunityRoleSelect } from './OpportunityRoleSelect'
 import styles from './OpportunityFiltersPanel.module.scss'
 
 interface OpportunityFiltersPanelProps {
@@ -60,7 +60,6 @@ const COMPETITION_TYPES: FacetOption[] = [
     { label: 'Challenge', value: 'CH' },
     { label: 'First2Finish', value: 'F2F' },
     { label: 'Marathon Match', value: 'MM' },
-    { label: 'Task', value: 'TSK' },
 ]
 
 const ENGAGEMENT_ROLES: FacetOption[] = [
@@ -207,25 +206,16 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                 </fieldset>
             )}
             {props.kind === 'engagements' && (
-                <label className={styles.selectGroup}>
+                <div className={styles.selectGroup}>
                     <strong>Role</strong>
-                    <span className={styles.select}>
-                        <select
-                            aria-label='Role'
-                            aria-describedby={roleDescriptionId}
-                            className={props.selectedRole ? undefined : styles.placeholder}
-                            onChange={event => props.onRoleChange(event.target.value)}
-                            value={props.selectedRole}
-                        >
-                            <option value=''>Select option</option>
-                            {ENGAGEMENT_ROLES.map(role => (
-                                <option key={role.value} value={role.value}>{role.label}</option>
-                            ))}
-                        </select>
-                        <ChevronDownIcon aria-hidden='true' />
-                    </span>
+                    <OpportunityRoleSelect
+                        describedBy={roleDescriptionId}
+                        onChange={props.onRoleChange}
+                        options={ENGAGEMENT_ROLES}
+                        value={props.selectedRole}
+                    />
                     <small id={roleDescriptionId}>Select e.g. “Software Engineer”</small>
-                </label>
+                </div>
             )}
         </aside>
     )

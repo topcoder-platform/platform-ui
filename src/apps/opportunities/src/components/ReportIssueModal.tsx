@@ -1,12 +1,32 @@
-/* eslint-disable react/jsx-no-bind */
-import { FC, useState } from 'react'
+/* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
+import {
+    ChangeEvent,
+    DragEvent,
+    FC,
+    useRef,
+    useState,
+} from 'react'
 import { toast } from 'react-toastify'
 
+import {
+    ReviewAttachmentUploadResult,
+    uploadReviewAttachment,
+} from '~/apps/review/src/lib/services/file-upload.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
-import { SupportMarkdownEditor } from '~/apps/support/src/lib/components/SupportMarkdownEditor'
 import { BaseModal, Button, IconOutline } from '~/libs/ui'
 
 import styles from './ReportIssueModal.module.scss'
+
+const DESCRIPTION_LIMIT = 1000
+const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
+const ISSUE_CATEGORIES = [
+    'Registration',
+    'Submission',
+    'Challenge requirements',
+    'Review',
+    'Payment',
+    'Other',
+]
 
 interface ReportIssueModalProps {
     challengeId?: string
@@ -14,36 +34,214 @@ interface ReportIssueModalProps {
     open: boolean
 }
 
+interface IssueAttachment {
+    error?: string
+    file: File
+    id: number
+    result?: ReviewAttachmentUploadResult
+    status: 'error' | 'uploaded' | 'uploading'
+}
+
 /**
- * Renders the Figma Report an Issue flow backed by support-api-v6. Subject,
- * category, and separate file fields are intentionally omitted; the Markdown
- * editor owns drag/drop and paste uploads.
+ * Formats an attached file size in the one-decimal megabyte style authored by Figma.
+ *
+ * @param bytes file size in bytes.
+ * @returns compact megabyte label such as `1.1 MB`.
+ * @throws Does not throw.
+ */
+function formatAttachmentSize(bytes: number): string {
+    const megabytes = bytes / (1024 * 1024)
+    return `${Math.max(0.1, megabytes)
+        .toFixed(1)} MB`
+}
+
+/**
+ * Preserves the authored subject, category, description, and uploaded-file
+ * metadata inside the description-only support-api-v6 ticket contract.
+ *
+ * @param subject member-entered issue subject.
+ * @param category selected authored issue category.
+ * @param description member-entered issue details.
+ * @param attachments successfully uploaded file metadata.
+ * @returns Markdown description accepted by support-api-v6.
+ * @throws Does not throw.
+ */
+export function buildReportIssueDescription(
+    subject: string,
+    category: string,
+    description: string,
+    attachments: ReviewAttachmentUploadResult[],
+): string {
+    const attachmentLines = attachments.map(attachment => {
+        const label = attachment.filename.replace(/\[|\]/g, '') || 'Attachment'
+        return `- [${label}](${attachment.url})`
+    })
+    return [
+        `**Subject:** ${subject.trim()}`,
+        `**Category:** ${category.trim()}`,
+        '',
+        description.trim(),
+        '',
+        '**Attachments:**',
+        ...attachmentLines,
+    ].join('\n')
+}
+
+/**
+ * Renders both authored Report an Issue states while adapting their richer
+ * fields to support-api-v6's challenge-id plus Markdown-description contract.
+ * Attachments upload through the shared Filestack pipeline before submission.
  *
  * @param props optional challenge context and modal state.
- * @returns Markdown-only support ticket form and success confirmation.
- * @throws Does not throw; request errors remain visible inside the modal.
+ * @returns subject, category, description, attachment, and success states.
+ * @throws Does not throw; validation, upload, and request errors stay in the modal.
  */
 export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
-    const [description, setDescription] = useState('')
-    const [error, setError] = useState<string | undefined>()
+    const [attachments, setAttachments] = useState<IssueAttachment[]>([])
     const [busy, setBusy] = useState(false)
+    const [category, setCategory] = useState('')
     const [created, setCreated] = useState(false)
-    const contextId = `opportunity-${props.challengeId ?? 'general'}`
+    const [description, setDescription] = useState('')
+    const [dragActive, setDragActive] = useState(false)
+    const [error, setError] = useState<string>()
+    const [subject, setSubject] = useState('')
+    const attachmentId = useRef(0)
+    const fileInput = useRef<HTMLInputElement>(null)
+    const uploading = attachments.some(attachment => attachment.status === 'uploading')
+    const uploaded = attachments
+        .filter((attachment): attachment is IssueAttachment & { result: ReviewAttachmentUploadResult } => (
+            attachment.status === 'uploaded' && !!attachment.result
+        ))
+    const canSubmit = !!subject.trim()
+        && !!category
+        && !!description.trim()
+        && uploaded.length > 0
+        && !uploading
+        && !busy
 
-    /** Clears local state and closes the dialog. */
-    const close = (): void => {
-        if (busy) return
-        setDescription('')
-        setError(undefined)
+    /**
+     * Clears local form and confirmation state for the next modal session.
+     *
+     * @returns void.
+     * @throws Does not throw.
+     */
+    const reset = (): void => {
+        setAttachments([])
+        setCategory('')
         setCreated(false)
+        setDescription('')
+        setDragActive(false)
+        setError(undefined)
+        setSubject('')
+        if (fileInput.current) fileInput.current.value = ''
+    }
+
+    /**
+     * Clears local state and closes the dialog when no request or upload is active.
+     *
+     * @returns void.
+     * @throws Does not throw.
+     */
+    const close = (): void => {
+        if (busy || uploading) return
+        reset()
         props.onClose()
     }
 
-    /** Creates a challenge-scoped support ticket. */
+    /**
+     * Validates and uploads selected files through the shared attachment pipeline.
+     *
+     * @param files browser-selected or dropped files.
+     * @returns promise settled after every accepted upload has succeeded or failed.
+     * @throws Does not throw; validation and upload failures render in the form.
+     */
+    const addAttachments = async (files: FileList | File[]): Promise<void> => {
+        const candidates = Array.from(files)
+        if (!candidates.length) return
+        const oversized = candidates.find(file => file.size > MAX_ATTACHMENT_BYTES)
+        if (oversized) {
+            setError(`${oversized.name} is larger than the 2 MB attachment limit.`)
+            return
+        }
+
+        setError(undefined)
+        const pending = candidates.map<IssueAttachment>(file => {
+            attachmentId.current += 1
+            return {
+                file,
+                id: attachmentId.current,
+                status: 'uploading',
+            }
+        })
+        setAttachments(current => [...current, ...pending])
+        await Promise.all(pending.map(async attachment => {
+            try {
+                const result = await uploadReviewAttachment(attachment.file, {
+                    category: 'support-ticket',
+                    challengeId: `opportunity-${props.challengeId ?? 'general'}`,
+                })
+                setAttachments(current => current.map(item => (item.id === attachment.id
+                    ? { ...item, result, status: 'uploaded' }
+                    : item)))
+            } catch (uploadError) {
+                const message = uploadError instanceof Error ? uploadError.message : 'File upload failed.'
+                setAttachments(current => current.map(item => (item.id === attachment.id
+                    ? { ...item, error: message, status: 'error' }
+                    : item)))
+                setError(message)
+            }
+        }))
+        if (fileInput.current) fileInput.current.value = ''
+    }
+
+    /**
+     * Uploads files selected by the hidden native picker.
+     *
+     * @param event native file-input change event.
+     * @returns void after starting the asynchronous uploads.
+     * @throws Does not throw.
+     */
+    const selectFiles = (event: ChangeEvent<HTMLInputElement>): void => {
+        if (event.target.files) {
+            addAttachments(event.target.files)
+                .catch(() => undefined)
+        }
+    }
+
+    /**
+     * Accepts files dropped on the authored attachment zone.
+     *
+     * @param event native attachment drop event.
+     * @returns void after starting the asynchronous uploads.
+     * @throws Does not throw.
+     */
+    const dropFiles = (event: DragEvent<HTMLButtonElement>): void => {
+        event.preventDefault()
+        setDragActive(false)
+        addAttachments(event.dataTransfer.files)
+            .catch(() => undefined)
+    }
+
+    /**
+     * Removes one uploaded, pending, or failed attachment from the report.
+     *
+     * @param id local attachment identifier.
+     * @returns void.
+     * @throws Does not throw.
+     */
+    const removeAttachment = (id: number): void => {
+        setAttachments(current => current.filter(attachment => attachment.id !== id))
+    }
+
+    /**
+     * Creates a challenge-scoped support ticket after all authored required fields validate.
+     *
+     * @returns promise settled after the support request succeeds or fails.
+     * @throws Does not throw; request failures remain visible inside the modal.
+     */
     const submit = async (): Promise<void> => {
-        const normalized = description.trim()
-        if (!normalized) {
-            setError('Enter a description of the issue.')
+        if (!canSubmit) {
+            setError('Complete every required field and attach at least one file.')
             return
         }
 
@@ -52,7 +250,12 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         try {
             await createSupportTicket({
                 ...(props.challengeId ? { challengeId: props.challengeId } : {}),
-                description: normalized,
+                description: buildReportIssueDescription(
+                    subject,
+                    category,
+                    description,
+                    uploaded.map(attachment => attachment.result),
+                ),
             })
             setCreated(true)
             toast.success('Your issue was sent to the Platform Team.')
@@ -82,7 +285,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                     <Button
                         className={styles.actionButton}
                         customRadius
-                        disabled={busy}
+                        disabled={busy || uploading}
                         label='Cancel'
                         noCaps
                         onClick={close}
@@ -92,7 +295,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                     <Button
                         className={styles.actionButton}
                         customRadius
-                        disabled={busy || !description.trim()}
+                        disabled={!canSubmit}
                         label={busy ? 'Sending…' : 'Send report'}
                         loading={busy}
                         noCaps
@@ -116,7 +319,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                     <button
                         aria-label='Close report issue'
                         className={styles.modalClose}
-                        disabled={busy}
+                        disabled={busy || uploading}
                         onClick={close}
                         type='button'
                     >
@@ -133,18 +336,108 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                 </div>
             ) : (
                 <div className={styles.form}>
-                    <SupportMarkdownEditor
-                        contextId={contextId}
-                        disabled={busy}
-                        error={error}
-                        label='Description'
-                        onChange={value => {
-                            setDescription(value)
-                            if (value.trim()) setError(undefined)
-                        }}
-                        uploadCategory='support-ticket'
-                        value={description}
-                    />
+                    <label className={styles.field}>
+                        <span>
+                            Subject
+                            <em>*</em>
+                        </span>
+                        <input
+                            disabled={busy}
+                            maxLength={255}
+                            onChange={event => setSubject(event.target.value)}
+                            placeholder='Enter the subject of your issue'
+                            value={subject}
+                        />
+                    </label>
+                    <label className={styles.field}>
+                        <span>
+                            Category
+                            <em>*</em>
+                        </span>
+                        <select
+                            disabled={busy}
+                            onChange={event => setCategory(event.target.value)}
+                            value={category}
+                        >
+                            <option value=''>Select category</option>
+                            {ISSUE_CATEGORIES.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className={styles.field}>
+                        <span>
+                            Description
+                            <em>*</em>
+                        </span>
+                        <textarea
+                            disabled={busy}
+                            maxLength={DESCRIPTION_LIMIT}
+                            onChange={event => setDescription(event.target.value)}
+                            placeholder='Explain your issue'
+                            value={description}
+                        />
+                        <small>Max. 1000 characters</small>
+                    </label>
+                    <div className={styles.attachmentField}>
+                        <span className={styles.attachmentLabel}>
+                            {attachments.length ? 'Attach Screenshots, Files' : 'Attach Files'}
+                            <em>*</em>
+                        </span>
+                        <input
+                            aria-label='Attach files'
+                            disabled={busy || uploading}
+                            multiple
+                            onChange={selectFiles}
+                            ref={fileInput}
+                            type='file'
+                        />
+                        <button
+                            className={dragActive ? styles.activeDropZone : styles.dropZone}
+                            disabled={busy || uploading}
+                            onClick={() => fileInput.current?.click()}
+                            onDragEnter={() => setDragActive(true)}
+                            onDragLeave={() => setDragActive(false)}
+                            onDragOver={event => event.preventDefault()}
+                            onDrop={dropFiles}
+                            type='button'
+                        >
+                            <IconOutline.UploadIcon aria-hidden='true' />
+                            <span>Drop your file(s) here or</span>
+                            <strong>Browse</strong>
+                        </button>
+                        <small>Max. 2 MB per file</small>
+                    </div>
+                    {attachments.length > 0 && (
+                        <div className={styles.attachments}>
+                            <strong>Uploading</strong>
+                            {attachments.map(attachment => (
+                                <div className={styles.attachmentRow} key={attachment.id}>
+                                    <IconOutline.PhotographIcon aria-hidden='true' />
+                                    <span>
+                                        <strong>{attachment.file.name}</strong>
+                                        <small>
+                                            {attachment.status === 'uploading'
+                                                ? 'Uploading…'
+                                                : attachment.status === 'error'
+                                                    ? attachment.error
+                                                    : formatAttachmentSize(
+                                                        attachment.result?.size ?? attachment.file.size,
+                                                    )}
+                                        </small>
+                                    </span>
+                                    <button
+                                        aria-label={`Remove ${attachment.file.name}`}
+                                        onClick={() => removeAttachment(attachment.id)}
+                                        type='button'
+                                    >
+                                        <IconOutline.TrashIcon aria-hidden='true' />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {error && <p className={styles.error} role='alert'>{error}</p>}
                 </div>
             )}
         </BaseModal>

@@ -90,9 +90,12 @@ describe('OpportunityFiltersPanel', () => {
         fireEvent.click(myEngagements)
         expect(onAppliedChange)
             .toHaveBeenCalledWith(true)
-        fireEvent.change(screen.getByRole('combobox', { name: 'Role' }), {
-            target: { value: 'SOFTWARE_DEVELOPER' },
-        })
+        fireEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+        expect(screen.getByRole('listbox'))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('option'))
+            .toHaveLength(4)
+        fireEvent.click(screen.getByRole('option', { name: 'Software Developer' }))
         expect(onRoleChange)
             .toHaveBeenCalledWith('SOFTWARE_DEVELOPER')
         expect(screen.getByText('Select e.g. “Software Engineer”'))

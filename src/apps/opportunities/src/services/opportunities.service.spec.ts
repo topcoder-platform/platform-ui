@@ -1,5 +1,6 @@
 /* eslint-disable ordered-imports/ordered-imports */
 import {
+    xhrDeleteAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
@@ -7,6 +8,8 @@ import {
 } from '~/libs/core'
 import {
     buildOpportunityPageUrl,
+    createChallengeSubmission,
+    deleteChallengeSubmission,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
     getChallengeSubmissionPreviews,
@@ -28,6 +31,7 @@ jest.mock('~/config', () => ({
     },
 }), { virtual: true })
 jest.mock('~/libs/core', () => ({
+    xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
     xhrGlobalInstance: { get: jest.fn() },
     xhrPostAsync: jest.fn(),
@@ -359,6 +363,50 @@ describe('opportunities service normalization', () => {
             )
     })
 
+    it('uploads a multipart challenge submission and reports Axios progress', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const progress = jest.fn()
+        const file = new File(['archive'], 'MySubmission.zip', { type: 'application/zip' })
+        const controller = new AbortController()
+        post.mockImplementationOnce(async (_url, _payload, config) => {
+            config?.onUploadProgress?.({ loaded: 1, total: 2 } as never)
+            return { id: 'submission-id' } as never
+        })
+
+        await expect(createChallengeSubmission(
+            'challenge-id',
+            '123',
+            'CHECKPOINT_SUBMISSION',
+            file,
+            progress,
+            controller.signal,
+        ))
+            .resolves.toEqual({ id: 'submission-id' })
+
+        expect(post)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/submissions',
+                expect.any(FormData),
+                expect.objectContaining({
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    signal: controller.signal,
+                }),
+            )
+        const payload = post.mock.calls.at(-1)?.[1] as FormData
+        expect(payload.get('challengeId'))
+            .toBe('challenge-id')
+        expect(payload.get('memberId'))
+            .toBe('123')
+        expect(payload.get('type'))
+            .toBe('CHECKPOINT_SUBMISSION')
+        expect(payload.get('fileName'))
+            .toBe('MySubmission.zip')
+        expect((payload.get('file') as File).name)
+            .toBe('MySubmission.zip')
+        expect(progress)
+            .toHaveBeenCalledWith(50)
+    })
+
     it('requests only the latest submission per member for the main table', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get.mockResolvedValueOnce({
@@ -405,6 +453,16 @@ describe('opportunities service normalization', () => {
             .toHaveBeenLastCalledWith(
                 'https://api.example/v6/submissions/submission%2Fid/download-url',
             )
+    })
+
+    it('deletes only the encoded submission selected by My Submissions', async () => {
+        const remove = xhrDeleteAsync as jest.MockedFunction<typeof xhrDeleteAsync>
+        remove.mockResolvedValueOnce(undefined)
+
+        await expect(deleteChallengeSubmission('submission/id'))
+            .resolves.toBeUndefined()
+        expect(remove)
+            .toHaveBeenLastCalledWith('https://api.example/v6/submissions/submission%2Fid')
     })
 
     it('loads and sorts every same-type member submission for the history modal', async () => {

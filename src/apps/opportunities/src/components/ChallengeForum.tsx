@@ -1,8 +1,10 @@
-/* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
+/* eslint-disable no-alert, no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     ChangeEvent,
     FC,
+    FormEvent,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import useSWR, { SWRResponse } from 'swr'
@@ -18,9 +20,17 @@ import {
     MemberProfileSummary,
 } from '../models'
 import {
+    createForumPost,
+    createForumTopic,
+    deleteForumPost,
+    deleteForumTopic,
     getChallengeForumTopics,
     getForumTopicDetail,
     getMemberProfilesByUserIds,
+    markForumTopicRead,
+    setForumTopicWatching,
+    updateForumPost,
+    updateForumTopic,
 } from '../services'
 import {
     challengeForumUrl,
@@ -32,6 +42,7 @@ import styles from './ChallengeForum.module.scss'
 
 type ForumScope = 'all' | 'announcements' | 'discussions' | 'unread'
 type ForumSort = 'active' | 'oldest' | 'recent'
+type ForumRatingClass = 'ratingBlue' | 'ratingGray' | 'ratingGreen' | 'ratingRed' | 'ratingYellow'
 
 interface ChallengeForumProps {
     challenge: ChallengeOpportunity
@@ -48,7 +59,16 @@ interface ForumParticipant {
     memberId: string
 }
 
+interface MarkdownSelectionResult {
+    selectionEnd: number
+    selectionStart: number
+    value: string
+}
+
 type MemberProfilesById = ReadonlyMap<string, MemberProfileSummary>
+
+const COMMENT_CHARACTER_LIMIT = 500
+const TOPIC_CHARACTER_LIMIT = 16000
 
 /**
  * Formats a Forums API timestamp in the authored day-month-year presentation.
@@ -86,6 +106,80 @@ export function flattenForumPosts(posts: ForumPost[], depth: number = 0): FlatFo
 }
 
 /**
+ * Produces compact plain list-card copy from a bounded markdown excerpt.
+ *
+ * @param value optional starter-post excerpt.
+ * @returns whitespace-normalized copy with common markdown markers removed.
+ * @throws Does not throw.
+ */
+export function plainForumExcerpt(value?: string | null): string {
+    return (value ?? '')
+        .replace(/!?(\[([^\]]+)\])\([^)]+\)/g, '$2')
+        .replace(/[`*_>#~]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+/**
+ * Wraps the selected editor range with a markdown prefix and suffix.
+ *
+ * @param value complete editor value.
+ * @param selectionStart inclusive selection start.
+ * @param selectionEnd exclusive selection end.
+ * @param prefix markdown inserted before the selection.
+ * @param suffix markdown inserted after the selection.
+ * @returns updated value and the range to reselect after rendering.
+ * @throws Does not throw; selection bounds are clamped to the input length.
+ */
+export function wrapMarkdownSelection(
+    value: string,
+    selectionStart: number,
+    selectionEnd: number,
+    prefix: string,
+    suffix: string,
+): MarkdownSelectionResult {
+    const start = Math.max(0, Math.min(selectionStart, value.length))
+    const end = Math.max(start, Math.min(selectionEnd, value.length))
+    return {
+        selectionEnd: end + prefix.length,
+        selectionStart: start + prefix.length,
+        value: `${value.slice(0, start)}${prefix}${value.slice(start, end)}${suffix}${value.slice(end)}`,
+    }
+}
+
+/**
+ * Resolves the August 2026 design-system handle color for a member rating.
+ *
+ * @param maxRating optional public maximum rating.
+ * @returns CSS module rating class name.
+ * @throws Does not throw.
+ */
+export function forumRatingClass(maxRating?: number): ForumRatingClass {
+    if (maxRating === undefined || maxRating < 900) return 'ratingGray'
+    if (maxRating < 1200) return 'ratingGreen'
+    if (maxRating < 1500) return 'ratingBlue'
+    if (maxRating < 2200) return 'ratingYellow'
+    return 'ratingRed'
+}
+
+/**
+ * Resolves human-readable API error copy without exposing transport internals.
+ *
+ * @param error unknown rejection from an authenticated forum mutation.
+ * @returns server validation copy when available, otherwise a stable fallback.
+ * @throws Does not throw.
+ */
+export function forumErrorMessage(error: unknown): string {
+    const responseMessage = (error as {
+        response?: { data?: { message?: string | string[] } }
+    })?.response?.data?.message
+    if (Array.isArray(responseMessage)) return responseMessage.join(' ')
+    if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage
+    if (error instanceof Error && error.message.trim()) return error.message
+    return 'The forum action could not be completed. Please try again.'
+}
+
+/**
  * Resolves the last visible activity timestamp used by local sort choices.
  *
  * @param topic forum topic summary.
@@ -100,26 +194,29 @@ function activityTimestamp(topic: ForumTopicSummary): number {
 }
 
 /**
- * Extracts the de-duplicated participant snapshots present in a topic summary.
+ * Extracts participant snapshots from the enriched summary with a legacy fallback.
  *
  * @param topic forum topic summary.
- * @returns author and latest-activity participant snapshots.
+ * @returns de-duplicated participant snapshots in API activity order.
  * @throws Does not throw.
  */
 function topicParticipants(topic: ForumTopicSummary): ForumParticipant[] {
-    return [
-        { handle: topic.authorHandle, memberId: topic.authorMemberId },
-        topic.latestActivity
-            ? {
-                handle: topic.latestActivity.authorHandle,
-                memberId: topic.latestActivity.authorMemberId,
-            }
-            : undefined,
-    ]
-        .filter((participant): participant is ForumParticipant => !!participant)
-        .filter((participant, index, participants) => (
-            participants.findIndex(candidate => candidate.memberId === participant.memberId) === index
-        ))
+    const snapshots = topic.participants ?? []
+    const participants = snapshots.length
+        ? snapshots
+        : [
+            { handle: topic.authorHandle, memberId: topic.authorMemberId },
+            topic.latestActivity
+                ? {
+                    handle: topic.latestActivity.authorHandle,
+                    memberId: topic.latestActivity.authorMemberId,
+                }
+                : undefined,
+        ].filter((participant): participant is ForumParticipant => !!participant)
+
+    return participants.filter((participant, index) => (
+        participants.findIndex(candidate => candidate.memberId === participant.memberId) === index
+    ))
 }
 
 /**
@@ -157,7 +254,7 @@ const MemberAvatar: FC<{
  * Renders a compact linked member snapshot enriched by the public Members API.
  *
  * @param props fallback handle and optional profile projection.
- * @returns profile link with avatar and canonical handle.
+ * @returns profile link with avatar and rating-colored canonical handle.
  * @throws Does not throw.
  */
 const ForumMember: FC<{
@@ -165,29 +262,32 @@ const ForumMember: FC<{
     profile?: MemberProfileSummary
 }> = props => {
     const handle = props.profile?.handle ?? props.handle
+    const ratingClass = forumRatingClass(props.profile?.maxRating)
 
     return (
         <span className={styles.member}>
             <MemberAvatar handle={handle} profile={props.profile} />
-            <a href={memberProfileUrl(handle)}>{handle}</a>
+            <a className={styles[ratingClass]} href={memberProfileUrl(handle)}>{handle}</a>
         </span>
     )
 }
 
 /**
- * Renders the limited participant identities provided by topic summaries.
+ * Renders topic participant identities and any bounded overflow count.
  *
- * @param props participant snapshots and member projections keyed by ID.
+ * @param props participant snapshots, complete count, and member projections.
  * @returns accessible linked avatar group.
  * @throws Does not throw.
  */
 const ParticipantGroup: FC<{
     participants: ForumParticipant[]
     profilesByMemberId: MemberProfilesById
+    total: number
 }> = props => {
     const labels = props.participants.map(participant => (
         props.profilesByMemberId.get(participant.memberId)?.handle ?? participant.handle
     ))
+    const overflow = Math.max(0, props.total - props.participants.length)
 
     return (
         <span aria-label={`Participants: ${labels.join(', ')}`} className={styles.participants}>
@@ -201,6 +301,12 @@ const ParticipantGroup: FC<{
                     </a>
                 )
             })}
+            {overflow > 0 && (
+                <span className={styles.participantOverflow}>
+                    +
+                    {overflow}
+                </span>
+            )}
         </span>
     )
 }
@@ -212,9 +318,9 @@ interface ForumFallbackProps {
 }
 
 /**
- * Preserves the external forum path when embedded reads are unavailable.
+ * Preserves a safe recovery path when embedded API access is unavailable.
  *
- * @param props fallback copy and optional forum destination.
+ * @param props fallback copy and optional legacy destination.
  * @returns forum fallback state.
  * @throws Does not throw.
  */
@@ -225,7 +331,7 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
         <p>{props.text}</p>
         {props.externalUrl && (
             <a href={props.externalUrl} rel='noreferrer' target='_blank'>
-                Open forum
+                Open legacy forum
                 <IconOutline.ExternalLinkIcon aria-hidden='true' />
             </a>
         )}
@@ -233,14 +339,14 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
 )
 
 /**
- * Renders challenge forum counters and the external create action.
+ * Renders challenge forum counters and the in-page create-topic action.
  *
- * @param props visible topics, source total, and optional forum destination.
+ * @param props visible topics, source total, and create callback.
  * @returns authored forum overview rail.
  * @throws Does not throw.
  */
 const ForumOverview: FC<{
-    externalUrl?: string
+    onCreate: () => void
     topics: ForumTopicSummary[]
     total: number
 }> = props => {
@@ -268,12 +374,10 @@ const ForumOverview: FC<{
                     posts
                 </span>
             </div>
-            {props.externalUrl && (
-                <a href={props.externalUrl} rel='noreferrer' target='_blank'>
-                    <IconOutline.PlusCircleIcon aria-hidden='true' />
-                    Create new topic
-                </a>
-            )}
+            <button onClick={props.onCreate} type='button'>
+                <IconOutline.PlusCircleIcon aria-hidden='true' />
+                Create new topic
+            </button>
         </section>
     )
 }
@@ -315,7 +419,7 @@ const ForumFilters: FC<ForumFiltersProps> = props => {
                     value={props.search}
                 />
             </label>
-            <small>Search topics or member handles</small>
+            <small>Search topic, comment</small>
             <label className={styles.sortField}>
                 <span>Sort by</span>
                 <select onChange={onSort} value={props.sort}>
@@ -388,31 +492,38 @@ const DiscussionInfo: FC<{
 }
 
 /**
- * Renders one topic summary card that can open embedded detail.
+ * Renders one topic summary card with watch and owner mutation actions.
  *
- * @param props topic, member projections, and selection callback.
- * @returns authored topic card.
- * @throws Does not throw.
+ * @param props topic data, current member, projections, and mutation callbacks.
+ * @returns Figma-aligned topic card.
+ * @throws Does not throw; callbacks own API error handling.
  */
 const ForumTopicCard: FC<{
+    memberId: string
+    onDelete: (topic: ForumTopicSummary) => void
+    onEdit: (topic: ForumTopicSummary) => void
     onSelect: (topicId: string) => void
+    onWatch: (topic: ForumTopicSummary) => void
+    pendingAction?: string
     profilesByMemberId: MemberProfilesById
     topic: ForumTopicSummary
 }> = props => {
     const participants = topicParticipants(props.topic)
-    const latestActivityLabel = props.topic.latestActivity
-        ? `Last post by ${props.topic.latestActivity.authorHandle}`
-            + ` at ${formatForumDate(props.topic.latestActivity.createdAt)}`
-        : 'No visible posts'
+    const excerpt = plainForumExcerpt(props.topic.starterPostExcerpt)
+    const owner = props.topic.authorMemberId === props.memberId
+    const cardClass = props.topic.isAnnouncement
+        ? `${styles.topicCard} ${styles.announcementCard}`
+        : styles.topicCard
     return (
-        <article className={styles.topicCard}>
+        <article className={cardClass}>
             <div className={styles.topicMain}>
                 <div className={styles.tags}>
                     {props.topic.isAnnouncement && <span className={styles.announcement}>Announcement</span>}
                     {props.topic.unread && (
-                        <span className={styles.newPost}>
-                            {props.topic.postsCount <= 1 ? 'New topic' : 'New post'}
-                        </span>
+                        <>
+                            {props.topic.postsCount <= 1 && <span className={styles.newTopic}>New topic</span>}
+                            <span className={styles.newPost}>New post</span>
+                        </>
                     )}
                     {props.topic.locked && <span className={styles.locked}>Locked</span>}
                 </div>
@@ -431,12 +542,36 @@ const ForumTopicCard: FC<{
                         {formatForumDate(props.topic.createdAt)}
                     </span>
                 </div>
-                <p className={styles.activity}>
-                    {latestActivityLabel}
-                </p>
-                <button className={styles.viewTopic} onClick={() => props.onSelect(props.topic.id)} type='button'>
-                    View topic
-                </button>
+                {excerpt && <p className={styles.topicExcerpt}>{excerpt}</p>}
+                <div className={styles.topicFooter}>
+                    <span>
+                        Last post at
+                        {' '}
+                        {formatForumDate(props.topic.latestActivity?.createdAt)}
+                    </span>
+                    <div className={styles.topicActions}>
+                        {owner && !props.topic.locked && (
+                            <>
+                                <button onClick={() => props.onEdit(props.topic)} type='button'>
+                                    <IconOutline.PencilIcon aria-hidden='true' />
+                                    Edit
+                                </button>
+                                <button onClick={() => props.onDelete(props.topic)} type='button'>
+                                    <IconOutline.TrashIcon aria-hidden='true' />
+                                    Delete
+                                </button>
+                            </>
+                        )}
+                        <button
+                            disabled={props.pendingAction === `watch:${props.topic.id}`}
+                            onClick={() => props.onWatch(props.topic)}
+                            type='button'
+                        >
+                            <IconOutline.EyeIcon aria-hidden='true' />
+                            {props.topic.watching ? 'Watched' : 'Watch'}
+                        </button>
+                    </div>
+                </div>
             </div>
             <aside className={styles.topicMetrics}>
                 <p>
@@ -445,42 +580,454 @@ const ForumTopicCard: FC<{
                     {' '}
                     {props.topic.postsCount}
                 </p>
+                <p>
+                    <IconOutline.EyeIcon aria-hidden='true' />
+                    <strong>Views:</strong>
+                    {' '}
+                    {props.topic.viewsCount ?? 0}
+                </p>
                 <strong>Participants</strong>
                 <ParticipantGroup
                     participants={participants}
                     profilesByMemberId={props.profilesByMemberId}
+                    total={props.topic.participantsCount ?? participants.length}
                 />
             </aside>
         </article>
     )
 }
 
+interface MarkdownEditorProps {
+    id: string
+    label: string
+    maxLength: number
+    onChange: (value: string) => void
+    placeholder: string
+    preview: boolean
+    value: string
+}
+
 /**
- * Renders read-only topic detail with nested post threading.
+ * Renders the shared Markdown toolbar, textarea, preview, and character count.
  *
- * @param props topic detail, member projections, navigation callback, and external URL.
- * @returns topic information and visible post cards.
+ * @param props controlled editor state and authored field metadata.
+ * @returns accessible Markdown authoring control.
  * @throws Does not throw.
+ */
+const MarkdownEditor: FC<MarkdownEditorProps> = props => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+    /** Applies one toolbar token to the active textarea selection. */
+    const format = (prefix: string, suffix: string = ''): void => {
+        const textarea = textareaRef.current
+        const result = wrapMarkdownSelection(
+            props.value,
+            textarea?.selectionStart ?? props.value.length,
+            textarea?.selectionEnd ?? props.value.length,
+            prefix,
+            suffix,
+        )
+        props.onChange(result.value.slice(0, props.maxLength))
+        window.setTimeout(() => {
+            textarea?.focus()
+            textarea?.setSelectionRange(result.selectionStart, result.selectionEnd)
+        })
+    }
+
+    const toolbarItems: Array<[string, string, string]> = [
+        ['Bold', '**', '**'],
+        ['Italic', '_', '_'],
+        ['Underline', '<u>', '</u>'],
+        ['Heading 1', '# ', ''],
+        ['Heading 2', '## ', ''],
+        ['Heading 3', '### ', ''],
+        ['Bulleted list', '- ', ''],
+        ['Numbered list', '1. ', ''],
+        ['Link', '[', '](https://)'],
+        ['Inline code', '`', '`'],
+        ['Quote', '> ', ''],
+    ]
+
+    return (
+        <div className={styles.markdownField}>
+            <label htmlFor={props.id}>{props.label}</label>
+            <div className={styles.editorShell}>
+                <div aria-label='Markdown formatting' className={styles.editorToolbar} role='toolbar'>
+                    {toolbarItems.map(([label, prefix, suffix]) => (
+                        <button
+                            aria-label={label}
+                            key={label}
+                            onClick={() => format(prefix, suffix)}
+                            tabIndex={props.preview ? -1 : 0}
+                            type='button'
+                        >
+                            {label === 'Bold' && <strong>B</strong>}
+                            {label === 'Italic' && <em>I</em>}
+                            {label === 'Underline' && <u>U</u>}
+                            {label.startsWith('Heading') && `H${label.slice(-1)}`}
+                            {label === 'Bulleted list' && '• ≡'}
+                            {label === 'Numbered list' && '1. ≡'}
+                            {label === 'Link' && <IconOutline.LinkIcon aria-hidden='true' />}
+                            {label === 'Inline code' && <IconOutline.CodeIcon aria-hidden='true' />}
+                            {label === 'Quote' && '❞'}
+                        </button>
+                    ))}
+                </div>
+                {props.preview
+                    ? (
+                        <div aria-label={`${props.label} preview`} className={styles.editorPreview}>
+                            {props.value.trim()
+                                ? <ChallengeMarkdown markdown={props.value} />
+                                : <p>Nothing to preview yet.</p>}
+                        </div>
+                    )
+                    : (
+                        <textarea
+                            id={props.id}
+                            maxLength={props.maxLength}
+                            onChange={event => props.onChange(event.target.value)}
+                            placeholder={props.placeholder}
+                            ref={textareaRef}
+                            value={props.value}
+                        />
+                    )}
+            </div>
+            <div className={styles.editorHelp}>
+                <span>You can use Markdown formatting.</span>
+                <span>
+                    {props.maxLength - props.value.length}
+                    {' '}
+                    characters left
+                </span>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Renders the in-page topic creation workflow for the current challenge.
+ *
+ * @param props challenge context, navigation callback, and async create command.
+ * @returns discussion guidance and controlled topic form.
+ * @throws Does not throw; command errors render in the form.
+ */
+const ForumCreateTopicView: FC<{
+    challenge: ChallengeOpportunity
+    onBack: () => void
+    onCreate: (title: string, content: string) => Promise<boolean>
+}> = props => {
+    const [content, setContent] = useState('')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+    const [title, setTitle] = useState('')
+
+    /** Validates and submits the controlled topic fields. */
+    const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+        event.preventDefault()
+        if (!title.trim() || !content.trim()) {
+            setError('Add a topic title and description before creating the topic.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        const created = await props.onCreate(title.trim(), content.trim())
+        setPending(false)
+        if (!created) setError('The topic could not be created. Review the message above and try again.')
+    }
+
+    return (
+        <div className={styles.createView}>
+            <button className={styles.back} onClick={props.onBack} type='button'>
+                <IconOutline.ArrowLeftIcon aria-hidden='true' />
+                Discussions
+            </button>
+            <div className={styles.createBreadcrumb}>Discussions / New discussion</div>
+            <div className={styles.createLayout}>
+                <aside className={styles.createRail}>
+                    <section>
+                        <h2>Start New Discussion</h2>
+                        <p>
+                            Create a new topic in
+                            {' '}
+                            <strong>{props.challenge.name}</strong>
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Discussion Guidelines</h3>
+                        <ul>
+                            <li>Be clear and specific in your topic title</li>
+                            <li>Provide context and details in your description</li>
+                            <li>Search existing topics before creating duplicates</li>
+                            <li>Use formatting to make your post readable</li>
+                            <li>Be respectful and constructive</li>
+                        </ul>
+                    </section>
+                </aside>
+                <form className={styles.createForm} onSubmit={submit}>
+                    <label className={styles.titleField}>
+                        <span>Topic Title</span>
+                        <input
+                            maxLength={255}
+                            onChange={event => setTitle(event.target.value)}
+                            placeholder='Enter a clear, descriptive title about your topic ...'
+                            value={title}
+                        />
+                    </label>
+                    <MarkdownEditor
+                        id='forum-topic-content'
+                        label='Topic Content'
+                        maxLength={TOPIC_CHARACTER_LIMIT}
+                        onChange={setContent}
+                        placeholder={'Describe your question, share insights, or start a discussion '
+                            + 'about the challenge...'}
+                        preview={preview}
+                        value={content}
+                    />
+                    {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                    <div className={styles.formActions}>
+                        <button disabled={pending} type='submit'>
+                            {pending ? 'Creating…' : 'Create topic'}
+                        </button>
+                        <button onClick={() => setPreview(value => !value)} type='button'>
+                            {preview ? 'Write' : 'Preview'}
+                        </button>
+                        <span>Your topic will be visible to all challenge participants</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Builds a bounded Markdown quote for a selected post.
+ *
+ * @param post visible forum post being quoted.
+ * @returns attributed blockquote suitable for the comment editor.
+ * @throws Does not throw.
+ */
+function quoteForumPost(post: ForumPost): string {
+    const content = (post.content ?? '')
+        .trim()
+        .slice(0, 220)
+        .split('\n')
+        .map(line => `> ${line}`)
+        .join('\n')
+    return `> ${post.authorHandle} wrote:\n${content}\n\n`
+}
+
+/**
+ * Renders one detail post with author context and in-page communication actions.
+ *
+ * @param props post thread context, current member, and mutation callbacks.
+ * @returns Figma-aligned post card.
+ * @throws Does not throw; mutation callbacks own API error handling.
+ */
+const ForumPostCard: FC<{
+    detail: ForumTopicDetail
+    item: FlatForumPost
+    memberId: string
+    onDelete: (post: ForumPost) => void
+    onEdit: (post: ForumPost) => void
+    onQuote: (post: ForumPost) => void
+    onReply: (post: ForumPost) => void
+    parent?: ForumPost
+    profilesByMemberId: MemberProfilesById
+}> = props => {
+    const post = props.item.post
+    const owner = post.authorMemberId === props.memberId
+    const postClass = props.item.depth > 0 ? styles.replyPost : styles.post
+    return (
+        <article className={postClass}>
+            <header>
+                {post.id === props.detail.topic.latestActivity?.postId
+                    && props.detail.topic.unread && <span className={styles.newPost}>New post</span>}
+                <div className={styles.postIdentity}>
+                    <ForumMember
+                        handle={post.authorHandle}
+                        profile={props.profilesByMemberId.get(post.authorMemberId)}
+                    />
+                    {post.authorMemberId === props.detail.topic.authorMemberId && (
+                        <span className={styles.authorBadge}>
+                            <IconOutline.PencilIcon aria-hidden='true' />
+                            Author
+                        </span>
+                    )}
+                    <span>
+                        {post.authorPostsCount ?? 0}
+                        {' '}
+                        posts
+                    </span>
+                </div>
+                <div className={styles.postMeta}>
+                    <time dateTime={post.createdAt}>
+                        Posted:
+                        {' '}
+                        {formatForumDate(post.createdAt)}
+                    </time>
+                    {props.parent && (
+                        <span>
+                            Replying to
+                            {' '}
+                            {props.parent.authorHandle}
+                            {'’s post of '}
+                            {formatForumDate(props.parent.createdAt)}
+                        </span>
+                    )}
+                </div>
+            </header>
+            <div className={styles.postContent}>
+                {post.deleted || !post.content
+                    ? <p className={styles.deleted}>This post has been deleted.</p>
+                    : <ChallengeMarkdown markdown={post.content} />}
+            </div>
+            {!post.deleted && (
+                <footer className={styles.postActions}>
+                    <span>
+                        <IconOutline.ThumbUpIcon aria-hidden='true' />
+                        0
+                    </span>
+                    <span>
+                        <IconOutline.ThumbDownIcon aria-hidden='true' />
+                        0
+                    </span>
+                    {!props.detail.topic.locked && (
+                        <>
+                            <button onClick={() => props.onReply(post)} type='button'>
+                                <IconOutline.ReplyIcon aria-hidden='true' />
+                                Reply
+                            </button>
+                            <button onClick={() => props.onQuote(post)} type='button'>
+                                ❞
+                                Quote
+                            </button>
+                        </>
+                    )}
+                    {owner && !props.detail.topic.locked && (
+                        <>
+                            <button onClick={() => props.onEdit(post)} type='button'>
+                                <IconOutline.PencilIcon aria-hidden='true' />
+                                Edit
+                            </button>
+                            <button onClick={() => props.onDelete(post)} type='button'>
+                                <IconOutline.TrashIcon aria-hidden='true' />
+                                Delete
+                            </button>
+                        </>
+                    )}
+                </footer>
+            )}
+        </article>
+    )
+}
+
+/**
+ * Renders interactive topic detail with nested posts and an in-page Markdown composer.
+ *
+ * @param props topic detail, current member, projections, navigation, and refresh callback.
+ * @returns topic information, post cards, and comment workflow.
+ * @throws Does not throw; API failures render beside the affected workflow.
  */
 const ForumTopicView: FC<{
     detail: ForumTopicDetail
-    externalUrl?: string
+    memberId: string
     onBack: () => void
+    onChanged: () => Promise<void>
     profilesByMemberId: MemberProfilesById
 }> = props => {
+    const [comment, setComment] = useState('')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+    const [replyTarget, setReplyTarget] = useState<ForumPost>()
     const flatPosts = flattenForumPosts(props.detail.posts)
-    const participants = [
-        {
-            handle: props.detail.topic.authorHandle,
-            memberId: props.detail.topic.authorMemberId,
-        },
-        ...flatPosts.map(item => ({
-            handle: item.post.authorHandle,
-            memberId: item.post.authorMemberId,
-        })),
-    ].filter((participant, index, allParticipants) => (
-        allParticipants.findIndex(candidate => candidate.memberId === participant.memberId) === index
-    ))
+    const postById = new Map(flatPosts.map(item => [item.post.id, item.post]))
+    const participants = topicParticipants(props.detail.topic)
+
+    /** Focuses the detail composer after selecting a reply or quote action. */
+    const focusComposer = (): void => {
+        window.setTimeout(() => document.getElementById('forum-comment')
+            ?.focus())
+    }
+
+    /** Selects a post as the nested reply target. */
+    const reply = (post: ForumPost): void => {
+        setReplyTarget(post)
+        setPreview(false)
+        focusComposer()
+    }
+
+    /** Adds an attributed bounded quote and selects the quoted post as parent. */
+    const quote = (post: ForumPost): void => {
+        setReplyTarget(post)
+        setComment(value => `${value}${value ? '\n\n' : ''}${quoteForumPost(post)}`.slice(0, COMMENT_CHARACTER_LIMIT))
+        setPreview(false)
+        focusComposer()
+    }
+
+    /** Updates an owned post after native confirmation of the replacement copy. */
+    const editPost = async (post: ForumPost): Promise<void> => {
+        const content = window.prompt('Edit your comment', post.content ?? '')
+            ?.trim()
+        if (!content || content === post.content) return
+        setError(undefined)
+        setPending(true)
+        try {
+            await updateForumPost(post.id, content)
+            await props.onChanged()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    /** Soft-deletes an owned post after explicit member confirmation. */
+    const removePost = async (post: ForumPost): Promise<void> => {
+        if (!window.confirm('Delete this comment? Replies will remain in the discussion.')) return
+        setError(undefined)
+        setPending(true)
+        try {
+            await deleteForumPost(post.id)
+            await props.onChanged()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    /** Creates a top-level comment or nested reply from the controlled composer. */
+    const submitComment = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+        event.preventDefault()
+        if (!comment.trim()) {
+            setError('Write a comment before posting.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        try {
+            await createForumPost(props.detail.topic.id, replyTarget
+                ? {
+                    content: comment.trim(),
+                    parentId: replyTarget.id,
+                    parentType: 'POST',
+                }
+                : { content: comment.trim() })
+            setComment('')
+            setReplyTarget(undefined)
+            setPreview(false)
+            await props.onChanged()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
     return (
         <div className={styles.detailView}>
             <button className={styles.back} onClick={props.onBack} type='button'>
@@ -493,10 +1040,16 @@ const ForumTopicView: FC<{
                         <IconOutline.InformationCircleIcon aria-hidden='true' />
                         Topic info
                     </h2>
-                    <ForumMember
-                        handle={props.detail.topic.authorHandle}
-                        profile={props.profilesByMemberId.get(props.detail.topic.authorMemberId)}
-                    />
+                    <div className={styles.topicInfoAuthor}>
+                        <ForumMember
+                            handle={props.detail.topic.authorHandle}
+                            profile={props.profilesByMemberId.get(props.detail.topic.authorMemberId)}
+                        />
+                        <span className={styles.authorBadge}>
+                            <IconOutline.PencilIcon aria-hidden='true' />
+                            Author
+                        </span>
+                    </div>
                     <dl>
                         <div>
                             <dt>Last post</dt>
@@ -514,52 +1067,78 @@ const ForumTopicView: FC<{
                             {' '}
                             {props.detail.topic.postsCount}
                         </p>
+                        <p>
+                            <IconOutline.EyeIcon aria-hidden='true' />
+                            Views:
+                            {' '}
+                            {props.detail.topic.viewsCount ?? 0}
+                        </p>
                         <strong>Participants</strong>
                         <ParticipantGroup
                             participants={participants}
                             profilesByMemberId={props.profilesByMemberId}
+                            total={props.detail.topic.participantsCount ?? participants.length}
                         />
                     </div>
                 </aside>
-                <div className={styles.posts}>
-                    {flatPosts.map((item, index) => (
-                        <article
-                            className={item.depth > 0 ? styles.replyPost : styles.post}
+                <div className={styles.posts} aria-busy={pending}>
+                    {flatPosts.map(item => (
+                        <ForumPostCard
+                            detail={props.detail}
+                            item={item}
                             key={item.post.id}
-                        >
-                            <header>
-                                <ForumMember
-                                    handle={item.post.authorHandle}
-                                    profile={props.profilesByMemberId.get(item.post.authorMemberId)}
-                                />
-                                {item.post.authorMemberId === props.detail.topic.authorMemberId && <span>Author</span>}
-                                {index === 0 && props.detail.topic.isAnnouncement && <span>Announcement</span>}
-                                {item.post.id === props.detail.topic.latestActivity?.postId
-                                    && props.detail.topic.unread && <span className={styles.newPost}>New post</span>}
-                                <time dateTime={item.post.createdAt}>
-                                    Posted:
-                                    {formatForumDate(item.post.createdAt)}
-                                </time>
-                            </header>
-                            {item.post.deleted || !item.post.content
-                                ? <p className={styles.deleted}>This post has been deleted.</p>
-                                : <ChallengeMarkdown markdown={item.post.content} />}
-                            {props.externalUrl && !props.detail.topic.locked && (
-                                <footer>
-                                    <a href={props.externalUrl} rel='noreferrer' target='_blank'>
-                                        <IconOutline.ReplyIcon aria-hidden='true' />
-                                        Reply in forum
-                                    </a>
-                                </footer>
-                            )}
-                        </article>
+                            memberId={props.memberId}
+                            onDelete={removePost}
+                            onEdit={editPost}
+                            onQuote={quote}
+                            onReply={reply}
+                            parent={item.post.parentType === 'POST'
+                                ? postById.get(item.post.parentId)
+                                : undefined}
+                            profilesByMemberId={props.profilesByMemberId}
+                        />
                     ))}
                     {!flatPosts.length && (
-                        <ForumFallback
-                            externalUrl={props.externalUrl}
-                            text='This topic has no visible posts.'
-                            title='No posts yet'
-                        />
+                        <div className={styles.noPosts}>
+                            <h2>No comments yet</h2>
+                            <p>Start the conversation below.</p>
+                        </div>
+                    )}
+                    {!props.detail.topic.locked && (
+                        <form className={styles.commentForm} onSubmit={submitComment}>
+                            <h2>Leave a comment</h2>
+                            {replyTarget && (
+                                <div className={styles.replyingTo}>
+                                    Replying to
+                                    {' '}
+                                    <strong>{replyTarget.authorHandle}</strong>
+                                    <button onClick={() => setReplyTarget(undefined)} type='button'>
+                                        Cancel reply
+                                    </button>
+                                </div>
+                            )}
+                            <MarkdownEditor
+                                id='forum-comment'
+                                label='Comment'
+                                maxLength={COMMENT_CHARACTER_LIMIT}
+                                onChange={setComment}
+                                placeholder='Type here'
+                                preview={preview}
+                                value={comment}
+                            />
+                            {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                            <div className={styles.formActions}>
+                                <button disabled={pending} type='submit'>
+                                    {pending ? 'Posting…' : 'Post comment'}
+                                </button>
+                                <button onClick={() => setPreview(value => !value)} type='button'>
+                                    {preview ? 'Write' : 'Preview'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                    {props.detail.topic.locked && (
+                        <p className={styles.lockedNotice}>This topic is locked and no longer accepts comments.</p>
                     )}
                 </div>
             </div>
@@ -568,21 +1147,28 @@ const ForumTopicView: FC<{
 }
 
 /**
- * Renders authenticated Forums API reads, with legacy forum links retained for
- * unsupported writes and for deployments without migrated forum data.
+ * Renders the authenticated Challenge Discussion experience against forums-api-v6.
+ *
+ * The component keeps every communication workflow inside Opportunities:
+ * topic create/edit/delete, nested replies, post edit/delete, watch state, and
+ * read state. A legacy link is retained only as recovery when the v6 API cannot
+ * be reached or the member is signed out.
  *
  * @param props challenge context and optional authenticated member ID.
- * @returns embedded topic list/detail or an authenticated fallback state.
- * @throws Does not throw; API failures render an external-forum fallback.
+ * @returns embedded topic list, creation form, detail discussion, or recovery state.
+ * @throws Does not throw; API failures render stable, actionable UI states.
  */
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
-    const [search, setSearch] = useState('')
-    const [scope, setScope] = useState<ForumScope>('all')
-    const [sort, setSort] = useState<ForumSort>('recent')
+    const [creatingTopic, setCreatingTopic] = useState(false)
+    const [mutationError, setMutationError] = useState<string>()
     const [page, setPage] = useState(1)
+    const [pendingAction, setPendingAction] = useState<string>()
     const [perPage, setPerPage] = useState(10)
+    const [scope, setScope] = useState<ForumScope>('all')
+    const [search, setSearch] = useState('')
     const [selectedTopicId, setSelectedTopicId] = useState<string>()
+    const [sort, setSort] = useState<ForumSort>('recent')
     const response: SWRResponse<ForumTopicCollection, Error> = useSWR(
         props.memberId ? ['opportunities:forum-topics', props.challenge.id] : undefined,
         () => getChallengeForumTopics(props.challenge.id),
@@ -605,6 +1191,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             if (!query) return true
             return [
                 topic.title,
+                topic.starterPostExcerpt,
                 topic.authorHandle,
                 topic.latestActivity?.authorHandle,
                 topic.roleName,
@@ -612,7 +1199,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 .includes(query))
         })
         return [...result].sort((a, b) => {
-            if (sort === 'active') return b.postsCount - a.postsCount || activityTimestamp(b) - activityTimestamp(a)
+            if (sort === 'active') {
+                return b.postsCount - a.postsCount || activityTimestamp(b) - activityTimestamp(a)
+            }
+
             if (sort === 'oldest') {
                 return new Date(a.createdAt)
                     .getTime() - new Date(b.createdAt)
@@ -633,6 +1223,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         ...visibleTopics.flatMap(topic => [
             topic.authorMemberId,
             topic.latestActivity?.authorMemberId,
+            ...(topic.participants ?? []).map(participant => participant.memberId),
         ]),
         discussionCreator?.authorMemberId,
         detailResponse.data?.topic.authorMemberId,
@@ -655,11 +1246,95 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         [profileResponse.data],
     )
 
+    /** Revalidates list and selected detail after a successful write. */
+    const refreshForum = async (): Promise<void> => {
+        await Promise.all([
+            response.mutate(),
+            selectedTopicId ? detailResponse.mutate() : Promise.resolve(),
+        ])
+    }
+
+    /** Opens a topic and records its current activity as read without blocking navigation. */
+    const openTopic = (topicId: string): void => {
+        setCreatingTopic(false)
+        setSelectedTopicId(topicId)
+        setMutationError(undefined)
+        markForumTopicRead(topicId)
+            .then(() => response.mutate())
+            .catch(() => undefined)
+    }
+
+    /** Creates a challenge topic and opens its new detail view. */
+    const createTopic = async (title: string, content: string): Promise<boolean> => {
+        setMutationError(undefined)
+        try {
+            const created = await createForumTopic({
+                challengeId: props.challenge.id,
+                content,
+                title,
+            })
+            await response.mutate()
+            setCreatingTopic(false)
+            setSelectedTopicId(created.topic.id)
+            return true
+        } catch (error) {
+            setMutationError(forumErrorMessage(error))
+            return false
+        }
+    }
+
+    /** Updates one owned topic title through the v6 API. */
+    const editTopic = async (topic: ForumTopicSummary): Promise<void> => {
+        const title = window.prompt('Edit topic title', topic.title)
+            ?.trim()
+        if (!title || title === topic.title) return
+        setPendingAction(`edit:${topic.id}`)
+        setMutationError(undefined)
+        try {
+            await updateForumTopic(topic.id, title)
+            await refreshForum()
+        } catch (error) {
+            setMutationError(forumErrorMessage(error))
+        } finally {
+            setPendingAction(undefined)
+        }
+    }
+
+    /** Soft-deletes one owned topic after explicit confirmation. */
+    const removeTopic = async (topic: ForumTopicSummary): Promise<void> => {
+        if (!window.confirm(`Delete “${topic.title}” and its discussion?`)) return
+        setPendingAction(`delete:${topic.id}`)
+        setMutationError(undefined)
+        try {
+            await deleteForumTopic(topic.id)
+            if (selectedTopicId === topic.id) setSelectedTopicId(undefined)
+            await response.mutate()
+        } catch (error) {
+            setMutationError(forumErrorMessage(error))
+        } finally {
+            setPendingAction(undefined)
+        }
+    }
+
+    /** Toggles the current member's explicit topic watch. */
+    const toggleWatch = async (topic: ForumTopicSummary): Promise<void> => {
+        setPendingAction(`watch:${topic.id}`)
+        setMutationError(undefined)
+        try {
+            await setForumTopicWatching(topic.id, !topic.watching)
+            await refreshForum()
+        } catch (error) {
+            setMutationError(forumErrorMessage(error))
+        } finally {
+            setPendingAction(undefined)
+        }
+    }
+
     if (!props.memberId) {
         return (
             <ForumFallback
                 externalUrl={externalUrl}
-                text='Sign in to read challenge discussions here, or continue in the established Topcoder forum.'
+                text='Sign in to read and join this challenge discussion.'
                 title='Challenge Forum'
             />
         )
@@ -670,19 +1345,22 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         return (
             <ForumFallback
                 externalUrl={externalUrl}
-                text='The embedded forum could not be loaded. You can continue the discussion in the Topcoder forum.'
+                text='The embedded discussion could not be loaded. No communication action was attempted.'
                 title='Forum temporarily unavailable'
             />
         )
     }
 
-    if (!topics.length) {
+    if (creatingTopic) {
         return (
-            <ForumFallback
-                externalUrl={externalUrl}
-                text='No migrated discussions are available for this challenge yet.'
-                title='No forum topics yet'
-            />
+            <>
+                {mutationError && <p className={styles.actionError} role='alert'>{mutationError}</p>}
+                <ForumCreateTopicView
+                    challenge={props.challenge}
+                    onBack={() => setCreatingTopic(false)}
+                    onCreate={createTopic}
+                />
+            </>
         )
     }
 
@@ -694,7 +1372,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                     <button onClick={() => setSelectedTopicId(undefined)} type='button'>Back to topics</button>
                     <ForumFallback
                         externalUrl={externalUrl}
-                        text='This topic could not be loaded. You can open the external forum instead.'
+                        text='This topic could not be loaded from the v6 Forums API.'
                         title='Topic unavailable'
                     />
                 </div>
@@ -704,8 +1382,9 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         return (
             <ForumTopicView
                 detail={detailResponse.data}
-                externalUrl={externalUrl}
+                memberId={props.memberId}
                 onBack={() => setSelectedTopicId(undefined)}
+                onChanged={refreshForum}
                 profilesByMemberId={profilesByMemberId}
             />
         )
@@ -723,7 +1402,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         <div className={styles.forumLayout}>
             <aside className={styles.leftPanel}>
                 <ForumOverview
-                    externalUrl={externalUrl}
+                    onCreate={() => {
+                        setMutationError(undefined)
+                        setCreatingTopic(true)
+                    }}
                     topics={topics}
                     total={topics.length}
                 />
@@ -749,6 +1431,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 <DiscussionInfo profilesByMemberId={profilesByMemberId} topics={topics} />
             </aside>
             <section aria-label='Forum topics' className={styles.topicList}>
+                {mutationError && <p className={styles.actionError} role='alert'>{mutationError}</p>}
                 {response.data?.truncated && (
                     <p className={styles.limitNotice}>
                         Showing the first
@@ -759,13 +1442,18 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                         {' '}
                         {response.data.sourceTotalCount}
                         {' '}
-                        topics. Open the external forum to find older discussions.
+                        topics. Refine the filters to narrow the loaded discussion set.
                     </p>
                 )}
                 {visibleTopics.map(topic => (
                     <ForumTopicCard
                         key={topic.id}
-                        onSelect={setSelectedTopicId}
+                        memberId={props.memberId as string}
+                        onDelete={removeTopic}
+                        onEdit={editTopic}
+                        onSelect={openTopic}
+                        onWatch={toggleWatch}
+                        pendingAction={pendingAction}
                         profilesByMemberId={profilesByMemberId}
                         topic={topic}
                     />
@@ -773,8 +1461,12 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 {!visibleTopics.length && (
                     <div className={styles.noResults}>
                         <IconOutline.SearchIcon aria-hidden='true' />
-                        <h2>No topics found</h2>
-                        <p>Try another search or reset the forum filters.</p>
+                        <h2>{topics.length ? 'No topics found' : 'No topics yet'}</h2>
+                        <p>
+                            {topics.length
+                                ? 'Try another search or reset the forum filters.'
+                                : 'Create the first topic to start the challenge discussion.'}
+                        </p>
                     </div>
                 )}
                 {filteredTopics.length > perPage && (

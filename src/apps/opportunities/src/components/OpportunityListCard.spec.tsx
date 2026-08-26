@@ -23,6 +23,7 @@ jest.mock('~/libs/ui', () => {
         IconOutline: new Proxy({}, {
             get: () => Icon,
         }),
+        Tooltip: ({ children }: { children: JSX.Element }): JSX.Element => children,
     }
 }, { virtual: true })
 
@@ -377,6 +378,31 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         )
         expect(screen.getByText('Applied').className)
             .toContain('stateApplied')
+    })
+
+    it('lets My Work override the owning API state with the accepted treatment', () => {
+        const item: EngagementOpportunity = {
+            id: 'accepted-engagement',
+            status: 'OPEN',
+            title: 'Accepted engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    applicationState='Accepted'
+                    item={item}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        const state = screen.getByText('Accepted')
+        expect(state.className)
+            .toContain('stateAccepted')
+        expect(state.querySelector('svg'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Open for application'))
+            .not.toBeInTheDocument()
     })
 
     it('renders Review role, start, and application metrics without a description', () => {

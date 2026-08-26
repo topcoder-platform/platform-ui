@@ -2,6 +2,7 @@ import { AxiosHeaders, AxiosResponse } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
 import {
+    xhrDeleteAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
@@ -16,6 +17,7 @@ import {
     ChallengeResourceRole,
     ChallengeReviewSummation,
     ChallengeSubmission,
+    ChallengeSubmissionType,
     ChallengeTerm,
     CopilotOpportunity,
     EngagementOpportunity,
@@ -40,6 +42,50 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
     copilots: { amount: 0, count: 0 },
     engagements: { count: 0 },
     reviews: { count: 0 },
+}
+
+/**
+ * Uploads a member's ZIP directly to the v6 Review API for the active submission phase.
+ *
+ * @param challengeId Challenge API UUID receiving the submission.
+ * @param memberId authenticated submitter's numeric member identifier serialized as text.
+ * @param type Review API submission category derived from the active challenge phase.
+ * @param file single ZIP archive selected in the Opportunities submission form.
+ * @param onProgress optional callback receiving whole-number upload completion from 0 to 100.
+ * @param signal optional abort signal used by the form's cancel-file action.
+ * @returns the newly created Review API submission.
+ * @throws request, authorization, registration, phase, validation, or upload errors from Review API.
+ */
+export async function createChallengeSubmission(
+    challengeId: string,
+    memberId: string,
+    type: ChallengeSubmissionType,
+    file: File,
+    onProgress?: (percent: number) => void,
+    signal?: AbortSignal,
+): Promise<ChallengeSubmission> {
+    const formData = new FormData()
+    formData.append('challengeId', challengeId)
+    formData.append('memberId', memberId)
+    formData.append('type', type)
+    formData.append('fileName', file.name)
+    formData.append('file', file, file.name)
+
+    return xhrPostAsync<FormData, ChallengeSubmission>(
+        `${V6_URL}/submissions`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            onUploadProgress: event => {
+                const total = event.total ?? file.size
+                if (!onProgress || total <= 0) return
+                onProgress(Math.min(100, Math.round((event.loaded / total) * 100)))
+            },
+            signal,
+        },
+    )
 }
 
 /**
@@ -674,6 +720,18 @@ export async function getChallengeSubmissionDownloadUrl(submissionId: string): P
     )
     if (!response.url) throw new Error('Review API did not return a submission download URL.')
     return response.url
+}
+
+/**
+ * Deletes one submission through Review API after the caller confirms the
+ * authored My Submissions action.
+ *
+ * @param submissionId Review API submission identifier owned by the caller.
+ * @returns void after Review API accepts the deletion.
+ * @throws Propagates Review API authorization, lifecycle, and network errors.
+ */
+export async function deleteChallengeSubmission(submissionId: string): Promise<void> {
+    await xhrDeleteAsync<void>(`${V6_URL}/submissions/${encodeURIComponent(submissionId)}`)
 }
 
 /**

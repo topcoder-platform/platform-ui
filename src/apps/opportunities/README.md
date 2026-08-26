@@ -10,6 +10,21 @@ The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.
 
+The August 2026 masthead has two destinations. Browse Opportunities renders
+the four dark category cards and the active owner-backed listing. My Work
+renders the four light member-summary cards and combines the authenticated
+member's competitions, engagements, copilot work, and review work into one
+newest-first list. Anonymous visitors receive an in-page sign-in handoff; no
+member-scoped request is issued until a profile ID is available.
+
+My Work requests at most the first 100 member records from each owning API in
+parallel, then applies its shared opportunity-type and track facets, global
+sorting, and pagination in the client. Owner-specific lifecycle values are
+normalized to All, Active, and Past. Competition cards read Registered;
+approved, accepted, or selected non-competition applications read Accepted;
+the remaining member applications read Applied. Summary counts retain the
+owner-reported totals even when an owner has more than 100 records.
+
 The Competitions sidebar follows the authored Figma filter with one Search
 control and the helper text “Search skills, technologies, projects.” Its value
 is sent through the Challenge API `search` parameter; Competitions does not
@@ -33,6 +48,13 @@ card content. The responsive grid uses the same cards and automatically drops
 to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
+
+Long card titles expose their complete value in the authored dark tooltip.
+When a card has more skills than fit in its visible skill row, its `+n` control
+exposes the hidden skill names in the corresponding bullet-list tooltip. The
+Engagement role filter uses the authored four-row keyboard-accessible listbox
+while preserving the Engagement API's Designer, Software Developer, Data
+Scientist, and Data Engineer enum values.
 
 ## Competition card contract
 
@@ -116,15 +138,40 @@ DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
 
-Design preview galleries use the public-safe
-`GET /v6/submissions/previews?challengeId=...` endpoint rather than the
-protected general submissions list. Review API remains authoritative for group,
-whitelist, and review-phase release checks and returns only released Payload
-asset URLs; an absent preview is rendered as a pending placeholder.
+Design challenges with `submissionsViewable=true` use the private-submission
+gallery from the Figma flow. Authenticated members receive the protected
+submission metadata needed for locked cards, while the public-safe
+`GET /v6/submissions/previews?challengeId=...` response overlays only previews
+that Review API has released. Anonymous visitors receive only that public page.
+Review API remains authoritative for group, whitelist, screening, and
+review-phase release checks; absent previews render as locked placeholders.
+Design challenges without the flag retain the authored submission-list state.
 
-Forum links are composed from the environment-specific
-`VANILLA_FORUM.V2_URL` origin, so development routes stay on the development
-Vanilla instance and production routes stay on production.
+Registered members submit without leaving challenge details. The My
+Submissions flow accepts one `.zip` archive up to 500MB, requires the authored
+declaration, reports live multipart progress, and posts the file directly to
+`POST /v6/submissions`. The active phase selects `CONTEST_SUBMISSION`,
+`CHECKPOINT_SUBMISSION`, or `STUDIO_FINAL_FIX_SUBMISSION`; Review API remains
+authoritative for registration, phase, winner, submission-limit, and file
+validation. Design shows the four expected inner deliverables, while
+Development, Marathon Match, and Quality Assurance direct members to their
+Requirements content. Successful uploads expose the created submission ID and
+refresh challenge counts without leaving the confirmation state.
+
+Challenge Discussion reads and writes use the authenticated
+`/v6/forums` API. Topic creation, comments and nested replies, owner edits and
+soft deletes, watch state, and read state remain inside the challenge detail
+page. Topic summaries expose bounded starter excerpts, participant snapshots,
+unique authenticated view counts, and current-member watch state. The
+environment-specific Vanilla URL is retained only as a recovery link when the
+v6 API is unavailable or the member is signed out.
+
+The Report an Issue dialog preserves the Figma subject, category,
+1000-character description, and required attachment fields. Files upload
+through the shared Filestack support-ticket pipeline with a 2MB-per-file UI
+limit. Because support-api-v6 accepts only `challengeId` and Markdown
+`description`, the client serializes the subject, category, body, and uploaded
+links into that description without inventing unsupported request fields.
 
 The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
 `environment`, and `codeRepo` metadata, shows safe Challenge API discussions

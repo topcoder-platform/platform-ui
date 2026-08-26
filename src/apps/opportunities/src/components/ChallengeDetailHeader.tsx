@@ -36,6 +36,7 @@ interface ChallengeDetailHeaderProps {
     challenge: ChallengeOpportunity
     isRegistered: boolean
     onRegister: () => void
+    onSubmit: () => void
     onUnregister: () => void
     registrationError?: boolean
     registrationLoading?: boolean
@@ -187,7 +188,6 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = catalogName(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
-    const submitUrl = `/challenges/${props.challenge.id}/submit`
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const registrationUnavailable = props.registrationLoading || props.registrationError
@@ -285,14 +285,15 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                     >
                                         Unregister
                                     </button>
-                                    <a
-                                        aria-disabled={!canSubmit}
+                                    <button
                                         className={styles.primary}
-                                        href={canSubmit ? submitUrl : undefined}
+                                        disabled={!canSubmit}
+                                        onClick={props.onSubmit}
+                                        type='button'
                                     >
                                         <IconOutline.UploadIcon />
                                         Submit a solution
-                                    </a>
+                                    </button>
                                 </>
                             ) : (
                                 <button

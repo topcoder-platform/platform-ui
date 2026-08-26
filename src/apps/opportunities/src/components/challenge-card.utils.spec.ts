@@ -79,6 +79,13 @@ describe('challenge card data utilities', () => {
         }))
             .toBe(true)
         expect(challengeSubmissionIsOpen({
+            currentPhaseNames: ['Final Fix'],
+            id: 'final-fix',
+            name: 'Final Fix challenge',
+            status: 'ACTIVE',
+        }))
+            .toBe(true)
+        expect(challengeSubmissionIsOpen({
             id: 'registration-only',
             name: 'Registration only',
             phases: [{ isOpen: true, name: 'Registration' }],

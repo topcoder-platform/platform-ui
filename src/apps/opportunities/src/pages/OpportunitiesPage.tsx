@@ -23,11 +23,13 @@ import {
     OpportunityListCard,
     OpportunityPagination,
     OpportunityViewToggle,
+    MyWorkListing,
 } from '../components'
 import {
     OpportunityFilters,
     OpportunityItem,
     OpportunityKind,
+    OpportunityMode,
     OpportunityPage,
     OpportunitySummary,
     OpportunityView,
@@ -187,11 +189,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         types: types.length ? types : undefined,
     }), [applied, deferredSearch, page, perPage, profile?.userId, role, sort, status, tracks, types])
 
-    const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
-        'opportunities:summary',
-        getOpportunitySummary,
-        { revalidateOnFocus: false },
-    )
     const pageResponse: SWRResponse<OpportunityPage<OpportunityItem>, Error> = useSWR(
         ['opportunities:list', kind, filters],
         () => getOpportunityPage(kind, filters),
@@ -275,69 +272,109 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     }
 
     return (
-        <main className={styles.page}>
-            <OpportunityHero
-                active={kind}
-                error={!!summaryResponse.error}
-                loading={summaryResponse.isValidating && !summaryResponse.data}
-                onRetry={() => summaryResponse.mutate()}
-                summary={summaryResponse.data}
-            />
-            <section className={styles.content}>
-                <div className={styles.titleRow}>
-                    <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
-                    <div className={styles.toolbar}>
-                        <label className={styles.sort}>
-                            <SortIcon aria-hidden='true' />
-                            <strong>Sort by</strong>
-                            <span className={styles.sortSelect}>
-                                <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                                    {opportunitySortOptions(kind)
-                                        .map(option => (
-                                            <option key={option.value} value={option.value}>{option.label}</option>
-                                        ))}
-                                </select>
-                                <ChevronDownIcon aria-hidden='true' />
-                            </span>
-                        </label>
-                        <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
-                    </div>
+        <section className={styles.content}>
+            <div className={styles.titleRow}>
+                <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
+                <div className={styles.toolbar}>
+                    <label className={styles.sort}>
+                        <SortIcon aria-hidden='true' />
+                        <strong>Sort by</strong>
+                        <span className={styles.sortSelect}>
+                            <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
+                                {opportunitySortOptions(kind)
+                                    .map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                            </select>
+                            <ChevronDownIcon aria-hidden='true' />
+                        </span>
+                    </label>
+                    <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
                 </div>
-                <div className={styles.body}>
-                    <div className={styles.sidebar}>
-                        <OpportunityFiltersPanel
-                            applied={applied}
-                            isAuthenticated={!!profile}
-                            kind={kind}
-                            onAppliedChange={updateApplied}
-                            onReset={resetFilters}
-                            onRoleChange={updateRole}
-                            onSearchChange={updateSearch}
-                            onStatusChange={updateStatus}
-                            onTrackChange={updateTrack}
-                            onTypeChange={updateType}
-                            search={search}
-                            selectedRole={role}
-                            status={status}
-                            tracks={tracks}
-                            types={types}
+            </div>
+            <div className={styles.body}>
+                <div className={styles.sidebar}>
+                    <OpportunityFiltersPanel
+                        applied={applied}
+                        isAuthenticated={!!profile}
+                        kind={kind}
+                        onAppliedChange={updateApplied}
+                        onReset={resetFilters}
+                        onRoleChange={updateRole}
+                        onSearchChange={updateSearch}
+                        onStatusChange={updateStatus}
+                        onTrackChange={updateTrack}
+                        onTypeChange={updateType}
+                        search={search}
+                        selectedRole={role}
+                        status={status}
+                        tracks={tracks}
+                        types={types}
+                    />
+                    {kind === 'reviews' && !isReviewer && (
+                        <LearningCard
+                            body='Interested in evaluating submissions on Topcoder?'
+                            href='/thrive/articles/How%20to%20become%20a%20reviewer'
+                            title='How to become a reviewer?'
                         />
-                        {kind === 'reviews' && !isReviewer && (
-                            <LearningCard
-                                body='Interested in evaluating submissions on Topcoder?'
-                                href='/thrive/articles/How%20to%20become%20a%20reviewer'
-                                title='How to become a reviewer?'
+                    )}
+                    {kind === 'copilots' && !isCopilot && (
+                        <LearningCard
+                            body='Interested in managing challenges on Topcoder?'
+                            href='/thrive/articles/How%20to%20become%20a%20copilot'
+                            title='How to become a copilot?'
+                        />
+                    )}
+                </div>
+                <div className={styles.results} aria-live='polite'>
+                    <OpportunityPagination
+                        onPageChange={setPage}
+                        onPerPageChange={updatePerPage}
+                        page={data?.page ?? page}
+                        perPage={data?.perPage ?? perPage}
+                        total={data?.total ?? 0}
+                        totalPages={data?.totalPages ?? 0}
+                    />
+                    {pageResponse.isValidating && !data && <ResultsLoading view={props.view} />}
+                    {pageResponse.error && (
+                        <div className={styles.message} role='alert'>
+                            <IconOutline.ExclamationCircleIcon />
+                            <h3>We couldn&apos;t load these opportunities.</h3>
+                            <p>Please try again. Your filters have been preserved.</p>
+                            <button onClick={() => pageResponse.mutate()} type='button'>Try again</button>
+                        </div>
+                    )}
+                    {!pageResponse.error && data?.items.length === 0 && (
+                        <div className={styles.empty}>
+                            <span className={styles.emptyIcon}>
+                                <EmptyInfoIcon aria-hidden='true' />
+                            </span>
+                            <h3>No results found</h3>
+                            <div className={styles.emptyCopy}>
+                                <p>There are no matching opportunities right now.</p>
+                                <p>Check back later for new opportunities</p>
+                            </div>
+                            <button onClick={resetFilters} type='button'>
+                                <ResetIcon aria-hidden='true' />
+                                Reset filter
+                            </button>
+                        </div>
+                    )}
+                    <div className={classNames(styles.list, {
+                        [styles.grid]: props.view === 'grid',
+                    })}
+                    >
+                        {data?.items.map((item: OpportunityItem) => (
+                            <OpportunityListCard
+                                item={item}
+                                key={item.id}
+                                kind={kind}
+                                registered={kind === 'competitions' && applied}
+                                view={props.view}
                             />
-                        )}
-                        {kind === 'copilots' && !isCopilot && (
-                            <LearningCard
-                                body='Interested in managing challenges on Topcoder?'
-                                href='/thrive/articles/How%20to%20become%20a%20copilot'
-                                title='How to become a copilot?'
-                            />
-                        )}
+                        ))}
                     </div>
-                    <div className={styles.results} aria-live='polite'>
+                    {(data?.items.length ?? 0) > 0 && (
                         <OpportunityPagination
                             onPageChange={setPage}
                             onPerPageChange={updatePerPage}
@@ -346,59 +383,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             total={data?.total ?? 0}
                             totalPages={data?.totalPages ?? 0}
                         />
-                        {pageResponse.isValidating && !data && <ResultsLoading view={props.view} />}
-                        {pageResponse.error && (
-                            <div className={styles.message} role='alert'>
-                                <IconOutline.ExclamationCircleIcon />
-                                <h3>We couldn&apos;t load these opportunities.</h3>
-                                <p>Please try again. Your filters have been preserved.</p>
-                                <button onClick={() => pageResponse.mutate()} type='button'>Try again</button>
-                            </div>
-                        )}
-                        {!pageResponse.error && data?.items.length === 0 && (
-                            <div className={styles.empty}>
-                                <span className={styles.emptyIcon}>
-                                    <EmptyInfoIcon aria-hidden='true' />
-                                </span>
-                                <h3>No results found</h3>
-                                <div className={styles.emptyCopy}>
-                                    <p>There are no matching opportunities right now.</p>
-                                    <p>Check back later for new opportunities</p>
-                                </div>
-                                <button onClick={resetFilters} type='button'>
-                                    <ResetIcon aria-hidden='true' />
-                                    Reset filter
-                                </button>
-                            </div>
-                        )}
-                        <div className={classNames(styles.list, {
-                            [styles.grid]: props.view === 'grid',
-                        })}
-                        >
-                            {data?.items.map((item: OpportunityItem) => (
-                                <OpportunityListCard
-                                    item={item}
-                                    key={item.id}
-                                    kind={kind}
-                                    registered={kind === 'competitions' && applied}
-                                    view={props.view}
-                                />
-                            ))}
-                        </div>
-                        {(data?.items.length ?? 0) > 0 && (
-                            <OpportunityPagination
-                                onPageChange={setPage}
-                                onPerPageChange={updatePerPage}
-                                page={data?.page ?? page}
-                                perPage={data?.perPage ?? perPage}
-                                total={data?.total ?? 0}
-                                totalPages={data?.totalPages ?? 0}
-                            />
-                        )}
-                    </div>
+                    )}
                 </div>
-            </section>
-        </main>
+            </div>
+        </section>
     )
 }
 
@@ -413,13 +401,66 @@ export const OpportunitiesPage: FC = () => {
     const params = useParams<{ kind?: string }>()
     const kind = resolveOpportunityKind(params.kind)
     const viewContext: OpportunityViewContextData = useContext(opportunityViewContext)
+    const { profile }: ProfileContextData = useProfileContext()
+    const [mode, setMode] = useState<OpportunityMode>('browse')
+    const [workKinds, setWorkKinds] = useState<OpportunityKind[]>([])
+    const [workCounts, setWorkCounts] = useState<Record<OpportunityKind, number>>()
+    const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
+        'opportunities:summary',
+        getOpportunitySummary,
+        { revalidateOnFocus: false },
+    )
+    const workCount = workCounts
+        ? Object.values(workCounts)
+            .reduce((total, count) => total + count, 0)
+        : 3
+
+    /**
+     * Uses a My Work summary card as an exclusive domain shortcut, and clears
+     * the shortcut when the already-selected card is pressed again.
+     *
+     * @param selectedKind domain selected from the summary row.
+     * @returns void.
+     * @throws Does not throw.
+     */
+    const selectWorkKind = (selectedKind: OpportunityKind): void => {
+        setWorkKinds(current => (current.length === 1 && current[0] === selectedKind
+            ? []
+            : [selectedKind]))
+    }
+
     return (
-        <OpportunityListing
-            key={kind}
-            kind={kind}
-            onViewChange={viewContext.onViewChange}
-            view={viewContext.view}
-        />
+        <main className={styles.page}>
+            <OpportunityHero
+                active={kind}
+                error={!!summaryResponse.error}
+                loading={summaryResponse.isValidating && !summaryResponse.data}
+                mode={mode}
+                onModeChange={setMode}
+                onRetry={() => summaryResponse.mutate()}
+                onWorkKindSelect={selectWorkKind}
+                summary={summaryResponse.data}
+                workCount={workCount}
+                workCounts={workCounts}
+            />
+            {mode === 'browse' ? (
+                <OpportunityListing
+                    key={kind}
+                    kind={kind}
+                    onViewChange={viewContext.onViewChange}
+                    view={viewContext.view}
+                />
+            ) : (
+                <MyWorkListing
+                    kinds={workKinds}
+                    memberId={profile?.userId === undefined ? undefined : String(profile.userId)}
+                    onCountsChange={setWorkCounts}
+                    onKindsChange={setWorkKinds}
+                    onViewChange={viewContext.onViewChange}
+                    view={viewContext.view}
+                />
+            )}
+        </main>
     )
 }
 

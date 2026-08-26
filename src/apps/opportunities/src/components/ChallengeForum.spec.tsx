@@ -1,11 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, unicorn/no-null */
 import '@testing-library/jest-dom'
 import { readFileSync } from 'fs'
+import { act } from 'react'
 import {
     fireEvent,
     render,
     RenderResult,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import {
@@ -18,10 +20,21 @@ import {
 import {
     ChallengeForum,
     flattenForumPosts,
+    forumRatingClass,
     formatForumDate,
+    plainForumExcerpt,
+    wrapMarkdownSelection,
 } from './ChallengeForum'
 
+const mockCreateForumPost = jest.fn()
+const mockCreateForumTopic = jest.fn()
+const mockDeleteForumPost = jest.fn()
+const mockDeleteForumTopic = jest.fn()
+const mockMarkForumTopicRead = jest.fn()
+const mockSetForumTopicWatching = jest.fn()
 const mockUseSWR = jest.fn()
+const mockUpdateForumPost = jest.fn()
+const mockUpdateForumTopic = jest.fn()
 let listError: Error | undefined
 let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
@@ -41,9 +54,17 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../services', () => ({
+    createForumPost: (...args: unknown[]) => mockCreateForumPost(...args),
+    createForumTopic: (...args: unknown[]) => mockCreateForumTopic(...args),
+    deleteForumPost: (...args: unknown[]) => mockDeleteForumPost(...args),
+    deleteForumTopic: (...args: unknown[]) => mockDeleteForumTopic(...args),
     getChallengeForumTopics: jest.fn(),
     getForumTopicDetail: jest.fn(),
     getMemberProfilesByUserIds: jest.fn(),
+    markForumTopicRead: (...args: unknown[]) => mockMarkForumTopicRead(...args),
+    setForumTopicWatching: (...args: unknown[]) => mockSetForumTopicWatching(...args),
+    updateForumPost: (...args: unknown[]) => mockUpdateForumPost(...args),
+    updateForumTopic: (...args: unknown[]) => mockUpdateForumTopic(...args),
 }))
 
 jest.mock('../utils', () => ({
@@ -72,11 +93,19 @@ const announcement: ForumTopicSummary = {
     lockedAt: null,
     lockedBy: null,
     parentTopicId: null,
+    participants: [
+        { handle: 'DaraK', memberId: '1' },
+        { handle: 'Yoki', memberId: '2' },
+    ],
+    participantsCount: 2,
     postsCount: 2,
     roleName: null,
+    starterPostExcerpt: 'Welcome to the challenge.',
     title: 'Welcome to React Component Library Development Challenge',
     unread: true,
     updatedAt: '2026-06-07T10:15:00.000Z',
+    viewsCount: 48,
+    watching: true,
 }
 
 const discussion: ForumTopicSummary = {
@@ -94,6 +123,7 @@ const discussion: ForumTopicSummary = {
 const starterPost: ForumPost = {
     authorHandle: 'DaraK',
     authorMemberId: '1',
+    authorPostsCount: 123,
     content: 'Welcome **competitors**.',
     createdAt: '2026-06-06T00:05:00.000Z',
     deleted: false,
@@ -103,6 +133,7 @@ const starterPost: ForumPost = {
     replies: [{
         authorHandle: 'Yoki',
         authorMemberId: '2',
+        authorPostsCount: 12,
         content: 'Thanks for the clarification.',
         createdAt: '2026-06-07T10:15:00.000Z',
         deleted: false,
@@ -122,6 +153,13 @@ const forumStyles = readFileSync(`${__dirname}/ChallengeForum.module.scss`, 'utf
 describe('ChallengeForum', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockCreateForumPost.mockResolvedValue({ id: 'post-3' })
+        mockCreateForumTopic.mockResolvedValue({
+            starterPost: { id: 'post-3' },
+            topic: { id: 'topic-3' },
+        })
+        mockMarkForumTopicRead.mockResolvedValue(undefined)
+        mockSetForumTopicWatching.mockResolvedValue({ watching: false })
         listError = undefined
         memberProfiles = [{
             handle: 'DaraK',
@@ -176,8 +214,8 @@ describe('ChallengeForum', () => {
 
         expect(screen.getByRole('heading', { name: 'Challenge Forum' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('link', { name: /Create new topic/ }))
-            .toHaveAttribute('href', 'https://forum.example/challenge')
+        expect(screen.getByRole('button', { name: /Create new topic/ }))
+            .toBeInTheDocument()
         expect(screen.getByRole('button', { name: announcement.title }))
             .toBeInTheDocument()
         expect(screen.getByText('1 new topic'))
@@ -197,9 +235,9 @@ describe('ChallengeForum', () => {
             .not.toBeInTheDocument()
     })
 
-    it('opens a read-only embedded post tree and keeps replies external', () => {
+    it('opens an embedded post tree and keeps replies and comments in-page', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
-        fireEvent.click(screen.getByRole('button', { name: announcement.title }))
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
 
         expect(screen.getByRole('button', { name: announcement.title }))
             .toBeInTheDocument()
@@ -207,8 +245,69 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Thanks for the clarification.'))
             .toBeInTheDocument()
-        expect(screen.getAllByRole('link', { name: /Reply in forum/ }))
+        expect(screen.getAllByText('Author'))
             .toHaveLength(2)
+        expect(screen.getAllByRole('button', { name: 'Reply' }))
+            .toHaveLength(2)
+        fireEvent.change(screen.getByPlaceholderText('Type here'), {
+            target: { value: 'A new in-page comment' },
+        })
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Post comment' })))
+
+        await waitFor(() => expect(mockCreateForumPost)
+            .toHaveBeenCalledWith('topic-1', { content: 'A new in-page comment' }))
+        expect(mockMarkForumTopicRead)
+            .toHaveBeenCalledWith('topic-1')
+    })
+
+    it('creates a challenge topic without leaving Opportunities', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
+            target: { value: 'Clarify the API contract' },
+        })
+        fireEvent.change(screen.getByPlaceholderText(/Describe your question/), {
+            target: { value: 'Can the maintainers clarify the response type?' },
+        })
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create topic' })))
+
+        await waitFor(() => expect(mockCreateForumTopic)
+            .toHaveBeenCalledWith({
+                challengeId: 'challenge-id',
+                content: 'Can the maintainers clarify the response type?',
+                title: 'Clarify the API contract',
+            }))
+    })
+
+    it('toggles topic watches through forums-api-v6', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Watched' })[0]))
+
+        await waitFor(() => expect(mockSetForumTopicWatching)
+            .toHaveBeenCalledWith('topic-1', false))
+    })
+
+    it('keeps legacy topic summaries usable while the enriched API rolls out', () => {
+        topicCollection = {
+            data: [{
+                ...announcement,
+                participants: undefined,
+                participantsCount: undefined,
+                viewsCount: undefined,
+                watching: undefined,
+            } as unknown as ForumTopicSummary],
+            sourceTotalCount: 1,
+            truncated: false,
+        }
+
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+
+        expect(screen.getByRole('button', { name: announcement.title }))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Participants: DaraK, Yoki'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Watch' }))
+            .toBeInTheDocument()
     })
 
     it('uses public member photos with an initials fallback when an image fails', () => {
@@ -237,14 +336,14 @@ describe('ChallengeForum', () => {
 
         expect(screen.getByRole('heading', { name: 'Forum temporarily unavailable' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('link', { name: /Open forum/ }))
+        expect(screen.getByRole('link', { name: /Open legacy forum/ }))
             .toHaveAttribute('href', 'https://forum.example/challenge')
     })
 
     it('does not attempt an authenticated embed for signed-out members', () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} />)
 
-        expect(screen.getByText(/Sign in to read challenge discussions here/))
+        expect(screen.getByText(/Sign in to read and join this challenge discussion/))
             .toBeInTheDocument()
         expect(mockUseSWR.mock.calls[0][0])
             .toBeUndefined()
@@ -259,6 +358,10 @@ describe('ChallengeForum', () => {
             .toContain('color: #161616;')
         expect(forumStyles)
             .toContain('background: #007d79;')
+        expect(forumStyles)
+            .toContain('color: #f2c900;')
+        expect(forumStyles)
+            .not.toContain('#8d8d8d')
     })
 })
 
@@ -274,5 +377,29 @@ describe('forum presentation helpers', () => {
             .toBe('—')
         expect(formatForumDate('not-a-date'))
             .toBe('—')
+    })
+
+    it('normalizes list excerpts and wraps editor selections', () => {
+        expect(plainForumExcerpt('Use **strong** [guidance](https://example.com).'))
+            .toBe('Use strong guidance.')
+        expect(wrapMarkdownSelection('hello world', 6, 11, '**', '**'))
+            .toEqual({
+                selectionEnd: 13,
+                selectionStart: 8,
+                value: 'hello **world**',
+            })
+    })
+
+    it('maps public ratings to the August 2026 handle palette', () => {
+        expect(forumRatingClass())
+            .toBe('ratingGray')
+        expect(forumRatingClass(1000))
+            .toBe('ratingGreen')
+        expect(forumRatingClass(1300))
+            .toBe('ratingBlue')
+        expect(forumRatingClass(1800))
+            .toBe('ratingYellow')
+        expect(forumRatingClass(2400))
+            .toBe('ratingRed')
     })
 })

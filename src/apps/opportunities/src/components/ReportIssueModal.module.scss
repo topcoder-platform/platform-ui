@@ -5,8 +5,8 @@
     color: #161616;
     font-family: 'Nunito Sans', sans-serif;
     height: auto !important;
-    max-height: calc(100vh - 32px) !important;
-    max-width: calc(100vw - 32px) !important;
+    max-height: calc(100vh - 16px) !important;
+    max-width: calc(100vw - 24px) !important;
     min-width: 0 !important;
     padding: 32px !important;
     width: 600px !important;
@@ -22,7 +22,6 @@
             display: none;
         }
     }
-
 }
 
 .modalHeading {
@@ -79,13 +78,203 @@
     padding: 0 !important;
 }
 
-.form {
-    color: #161616;
+.form,
+.field,
+.attachmentField,
+.attachments,
+.attachmentRow > span {
     display: flex;
     flex-direction: column;
+}
+
+.form {
+    color: #161616;
     font-family: 'Nunito Sans', sans-serif;
-    gap: 16px;
+    gap: 12px;
     width: 100%;
+}
+
+.field,
+.attachmentField {
+    gap: 4px;
+
+    > span,
+    > .attachmentLabel {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+
+    em {
+        color: #c1294f;
+        font-style: normal;
+        margin-left: 2px;
+    }
+
+    > small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+}
+
+.field input,
+.field select,
+.field textarea {
+    background: #fff;
+    border: 1px solid #a8a8a8;
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: #161616;
+    font: 16px/22px 'Nunito Sans', sans-serif;
+    outline: none;
+    padding: 8px 16px;
+    width: 100%;
+
+    &::placeholder {
+        color: #6f6f6f;
+        opacity: 1;
+    }
+
+    &:focus {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
+.field input,
+.field select {
+    height: 38px;
+}
+
+.field select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #6f6f6f 50%),
+        linear-gradient(135deg, #6f6f6f 50%, transparent 50%);
+    background-position: calc(100% - 19px) 16px, calc(100% - 15px) 16px;
+    background-repeat: no-repeat;
+    background-size: 4px 4px, 4px 4px;
+    padding-right: 40px;
+}
+
+.field textarea {
+    height: 106px;
+    resize: none;
+}
+
+.attachmentField > input {
+    display: none;
+}
+
+.dropZone,
+.activeDropZone {
+    align-items: center;
+    background: #f5f7fa;
+    border: 1px dashed #a8a8a8;
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: #6f6f6f;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    font: 14px/20px 'Nunito Sans', sans-serif;
+    height: 120px;
+    justify-content: center;
+    padding: 16px;
+
+    svg {
+        color: #161616;
+        height: 32px;
+        margin-bottom: 8px;
+        width: 32px;
+    }
+
+    strong {
+        color: #007d79;
+        font-weight: 400;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: .65;
+    }
+}
+
+.activeDropZone {
+    background: #e5f6f6;
+    border-color: #007d79;
+}
+
+.attachments {
+    gap: 8px;
+
+    > strong {
+        font-size: 12px;
+        line-height: 16px;
+    }
+}
+
+.attachmentRow {
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 4px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 20px minmax(0, 1fr) 24px;
+    min-height: 68px;
+    padding: 12px 16px;
+
+    > svg {
+        height: 20px;
+        width: 20px;
+    }
+
+    > span {
+        min-width: 0;
+
+        strong,
+        small {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        strong {
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        small {
+            color: #161616;
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
+
+    button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        cursor: pointer;
+        display: flex;
+        height: 24px;
+        justify-content: center;
+        padding: 0;
+        width: 24px;
+
+        svg {
+            height: 20px;
+            width: 20px;
+        }
+    }
+}
+
+.error {
+    color: #c1294f;
+    font-size: 12px;
+    line-height: 16px;
+    margin: 0;
 }
 
 .actionButton {

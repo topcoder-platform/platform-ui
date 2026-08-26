@@ -2,7 +2,7 @@
 import { FC, ReactNode, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import { IconOutline } from '~/libs/ui'
+import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
     ChallengeOpportunity,
@@ -47,6 +47,7 @@ import {
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
+    applicationState?: string
     item: OpportunityItem
     kind: OpportunityKind
     registered?: boolean
@@ -550,7 +551,13 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                 : registrationOpen ? 'Open for registration' : 'Registration closed'}
                         </span>
                     </div>
-                    <h3>{item.name}</h3>
+                    <Tooltip
+                        className={styles.cardTooltip}
+                        content={item.name}
+                        place='bottom'
+                    >
+                        <h3>{item.name}</h3>
+                    </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
                             {visibleSkills.map((skill, index) => (
@@ -563,7 +570,20 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     {skill}
                                 </span>
                             ))}
-                            {remainingSkills > 0 && <span>{`+${remainingSkills}`}</span>}
+                            {remainingSkills > 0 && (
+                                <Tooltip
+                                    className={styles.cardTooltip}
+                                    content={(
+                                        <ul>
+                                            {skillLabels.slice(visibleSkills.length)
+                                                .map(skill => <li key={skill}>{skill}</li>)}
+                                        </ul>
+                                    )}
+                                    place='bottom'
+                                >
+                                    <span>{`+${remainingSkills}`}</span>
+                                </Tooltip>
+                            )}
                         </div>
                     )}
                 </div>
@@ -610,7 +630,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
 /**
  * Renders a responsive list card shared by all four owning API payloads.
  *
- * @param props opportunity kind and raw item.
+ * @param props opportunity kind, raw item, member application state, and presentation mode.
  * @returns linked opportunity card with tags and domain-specific metadata.
  * @throws Does not throw.
  */
@@ -625,7 +645,10 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
         )
     }
 
-    const card = toViewModel(props.kind, props.item)
+    const card = {
+        ...toViewModel(props.kind, props.item),
+        ...(props.applicationState ? { state: props.applicationState } : {}),
+    }
     const visibleSkills = card.skills.filter(Boolean)
         .slice(0, props.view === 'grid' ? 3 : 5)
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
@@ -657,21 +680,42 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     {card.state && (
                         <span className={classNames(styles.state, {
                             [styles.stateApplied]: stateKey === 'applied',
+                            [styles.stateAccepted]: stateKey === 'accepted',
                             [styles.stateClosed]: stateKey === 'applicationclosed',
                         })}
                         >
                             {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
                             {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateKey === 'accepted' && <IconOutline.CheckIcon aria-hidden='true' />}
                             {stateKey === 'applicationclosed' && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}
                         </span>
                     )}
                 </div>
-                <h3>{card.title}</h3>
+                <Tooltip
+                    className={styles.cardTooltip}
+                    content={card.title}
+                    place='bottom'
+                >
+                    <h3>{card.title}</h3>
+                </Tooltip>
                 {visibleSkills.length > 0 && (
                     <div className={styles.skills}>
                         {visibleSkills.map((skill: string) => <span key={skill}>{skill}</span>)}
-                        {remaining > 0 && <span>{`+${remaining}`}</span>}
+                        {remaining > 0 && (
+                            <Tooltip
+                                className={styles.cardTooltip}
+                                content={(
+                                    <ul>
+                                        {card.skills.slice(visibleSkills.length)
+                                            .map(skill => <li key={skill}>{skill}</li>)}
+                                    </ul>
+                                )}
+                                place='bottom'
+                            >
+                                <span>{`+${remaining}`}</span>
+                            </Tooltip>
+                        )}
                     </div>
                 )}
                 {card.description && <p>{card.description}</p>}

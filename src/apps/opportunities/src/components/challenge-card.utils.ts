@@ -123,7 +123,7 @@ export function challengeSubmissionIsOpen(challenge: ChallengeOpportunity): bool
     if (challengeCatalogKey(challenge.status) !== 'active') return false
 
     /**
-     * Identifies canonical submission phases, including the legacy combined Open phase.
+     * Identifies canonical submission phases, including Final Fix and the legacy combined Open phase.
      *
      * @param name Challenge API phase name.
      * @returns true when registration grants access to a currently open submission surface.
@@ -131,7 +131,7 @@ export function challengeSubmissionIsOpen(challenge: ChallengeOpportunity): bool
      */
     const phaseIsSubmission = (name: string): boolean => {
         const key = challengeCatalogKey(name)
-        return key === 'open' || key.includes('submission')
+        return key === 'open' || key.includes('submission') || key === 'finalfix'
     }
 
     if ((challenge.phases ?? []).some(phase => phase.isOpen === true && phaseIsSubmission(phase.name))) {

@@ -25,6 +25,7 @@ import {
     ChallengeDetailHeader,
     ChallengeForum,
     ChallengeSidebar,
+    ChallengeSubmissionUpload,
     ChallengeTermsModal,
     ChallengeTocItem,
     extractTableOfContents,
@@ -50,6 +51,7 @@ import {
 } from '../models'
 import {
     agreeToChallengeTerms,
+    deleteChallengeSubmission,
     getChallengeOpportunity,
     getChallengeRegistration,
     getChallengeReviewSummations,
@@ -76,6 +78,7 @@ import {
 import medal1 from '../assets/medal-1.svg'
 import medal2 from '../assets/medal-2.svg'
 import medal3 from '../assets/medal-3.svg'
+import winnerThanksIcon from '../assets/winner-thanks.svg'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -149,6 +152,24 @@ function catalogName(value: string | { name?: string } | undefined): string {
 }
 
 /**
+ * Reads a case-insensitive boolean flag from Challenge API metadata.
+ *
+ * @param challenge challenge containing arbitrary string-like metadata values.
+ * @param name metadata name to resolve.
+ * @returns true only when the matching metadata value serializes to `true`.
+ * @throws Does not throw.
+ */
+function challengeMetadataFlag(challenge: ChallengeOpportunity, name: string): boolean {
+    const normalizedName = name.trim()
+        .toLowerCase()
+    return challenge.metadata?.some(item => item.name.trim()
+        .toLowerCase() === normalizedName
+        && String(item.value)
+            .trim()
+            .toLowerCase() === 'true') ?? false
+}
+
+/**
  * Formats an API timestamp used in submission and phase tables.
  *
  * @param value optional ISO timestamp.
@@ -184,6 +205,7 @@ export const ChallengeDetailsPage: FC = () => {
     const [termsMode, setTermsMode] = useState<'register' | 'view'>('view')
     const [issueOpen, setIssueOpen] = useState(false)
     const [registrationBusy, setRegistrationBusy] = useState(false)
+    const [submissionFlowOpen, setSubmissionFlowOpen] = useState(false)
     const [visibleTerms, setVisibleTerms] = useState<ChallengeTerm[]>([])
     const challengeResponse: SWRResponse<ChallengeOpportunity, Error> = useSWR(
         challengeId ? `opportunities:challenge:${challengeId}` : undefined,
@@ -223,6 +245,53 @@ export const ChallengeDetailsPage: FC = () => {
             { id: 'winners', label: 'Winners' },
         ]
     }, [challenge, registration])
+
+    /**
+     * Selects a challenge tab and closes the transient in-tab submission form.
+     *
+     * @param tab destination tab identifier.
+     * @returns void after updating the visible panel.
+     * @throws Does not throw.
+     */
+    const selectTab = (tab: ChallengeTab): void => {
+        setSubmissionFlowOpen(false)
+        setActiveTab(tab)
+    }
+
+    /**
+     * Opens the Figma submission flow under the registered member's My Submissions tab.
+     *
+     * @returns void after selecting the tab, or redirecting an anonymous member to sign in.
+     * @throws Does not throw.
+     */
+    const startSubmission = (): void => {
+        if (!memberId) {
+            window.location.assign(authUrlLogin(window.location.href))
+            return
+        }
+
+        setActiveTab('mine')
+        setSubmissionFlowOpen(true)
+    }
+
+    /**
+     * Returns from the upload workflow to the member's refreshed submission table.
+     *
+     * @returns void after restoring the default My Submissions panel.
+     * @throws Does not throw.
+     */
+    const closeSubmission = (): void => {
+        setActiveTab('mine')
+        setSubmissionFlowOpen(false)
+    }
+
+    /**
+     * Opens Requirements from the upload form's track-specific guidance card.
+     *
+     * @returns void after selecting the Requirements panel.
+     * @throws Does not throw.
+     */
+    const showSubmissionRequirements = (): void => selectTab('requirements')
 
     /** Opens authentication or the terms confirmation before registration. */
     const startRegistration = (): void => {
@@ -296,6 +365,7 @@ export const ChallengeDetailsPage: FC = () => {
         try {
             await unregisterFromChallenge(challengeId, profile.handle)
             setActiveTab('requirements')
+            setSubmissionFlowOpen(false)
             await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
             toast.success('You are no longer registered for this competition.')
         } catch (error) {
@@ -327,6 +397,7 @@ export const ChallengeDetailsPage: FC = () => {
                 challenge={challenge}
                 isRegistered={!!registration}
                 onRegister={startRegistration}
+                onSubmit={startSubmission}
                 onUnregister={unregister}
                 registrationError={!!memberId && !!registrationResponse.error}
                 registrationLoading={!!memberId
@@ -345,7 +416,7 @@ export const ChallengeDetailsPage: FC = () => {
                             className={activeTab === tab.id ? styles.activeTab : undefined}
                             id={`challenge-tab-${tab.id}`}
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() => selectTab(tab.id)}
                             onKeyDown={event => navigateTabs(event, index)}
                             role='tab'
                             tabIndex={activeTab === tab.id ? 0 : -1}
@@ -368,6 +439,16 @@ export const ChallengeDetailsPage: FC = () => {
                         activeTab={activeTab}
                         challenge={challenge}
                         memberId={memberId}
+                        onCloseSubmission={closeSubmission}
+                        onContactSupport={() => setIssueOpen(true)}
+                        onShowRequirements={showSubmissionRequirements}
+                        onShowTerms={showTerms}
+                        onStartSubmission={startSubmission}
+                        onSubmitted={() => challengeResponse.mutate({
+                            ...challenge,
+                            numOfSubmissions: (challenge.numOfSubmissions ?? 0) + 1,
+                        }, { revalidate: false })}
+                        submissionFlowOpen={submissionFlowOpen}
                     />
                 </section>
                 {activeTab === 'requirements' && (
@@ -399,6 +480,13 @@ interface ChallengeTabContentProps {
     activeTab: ChallengeTab
     challenge: ChallengeOpportunity
     memberId?: string
+    onCloseSubmission: () => void
+    onContactSupport: () => void
+    onShowRequirements: () => void
+    onShowTerms: (term?: ChallengeTerm) => void
+    onStartSubmission: () => void
+    onSubmitted: () => Promise<unknown> | unknown
+    submissionFlowOpen: boolean
 }
 
 /**
@@ -410,19 +498,39 @@ interface ChallengeTabContentProps {
  */
 const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'requirements') return <RequirementsTab challenge={props.challenge} />
-    if (props.activeTab === 'registrants') return <RegistrantsTab challengeId={props.challenge.id} />
+    if (props.activeTab === 'registrants') return <RegistrantsTab challenge={props.challenge} />
     if (props.activeTab === 'submissions') {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
         return props.memberId || isDesign
-            ? <SubmissionsTab challenge={props.challenge} />
+            ? <SubmissionsTab challenge={props.challenge} viewerMemberId={props.memberId} />
             : <SignInTab subject='submissions' />
     }
 
     if (props.activeTab === 'mine') {
-        return props.memberId
-            ? <SubmissionsTab challenge={props.challenge} memberId={props.memberId} mine />
-            : <SignInTab subject='your submissions' />
+        if (!props.memberId) return <SignInTab subject='your submissions' />
+        if (props.submissionFlowOpen) {
+            return (
+                <ChallengeSubmissionUpload
+                    challenge={props.challenge}
+                    memberId={props.memberId}
+                    onBack={props.onCloseSubmission}
+                    onContactSupport={props.onContactSupport}
+                    onShowRequirements={props.onShowRequirements}
+                    onShowTerms={props.onShowTerms}
+                    onSubmitted={props.onSubmitted}
+                />
+            )
+        }
+
+        return (
+            <SubmissionsTab
+                challenge={props.challenge}
+                memberId={props.memberId}
+                mine
+                onStartSubmission={props.onStartSubmission}
+            />
+        )
     }
 
     if (props.activeTab === 'dashboard') {
@@ -435,7 +543,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
         return <ForumTab challenge={props.challenge} memberId={props.memberId} />
     }
 
-    return <WinnersTab challenge={props.challenge} />
+    return <WinnersTab challenge={props.challenge} memberId={props.memberId} />
 }
 
 /**
@@ -588,16 +696,16 @@ function registrationTimestamp(resource: ChallengeResource): string {
 /**
  * Loads Submitter resources only after the Registrants tab is selected.
  *
- * @param props challenge identifier.
+ * @param props challenge used to load resources and select the track-specific table.
  * @returns paginated registrants table or loading/error/empty state.
  * @throws Does not throw; request failures render a retry action.
  */
-const RegistrantsTab: FC<{ challengeId: string }> = props => {
+const RegistrantsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const response: SWRResponse<OpportunityPage<ChallengeResource>, Error> = useSWR(
-        ['opportunities:registrants', props.challengeId, page, perPage],
-        () => getChallengeSubmitters(props.challengeId, page, perPage),
+        ['opportunities:registrants', props.challenge.id, page, perPage],
+        () => getChallengeSubmitters(props.challenge.id, page, perPage),
         { revalidateOnFocus: false },
     )
     const memberIds = useMemo(
@@ -616,6 +724,10 @@ const RegistrantsTab: FC<{ challengeId: string }> = props => {
         () => memberProfilesById(profileResponse.data),
         [profileResponse.data],
     )
+    const trackKey = challengeCatalogKey(props.challenge.track)
+    const showRating = trackKey !== 'design'
+    const sortRegistrationDate = trackKey === 'qualityassurance'
+        || isMarathonMatchChallenge(props.challenge)
     if (response.isValidating && !response.data) return <LoadingSpinner />
     if (response.error) return <TabError onRetry={() => response.mutate()} />
     if (!response.data?.items.length) {
@@ -626,12 +738,22 @@ const RegistrantsTab: FC<{ challengeId: string }> = props => {
         <div className={styles.tableSection}>
             <h2>Registrants</h2>
             <div className={styles.tableCard}>
-                <table>
+                <table className={!showRating
+                    ? styles.designRegistrantTable
+                    : styles.ratedRegistrantTable}
+                >
                     <thead>
                         <tr>
                             <th>Handle</th>
-                            <th>Rating</th>
-                            <th>Registration Date</th>
+                            {showRating && <th>Rating</th>}
+                            <th>
+                                {sortRegistrationDate ? (
+                                    <span className={styles.sortedHeader}>
+                                        Registration Date
+                                        <IconOutline.ChevronDownIcon aria-hidden='true' />
+                                    </span>
+                                ) : 'Registration Date'}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -652,7 +774,7 @@ const RegistrantsTab: FC<{ challengeId: string }> = props => {
                                             rating={rating}
                                         />
                                     </td>
-                                    <td>{rating ?? '—'}</td>
+                                    {showRating && <td>{rating ?? '—'}</td>}
                                     <td>{registrationTimestamp(resource)}</td>
                                 </tr>
                             )
@@ -681,12 +803,14 @@ interface SubmissionsTabProps {
     challenge: ChallengeOpportunity
     memberId?: string
     mine?: boolean
+    onStartSubmission?: () => void
+    viewerMemberId?: string
 }
 
 /**
  * Loads and paginates submissions only after a submission tab is selected.
  *
- * @param props challenge, optional member scope, and My Submissions flag.
+ * @param props challenge, optional member scope, viewer identity, and My Submissions flag.
  * @returns submission table/gallery, Marathon dashboard, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
@@ -695,20 +819,25 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [perPage, setPerPage] = useState(10)
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [marathonView, setMarathonView] = useState<'dashboard' | 'list'>('list')
+    const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | undefined>()
     const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | undefined>()
-    const isDesign = catalogName(props.challenge.track)
-        .toLowerCase() === 'design'
+    const trackKey = challengeCatalogKey(props.challenge.track)
+    const isDesign = trackKey === 'design'
+    const isQa = trackKey === 'qualityassurance'
     const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
-    const releasedPreviewGallery = isDesign && !props.mine
+    const privatePreviewGallery = isDesign
+        && !props.mine
+        && challengeMetadataFlag(props.challenge, 'submissionsViewable')
+    const usePublicPreviewPage = privatePreviewGallery && !props.viewerMemberId
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         [
-            releasedPreviewGallery ? 'opportunities:submission-previews' : 'opportunities:submissions',
+            usePublicPreviewPage ? 'opportunities:submission-previews' : 'opportunities:submissions',
             props.challenge.id,
             props.memberId,
             page,
             perPage,
         ],
-        () => (releasedPreviewGallery
+        () => (usePublicPreviewPage
             ? getChallengeSubmissionPreviews(props.challenge.id, page, perPage)
             : getChallengeSubmissions(
                 props.challenge.id,
@@ -719,22 +848,31 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             )),
         { revalidateOnFocus: false },
     )
+    const previewResponse: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
+        privatePreviewGallery && !!props.viewerMemberId
+            ? ['opportunities:submission-previews', props.challenge.id, page, perPage]
+            : undefined,
+        () => getChallengeSubmissionPreviews(props.challenge.id, page, perPage),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
     const scoreResponse: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
-        isMarathonMatch && !releasedPreviewGallery
+        isMarathonMatch && !privatePreviewGallery
             ? ['opportunities:mm-review-summations', props.challenge.id]
             : undefined,
         () => getChallengeReviewSummations(props.challenge.id),
         { revalidateOnFocus: false },
     )
-    const submissions = useMemo(
-        () => (isMarathonMatch
-            ? attachMarathonReviewSummations(
-                response.data?.items ?? [],
-                scoreResponse.data ?? [],
-            )
-            : response.data?.items ?? []),
-        [isMarathonMatch, response.data?.items, scoreResponse.data],
-    )
+    const submissions = useMemo(() => {
+        const previewById = new Map((previewResponse.data?.items ?? [])
+            .map(item => [item.id, item.previewUrl]))
+        const items = (response.data?.items ?? []).map(item => ({
+            ...item,
+            previewUrl: item.previewUrl ?? previewById.get(item.id),
+        }))
+        return isMarathonMatch
+            ? attachMarathonReviewSummations(items, scoreResponse.data ?? [])
+            : items
+    }, [isMarathonMatch, previewResponse.data?.items, response.data?.items, scoreResponse.data])
     const submissionMemberIds = useMemo(
         () => (props.mine
             ? []
@@ -755,7 +893,13 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         [profileResponse.data],
     )
 
-    /** Opens an authorized clean-storage download without exposing private URLs in list data. */
+    /**
+     * Opens an authorized clean-storage download without exposing private URLs in list data.
+     *
+     * @param submission selected authored submission.
+     * @returns void after opening the signed URL or reporting a request error.
+     * @throws Does not throw; download failures are reported through a toast.
+     */
     const downloadSubmission = async (submission: ChallengeSubmission): Promise<void> => {
         setDownloadingSubmissionId(submission.id)
         try {
@@ -774,11 +918,41 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         }
     }
 
+    /**
+     * Deletes an owned Design submission after explicit member confirmation.
+     *
+     * @param submission selected authored submission.
+     * @returns void after refreshing the current submission page or reporting an error.
+     * @throws Does not throw; deletion failures are reported through a toast.
+     */
+    const removeSubmission = async (submission: ChallengeSubmission): Promise<void> => {
+        // eslint-disable-next-line no-alert
+        if (!window.confirm(`Delete submission ${submission.id}? This action cannot be undone.`)) return
+        setDeletingSubmissionId(submission.id)
+        try {
+            await deleteChallengeSubmission(submission.id)
+            await response.mutate()
+            toast.success('Submission deleted.')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to delete this submission.')
+        } finally {
+            setDeletingSubmissionId(undefined)
+        }
+    }
+
     if (response.isValidating && !response.data) return <LoadingSpinner />
     if (response.error) return <TabError onRetry={() => response.mutate()} />
     if (!response.data?.items.length) {
-        if (props.mine) return <MySubmissionsEmpty challengeId={props.challenge.id} />
-        return releasedPreviewGallery
+        if (props.mine) {
+            return (
+                <MySubmissionsEmpty
+                    challengeId={props.challenge.id}
+                    onStartSubmission={props.onStartSubmission}
+                />
+            )
+        }
+
+        return privatePreviewGallery
             ? (
                 <EmptyTab
                     title='No submission previews yet'
@@ -843,7 +1017,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             </div>
             {isMarathonMatch && !props.mine && marathonView === 'dashboard' ? (
                 <MarathonDashboard challenge={props.challenge} />
-            ) : releasedPreviewGallery ? (
+            ) : privatePreviewGallery ? (
                 <div className={styles.previewGrid}>
                     {submissions.map(submission => (
                         <SubmissionPreview
@@ -855,7 +1029,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 </div>
             ) : props.mine ? (
                 <div className={styles.tableCard}>
-                    <table className={isMarathonMatch ? styles.myMarathonTable : styles.mySubmissionTable}>
+                    <table className={isMarathonMatch
+                        ? styles.myMarathonTable
+                        : isDesign || isQa
+                            ? styles.myCompactSubmissionTable
+                            : styles.mySubmissionTable}
+                    >
                         <thead>
                             <tr>
                                 <th>Submission ID</th>
@@ -872,9 +1051,9 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                         <th>Test Status</th>
                                         <th>Test Progress</th>
                                         <th>Final Score</th>
-                                        <th>Provisional Score</th>
+                                        <th>Provision Score</th>
                                     </>
-                                ) : (
+                                ) : !isDesign && !isQa && (
                                     <>
                                         <th>Current Status</th>
                                         <th>Score</th>
@@ -925,7 +1104,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 <td>{formatMarathonScore(scores.finalScore, '-')}</td>
                                                 <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                             </>
-                                        ) : (
+                                        ) : !isDesign && !isQa ? (
                                             <>
                                                 <td>
                                                     <span className={styles.currentStatus}>
@@ -939,34 +1118,52 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                     )}
                                                 </td>
                                             </>
-                                        )}
+                                        ) : undefined}
                                         <td>
                                             <div className={styles.submissionActions}>
-                                                <button
-                                                    aria-label={`Download submission ${submission.id}`}
-                                                    disabled={downloadingSubmissionId === submission.id}
-                                                    onClick={() => downloadSubmission(submission)}
-                                                    type='button'
-                                                >
-                                                    <IconOutline.DownloadIcon aria-hidden='true' />
-                                                </button>
+                                                {(isDesign || isQa || isMarathonMatch) && (
+                                                    <button
+                                                        aria-label={`Download submission ${submission.id}`}
+                                                        disabled={downloadingSubmissionId === submission.id}
+                                                        onClick={() => downloadSubmission(submission)}
+                                                        title='Download submission'
+                                                        type='button'
+                                                    >
+                                                        <IconOutline.DownloadIcon aria-hidden='true' />
+                                                    </button>
+                                                )}
+                                                {isDesign && (
+                                                    <button
+                                                        aria-label={`Delete submission ${submission.id}`}
+                                                        disabled={deletingSubmissionId === submission.id}
+                                                        onClick={() => removeSubmission(submission)}
+                                                        title='Delete'
+                                                        type='button'
+                                                    >
+                                                        <IconOutline.TrashIcon aria-hidden='true' />
+                                                    </button>
+                                                )}
                                                 <a
                                                     aria-label={`Open submission ${submission.id} in Review App`}
                                                     href={reviewUrl}
                                                     rel='noreferrer'
                                                     target='_blank'
+                                                    title='Open Review App'
                                                 >
                                                     <IconOutline.DocumentSearchIcon aria-hidden='true' />
                                                 </a>
-                                                <button
-                                                    aria-label={`View history for submission ${submission.id}`}
-                                                    onClick={() => setHistorySubmission(submission)}
-                                                    type='button'
-                                                >
-                                                    {isMarathonMatch
-                                                        ? <IconOutline.SearchIcon aria-hidden='true' />
-                                                        : <IconOutline.ChevronDownIcon aria-hidden='true' />}
-                                                </button>
+                                                {!isDesign && !isQa && (
+                                                    <button
+                                                        aria-label={`View history for submission ${submission.id}`}
+                                                        onClick={() => setHistorySubmission(submission)}
+                                                        title='Submission history'
+                                                        type='button'
+                                                    >
+                                                        {isMarathonMatch
+                                                            ? <IconOutline.SearchIcon aria-hidden='true' />
+                                                            : <IconOutline.ChevronDownIcon aria-hidden='true' />}
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -977,11 +1174,18 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 </div>
             ) : (
                 <div className={styles.tableCard}>
-                    <table className={isMarathonMatch ? styles.marathonTable : undefined}>
+                    <table className={isMarathonMatch
+                        ? styles.marathonTable
+                        : isQa
+                            ? styles.qaSubmissionTable
+                            : isDesign
+                                ? styles.designSubmissionTable
+                                : styles.developmentSubmissionTable}
+                    >
                         <thead>
                             <tr>
                                 <th>Handle</th>
-                                <th>Rating</th>
+                                {!isDesign && <th>Rating</th>}
                                 <th>
                                     <span className={styles.sortedHeader}>
                                         Submission Date
@@ -990,6 +1194,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                 </th>
                                 {isMarathonMatch && <th>Provisional Score</th>}
                                 {isMarathonMatch && <th>Final Score</th>}
+                                {isQa && <th>Initial Score</th>}
+                                {isQa && <th>Final Score</th>}
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -1015,12 +1221,18 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 rating={rating}
                                             />
                                         </td>
-                                        <td>{rating ?? '—'}</td>
+                                        {!isDesign && <td>{rating ?? '—'}</td>}
                                         <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
                                         {isMarathonMatch && (
                                             <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                         )}
                                         {isMarathonMatch && (
+                                            <td>{formatMarathonScore(scores.finalScore, '-')}</td>
+                                        )}
+                                        {isQa && (
+                                            <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
+                                        )}
+                                        {isQa && (
                                             <td>{formatMarathonScore(scores.finalScore, '-')}</td>
                                         )}
                                         <td>
@@ -1152,10 +1364,10 @@ const SubmissionPreview: FC<{
 }
 
 /**
- * Renders the embedded read-only forum with external write fallbacks.
+ * Renders the authenticated in-page Challenge Discussion workflow.
  *
  * @param props challenge context and optional authenticated member ID.
- * @returns forum tab content.
+ * @returns topic list, creation, threaded detail, and mutation workflows.
  * @throws Does not throw.
  */
 const ForumTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = props => (
@@ -1175,6 +1387,7 @@ interface WinnerCardProps {
     profile?: MemberProfileSummary
     prize?: ChallengePlacementPrize
     rating?: number
+    showRating: boolean
     trackLabel: string
     wins?: number
     winner: ChallengeWinner
@@ -1283,8 +1496,12 @@ const WinnerCard: FC<WinnerCardProps> = props => {
             />
             <span className={styles.winnerMemberStats}>
                 <span>{`${props.wins ?? '—'} ${props.trackLabel} wins`}</span>
-                <span aria-hidden='true' className={styles.winnerStatsDivider} />
-                <span>{`${props.rating ?? '—'} rating`}</span>
+                {props.showRating && (
+                    <>
+                        <span aria-hidden='true' className={styles.winnerStatsDivider} />
+                        <span>{`${props.rating ?? '—'} rating`}</span>
+                    </>
+                )}
             </span>
         </article>
     )
@@ -1293,11 +1510,11 @@ const WinnerCard: FC<WinnerCardProps> = props => {
 /**
  * Renders challenge winners once present in the Challenge API response.
  *
- * @param props challenge with winner and prize data.
+ * @param props challenge with winner and prize data, plus the optional viewer ID.
  * @returns winner podium or ongoing-challenge empty state.
  * @throws Does not throw; optional enrichment failures preserve winner rows.
  */
-const WinnersTab: FC<{ challenge: ChallengeOpportunity }> = props => {
+const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = props => {
     const winners = props.challenge.winners
     const winnerMemberIds = useMemo(
         () => Array.from(new Set((winners ?? [])
@@ -1374,43 +1591,108 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity }> = props => {
         }
     })
         .sort((first, second) => first.placement - second.placement)
-    const trackLabel = challengeTrackLabel(props.challenge.track)
-        .toLowerCase()
+    const trackHeading = challengeTrackLabel(props.challenge.track)
+    const trackLabel = trackHeading.toLowerCase()
+    const rankedWinners = ranked.map(entry => {
+        const profile = profilesById.get(String(entry.winner.userId ?? ''))
+        const handle = profile?.handle
+            ?? entry.winner.handle
+            ?? entry.winner.userId
+            ?? 'Member'
+        const stats = statsByHandle.get(memberHandleKey(handle))
+        return {
+            ...entry,
+            finalScore: winnerFinalScore(
+                entry.winner,
+                submissionResponse.data?.items ?? [],
+                reviewSummationResponse.data ?? [],
+            ),
+            handle,
+            profile,
+            rating: profile?.maxRating ?? stats?.maxRating?.rating,
+            wins: challengeTrackWins(stats, props.challenge.track),
+        }
+    })
+    const showWinnerRating = rankedWinners.length === 1 || rankedWinners.length > 3
     return (
         <section className={styles.winnersSection}>
             <h2>Winners</h2>
             <p>Congratulations to the top members who build outstanding solutions</p>
             <div className={styles.winnersPanel}>
                 <div className={styles.podium}>
-                    {ranked.map(entry => {
-                        const profile = profilesById.get(String(entry.winner.userId ?? ''))
-                        const handle = profile?.handle
-                            ?? entry.winner.handle
-                            ?? entry.winner.userId
-                            ?? 'Member'
-                        const stats = statsByHandle.get(memberHandleKey(handle))
-                        const rating = profile?.maxRating ?? stats?.maxRating?.rating
-                        return (
+                    {rankedWinners.slice(0, 3)
+                        .map(entry => (
                             <WinnerCard
-                                finalScore={winnerFinalScore(
-                                    entry.winner,
-                                    submissionResponse.data?.items ?? [],
-                                    reviewSummationResponse.data ?? [],
-                                )}
+                                finalScore={entry.finalScore}
                                 key={`${entry.placement}-${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`}
                                 placement={entry.placement}
                                 prize={entry.prize}
-                                profile={profile}
-                                rating={rating}
+                                profile={entry.profile}
+                                rating={entry.rating}
+                                showRating={showWinnerRating}
                                 trackLabel={trackLabel}
                                 winner={entry.winner}
-                                wins={challengeTrackWins(stats, props.challenge.track)}
+                                wins={entry.wins}
                             />
-                        )
-                    })}
+                        ))}
                 </div>
+                {rankedWinners.length > 3 && (
+                    <div className={styles.winnerTable}>
+                        <table aria-label='Remaining winners'>
+                            <thead>
+                                <tr>
+                                    <th>Place</th>
+                                    <th>Handle</th>
+                                    <th>{`${trackHeading} Wins`}</th>
+                                    <th>
+                                        <span className={styles.sortedHeader}>
+                                            Final Score
+                                            <IconOutline.ChevronDownIcon aria-hidden='true' />
+                                        </span>
+                                    </th>
+                                    <th>Prize</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rankedWinners.slice(3)
+                                    .map(entry => {
+                                        const isViewer = String(entry.winner.userId ?? '') === props.memberId
+                                        const rowKey = `${entry.placement}-`
+                                            + `${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`
+                                        return (
+                                            <tr
+                                                className={isViewer ? styles.currentWinnerRow : undefined}
+                                                key={rowKey}
+                                            >
+                                                <td>
+                                                    {placementLabel(entry.placement)
+                                                        .replace(' Place', '')}
+                                                </td>
+                                                <td>
+                                                    <div className={styles.winnerHandleCell}>
+                                                        <MemberHandle
+                                                            handle={entry.handle}
+                                                            link={!!entry.profile?.handle || !!entry.winner.handle}
+                                                            profile={entry.profile}
+                                                            rating={entry.rating}
+                                                        />
+                                                        {isViewer && <span className={styles.winnerYou}>You</span>}
+                                                    </div>
+                                                </td>
+                                                <td>{entry.wins ?? '—'}</td>
+                                                <td className={styles.winnerTableScore}>
+                                                    {formatMarathonScore(entry.finalScore, '-')}
+                                                </td>
+                                                <td>{winnerPrizeLabel(entry.prize)}</td>
+                                            </tr>
+                                        )
+                                    })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
                 <p className={styles.winnerThanks}>
-                    <IconOutline.BadgeCheckIcon />
+                    <img alt='' src={winnerThanksIcon} />
                     <strong>Thank you everyone who participated!</strong>
                     Your innovative solutions made this challenge a success.
                 </p>
@@ -1426,7 +1708,10 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity }> = props => {
  * @returns empty-state panel.
  * @throws Does not throw.
  */
-const MySubmissionsEmpty: FC<{ challengeId: string }> = props => (
+const MySubmissionsEmpty: FC<{
+    challengeId: string
+    onStartSubmission?: () => void
+}> = props => (
     <section className={styles.mySubmissionsEmpty}>
         <div className={styles.submissionHeading}>
             <div>
@@ -1445,10 +1730,10 @@ const MySubmissionsEmpty: FC<{ challengeId: string }> = props => (
         </div>
         <EmptyTab
             action={(
-                <a href={`/challenges/${props.challengeId}/submit`}>
+                <button onClick={props.onStartSubmission} type='button'>
                     <IconOutline.UploadIcon />
                     Submit a solution
-                </a>
+                </button>
             )}
             title='You have no submissions yet'
             text='Upload a submission to compete in this challenge.'

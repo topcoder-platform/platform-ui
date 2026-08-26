@@ -1,10 +1,22 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import {
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+    xhrPutAsync,
+} from '~/libs/core'
 
 import {
+    CreateForumPostRequest,
+    CreateForumTopicRequest,
+    CreateForumTopicResponse,
+    ForumPostMutationResponse,
     ForumTopicCollection,
     ForumTopicDetail,
+    ForumTopicMutationResponse,
     ForumTopicPage,
+    ForumWatchMutationResponse,
 } from '../models'
 
 const FORUMS_URL = `${EnvironmentConfig.API.V6}/forums`
@@ -109,5 +121,133 @@ export async function getChallengeForumTopics(
 export function getForumTopicDetail(topicId: string): Promise<ForumTopicDetail> {
     return xhrGetAsync<ForumTopicDetail>(
         `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}`,
+    )
+}
+
+/**
+ * Creates a challenge-scoped topic and its starter post with the member token.
+ *
+ * @param request validated topic title, markdown content, and challenge ID.
+ * @returns transactional topic and starter-post response.
+ * @throws Propagates Forums API authentication, access, validation, and network errors.
+ */
+export function createForumTopic(
+    request: CreateForumTopicRequest,
+): Promise<CreateForumTopicResponse> {
+    return xhrPostAsync<CreateForumTopicRequest, CreateForumTopicResponse>(
+        `${FORUMS_URL}/topics`,
+        request,
+    )
+}
+
+/**
+ * Updates the title of an owned or moderated forum topic.
+ *
+ * @param topicId Forums API topic identifier.
+ * @param title non-empty replacement title.
+ * @returns updated topic mutation response.
+ * @throws Propagates Forums API ownership, lock, validation, and network errors.
+ */
+export function updateForumTopic(
+    topicId: string,
+    title: string,
+): Promise<ForumTopicMutationResponse> {
+    return xhrPatchAsync<{ title: string }, ForumTopicMutationResponse>(
+        `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}`,
+        { title },
+    )
+}
+
+/**
+ * Soft-deletes an owned or moderated forum topic.
+ *
+ * @param topicId Forums API topic identifier.
+ * @returns deleted topic mutation response.
+ * @throws Propagates Forums API ownership, lock, not-found, and network errors.
+ */
+export function deleteForumTopic(topicId: string): Promise<ForumTopicMutationResponse> {
+    return xhrDeleteAsync<ForumTopicMutationResponse>(
+        `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}`,
+    )
+}
+
+/**
+ * Creates a top-level comment or reply in a visible forum topic.
+ *
+ * @param topicId Forums API topic identifier.
+ * @param request markdown content and optional reply parent.
+ * @returns persisted post mutation response.
+ * @throws Propagates Forums API access, lock, validation, and network errors.
+ */
+export function createForumPost(
+    topicId: string,
+    request: CreateForumPostRequest,
+): Promise<ForumPostMutationResponse> {
+    return xhrPostAsync<CreateForumPostRequest, ForumPostMutationResponse>(
+        `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}/posts`,
+        request,
+    )
+}
+
+/**
+ * Updates markdown content on an owned or moderated forum post.
+ *
+ * @param postId Forums API post identifier.
+ * @param content non-empty replacement markdown.
+ * @returns updated post mutation response.
+ * @throws Propagates Forums API ownership, lock, validation, and network errors.
+ */
+export function updateForumPost(
+    postId: string,
+    content: string,
+): Promise<ForumPostMutationResponse> {
+    return xhrPatchAsync<{ content: string }, ForumPostMutationResponse>(
+        `${FORUMS_URL}/posts/${encodeURIComponent(postId)}`,
+        { content },
+    )
+}
+
+/**
+ * Soft-deletes an owned or moderated forum post while preserving its thread placeholder.
+ *
+ * @param postId Forums API post identifier.
+ * @returns deleted post mutation response.
+ * @throws Propagates Forums API ownership, lock, not-found, and network errors.
+ */
+export function deleteForumPost(postId: string): Promise<ForumPostMutationResponse> {
+    return xhrDeleteAsync<ForumPostMutationResponse>(
+        `${FORUMS_URL}/posts/${encodeURIComponent(postId)}`,
+    )
+}
+
+/**
+ * Adds or removes the current member's explicit topic watch.
+ *
+ * @param topicId Forums API topic identifier.
+ * @param watching true to watch or false to unwatch.
+ * @returns persisted watch row or resulting watch state.
+ * @throws Propagates Forums API access, ban, not-found, and network errors.
+ */
+export function setForumTopicWatching(
+    topicId: string,
+    watching: boolean,
+): Promise<ForumWatchMutationResponse> {
+    const url = `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}/watch`
+    return watching
+        ? xhrPutAsync<Record<string, never>, ForumWatchMutationResponse>(url, {})
+        : xhrDeleteAsync<ForumWatchMutationResponse>(url)
+}
+
+/**
+ * Marks all current topic activity as read for the authenticated member.
+ *
+ * @param topicId Forums API topic identifier.
+ * @returns completion after the read-state upsert succeeds.
+ * @throws Propagates Forums API access, ban, not-found, and network errors.
+ */
+export async function markForumTopicRead(topicId: string): Promise<void> {
+    await xhrPutAsync<Record<string, never>, unknown>(
+        `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}/read-state`,
+        {},
     )
 }

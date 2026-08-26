@@ -1,17 +1,33 @@
 import {
     challengeForumTopicsUrl,
+    createForumPost,
+    createForumTopic,
+    deleteForumPost,
+    deleteForumTopic,
     getChallengeForumTopics,
     getForumTopicDetail,
+    markForumTopicRead,
+    setForumTopicWatching,
+    updateForumPost,
+    updateForumTopic,
 } from './forum.service'
 
+const mockXhrDeleteAsync = jest.fn()
 const mockXhrGetAsync = jest.fn()
+const mockXhrPatchAsync = jest.fn()
+const mockXhrPostAsync = jest.fn()
+const mockXhrPutAsync = jest.fn()
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: { API: { V6: 'https://api.example/v6' } },
 }), { virtual: true })
 
 jest.mock('~/libs/core', () => ({
+    xhrDeleteAsync: (...args: unknown[]) => mockXhrDeleteAsync(...args),
     xhrGetAsync: (...args: unknown[]) => mockXhrGetAsync(...args),
+    xhrPatchAsync: (...args: unknown[]) => mockXhrPatchAsync(...args),
+    xhrPostAsync: (...args: unknown[]) => mockXhrPostAsync(...args),
+    xhrPutAsync: (...args: unknown[]) => mockXhrPutAsync(...args),
 }), { virtual: true })
 
 describe('forum service', () => {
@@ -93,5 +109,71 @@ describe('forum service', () => {
             .resolves.toBe(detail)
         expect(mockXhrGetAsync)
             .toHaveBeenCalledWith('https://api.example/v6/forums/topics/topic%2Fid')
+    })
+
+    it('routes topic create, update, and delete commands through authenticated XHR', async () => {
+        mockXhrPostAsync.mockResolvedValue({ topic: { id: 'topic-1' } })
+        mockXhrPatchAsync.mockResolvedValue({ id: 'topic-1' })
+        mockXhrDeleteAsync.mockResolvedValue({ id: 'topic-1' })
+
+        await createForumTopic({
+            challengeId: 'challenge-id',
+            content: 'Starter',
+            title: 'New topic',
+        })
+        await updateForumTopic('topic/id', 'Renamed')
+        await deleteForumTopic('topic/id')
+
+        expect(mockXhrPostAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/topics', {
+                challengeId: 'challenge-id',
+                content: 'Starter',
+                title: 'New topic',
+            })
+        expect(mockXhrPatchAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/topics/topic%2Fid', { title: 'Renamed' })
+        expect(mockXhrDeleteAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/topics/topic%2Fid')
+    })
+
+    it('routes post create, update, and delete commands through authenticated XHR', async () => {
+        mockXhrPostAsync.mockResolvedValue({ id: 'post-1' })
+        mockXhrPatchAsync.mockResolvedValue({ id: 'post-1' })
+        mockXhrDeleteAsync.mockResolvedValue({ id: 'post-1' })
+
+        await createForumPost('topic/id', {
+            content: 'Reply',
+            parentId: 'post/id',
+            parentType: 'POST',
+        })
+        await updateForumPost('post/id', 'Edited')
+        await deleteForumPost('post/id')
+
+        expect(mockXhrPostAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/topics/topic%2Fid/posts', {
+                content: 'Reply',
+                parentId: 'post/id',
+                parentType: 'POST',
+            })
+        expect(mockXhrPatchAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/posts/post%2Fid', { content: 'Edited' })
+        expect(mockXhrDeleteAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/posts/post%2Fid')
+    })
+
+    it('routes watch and read-state commands without impersonation fields', async () => {
+        mockXhrPutAsync.mockResolvedValue({})
+        mockXhrDeleteAsync.mockResolvedValue({ watching: false })
+
+        await setForumTopicWatching('topic/id', true)
+        await setForumTopicWatching('topic/id', false)
+        await markForumTopicRead('topic/id')
+
+        expect(mockXhrPutAsync)
+            .toHaveBeenNthCalledWith(1, 'https://api.example/v6/forums/topics/topic%2Fid/watch', {})
+        expect(mockXhrDeleteAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/topics/topic%2Fid/watch')
+        expect(mockXhrPutAsync)
+            .toHaveBeenNthCalledWith(2, 'https://api.example/v6/forums/topics/topic%2Fid/read-state', {})
     })
 })

@@ -59,6 +59,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                     challenge={challengeFixture()}
                     isRegistered={false}
                     onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
                     onUnregister={jest.fn()}
                 />
             </MemoryRouter>,
@@ -73,6 +74,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
     })
 
     it('shows enabled member actions only while their phases are open', () => {
+        const onSubmit = jest.fn()
         const { rerender }: RenderResult = render(
             <MemoryRouter>
                 <ChallengeDetailHeader
@@ -80,6 +82,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                     challenge={challengeFixture()}
                     isRegistered
                     onRegister={jest.fn()}
+                    onSubmit={onSubmit}
                     onUnregister={jest.fn()}
                 />
             </MemoryRouter>,
@@ -87,8 +90,12 @@ describe('ChallengeDetailHeader actions and presentation', () => {
 
         expect(screen.getByRole('button', { name: 'Unregister' }))
             .toBeEnabled()
-        expect(screen.getByRole('link', { name: 'Submit a solution' }))
-            .toHaveAttribute('href', '/challenges/challenge-id/submit')
+        const submit = screen.getByRole('button', { name: 'Submit a solution' })
+        expect(submit)
+            .toBeEnabled()
+        submit.click()
+        expect(onSubmit)
+            .toHaveBeenCalledTimes(1)
 
         rerender(
             <MemoryRouter>
@@ -101,18 +108,15 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                     })}
                     isRegistered
                     onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
                     onUnregister={jest.fn()}
                 />
             </MemoryRouter>,
         )
         expect(screen.getByRole('button', { name: 'Unregister' }))
             .toBeDisabled()
-        expect(screen.getByText('Submit a solution')
-            .closest('a'))
-            .toHaveAttribute('aria-disabled', 'true')
-        expect(screen.getByText('Submit a solution')
-            .closest('a'))
-            .not.toHaveAttribute('href')
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
     })
 
     it('avoids flashing Register while member registration is unresolved', () => {
@@ -123,6 +127,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                     challenge={challengeFixture()}
                     isRegistered={false}
                     onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
                     onUnregister={jest.fn()}
                     registrationLoading
                 />
@@ -143,6 +148,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                     challenge={challengeFixture()}
                     isRegistered
                     onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
                     onUnregister={jest.fn()}
                 />
             </MemoryRouter>,

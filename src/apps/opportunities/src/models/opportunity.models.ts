@@ -3,6 +3,12 @@ export type OpportunityKind = 'competitions' | 'engagements' | 'copilots' | 'rev
 /** Member-selected presentation for an Opportunities result page. */
 export type OpportunityView = 'list' | 'grid'
 
+/** Top-level authored destination within the Opportunities discovery experience. */
+export type OpportunityMode = 'browse' | 'work'
+
+/** Lifecycle facet shared by the mixed My Work result set. */
+export type OpportunityWorkStatus = 'all' | 'active' | 'past'
+
 export interface OpportunityCellSummary {
     count: number
     amount?: number
@@ -147,6 +153,7 @@ export interface ChallengeResourceRole {
 }
 
 export interface EngagementOpportunity {
+    applicationStatus?: string
     anticipatedStart?: 'IMMEDIATE' | 'FEW_DAYS' | 'FEW_WEEKS' | string
     compensationRange?: string
     countries?: string[]
@@ -162,6 +169,7 @@ export interface EngagementOpportunity {
     durationStartDate?: string
     durationWeeks?: number
     id: string
+    myApplication?: { status?: string }
     nanoId?: string
     requiredSkills?: string[]
     role?: string
@@ -352,3 +360,9 @@ export interface ChallengeSubmission {
     submitterMaxRating?: number | null
     type?: string
 }
+
+/** Submission categories accepted by the v6 Review API upload endpoint. */
+export type ChallengeSubmissionType =
+    | 'CONTEST_SUBMISSION'
+    | 'CHECKPOINT_SUBMISSION'
+    | 'STUDIO_FINAL_FIX_SUBMISSION'
