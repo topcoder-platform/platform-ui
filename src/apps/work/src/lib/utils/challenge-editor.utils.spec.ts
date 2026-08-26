@@ -176,6 +176,76 @@ describe('challenge-editor utils test challenge metadata mapping', () => {
     })
 })
 
+describe('challenge-editor utils gitea teams mapping', () => {
+    it('defaults giteaTeams to an empty list when the metadata is absent', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Challenge without git config',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.giteaTeams)
+            .toEqual([])
+    })
+
+    it('loads unique team ids from the gitea metadata entry', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            metadata: [{
+                name: 'gitea',
+                value: '{"teams":["12","34","12"]}',
+            }],
+            name: 'Challenge with git config',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.giteaTeams)
+            .toEqual(['12', '34'])
+    })
+
+    it('serializes selected team ids into the gitea metadata entry', () => {
+        const result = transformFormDataToChallenge({
+            description: 'Public specification',
+            giteaTeams: ['12', '34', '12'],
+            name: 'Challenge with git config',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.metadata)
+            .toEqual(expect.arrayContaining([{
+                name: 'gitea',
+                value: '{"teams":["12","34"]}',
+            }]))
+    })
+
+    it('drops the gitea metadata entry when no team is selected', () => {
+        const result = transformFormDataToChallenge({
+            description: 'Public specification',
+            giteaTeams: [],
+            metadata: [{
+                name: 'gitea',
+                value: '{"teams":["12"]}',
+            }],
+            name: 'Challenge without git config',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.metadata)
+            .not
+            .toEqual(expect.arrayContaining([
+                expect.objectContaining({ name: 'gitea' }),
+            ]))
+    })
+})
+
 describe('challenge-editor utils wiproAllowed mapping', () => {
     it('defaults wiproAllowed to false in form data', () => {
         const result = transformChallengeToFormData({

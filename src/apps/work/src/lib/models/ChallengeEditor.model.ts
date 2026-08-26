@@ -42,6 +42,8 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     id?: string
     /** Whether the challenge is a production test, persisted in challenge metadata. */
     isTestChallenge?: boolean
+    /** Gitea team ids challenge participants are synced with, persisted in challenge metadata. */
+    giteaTeams?: string[]
     metadata?: ChallengeMetadata[]
     name: string
     prizeSets?: PrizeSet[]

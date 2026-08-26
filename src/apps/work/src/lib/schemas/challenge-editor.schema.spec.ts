@@ -279,6 +279,49 @@ describe('challenge-editor schema test challenge default', () => {
     })
 })
 
+describe('challenge-editor schema gitea teams validation', () => {
+    const baseFormData = {
+        description: 'This is a valid public specification description.',
+        name: 'Gitea configured challenge',
+        skills: [{
+            id: 'skill-id',
+            name: 'JavaScript',
+        }],
+        tags: [],
+        trackId: 'track-id',
+        typeId: 'type-id',
+    }
+
+    it('defaults giteaTeams to an empty list', () => {
+        const result = challengeBasicInfoSchema.cast(baseFormData)
+
+        expect(result.giteaTeams)
+            .toEqual([])
+    })
+
+    it('accepts a list of distinct team ids', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: ['12', '34'],
+            }),
+        )
+            .resolves
+            .toEqual(['12', '34'])
+    })
+
+    it('rejects duplicated team ids', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: ['12', '12'],
+            }),
+        )
+            .rejects
+            .toThrow('Gitea team ids must be unique')
+    })
+})
+
 describe('challenge-editor schema reviewer slot assignment validation', () => {
     const baseFormData = {
         roundType: ROUND_TYPES.SINGLE_ROUND,

@@ -297,6 +297,23 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
         funChallenge: yup.boolean()
             .default(false)
             .optional(),
+        giteaTeams: yup.array()
+            .of(yup.string()
+                .trim()
+                .required('Gitea team id cannot be empty'))
+            .test(
+                'unique-gitea-teams',
+                'Gitea team ids must be unique',
+                (value: unknown): boolean => {
+                    if (!Array.isArray(value)) {
+                        return true
+                    }
+
+                    return new Set(value).size === value.length
+                },
+            )
+            .default([])
+            .optional(),
         id: yup.string()
             .optional(),
         isTestChallenge: yup.boolean()
