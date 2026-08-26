@@ -6,16 +6,14 @@
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
     overflow-x: hidden;
-    padding: 8px 0 0;
-}
+    padding: 8px 0 48px;
 
-.header {
-    h1 {
+    .header h1 {
         color: #151515;
         font-family: 'Figtree', sans-serif;
-        font-size: 32px;
+        font-size: 33px;
         font-weight: 700;
-        line-height: 38px;
+        line-height: 40px;
         margin-top: 20px;
         text-transform: none;
     }
@@ -39,11 +37,16 @@
     position: relative;
     transform: translateX(-50%);
     width: 100vw;
+
+    @include ltemd {
+        padding: 0 16px;
+    }
 }
 
 .hint {
     color: #0a0a0a;
     font-size: 16px;
+    font-weight: 700;
     line-height: 22px;
     margin: 20px 0 8px;
     text-align: center;

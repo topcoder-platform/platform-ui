@@ -1,23 +1,30 @@
-import _ from 'lodash'
-
 import { TabsNavItem } from '~/libs/ui'
 import {
     flexiTalentRouteId,
     showcaseSearchRouteId,
     skillStatisticsRouteId,
+    statisticsNavRouteId,
     statisticsRouteId,
     talentSearchRouteId,
 } from '~/apps/customer-portal/src/config/routes.config'
+
+function pathMatchesTab(pathname: string, tabId: string): boolean {
+    return pathname === `/${tabId}` || pathname.startsWith(`/${tabId}/`)
+}
 
 export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnprivilegedUser: boolean): TabsNavItem[] {
 
     const tabs: TabsNavItem[] = [
         ...(!isUnprivilegedUser ? [{
-            id: statisticsRouteId,
-            title: 'General Statistics',
-        }, {
-            id: skillStatisticsRouteId,
-            title: 'Skill Statistics',
+            children: [{
+                id: statisticsRouteId,
+                title: 'General Statistics',
+            }, {
+                id: skillStatisticsRouteId,
+                title: 'Skill Statistics',
+            }],
+            id: statisticsNavRouteId,
+            title: 'Statistics',
         }, {
             id: talentSearchRouteId,
             title: 'Talent Search',
@@ -39,11 +46,15 @@ export function getTabIdFromPathName(
     isAnonymous: boolean,
     isUnprivilegedUser: boolean,
 ): string {
-    const matchItem = _.find(getTabsConfig(
+    const tabs = getTabsConfig(
         userRoles,
         isAnonymous,
         isUnprivilegedUser,
-    ), item => pathname.includes(`/${item.id}`))
+    )
+    const matchItem = tabs.find(item => (
+        item.children?.some(child => pathMatchesTab(pathname, child.id))
+        || pathMatchesTab(pathname, item.id)
+    ))
 
     if (matchItem) {
         return matchItem.id

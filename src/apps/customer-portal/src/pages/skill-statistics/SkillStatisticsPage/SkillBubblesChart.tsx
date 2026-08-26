@@ -28,7 +28,8 @@ import {
 import memberGroupIcon from '../../statistics/StatisticsPage/assets/member-group.svg'
 import skillCognitionIcon from '../../statistics/StatisticsPage/assets/skill-cognition.svg'
 
-import { packCircles, PackedCircle } from './packCircles'
+import { packCircles, packedBoundsHeight, PackedCircle } from './packCircles'
+import { MOBILE_MAX_WIDTH, useMobileView } from './useMobileView'
 import styles from './SkillBubblesChart.module.scss'
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('en-US')
@@ -39,6 +40,7 @@ const POPOVER_WIDTH = 320
 const VIEW_PAD = 8
 const MIN_BUBBLE_FONT_SIZE = 10
 const MAX_BUBBLE_FONT_SIZE = 16
+const DOUBLE_TAP_MS = 450
 
 type PopoverPlacement = 'top' | 'bottom' | 'left' | 'right'
 
@@ -122,6 +124,37 @@ function getPopoverLayout(
     }
 }
 
+function getAnchoredPopoverLayout(
+    circle: PackedCircle,
+    chartWidth: number,
+    chartHeight: number,
+    popoverWidth: number,
+    popoverHeight: number,
+): PopoverLayout {
+    const bubbleTop = circle.y - circle.r
+    const bubbleBottom = circle.y + circle.r
+    const fitsTop = bubbleTop - POPOVER_GAP - popoverHeight >= VIEW_PAD
+    const fitsBottom = bubbleBottom + POPOVER_GAP + popoverHeight <= chartHeight - VIEW_PAD
+    const placement: PopoverPlacement = fitsTop || !fitsBottom ? 'top' : 'bottom'
+    const halfWidth = popoverWidth / 2
+    const minLeft = VIEW_PAD + halfWidth
+    const maxLeft = chartWidth - VIEW_PAD - halfWidth
+    const left = maxLeft < minLeft
+        ? chartWidth / 2
+        : Math.min(Math.max(circle.x, minLeft), maxLeft)
+    const layout: PopoverLayout = {
+        left,
+        placement,
+        top: placement === 'top' ? bubbleTop : bubbleBottom,
+    }
+
+    if (Math.abs(left - circle.x) > 1) {
+        layout.arrowOffset = halfWidth + (circle.x - left)
+    }
+
+    return layout
+}
+
 type SkillCategoryIcon = FC<SVGProps<SVGSVGElement>>
 
 interface SkillBubblesChartProps {
@@ -157,8 +190,14 @@ function fontSizeForRadius(
 
 const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
     const chartRef = useRef<HTMLDivElement>(null)
+    const lastTapRef = useRef<{ at: number; id: string }>()
+    const isMobileView = useMobileView()
     const [hoveredCategoryId, setHoveredCategoryId] = useState<string>()
-    const [viewport, setViewport] = useState({ height: 560, width: 960 })
+    const [previewedCategoryId, setPreviewedCategoryId] = useState<string>()
+    const [viewport, setViewport] = useState(() => ({
+        height: 560,
+        width: typeof window === 'undefined' ? 960 : Math.min(window.innerWidth, 960),
+    }))
 
     useEffect(() => {
         const node = chartRef.current
@@ -191,6 +230,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
         }
     }, [])
 
+    const isMobile = viewport.width > 0 && viewport.width <= MOBILE_MAX_WIDTH
     const packed = useMemo(
         () => packCircles(
             props.categories.map(category => ({
@@ -199,8 +239,13 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
             })),
             viewport.width,
             viewport.height,
+            isMobile ? { fit: 'width' } : undefined,
         ),
-        [props.categories, viewport.height, viewport.width],
+        [isMobile, props.categories, viewport.height, viewport.width],
+    )
+    const packedHeight = useMemo(
+        () => packedBoundsHeight(packed),
+        [packed],
     )
 
     const packedById = useMemo(
@@ -217,16 +262,76 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
     const hoveredCategory = props.categories.find(
         category => category.id === hoveredCategoryId,
     )
-    const hoveredCircle = hoveredCategory
-        ? packedById.get(hoveredCategory.id)
-        : undefined
-    const { data: hoveredMembers }: SWRResponse<ExpertSkillCategoryMember[], Error> = useSWR(
-        hoveredCategory
-            ? expertSkillCategoryMembersCacheKey(hoveredCategory.name)
-            : undefined,
-        () => fetchExpertSkillCategoryMembers(hoveredCategory?.name || ''),
+    const previewedCategory = props.categories.find(
+        category => category.id === previewedCategoryId,
     )
-    const topMember = hoveredMembers?.[0]
+    const popoverCategory = hoveredCategory || previewedCategory
+    const popoverCircle = popoverCategory
+        ? packedById.get(popoverCategory.id)
+        : undefined
+    const { data: popoverMembers }: SWRResponse<ExpertSkillCategoryMember[], Error> = useSWR(
+        popoverCategory
+            ? expertSkillCategoryMembersCacheKey(popoverCategory.name)
+            : undefined,
+        () => fetchExpertSkillCategoryMembers(popoverCategory?.name || ''),
+    )
+    const topMember = popoverMembers?.[0]
+
+    const hidePopover = useCallback(() => {
+        lastTapRef.current = undefined
+        setPreviewedCategoryId(undefined)
+        setHoveredCategoryId(undefined)
+    }, [])
+
+    const openMembersTable = useCallback((categoryId: string) => {
+        lastTapRef.current = undefined
+        setPreviewedCategoryId(undefined)
+        if (isMobileView) {
+            setHoveredCategoryId(undefined)
+        }
+
+        props.onSelect(categoryId)
+    }, [isMobileView, props])
+
+    const handleBubbleClick = useCallback((categoryId: string) => {
+        if (!isMobileView) {
+            openMembersTable(categoryId)
+            return
+        }
+
+        const now = Date.now()
+        const lastTap = lastTapRef.current
+        if (lastTap && lastTap.id === categoryId && now - lastTap.at <= DOUBLE_TAP_MS) {
+            openMembersTable(categoryId)
+            return
+        }
+
+        if (previewedCategoryId === categoryId) {
+            hidePopover()
+            return
+        }
+
+        lastTapRef.current = { at: now, id: categoryId }
+        setPreviewedCategoryId(categoryId)
+        setHoveredCategoryId(categoryId)
+    }, [hidePopover, isMobileView, openMembersTable, previewedCategoryId])
+
+    useEffect(() => {
+        const onPointerDown = (event: Event): void => {
+            const target = event.target
+            if (target instanceof Element && target.closest('[aria-label="Skill category bubbles"] button')) {
+                return
+            }
+
+            hidePopover()
+        }
+
+        document.addEventListener('pointerdown', onPointerDown)
+
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown)
+        }
+    }, [hidePopover])
 
     const handleKeyDown = useCallback((
         event: KeyboardEvent<HTMLButtonElement>,
@@ -234,9 +339,9 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
     ) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
-            props.onSelect(categoryId)
+            openMembersTable(categoryId)
         }
-    }, [props])
+    }, [openMembersTable])
 
     return (
         <div
@@ -244,6 +349,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
             className={styles.chart}
             ref={chartRef}
             role='group'
+            style={isMobile && packedHeight ? { height: packedHeight, minHeight: packedHeight } : undefined}
         >
             {props.categories.map(category => {
                 const circle = packedById.get(category.id)
@@ -253,6 +359,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
 
                 const Icon = getCategoryIcon(category.icon)
                 const isSelected = category.id === props.selectedCategoryId
+                    || category.id === previewedCategoryId
                 const fontSize = fontSizeForRadius(
                     circle.r,
                     minPackedRadius,
@@ -271,7 +378,12 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                         )}
                         key={category.id}
                         onBlur={function onBlur() { setHoveredCategoryId(undefined) }}
-                        onClick={function onClick() { props.onSelect(category.id) }}
+                        onClick={function onClick() { handleBubbleClick(category.id) }}
+                        onDoubleClick={function onDoubleClick() {
+                            if (isMobileView) {
+                                openMembersTable(category.id)
+                            }
+                        }}
                         onFocus={function onFocus() { setHoveredCategoryId(category.id) }}
                         onKeyDown={function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
                             handleKeyDown(event, category.id)
@@ -295,14 +407,15 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                     </button>
                 )
             })}
-            {hoveredCategory && hoveredCircle && (
+            {popoverCategory && popoverCircle && (
                 <SkillCategoryPopover
-                    category={hoveredCategory}
+                    anchored={isMobile}
+                    category={popoverCategory}
                     chartHeight={viewport.height}
                     chartRef={chartRef}
                     chartWidth={viewport.width}
-                    circle={hoveredCircle}
-                    key={hoveredCategory.id}
+                    circle={popoverCircle}
+                    key={popoverCategory.id}
                     topMember={topMember}
                 />
             )}
@@ -311,6 +424,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
 }
 
 interface SkillCategoryPopoverProps {
+    anchored?: boolean
     category: ExpertSkillCategory
     chartHeight: number
     chartRef: RefObject<HTMLDivElement>
@@ -329,6 +443,20 @@ const SkillCategoryPopover = (props: SkillCategoryPopoverProps): JSX.Element => 
 
     useLayoutEffect(() => {
         const update = (): void => {
+            const height = popoverRef.current?.offsetHeight || POPOVER_ESTIMATED_HEIGHT
+            const width = popoverRef.current?.offsetWidth || POPOVER_WIDTH
+
+            if (props.anchored) {
+                setLayout(getAnchoredPopoverLayout(
+                    props.circle,
+                    props.chartWidth,
+                    props.chartHeight,
+                    width,
+                    height,
+                ))
+                return
+            }
+
             const chartNode = props.chartRef.current
             const chartRect = chartNode?.getBoundingClientRect()
             const measured: ChartRect = chartRect && chartRect.width > 0
@@ -339,20 +467,27 @@ const SkillCategoryPopover = (props: SkillCategoryPopoverProps): JSX.Element => 
                     top: 0,
                     width: props.chartWidth,
                 }
-            const height = popoverRef.current?.offsetHeight || POPOVER_ESTIMATED_HEIGHT
-            const width = popoverRef.current?.offsetWidth || POPOVER_WIDTH
             setLayout(getPopoverLayout(props.circle, measured, width, height))
         }
 
         update()
         window.addEventListener('resize', update)
-        window.addEventListener('scroll', update, true)
+        if (!props.anchored) {
+            window.addEventListener('scroll', update, true)
+        }
 
         return () => {
             window.removeEventListener('resize', update)
             window.removeEventListener('scroll', update, true)
         }
-    }, [props.category.id, props.chartHeight, props.chartRef, props.chartWidth, props.circle])
+    }, [
+        props.anchored,
+        props.category.id,
+        props.chartHeight,
+        props.chartRef,
+        props.chartWidth,
+        props.circle,
+    ])
 
     const topSkillsPercentage = props.category.skillsBreakdown.reduce(
         (total, skill) => total + skill.percentage,
@@ -374,13 +509,18 @@ const SkillCategoryPopover = (props: SkillCategoryPopoverProps): JSX.Element => 
     }
 
     if (layout.arrowOffset !== undefined) {
-        Object.assign(popoverStyle, { '--arrow-offset': `${layout.arrowOffset}px` })
+        if (layout.placement === 'left' || layout.placement === 'right') {
+            Object.assign(popoverStyle, { '--arrow-offset': `${layout.arrowOffset}px` })
+        } else {
+            Object.assign(popoverStyle, { '--arrow-x': `${layout.arrowOffset}px` })
+        }
     }
 
     const popover = (
         <div
             className={classNames(
                 styles.popover,
+                props.anchored && styles.anchored,
                 layout.placement === 'bottom' && styles.below,
                 layout.placement === 'left' && styles.left,
                 layout.placement === 'right' && styles.right,
@@ -475,9 +615,11 @@ const SkillCategoryPopover = (props: SkillCategoryPopoverProps): JSX.Element => 
         </div>
     )
 
-    return typeof document === 'undefined'
-        ? popover
-        : createPortal(popover, document.body)
+    if (props.anchored || typeof document === 'undefined') {
+        return popover
+    }
+
+    return createPortal(popover, document.body)
 }
 
 export default SkillBubblesChart
