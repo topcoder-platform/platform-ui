@@ -24,6 +24,7 @@ import type { PhaseOrderingOptions } from '../../utils'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 
 import styles from './TableWinners.module.scss'
 
@@ -170,6 +171,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             ) : undefined}
                             <span>
                                 {renderedDownloadButton}
+                                <SubmissionDuplicatesBadge submissionId={data.submissionId} />
                                 <span className={styles.spacing}>-</span>
                                 <span>
                                     <a

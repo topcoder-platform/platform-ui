@@ -293,6 +293,22 @@ describe('challenge-editor utils submission count mapping', () => {
             .toBe(1)
     })
 
+    it('keeps numOfCheckpointSubmissions in form data so submission-limit locking can use it', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Checkpoint submission challenge',
+            numOfCheckpointSubmissions: 2,
+            numOfSubmissions: 0,
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.numOfCheckpointSubmissions)
+            .toBe(2)
+        expect(result.numOfSubmissions)
+            .toBe(0)
+    })
+
     it('keeps phase completion dates in form data so completed schedule rows stay locked', () => {
         const result = transformChallengeToFormData({
             description: 'Public specification',
@@ -633,6 +649,22 @@ describe('challenge-editor utils design work type mapping', () => {
 })
 
 describe('challenge-editor utils terms mapping', () => {
+    it('keeps an empty tags array in API payloads to clear tags on update', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            name: 'Design challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.tags)
+            .toEqual([])
+    })
+
     it('keeps an empty groups array in API payloads to clear groups on update', () => {
         const formData: Record<string, unknown> = {
             description: 'Public specification',

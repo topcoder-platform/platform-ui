@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { MemberRoleStats, UserProfile, UserStats } from '~/libs/core'
 
@@ -22,6 +23,11 @@ const DefaultAchievementsView: FC<DefaultAchievementsViewProps> = props => {
     const hasTcoBanner = props.tcoWins > 0 || props.tcoQualifications > 0 || props.tcoTrips > 0
     const activeTracks: MemberStatsTrack[] = useMemo(() => getActiveTracks(props.memberStats), [props.memberStats])
     const hasMemberStats = activeTracks.length > 0
+    const hasReviewer = !!props.roleStats?.reviewer?.challengeCount
+    const hasCopilot = !!props.roleStats?.copilot?.challengeCount
+    const hasRoles = hasReviewer || hasCopilot
+    const hasTwoColumns = (hasReviewer && hasCopilot) || (hasTcoBanner && hasMemberStats)
+    const hasAchievementsGrid = hasRoles || hasTcoBanner || hasMemberStats
 
     return (
         <>
@@ -29,18 +35,25 @@ const DefaultAchievementsView: FC<DefaultAchievementsViewProps> = props => {
 
             <MemberChallengePointsBar profile={props.profile} memberStats={props.memberStats} />
 
-            <TcSpecialRolesBanner profile={props.profile} roleStats={props.roleStats} />
-
-            {(hasTcoBanner || hasMemberStats) && (
-                <div className={styles.achievementsWrap}>
+            {hasAchievementsGrid && (
+                <div
+                    className={classNames(styles.achievementsGrid, hasTwoColumns && styles.twoColumns)}
+                >
+                    <TcSpecialRolesBanner profile={props.profile} roleStats={props.roleStats} />
                     {hasTcoBanner && (
-                        <TCOWinsBanner
-                            tcoWins={props.tcoWins}
-                            tcoQualifications={props.tcoQualifications}
-                            tcoTrips={props.tcoTrips}
-                        />
+                        <div className={classNames(styles.tcoCell, hasMemberStats ? styles.col1 : styles.spanAll)}>
+                            <TCOWinsBanner
+                                tcoWins={props.tcoWins}
+                                tcoQualifications={props.tcoQualifications}
+                                tcoTrips={props.tcoTrips}
+                            />
+                        </div>
                     )}
-                    {hasMemberStats && <MemberStatsBlock profile={props.profile} />}
+                    {hasMemberStats && (
+                        <div className={classNames(styles.statsCell, hasTcoBanner ? styles.col2 : styles.spanAll)}>
+                            <MemberStatsBlock profile={props.profile} />
+                        </div>
+                    )}
                 </div>
             )}
 

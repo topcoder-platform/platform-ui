@@ -1,0 +1,1 @@
+export { MemberAvatar } from './MemberAvatar'

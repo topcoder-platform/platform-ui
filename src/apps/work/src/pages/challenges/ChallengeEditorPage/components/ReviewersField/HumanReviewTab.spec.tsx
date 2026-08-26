@@ -1273,6 +1273,77 @@ describe('HumanReviewTab', () => {
             .toHaveProperty('dataset.required', 'true')
     })
 
+    it('marks copilot assigned Design Challenge review assignments optional', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'track-1',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'type-1',
+                    name: 'Challenge',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Review',
+                            phaseId: 'checkpoint-review-phase-id',
+                        },
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-review-phase-id',
+                            scorecardId: 'checkpoint-review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(screen.getByTestId('reviewers.0.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.1.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.2.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+    })
+
     it('assigns one simplified screener selection to checkpoint and final screening roles', async () => {
         const mutateResources = jest.fn()
             .mockResolvedValue(undefined)

@@ -93,8 +93,9 @@ const SpecialRoleCard: FC<SpecialRoleCardConfig & { profile: UserProfile }> = pr
 /**
  * Shows reviewer and copilot summary cards above Member Stats.
  *
- * A single role spans the available width, while two roles share the row and
- * collapse to a vertical stack on narrow profile layouts.
+ * Cards participate in the parent achievements grid so a reviewer card shares
+ * a column with the TCO banner and a copilot card shares a column with Member
+ * Stats. A single role spans the available width.
  *
  * This component does not throw.
  *
@@ -121,7 +122,7 @@ const TcSpecialRolesBanner: FC<TcSpecialRolesBannerProps> = props => {
     }
 
     return roles.length === 0 ? <></> : (
-        <div className={styles.rolesSection}>
+        <div className={classNames(styles.rolesSection, roles.length === 1 && styles.singleRole)}>
             {roles.map(role => (
                 <SpecialRoleCard
                     challengeCount={role.challengeCount}

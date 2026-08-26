@@ -5,6 +5,9 @@ import {
     REVIEW_TYPES,
     ROUND_TYPES,
 } from '../constants/challenge-editor.constants'
+import {
+    SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+} from '../utils/submission-limit.utils'
 
 import {
     challengeAdvancedOptionsSchema,
@@ -356,6 +359,81 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
             .toBeTruthy()
     })
 
+    it('accepts unassigned Design copilot review phases', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    phases: [
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                },
+                {
+                    context: {
+                        isDesignChallenge: true,
+                    },
+                },
+            ),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('still requires review assignments outside Design challenges', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    phases: [{
+                        name: 'Review',
+                        phaseId: 'review-phase-id',
+                    }],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                },
+                {
+                    context: {
+                        isDesignChallenge: false,
+                    },
+                },
+            ),
+        )
+            .rejects
+            .toMatchObject({
+                path: 'reviewers[0].memberId',
+            })
+    })
+
     it('accepts required reviewer slot assignments when opportunity is closed', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
@@ -411,5 +489,115 @@ describe('challenge-editor schema reviewer slot assignment validation', () => {
         )
             .rejects
             .toThrow(`Number of reviewers cannot exceed ${MAX_MANUAL_REVIEWER_COUNT}`)
+    })
+})
+
+describe('challenge-editor schema submission limit validation', () => {
+    const baseFormData = {
+        roundType: ROUND_TYPES.SINGLE_ROUND,
+    }
+    const configurableContext = {
+        context: {
+            isSubmissionLimitConfigurable: true,
+        },
+    }
+
+    function buildSubmissionLimitMetadata(count: string, limit: string): Array<{
+        name: string
+        value: string
+    }> {
+        return [{
+            name: 'submissionLimit',
+            value: JSON.stringify({
+                count,
+                limit,
+                unlimited: limit === 'true'
+                    ? 'false'
+                    : 'true',
+            }),
+        }]
+    }
+
+    it('rejects a limited submission setting without a count', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    metadata: buildSubmissionLimitMetadata('', 'true'),
+                },
+                configurableContext,
+            ),
+        )
+            .rejects
+            .toThrow(SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE)
+    })
+
+    it('reports the missing count on the visible limit field', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    metadata: buildSubmissionLimitMetadata('', 'true'),
+                },
+                configurableContext,
+            ),
+        )
+            .rejects
+            .toMatchObject({
+                path: 'submissionLimitCount',
+            })
+    })
+
+    it('rejects a limited submission setting with a zero count', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    metadata: buildSubmissionLimitMetadata('0', 'true'),
+                },
+                configurableContext,
+            ),
+        )
+            .rejects
+            .toThrow(SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE)
+    })
+
+    it('accepts a limited submission setting with a count', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    metadata: buildSubmissionLimitMetadata('2', 'true'),
+                },
+                configurableContext,
+            ),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('accepts an unlimited submission setting', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate(
+                {
+                    ...baseFormData,
+                    metadata: buildSubmissionLimitMetadata('', 'false'),
+                },
+                configurableContext,
+            ),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+
+    it('skips the count rule when the submission limit is not configurable', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                metadata: buildSubmissionLimitMetadata('', 'true'),
+            }),
+        )
+            .resolves
+            .toBeTruthy()
     })
 })

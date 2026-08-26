@@ -4,7 +4,10 @@ import {
     BackendResource,
     SubmissionInfo,
 } from '../../models'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import {
+    isAiFailedReviewSubmission,
+    shouldIncludeInReviewPhase,
+} from '../../utils/reviewPhaseGuards'
 
 interface FilterIterativeReviewRowsArgs {
     aiReviewDecisionsBySubmissionId?: Record<string, AiReviewDecision>
@@ -26,10 +29,6 @@ interface IterativePlaceholderRowArgs {
 
 interface LimitFirst2FinishIterativeRowsOptions {
     forceSingleRow?: boolean
-}
-
-function isAiFailedReviewSubmission(submission: SubmissionInfo): boolean {
-    return (submission.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
 }
 
 function isAiLockedByDecision(

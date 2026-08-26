@@ -159,6 +159,19 @@ export const isContestReviewPhaseSubmission = (
     return normalizedCandidates.has(normalizeReviewPhaseKey(targetPhaseName))
 }
 
+/**
+ * Detects submissions the AI reviewer failed and locked.
+ *
+ * @param submission - Submission candidate.
+ * @returns True when the submission status marks an AI review failure.
+ * @throws This helper does not throw.
+ * Such submissions must stay visible on the Review tab so reviewers and copilots
+ * can escalate, verify, or unlock them even without a Review-phase review record.
+ */
+export const isAiFailedReviewSubmission = (submission?: SubmissionInfo): boolean => (
+    (submission?.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
+)
+
 export const shouldIncludeInReviewPhase = (
     submission?: SubmissionInfo,
     phases?: BackendPhase[],

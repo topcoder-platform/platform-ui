@@ -54,6 +54,7 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    PrizeSet,
     Resource,
     ResourceRole,
     Reviewer,
@@ -61,6 +62,7 @@ import {
 } from '../../../../lib/models'
 import {
     challengeEditorSchema,
+    ChallengeEditorValidationContext,
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
@@ -90,11 +92,14 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../lib/utils/metadata.utils'
-import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
 } from '../../../../lib/utils/project-billing-account.utils'
+import {
+    hasChallengeSubmissions,
+} from '../../../../lib/utils/submission-limit.utils'
 import {
     resolveMatchingChallengeViewPath,
 } from '../ChallengeEditorPage.utils'
@@ -1401,6 +1406,7 @@ async function hydratePersistedManualReviewerAssignments(
 function getReviewerEntryValidationError(
     reviewer: Reviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
+    isDesignChallenge: boolean,
 ): string | undefined {
     if (!reviewer) {
         return undefined
@@ -1423,7 +1429,7 @@ function getReviewerEntryValidationError(
 
         if (
             reviewer.shouldOpenOpportunity !== true
-            && !isScreenerAssignmentOptional(reviewer, phases)
+            && !isReviewerAssignmentOptional(reviewer, phases, isDesignChallenge)
         ) {
             const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
@@ -1465,6 +1471,7 @@ interface ReviewerValidationOptions {
     challengeTypeAbbreviation?: string
     challengeTypeName?: string
     requiredReviewersErrorMessage: string
+    isDesignChallenge: boolean
     isTaskChallenge: boolean
 }
 
@@ -1493,7 +1500,11 @@ function getReviewerValidationError(
     }
 
     const invalidReviewer = reviewers
-        .map(reviewer => getReviewerEntryValidationError(reviewer, formData.phases))
+        .map(reviewer => getReviewerEntryValidationError(
+            reviewer,
+            formData.phases,
+            options.isDesignChallenge,
+        ))
         .find(Boolean)
     if (invalidReviewer) {
         return invalidReviewer
@@ -1887,6 +1898,19 @@ function getApprovalStatusText(approvalStatus: string | undefined): string {
     return 'Pending Approval'
 }
 
+/**
+ * Detects whether a persisted challenge snapshot already stores at least one prize.
+ *
+ * @param prizeSets prize sets returned by challenge-api for the challenge.
+ * @returns `true` when any prize set contains at least one prize.
+ * @remarks Used by the budget approval actions so approvers only act on prizes
+ * that challenge-api already persisted.
+ */
+function hasPrizeSetWithPrizes(prizeSets: PrizeSet[] | undefined): boolean {
+    return Array.isArray(prizeSets)
+        && prizeSets.some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0)
+}
+
 interface TaskLaunchValidationParams {
     assignedMemberId?: unknown
     currentStatus?: unknown
@@ -2056,11 +2080,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
     const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    // Tracks the prize sets challenge-api has stored so budget approval actions can appear
+    // right after a save instead of waiting for the challenge prop to be refetched.
+    const [persistedPrizeSets, setPersistedPrizeSets] = useState<PrizeSet[] | undefined>(
+        props.challenge?.prizeSets,
+    )
     const [showApproveBudgetModal, setShowApproveBudgetModal] = useState<boolean>(false)
     const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
+    const validationContextRef = useRef<ChallengeEditorValidationContext>({
+        isDesignChallenge: false,
+        isSubmissionLimitConfigurable: false,
+    })
     const formMethods = useForm<ChallengeEditorFormData>({
+        context: validationContextRef.current,
         defaultValues: applyProjectBillingToChallengeFormData(
             transformChallengeToFormData(props.challenge),
             projectBillingAccount,
@@ -2316,10 +2350,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         projectResult.project,
     )
     const hasPersistedPrizeSets = useMemo(
-        () => Array.isArray(props.challenge?.prizeSets)
-            && props.challenge?.prizeSets
-                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
-        [props.challenge?.prizeSets],
+        () => hasPrizeSetWithPrizes(persistedPrizeSets),
+        [persistedPrizeSets],
     )
     const hasUnsavedPrizeSetChanges = useMemo(
         () => {
@@ -2386,6 +2418,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         && !workAppContext.isManager
     const shouldUseSimplifiedDesignReview = isDesignTrackSelected
         && isChallengeTypeSelected
+
+    useEffect(() => {
+        if (validationContextRef.current.isDesignChallenge === shouldUseSimplifiedDesignReview) {
+            return
+        }
+
+        validationContextRef.current.isDesignChallenge = shouldUseSimplifiedDesignReview
+        trigger('reviewers')
+            .catch(() => undefined)
+    }, [
+        shouldUseSimplifiedDesignReview,
+        trigger,
+    ])
+
+    /*
+     * The submission limit is only editable inside Design submission settings, and it is locked
+     * once members have uploaded submissions. Publishing that state to the validation context keeps
+     * the required-count rule from blocking saves on challenges where the copilot cannot change it.
+     */
+    const isSubmissionLimitConfigurable = showSubmissionSettingsSection
+        && !hasChallengeSubmissions({
+            numOfCheckpointSubmissions: values.numOfCheckpointSubmissions,
+            numOfSubmissions: values.numOfSubmissions,
+        })
+
+    useEffect(() => {
+        validationContextRef.current.isSubmissionLimitConfigurable = isSubmissionLimitConfigurable
+    }, [isSubmissionLimitConfigurable])
+
     /**
      * Validates the copilot required for hidden private Design reviewer assignments.
      *
@@ -2908,6 +2969,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         challengeRef.current = props.challenge
     }, [props.challenge])
+
+    useEffect(() => {
+        setPersistedPrizeSets(props.challenge?.prizeSets)
+    }, [props.challenge?.prizeSets])
 
     useEffect(() => {
         currentChallengeIdRef.current = currentChallengeId
@@ -3612,6 +3677,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     }
                 }
 
+                setPersistedPrizeSets(savedChallengeSnapshot.prizeSets)
+
                 const persistedFormData = applyProjectBillingToChallengeFormData(
                     transformChallengeToFormData(savedChallengeSnapshot),
                     resolvedProjectBillingAccount,
@@ -3967,6 +4034,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
+                    isDesignChallenge: shouldUseSimplifiedDesignReview,
                     isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',

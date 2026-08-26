@@ -42,6 +42,7 @@ import {
     SUBMITTER,
 } from '../../../config/index.config'
 import {
+    isAiFailedReviewSubmission,
     isContestReviewPhaseSubmission,
     shouldIncludeInReviewPhase,
 } from '../../utils/reviewPhaseGuards'
@@ -171,10 +172,6 @@ const sortSubmissionsByReviewScoreDesc = (
 
     return entries.map(entry => entry.submission)
 }
-
-const isAiFailedReviewSubmission = (submission?: SubmissionInfo): boolean => (
-    (submission?.status || '').toUpperCase() === 'AI_FAILED_REVIEW'
-)
 
 const mergeSubmissionsById = (
     primary: SubmissionInfo[],

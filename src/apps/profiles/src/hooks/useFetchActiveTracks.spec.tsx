@@ -5,7 +5,9 @@ import {
     getMemberChallengePoints,
     getSubTrackDisplaySubmissionCount,
     getSubTrackSummaryStats,
+    getTrackSummaryStats,
     MemberStatsTrack,
+    SubTrackSummaryStats,
 } from './useFetchActiveTracks'
 
 jest.mock('~/libs/core', () => ({
@@ -592,5 +594,178 @@ describe('getSubTrackSummaryStats', () => {
                 submissions: 2,
                 wins: 2,
             })
+    })
+
+    it('keeps aggregate Marathon Match wins when legacy placement history is partial', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 225,
+            name: 'MARATHON_MATCH',
+            submissions: {
+                submissions: 7,
+            },
+            wins: 76,
+        } as MemberStats, [
+            {
+                challengeId: 'legacy-mm-1',
+                challengeName: 'Legacy Marathon Match 1',
+                newRating: 1210,
+                placement: 122,
+                ratingDate: 1301961600000,
+            },
+            {
+                challengeId: 'legacy-mm-2',
+                challengeName: 'Legacy Marathon Match 2',
+                newRating: 1218,
+                placement: 145,
+                ratingDate: 1302652800000,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 7,
+                wins: 76,
+            })
+    })
+})
+
+describe('getTrackSummaryStats', () => {
+    const statsOnlyHistoryStats = {
+        DEVELOP: {
+            subTracks: [
+                {
+                    challenges: 231,
+                    name: 'Task',
+                    submissions: {
+                        submissions: 231,
+                    },
+                    wins: 231,
+                },
+                {
+                    challenges: 18,
+                    name: 'Challenge',
+                    submissions: {
+                        submissions: 18,
+                    },
+                    wins: 17,
+                },
+                {
+                    challenges: 21,
+                    name: 'CONTENT_CREATION',
+                    submissions: {
+                        submissions: 17,
+                    },
+                    wins: 8,
+                },
+                {
+                    challenges: 71,
+                    name: 'First2Finish',
+                    submissions: {
+                        submissions: 66,
+                    },
+                    wins: 64,
+                },
+                {
+                    challenges: 37,
+                    name: 'CODE',
+                    submissions: {
+                        submissions: 24,
+                    },
+                    wins: 10,
+                },
+            ],
+        },
+    } as unknown as UserStats
+    const statsOnlyHistory = {
+        DEVELOP: {
+            subTracks: [
+                {
+                    history: [
+                        {
+                            challengeId: 'task-1',
+                            challengeName: 'Task 1',
+                            placement: 1,
+                            ratingDate: 1781237773026,
+                        },
+                        {
+                            challengeId: 'task-2',
+                            challengeName: 'Task 2',
+                            placement: 1,
+                            ratingDate: 1781237773027,
+                        },
+                    ],
+                    name: 'Task',
+                },
+                {
+                    history: [
+                        {
+                            challengeId: 'challenge-1',
+                            challengeName: 'Challenge 1',
+                            placement: 1,
+                            ratingDate: 1781237773028,
+                        },
+                        {
+                            challengeId: 'challenge-2',
+                            challengeName: 'Challenge 2',
+                            placement: 36,
+                            ratingDate: 1781237773029,
+                        },
+                    ],
+                    name: 'Challenge',
+                },
+                {
+                    history: [
+                        {
+                            challengeId: 30040681,
+                            newRating: 1333,
+                            ratingDate: 1393405500000,
+                        },
+                    ],
+                    name: 'CONTENT_CREATION',
+                },
+            ],
+        },
+    } as unknown as UserStatsHistory
+
+    it('adds aggregate wins for subtracks whose history has no placements', () => {
+        const developmentTrack: MemberStatsTrack | undefined = getActiveTracks(
+            statsOnlyHistoryStats,
+            statsOnlyHistory,
+        )
+            .find(track => track.name === 'Development')
+        const subTrackWins: number = developmentTrack?.subTracks.reduce((wins, subTrack) => {
+            const trackHistory = statsOnlyHistory.DEVELOP?.subTracks
+                ?.find(historyEntry => historyEntry.name === subTrack.name)
+                ?.history ?? []
+            const summaryStats: SubTrackSummaryStats = getSubTrackSummaryStats(subTrack, trackHistory)
+
+            return wins + summaryStats.wins
+        }, 0) ?? 0
+
+        // 2 Task placements + 1 Challenge placement + 8 CONTENT_CREATION + 64 First2Finish + 10 CODE
+        expect(developmentTrack?.wins)
+            .toEqual(85)
+        expect(developmentTrack?.wins)
+            .toEqual(subTrackWins)
+    })
+
+    it('keeps aggregate wins when no subtrack history has placements', () => {
+        const summaryStats = getTrackSummaryStats(
+            [
+                {
+                    challenges: 21,
+                    name: 'CONTENT_CREATION',
+                    path: 'DEVELOP.subTracks',
+                    submissions: {
+                        submissions: 17,
+                    },
+                    wins: 8,
+                } as unknown as MemberStats,
+            ],
+            statsOnlyHistory,
+        )
+
+        expect(summaryStats.wins)
+            .toEqual(8)
     })
 })

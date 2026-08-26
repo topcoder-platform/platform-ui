@@ -14,6 +14,7 @@ import {
 import { ChallengeDetailContext } from '../../contexts'
 import { AiScoreFormulaTooltip } from '../AiScoreFormulaTooltip'
 import { formatScore } from '../AiScoreFormulaTooltip/AiScoreFormulaTooltip'
+import { SubmissionDuplicatesPanel } from '../SubmissionDuplicates/SubmissionDuplicatesPanel'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
@@ -180,12 +181,15 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 </div>
             </div>
             {isOpen && portalContainer && createPortal(
-                <div className={classNames(styles.table, 'reviews-table')}>
-                    <AiReviewsTable
-                        submission={props.submission}
-                        aiReviewers={props.aiReviewers}
-                    />
-                </div>,
+                <>
+                    <SubmissionDuplicatesPanel submissionId={props.submission.id} />
+                    <div className={classNames(styles.table, 'reviews-table')}>
+                        <AiReviewsTable
+                            submission={props.submission}
+                            aiReviewers={props.aiReviewers}
+                        />
+                    </div>
+                </>,
                 portalContainer,
             )}
         </div>
