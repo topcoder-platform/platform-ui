@@ -49,6 +49,7 @@ jest.mock('~/apps/customer-portal/src/config/routes.config', () => ({
     flexiTalentRouteId: 'flexi-talent',
     showcaseSearchRouteId: 'showcase',
     skillStatisticsRouteId: 'skill-statistics',
+    statisticsNavRouteId: 'statistics-nav',
     statisticsRouteId: 'statistics',
     talentSearchRouteId: 'talent-search',
 }), {
@@ -157,26 +158,36 @@ function renderPage(): ReturnType<typeof render> {
 }
 
 describe('Customer Portal Skill Statistics tabs', () => {
-    it('adds Skill Statistics beside General Statistics', () => {
+    it('nests General Statistics and Skill Statistics under Statistics', () => {
         const tabs = getTabsConfig(['administrator'], false, false)
 
         expect(tabs.map(tab => tab.title))
             .toEqual([
-                'General Statistics',
-                'Skill Statistics',
+                'Statistics',
                 'Talent Search',
                 'Showcase',
                 'Flexi-Talent',
             ])
+        expect(tabs[0].children?.map(tab => tab.title))
+            .toEqual([
+                'General Statistics',
+                'Skill Statistics',
+            ])
         expect(getTabIdFromPathName('/skill-statistics', ['administrator'], false, false))
-            .toBe('skill-statistics')
+            .toBe('statistics-nav')
         expect(getTabIdFromPathName('/statistics', ['administrator'], false, false))
-            .toBe('statistics')
+            .toBe('statistics-nav')
     })
 })
 
 describe('SkillStatisticsPage', () => {
+    const originalInnerWidth = window.innerWidth
+
     beforeEach(() => {
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            value: originalInnerWidth,
+        })
         mockedFetchCategories.mockReset()
         mockedFetchMembers.mockReset()
         mockedFetchCategories.mockResolvedValue(CATEGORIES)
@@ -220,7 +231,8 @@ describe('SkillStatisticsPage', () => {
 
         expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
             .toBeInTheDocument()
-        expect(screen.getByText('Ghostar'))
+        expect(within(screen.getByRole('table'))
+            .getByText('Ghostar'))
             .toBeInTheDocument()
     })
 
@@ -228,7 +240,10 @@ describe('SkillStatisticsPage', () => {
         renderPage()
         fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
 
-        expect(await screen.findByText('billzedison'))
+        expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
+            .toBeInTheDocument()
+        expect(within(screen.getByRole('table'))
+            .getByText('billzedison'))
             .toBeInTheDocument()
 
         fireEvent.change(screen.getByLabelText('Search members'), {
@@ -247,11 +262,29 @@ describe('SkillStatisticsPage', () => {
             .toBeInTheDocument()
     })
 
+    it('centers the empty members message when filters match nobody', async () => {
+        renderPage()
+        fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
+
+        expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
+            .toBeInTheDocument()
+
+        fireEvent.change(screen.getByLabelText('Search members'), {
+            target: { value: 'no-such-member' },
+        })
+
+        expect(screen.getByText('No members match the current filters.'))
+            .toBeInTheDocument()
+    })
+
     it('reranks members when filtering by country', async () => {
         renderPage()
         fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
 
-        expect(await screen.findByText('billzedison'))
+        expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
+            .toBeInTheDocument()
+        expect(within(screen.getByRole('table'))
+            .getByText('billzedison'))
             .toBeInTheDocument()
 
         fireEvent.change(screen.getByLabelText('Filter By'), {
@@ -268,6 +301,88 @@ describe('SkillStatisticsPage', () => {
         expect(within(table)
             .getByText('1st'))
             .toBeInTheDocument()
+    })
+
+    it('opens the members table on double click in mobile view', async () => {
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+        renderPage()
+
+        const bubble = await screen.findByRole('button', { name: 'Programming and Development' })
+        fireEvent.click(bubble)
+
+        expect(screen.queryByRole('heading', { name: 'Members for Programming and Development' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Total Members'))
+            .toBeInTheDocument()
+
+        fireEvent.doubleClick(bubble)
+
+        expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Total Members'))
+            .not.toBeInTheDocument()
+    })
+
+    it('hides the popover when the same bubble is clicked again', async () => {
+        const now = jest.spyOn(Date, 'now')
+
+        try {
+            now.mockReturnValue(1_000)
+            Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+            renderPage()
+
+            const bubble = await screen.findByRole('button', { name: 'Programming and Development' })
+            fireEvent.click(bubble)
+
+            expect(screen.getByText('Total Members'))
+                .toBeInTheDocument()
+
+            now.mockReturnValue(1_500)
+            fireEvent.click(bubble)
+
+            expect(screen.queryByText('Total Members'))
+                .not.toBeInTheDocument()
+        } finally {
+            now.mockRestore()
+        }
+    })
+
+    it('hides the popover when clicking outside the bubbles', async () => {
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+        renderPage()
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
+
+        expect(screen.getByText('Total Members'))
+            .toBeInTheDocument()
+
+        fireEvent.pointerDown(document.body)
+
+        expect(screen.queryByText('Total Members'))
+            .not.toBeInTheDocument()
+    })
+
+    it('expands a member row to show rating, country, and wins', async () => {
+        renderPage()
+        fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
+
+        expect(await screen.findByRole('heading', { name: 'Members for Programming and Development' }))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByText('Justin G'))
+
+        const details = screen.getByLabelText('Details for Ghostar')
+        expect(within(details)
+            .getByText('1900'))
+            .toBeInTheDocument()
+        expect(within(details)
+            .getByText('USA'))
+            .toBeInTheDocument()
+        expect(within(details)
+            .getByText('322'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Hide details for Ghostar' }))
+            .toHaveAttribute('aria-expanded', 'true')
     })
 
     it('shows an error when skill categories fail to load', async () => {

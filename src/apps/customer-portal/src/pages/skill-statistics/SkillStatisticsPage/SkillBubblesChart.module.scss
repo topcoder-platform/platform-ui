@@ -8,8 +8,8 @@
     width: 100%;
 
     @include ltemd {
-        height: 420px;
-        min-height: 420px;
+        height: auto;
+        min-height: 640px;
     }
 }
 
@@ -99,7 +99,7 @@
         border-top: 8px solid #0f172a;
         content: '';
         height: 0;
-        left: 50%;
+        left: var(--arrow-x, 50%);
         position: absolute;
         top: 100%;
         transform: translateX(-50%);
@@ -144,6 +144,12 @@
             top: var(--arrow-offset, 50%);
             transform: translateY(-50%);
         }
+    }
+
+    &.anchored {
+        position: absolute;
+        width: min(320px, calc(100% - 16px));
+        z-index: 5;
     }
 }
 

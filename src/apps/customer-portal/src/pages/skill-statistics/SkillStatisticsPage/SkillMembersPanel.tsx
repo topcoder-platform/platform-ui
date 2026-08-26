@@ -1,5 +1,12 @@
 /* eslint-disable react/jsx-no-bind */
-import { ChangeEvent, FC, useMemo } from 'react'
+import {
+    ChangeEvent,
+    FC,
+    Fragment,
+    MouseEvent,
+    useMemo,
+    useState,
+} from 'react'
 import classNames from 'classnames'
 
 import { EnvironmentConfig } from '~/config'
@@ -28,6 +35,8 @@ interface SkillMembersPanelProps {
 }
 
 const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
+    const [expandedHandles, setExpandedHandles] = useState<Set<string>>(new Set())
+
     const countryOptions = useMemo(() => {
         const unique = new Map<string, string>()
         props.members.forEach(member => {
@@ -60,8 +69,24 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
             .sort((left, right) => right.wins - left.wins)
     }, [props.countryFilter, props.members, props.search])
 
+    function toggleExpanded(handle: string): void {
+        setExpandedHandles(current => {
+            const next = new Set(current)
+            if (next.has(handle)) {
+                next.delete(handle)
+            } else {
+                next.add(handle)
+            }
+
+            return next
+        })
+    }
+
     return (
-        <section className={styles.section} aria-label={`Members for ${props.category.name}`}>
+        <section
+            className={styles.section}
+            aria-label={`Members for ${props.category.name}`}
+        >
             <div className={styles.header}>
                 <h2>{`Members for ${props.category.name}`}</h2>
                 <p className={styles.subtitle}>
@@ -106,9 +131,9 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
                             <tr>
                                 <th>Rank</th>
                                 <th>Member</th>
-                                <th>Rating</th>
-                                <th>Country</th>
-                                <th># of Wins</th>
+                                <th className={styles.desktopOnly}>Rating</th>
+                                <th className={styles.desktopOnly}>Country</th>
+                                <th className={styles.desktopOnly}># of Wins</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -136,59 +161,149 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
                                 const profileUrl = `${EnvironmentConfig.USER_PROFILE_URL}/${
                                     encodeURIComponent(member.handle)
                                 }`
+                                const isExpanded = expandedHandles.has(member.handle)
 
                                 return (
-                                    <tr key={member.handle}>
-                                        <td>
-                                            <span className={styles[`rank${Math.min(index + 1, 4)}`]}>
-                                                {rankIcon}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className={styles.memberCell}>
-                                                <ProfilePicture
-                                                    className={styles.avatar}
-                                                    member={{
-                                                        firstName: firstName || member.handle,
-                                                        lastName,
-                                                        photoURL: member.photoURL || '',
-                                                    }}
-                                                />
-                                                <div className={styles.memberText}>
-                                                    <a
-                                                        className={styles.handle}
-                                                        href={profileUrl}
-                                                        rel='noreferrer'
-                                                        style={{ color: getRatingColor(member.rating) }}
-                                                        target='_blank'
-                                                    >
-                                                        {member.handle}
-                                                    </a>
-                                                    <span className={styles.memberName}>{member.name}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style={{ color: getRatingColor(member.rating) }}>
-                                                {member.rating}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className={styles.countryCell} title={member.countryName}>
-                                                {countryCode && (
-                                                    <span
-                                                        aria-hidden='true'
-                                                        className={classNames(
-                                                            styles.flag,
-                                                            `fi fi-${countryCode}`,
-                                                        )}
+                                    <Fragment key={member.handle}>
+                                        <tr
+                                            className={classNames(
+                                                styles.memberRow,
+                                                isExpanded && styles.expanded,
+                                            )}
+                                            onClick={function onClick(event: MouseEvent<HTMLTableRowElement>) {
+                                                const target = event.target
+                                                if (target instanceof Element && target.closest('a')) {
+                                                    return
+                                                }
+
+                                                toggleExpanded(member.handle)
+                                            }}
+                                        >
+                                            <td>
+                                                <span className={styles[`rank${Math.min(index + 1, 4)}`]}>
+                                                    {rankIcon}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className={styles.memberCell}>
+                                                    <ProfilePicture
+                                                        className={styles.avatar}
+                                                        member={{
+                                                            firstName: firstName || member.handle,
+                                                            lastName,
+                                                            photoURL: member.photoURL || '',
+                                                        }}
                                                     />
-                                                )}
-                                                <span>{member.countryName}</span>
-                                            </div>
-                                        </td>
-                                        <td>{NUMBER_FORMATTER.format(member.wins)}</td>
-                                    </tr>
+                                                    <div className={styles.memberText}>
+                                                        <a
+                                                            className={styles.handle}
+                                                            href={profileUrl}
+                                                            onClick={function onClick(
+                                                                event: MouseEvent<HTMLAnchorElement>,
+                                                            ) {
+                                                                event.stopPropagation()
+                                                            }}
+                                                            rel='noreferrer'
+                                                            style={{ color: getRatingColor(member.rating) }}
+                                                            target='_blank'
+                                                        >
+                                                            {member.handle}
+                                                        </a>
+                                                        <span className={styles.memberName}>{member.name}</span>
+                                                    </div>
+                                                    <button
+                                                        aria-expanded={isExpanded}
+                                                        aria-label={
+                                                            isExpanded
+                                                                ? `Hide details for ${member.handle}`
+                                                                : `Show details for ${member.handle}`
+                                                        }
+                                                        className={styles.toggle}
+                                                        onClick={function onClick(
+                                                            event: MouseEvent<HTMLButtonElement>,
+                                                        ) {
+                                                            event.stopPropagation()
+                                                            toggleExpanded(member.handle)
+                                                        }}
+                                                        type='button'
+                                                    >
+                                                        <IconOutline.ChevronDownIcon
+                                                            className={classNames(
+                                                                styles.chevron,
+                                                                isExpanded && styles.chevronOpen,
+                                                            )}
+                                                            height={20}
+                                                            width={20}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className={styles.desktopOnly}>
+                                                <span style={{ color: getRatingColor(member.rating) }}>
+                                                    {member.rating}
+                                                </span>
+                                            </td>
+                                            <td className={styles.desktopOnly}>
+                                                <div className={styles.countryCell} title={member.countryName}>
+                                                    {countryCode && (
+                                                        <span
+                                                            aria-hidden='true'
+                                                            className={classNames(
+                                                                styles.flag,
+                                                                `fi fi-${countryCode}`,
+                                                            )}
+                                                        />
+                                                    )}
+                                                    <span>{member.countryName}</span>
+                                                </div>
+                                            </td>
+                                            <td className={styles.desktopOnly}>
+                                                {NUMBER_FORMATTER.format(member.wins)}
+                                            </td>
+                                        </tr>
+                                        {isExpanded && (
+                                            <tr className={styles.detailsRow}>
+                                                <td className={styles.detailsCell} colSpan={2}>
+                                                    <dl
+                                                        aria-label={`Details for ${member.handle}`}
+                                                        className={styles.details}
+                                                    >
+                                                        <div className={styles.detail}>
+                                                            <dt>Rating</dt>
+                                                            <dd
+                                                                style={{
+                                                                    color: getRatingColor(member.rating),
+                                                                }}
+                                                            >
+                                                                {member.rating}
+                                                            </dd>
+                                                        </div>
+                                                        <div className={styles.detail}>
+                                                            <dt>Country</dt>
+                                                            <dd className={styles.countryCell}>
+                                                                {countryCode && (
+                                                                    <span
+                                                                        aria-hidden='true'
+                                                                        className={classNames(
+                                                                            styles.flag,
+                                                                            `fi fi-${countryCode}`,
+                                                                        )}
+                                                                    />
+                                                                )}
+                                                                <span>{member.countryName}</span>
+                                                            </dd>
+                                                        </div>
+                                                        <div className={styles.detail}>
+                                                            <dt># of Wins</dt>
+                                                            <dd>
+                                                                {NUMBER_FORMATTER.format(member.wins)}
+                                                            </dd>
+                                                        </div>
+                                                    </dl>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </Fragment>
                                 )
                             })}
                         </tbody>
