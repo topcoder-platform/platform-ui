@@ -24,6 +24,8 @@ import { WorkAppContext } from '../../../../../lib/contexts'
 import {
     useDownloadAllSubmissions,
     useDownloadSubmission,
+    useFetchSubmissionDuplicates,
+    type UseFetchSubmissionDuplicatesResult,
     useFetchSubmissions,
 } from '../../../../../lib/hooks'
 import { Challenge, Submission } from '../../../../../lib/models'
@@ -32,6 +34,7 @@ import type { MemberProfile } from '../../../../../lib/services'
 import {
     canDownloadSubmissions,
     canViewMarathonMatchRunnerLogs,
+    canViewSubmissionDuplicates,
     getSubmissionFinalScore,
     getSubmissionInitialScore,
     getSubmissionProvisionalScore,
@@ -601,6 +604,26 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const isMembersLoading = memberIdsToLoad.length > 0
     const paginationTotal = sortedSubmissions.length
 
+    // Duplicates are only requested for the rows currently on screen, and only
+    // for roles the review API answers for.
+    const canCheckDuplicates = canViewSubmissionDuplicates(workAppContext.userRoles)
+    const duplicateCheckSubmissionIds = useMemo<string[]>(
+        () => [
+            ...paginatedSubmissions,
+            ...sortedCheckpointSubmissions,
+        ]
+            .map(submission => normalizeValue(submission.id))
+            .filter(Boolean),
+        [paginatedSubmissions, sortedCheckpointSubmissions],
+    )
+    const {
+        duplicatesBySubmissionId,
+    }: UseFetchSubmissionDuplicatesResult = useFetchSubmissionDuplicates(
+        props.challengeId,
+        duplicateCheckSubmissionIds,
+        canCheckDuplicates,
+    )
+
     const handleDownloadAll = useCallback(async (): Promise<void> => {
         try {
             await downloadAllResult.downloadAll(toDownloadAllItems(submissionsResult.submissions))
@@ -793,6 +816,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     canDownloadSubmissions={canDownload}
                     canViewRunnerLogs={canViewRunnerLogs}
                     challengeId={props.challengeId}
+                    duplicatesBySubmissionId={duplicatesBySubmissionId}
                     isLoading={submissionsResult.isLoading}
                     isLoadingMembers={isMembersLoading}
                     onDownloadSubmission={handleDownloadSubmission}
@@ -815,6 +839,7 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                             canDownloadSubmissions={canDownload}
                             canViewRunnerLogs={canViewRunnerLogs}
                             challengeId={props.challengeId}
+                            duplicatesBySubmissionId={duplicatesBySubmissionId}
                             isLoading={false}
                             isLoadingMembers={isMembersLoading}
                             onDownloadSubmission={handleDownloadSubmission}

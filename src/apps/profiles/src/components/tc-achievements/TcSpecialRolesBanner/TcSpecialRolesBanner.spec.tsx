@@ -45,14 +45,17 @@ describe('TcSpecialRolesBanner styles', () => {
             .toMatch(/font-size: 22px;/)
     })
 
-    it('aligns the second role card with member stats on desktop', () => {
+    it('lets role cards share the parent achievements grid columns', () => {
         expect(tcSpecialRolesBannerStyles)
-            .toMatch(new RegExp(
-                '@include gtexl \\{[\\s\\S]*?'
-                + '@container \\(min-width: 656px\\) \\{[\\s\\S]*?'
-                + '\\.roleCard \\+ \\.roleCard \\{[\\s\\S]*?'
-                + 'margin-left: \\$sp-10;',
-            ))
+            .toMatch(/\.rolesSection \{[\s\S]*?display: contents;/)
+        expect(tcSpecialRolesBannerStyles)
+            .toMatch(/&.reviewer \{[\s\S]*?grid-column: 1;/)
+        expect(tcSpecialRolesBannerStyles)
+            .toMatch(/&.copilot \{[\s\S]*?grid-column: 2;/)
+        expect(tcSpecialRolesBannerStyles)
+            .toMatch(/\.singleRole \.roleCard \{[\s\S]*?grid-column: 1 \/ -1;/)
+        expect(tcSpecialRolesBannerStyles).not
+            .toMatch(/margin-left: \$sp-10;/)
     })
 })
 

@@ -55,6 +55,7 @@ const MILESTONE_METADATA_NAMES = {
 const MILESTONE_METADATA_KEYS: readonly string[] = Object.values(MILESTONE_METADATA_NAMES)
 const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>([
     'groups',
+    'tags',
     'terms',
 ])
 
@@ -1046,6 +1047,7 @@ export function transformChallengeToFormData(
             milestoneDurationDays: normalizeOptionalNumber(milestoneConfiguration.milestoneDurationDays),
         },
         name,
+        numOfCheckpointSubmissions: normalizeOptionalNumber(challenge?.numOfCheckpointSubmissions),
         numOfSubmissions: normalizeOptionalNumber(challenge?.numOfSubmissions),
         phases,
         privateDescription,

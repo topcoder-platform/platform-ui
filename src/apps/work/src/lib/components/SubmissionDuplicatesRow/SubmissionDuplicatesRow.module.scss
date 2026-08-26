@@ -1,0 +1,97 @@
+@import '@libs/ui/styles/includes';
+
+.cell {
+    padding-top: 0;
+}
+
+.toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: $red-100;
+    cursor: pointer;
+    display: flex;
+    font-size: 13px;
+    font-weight: 500;
+    gap: $sp-1;
+    padding: 0;
+    width: 100%;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.toggleLabel {
+    flex: 1;
+    text-align: left;
+}
+
+.chevron {
+    transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.panel {
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    margin-top: $sp-2;
+    padding: $sp-3;
+}
+
+.duplicate {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.duplicateLine {
+    align-items: center;
+    color: $black-80;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 13px;
+    gap: $sp-1;
+}
+
+.bullet {
+    color: $black-60;
+}
+
+.duplicateMeta {
+    color: $black-60;
+}
+
+.crossChallenge {
+    align-items: center;
+    color: $red-100;
+    display: inline-flex;
+    font-size: 13px;
+    gap: $sp-1;
+    padding-left: $sp-4;
+
+    svg {
+        height: 14px;
+        width: 14px;
+    }
+}
+
+.crossChallengeLink {
+    align-items: center;
+    color: $red-100;
+    display: inline-flex;
+    gap: 2px;
+    text-decoration: underline;
+
+    svg {
+        height: 12px;
+        width: 12px;
+    }
+}

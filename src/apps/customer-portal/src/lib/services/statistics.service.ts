@@ -92,6 +92,7 @@ type CountryLookupResponse = {
 }
 
 const GENERAL_STATISTICS_URL = `${EnvironmentConfig.REPORTS_API}/statistics/general`
+const EXPERT_SKILLS_STATISTICS_URL = `${EnvironmentConfig.REPORTS_API}/statistics/expert-skills`
 const COUNTRY_LOOKUP_URL = `${EnvironmentConfig.API.V6}/lookups/countries?page=1&perPage=9999`
 
 const COUNTRY_NAME_ALIASES: Record<string, string> = {
@@ -262,4 +263,58 @@ export async function fetchGeneralStatistics(): Promise<GeneralStatistics> {
         memberCount: Number(memberCountResponse['user.count'] || 0),
         totalPrizes: Number(totalPrizesResponse.total || 0),
     }
+}
+
+export type ExpertSkillBreakdown = {
+    name: string
+    percentage: number
+}
+
+export type ExpertSkillCategory = {
+    color: string
+    icon: string
+    id: string
+    name: string
+    officialName: string
+    size: number
+    skillsBreakdown: ExpertSkillBreakdown[]
+    totalMembers: number
+    totalSkills: number
+}
+
+export type ExpertSkillCategoryMember = {
+    countryCode: string
+    countryName: string
+    handle: string
+    name: string
+    photoURL?: string | null
+    rating: number
+    wins: number
+}
+
+export const EXPERT_SKILL_CATEGORIES_CACHE_KEY = 'customer-portal-expert-skill-categories'
+
+export function expertSkillCategoryMembersCacheKey(selectedCategory: string): string {
+    return `customer-portal-expert-skill-category-members:${selectedCategory}`
+}
+
+export async function fetchExpertSkillCategories(): Promise<ExpertSkillCategory[]> {
+    const response = await xhrGetAsync<ExpertSkillCategory[]>(
+        `${EXPERT_SKILLS_STATISTICS_URL}/categories`,
+    )
+
+    return Array.isArray(response) ? response : []
+}
+
+export async function fetchExpertSkillCategoryMembers(
+    selectedCategory: string,
+): Promise<ExpertSkillCategoryMember[]> {
+    const query = new URLSearchParams({
+        selectedcategory: selectedCategory,
+    })
+    const response = await xhrGetAsync<ExpertSkillCategoryMember[]>(
+        `${EXPERT_SKILLS_STATISTICS_URL}/category-members?${query.toString()}`,
+    )
+
+    return Array.isArray(response) ? response : []
 }

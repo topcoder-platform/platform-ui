@@ -54,6 +54,7 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    PrizeSet,
     Resource,
     ResourceRole,
     Reviewer,
@@ -61,6 +62,7 @@ import {
 } from '../../../../lib/models'
 import {
     challengeEditorSchema,
+    ChallengeEditorValidationContext,
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
@@ -90,11 +92,14 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../lib/utils/metadata.utils'
-import { isScreenerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
 } from '../../../../lib/utils/project-billing-account.utils'
+import {
+    hasChallengeSubmissions,
+} from '../../../../lib/utils/submission-limit.utils'
 import {
     resolveMatchingChallengeViewPath,
 } from '../ChallengeEditorPage.utils'
@@ -188,6 +193,10 @@ import {
 import {
     RoundTypeField,
 } from './RoundTypeField'
+import {
+    ShowDashboardField,
+    SHOW_DATA_DASHBOARD_METADATA_FIELD,
+} from './ShowDashboardField'
 import {
     StockArtsField,
 } from './StockArtsField'
@@ -292,9 +301,31 @@ interface PersistCreatedChallengeCopilotResult {
     warningMessage?: string
 }
 
+interface DesignCopilotReviewerAssignmentConfig {
+    phaseName: string
+    roleNames: readonly string[]
+}
+
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
 const SAVED_BUTTON_STATE_DURATION_MS = 2000
 const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
+const DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE
+    = 'Select a copilot to assign Checkpoint Review, Review, and Approval.'
+const DESIGN_REVIEW_COPILOT_ERROR_TYPE = 'designReviewCopilotRequired'
+const DESIGN_COPILOT_REVIEWER_ASSIGNMENT_CONFIGS: readonly DesignCopilotReviewerAssignmentConfig[] = [
+    {
+        phaseName: 'Checkpoint Review',
+        roleNames: ['Checkpoint Reviewer'],
+    },
+    {
+        phaseName: 'Review',
+        roleNames: ['Reviewer'],
+    },
+    {
+        phaseName: 'Approval',
+        roleNames: ['Approver'],
+    },
+]
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const APPROVAL_REQUIRED_FOR_LAUNCH_MESSAGE
@@ -466,6 +497,45 @@ function normalizeTextValue(value: unknown): string {
     }
 
     return value.trim()
+}
+
+/**
+ * Finds the first user-facing message in React Hook Form's nested validation errors.
+ *
+ * @param errors field-error tree supplied to the invalid-submit callback.
+ * @returns the first non-empty validation message, or `undefined` when none is available.
+ * @remarks Nested and array fields, including hidden reviewer rows, do not expose a root-level
+ * message. The save footer uses this helper so every rejected submit explains what must be fixed.
+ * @throws Does not throw; cyclic field references are ignored.
+ */
+function getFirstFormValidationMessage(errors: unknown): string | undefined {
+    const visitedValues = new Set<object>()
+
+    function findMessage(value: unknown): string | undefined {
+        if (!value || typeof value !== 'object' || visitedValues.has(value)) {
+            return undefined
+        }
+
+        visitedValues.add(value)
+
+        const message = normalizeTextValue((value as { message?: unknown }).message)
+        if (message) {
+            return message
+        }
+
+        for (const [key, childValue] of Object.entries(value)) {
+            if (key !== 'ref') {
+                const childMessage = findMessage(childValue)
+                if (childMessage) {
+                    return childMessage
+                }
+            }
+        }
+
+        return undefined
+    }
+
+    return findMessage(errors)
 }
 
 /**
@@ -933,6 +1003,101 @@ function normalizeReviewerPhaseId(phase: {
     return normalizeTextValue(phase?.phaseId) || normalizeTextValue(phase?.id)
 }
 
+/**
+ * Assigns the selected Design Challenge copilot to the hidden private reviewer phases.
+ *
+ * @param formData current challenge form snapshot containing phases, reviewers, and copilot.
+ * @param copilotMemberId resolved Topcoder member id for the selected copilot.
+ * @returns a form-data copy whose Checkpoint Review, Review, and Approval rows are private and
+ * assigned to the copilot; unrelated reviewer rows are preserved.
+ * @remarks Used immediately before save serialization so the challenge payload and reviewer
+ * resource assignments carry the same member identity.
+ * @throws Does not throw.
+ */
+function applyDesignCopilotReviewerAssignments(
+    formData: ChallengeEditorFormData,
+    copilotMemberId: string,
+): ChallengeEditorFormData {
+    const selectedCopilot = normalizeTextValue(formData.copilot)
+    const phaseNameById = new Map(
+        (Array.isArray(formData.phases)
+            ? formData.phases
+            : [])
+            .map(phase => {
+                const phaseId = normalizeReviewerPhaseId(phase)
+                const phaseName = normalizeTextValue(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const copilotReviewPhaseKeys = new Set(
+        DESIGN_COPILOT_REVIEWER_ASSIGNMENT_CONFIGS
+            .map(config => normalizeReviewerPhaseName(config.phaseName)),
+    )
+    const reviewers = (Array.isArray(formData.reviewers)
+        ? formData.reviewers
+        : [])
+        .map(reviewer => {
+            const phaseName = phaseNameById.get(normalizeReviewerPhaseId(reviewer))
+
+            if (
+                isAiReviewer(reviewer)
+                || !copilotReviewPhaseKeys.has(normalizeReviewerPhaseName(phaseName))
+            ) {
+                return reviewer
+            }
+
+            return {
+                ...reviewer,
+                additionalMemberIds: undefined,
+                handle: selectedCopilot || undefined,
+                memberId: copilotMemberId,
+                memberReviewerCount: 1,
+                shouldOpenOpportunity: false,
+            }
+        })
+
+    return {
+        ...formData,
+        reviewers,
+    }
+}
+
+/**
+ * Resolves the selected copilot handle to the member id required by private reviewer rows.
+ *
+ * @param copilot selected copilot handle or an already-normalized numeric member id.
+ * @returns the selected copilot's Topcoder member id.
+ * @remarks Used by the save flow before reviewer payload serialization.
+ * @throws when the selection is empty or the member profile cannot provide a user id.
+ */
+async function resolveDesignCopilotReviewerMemberId(copilot: unknown): Promise<string> {
+    const selectedCopilot = normalizeTextValue(copilot)
+
+    if (!selectedCopilot) {
+        throw new Error(DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE)
+    }
+
+    if (/^\d+$/.test(selectedCopilot)) {
+        return selectedCopilot
+    }
+
+    const profile = await fetchProfile(selectedCopilot)
+    const memberId = profile?.userId === undefined || profile?.userId === null
+        ? ''
+        : String(profile.userId)
+            .trim()
+
+    if (!memberId) {
+        throw new Error('Unable to resolve the selected copilot for reviewer assignment.')
+    }
+
+    return memberId
+}
+
 function isMarathonMatchChallengeTypeByNameAndAbbreviation({
     abbreviation,
     name,
@@ -1241,6 +1406,7 @@ async function hydratePersistedManualReviewerAssignments(
 function getReviewerEntryValidationError(
     reviewer: Reviewer | undefined,
     phases: ChallengeEditorFormData['phases'],
+    isDesignChallenge: boolean,
 ): string | undefined {
     if (!reviewer) {
         return undefined
@@ -1263,7 +1429,7 @@ function getReviewerEntryValidationError(
 
         if (
             reviewer.shouldOpenOpportunity !== true
-            && !isScreenerAssignmentOptional(reviewer, phases)
+            && !isReviewerAssignmentOptional(reviewer, phases, isDesignChallenge)
         ) {
             const requiredAssignedMembers = getAssignedMemberReviewerValidationSlots(reviewer)
                 .slice(0, reviewerCount)
@@ -1305,6 +1471,7 @@ interface ReviewerValidationOptions {
     challengeTypeAbbreviation?: string
     challengeTypeName?: string
     requiredReviewersErrorMessage: string
+    isDesignChallenge: boolean
     isTaskChallenge: boolean
 }
 
@@ -1333,7 +1500,11 @@ function getReviewerValidationError(
     }
 
     const invalidReviewer = reviewers
-        .map(reviewer => getReviewerEntryValidationError(reviewer, formData.phases))
+        .map(reviewer => getReviewerEntryValidationError(
+            reviewer,
+            formData.phases,
+            options.isDesignChallenge,
+        ))
         .find(Boolean)
     if (invalidReviewer) {
         return invalidReviewer
@@ -1727,6 +1898,19 @@ function getApprovalStatusText(approvalStatus: string | undefined): string {
     return 'Pending Approval'
 }
 
+/**
+ * Detects whether a persisted challenge snapshot already stores at least one prize.
+ *
+ * @param prizeSets prize sets returned by challenge-api for the challenge.
+ * @returns `true` when any prize set contains at least one prize.
+ * @remarks Used by the budget approval actions so approvers only act on prizes
+ * that challenge-api already persisted.
+ */
+function hasPrizeSetWithPrizes(prizeSets: PrizeSet[] | undefined): boolean {
+    return Array.isArray(prizeSets)
+        && prizeSets.some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0)
+}
+
 interface TaskLaunchValidationParams {
     assignedMemberId?: unknown
     currentStatus?: unknown
@@ -1896,11 +2080,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
     const [isUpdatingApproval, setIsUpdatingApproval] = useState<boolean>(false)
     const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('')
+    // Tracks the prize sets challenge-api has stored so budget approval actions can appear
+    // right after a save instead of waiting for the challenge prop to be refetched.
+    const [persistedPrizeSets, setPersistedPrizeSets] = useState<PrizeSet[] | undefined>(
+        props.challenge?.prizeSets,
+    )
     const [showApproveBudgetModal, setShowApproveBudgetModal] = useState<boolean>(false)
     const [showRejectBudgetModal, setShowRejectBudgetModal] = useState<boolean>(false)
     const [resolvedPaymentCreator, setResolvedPaymentCreator] = useState<ResolvedPaymentCreator | undefined>()
 
+    const validationContextRef = useRef<ChallengeEditorValidationContext>({
+        isDesignChallenge: false,
+        isSubmissionLimitConfigurable: false,
+    })
     const formMethods = useForm<ChallengeEditorFormData>({
+        context: validationContextRef.current,
         defaultValues: applyProjectBillingToChallengeFormData(
             transformChallengeToFormData(props.challenge),
             projectBillingAccount,
@@ -2156,10 +2350,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         projectResult.project,
     )
     const hasPersistedPrizeSets = useMemo(
-        () => Array.isArray(props.challenge?.prizeSets)
-            && props.challenge?.prizeSets
-                .some(prizeSet => Array.isArray(prizeSet?.prizes) && prizeSet.prizes.length > 0),
-        [props.challenge?.prizeSets],
+        () => hasPrizeSetWithPrizes(persistedPrizeSets),
+        [persistedPrizeSets],
     )
     const hasUnsavedPrizeSetChanges = useMemo(
         () => {
@@ -2192,6 +2384,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
+    const showDashboardField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showRateChallengeField = isMarathonMatchChallengeSelected || isDevelopmentChallengeSelected
     const showPrizesAndBillingSection = !isFunChallengeSelected
@@ -2223,9 +2416,86 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const shouldUseCopilotBillingSummary = workAppContext.isCopilot
         && !workAppContext.isAdmin
         && !workAppContext.isManager
-    const shouldUseSimplifiedDesignReview = shouldUseCopilotBillingSummary
-        && isDesignTrackSelected
+    const shouldUseSimplifiedDesignReview = isDesignTrackSelected
         && isChallengeTypeSelected
+
+    useEffect(() => {
+        if (validationContextRef.current.isDesignChallenge === shouldUseSimplifiedDesignReview) {
+            return
+        }
+
+        validationContextRef.current.isDesignChallenge = shouldUseSimplifiedDesignReview
+        trigger('reviewers')
+            .catch(() => undefined)
+    }, [
+        shouldUseSimplifiedDesignReview,
+        trigger,
+    ])
+
+    /*
+     * The submission limit is only editable inside Design submission settings, and it is locked
+     * once members have uploaded submissions. Publishing that state to the validation context keeps
+     * the required-count rule from blocking saves on challenges where the copilot cannot change it.
+     */
+    const isSubmissionLimitConfigurable = showSubmissionSettingsSection
+        && !hasChallengeSubmissions({
+            numOfCheckpointSubmissions: values.numOfCheckpointSubmissions,
+            numOfSubmissions: values.numOfSubmissions,
+        })
+
+    useEffect(() => {
+        validationContextRef.current.isSubmissionLimitConfigurable = isSubmissionLimitConfigurable
+    }, [isSubmissionLimitConfigurable])
+
+    /**
+     * Validates the copilot required for hidden private Design reviewer assignments.
+     *
+     * @param formData current challenge form snapshot.
+     * @returns `true` when the simplified review flow is not active or a copilot is selected;
+     * otherwise registers the visible Copilot field error and returns `false`.
+     * @throws Does not throw.
+     */
+    const validateDesignReviewCopilotSelection = useCallback((
+        formData: ChallengeEditorFormData,
+    ): boolean => {
+        if (
+            !shouldUseSimplifiedDesignReview
+            || normalizeTextValue(formData.copilot)
+        ) {
+            return true
+        }
+
+        setError('copilot', {
+            message: DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE,
+            type: DESIGN_REVIEW_COPILOT_ERROR_TYPE,
+        })
+        setSaveStatus('idle')
+        setSaveValidationError(DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE)
+
+        return false
+    }, [
+        setError,
+        shouldUseSimplifiedDesignReview,
+    ])
+
+    useEffect(() => {
+        if (
+            !normalizeTextValue(values.copilot)
+            || formState.errors.copilot?.type !== DESIGN_REVIEW_COPILOT_ERROR_TYPE
+        ) {
+            return
+        }
+
+        clearErrors('copilot')
+        if (saveValidationError === DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE) {
+            setSaveValidationError(undefined)
+        }
+    }, [
+        clearErrors,
+        formState.errors.copilot?.type,
+        saveValidationError,
+        values.copilot,
+    ])
     const getPersistedAssignmentValueByFields = useCallback((
         fallbackValue: string | undefined,
         roleNames: readonly string[],
@@ -2487,7 +2757,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fetchResources(challengeId),
             loadSingleAssignmentResourceRoles(),
         ])
-        const resourceSyncOperations = getSingleAssignmentConfigs(
+        const resourceSyncOperations: Promise<void>[] = getSingleAssignmentConfigs(
             isTaskSingleAssignmentChallenge(formData),
         )
             .map(config => {
@@ -2513,6 +2783,36 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     })
             })
             .filter((operation): operation is Promise<void> => !!operation)
+        const selectedCopilot = getSingleAssignmentFieldValue(formData, 'copilot')
+
+        if (shouldUseSimplifiedDesignReview && selectedCopilot) {
+            DESIGN_COPILOT_REVIEWER_ASSIGNMENT_CONFIGS.forEach(config => {
+                const persistedValue = getPersistedAssignmentValueByFields(
+                    undefined,
+                    config.roleNames,
+                    ['memberHandle', 'memberId'],
+                    persistedResources,
+                    persistedResourceRoles,
+                )
+
+                if (hasSameNormalizedValue(selectedCopilot, persistedValue)) {
+                    return
+                }
+
+                resourceSyncOperations.push(syncSingleAssignmentResource({
+                    challengeId,
+                    nextValue: selectedCopilot,
+                    resourceRolesOverride: persistedResourceRoles,
+                    resourcesOverride: persistedResources,
+                    resourceValueFields: [
+                        'memberHandle',
+                        'memberId',
+                    ],
+                    roleNames: config.roleNames,
+                    valueField: 'memberHandle',
+                }))
+            })
+        }
 
         if (resourceSyncOperations.length === 0) {
             return
@@ -2525,6 +2825,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         isTaskSingleAssignmentChallenge,
         loadSingleAssignmentResourceRoles,
         mutateChallengeResources,
+        shouldUseSimplifiedDesignReview,
         syncSingleAssignmentResource,
     ])
     /**
@@ -2668,6 +2969,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     useEffect(() => {
         challengeRef.current = props.challenge
     }, [props.challenge])
+
+    useEffect(() => {
+        setPersistedPrizeSets(props.challenge?.prizeSets)
+    }, [props.challenge?.prizeSets])
 
     useEffect(() => {
         currentChallengeIdRef.current = currentChallengeId
@@ -3022,6 +3327,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            if (!validateDesignReviewCopilotSelection(getValues())) {
+                return
+            }
+
             clearErrors('workType')
             setSaveError(undefined)
             setSaveValidationError(undefined)
@@ -3071,7 +3380,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     discussionForum: formData.discussionForum,
                     selectedChallengeType,
                 })
-                const metadata = booleanToMetadata(
+                const baseMetadata = booleanToMetadata(
                     booleanToMetadata(
                         formData.metadata,
                         REGISTERED_MEMBER_DOWNLOAD_METADATA_FIELD,
@@ -3080,6 +3389,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     IS_TEST_CHALLENGE_METADATA_FIELD,
                     formData.isTestChallenge === true,
                 )
+                // Marathon Match fun challenges are created with the data dashboard enabled.
+                const metadata = isMarathonMatchChallengeSelected
+                    ? booleanToMetadata(
+                        baseMetadata,
+                        SHOW_DATA_DASHBOARD_METADATA_FIELD,
+                        formData.funChallenge === true,
+                    )
+                    : baseMetadata
                 const createdChallenge = await createChallenge({
                     discussions,
                     funChallenge: formData.funChallenge === true,
@@ -3167,6 +3484,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fallbackProjectId,
             getValues,
             isDevelopmentTrackSelected,
+            isMarathonMatchChallengeSelected,
             isTaskSingleAssignmentChallenge,
             reset,
             onChallengeCreated,
@@ -3178,6 +3496,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
+            validateDesignReviewCopilotSelection,
         ],
     )
 
@@ -3296,6 +3615,40 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     formDataToSave = getValues()
                 }
 
+                if (shouldUseSimplifiedDesignReview) {
+                    try {
+                        const copilotMemberId = await resolveDesignCopilotReviewerMemberId(
+                            formDataToSave.copilot,
+                        )
+
+                        formDataToSave = applyDesignCopilotReviewerAssignments(
+                            formDataToSave,
+                            copilotMemberId,
+                        )
+                        setValue('reviewers', formDataToSave.reviewers, {
+                            shouldDirty: false,
+                            shouldValidate: true,
+                        })
+                    } catch (error) {
+                        const errorMessage = error instanceof Error
+                            ? error.message
+                            : DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE
+
+                        setError('copilot', {
+                            message: errorMessage,
+                            type: DESIGN_REVIEW_COPILOT_ERROR_TYPE,
+                        })
+                        setSaveStatus('idle')
+                        setSaveValidationError(errorMessage)
+
+                        if (!options.isAutosave) {
+                            showErrorToast(errorMessage)
+                        }
+
+                        throw createHandledLaunchBlockError(errorMessage)
+                    }
+                }
+
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
                     formDataToSave,
                     resolvedProjectBillingAccount,
@@ -3323,6 +3676,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         savedChallengeSnapshot = savedChallenge
                     }
                 }
+
+                setPersistedPrizeSets(savedChallengeSnapshot.prizeSets)
 
                 const persistedFormData = applyProjectBillingToChallengeFormData(
                     transformChallengeToFormData(savedChallengeSnapshot),
@@ -3442,6 +3797,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeTrack,
             selectedChallengeType,
             setError,
+            setValue,
+            shouldUseSimplifiedDesignReview,
             syncDraftSingleAssignments,
             usesManualReviewers,
             viewModePath,
@@ -3562,14 +3919,20 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
             },
             () => {
+                if (!validateDesignReviewCopilotSelection(getValues())) {
+                    throw new Error(DESIGN_REVIEW_COPILOT_REQUIRED_MESSAGE)
+                }
+
                 showErrorToast('Please fix validation errors before launching')
                 throw new Error('Challenge launch validation failed')
             },
         )()
     }, [
+        getValues,
         handleSubmit,
         isScorerBlockingChallengeActions,
         saveChallenge,
+        validateDesignReviewCopilotSelection,
     ])
 
     const launchChallengeRef = useRef(launchChallenge)
@@ -3651,6 +4014,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, {})
 
+            if (!validateDesignReviewCopilotSelection(formData)) {
+                return
+            }
+
             if (isScorerBlockingChallengeActions) {
                 showErrorToast('Save a valid scorer configuration before saving the challenge')
                 return
@@ -3667,6 +4034,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
+                    isDesignChallenge: shouldUseSimplifiedDesignReview,
                     isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',
@@ -3702,13 +4070,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             saveChallenge,
             scheduleValidationError,
             setError,
+            validateDesignReviewCopilotSelection,
         ],
     )
 
-    const onInvalidSubmit = useCallback((): void => {
+    const onInvalidSubmit = useCallback((errors: unknown): void => {
+        if (!validateDesignReviewCopilotSelection(getValues())) {
+            return
+        }
+
         setSaveStatus('idle')
-        setSaveValidationError(SAVE_VALIDATION_ERROR_MESSAGE)
-    }, [])
+        setSaveValidationError(
+            getFirstFormValidationMessage(errors) || SAVE_VALIDATION_ERROR_MESSAGE,
+        )
+    }, [
+        getValues,
+        validateDesignReviewCopilotSelection,
+    ])
 
     const statusText = useMemo(
         () => getStatusText(isSaving ? 'saving' : saveStatus),
@@ -3861,6 +4239,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 <h3 className={styles.sectionTitle}>Review</h3>
                 <div className={styles.block}>
                     <ReviewersField
+                        canConfigureFullReview={workAppContext.isAdmin}
                         isReadOnly={isReadOnly}
                         onConfigSaveControllerReady={function (controller: AiReviewConfigSaveController | undefined) {
                             aiReviewConfigSaveControllerRef.current = controller
@@ -4210,6 +4589,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         />
                                         {showRateChallengeField
                                             ? <RateChallengeField />
+                                            : undefined}
+                                        {showDashboardField
+                                            ? <ShowDashboardField disabled={isReadOnly} />
                                             : undefined}
                                         <TestChallengeField disabled={isReadOnly} />
                                     </div>

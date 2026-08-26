@@ -13,12 +13,33 @@ import {
 } from '../constants/challenge-editor.constants'
 import {
     ChallengeEditorFormData,
+    ChallengeMetadata,
     ChallengeReviewer,
 } from '../models'
 import {
     isSkillsRequired,
 } from '../utils/challenge-editor.utils'
-import { isScreenerAssignmentOptional } from '../utils/reviewer.utils'
+import { isReviewerAssignmentOptional } from '../utils/reviewer.utils'
+import {
+    isSubmissionLimitCountMissing,
+    SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+} from '../utils/submission-limit.utils'
+
+/**
+ * Validation context supplied to the challenge editor schema by the challenge editor form.
+ *
+ * @remarks The schema only receives form values, so track and type driven rules such as the
+ * Design `Challenge` reviewer assignment exception are provided through the resolver context.
+ */
+export interface ChallengeEditorValidationContext {
+    /** Whether the edited challenge is a Design `Challenge`, whose private reviewers are
+     * automatically assigned to the selected copilot during save. */
+    isDesignChallenge?: boolean
+    /** Whether the submission-limit control is currently editable. The limit is only rendered for
+     * Design submission settings and is locked once members have uploaded submissions, so the
+     * required-count rule is skipped when the copilot cannot correct the value. */
+    isSubmissionLimitConfigurable?: boolean
+}
 
 function isSchedulingApiEnabled(value: unknown): boolean {
     return value !== false
@@ -409,7 +430,32 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     metadata: yup.array()
         .of(metadataSchema)
-        .optional(),
+        .optional()
+        .test(
+            'submission-limit-count-required',
+            SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+            function validateSubmissionLimitCount(value: unknown): boolean | yup.ValidationError {
+                const isSubmissionLimitConfigurable = (
+                    this.options.context as ChallengeEditorValidationContext | undefined
+                )?.isSubmissionLimitConfigurable === true
+
+                if (
+                    !isSubmissionLimitConfigurable
+                    || !isSubmissionLimitCountMissing(value as ChallengeMetadata[] | undefined)
+                ) {
+                    return true
+                }
+
+                /*
+                 * The limit is edited through display-only form fields, so the error is reported on
+                 * the visible count input instead of the metadata array that stores the value.
+                 */
+                return this.createError({
+                    message: SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+                    path: 'submissionLimitCount',
+                })
+            },
+        ),
     reviewer: yup.string()
         .transform(emptyStringToUndefined)
         .optional(),
@@ -425,6 +471,9 @@ export const challengeAdvancedOptionsSchema = yup.object({
                 }
 
                 const phases = (this.parent as Partial<ChallengeEditorFormData>)?.phases
+                const isDesignChallenge = (
+                    this.options.context as ChallengeEditorValidationContext | undefined
+                )?.isDesignChallenge === true
 
                 for (let reviewerIndex = 0; reviewerIndex < value.length; reviewerIndex += 1) {
                     const reviewer = value[reviewerIndex] as ChallengeReviewer | undefined
@@ -433,7 +482,7 @@ export const challengeAdvancedOptionsSchema = yup.object({
                     const requiresMemberAssignments = !!reviewer
                         && isMemberReview
                         && !shouldOpenOpportunity
-                        && !isScreenerAssignmentOptional(reviewer, phases)
+                        && !isReviewerAssignmentOptional(reviewer, phases, isDesignChallenge)
 
                     if (requiresMemberAssignments) {
                         const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)
@@ -441,11 +490,10 @@ export const challengeAdvancedOptionsSchema = yup.object({
                             ? reviewer.additionalMemberIds
                             : []
                         const normalizedAssignedMemberSlots = [
-                            reviewer.memberId,
-                            ...additionalMemberIds,
+                            toNormalizedText(reviewer.memberId) || toNormalizedText(reviewer.handle),
+                            ...additionalMemberIds.map(memberId => toNormalizedText(memberId)),
                         ]
                             .slice(0, reviewerSlots)
-                            .map(memberId => toNormalizedText(memberId))
                         const missingSlotIndex = normalizedAssignedMemberSlots.findIndex(memberId => !memberId)
                         const hasAllAssignments = normalizedAssignedMemberSlots.length === reviewerSlots
                             && missingSlotIndex === -1

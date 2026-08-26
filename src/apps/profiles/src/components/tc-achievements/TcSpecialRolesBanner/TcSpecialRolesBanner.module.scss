@@ -1,11 +1,7 @@
 @import '@libs/ui/styles/includes';
 
 .rolesSection {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-    gap: $sp-4;
-    margin-top: $sp-4;
-    container-type: inline-size;
+    display: contents;
 }
 
 .roleCard {
@@ -14,11 +10,22 @@
     align-items: center;
     justify-content: space-between;
     gap: $sp-4;
+    width: 100%;
     min-height: 66px;
     padding: $sp-3 $sp-4;
     border-radius: 10px;
     color: $tc-white;
     overflow: visible;
+
+    @include gtexl {
+        &.reviewer {
+            grid-column: 1;
+        }
+
+        &.copilot {
+            grid-column: 2;
+        }
+    }
 
     &.reviewer {
         background: linear-gradient(155deg, #065D6E 0%, #3E3B91 100%);
@@ -127,12 +134,8 @@
     }
 }
 
-@include gtexl {
-    @container (min-width: 656px) {
-        .roleCard + .roleCard {
-            margin-left: $sp-10;
-        }
-    }
+.singleRole .roleCard {
+    grid-column: 1 / -1;
 }
 
 @container (max-width: 420px) {

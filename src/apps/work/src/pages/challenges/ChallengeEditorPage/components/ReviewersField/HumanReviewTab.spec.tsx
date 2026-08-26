@@ -40,6 +40,7 @@ import {
 } from '../../../../../lib/services'
 import {
     ChallengeEditorFormData,
+    Reviewer,
 } from '../../../../../lib/models'
 
 import HumanReviewTab from './HumanReviewTab'
@@ -281,6 +282,7 @@ interface TestHarnessProps {
     showPublicOpportunityValue?: boolean
     showRoleValue?: boolean
     showRoleValueIndex?: number
+    showReviewersValue?: boolean
     showScorecardValue?: boolean
     showScorecardValueIndex?: number
     screenerOnly?: boolean
@@ -479,6 +481,13 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
                 ? (
                     <div data-testid='role-id-value'>
                         {String(formMethods.watch(`reviewers.${roleValueIndex}.roleId` as never) || '')}
+                    </div>
+                )
+                : undefined}
+            {props.showReviewersValue
+                ? (
+                    <div data-testid='reviewers-value'>
+                        {JSON.stringify(formMethods.watch('reviewers'))}
                     </div>
                 )
                 : undefined}
@@ -909,13 +918,18 @@ describe('HumanReviewTab', () => {
             <TestHarness
                 defaultValues={{
                     reviewers: [],
+                    timelineTemplateId: 'timeline-template-1',
                 }}
             />,
         )
 
         await waitFor(() => {
             expect(mockedFetchDefaultReviewers)
-                .toHaveBeenCalledWith('type-1', 'track-1')
+                .toHaveBeenCalledWith({
+                    timelineTemplateId: 'timeline-template-1',
+                    trackId: 'track-1',
+                    typeId: 'type-1',
+                })
         })
         await waitFor(() => {
             expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
@@ -992,6 +1006,210 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
     })
 
+    it('resolves phase-name-only defaults and assigns private reviewers to the copilot', async () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [{
+                id: 'track-1',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            isLoading: false,
+            resourceRoles: [],
+        })
+        mockedFetchDefaultReviewers.mockImplementation(filters => Promise.resolve(
+            filters?.timelineTemplateId === 'two-round-timeline-template-id'
+                ? [
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseName: 'Checkpoint Review',
+                        scorecardId: 'checkpoint-review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseName: 'Review',
+                        scorecardId: 'review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseName: 'Checkpoint Screening',
+                        scorecardId: 'checkpoint-screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseName: 'Screening',
+                        scorecardId: 'screening-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseName: 'Approval',
+                        scorecardId: 'approval-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ]
+                : [],
+        ))
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'checkpoint-review-scorecard-id',
+                name: 'Checkpoint Review Scorecard',
+                type: 'CHECKPOINT_REVIEW',
+            },
+            {
+                id: 'review-scorecard-id',
+                name: 'Review Scorecard',
+                type: 'REVIEW',
+            },
+            {
+                id: 'checkpoint-screening-scorecard-id',
+                name: 'Checkpoint Screening Scorecard',
+                type: 'CHECKPOINT_SCREENING',
+            },
+            {
+                id: 'screening-scorecard-id',
+                name: 'Screening Scorecard',
+                type: 'SCREENING',
+            },
+            {
+                id: 'approval-scorecard-id',
+                name: 'Approval Scorecard',
+                type: 'APPROVAL',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    copilot: 'TCConnCopilot',
+                    phases: [
+                        {
+                            name: 'Checkpoint Screening',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        },
+                        {
+                            name: 'Checkpoint Review',
+                            phaseId: 'checkpoint-review-phase-id',
+                        },
+                        {
+                            name: 'Screening',
+                            phaseId: 'screening-phase-id',
+                        },
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-review-phase-id',
+                            scorecardId: 'checkpoint-review-scorecard-id',
+                            shouldOpenOpportunity: true,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-screening-phase-id',
+                            scorecardId: 'checkpoint-screening-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 2,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'stale-approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'another-stale-approval-scorecard-id',
+                            shouldOpenOpportunity: true,
+                        },
+                    ],
+                    timelineTemplateId: 'two-round-timeline-template-id',
+                }}
+                screenerOnly
+                showReviewersValue
+            />,
+        )
+
+        expect(screen.getByLabelText('Screener'))
+            .not.toBeNull()
+        await waitFor(() => {
+            expect(mockedFetchDefaultReviewers)
+                .toHaveBeenCalledWith({
+                    timelineTemplateId: 'two-round-timeline-template-id',
+                    trackId: 'track-1',
+                    typeId: 'type-1',
+                })
+        })
+        await waitFor(() => {
+            const reconciledReviewers = JSON.parse(
+                screen.getByTestId('reviewers-value').textContent || '[]',
+            ) as Reviewer[]
+
+            expect(reconciledReviewers)
+                .toHaveLength(5)
+            expect(reconciledReviewers.map(reviewer => reviewer.phaseId))
+                .toEqual([
+                    'checkpoint-screening-phase-id',
+                    'checkpoint-review-phase-id',
+                    'screening-phase-id',
+                    'review-phase-id',
+                    'approval-phase-id',
+                ])
+            expect(reconciledReviewers.filter(reviewer => [
+                'checkpoint-review-phase-id',
+                'review-phase-id',
+                'approval-phase-id',
+            ].includes(reviewer.phaseId || '')))
+                .toEqual(expect.arrayContaining([
+                    expect.objectContaining({
+                        handle: 'TCConnCopilot',
+                        phaseId: 'checkpoint-review-phase-id',
+                        scorecardId: 'checkpoint-review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    }),
+                    expect.objectContaining({
+                        handle: 'TCConnCopilot',
+                        phaseId: 'review-phase-id',
+                        scorecardId: 'review-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    }),
+                    expect.objectContaining({
+                        handle: 'TCConnCopilot',
+                        phaseId: 'approval-phase-id',
+                        scorecardId: 'approval-scorecard-id',
+                        shouldOpenOpportunity: false,
+                    }),
+                ]))
+        })
+    })
+
     it('marks Screening and Checkpoint Screening member assignments optional', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             tracks: [
@@ -1053,6 +1271,77 @@ describe('HumanReviewTab', () => {
             .toHaveProperty('dataset.required', 'false')
         expect(screen.getByTestId('reviewers.2.memberId'))
             .toHaveProperty('dataset.required', 'true')
+    })
+
+    it('marks copilot assigned Design Challenge review assignments optional', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            tracks: [
+                {
+                    id: 'track-1',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'type-1',
+                    name: 'Challenge',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            name: 'Checkpoint Review',
+                            phaseId: 'checkpoint-review-phase-id',
+                        },
+                        {
+                            name: 'Review',
+                            phaseId: 'review-phase-id',
+                        },
+                        {
+                            name: 'Approval',
+                            phaseId: 'approval-phase-id',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'checkpoint-review-phase-id',
+                            scorecardId: 'checkpoint-review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                        {
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'approval-phase-id',
+                            scorecardId: 'approval-scorecard-id',
+                            shouldOpenOpportunity: false,
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(screen.getByTestId('reviewers.0.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.1.memberId'))
+            .toHaveProperty('dataset.required', 'false')
+        expect(screen.getByTestId('reviewers.2.memberId'))
+            .toHaveProperty('dataset.required', 'false')
     })
 
     it('assigns one simplified screener selection to checkpoint and final screening roles', async () => {

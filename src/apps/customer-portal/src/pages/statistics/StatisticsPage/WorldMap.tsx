@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Highcharts from 'highcharts/highmaps'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -113,7 +113,7 @@ function renderWinnersTooltip(point: StatisticsMapPoint): string {
                     ${flag}
                     <strong>${escapeHtml(point.name)}</strong>
                 </div>
-                <span>Winners: ${NUMBER_FORMATTER.format(point.value)}</span>
+                <span># of 1st place Wins: ${NUMBER_FORMATTER.format(point.value)}</span>
             </div>
             <span class="${styles.tooltipSectionTitle}">Top Winners</span>
             <div class="${styles.tooltipWinners}">
@@ -351,6 +351,35 @@ function createTooltipFormatter(
     }
 }
 
+// Shapes dropped from the bundled world map. 'sx' is Somaliland, which the map
+// collection tags with the ISO code of Sint Maarten, so it both shows a country
+// that we never have data for and can steal SX data from the real Sint Maarten.
+const EXCLUDED_MAP_KEYS = ['sx']
+
+const worldMapTopology = ((): any => {
+    const topology = worldMap as any
+    const geometries = topology.objects?.default?.geometries
+
+    if (!Array.isArray(geometries)) {
+        return topology
+    }
+
+    return {
+        ...topology,
+        objects: {
+            ...topology.objects,
+            default: {
+                ...topology.objects.default,
+                geometries: geometries.filter(
+                    (geometry: any) => !EXCLUDED_MAP_KEYS.includes(
+                        String(geometry?.properties?.['hc-key'] ?? ''),
+                    ),
+                ),
+            },
+        },
+    }
+})()
+
 interface ChartDataPoint {
     code: string
     name: string
@@ -365,6 +394,8 @@ const WorldMap: FC<WorldMapProps> = props => {
     const mapRef = useRef<HTMLDivElement>(null)
     const chartRef = useRef<any>(null)
     const hoveredPointRef = useRef<Highcharts.Point | undefined>(undefined)
+    const [fallbackTooltipPoint, setFallbackTooltipPoint]
+        = useState<ChartDataPoint | undefined>(undefined)
     const chartData: ChartDataPoint[] = useMemo(
         () => props.countries.map(country => {
             const code = String(country.code ?? '')
@@ -415,14 +446,25 @@ const WorldMap: FC<WorldMapProps> = props => {
             chart.tooltip?.hide()
         }
 
+        // The map geometry does not cover every country we have data for
+        // (missing/unmatched ISO codes), so fall back to a tooltip rendered at a
+        // fixed spot over the map instead of showing nothing at all.
+        const showFallbackTooltip = (): void => {
+            clearHover()
+            setFallbackTooltipPoint(
+                chartData.find(point => point.code === normalizedHoveredCountry),
+            )
+        }
+
         if (!normalizedHoveredCountry) {
             clearHover()
+            setFallbackTooltipPoint(undefined)
             return
         }
 
         const series = chart.series?.[0]
         if (!series) {
-            clearHover()
+            showFallbackTooltip()
             return
         }
 
@@ -433,8 +475,17 @@ const WorldMap: FC<WorldMapProps> = props => {
             return pointCode && pointCode === normalizedHoveredCountry
         })
 
-        if (!hoveredPoint) {
-            clearHover()
+        // const countryName = getName(normalizedHoveredCountry, 'EN');
+
+        // A point can exist in the series without being drawn on the map, in
+        // which case it has no plot coordinates and cannot anchor a tooltip.
+        const isPlotted
+            = Number.isFinite(hoveredPoint?.plotX)
+            && Number.isFinite(hoveredPoint?.plotY)
+            // && hoveredPoint.name === countryName
+
+        if (!hoveredPoint || !isPlotted) {
+            showFallbackTooltip()
             return
         }
 
@@ -442,16 +493,17 @@ const WorldMap: FC<WorldMapProps> = props => {
             hoveredPointRef.current.setState('')
         }
 
+        setFallbackTooltipPoint(undefined)
         hoveredPointRef.current = hoveredPoint
         hoveredPoint.setState('hover')
         chart.tooltip.refresh(hoveredPoint)
-    }, [normalizedHoveredCountry, props.showWinnerDetails])
+    }, [chartData, normalizedHoveredCountry, props.showWinnerDetails])
 
     const chartOptions = useMemo<Highcharts.Options>(
         () => ({
             chart: {
                 backgroundColor: '#ffffff',
-                map: worldMap as any,
+                map: worldMapTopology,
                 margin: [12, 8, 54, 8],
                 plotBackgroundColor: '#f8f8f8',
                 spacing: [0, 0, 0, 0],
@@ -572,6 +624,16 @@ const WorldMap: FC<WorldMapProps> = props => {
         ],
     )
 
+    const fallbackTooltipHtml = useMemo(() => {
+        if (!fallbackTooltipPoint) {
+            return ''
+        }
+
+        return props.showWinnerDetails
+            ? renderWinnersTooltip(fallbackTooltipPoint)
+            : renderCountryTooltip(fallbackTooltipPoint)
+    }, [fallbackTooltipPoint, props.showWinnerDetails])
+
     const toggleFullscreen = useCallback(async () => {
         if (document.fullscreenElement === mapRef.current) {
             await document.exitFullscreen()
@@ -602,6 +664,12 @@ const WorldMap: FC<WorldMapProps> = props => {
                 options={chartOptions}
                 ref={chartRef}
             />
+            {!!fallbackTooltipHtml && (
+                <div
+                    className={styles.mapFallbackTooltip}
+                    dangerouslySetInnerHTML={{ __html: fallbackTooltipHtml }}
+                />
+            )}
             <button
                 aria-label='Toggle fullscreen map'
                 className={styles.mapFullscreenButton}

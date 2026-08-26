@@ -1,0 +1,178 @@
+@import '@libs/ui/styles/includes';
+
+$box-padding: 40px;
+$box-width: 1080px;
+
+.modal {
+    border-radius: 8px !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    padding: $box-padding !important;
+    width: $box-width !important;
+
+    // full screen on mobile, like the rest of the platform's modals
+    @include ltemd {
+        border-radius: 0 !important;
+        max-width: 100vw !important;
+        padding: $sp-6 $sp-4 !important;
+        width: 100vw !important;
+    }
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-2;
+        top: $sp-2;
+
+        svg {
+            height: 22px;
+            width: 22px;
+        }
+    }
+
+    // the shared modal header pads its top by 5px, the design does not
+    div:has(> h3) {
+        padding-top: 0;
+    }
+
+    h3 {
+        color: var(--FontColor);
+        font-family: 'Figtree', sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: normal;
+        line-height: 30px;
+        text-transform: none;
+        word-break: break-word;
+
+        @include ltemd {
+            font-size: 20px;
+            line-height: 26px;
+            padding-right: $sp-6;
+        }
+    }
+
+    :global(.modal-body) {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: $box-padding;
+    margin-top: $box-padding;
+
+    @include ltemd {
+        gap: $sp-6;
+        margin-top: $sp-6;
+    }
+
+    // nested to win over the shared modal body link styling
+    .workLink {
+        color: var(--Link);
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 22px;
+        text-decoration: none;
+
+        &:hover,
+        &:focus {
+            text-decoration: underline;
+        }
+    }
+}
+
+.stats {
+    align-items: center;
+    display: flex;
+    gap: $sp-6;
+
+    // two by two rather than a four card column, which would push the
+    // participation history off screen
+    @include ltemd {
+        display: grid;
+        gap: $sp-3;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.historyTable {
+    table {
+        th:global(.column-id-track-) {
+            width: 140px;
+        }
+
+        th:global(.column-id-registrationDate-),
+        th:global(.column-id-submissionDate-) {
+            width: 150px;
+        }
+
+        th:global(.column-id-result-) {
+            width: 160px;
+        }
+    }
+}
+
+// stacked "Label: value" rows, one block per challenge
+.stackedTable {
+    width: 100%;
+
+    tbody {
+        td {
+            border-bottom: 0;
+            color: var(--TableTextColor);
+            font-family: 'Nunito Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: normal;
+            line-height: 20px;
+            padding: $sp-1 0 !important;
+            text-transform: none;
+            vertical-align: top;
+
+            &:first-child {
+                color: var(--GrayFontColor);
+                padding-right: $sp-3 !important;
+                text-align: left;
+                white-space: nowrap;
+            }
+
+            &:last-child {
+                text-align: right;
+            }
+        }
+
+        // one rule per challenge, and a little more air between blocks.
+        // 5n == one row per column of `stackedColumns`, keep them in sync.
+        tr:nth-child(5n) td {
+            border-bottom: 1px solid var(--TableRowBorderColor);
+            padding-bottom: $sp-4 !important;
+        }
+
+        tr:nth-child(5n + 1) td {
+            padding-top: $sp-4 !important;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+    }
+
+    .workLink {
+        font-size: 14px;
+        line-height: 20px;
+    }
+}
+
+.result {
+    align-items: center;
+    display: inline-flex;
+    gap: $sp-2;
+}
+
+.resultIcon,
+.medal {
+    flex: 0 0 auto;
+    height: 20px;
+    width: 20px;
+}

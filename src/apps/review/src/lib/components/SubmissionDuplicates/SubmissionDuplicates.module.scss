@@ -1,0 +1,93 @@
+@import '@libs/ui/styles/includes';
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    color: $red-100;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    padding: $sp-3 0;
+}
+
+.panelTitle {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    color: $red-100;
+    font-weight: 700;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.panelBox {
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    padding: $sp-3;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.duplicate {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.duplicateLine {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    flex-wrap: wrap;
+}
+
+.bullet {
+    color: $black-60;
+}
+
+.duplicateId {
+    color: $black-60;
+}
+
+.crossChallenge {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-1;
+    color: $red-100;
+    padding-left: $sp-4;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.crossChallengeLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: $red-100;
+    text-decoration: underline;
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}

@@ -21,8 +21,11 @@ import {
     useFetchChallengeResourcesProps,
     useFetchChallengeSubmissions,
     useFetchChallengeSubmissionsProps,
+    useFetchSubmissionDuplicates,
+    UseFetchSubmissionDuplicatesResult,
 } from '../hooks'
 import type { ChallengeVisibilityFlags } from '../hooks/useFetchChallengeSubmissions'
+import { canViewSubmissionDuplicates } from '../utils'
 
 import { ChallengeDetailContext } from './ChallengeDetailContext'
 import { ReviewAppContext } from './ReviewAppContext'
@@ -123,6 +126,27 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         [aiReviewDecisions],
     )
 
+    // Duplicate detection is queried for every visible submission at once so any
+    // tab can decorate its rows straight from context.
+    const duplicateCheckSubmissionIds = useMemo<string[]>(
+        () => challengeSubmissions
+            .map(submission => `${submission.id ?? ''}`.trim())
+            .filter(Boolean),
+        [challengeSubmissions],
+    )
+    const canQueryDuplicates = useMemo<boolean>(
+        () => canViewSubmissionDuplicates(myRoles, loginUserInfo?.roles),
+        [loginUserInfo?.roles, myRoles],
+    )
+    const {
+        duplicatesBySubmissionId,
+        isLoading: isLoadingSubmissionDuplicates,
+    }: UseFetchSubmissionDuplicatesResult = useFetchSubmissionDuplicates(
+        challengeId,
+        duplicateCheckSubmissionIds,
+        canQueryDuplicates,
+    )
+
     const enrichedChallengeInfo = useMemo(
         () => (challengeInfo
             ? {
@@ -165,12 +189,14 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             challengeScopedFetchError,
             challengeSubmissions,
             challengeSubmissionsError,
+            duplicatesBySubmissionId,
             hasChallengeScopedFetchError: !!challengeScopedFetchError,
             isLoadingAiReviewConfig,
             isLoadingAiReviewDecisions,
             isLoadingChallengeInfo: isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
             isLoadingChallengeSubmissions,
+            isLoadingSubmissionDuplicates,
             myResources,
             myRoles,
             registrants,
@@ -187,9 +213,11 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             challengeScopedFetchError,
             challengeSubmissions,
             challengeSubmissionsError,
+            duplicatesBySubmissionId,
             isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
             isLoadingChallengeSubmissions,
+            isLoadingSubmissionDuplicates,
             aiReviewConfig,
             aiReviewDecisionsBySubmissionId,
             isLoadingAiReviewConfig,

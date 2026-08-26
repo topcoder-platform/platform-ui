@@ -32,6 +32,7 @@ jest.mock('~/libs/shared/lib/hooks', () => ({
 
 jest.mock('~/libs/ui', () => ({
     IconOutline: {
+        ChevronDownIcon: () => <span>chevron-down</span>,
         ExternalLinkIcon: () => <span>external-link</span>,
     },
 }), {

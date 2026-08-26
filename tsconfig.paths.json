@@ -27,6 +27,9 @@
             "@wallet/*": [
                 "./src/apps/wallet/src/*"
             ],
+            "@campus/*": [
+                "./src/apps/campus/src/*"
+            ],
             "@walletAdmin/*": [
                 "./src/apps/wallet-admin/src/*"
             ],

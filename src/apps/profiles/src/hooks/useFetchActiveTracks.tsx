@@ -120,7 +120,8 @@ export const getSubTrackDisplaySubmissionCount = (subTrack?: MemberStats): numbe
  * Some unified stats rows currently include challenge/rating history while the
  * aggregate win or submission counters are stale, omitted, or left at zero. In
  * that case, placement-bearing history is used for wins and history/challenge
- * count is used as the minimum visible submission count.
+ * count is used as the minimum visible submission count. Legacy Marathon Match
+ * history is partial, so its explicit aggregate win counter remains authoritative.
  *
  * @param {MemberStats | undefined} subTrack - The subtrack to summarize.
  * @param {StatsHistory[]} trackHistory - Optional history rows for the same subtrack.
@@ -130,16 +131,21 @@ export const getSubTrackSummaryStats = (
     subTrack?: MemberStats,
     trackHistory: StatsHistory[] = [],
 ): SubTrackSummaryStats => {
-    const statWins = getFiniteNumber(subTrack?.wins) ?? 0
+    const aggregateWins = getFiniteNumber(subTrack?.wins)
+    const statWins = aggregateWins ?? 0
     const historyWithPlacements = trackHistory
         .filter(history => getFiniteNumber(history.placement) !== undefined)
     const historyWins = historyWithPlacements.filter(history => history.placement === 1).length
     const displaySubmissions = getSubTrackDisplaySubmissionCount(subTrack) ?? 0
     const historySubmissions = trackHistory.length
+    const hasAuthoritativeAggregateWins = subTrack?.name === 'MARATHON_MATCH'
+        && aggregateWins !== undefined
 
     return {
         submissions: Math.max(displaySubmissions, historySubmissions),
-        wins: historyWithPlacements.length > 0 ? historyWins : statWins,
+        wins: historyWithPlacements.length > 0 && !hasAuthoritativeAggregateWins
+            ? historyWins
+            : statWins,
     }
 }
 
@@ -189,6 +195,19 @@ interface SubTrackHistorySummary {
     subTrack: MemberStats
 }
 
+/**
+ * Checks whether the subtrack history carries placement information.
+ *
+ * Some history rows only record rating changes, so their win counts still come
+ * from the aggregate stats payload instead of placement rows.
+ *
+ * @param {SubTrackHistorySummary} summary - The subtrack history summary to inspect.
+ * @returns {boolean} Whether any history row includes a placement.
+ */
+const hasPlacementHistory = (summary: SubTrackHistorySummary): boolean => (
+    summary.history.some(history => getFiniteNumber(history.placement) !== undefined)
+)
+
 const getSubTrackHistorySummaries = (
     subTracks: MemberStats[],
     statsHistory?: UserStatsHistory,
@@ -216,6 +235,11 @@ const getFallbackTrackSummaryStats = (summaries: SubTrackHistorySummary[]): Trac
  * Development can show the same AI challenge under both `Challenge` and
  * `AI Engineering`. When history rows are available, duplicate challenge ids are
  * counted once for the parent totals while each child card keeps its own stats.
+ *
+ * Subtracks whose history only carries rating changes have no placement rows, so
+ * their cards fall back to the aggregate win counter. Those wins are added to the
+ * parent total as well, otherwise the summary drops them and no longer matches the
+ * sum of the subtrack cards.
  *
  * @param {MemberStats[]} subTracks - Active subtracks included in the parent track.
  * @param {UserStatsHistory | undefined} statsHistory - Optional stats-history payload for the same member.
@@ -267,15 +291,22 @@ export const getTrackSummaryStats = (
         0,
         summary.stats.submissions - summary.history.length,
     ))
+    const placementHistorySummaries = historySummaries.filter(hasPlacementHistory)
     const uniqueHistoryWins = uniqueHistory.filter(history => history.placement === 1).length
     const historyStatsWins = hasDuplicateHistory
-        ? Math.max(...historySummaries.map(summary => summary.stats.wins))
-        : sumBy(historySummaries, summary => summary.stats.wins)
+        ? Math.max(0, ...placementHistorySummaries.map(summary => summary.stats.wins))
+        : sumBy(placementHistorySummaries, summary => summary.stats.wins)
+    const statsOnlyHistoryWins = sumBy(
+        historySummaries.filter(summary => !hasPlacementHistory(summary)),
+        summary => summary.stats.wins,
+    )
 
     return {
         challenges: uniqueHistory.length + historyChallengeExtras + noHistorySummaryStats.challenges,
         submissions: uniqueHistory.length + historySubmissionExtras + noHistorySummaryStats.submissions,
-        wins: (uniqueHistoryWins > 0 ? uniqueHistoryWins : historyStatsWins) + noHistorySummaryStats.wins,
+        wins: (uniqueHistoryWins > 0 ? uniqueHistoryWins : historyStatsWins)
+            + statsOnlyHistoryWins
+            + noHistorySummaryStats.wins,
     }
 }
 

@@ -512,9 +512,36 @@ jest.mock('./ChallengePrivateDescriptionField', () => ({
         />
     ),
 }))
-jest.mock('./ChallengePrizesField', () => ({
-    ChallengePrizesField: () => <></>,
-}))
+jest.mock('./ChallengePrizesField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        ChallengePrizesField: function ChallengePrizesField() {
+            const formContext = reactHookForm.useFormContext()
+            const handleSetPlacementPrize = (): void => {
+                formContext.setValue('prizeSets', [{
+                    prizes: [{
+                        type: 'USD',
+                        value: 500,
+                    }],
+                    type: 'PLACEMENT',
+                }], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+
+            return (
+                <button
+                    onClick={handleSetPlacementPrize}
+                    type='button'
+                >
+                    Mock Set Placement Prize
+                </button>
+            )
+        },
+    }
+})
 jest.mock('./ChallengeSkillsField', () => ({
     ChallengeSkillsField: () => <></>,
 }))
@@ -613,6 +640,9 @@ jest.mock('./CopilotField', () => ({
                         value={controller.field.value || ''}
                     />
                 </label>
+                {controller.fieldState.error?.message
+                    ? <span role='alert'>{controller.fieldState.error.message}</span>
+                    : undefined}
                 <button
                     onClick={handleAssignYourself}
                     type='button'
@@ -651,7 +681,22 @@ jest.mock('./FinalDeliverablesField', () => ({
     FinalDeliverablesField: () => <>Final Deliverables Field</>,
 }))
 jest.mock('./FunChallengeField', () => ({
-    FunChallengeField: () => <></>,
+    FunChallengeField: function MockFunChallengeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'funChallenge',
+        })
+
+        return (
+            <input
+                aria-label='Fun Challenge'
+                checked={controller.field.value === true}
+                onChange={event => controller.field.onChange(event.target.checked)}
+                type='checkbox'
+            />
+        )
+    },
 }))
 jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
@@ -692,6 +737,7 @@ jest.mock('./ReviewCostField', () => ({
 }))
 jest.mock('./ReviewersField', () => ({
     ReviewersField: (props: {
+        canConfigureFullReview?: boolean
         isReadOnly?: boolean
         screenerOnly?: boolean
     }) => {
@@ -703,6 +749,7 @@ jest.mock('./ReviewersField', () => ({
 
         return (
             <div
+                data-can-configure-full-review={props.canConfigureFullReview === true ? 'true' : 'false'}
                 data-read-only={props.isReadOnly === true ? 'true' : 'false'}
                 data-reviewers={JSON.stringify(reviewers || [])}
                 data-screener-only={props.screenerOnly === true ? 'true' : 'false'}
@@ -718,6 +765,10 @@ jest.mock('./ReviewTypeField', () => ({
 }))
 jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
+}))
+jest.mock('./ShowDashboardField', () => ({
+    SHOW_DATA_DASHBOARD_METADATA_FIELD: 'show_data_dashboard',
+    ShowDashboardField: () => <>Show Dashboard Field</>,
 }))
 jest.mock('./StockArtsField', () => ({
     StockArtsField: function StockArtsField() {
@@ -872,6 +923,7 @@ describe('ChallengeEditorForm', () => {
     const designChallengeWithDeferredScreeners = {
         ...validDraftChallenge,
         approvalStatus: 'APPROVED',
+        copilot: 'TCConnCopilot',
         phases: [
             {
                 duration: 60,
@@ -913,6 +965,92 @@ describe('ChallengeEditorForm', () => {
                 memberReviewerCount: 1,
                 phaseId: 'review-phase-id',
                 scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+        ],
+        trackId: 'design-track-id',
+        type: {
+            abbreviation: 'CH',
+            name: 'Challenge',
+        },
+        typeId: 'design-challenge-type-id',
+    } as Challenge
+    const designChallengeWithDeferredReviewers = {
+        ...designChallengeWithDeferredScreeners,
+        reviewers: designChallengeWithDeferredScreeners.reviewers?.map(reviewer => ({
+            ...reviewer,
+            memberId: undefined,
+        })),
+    } as Challenge
+    const twoRoundDesignChallengeWithCopilotReviewers = {
+        ...validDraftChallenge,
+        copilot: 'TCConnCopilot',
+        phases: [
+            {
+                duration: 60,
+                name: 'Checkpoint Screening',
+                phaseId: 'checkpoint-screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Checkpoint Review',
+                phaseId: 'checkpoint-review-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Screening',
+                phaseId: 'screening-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Review',
+                phaseId: 'review-phase-id',
+            },
+            {
+                duration: 60,
+                name: 'Approval',
+                phaseId: 'approval-phase-id',
+            },
+        ],
+        reviewers: [
+            {
+                isMemberReview: true,
+                memberId: 'screener-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-screening-phase-id',
+                scorecardId: 'checkpoint-screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                handle: 'TCConnCopilot',
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'checkpoint-review-phase-id',
+                scorecardId: 'checkpoint-review-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                isMemberReview: true,
+                memberId: 'screener-member-id',
+                memberReviewerCount: 1,
+                phaseId: 'screening-phase-id',
+                scorecardId: 'screening-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                handle: 'TCConnCopilot',
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'review-phase-id',
+                scorecardId: 'review-scorecard-id',
+                shouldOpenOpportunity: false,
+            },
+            {
+                handle: 'TCConnCopilot',
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'approval-phase-id',
+                scorecardId: 'approval-scorecard-id',
                 shouldOpenOpportunity: false,
             },
         ],
@@ -1019,8 +1157,28 @@ describe('ChallengeEditorForm', () => {
         mockedFetchProjectBillingAccountService.mockResolvedValue({
             billingAccount: undefined,
         })
-        mockedFetchProfile.mockResolvedValue(undefined)
-        mockedFetchResourceRolesService.mockResolvedValue([])
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'TCConnCopilot',
+            userId: '40158994',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([
+            {
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            },
+            {
+                id: 'checkpoint-reviewer-role-id',
+                name: 'Checkpoint Reviewer',
+            },
+            {
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            },
+            {
+                id: 'approver-role-id',
+                name: 'Approver',
+            },
+        ])
         mockedFetchResourcesService.mockResolvedValue([])
         mockedSearchProfilesByUserIds.mockResolvedValue([])
         mockedCreateResource.mockResolvedValue(undefined)
@@ -1304,6 +1462,59 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Reject Budget' }))
             .toBeNull()
+    })
+
+    it('shows budget approval actions after saving a new challenge without persisted prizes', async () => {
+        const user = userEvent.setup()
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isManager: true,
+            userRoles: ['manager'],
+        }
+        // Challenges in 'New' status are created before the prizes section is available, so the
+        // fetched challenge snapshot still has no persisted prize sets while the form is edited.
+        const newChallengeWithoutPrizes = {
+            ...validNewChallenge,
+            approvalStatus: 'PENDING_APPROVAL',
+            prizeSets: undefined,
+        } as Challenge
+        const renderForm = (isReadOnly: boolean): React.ReactElement => (
+            <MemoryRouter initialEntries={['/projects/3001/challenges/12345/edit']}>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm
+                        challenge={newChallengeWithoutPrizes}
+                        isEditMode={!isReadOnly}
+                        isReadOnly={isReadOnly}
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>
+        )
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validNewChallenge,
+            approvalStatus: 'PENDING_APPROVAL',
+            status: 'DRAFT',
+        })
+
+        const renderResult = render(renderForm(false))
+
+        await user.click(screen.getByRole('button', { name: 'Mock Set Placement Prize' }))
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'DRAFT',
+                }))
+        })
+
+        // The saved form stays mounted while the successful save redirects to the read-only view.
+        renderResult.rerender(renderForm(true))
+
+        expect(screen.getByRole('button', { name: 'Approve Budget' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Reject Budget' }))
+            .toBeInTheDocument()
     })
 
     it('hides the editable timeline section for task challenges in edit mode', () => {
@@ -2000,6 +2211,75 @@ describe('ChallengeEditorForm', () => {
                         expect.objectContaining({
                             phaseId: 'checkpoint-screening-phase-id',
                             scorecardId: 'checkpoint-screening-scorecard-id',
+                        }),
+                    ]),
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Please fix validation errors before launching')
+    })
+
+    it('launches a design draft before copilot assigned review members exist', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: true,
+                id: '80001063',
+                totalBudgetRemaining: 500,
+            },
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...designChallengeWithDeferredReviewers,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={designChallengeWithDeferredReviewers}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            phaseId: 'review-phase-id',
+                            scorecardId: 'review-scorecard-id',
                         }),
                     ]),
                     status: 'ACTIVE',
@@ -3146,7 +3426,7 @@ describe('ChallengeEditorForm', () => {
             .toHaveAttribute('data-screener-only', 'true')
     })
 
-    it('keeps the full review configuration for an admin editing a Design Challenge', () => {
+    it('uses the simplified screener review for an admin editing a Design Challenge', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
             tracks: [{
@@ -3178,7 +3458,47 @@ describe('ChallengeEditorForm', () => {
         )
 
         expect(screen.getByTestId('reviewers-field'))
-            .toHaveAttribute('data-screener-only', 'false')
+            .toHaveAttribute('data-screener-only', 'true')
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-can-configure-full-review', 'true')
+    })
+
+    it('uses the simplified screener review for a manager editing a Design Challenge', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        const managerContextValue: WorkAppContextModel = {
+            ...copilotContextValue,
+            isCopilot: false,
+            isManager: true,
+            userRoles: ['project manager'],
+        }
+
+        render(
+            <MemoryRouter>
+                <WorkAppContext.Provider value={managerContextValue}>
+                    <ChallengeEditorForm challenge={designChallengeWithDeferredScreeners} />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-screener-only', 'true')
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-can-configure-full-review', 'false')
     })
 
     it('keeps the full review configuration for a copilot editing a Design First2Finish', () => {
@@ -4356,6 +4676,30 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('shows the concrete schema error when saving an invalid draft', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validNewChallenge,
+                        description: '',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        expect(await screen.findByText('Public specification must be at least 10 characters'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Please fix validation errors before saving.'))
+            .not.toBeInTheDocument()
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+    })
+
     it('saves a new design draft before screening members are assigned', async () => {
         const user = userEvent.setup()
 
@@ -4413,6 +4757,179 @@ describe('ChallengeEditorForm', () => {
         })
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+    })
+
+    it('saves a two-round design draft with private copilot reviewers', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...twoRoundDesignChallengeWithCopilotReviewers,
+            status: 'DRAFT',
+        })
+        mockedFetchProfile.mockResolvedValue({
+            handle: 'TCConnCopilot',
+            userId: '40158994',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([
+            {
+                id: 'copilot-role-id',
+                name: 'Copilot',
+            },
+            {
+                id: 'checkpoint-reviewer-role-id',
+                name: 'Checkpoint Reviewer',
+            },
+            {
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            },
+            {
+                id: 'approver-role-id',
+                name: 'Approver',
+            },
+        ])
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <WorkAppContext.Provider value={copilotContextValue}>
+                    <ChallengeEditorForm
+                        challenge={{
+                            ...twoRoundDesignChallengeWithCopilotReviewers,
+                            status: 'NEW',
+                        }}
+                        projectId='100578'
+                    />
+                </WorkAppContext.Provider>
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    reviewers: expect.arrayContaining([
+                        expect.objectContaining({
+                            memberId: 'screener-member-id',
+                            phaseId: 'checkpoint-screening-phase-id',
+                        }),
+                        expect.objectContaining({
+                            memberId: '40158994',
+                            phaseId: 'checkpoint-review-phase-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                        expect.objectContaining({
+                            memberId: 'screener-member-id',
+                            phaseId: 'screening-phase-id',
+                        }),
+                        expect.objectContaining({
+                            memberId: '40158994',
+                            phaseId: 'review-phase-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                        expect.objectContaining({
+                            memberId: '40158994',
+                            phaseId: 'approval-phase-id',
+                            shouldOpenOpportunity: false,
+                        }),
+                    ]),
+                    status: 'DRAFT',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith(expect.stringContaining('validation'))
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith(expect.stringContaining('Assign all required members'))
+        await waitFor(() => {
+            expect(mockedCreateResource.mock.calls)
+                .toEqual(expect.arrayContaining([
+                    [{
+                        challengeId: '12345',
+                        memberHandle: 'TCConnCopilot',
+                        roleId: 'checkpoint-reviewer-role-id',
+                    }],
+                    [{
+                        challengeId: '12345',
+                        memberHandle: 'TCConnCopilot',
+                        roleId: 'reviewer-role-id',
+                    }],
+                    [{
+                        challengeId: '12345',
+                        memberHandle: 'TCConnCopilot',
+                        roleId: 'approver-role-id',
+                    }],
+                ]))
+        })
+    })
+
+    it('highlights the copilot field when private design reviewers cannot be assigned', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track-id',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge-type-id',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...twoRoundDesignChallengeWithCopilotReviewers,
+                        copilot: undefined,
+                        reviewers: twoRoundDesignChallengeWithCopilotReviewers.reviewers
+                            ?.map(reviewer => ({
+                                ...reviewer,
+                                handle: undefined,
+                                memberId: [
+                                    'checkpoint-review-phase-id',
+                                    'review-phase-id',
+                                    'approval-phase-id',
+                                ].includes(reviewer.phaseId || '')
+                                    ? undefined
+                                    : reviewer.memberId,
+                            })),
+                        status: 'NEW',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Select a copilot to assign Checkpoint Review, Review, and Approval.')
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
     })
 
     it('keeps submission-limit metadata visible when the draft save response omits metadata', async () => {
@@ -4654,6 +5171,7 @@ describe('ChallengeEditorForm', () => {
         await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
         await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
         await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+        await user.type(screen.getByLabelText('Copilot Field'), 'TCConnCopilot')
 
         await waitFor(() => {
             expect(screen.getByLabelText('Work Type'))
@@ -4702,6 +5220,7 @@ describe('ChallengeEditorForm', () => {
         await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
         await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
         await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+        await user.type(screen.getByLabelText('Copilot Field'), 'TCConnCopilot')
         await user.type(screen.getByLabelText('Work Type'), 'Web Design')
         await user.click(screen.getByRole('button', { name: 'New' }))
 
@@ -4791,6 +5310,7 @@ describe('ChallengeEditorForm', () => {
         await user.type(screen.getByLabelText('Challenge Type'), 'challenge-type-id')
 
         if (workType) {
+            await user.type(screen.getByLabelText('Copilot Field'), 'TCConnCopilot')
             await user.type(screen.getByLabelText('Work Type'), workType)
         }
 
@@ -4806,6 +5326,73 @@ describe('ChallengeEditorForm', () => {
                         name: 'is_test_challenge',
                         value: 'false',
                     }],
+                }))
+        })
+    })
+
+    it.each([
+        {
+            expectedShowDataDashboard: 'true',
+            isFunChallenge: true,
+        },
+        {
+            expectedShowDataDashboard: 'false',
+            isFunChallenge: false,
+        },
+    ])('creates a Marathon Match with show_data_dashboard $expectedShowDataDashboard', async ({
+        expectedShowDataDashboard,
+        isFunChallenge,
+    }: {
+        expectedShowDataDashboard: string
+        isFunChallenge: boolean
+    }) => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                isActive: true,
+                isTask: false,
+                name: 'Marathon Match',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Marathon Match challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Marathon Match challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Marathon Match challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'marathon-match-id')
+
+        if (isFunChallenge) {
+            await user.click(screen.getByRole('checkbox', { name: 'Fun Challenge' }))
+        }
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    funChallenge: isFunChallenge,
+                    metadata: expect.arrayContaining([{
+                        name: 'show_data_dashboard',
+                        value: expectedShowDataDashboard,
+                    }]),
                 }))
         })
     })

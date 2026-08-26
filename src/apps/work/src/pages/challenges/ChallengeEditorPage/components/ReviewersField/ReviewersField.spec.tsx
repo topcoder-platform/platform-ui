@@ -27,6 +27,24 @@ jest.mock('../../../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
 
+jest.mock('~/libs/ui', () => ({
+    Button: (props: {
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+    }) => (
+        <button
+            disabled={props.disabled}
+            onClick={props.onClick}
+            type='button'
+        >
+            {props.label}
+        </button>
+    ),
+}), {
+    virtual: true,
+})
+
 jest.mock('./HumanReviewTab', () => ({
     __esModule: true,
     default: (props: { screenerOnly?: boolean }) => (
@@ -99,6 +117,7 @@ const mockedPatchChallenge = jest.spyOn(services, 'patchChallenge')
 const mockedFetchAiReviewConfigByChallenge = services.fetchAiReviewConfigByChallenge as jest.Mock
 
 interface TestHarnessProps {
+    canConfigureFullReview?: boolean
     isReadOnly?: boolean
     numOfSubmissions?: number
     reviewers: Reviewer[]
@@ -118,14 +137,20 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     })
     const reviewersField = (
         <ReviewersField
+            canConfigureFullReview={props.canConfigureFullReview}
             isReadOnly={props.isReadOnly}
             screenerOnly={props.screenerOnly}
         />
     )
 
+    const reviewersFormError = formMethods.formState.errors.reviewers?.message
+
     return (
         <FormProvider {...formMethods}>
             {reviewersField}
+            {reviewersFormError
+                ? <div data-testid='reviewers-form-error'>{reviewersFormError}</div>
+                : undefined}
         </FormProvider>
     )
 }
@@ -158,6 +183,55 @@ describe('ReviewersField', () => {
             .toBeNull()
         expect(screen.queryByText('Manual review configuration is required.'))
             .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Show advanced review configuration' }))
+            .toBeNull()
+    })
+
+    it('starts collapsed for administrators and reveals the full configuration on demand', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                canConfigureFullReview
+                reviewers={[]}
+                screenerOnly
+            />,
+        )
+
+        expect(screen.getByTestId('human-review-tab')
+            .getAttribute('data-screener-only'))
+            .toBe('true')
+        expect(screen.queryByRole('tablist'))
+            .toBeNull()
+
+        await user.click(screen.getByRole('button', { name: 'Show advanced review configuration' }))
+
+        expect(screen.getByRole('tablist')).not.toBeNull()
+        expect(screen.getByTestId('human-review-tab')
+            .getAttribute('data-screener-only'))
+            .toBe('false')
+        expect(screen.getByTestId('ai-review-tab')).not.toBeNull()
+
+        await user.click(screen.getByRole('button', { name: 'Hide advanced review configuration' }))
+
+        expect(screen.queryByRole('tablist'))
+            .toBeNull()
+        expect(screen.getByTestId('human-review-tab')
+            .getAttribute('data-screener-only'))
+            .toBe('true')
+    })
+
+    it('does not offer the advanced toggle outside the simplified review section', () => {
+        render(
+            <TestHarness
+                canConfigureFullReview
+                reviewers={[]}
+            />,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Show advanced review configuration' }))
+            .toBeNull()
+        expect(screen.getByRole('tablist')).not.toBeNull()
     })
 
     it('uses tab labels with reviewer counts and toggles between human and AI content', async () => {
@@ -319,10 +393,28 @@ describe('ReviewersField', () => {
         await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
         await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
 
-        expect(screen.getByText(
-            'Manual review configuration is required.',
-        ))
-            .toBeInTheDocument()
+        expect(screen.getByTestId('reviewers-form-error').textContent)
+            .toBe('Manual review configuration is required.')
+    })
+
+    it('does not require manual reviewer configuration in the simplified screener view', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                canConfigureFullReview
+                reviewers={[]}
+                screenerOnly
+            />,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Show advanced review configuration' }))
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+        await user.click(screen.getByRole('button', { name: 'Hide advanced review configuration' }))
+
+        expect(screen.queryByTestId('reviewers-form-error'))
+            .toBeNull()
     })
 
     it('supports keyboard navigation between review tabs', async () => {

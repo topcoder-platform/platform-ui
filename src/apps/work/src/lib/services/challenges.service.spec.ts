@@ -107,7 +107,7 @@ describe('fetchDefaultReviewers', () => {
             {
                 isMemberReview: true,
                 memberReviewerCount: 1,
-                phaseId: 'phase-1',
+                phaseName: 'Review',
                 roleId: 'role-1',
                 scorecardId: 'scorecard-1',
                 shouldOpenOpportunity: true,
@@ -119,12 +119,31 @@ describe('fetchDefaultReviewers', () => {
                 {
                     isMemberReview: true,
                     memberReviewerCount: 1,
-                    phaseId: 'phase-1',
+                    phaseName: 'Review',
                     roleId: 'role-1',
                     scorecardId: 'scorecard-1',
                     shouldOpenOpportunity: true,
                 },
             ])
+    })
+
+    it('requests defaults for the selected timeline template', async () => {
+        const mockedGet = xhrGetAsync as jest.Mock
+
+        mockedGet.mockResolvedValue([])
+
+        await fetchDefaultReviewers({
+            timelineTemplateId: ' timeline-template-1 ',
+            trackId: ' track-1 ',
+            typeId: ' type-1 ',
+        })
+
+        expect(mockedGet)
+            .toHaveBeenCalledWith(
+                'https://example.com/default-reviewers'
+                + '?typeId=type-1&trackId=track-1&timelineTemplateId=timeline-template-1',
+                expect.any(Object),
+            )
     })
 })
 

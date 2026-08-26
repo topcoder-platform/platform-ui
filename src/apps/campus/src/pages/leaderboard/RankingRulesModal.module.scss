@@ -1,0 +1,76 @@
+@import '@libs/ui/styles/includes';
+
+$box-padding: 40px;
+$box-width: 476px;
+$text-gap: 20px;
+
+.modal {
+    border-radius: 8px !important;
+    max-width: calc(100vw - #{$sp-8}) !important;
+    min-width: 0 !important;
+    padding: $box-padding !important;
+    width: $box-width !important;
+
+    @include ltemd {
+        padding: $sp-4 !important;
+        width: calc(100vw - #{$sp-4}) !important;
+    }
+
+    :global(.react-responsive-modal-closeButton) {
+        right: $sp-2;
+        top: $sp-2;
+
+        svg {
+            height: 22px;
+            width: 22px;
+        }
+    }
+
+    // the shared modal header pads its top by 5px, the design does not
+    div:has(> h3) {
+        padding-top: 0;
+    }
+
+    h3 {
+        color: var(--FontColor);
+        font-family: 'Figtree', sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: normal;
+        line-height: 30px;
+        text-transform: none;
+    }
+
+    :global(.modal-body) {
+        margin: 0;
+        padding: 0;
+    }
+
+    .body {
+        color: var(--FontColor);
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: normal;
+        line-height: 20px;
+        margin-top: $sp-6;
+
+        p {
+            margin: 0 0 $text-gap;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        strong {
+            font-weight: 700;
+        }
+    }
+}
+
+.rules {
+    list-style: decimal outside;
+    margin: 0 0 $text-gap;
+    padding-left: $sp-6;
+}

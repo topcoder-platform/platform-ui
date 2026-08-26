@@ -1,5 +1,6 @@
 import {
     FC,
+    Fragment,
     MouseEvent,
     ReactElement,
 } from 'react'
@@ -15,7 +16,8 @@ import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
 import { ReactComponent as IconRunnerLogs } from '../../assets/icons/IconRunnerLogs.svg'
 import { ReactComponent as IconSquareDownload } from '../../assets/icons/IconSquareDownload.svg'
-import { Submission } from '../../models'
+import { Submission, SubmissionDuplicatesMap } from '../../models'
+import { SubmissionDuplicatesRow } from '../SubmissionDuplicatesRow'
 import {
     formatDateTime,
     getRatingLevel,
@@ -49,6 +51,8 @@ interface SubmissionsTableProps {
     canDownloadSubmissions: boolean
     canViewRunnerLogs?: boolean
     challengeId: string
+    /** SHA-256 duplicate matches keyed by submission id; empty when not permitted. */
+    duplicatesBySubmissionId?: SubmissionDuplicatesMap
     isLoading?: boolean
     isLoadingMembers?: boolean
     onDownloadSubmission: (submissionId: string) => void
@@ -405,116 +409,128 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                             : ''
                         const reviewLink = `${REVIEW_APP_URL}/active-challenges/${props.challengeId}`
                             + `/challenge-details?tab=${reviewTab}`
+                        const duplicates = props.duplicatesBySubmissionId?.[submission.id] ?? []
 
                         return (
-                            <tr key={submission.id}>
-                                <td>
-                                    {submission.memberHandle
+                            <Fragment key={submission.id}>
+                                <tr>
+                                    <td>
+                                        {submission.memberHandle
+                                            ? (
+                                                <a
+                                                    className={classNames(styles.handleLink, styles[ratingLevel])}
+                                                    href={memberProfileUrl}
+                                                    rel='noreferrer'
+                                                    target='_blank'
+                                                >
+                                                    {handleDisplay}
+                                                </a>
+                                            )
+                                            : (
+                                                <span className={classNames(styles.handleLink, styles[ratingLevel])}>
+                                                    {handleDisplay}
+                                                </span>
+                                            )}
+                                    </td>
+
+                                    <td>
+                                        <span title={emailDisplay}>{emailDisplay}</span>
+                                    </td>
+
+                                    <td>
+                                        <span title={submissionDate}>{submissionDate}</span>
+                                    </td>
+
+                                    <td>
+                                        <a
+                                            className={styles.scoreLink}
+                                            href={reviewLink}
+                                            rel='noreferrer'
+                                            target='_blank'
+                                        >
+                                            {initialScore}
+                                            {' / '}
+                                            {finalScore}
+                                        </a>
+                                    </td>
+
+                                    {props.showMarathonMatchTestProgress
                                         ? (
-                                            <a
-                                                className={classNames(styles.handleLink, styles[ratingLevel])}
-                                                href={memberProfileUrl}
-                                                rel='noreferrer'
-                                                target='_blank'
-                                            >
-                                                {handleDisplay}
-                                            </a>
+                                            <>
+                                                <td>
+                                                    <span>{formatTestProcess(testProgress?.process)}</span>
+                                                </td>
+
+                                                <td className={styles.testStatusCell}>
+                                                    {renderTestStatusIcon(testProgress?.status)}
+                                                </td>
+
+                                                <td>
+                                                    <span>{testProgress?.progressPercent || ''}</span>
+                                                </td>
+                                            </>
                                         )
-                                        : (
-                                            <span className={classNames(styles.handleLink, styles[ratingLevel])}>
-                                                {handleDisplay}
-                                            </span>
-                                        )}
-                                </td>
+                                        : undefined}
 
-                                <td>
-                                    <span title={emailDisplay}>{emailDisplay}</span>
-                                </td>
+                                    <td>
+                                        <span title={submission.id}>{submission.id}</span>
+                                    </td>
 
-                                <td>
-                                    <span title={submissionDate}>{submissionDate}</span>
-                                </td>
+                                    <td>
+                                        <div className={styles.actions}>
+                                            <button
+                                                data-submission-id={submission.id}
+                                                aria-label='Download submission'
+                                                className={styles.iconButton}
+                                                disabled={
+                                                    !props.canDownloadSubmissions
+                                                    || props.submissionDownloadLoading?.[submission.id] === true
+                                                }
+                                                onClick={handleSubmissionDownloadClick}
+                                                type='button'
+                                            >
+                                                <IconSquareDownload />
+                                            </button>
 
-                                <td>
-                                    <a
-                                        className={styles.scoreLink}
-                                        href={reviewLink}
-                                        rel='noreferrer'
-                                        target='_blank'
-                                    >
-                                        {initialScore}
-                                        {' / '}
-                                        {finalScore}
-                                    </a>
-                                </td>
+                                            <button
+                                                data-submission-id={submission.id}
+                                                aria-label='Download submission artifacts'
+                                                className={styles.iconButton}
+                                                disabled={!props.canDownloadSubmissions}
+                                                onClick={handleSubmissionArtifactsClick}
+                                                type='button'
+                                            >
+                                                <IconDownloadArtifacts />
+                                            </button>
 
-                                {props.showMarathonMatchTestProgress
+                                            {props.canViewRunnerLogs
+                                                ? (
+                                                    <button
+                                                        data-submission-id={submission.id}
+                                                        aria-label='View runner logs'
+                                                        className={styles.iconButton}
+                                                        disabled={!props.onOpenRunnerLogs}
+                                                        onClick={handleRunnerLogsClick}
+                                                        type='button'
+                                                    >
+                                                        <IconRunnerLogs />
+                                                    </button>
+                                                )
+                                                : undefined}
+
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {duplicates.length > 0
                                     ? (
-                                        <>
-                                            <td>
-                                                <span>{formatTestProcess(testProgress?.process)}</span>
-                                            </td>
-
-                                            <td className={styles.testStatusCell}>
-                                                {renderTestStatusIcon(testProgress?.status)}
-                                            </td>
-
-                                            <td>
-                                                <span>{testProgress?.progressPercent || ''}</span>
-                                            </td>
-                                        </>
+                                        <SubmissionDuplicatesRow
+                                            colSpan={columns.length}
+                                            duplicates={duplicates}
+                                        />
                                     )
                                     : undefined}
-
-                                <td>
-                                    <span title={submission.id}>{submission.id}</span>
-                                </td>
-
-                                <td>
-                                    <div className={styles.actions}>
-                                        <button
-                                            data-submission-id={submission.id}
-                                            aria-label='Download submission'
-                                            className={styles.iconButton}
-                                            disabled={
-                                                !props.canDownloadSubmissions
-                                                || props.submissionDownloadLoading?.[submission.id] === true
-                                            }
-                                            onClick={handleSubmissionDownloadClick}
-                                            type='button'
-                                        >
-                                            <IconSquareDownload />
-                                        </button>
-
-                                        <button
-                                            data-submission-id={submission.id}
-                                            aria-label='Download submission artifacts'
-                                            className={styles.iconButton}
-                                            disabled={!props.canDownloadSubmissions}
-                                            onClick={handleSubmissionArtifactsClick}
-                                            type='button'
-                                        >
-                                            <IconDownloadArtifacts />
-                                        </button>
-
-                                        {props.canViewRunnerLogs
-                                            ? (
-                                                <button
-                                                    data-submission-id={submission.id}
-                                                    aria-label='View runner logs'
-                                                    className={styles.iconButton}
-                                                    disabled={!props.onOpenRunnerLogs}
-                                                    onClick={handleRunnerLogsClick}
-                                                    type='button'
-                                                >
-                                                    <IconRunnerLogs />
-                                                </button>
-                                            )
-                                            : undefined}
-
-                                    </div>
-                                </td>
-                            </tr>
+                            </Fragment>
                         )
                     })}
                 </tbody>

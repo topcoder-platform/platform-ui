@@ -76,6 +76,12 @@
     max-width: 420px;
 }
 
+.fullReviewToggle {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+}
+
 .summary {
     color: #555;
     display: flex;

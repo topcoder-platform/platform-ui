@@ -57,6 +57,7 @@ import { useRole, useRolePermissions, UseRolePermissionsResult, useSubmissionDow
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import type { useRoleProps } from '../../hooks/useRole'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -208,6 +209,7 @@ const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Scr
                 >
                     <IconOutline.DocumentDuplicateIcon />
                 </button>
+                <SubmissionDuplicatesBadge submissionId={data.submissionId} />
             </span>
         )
     },

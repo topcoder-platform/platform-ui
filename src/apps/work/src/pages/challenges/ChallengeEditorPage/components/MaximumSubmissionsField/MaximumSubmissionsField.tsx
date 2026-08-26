@@ -22,21 +22,26 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../../lib/utils/metadata.utils'
+import {
+    hasChallengeSubmissions,
+    parseSubmissionLimitMetadata,
+    sanitizeSubmissionLimitCount,
+    serializeSubmissionLimitMetadata,
+    SubmissionLimitMode,
+    SUBMISSION_LIMIT_LIMITED_MODE,
+    SUBMISSION_LIMIT_METADATA_NAME,
+    SUBMISSION_LIMIT_UNLIMITED_MODE,
+} from '../../../../../lib/utils/submission-limit.utils'
 
 import styles from './MaximumSubmissionsField.module.scss'
 
-const SUBMISSION_LIMIT_FIELD = 'submissionLimit'
+const SUBMISSION_LIMIT_FIELD = SUBMISSION_LIMIT_METADATA_NAME
 const SUBMISSION_LIMIT_COUNT_FIELD = 'submissionLimitCount'
 const SUBMISSION_LIMIT_MODE_FIELD = 'submissionLimitMode'
-const LIMITED_MODE = 'limited'
-const UNLIMITED_MODE = 'unlimited'
-
-type SubmissionLimitMode = typeof LIMITED_MODE | typeof UNLIMITED_MODE
-
-interface SubmissionLimitMetadata {
-    count: string
-    mode: SubmissionLimitMode
-}
+const LIMITED_MODE = SUBMISSION_LIMIT_LIMITED_MODE
+const UNLIMITED_MODE = SUBMISSION_LIMIT_UNLIMITED_MODE
+const SUBMITTED_LIMIT_LOCK_HINT
+    = 'The submission limit cannot be changed after the first submission is uploaded.'
 
 interface SubmissionLimitFormData extends ChallengeEditorFormData {
     submissionLimitCount?: string
@@ -54,11 +59,6 @@ const submissionLimitOptions: FormRadioOption<string>[] = [
     },
 ]
 
-const defaultSubmissionLimitMetadata: SubmissionLimitMetadata = {
-    count: '',
-    mode: UNLIMITED_MODE,
-}
-
 interface MaximumSubmissionsFieldProps {
     /**
      * Defers automatic metadata normalization while the editor restores persisted assignments.
@@ -66,100 +66,6 @@ interface MaximumSubmissionsFieldProps {
      * is marked dirty so save/autosave persists the canonical unlimited payload.
      */
     deferDirty?: boolean
-}
-
-/**
- * Converts legacy string and boolean flags to a strict boolean.
- *
- * @param value legacy metadata flag.
- * @returns Whether the flag is enabled.
- * @throws Does not throw.
- */
-function toBoolean(value: unknown): boolean {
-    return value === true || value === 'true'
-}
-
-/**
- * Removes non-numeric characters from a submission-limit count.
- *
- * @param value raw form or metadata value.
- * @returns The digits-only submission count.
- * @throws Does not throw.
- */
-function sanitizeSubmissionLimitCount(value: string): string {
-    return value.replace(/[^\d]/g, '')
-}
-
-/**
- * Parses the legacy JSON string stored in `submissionLimit` challenge metadata.
- *
- * Missing, malformed, and explicitly non-limited values use the product default of unlimited.
- * A positive count without either flag is retained for compatibility with older payloads.
- *
- * @param value serialized challenge metadata value.
- * @returns The submission-limit mode and sanitized count used by the form.
- * @throws Does not throw; malformed metadata falls back to unlimited.
- */
-function parseSubmissionLimitMetadata(value: string | undefined): SubmissionLimitMetadata {
-    if (!value) {
-        return defaultSubmissionLimitMetadata
-    }
-
-    try {
-        const parsedValue = JSON.parse(value) as unknown
-
-        if (!parsedValue || typeof parsedValue !== 'object' || Array.isArray(parsedValue)) {
-            return defaultSubmissionLimitMetadata
-        }
-
-        const parsedMetadata = parsedValue as Record<string, unknown>
-        const rawCount = typeof parsedMetadata.count === 'string'
-            || typeof parsedMetadata.count === 'number'
-            ? String(parsedMetadata.count)
-            : ''
-        const count = sanitizeSubmissionLimitCount(rawCount)
-        const isUnlimited = toBoolean(parsedMetadata.unlimited)
-        const isLimited = toBoolean(parsedMetadata.limit)
-            || (!isUnlimited && Number(count) > 0)
-
-        return {
-            count: isLimited
-                ? count
-                : '',
-            mode: isLimited
-                ? LIMITED_MODE
-                : UNLIMITED_MODE,
-        }
-    } catch {
-        return defaultSubmissionLimitMetadata
-    }
-}
-
-/**
- * Serializes the editor state to the legacy submission-limit metadata contract.
- *
- * @param mode selected unlimited or limited mode.
- * @param count digits-only maximum submission count.
- * @returns The JSON string persisted in challenge metadata.
- * @throws Does not throw.
- */
-function serializeSubmissionLimitMetadata(
-    mode: SubmissionLimitMode,
-    count: string | undefined,
-): string {
-    const isLimited = mode === LIMITED_MODE
-
-    return JSON.stringify({
-        count: isLimited
-            ? (count || '')
-            : '',
-        limit: isLimited
-            ? 'true'
-            : 'false',
-        unlimited: isLimited
-            ? 'false'
-            : 'true',
-    })
 }
 
 /**
@@ -180,9 +86,10 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         control,
         getValues,
         setValue,
+        trigger,
     }: Pick<
         UseFormReturn<SubmissionLimitFormData>,
-        'control' | 'getValues' | 'setValue'
+        'control' | 'getValues' | 'setValue' | 'trigger'
     > = useFormContext<SubmissionLimitFormData>()
     const metadata = useWatch({
         control,
@@ -196,7 +103,19 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         control,
         name: SUBMISSION_LIMIT_COUNT_FIELD,
     }) as string | undefined
+    const numOfSubmissions = useWatch({
+        control,
+        name: 'numOfSubmissions',
+    }) as number | string | undefined
+    const numOfCheckpointSubmissions = useWatch({
+        control,
+        name: 'numOfCheckpointSubmissions',
+    }) as number | string | undefined
     const submissionLimitValue = getMetadataValue(metadata, SUBMISSION_LIMIT_FIELD)
+    const isLocked = hasChallengeSubmissions({
+        numOfCheckpointSubmissions,
+        numOfSubmissions,
+    })
 
     const persistSubmissionLimitMetadata = useCallback((
         mode: SubmissionLimitMode,
@@ -226,43 +145,41 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         setValue,
     ])
 
+    /*
+     * The selection and count are display-only fields, so every editor form reset drops them
+     * without changing any value this component watches. Running on each render re-seeds them
+     * from the current challenge metadata, which keeps the saved limit visible after the
+     * challenge loads and after a draft save resets the form.
+     */
     useEffect(() => {
-        if (submissionLimitMode !== undefined && submissionLimitCount !== undefined) {
-            return
-        }
-
-        const currentSubmissionLimitMetadata = parseSubmissionLimitMetadata(
+        const currentSubmissionLimit = parseSubmissionLimitMetadata(
             getMetadataValue(getValues('metadata'), SUBMISSION_LIMIT_FIELD),
         )
 
-        if (submissionLimitMode === undefined) {
-            setValue(
-                SUBMISSION_LIMIT_MODE_FIELD,
-                currentSubmissionLimitMetadata.mode,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
+        if (
+            submissionLimitMode === currentSubmissionLimit.mode
+            && (submissionLimitCount || '') === currentSubmissionLimit.count
+        ) {
+            return
         }
 
-        if (submissionLimitCount === undefined) {
-            setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD,
-                currentSubmissionLimitMetadata.count,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-    }, [
-        getValues,
-        setValue,
-        submissionLimitCount,
-        submissionLimitMode,
-        submissionLimitValue,
-    ])
+        setValue(
+            SUBMISSION_LIMIT_MODE_FIELD,
+            currentSubmissionLimit.mode,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+        setValue(
+            SUBMISSION_LIMIT_COUNT_FIELD,
+            currentSubmissionLimit.count,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+    })
 
     useEffect(() => {
         if (props.deferDirty) {
@@ -295,6 +212,16 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
         submissionLimitValue,
     ])
 
+    /*
+     * The required-count rule is validated from the persisted metadata, which this component
+     * writes after React Hook Form has already scheduled its own change validation. Revalidating
+     * the count field here keeps the error in step with the value that would be saved.
+     */
+    const revalidateSubmissionLimitCount = useCallback((): void => {
+        trigger(SUBMISSION_LIMIT_COUNT_FIELD)
+            .catch(() => undefined)
+    }, [trigger])
+
     const handleModeChange = useCallback((value: boolean | string): void => {
         if (value !== LIMITED_MODE && value !== UNLIMITED_MODE) {
             return
@@ -319,19 +246,29 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
                 ? count
                 : '',
         )
+        revalidateSubmissionLimitCount()
     }, [
         getValues,
         persistSubmissionLimitMetadata,
+        revalidateSubmissionLimitCount,
         setValue,
     ])
 
     const handleCountChange = useCallback((count: string): void => {
         persistSubmissionLimitMetadata(LIMITED_MODE, count)
-    }, [persistSubmissionLimitMetadata])
+        revalidateSubmissionLimitCount()
+    }, [
+        persistSubmissionLimitMetadata,
+        revalidateSubmissionLimitCount,
+    ])
 
     return (
         <div className={styles.container}>
             <FormRadioGroup
+                disabled={isLocked}
+                hint={isLocked
+                    ? SUBMITTED_LIMIT_LOCK_HINT
+                    : undefined}
                 label='Submission limit'
                 name={SUBMISSION_LIMIT_MODE_FIELD}
                 onChange={handleModeChange}
@@ -342,6 +279,7 @@ export const MaximumSubmissionsField: FC<MaximumSubmissionsFieldProps> = (
                 ? (
                     <FormTextField
                         className={styles.countField}
+                        disabled={isLocked}
                         label='Limit count'
                         min={1}
                         name={SUBMISSION_LIMIT_COUNT_FIELD}

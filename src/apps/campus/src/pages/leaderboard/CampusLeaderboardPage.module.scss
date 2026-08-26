@@ -1,0 +1,226 @@
+@import '@libs/ui/styles/includes';
+
+$section-gap: 40px;
+$card-gap: 35px;
+
+.header {
+    margin-top: $section-gap;
+    margin-bottom: $section-gap;
+}
+
+.title {
+    color: var(--FontColor);
+    font-family: 'Figtree', sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    letter-spacing: normal;
+    line-height: 38px;
+    margin-bottom: $sp-2;
+    text-transform: none;
+}
+
+.subtitle {
+    color: var(--SubtitleColor);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 25px;
+}
+
+.stats {
+    display: flex;
+    align-items: center;
+    gap: $card-gap;
+    margin-bottom: $section-gap;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+        gap: $sp-4;
+    }
+}
+
+.toolbar {
+    align-items: center;
+    border-bottom: 1px solid var(--TableBorderColor);
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+    padding-bottom: $sp-4;
+}
+
+.filter {
+    max-width: 100%;
+    width: 234px;
+
+    :global(.input-el) {
+        border-color: var(--TableBorderColor);
+        border-radius: 4px;
+        height: 40px;
+        justify-content: center;
+        margin-bottom: 0;
+        padding: $sp-2 $sp-4;
+    }
+
+    :global(.input-el) span {
+        color: var(--FontColor);
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 22px;
+    }
+
+    :global(.input-el) svg {
+        color: var(--GrayFontColor);
+        height: 22px;
+        width: 22px;
+    }
+}
+
+.rulesLink {
+    align-items: center;
+    background: none;
+    border: none;
+    color: var(--Link);
+    cursor: pointer;
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    gap: $sp-1;
+    line-height: 22px;
+    padding: 0;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 auto;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.tableWrapper {
+    position: relative;
+}
+
+.lbTable {
+    table {
+        // doubled to win over the reskin's second-to-last column alignment
+        td.numberCell.numberCell {
+            text-align: right;
+
+            :global(.TableCell_blockCell) {
+                justify-content: flex-end;
+            }
+        }
+
+        th:global(.column-id-open-) {
+            width: 55px;
+        }
+
+        th:global(.column-id-rank-) {
+            width: 52px;
+        }
+
+        th:global(.column-id-member-) {
+            width: 210px;
+        }
+
+        th:global(.column-id-wins-),
+        th:global(.column-id-passingSubmissions-),
+        th:global(.column-id-submissions-),
+        th:global(.column-id-registrations-) {
+            width: 220px;
+
+            > div {
+                justify-content: flex-end;
+            }
+        }
+    }
+}
+
+.infoIcon {
+    align-items: center;
+    color: var(--GrayFontColor);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+
+    svg {
+        height: 14px;
+        width: 14px;
+    }
+}
+
+.tooltip {
+    // doubled to win over the shared tooltip + react-tooltip variant styles
+    &.tooltip {
+        background-color: var(--TooltipColor);
+        border-radius: 8px;
+        color: $tc-white;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+        max-width: 244px;
+        padding: $sp-3;
+        text-align: left;
+    }
+}
+
+.medal {
+    display: block;
+    height: 20px;
+    width: 20px;
+}
+
+.rank {
+    display: inline-block;
+    text-align: center;
+    width: 20px;
+}
+
+.handleCell {
+    align-items: center;
+    display: flex;
+    gap: $sp-2;
+}
+
+.avatar {
+    height: 32px;
+    width: 32px;
+}
+
+.handle {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.chevronButton {
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+    margin-left: auto;
+}
+
+.chevron {
+    color: var(--FontColor);
+    height: 24px;
+    width: 24px;
+}
+
+.empty,
+.error {
+    color: var(--GrayFontColor);
+    font-family: 'Nunito Sans', sans-serif;
+    padding: $sp-6 0;
+    text-align: center;
+}

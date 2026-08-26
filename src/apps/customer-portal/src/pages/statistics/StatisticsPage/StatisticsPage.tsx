@@ -73,7 +73,7 @@ const StatisticsPage: FC = () => {
         ? !generalStatistics && !generalStatisticsError
         : !winners && !winnersError
     const contentError = activeTab === 'countries' ? generalStatisticsError : winnersError
-    const valueLabel = activeTab === 'countries' ? 'Members' : 'Winners'
+    const valueLabel = activeTab === 'countries' ? 'Members' : '1st Places'
 
     const selectTab = useCallback((tab: StatisticsTab) => {
         setActiveTab(tab)
@@ -184,7 +184,7 @@ const StatisticsPage: FC = () => {
                         tabIndex={activeTab === 'winners' ? 0 : -1}
                         type='button'
                     >
-                        Winners by Country
+                        First place by Country
                     </button>
                 </div>
 

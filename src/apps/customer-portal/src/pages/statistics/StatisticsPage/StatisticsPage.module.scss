@@ -189,6 +189,7 @@
         position: sticky;
         top: 0;
         z-index: 1;
+        vertical-align: middle;
     }
 
     th:first-child,
@@ -283,6 +284,7 @@
         :global(.highcharts-container),
         :global(.highcharts-root) {
             height: 370px !important;
+            z-index: unset !important;
         }
     }
 
@@ -346,6 +348,22 @@
     }
 
     @include gtelg {
+        display: none;
+    }
+}
+
+// Shown when the hovered country has no matching shape on the map, so the
+// Highcharts tooltip has no point to anchor to.
+.mapFallbackTooltip {
+    left: 50%;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+
+    // no anchor point to point at
+    > div::after {
         display: none;
     }
 }
@@ -502,6 +520,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    color: #3877EA!important;
 }
 
 .tooltipWins {
