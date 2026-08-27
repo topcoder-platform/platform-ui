@@ -45,6 +45,8 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
     engagements: { count: 0 },
     reviews: { count: 0 },
 }
+const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilots', 'reviews']
+const MY_WORK_COUNT_PAGE_SIZE = 1
 
 /**
  * Uploads a member's ZIP directly to the v6 Review API for the active submission phase.
@@ -240,6 +242,31 @@ export function normalizeOpportunitySummary(payload: unknown): OpportunitySummar
 export async function getOpportunitySummary(): Promise<OpportunitySummary> {
     const response = await xhrGetAsync<unknown>(`${V6_URL}/opportunities/summary`)
     return normalizeOpportunitySummary(response)
+}
+
+/**
+ * Loads authenticated member-work totals without downloading list-sized
+ * result sets. Each owning API remains authoritative for its membership and
+ * application rules, while a failed owner rejects the whole count instead of
+ * displaying a misleading partial total.
+ *
+ * @param memberId authenticated member identifier used by Challenge API.
+ * @returns owner-reported totals for all four My Work opportunity domains.
+ * @throws Propagates request, authorization, role-resolution, and owning-API errors.
+ */
+export async function getMyWorkCounts(
+    memberId: string,
+): Promise<Record<OpportunityKind, number>> {
+    const entries = await Promise.all(MY_WORK_KINDS.map(async kind => {
+        const page = await getOpportunityPage(kind, {
+            applied: true,
+            memberId,
+            page: 1,
+            perPage: MY_WORK_COUNT_PAGE_SIZE,
+        })
+        return [kind, page.total] as const
+    }))
+    return Object.fromEntries(entries) as Record<OpportunityKind, number>
 }
 
 /**

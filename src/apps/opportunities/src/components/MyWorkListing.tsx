@@ -4,7 +4,6 @@ import {
     ChangeEvent,
     FC,
     useDeferredValue,
-    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -49,7 +48,6 @@ const WORK_FETCH_SIZE = 100
 interface MyWorkListingProps {
     kinds: OpportunityKind[]
     memberId?: string
-    onCountsChange: (counts: Record<OpportunityKind, number>) => void
     onKindsChange: (kinds: OpportunityKind[]) => void
     onViewChange: (view: OpportunityView) => void
     view: OpportunityView
@@ -277,12 +275,11 @@ function toggleFacet<T>(current: T[], value: T, checked: boolean): T[] {
  * Renders the authenticated member's combined competition, engagement,
  * copilot, and review work with the authored filters and shared cards.
  *
- * @param props member identity, controlled domain facets, view, and summary callbacks.
+ * @param props member identity, controlled domain facets, and view callbacks.
  * @returns mixed, filtered, sorted, and paginated My Work section.
  * @throws Does not throw; owning-API failures render a retryable in-page state.
  */
 export const MyWorkListing: FC<MyWorkListingProps> = props => {
-    const onCountsChange: MyWorkListingProps['onCountsChange'] = props.onCountsChange
     const [search, setSearch] = useState('')
     const deferredSearch = useDeferredValue(search.trim())
     const [page, setPage] = useState(1)
@@ -298,14 +295,6 @@ export const MyWorkListing: FC<MyWorkListingProps> = props => {
         () => getMyWorkPages(props.memberId as string, deferredSearch, status, sort),
         { revalidateOnFocus: false },
     )
-
-    const counts = useMemo<Record<OpportunityKind, number>>(() => WORK_KINDS
-        .reduce<Record<OpportunityKind, number>>((result, kind) => {
-            result[kind] = response.data?.[kind].total ?? 0
-            return result
-        }, { competitions: 0, copilots: 0, engagements: 0, reviews: 0 }), [response.data])
-
-    useEffect(() => onCountsChange(counts), [counts, onCountsChange])
 
     const filtered = useMemo<MyWorkItem[]>(() => {
         const selectedKinds = props.kinds.length ? props.kinds : WORK_KINDS

@@ -52,7 +52,6 @@ describe('My Work normalization', () => {
     it('renders an authentication handoff without issuing member requests', () => {
         render(React.createElement(MyWorkListing, {
             kinds: [],
-            onCountsChange: jest.fn(),
             onKindsChange: jest.fn(),
             onViewChange: jest.fn(),
             view: 'list',

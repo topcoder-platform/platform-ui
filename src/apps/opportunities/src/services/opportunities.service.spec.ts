@@ -21,6 +21,7 @@ import {
     getChallengeSubmitters,
     getChallengeTermDocuSignUrl,
     getChallengeTermDetails,
+    getMyWorkCounts,
     getOpportunityPage,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
@@ -69,6 +70,62 @@ describe('opportunities service normalization', () => {
                 engagements: { count: 0 },
                 reviews: { count: 0 },
             })
+    })
+
+    it('loads member-work totals on count-only owner pages', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const totals: Record<string, number> = {
+            '/v6/challenges': 40,
+            '/v6/engagements/engagements': 30,
+            '/v6/projects/copilots/opportunities': 20,
+            '/v6/review-opportunities/search': 15,
+        }
+        getAsync.mockResolvedValueOnce([
+            { id: 'submitter-role', name: 'Submitter' },
+        ] as never)
+        get.mockImplementation(async requestUrl => {
+            const url = new URL(String(requestUrl))
+            return {
+                data: [],
+                headers: {
+                    get: (name: string) => (name === 'x-total'
+                        ? String(totals[url.pathname] ?? 0)
+                        : undefined),
+                },
+            } as never
+        })
+
+        await expect(getMyWorkCounts('123'))
+            .resolves.toEqual({
+                competitions: 40,
+                copilots: 20,
+                engagements: 30,
+                reviews: 15,
+            })
+
+        const requests = (get.mock.calls as Array<[string]>).map(call => new URL(call[0]))
+        const byPath = new Map(requests.map(url => [url.pathname, url]))
+        expect(requests)
+            .toHaveLength(4)
+        expect(byPath.get('/v6/challenges')?.searchParams.get('perPage'))
+            .toBe('1')
+        expect(byPath.get('/v6/challenges')?.searchParams.get('memberId'))
+            .toBe('123')
+        expect(byPath.get('/v6/challenges')?.searchParams.get('resourceRoleId'))
+            .toBe('submitter-role')
+        expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('perPage'))
+            .toBe('1')
+        expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('appliedByMe'))
+            .toBe('true')
+        expect(byPath.get('/v6/projects/copilots/opportunities')?.searchParams.get('pageSize'))
+            .toBe('1')
+        expect(byPath.get('/v6/projects/copilots/opportunities')?.searchParams.get('applied'))
+            .toBe('true')
+        expect(byPath.get('/v6/review-opportunities/search')?.searchParams.get('limit'))
+            .toBe('1')
+        expect(byPath.get('/v6/review-opportunities/search')?.searchParams.get('appliedByMe'))
+            .toBe('true')
     })
 
     it('maps competition facets and registration phase to Challenge API parameters', () => {

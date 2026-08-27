@@ -23,7 +23,12 @@ sorting, and pagination in the client. Owner-specific lifecycle values are
 normalized to All, Active, and Past. Competition cards read Registered;
 approved, accepted, or selected non-competition applications read Accepted;
 the remaining member applications read Applied. Summary counts retain the
-owner-reported totals even when an owner has more than 100 records.
+owner-reported totals even when an owner has more than 100 records. Once the
+authenticated profile is available, four count-only owner requests load those
+totals independently of the selected Browse/My Work destination. The masthead
+therefore never uses a fabricated member-work fallback; it shows an em dash
+until the complete count is available and keeps the same total while filters
+or destinations change.
 
 The Competitions sidebar follows the authored Figma filter with one Search
 control and the helper text “Search skills, technologies, projects.” Its value

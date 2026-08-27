@@ -137,7 +137,9 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
                         type='button'
                     >
                         My Work
-                        <span className={styles.workBadge}>{props.workCount ?? 0}</span>
+                        <span aria-live='polite' className={styles.workBadge}>
+                            {props.workCount ?? '—'}
+                        </span>
                     </button>
                     <span aria-hidden='true' className={styles.tabRule} />
                 </div>
@@ -196,7 +198,7 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
                             >
                                 <span className={styles.workIcon}><Icon aria-hidden='true' /></span>
                                 <span className={styles.workCopy}>
-                                    <strong>{props.workCounts?.[cell.kind] ?? 0}</strong>
+                                    <strong>{props.workCounts?.[cell.kind] ?? '—'}</strong>
                                     <span>{cell.workLabel}</span>
                                 </span>
                             </button>
