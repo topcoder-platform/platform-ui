@@ -4,8 +4,6 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import useSWR, { SWRResponse } from 'swr'
 
-import { LoadingSpinner } from '~/libs/ui'
-
 import {
     ChallengeOpportunity,
     ChallengeReviewSummation,
@@ -17,6 +15,7 @@ import {
     marathonRatingColor,
 } from '../utils/marathon-match.utils'
 
+import { OpportunityTabLoading } from './OpportunityTabLoading'
 import styles from './MarathonDashboard.module.scss'
 
 interface MarathonDashboardProps {
@@ -152,7 +151,7 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
     }), [awardLine, baseline, points])
 
     if (response.isValidating && !response.data) {
-        return <div className={styles.loading}><LoadingSpinner /></div>
+        return <OpportunityTabLoading label='Loading Marathon Match dashboard' />
     }
 
     if (response.error) {

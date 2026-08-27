@@ -32,6 +32,7 @@ import {
     isHtmlDescriptionFormat,
     MarathonDashboard,
     OpportunityPagination,
+    OpportunityTabLoading,
     ReportIssueModal,
     SubmissionHistoryModal,
 } from '../components'
@@ -742,7 +743,10 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
     const showRating = trackKey !== 'design'
     const sortRegistrationDate = trackKey === 'qualityassurance'
         || isMarathonMatchChallenge(props.challenge)
-    if (response.isValidating && !response.data) return <LoadingSpinner />
+    if (response.isValidating && !response.data) {
+        return <OpportunityTabLoading label='Loading registrants' />
+    }
+
     if (response.error) return <TabError onRetry={() => response.mutate()} />
     if (!response.data?.items.length) {
         return <EmptyTab title='No registrants yet' text='Registered competitors will appear here.' />
@@ -958,7 +962,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         }
     }
 
-    if (response.isValidating && !response.data) return <LoadingSpinner />
+    if (response.isValidating && !response.data) {
+        return <OpportunityTabLoading label='Loading submissions' />
+    }
+
     if (response.error) return <TabError onRetry={() => response.mutate()} />
     if (!response.data?.items.length) {
         if (props.mine) {

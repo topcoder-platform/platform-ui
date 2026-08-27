@@ -9,7 +9,7 @@ import {
 } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
-import { IconOutline, LoadingSpinner } from '~/libs/ui'
+import { IconOutline } from '~/libs/ui'
 
 import {
     ChallengeOpportunity,
@@ -34,6 +34,8 @@ import {
     updateForumPost,
     updateForumTopic,
 } from '../services'
+
+import { OpportunityTabLoading } from './OpportunityTabLoading'
 import {
     challengeForumUrl,
     memberProfileUrl,
@@ -1409,7 +1411,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         )
     }
 
-    if (response.isValidating && !response.data) return <LoadingSpinner />
+    if (response.isValidating && !response.data) {
+        return <OpportunityTabLoading label='Loading challenge forum' />
+    }
+
     if (response.error) {
         return (
             <ForumFallback
@@ -1435,7 +1440,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     }
 
     if (selectedTopicId) {
-        if (detailResponse.isValidating && !detailResponse.data) return <LoadingSpinner />
+        if (detailResponse.isValidating && !detailResponse.data) {
+            return <OpportunityTabLoading label='Loading forum topic' />
+        }
+
         if (detailResponse.error || !detailResponse.data) {
             return (
                 <div className={styles.detailError}>

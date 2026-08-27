@@ -166,6 +166,14 @@ Review API remains authoritative for group, whitelist, screening, and
 review-phase release checks; absent previews render as locked placeholders.
 Design challenges without the flag retain the authored submission-list state.
 
+Opportunity detail tabs keep their page header and tab navigation mounted while
+the selected panel changes. Lazy challenge panels use a panel-scoped loading
+state, so loading Registrants, Submissions, Dashboard, Forum, or a forum topic
+never replaces or masks the surrounding detail page. Full-page loading states
+are reserved for the initial detail-route request. Review and copilot detail
+tabs likewise switch in place, and engagement detail background checks render
+inside their owning section.
+
 The standard Submissions tab follows community-app's authenticated-member
 gate; registration is required only for My Submissions and authored actions.
 Review API submissions and Marathon Match review summations own provisional

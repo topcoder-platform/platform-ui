@@ -1,0 +1,13 @@
+.loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 360px;
+    width: 100%;
+
+    > .spinner {
+        background: transparent;
+        height: 64px;
+        width: 64px;
+    }
+}

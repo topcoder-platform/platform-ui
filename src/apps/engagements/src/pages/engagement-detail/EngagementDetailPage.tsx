@@ -385,7 +385,7 @@ const EngagementDetailPage: FC = () => {
         if (isCheckingTerms) {
             return (
                 <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <LoadingSpinner className={styles.inlineSpinner} inline />
                     <span>Checking terms and NDA...</span>
                 </div>
             )
@@ -394,7 +394,7 @@ const EngagementDetailPage: FC = () => {
         if (isFinalizingAgreement) {
             return (
                 <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <LoadingSpinner className={styles.inlineSpinner} inline />
                     <span>Finalizing your agreement...</span>
                 </div>
             )
@@ -433,7 +433,7 @@ const EngagementDetailPage: FC = () => {
             if (checkingApplication) {
                 return (
                     <div className={styles.applyMessage}>
-                        <LoadingSpinner className={styles.inlineSpinner} />
+                        <LoadingSpinner className={styles.inlineSpinner} inline />
                         <span>Checking your application status...</span>
                     </div>
                 )
@@ -510,7 +510,7 @@ const EngagementDetailPage: FC = () => {
 
     const renderLoadingState = (): JSX.Element => (
         <div className={styles.loadingSection}>
-            <LoadingSpinner className={styles.loadingSpinner} />
+            <LoadingSpinner className={styles.loadingSpinner} inline />
             <div className={styles.skeletonBlock} />
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />
