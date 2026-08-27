@@ -23,36 +23,37 @@ describe('challenge winner utilities', () => {
             .toBe('DATA_SCIENCE')
     })
 
-    it('prefers a matching public latest-submission final score', () => {
+    it('uses the canonical result matching both winner ID and placement', () => {
         expect(winnerFinalScore(
             { handle: 'Winner', placement: 1, userId: '42' },
-            [{ finalScore: 98.98, id: 'submission', memberId: '42' }],
-            [{ aggregateScore: 88, isFinal: true, submitterId: '42' }],
+            [
+                { finalScore: 75, placement: 2, userId: '42' },
+                { finalScore: '98.98', placement: 1, userId: 42 },
+            ],
         ))
             .toBe(98.98)
     })
 
-    it('falls back to a case-insensitive Review Summation match', () => {
+    it('does not infer a result from a handle or placement alone', () => {
         expect(winnerFinalScore(
             { handle: 'Winner', placement: 2 },
-            [],
-            [{
-                aggregateScore: '98.88',
-                isFinal: true,
-                submitterHandle: 'winner',
-            }],
+            [{ finalScore: 98.88, placement: 2, userId: '42' }],
         ))
-            .toBe(98.88)
+            .toBeUndefined()
+        expect(winnerFinalScore(
+            { placement: 4, userId: '42' },
+            [{ finalScore: 75.5, placement: 4, userId: '99' }],
+        ))
+            .toBeUndefined()
     })
 
-    it('matches legacy submission placements and leaves missing scores empty', () => {
+    it('leaves missing and non-finite canonical scores empty', () => {
         expect(winnerFinalScore(
-            { placement: 4 },
-            [{ finalScore: 75.5, id: 'submission', placement: 4 }],
-            [],
+            { placement: 1, userId: '42' },
+            [{ finalScore: 'not-a-score', placement: 1, userId: '42' }],
         ))
-            .toBe(75.5)
-        expect(winnerFinalScore({ handle: 'nobody' }, [], []))
+            .toBeUndefined()
+        expect(winnerFinalScore({ handle: 'nobody' }, []))
             .toBeUndefined()
     })
 })

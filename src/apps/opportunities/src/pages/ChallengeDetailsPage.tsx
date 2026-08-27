@@ -42,6 +42,7 @@ import {
 } from '../components/challenge-card.utils'
 import {
     ChallengeOpportunity,
+    ChallengeProjectResult,
     ChallengeResource,
     ChallengeReviewSummation,
     ChallengeSubmission,
@@ -53,6 +54,7 @@ import {
     agreeToChallengeTerms,
     deleteChallengeSubmission,
     getChallengeOpportunity,
+    getChallengeProjectResults,
     getChallengeRegistration,
     getChallengeReviewSummations,
     getChallengeSubmissionDownloadUrl,
@@ -67,12 +69,14 @@ import {
     attachMarathonReviewSummations,
     challengeTrackLabel,
     challengeTrackWins,
+    formatMarathonFinalScore,
     formatMarathonScore,
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
+    shouldShowFinalSubmissionScores,
     winnerFinalScore,
 } from '../utils'
 import medal1 from '../assets/medal-1.svg'
@@ -230,7 +234,7 @@ export const ChallengeDetailsPage: FC = () => {
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(hasMemberTabAccess || designChallenge
+            ...(memberId || designChallenge
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
@@ -246,7 +250,7 @@ export const ChallengeDetailsPage: FC = () => {
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
-    }, [challenge, hasMemberTabAccess, isRegistered])
+    }, [challenge, hasMemberTabAccess, isRegistered, memberId])
 
     /**
      * Selects a challenge tab and closes the transient in-tab submission form.
@@ -902,6 +906,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         () => memberProfilesById(profileResponse.data),
         [profileResponse.data],
     )
+    const showAllSubmissionFinalScores = shouldShowFinalSubmissionScores(
+        props.challenge,
+        submissions,
+    )
 
     /**
      * Opens an authorized clean-storage download without exposing private URLs in list data.
@@ -1237,13 +1245,27 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                         )}
                                         {isMarathonMatch && (
-                                            <td>{formatMarathonScore(scores.finalScore, '-')}</td>
+                                            <td>
+                                                {formatMarathonFinalScore(
+                                                    showAllSubmissionFinalScores
+                                                        ? scores.finalScore
+                                                        : undefined,
+                                                    '-',
+                                                )}
+                                            </td>
                                         )}
                                         {isQa && (
                                             <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                         )}
                                         {isQa && (
-                                            <td>{formatMarathonScore(scores.finalScore, '-')}</td>
+                                            <td>
+                                                {formatMarathonScore(
+                                                    showAllSubmissionFinalScores
+                                                        ? scores.finalScore
+                                                        : undefined,
+                                                    '-',
+                                                )}
+                                            </td>
                                         )}
                                         <td>
                                             <button
@@ -1281,6 +1303,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 onClose={() => setHistorySubmission(undefined)}
                 open={!!historySubmission}
                 reviewSummations={scoreResponse.data}
+                showFinalScores={props.mine || showAllSubmissionFinalScores}
                 submission={historySubmission}
             />
         </div>
@@ -1499,7 +1522,7 @@ const WinnerCard: FC<WinnerCardProps> = props => {
                 <span className={styles.winnerScore}>
                     with a final score of
                     {' '}
-                    <strong>{formatMarathonScore(props.finalScore, '')}</strong>
+                    <strong>{formatMarathonFinalScore(props.finalScore, '')}</strong>
                 </span>
             )}
             <span className={styles.winnerPrize}>
@@ -1571,18 +1594,11 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
             .map(entry => [memberHandleKey(entry.handle), entry.stats])),
         [statsResponse.data],
     )
-    const submissionResponse: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
-        winners?.length
-            ? ['opportunities:winner-submissions', props.challenge.id]
+    const projectResultResponse: SWRResponse<ChallengeProjectResult[], Error> = useSWR(
+        winners?.length && props.memberId
+            ? ['opportunities:winner-project-results', props.challenge.id]
             : undefined,
-        () => getChallengeSubmissions(props.challenge.id, 1, 500),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
-    )
-    const reviewSummationResponse: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
-        winners?.length
-            ? ['opportunities:mm-review-summations', props.challenge.id]
-            : undefined,
-        () => getChallengeReviewSummations(props.challenge.id),
+        () => getChallengeProjectResults(props.challenge.id),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
 
@@ -1611,6 +1627,11 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         .sort((first, second) => first.placement - second.placement)
     const trackHeading = challengeTrackLabel(props.challenge.track)
     const trackLabel = trackHeading.toLowerCase()
+    const showWinnerFinalScores = !!props.memberId && shouldShowFinalSubmissionScores(
+        props.challenge,
+        [],
+        (projectResultResponse.data ?? []).map(result => result.finalScore),
+    )
     const rankedWinners = ranked.map(entry => {
         const profile = profilesById.get(String(entry.winner.userId ?? ''))
         const handle = profile?.handle
@@ -1620,11 +1641,12 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         const stats = statsByHandle.get(memberHandleKey(handle))
         return {
             ...entry,
-            finalScore: winnerFinalScore(
-                entry.winner,
-                submissionResponse.data?.items ?? [],
-                reviewSummationResponse.data ?? [],
-            ),
+            finalScore: showWinnerFinalScores
+                ? winnerFinalScore(
+                    { ...entry.winner, placement: entry.placement },
+                    projectResultResponse.data ?? [],
+                )
+                : undefined,
             handle,
             profile,
             rating: profile?.maxRating ?? stats?.maxRating?.rating,
@@ -1699,7 +1721,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                                 </td>
                                                 <td>{entry.wins ?? '—'}</td>
                                                 <td className={styles.winnerTableScore}>
-                                                    {formatMarathonScore(entry.finalScore, '-')}
+                                                    {formatMarathonFinalScore(entry.finalScore, '-')}
                                                 </td>
                                                 <td>{winnerPrizeLabel(entry.prize)}</td>
                                             </tr>

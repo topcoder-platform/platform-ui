@@ -2,30 +2,13 @@ import { UserStats } from '~/libs/core'
 
 import {
     ChallengeCatalogValue,
-    ChallengeReviewSummation,
-    ChallengeSubmission,
+    ChallengeProjectResult,
 } from '../models'
-
-import { marathonSubmissionScores } from './marathon-match.utils'
 
 export interface ChallengeWinnerIdentity {
     handle?: string
     placement?: number
     userId?: string
-}
-
-/**
- * Normalizes catalog and identity labels for tolerant API comparisons.
- *
- * @param value unknown catalog or identity field.
- * @returns trimmed lowercase string, or an empty string.
- * @throws Does not throw.
- */
-function normalized(value: unknown): string {
-    return typeof value === 'string'
-        ? value.trim()
-            .toLowerCase()
-        : ''
 }
 
 /**
@@ -87,89 +70,49 @@ export function challengeTrackWins(
 }
 
 /**
- * Matches a public latest submission to a Challenge API winner.
+ * Normalizes an API identity without changing numeric member IDs.
  *
- * @param submission Review API submission row.
- * @param winner Challenge API winner identity.
- * @returns true when ID, handle, or placement identifies the same member.
+ * @param value member or submission identity candidate.
+ * @returns trimmed identifier, or an empty string.
  * @throws Does not throw.
  */
-function submissionBelongsToWinner(
-    submission: ChallengeSubmission,
-    winner: ChallengeWinnerIdentity,
-): boolean {
-    const winnerId = String(winner.userId ?? '')
+function normalizedIdentifier(value: unknown): string {
+    return value === undefined || value === null ? '' : String(value)
         .trim()
-    const winnerHandle = normalized(winner.handle)
-    const submissionIds = [
-        submission.memberId,
-        submission.registrant?.userId,
-        submission.createdBy,
-    ].map(value => String(value ?? '')
-        .trim())
-    const submissionHandles = [
-        submission.submitterHandle,
-        submission.memberHandle,
-        submission.registrant?.memberHandle,
-        submission.registrant?.handle,
-        submission.createdBy,
-    ].map(normalized)
-    if (winnerId && submissionIds.includes(winnerId)) return true
-    if (winnerHandle && submissionHandles.includes(winnerHandle)) return true
-    return winner.placement !== undefined
-        && submission.placement !== undefined
-        && Number(submission.placement) === Number(winner.placement)
 }
 
 /**
- * Matches one Review Summation aggregate to a Challenge API winner.
+ * Reads a positive integer placement from Challenge or Review API data.
  *
- * @param summation Review API aggregate score row.
- * @param winner Challenge API winner identity.
- * @returns true when member ID or handle identifies the same member.
+ * @param value placement candidate.
+ * @returns normalized placement, or undefined.
  * @throws Does not throw.
  */
-function summationBelongsToWinner(
-    summation: ChallengeReviewSummation,
-    winner: ChallengeWinnerIdentity,
-): boolean {
-    const winnerId = String(winner.userId ?? '')
-        .trim()
-    const submitterIds = [summation.submitterId, summation.memberId]
-        .map(value => String(value ?? '')
-            .trim())
-    if (winnerId && submitterIds.includes(winnerId)) return true
-    const winnerHandle = normalized(winner.handle)
-    return !!winnerHandle && normalized(summation.submitterHandle) === winnerHandle
+function normalizedPlacement(value: unknown): number | undefined {
+    const placement = Number(value)
+    return Number.isInteger(placement) && placement > 0 ? placement : undefined
 }
 
 /**
- * Resolves a winner's best available final score. Public latest submissions
- * are authoritative; Review Summations supply the fallback when those rows do
- * not yet expose their scorer aggregate.
+ * Resolves a winner's final score from Review API's canonical project result.
+ * Both member ID and placement must match, preventing a sibling submission or
+ * a same-placement record from being attributed to the wrong winner.
  *
  * @param winner Challenge API winner identity.
- * @param submissions public latest submission rows.
- * @param reviewSummations challenge-level aggregate score rows.
- * @returns best available final score, or undefined.
+ * @param projectResults authorized Review API final-placement results.
+ * @returns canonical finite final score, or undefined.
  * @throws Does not throw.
  */
 export function winnerFinalScore(
     winner: ChallengeWinnerIdentity,
-    submissions: ChallengeSubmission[],
-    reviewSummations: ChallengeReviewSummation[],
+    projectResults: ChallengeProjectResult[],
 ): number | undefined {
-    const submissionScore = submissions
-        .filter(submission => submissionBelongsToWinner(submission, winner))
-        .map(submission => marathonSubmissionScores(submission).finalScore)
-        .find((score): score is number => score !== undefined)
-    if (submissionScore !== undefined) return submissionScore
-
-    const matchingSummations = reviewSummations
-        .filter(summation => summationBelongsToWinner(summation, winner))
-    if (!matchingSummations.length) return undefined
-    return marathonSubmissionScores({
-        id: `winner-${winner.userId ?? winner.handle ?? winner.placement ?? 'unknown'}`,
-        reviewSummation: matchingSummations,
-    }).finalScore
+    const winnerId = normalizedIdentifier(winner.userId)
+    const winnerPlacement = normalizedPlacement(winner.placement)
+    if (!winnerId || winnerPlacement === undefined) return undefined
+    const result = projectResults.find(candidate => (
+        normalizedIdentifier(candidate.userId) === winnerId
+        && normalizedPlacement(candidate.placement) === winnerPlacement
+    ))
+    return result ? finiteNumber(result.finalScore) : undefined
 }

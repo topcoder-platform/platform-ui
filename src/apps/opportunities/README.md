@@ -147,6 +147,18 @@ Review API remains authoritative for group, whitelist, screening, and
 review-phase release checks; absent previews render as locked placeholders.
 Design challenges without the flag retain the authored submission-list state.
 
+The standard Submissions tab follows community-app's authenticated-member
+gate; registration is required only for My Submissions and authored actions.
+Review API submissions and Marathon Match review summations own provisional
+and final scores. Final Marathon Match values remain hidden while a submission
+phase is open, then appear after Review closes or Review API publishes a final
+result. Non-Marathon final scores appear only for completed challenges. The
+Figma keeps separate Provisional Score and Final Score columns and uses `-`
+when a final value is not yet available. Winners use Review API's canonical
+`GET /v6/projectResult` member-and-placement result instead of inferring a
+score from Challenge API winners or a sibling submission; protected winner
+scores are requested only for authenticated members.
+
 Registered members submit without leaving challenge details. The My
 Submissions flow accepts one `.zip` archive up to 500MB, requires the authored
 declaration, reports live multipart progress, and posts the file directly to

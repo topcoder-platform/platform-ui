@@ -58,6 +58,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 jest.mock('../services', () => ({
     agreeToChallengeTerms: jest.fn(),
     getChallengeOpportunity: jest.fn(),
+    getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
     getChallengeReviewSummations: jest.fn(),
     getChallengeSubmissionPreviews: jest.fn(),
@@ -75,6 +76,7 @@ jest.mock('../utils', () => ({
     marathonDashboardIsEnabled: (): boolean => false,
     marathonSubmissionScores: (): Record<string, never> => ({}),
     memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,
+    shouldShowFinalSubmissionScores: (): boolean => false,
 }))
 
 describe('ChallengeDetailsPage registrants', () => {

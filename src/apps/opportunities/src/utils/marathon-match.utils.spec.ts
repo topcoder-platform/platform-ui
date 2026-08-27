@@ -1,11 +1,13 @@
 import {
     attachMarathonReviewSummations,
     buildMarathonDashboardData,
+    formatMarathonFinalScore,
     formatMarathonScore,
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
+    shouldShowFinalSubmissionScores,
 } from './marathon-match.utils'
 
 describe('Marathon Match challenge detail utilities', () => {
@@ -79,11 +81,54 @@ describe('Marathon Match challenge detail utilities', () => {
             .toBe('0')
         expect(formatMarathonScore(undefined, 'N/A'))
             .toBe('N/A')
+        expect(formatMarathonFinalScore(-1, '-'))
+            .toBe('0')
         expect(marathonSubmissionScores({
             id: 'legacy-unmarked',
             reviewSummation: [{ aggregateScore: 18.75, id: 'unmarked' }],
         }))
             .toEqual({ finalScore: undefined, provisionalScore: 18.75 })
+    })
+
+    it('matches community-app final-score release timing and completed non-MM gating', () => {
+        const finalSubmission = { finalScore: 98.98, id: 'final' }
+        expect(shouldShowFinalSubmissionScores({
+            id: 'open',
+            name: 'Open',
+            phases: [{ isOpen: true, name: 'Submission' }],
+            type: 'Marathon Match',
+        }, [finalSubmission]))
+            .toBe(false)
+        expect(shouldShowFinalSubmissionScores({
+            id: 'reviewed',
+            name: 'Reviewed',
+            phases: [{
+                isOpen: false,
+                name: 'Review',
+                scheduledStartDate: '2020-01-01T00:00:00.000Z',
+            }],
+            type: 'Marathon Match',
+        }, []))
+            .toBe(true)
+        expect(shouldShowFinalSubmissionScores({
+            id: 'data-ready',
+            name: 'Data ready',
+            phases: [],
+            type: 'Marathon Match',
+        }, [], ['91.25']))
+            .toBe(true)
+        expect(shouldShowFinalSubmissionScores({
+            id: 'active-code',
+            name: 'Active code',
+            status: 'ACTIVE',
+        }, [finalSubmission]))
+            .toBe(false)
+        expect(shouldShowFinalSubmissionScores({
+            id: 'completed-code',
+            name: 'Completed code',
+            status: 'COMPLETED',
+        }, [finalSubmission]))
+            .toBe(true)
     })
 
     it('attaches challenge-level summations only to their matching attempts', () => {

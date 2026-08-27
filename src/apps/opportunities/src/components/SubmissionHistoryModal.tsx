@@ -11,6 +11,7 @@ import {
 import { getChallengeSubmissionHistory } from '../services'
 import {
     attachMarathonReviewSummations,
+    formatMarathonFinalScore,
     formatMarathonScore,
     marathonSubmissionScores,
 } from '../utils/marathon-match.utils'
@@ -23,6 +24,7 @@ interface SubmissionHistoryModalProps {
     onClose: () => void
     open: boolean
     reviewSummations?: ChallengeReviewSummation[]
+    showFinalScores?: boolean
     submission?: ChallengeSubmission
 }
 
@@ -167,7 +169,12 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                         <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                     )}
                                     {props.isMarathonMatch && (
-                                        <td>{formatMarathonScore(scores.finalScore, '-')}</td>
+                                        <td>
+                                            {formatMarathonFinalScore(
+                                                props.showFinalScores ? scores.finalScore : undefined,
+                                                '-',
+                                            )}
+                                        </td>
                                     )}
                                 </tr>
                             )

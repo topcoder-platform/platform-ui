@@ -10,6 +10,7 @@ import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
     deleteChallengeSubmission,
+    getChallengeProjectResults,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
     getChallengeSubmissionPreviews,
@@ -518,6 +519,33 @@ describe('opportunities service normalization', () => {
         expect(get)
             .toHaveBeenCalledWith(
                 'https://api.example/v6/reviewSummations?challengeId=challenge&page=2&perPage=500',
+            )
+    })
+
+    it('loads every authorized canonical winner-result page from Review API', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get
+            .mockResolvedValueOnce({
+                data: [{ finalScore: 98.98, placement: 1, userId: '1' }],
+                meta: { page: 1, perPage: 100, totalCount: 2, totalPages: 2 },
+            })
+            .mockResolvedValueOnce({
+                data: [{ finalScore: 88.88, placement: 2, userId: '2' }],
+                meta: { page: 2, perPage: 100, totalCount: 2, totalPages: 2 },
+            })
+
+        await expect(getChallengeProjectResults('challenge'))
+            .resolves.toEqual([
+                { finalScore: 98.98, placement: 1, userId: '1' },
+                { finalScore: 88.88, placement: 2, userId: '2' },
+            ])
+        expect(get)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/projectResult?challengeId=challenge&page=1&perPage=100',
+            )
+        expect(get)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/projectResult?challengeId=challenge&page=2&perPage=100',
             )
     })
 

@@ -284,6 +284,49 @@ export function marathonSubmissionScores(
 }
 
 /**
+ * Applies community-app's final-score release timing while leaving Review API
+ * as the authorization and score authority. Marathon Match results stay hidden
+ * while any submission phase is open, then become visible after Review closes
+ * or as soon as a finite final result is returned. Other challenge types expose
+ * final scores only after the challenge is completed.
+ *
+ * @param challenge Challenge API lifecycle and phase data.
+ * @param submissions Review API submissions currently displayed.
+ * @param additionalFinalScores optional canonical result scores, such as winner project results.
+ * @returns whether final scores may be rendered to the current authenticated viewer.
+ * @throws Does not throw.
+ */
+export function shouldShowFinalSubmissionScores(
+    challenge: ChallengeOpportunity,
+    submissions: ChallengeSubmission[],
+    additionalFinalScores: unknown[] = [],
+): boolean {
+    if (!isMarathonMatchChallenge(challenge)) {
+        return normalizeToken(challenge.status) === 'completed'
+    }
+
+    const submissionPhaseNames = new Set([
+        'Submission',
+        'Checkpoint Submission',
+        'Topgear Submission',
+    ])
+    if ((challenge.phases ?? []).some(phase => (
+        submissionPhaseNames.has(phase.name) && phase.isOpen === true
+    ))) return false
+
+    const now = Date.now()
+    const reviewComplete = (challenge.phases ?? []).some(phase => {
+        if (phase.name !== 'Review' || phase.isOpen === true || !phase.scheduledStartDate) return false
+        const scheduledStart = Date.parse(phase.scheduledStartDate)
+        return Number.isFinite(scheduledStart) && scheduledStart < now
+    })
+    const finalScoreAvailable = submissions.some(
+        submission => marathonSubmissionScores(submission).finalScore !== undefined,
+    ) || additionalFinalScores.some(score => finiteScore(score) !== undefined)
+    return reviewComplete || finalScoreAvailable
+}
+
+/**
  * Resolves the most relevant member-safe scorer progress metadata embedded by
  * Review API on a Marathon Match submission.
  *
@@ -381,6 +424,19 @@ export function formatMarathonScore(score: number | undefined, fallback: string)
         ? fallback
         : new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 })
             .format(score)
+}
+
+/**
+ * Formats a released Marathon Match final score using community-app's failed
+ * scorer convention, where a negative sentinel is displayed as zero.
+ *
+ * @param score optional finite final score.
+ * @param fallback Figma fallback used when no released score exists.
+ * @returns localized non-negative final score or the supplied fallback.
+ * @throws Does not throw.
+ */
+export function formatMarathonFinalScore(score: number | undefined, fallback: string): string {
+    return formatMarathonScore(score !== undefined && score < 0 ? 0 : score, fallback)
 }
 
 /**

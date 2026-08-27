@@ -22,12 +22,12 @@ let mockProfile: { handle: string; roles?: string[]; userId: number } | undefine
 let mockRegistration: { id: string } | undefined
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
+let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
 let mockReviewSummations: Record<string, unknown>[]
 let mockSubmissions: Record<string, unknown>[]
 let mockWinnerStats: Record<string, unknown>[]
-let mockWinnerSubmissions: Record<string, unknown>[]
 
 jest.mock('../assets/medal-1.svg', () => 'medal-1')
 jest.mock('../assets/medal-2.svg', () => 'medal-2')
@@ -118,6 +118,7 @@ jest.mock('../services', () => ({
     agreeToChallengeTerms: jest.fn(),
     deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
     getChallengeOpportunity: jest.fn(),
+    getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
     getChallengeReviewSummations: jest.fn(),
     getChallengeSubmissionDownloadUrl: jest.fn(),
@@ -130,12 +131,24 @@ jest.mock('../services', () => ({
 }))
 
 jest.mock('../utils', () => ({
-    attachMarathonReviewSummations: (submissions: unknown[]): unknown[] => submissions,
+    attachMarathonReviewSummations: (
+        submissions: Array<Record<string, unknown>>,
+        summations: Array<Record<string, unknown>>,
+    ): Array<Record<string, unknown>> => submissions.map(submission => ({
+        ...submission,
+        reviewSummation: [
+            ...((submission.reviewSummation as Array<Record<string, unknown>> | undefined) ?? []),
+            ...summations.filter(summation => summation.submissionId === submission.id),
+        ],
+    })),
     challengeTrackLabel: (track?: string): string => track ?? 'challenge',
     challengeTrackWins: (stats?: {
         DEVELOP?: { wins?: number }
         wins?: number
     }): number | undefined => stats?.DEVELOP?.wins ?? stats?.wins,
+    formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
+        score === undefined ? fallback : String(Math.max(0, score))
+    ),
     formatMarathonScore: (score: number | undefined, fallback: string): string => (
         score === undefined ? fallback : String(score)
     ),
@@ -148,9 +161,16 @@ jest.mock('../utils', () => ({
     marathonSubmissionScores: (submission: {
         finalScore?: number
         provisionalScore?: number
+        reviewSummation?: Array<{
+            aggregateScore?: number
+            isFinal?: boolean
+            isProvisional?: boolean
+        }>
     }): { finalScore?: number; provisionalScore?: number } => ({
-        finalScore: submission.finalScore,
-        provisionalScore: submission.provisionalScore,
+        finalScore: submission.reviewSummation?.find(item => item.isFinal)?.aggregateScore
+            ?? submission.finalScore,
+        provisionalScore: submission.reviewSummation?.find(item => item.isProvisional)?.aggregateScore
+            ?? submission.provisionalScore,
     }),
     marathonSubmissionTestProgress: (): {
         process: string
@@ -158,17 +178,39 @@ jest.mock('../utils', () => ({
         status: string
     } => ({ process: 'System', progress: 50, status: 'In progress' }),
     memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,
-    winnerFinalScore: (
-        winner: { handle?: string; userId?: string },
-        submissions: Array<{ finalScore?: number; memberId?: string }>,
-        summations: Array<{
-            aggregateScore?: number
-            submitterHandle?: string
-            submitterId?: string
+    shouldShowFinalSubmissionScores: (
+        challenge: {
+            phases?: Array<{ isOpen?: boolean; name: string; scheduledStartDate?: string }>
+            status?: string
+            type?: string
+        },
+        submissions: Array<{
+            finalScore?: number
+            reviewSummation?: Array<{ aggregateScore?: number; isFinal?: boolean }>
         }>,
-    ): number | undefined => submissions.find(item => item.memberId === winner.userId)?.finalScore
-        ?? summations.find(item => item.submitterId === winner.userId
-            || item.submitterHandle?.toLowerCase() === winner.handle?.toLowerCase())?.aggregateScore,
+        additionalScores: unknown[] = [],
+    ): boolean => {
+        if (challenge.type !== 'Marathon Match') return challenge.status === 'COMPLETED'
+        if (challenge.phases?.some(phase => [
+            'Submission',
+            'Checkpoint Submission',
+            'Topgear Submission',
+        ].includes(phase.name) && phase.isOpen)) return false
+        return challenge.phases?.some(phase => phase.name === 'Review'
+            && !phase.isOpen
+            && !!phase.scheduledStartDate) === true
+            || submissions.some(submission => submission.finalScore !== undefined
+                || submission.reviewSummation?.some(summation => (
+                    summation.isFinal && summation.aggregateScore !== undefined
+                )))
+            || additionalScores.some(score => Number.isFinite(Number(score)))
+    },
+    winnerFinalScore: (
+        winner: { placement?: number; userId?: string },
+        projectResults: Array<{ finalScore?: number; placement?: number; userId?: string }>,
+    ): number | undefined => projectResults.find(result => (
+        result.userId === winner.userId && result.placement === winner.placement
+    ))?.finalScore,
 }))
 
 function swrResponse(data: unknown): Record<string, unknown> {
@@ -208,12 +250,12 @@ describe('ChallengeDetailsPage member flows', () => {
         mockProfile = undefined
         mockRegistration = undefined
         mockMemberProfiles = []
+        mockProjectResults = []
         mockPreviewSubmissions = []
         mockRegistrants = []
         mockReviewSummations = []
         mockSubmissions = []
         mockWinnerStats = []
-        mockWinnerSubmissions = []
         mockChallenge = {
             description: 'Challenge requirements',
             id: 'challenge-id',
@@ -263,8 +305,8 @@ describe('ChallengeDetailsPage member flows', () => {
                 return swrResponse(mockWinnerStats)
             }
 
-            if (Array.isArray(key) && key[0] === 'opportunities:winner-submissions') {
-                return swrResponse(submissionPage(mockWinnerSubmissions))
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-project-results') {
+                return swrResponse(mockProjectResults)
             }
 
             return swrResponse(undefined)
@@ -311,6 +353,19 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
         expect(screen.getByText('Administrator forum content'))
             .toBeInTheDocument()
+    })
+
+    it('matches community-app by showing all submissions to a signed-in unregistered member', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+
+        renderPage()
+
+        expect(screen.getByRole('tab', { name: /^Submissions/ }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {
@@ -502,7 +557,11 @@ describe('ChallengeDetailsPage member flows', () => {
     it('renders the compact QA My Submissions columns and authored actions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
-        mockChallenge = { ...mockChallenge, track: 'Quality Assurance' }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            track: 'Quality Assurance',
+        }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
             id: 'submission-qa',
@@ -559,6 +618,38 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
+    it('populates the released Marathon Match final score from Review Summations', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{
+                isOpen: false,
+                name: 'Review',
+                scheduledStartDate: '2026-06-04T09:30:00.000Z',
+            }],
+            type: 'Marathon Match',
+        }
+        mockSubmissions = [{
+            id: 'submission-1',
+            provisionalScore: 98.5,
+            submitterHandle: 'coder',
+        }]
+        mockReviewSummations = [{
+            aggregateScore: 99.5,
+            isFinal: true,
+            submissionId: 'submission-1',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        expect(screen.getByRole('cell', { name: '98.5' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '99.5' }))
+            .toBeInTheDocument()
+    })
+
     it('matches the Design Registrants columns and the QA submission score columns', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockRegistration = { id: 'resource-id' }
@@ -587,7 +678,11 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
 
         rendered.unmount()
-        mockChallenge = { ...mockChallenge, track: 'Quality Assurance' }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            track: 'Quality Assurance',
+        }
         mockSubmissions = [{
             finalScore: 91,
             id: 'submission-qa',
@@ -659,6 +754,7 @@ describe('ChallengeDetailsPage member flows', () => {
                 ],
                 type: 'PLACEMENT',
             }],
+            status: 'COMPLETED',
             winners: [
                 { handle: 'second-fallback', placement: 2, userId: '2' },
                 { handle: 'first-fallback', placement: 1, userId: '1' },
@@ -683,13 +779,10 @@ describe('ChallengeDetailsPage member flows', () => {
             { handle: 'third', stats: { DEVELOP: { wins: 5 }, wins: 7 } },
             { handle: 'fourth', stats: { DEVELOP: { wins: 4 }, wins: 6 } },
         ]
-        mockWinnerSubmissions = [{ finalScore: 98.98, id: 'first-score', memberId: '1' }]
-        mockReviewSummations = [{
-            aggregateScore: 98.88,
-            isFinal: true,
-            submitterHandle: 'second-fallback',
-            submitterId: '2',
-        }]
+        mockProjectResults = [
+            { finalScore: 98.98, placement: 1, userId: '1' },
+            { finalScore: 98.88, placement: 2, userId: '2' },
+        ]
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))

@@ -13,6 +13,7 @@ import {
     ApiEnvelope,
     ApiListResponse,
     ChallengeOpportunity,
+    ChallengeProjectResult,
     ChallengeResource,
     ChallengeResourceRole,
     ChallengeReviewSummation,
@@ -34,6 +35,7 @@ const LEGACY_COPILOT_PAGE_SIZE = 1000
 const MAX_LEGACY_COPILOT_PAGES = 20
 const SUBMISSION_HISTORY_PAGE_SIZE = 200
 const REVIEW_SUMMATIONS_PAGE_SIZE = 500
+const PROJECT_RESULTS_PAGE_SIZE = 100
 const MAX_DETAIL_PAGES = 100
 const PAGE_REQUEST_BATCH_SIZE = 4
 
@@ -637,6 +639,17 @@ interface ReviewSummationApiResponse {
     }
 }
 
+interface ProjectResultApiResponse {
+    data?: ChallengeProjectResult[]
+    meta?: {
+        page?: number
+        perPage?: number
+        total?: number
+        totalCount?: number
+        totalPages?: number
+    }
+}
+
 /**
  * Converts supported Review API submission response shapes into the shared page model.
  *
@@ -830,6 +843,52 @@ export async function getChallengeReviewSummations(
             )
             if (Array.isArray(response)) return response
             return response.data ?? response.result?.content ?? []
+        },
+    )
+    return [...firstItems, ...additionalPages.flat()]
+}
+
+/**
+ * Loads every canonical final-placement result exposed by Review API for a
+ * challenge. Review API applies the caller's challenge visibility and
+ * `read:project-result` authorization before returning scores.
+ *
+ * @param challengeId challenge UUID whose winner results are required.
+ * @returns all authorized project-result rows in API page order.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function getChallengeProjectResults(
+    challengeId: string,
+): Promise<ChallengeProjectResult[]> {
+    /**
+     * Builds one paginated project-result request for the selected challenge.
+     *
+     * @param page one-based Review API page.
+     * @returns absolute project-result URL.
+     */
+    const makeUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}/projectResult`)
+        url.searchParams.set('challengeId', challengeId)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(PROJECT_RESULTS_PAGE_SIZE))
+        return url.toString()
+    }
+
+    const firstResponse = await xhrGetAsync<ProjectResultApiResponse | ChallengeProjectResult[]>(makeUrl(1))
+    if (Array.isArray(firstResponse)) return firstResponse
+    const firstItems = firstResponse.data ?? []
+    const totalPages = Math.min(MAX_DETAIL_PAGES, Math.max(
+        1,
+        toNumber(firstResponse.meta?.totalPages, 1),
+    ))
+    if (totalPages === 1) return firstItems
+    const additionalPages = await loadPagesInBatches(
+        Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+        async page => {
+            const response = await xhrGetAsync<ProjectResultApiResponse | ChallengeProjectResult[]>(
+                makeUrl(page),
+            )
+            return Array.isArray(response) ? response : response.data ?? []
         },
     )
     return [...firstItems, ...additionalPages.flat()]

@@ -326,6 +326,16 @@ export interface ChallengeReviewSummation {
     updatedAt?: string
 }
 
+/** Canonical Review API result for one final-placement challenge winner. */
+export interface ChallengeProjectResult {
+    challengeId?: string
+    finalScore?: number | string | null
+    initialScore?: number | string | null
+    placement?: number | string | null
+    submissionId?: string | null
+    userId?: number | string | null
+}
+
 export interface ChallengeSubmission {
     challengeId?: string
     createdAt?: string

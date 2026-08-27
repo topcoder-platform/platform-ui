@@ -74,6 +74,7 @@ describe('SubmissionHistoryModal', () => {
                         isProvisional: true,
                         submissionId: 'submission-two',
                     }]}
+                    showFinalScores
                     submission={{
                         id: 'submission-two',
                         memberId: '123',
