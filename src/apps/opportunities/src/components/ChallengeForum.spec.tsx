@@ -31,6 +31,7 @@ const mockCreateForumTopic = jest.fn()
 const mockDeleteForumPost = jest.fn()
 const mockDeleteForumTopic = jest.fn()
 const mockMarkForumTopicRead = jest.fn()
+const mockSetForumPostReaction = jest.fn()
 const mockSetForumTopicWatching = jest.fn()
 const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
@@ -62,6 +63,7 @@ jest.mock('../services', () => ({
     getForumTopicDetail: jest.fn(),
     getMemberProfilesByUserIds: jest.fn(),
     markForumTopicRead: (...args: unknown[]) => mockMarkForumTopicRead(...args),
+    setForumPostReaction: (...args: unknown[]) => mockSetForumPostReaction(...args),
     setForumTopicWatching: (...args: unknown[]) => mockSetForumTopicWatching(...args),
     updateForumPost: (...args: unknown[]) => mockUpdateForumPost(...args),
     updateForumTopic: (...args: unknown[]) => mockUpdateForumTopic(...args),
@@ -141,11 +143,17 @@ const starterPost: ForumPost = {
         parentId: 'post-1',
         parentType: 'POST',
         replies: [],
+        thumbsDownCount: 4,
+        thumbsUpCount: 3,
         topicId: 'topic-1',
         updatedAt: '2026-06-07T10:15:00.000Z',
+        viewerReaction: null,
     }],
+    thumbsDownCount: 1,
+    thumbsUpCount: 2,
     topicId: 'topic-1',
     updatedAt: '2026-06-06T00:05:00.000Z',
+    viewerReaction: 'THUMBS_UP',
 }
 
 const forumStyles = readFileSync(`${__dirname}/ChallengeForum.module.scss`, 'utf8')
@@ -159,6 +167,12 @@ describe('ChallengeForum', () => {
             topic: { id: 'topic-3' },
         })
         mockMarkForumTopicRead.mockResolvedValue(undefined)
+        mockSetForumPostReaction.mockResolvedValue({
+            postId: 'post-1',
+            thumbsDownCount: 1,
+            thumbsUpCount: 1,
+            viewerReaction: null,
+        })
         mockSetForumTopicWatching.mockResolvedValue({ watching: false })
         listError = undefined
         memberProfiles = [{
@@ -314,6 +328,29 @@ describe('ChallengeForum', () => {
 
         await waitFor(() => expect(mockSetForumTopicWatching)
             .toHaveBeenCalledWith('topic-1', false))
+    })
+
+    it('shows shared reaction counts and toggles or switches the current member reaction', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        const selectedThumbsUp = screen.getByRole('button', { name: 'Remove thumbs up (2)' })
+        expect(selectedThumbsUp)
+            .toHaveAttribute('aria-pressed', 'true')
+        expect(screen.getByRole('button', { name: 'Add thumbs down (1)' }))
+            .toHaveAttribute('aria-pressed', 'false')
+        expect(screen.getByRole('button', { name: 'Add thumbs up (3)' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Add thumbs down (4)' }))
+            .toBeInTheDocument()
+
+        await act(async () => fireEvent.click(selectedThumbsUp))
+        await waitFor(() => expect(mockSetForumPostReaction)
+            .toHaveBeenCalledWith('post-1', undefined))
+
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Add thumbs down (1)' })))
+        await waitFor(() => expect(mockSetForumPostReaction)
+            .toHaveBeenCalledWith('post-1', 'THUMBS_DOWN'))
     })
 
     it('keeps legacy topic summaries usable while the enriched API rolls out', () => {

@@ -58,6 +58,9 @@ export interface ForumTopicCollection {
     truncated: boolean
 }
 
+/** Supported current-member reactions on a forum post. */
+export type ForumPostReaction = 'THUMBS_DOWN' | 'THUMBS_UP'
+
 /** One post in the nested Forums API topic detail tree. */
 export interface ForumPost {
     authorHandle: string
@@ -70,8 +73,11 @@ export interface ForumPost {
     parentId: string
     parentType: 'POST' | 'TOPIC' | string
     replies: ForumPost[]
+    thumbsDownCount: number
+    thumbsUpCount: number
     topicId: string
     updatedAt: string
+    viewerReaction: ForumPostReaction | null
 }
 
 /** Read-only topic detail response with its complete post tree. */
@@ -106,6 +112,14 @@ export interface ForumPostMutationResponse {
     content: string | null
     id: string
     topicId: string
+}
+
+/** Current-member reaction and shared counts returned by reaction mutations. */
+export interface ForumPostReactionMutationResponse {
+    postId: string
+    thumbsDownCount: number
+    thumbsUpCount: number
+    viewerReaction: ForumPostReaction | null
 }
 
 /** Transactional topic-create response containing the new topic identifier. */

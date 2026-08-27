@@ -191,9 +191,12 @@ refresh challenge counts without leaving the confirmation state.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits and
-soft deletes, watch state, and read state remain inside the challenge detail
-page. Topic summaries expose bounded starter excerpts, participant snapshots,
-unique authenticated view counts, and current-member watch state. The
+soft deletes, per-member thumbs-up/thumbs-down reactions, watch state, and read
+state remain inside the challenge detail page. Each visible post shows shared
+reaction counts and the current member's selected state; clicking the selected
+thumb again removes it, while clicking the other thumb switches it. Topic
+summaries expose bounded starter excerpts, participant snapshots, unique
+authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
 v6 API is unavailable or the member is signed out. Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the

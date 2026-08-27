@@ -923,6 +923,14 @@
     margin-top: 16px;
 }
 
+.postActions button.reactionActive {
+    background: #e5f6f6;
+    border-radius: 4px;
+    color: #006b68;
+    padding: 4px 6px;
+    text-decoration: none;
+}
+
 .actionError,
 .lockedNotice {
     background: #fff;

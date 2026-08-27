@@ -7,6 +7,7 @@ import {
     getChallengeForumTopics,
     getForumTopicDetail,
     markForumTopicRead,
+    setForumPostReaction,
     setForumTopicWatching,
     updateForumPost,
     updateForumTopic,
@@ -159,6 +160,22 @@ describe('forum service', () => {
             .toHaveBeenCalledWith('https://api.example/v6/forums/posts/post%2Fid', { content: 'Edited' })
         expect(mockXhrDeleteAsync)
             .toHaveBeenCalledWith('https://api.example/v6/forums/posts/post%2Fid')
+    })
+
+    it('sets and removes the current member post reaction through authenticated XHR', async () => {
+        mockXhrPutAsync.mockResolvedValue({ viewerReaction: 'THUMBS_UP' })
+        mockXhrDeleteAsync.mockResolvedValue({ viewerReaction: undefined })
+
+        await setForumPostReaction('post/id', 'THUMBS_UP')
+        await setForumPostReaction('post/id', undefined)
+
+        expect(mockXhrPutAsync)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/forums/posts/post%2Fid/reaction',
+                { reaction: 'THUMBS_UP' },
+            )
+        expect(mockXhrDeleteAsync)
+            .toHaveBeenCalledWith('https://api.example/v6/forums/posts/post%2Fid/reaction')
     })
 
     it('routes watch and read-state commands without impersonation fields', async () => {

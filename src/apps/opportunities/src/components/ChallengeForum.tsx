@@ -14,6 +14,7 @@ import { IconOutline, LoadingSpinner } from '~/libs/ui'
 import {
     ChallengeOpportunity,
     ForumPost,
+    ForumPostReaction,
     ForumTopicCollection,
     ForumTopicDetail,
     ForumTopicSummary,
@@ -28,6 +29,7 @@ import {
     getForumTopicDetail,
     getMemberProfilesByUserIds,
     markForumTopicRead,
+    setForumPostReaction,
     setForumTopicWatching,
     updateForumPost,
     updateForumTopic,
@@ -850,9 +852,11 @@ const ForumPostCard: FC<{
     onDelete: (post: ForumPost) => void
     onEdit: (post: ForumPost) => void
     onQuote: (post: ForumPost) => void
+    onReact: (post: ForumPost, reaction: ForumPostReaction) => void
     onReply: (post: ForumPost) => void
     parent?: ForumPost
     profilesByMemberId: MemberProfilesById
+    reactionPending: boolean
 }> = props => {
     const post = props.item.post
     const owner = post.authorMemberId === props.memberId
@@ -903,14 +907,32 @@ const ForumPostCard: FC<{
             </div>
             {!post.deleted && (
                 <footer className={styles.postActions}>
-                    <span>
+                    <button
+                        aria-label={`${post.viewerReaction === 'THUMBS_UP'
+                            ? 'Remove'
+                            : 'Add'} thumbs up (${post.thumbsUpCount ?? 0})`}
+                        aria-pressed={post.viewerReaction === 'THUMBS_UP'}
+                        className={post.viewerReaction === 'THUMBS_UP' ? styles.reactionActive : undefined}
+                        disabled={props.reactionPending}
+                        onClick={() => props.onReact(post, 'THUMBS_UP')}
+                        type='button'
+                    >
                         <IconOutline.ThumbUpIcon aria-hidden='true' />
-                        0
-                    </span>
-                    <span>
+                        {post.thumbsUpCount ?? 0}
+                    </button>
+                    <button
+                        aria-label={`${post.viewerReaction === 'THUMBS_DOWN'
+                            ? 'Remove'
+                            : 'Add'} thumbs down (${post.thumbsDownCount ?? 0})`}
+                        aria-pressed={post.viewerReaction === 'THUMBS_DOWN'}
+                        className={post.viewerReaction === 'THUMBS_DOWN' ? styles.reactionActive : undefined}
+                        disabled={props.reactionPending}
+                        onClick={() => props.onReact(post, 'THUMBS_DOWN')}
+                        type='button'
+                    >
                         <IconOutline.ThumbDownIcon aria-hidden='true' />
-                        0
-                    </span>
+                        {post.thumbsDownCount ?? 0}
+                    </button>
                     {!props.detail.topic.locked && (
                         <>
                             <button onClick={() => props.onReply(post)} type='button'>
@@ -942,7 +964,8 @@ const ForumPostCard: FC<{
 }
 
 /**
- * Renders interactive topic detail with nested posts and an in-page Markdown composer.
+ * Renders interactive topic detail with nested posts, per-member reactions,
+ * and an in-page Markdown composer.
  *
  * @param props topic detail, current member, projections, navigation, and refresh callback.
  * @returns topic information, post cards, and comment workflow.
@@ -959,6 +982,7 @@ const ForumTopicView: FC<{
     const [error, setError] = useState<string>()
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
+    const [reactionPendingPostId, setReactionPendingPostId] = useState<string>()
     const [replyTarget, setReplyTarget] = useState<ForumPost>()
     const flatPosts = flattenForumPosts(props.detail.posts)
     const postById = new Map(flatPosts.map(item => [item.post.id, item.post]))
@@ -1014,6 +1038,26 @@ const ForumTopicView: FC<{
             setError(forumErrorMessage(mutationError))
         } finally {
             setPending(false)
+        }
+    }
+
+    /** Adds, switches, or removes the current member's post reaction. */
+    const reactToPost = async (
+        post: ForumPost,
+        reaction: ForumPostReaction,
+    ): Promise<void> => {
+        setError(undefined)
+        setReactionPendingPostId(post.id)
+        try {
+            await setForumPostReaction(
+                post.id,
+                post.viewerReaction === reaction ? undefined : reaction,
+            )
+            await props.onChanged()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setReactionPendingPostId(undefined)
         }
     }
 
@@ -1099,7 +1143,8 @@ const ForumTopicView: FC<{
                         />
                     </div>
                 </aside>
-                <div className={styles.posts} aria-busy={pending}>
+                <div className={styles.posts} aria-busy={pending || !!reactionPendingPostId}>
+                    {error && <p className={styles.actionError} role='alert'>{error}</p>}
                     {flatPosts.map(item => (
                         <ForumPostCard
                             detail={props.detail}
@@ -1109,11 +1154,13 @@ const ForumTopicView: FC<{
                             onDelete={removePost}
                             onEdit={editPost}
                             onQuote={quote}
+                            onReact={reactToPost}
                             onReply={reply}
                             parent={item.post.parentType === 'POST'
                                 ? postById.get(item.post.parentId)
                                 : undefined}
                             profilesByMemberId={props.profilesByMemberId}
+                            reactionPending={reactionPendingPostId === item.post.id}
                         />
                     ))}
                     {!flatPosts.length && (
@@ -1144,7 +1191,6 @@ const ForumTopicView: FC<{
                                 preview={preview}
                                 value={comment}
                             />
-                            {error && <p className={styles.actionError} role='alert'>{error}</p>}
                             <div className={styles.formActions}>
                                 <button disabled={pending} type='submit'>
                                     {pending ? 'Posting…' : 'Post comment'}
@@ -1168,9 +1214,9 @@ const ForumTopicView: FC<{
  * Renders the authenticated Challenge Discussion experience against forums-api-v6.
  *
  * The component keeps every communication workflow inside Opportunities:
- * topic create/edit/delete, nested replies, post edit/delete, watch state, and
- * read state. A legacy link is retained only as recovery when the v6 API cannot
- * be reached or the member is signed out.
+ * topic create/edit/delete, nested replies, post edit/delete, reaction toggles,
+ * watch state, and read state. A legacy link is retained only as recovery when
+ * the v6 API cannot be reached or the member is signed out.
  *
  * @param props challenge context, optional authenticated member ID, and administrator announcement access.
  * @returns embedded topic list, creation form, detail discussion, or recovery state.

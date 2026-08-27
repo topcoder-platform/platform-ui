@@ -12,6 +12,8 @@ import {
     CreateForumTopicRequest,
     CreateForumTopicResponse,
     ForumPostMutationResponse,
+    ForumPostReaction,
+    ForumPostReactionMutationResponse,
     ForumTopicCollection,
     ForumTopicDetail,
     ForumTopicMutationResponse,
@@ -218,6 +220,27 @@ export function deleteForumPost(postId: string): Promise<ForumPostMutationRespon
     return xhrDeleteAsync<ForumPostMutationResponse>(
         `${FORUMS_URL}/posts/${encodeURIComponent(postId)}`,
     )
+}
+
+/**
+ * Adds, switches, or removes the current member's reaction on a forum post.
+ *
+ * @param postId Forums API post identifier.
+ * @param reaction thumbs value to set, or undefined to remove the current value.
+ * @returns resulting current-member reaction and shared aggregate counts.
+ * @throws Propagates Forums API access, ban, validation, not-found, and network errors.
+ */
+export function setForumPostReaction(
+    postId: string,
+    reaction?: ForumPostReaction,
+): Promise<ForumPostReactionMutationResponse> {
+    const url = `${FORUMS_URL}/posts/${encodeURIComponent(postId)}/reaction`
+    return reaction
+        ? xhrPutAsync<{ reaction: ForumPostReaction }, ForumPostReactionMutationResponse>(
+            url,
+            { reaction },
+        )
+        : xhrDeleteAsync<ForumPostReactionMutationResponse>(url)
 }
 
 /**
