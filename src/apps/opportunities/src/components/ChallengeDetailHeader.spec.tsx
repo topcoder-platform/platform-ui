@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
-import { render, RenderResult, screen } from '@testing-library/react'
+import { fireEvent, render, RenderResult, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 import { ChallengeOpportunity } from '../models'
@@ -159,6 +159,74 @@ describe('ChallengeDetailHeader actions and presentation', () => {
         expect(screen.getAllByAltText(/place$/))
             .toHaveLength(10)
         expect(screen.getByAltText('10 place'))
+            .toBeInTheDocument()
+    })
+
+    it('renders the Figma phase rail with date rows and challenge-end Winners milestone', () => {
+        const challengeEnd = '2999-08-20T12:30:00.000Z'
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: challengeEnd,
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-15T00:00:00.000Z',
+                                actualStartDate: '2026-08-10T00:00:00.000Z',
+                                id: 'registration',
+                                isOpen: true,
+                                name: 'Registration',
+                            },
+                            {
+                                id: 'submission',
+                                isOpen: true,
+                                name: 'Submission',
+                                scheduledEndDate: '2026-08-15T00:00:00.000Z',
+                                scheduledStartDate: '2026-08-10T00:00:00.000Z',
+                            },
+                        ],
+                        startDate: '2026-08-10T00:00:00.000Z',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const items = within(timeline)
+            .getAllByRole('listitem')
+        expect(items)
+            .toHaveLength(4)
+        expect(within(timeline)
+            .getByText('Launch'))
+            .toBeInTheDocument()
+
+        const registration = within(timeline)
+            .getByText('Registration')
+            .closest('li') as HTMLLIElement
+        expect(registration)
+            .toHaveAttribute('data-state', 'current')
+        expect(registration.querySelectorAll('time'))
+            .toHaveLength(2)
+
+        const winners = within(timeline)
+            .getByText('Winners')
+            .closest('li') as HTMLLIElement
+        expect(winners)
+            .toHaveAttribute('data-state', 'upcoming')
+        expect(winners.querySelector('time'))
+            .toHaveAttribute('datetime', challengeEnd)
+        expect(timeline.querySelectorAll('img'))
+            .toHaveLength(4)
+        expect(timeline.querySelectorAll('[data-state="current"]'))
+            .toHaveLength(6)
+        expect(within(timeline)
+            .getByText(/^Time zone:/))
             .toBeInTheDocument()
     })
 })

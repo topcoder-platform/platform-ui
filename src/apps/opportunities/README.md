@@ -85,6 +85,20 @@ subtype icons and member-facing labels.
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
 
+## Challenge detail timeline
+
+The expanded challenge timeline follows the Challenge API phase order between
+the synthetic Launch and Winners boundaries. Launch uses the challenge start,
+each authored phase displays its actual (then scheduled fallback) start and end
+on separate rows, and Winners uses the top-level challenge end. Only responses
+without a valid challenge end fall back to the latest valid phase end.
+
+Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping
+phases current. Ended phases and boundaries render complete, future milestones
+remain upcoming, and all timestamps use the browser's local time with its IANA
+timezone displayed below the rail. Phase names select the corresponding Figma
+glyph; unfamiliar phase names deliberately use the generic Review glyph.
+
 ## Challenge Markdown table of contents
 
 Challenge descriptions are safe Markdown. Authors create the generated table

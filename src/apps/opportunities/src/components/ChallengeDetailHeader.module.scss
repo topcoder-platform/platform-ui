@@ -397,76 +397,133 @@
 
 .expandedTimeline {
     display: flex;
-    gap: 0;
-    justify-content: space-between;
-    list-style: none;
-    margin: 32px auto 0;
+    flex-direction: column;
+    gap: 16px;
+    margin: 24px auto 0;
     max-width: 1200px;
-    padding: 20px 0 0;
+    padding-top: 24px;
     position: relative;
     z-index: 1;
+}
 
-    &::before {
-        background: rgba(255, 255, 255, .4);
-        content: '';
-        height: 1px;
-        left: 0;
-        position: absolute;
-        right: 0;
-        top: 7px;
+.timelineGraphic {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.timelineRail {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    width: 100%;
+}
+
+.timelineNode {
+    align-items: center;
+    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid transparent;
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: flex;
+    flex: 0 0 36px;
+    height: 36px;
+    justify-content: center;
+    padding: 8px;
+    width: 36px;
+
+    img {
+        display: block;
+        height: 20px;
+        width: 20px;
     }
 
-    li {
-        align-items: center;
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 110px;
-        position: relative;
-        text-align: center;
+    &.completed {
+        border-color: #3ddbd9;
+        border-style: solid;
+    }
 
-        > span {
-            background: #001e2e;
-            border: 2px solid rgba(255, 255, 255, .7);
-            border-radius: 50%;
-            height: 14px;
-            position: absolute;
-            top: -20px;
-            width: 14px;
+    &.current {
+        border-color: #3ddbd9;
+        border-style: dashed;
+    }
+
+    &.upcoming img {
+        filter: brightness(0) invert(1);
+        opacity: .2;
+    }
+}
+
+.timelineConnector {
+    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, .1);
+    border-radius: 8px;
+    flex: 1 1 0;
+    height: 8px;
+    min-width: 4px;
+
+    &.completed {
+        background: #3ddbd9;
+    }
+
+    &.current {
+        background: linear-gradient(90deg, #3ddbd9 49%, rgba(255, 255, 255, .1) 49%);
+    }
+}
+
+.timelineItems {
+    display: grid;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    li {
+        color: #fff;
+        font-size: 14px;
+        line-height: 20px;
+        min-width: 0;
+        text-align: center;
+        word-break: break-word;
+
+        &.upcoming {
+            color: rgba(255, 255, 255, .6);
+        }
+
+        &:first-child {
+            padding-right: 8px;
+            text-align: left;
+        }
+
+        &:last-child {
+            padding-left: 8px;
+            text-align: right;
         }
 
         strong {
-            font-size: 12px;
-            line-height: 16px;
-        }
-
-        small {
-            color: rgba(255, 255, 255, .6);
-            font-size: 11px;
-            line-height: 16px;
+            display: block;
+            font-weight: 400;
         }
     }
 }
 
-.completed {
-    > span {
-        background: #fff !important;
-        border-color: #fff !important;
-    }
-}
-
-.current {
-    color: #3ddbd9;
-
-    > span {
-        background: #3ddbd9 !important;
-        border-color: #3ddbd9 !important;
-    }
-}
-
-.upcoming {
+.timelineDates {
     color: rgba(255, 255, 255, .6);
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    line-height: 16px;
+    margin-top: 4px;
+}
+
+.timelineTimezone {
+    color: rgba(255, 255, 255, .6);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
 }
 
 @media (max-width: 1100px) {
@@ -511,29 +568,12 @@
     }
 
     .expandedTimeline {
-        align-items: stretch;
-        flex-direction: column;
-        gap: 16px;
-        padding-left: 24px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
 
-        &::before {
-            bottom: 0;
-            height: auto;
-            left: 6px;
-            right: auto;
-            top: 0;
-            width: 1px;
-        }
-
-        li {
-            align-items: flex-start;
-            text-align: left;
-
-            > span {
-                left: -24px;
-                top: 2px;
-            }
-        }
+    .timelineGraphic {
+        min-width: 800px;
     }
 }
 

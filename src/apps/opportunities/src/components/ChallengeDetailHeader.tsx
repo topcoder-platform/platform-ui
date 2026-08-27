@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useState } from 'react'
+import { CSSProperties, FC, Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -20,6 +20,15 @@ import medal7 from '../assets/medal-7.svg'
 import medal8 from '../assets/medal-8.svg'
 import medal9 from '../assets/medal-9.svg'
 import taskTypeIcon from '../assets/task-type.svg'
+import timelineAiScreeningIcon from '../assets/timeline-ai-screening.svg'
+import timelineAppealsIcon from '../assets/timeline-appeals.svg'
+import timelineAppealsResponseIcon from '../assets/timeline-appeals-response.svg'
+import timelineLaunchIcon from '../assets/timeline-launch.svg'
+import timelineRegistrationIcon from '../assets/timeline-registration.svg'
+import timelineReviewIcon from '../assets/timeline-review.svg'
+import timelineScreeningIcon from '../assets/timeline-screening.svg'
+import timelineSubmissionIcon from '../assets/timeline-submission.svg'
+import timelineWinnersIcon from '../assets/timeline-winners.svg'
 
 import {
     challengeCatalogKey,
@@ -40,6 +49,18 @@ interface ChallengeDetailHeaderProps {
     onUnregister: () => void
     registrationError?: boolean
     registrationLoading?: boolean
+}
+
+type ChallengeTimelineState = 'completed' | 'current' | 'upcoming'
+
+interface ChallengeTimelineItem {
+    endDate?: string
+    icon: string
+    key: string
+    name: string
+    range: boolean
+    startDate?: string
+    state: ChallengeTimelineState
 }
 
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
@@ -160,18 +181,178 @@ function trackClass(trackKey: string): string {
 }
 
 /**
+ * Converts an API date into a comparable timestamp.
+ *
+ * @param value ISO timestamp returned by Challenge API.
+ * @returns finite timestamp, or undefined for absent and malformed values.
+ * @throws Does not throw.
+ */
+function timelineTimestamp(value?: string): number | undefined {
+    if (!value) return undefined
+    const timestamp = Date.parse(value)
+    return Number.isNaN(timestamp) ? undefined : timestamp
+}
+
+/**
  * Labels one expanded-timeline phase for visual completion state.
  *
  * @param phase scheduled challenge phase.
  * @param selected API-authoritative current phase.
+ * @param currentPhaseNames every API-authoritative open phase name, including overlaps.
  * @returns completed, current, or upcoming state.
  * @throws Does not throw; malformed dates remain upcoming.
  */
-function timelineState(phase: ChallengePhase, selected?: ChallengePhase): 'completed' | 'current' | 'upcoming' {
-    if ((selected?.id && phase.id === selected.id) || (!selected?.id && selected === phase)) return 'current'
+function timelineState(
+    phase: ChallengePhase,
+    selected?: ChallengePhase,
+    currentPhaseNames: string[] = [],
+): ChallengeTimelineState {
+    const phaseKey = challengeCatalogKey(phase.name)
+    const selectedMatches = (selected?.id && phase.id === selected.id)
+        || (!selected?.id && selected && challengeCatalogKey(selected.name) === phaseKey)
+    const namedCurrent = currentPhaseNames.some(name => challengeCatalogKey(name) === phaseKey)
+    if (phase.isOpen === true || selectedMatches || namedCurrent) return 'current'
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
-    const end = endValue ? new Date(endValue) : undefined
-    return end && !Number.isNaN(end.getTime()) && end.getTime() <= Date.now() ? 'completed' : 'upcoming'
+    const end = timelineTimestamp(endValue)
+    return end !== undefined && end <= Date.now() ? 'completed' : 'upcoming'
+}
+
+/**
+ * Maps Challenge API phase names to the exact phase glyph exported from Figma.
+ *
+ * @param name authored Challenge API phase name.
+ * @returns committed Figma icon asset for the phase family.
+ * @throws Does not throw; unrecognized phases use the Review glyph.
+ */
+function timelinePhaseIcon(name: string): string {
+    const key = challengeCatalogKey(name)
+    if (key.includes('registration')) return timelineRegistrationIcon
+    if (key.includes('submission') || key.includes('finalfix')) return timelineSubmissionIcon
+    if (key.includes('aiscreening')) return timelineAiScreeningIcon
+    if (key.includes('screening')) return timelineScreeningIcon
+    if (key.includes('appealsresponse')) return timelineAppealsResponseIcon
+    if (key.includes('appeals')) return timelineAppealsIcon
+    return timelineReviewIcon
+}
+
+/**
+ * Resolves the end represented by the terminal Winners milestone.
+ *
+ * @param challenge Challenge API detail response.
+ * @returns the challenge end date, or the latest valid phase end when absent.
+ * @throws Does not throw; malformed dates are ignored.
+ */
+function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefined {
+    if (timelineTimestamp(challenge.endDate) !== undefined) return challenge.endDate
+    return (challenge.phases ?? []).reduce<string | undefined>((latest, item) => {
+        const candidate = item.actualEndDate ?? item.scheduledEndDate
+        const candidateTimestamp = timelineTimestamp(candidate)
+        const latestTimestamp = timelineTimestamp(latest)
+        if (candidateTimestamp === undefined) return latest
+        return latestTimestamp === undefined || candidateTimestamp > latestTimestamp ? candidate : latest
+    }, undefined)
+}
+
+/**
+ * Builds the Figma timeline sequence from Challenge API boundaries and phases.
+ *
+ * @param challenge Challenge API detail response.
+ * @param selected API-authoritative current phase.
+ * @returns Launch, authored phases, and terminal Winners timeline items in display order.
+ * @throws Does not throw; absent dates are retained as announced-later labels.
+ */
+function challengeTimelineItems(
+    challenge: ChallengeOpportunity,
+    selected?: ChallengePhase,
+): ChallengeTimelineItem[] {
+    const now = Date.now()
+    const startTimestamp = timelineTimestamp(challenge.startDate)
+    const endDate = challengeTimelineEnd(challenge)
+    const endTimestamp = timelineTimestamp(endDate)
+    const phases = (challenge.phases ?? []).map((item, index): ChallengeTimelineItem => ({
+        endDate: item.actualEndDate ?? item.scheduledEndDate,
+        icon: timelinePhaseIcon(item.name),
+        key: item.id ?? `phase-${challengeCatalogKey(item.name)}-${index}`,
+        name: item.name,
+        range: true,
+        startDate: item.actualStartDate ?? item.scheduledStartDate,
+        state: timelineState(item, selected, challenge.currentPhaseNames),
+    }))
+
+    return [{
+        icon: timelineLaunchIcon,
+        key: 'launch',
+        name: 'Launch',
+        range: false,
+        startDate: challenge.startDate,
+        state: startTimestamp !== undefined && startTimestamp <= now ? 'completed' : 'upcoming',
+    }, ...phases, {
+        icon: timelineWinnersIcon,
+        key: 'winners',
+        name: 'Winners',
+        range: false,
+        startDate: endDate,
+        state: ((endTimestamp !== undefined && endTimestamp <= now)
+            || challenge.status?.toUpperCase() === 'COMPLETED') ? 'completed' : 'upcoming',
+    }]
+}
+
+/**
+ * Labels the thick connector between two Figma timeline milestones.
+ *
+ * @param previous state of the milestone on the connector's left.
+ * @param next state of the milestone on the connector's right.
+ * @returns completed, current-progress, or upcoming connector state.
+ * @throws Does not throw.
+ */
+function timelineConnectorState(
+    previous: ChallengeTimelineState,
+    next: ChallengeTimelineState,
+): ChallengeTimelineState {
+    if (previous === 'completed' && (next === 'completed' || next === 'current')) return 'completed'
+    if (previous === 'current') return 'current'
+    return 'upcoming'
+}
+
+/**
+ * Formats one timeline timestamp as the two-row Figma date content expects.
+ *
+ * @param value ISO timestamp returned by Challenge API.
+ * @returns local day, month, year, hour, and minute, or the schedule fallback.
+ * @throws Does not throw; malformed dates use the fallback label.
+ */
+function timelineDate(value?: string): string {
+    const timestamp = timelineTimestamp(value)
+    if (timestamp === undefined) return 'To be announced'
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        hour: '2-digit',
+        hour12: false,
+        minute: '2-digit',
+        month: 'long',
+        year: 'numeric',
+    })
+        .formatToParts(new Date(timestamp))
+    const day = parts.find(part => part.type === 'day')?.value
+    const month = parts.find(part => part.type === 'month')?.value
+    const year = parts.find(part => part.type === 'year')?.value
+    const hour = parts.find(part => part.type === 'hour')?.value
+    const minute = parts.find(part => part.type === 'minute')?.value
+    return `${day} ${month}, ${year}, ${hour}:${minute}`
+}
+
+/**
+ * Formats the browser timezone in the human-readable Figma label style.
+ *
+ * @returns local IANA timezone with spaced path separators.
+ * @throws Does not throw; browsers without a timezone report UTC.
+ */
+function timelineTimezone(): string {
+    const timezone = Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone || 'UTC'
+    return timezone.replace(/_/g, ' ')
+        .replace(/\//g, ' / ')
 }
 
 /**
@@ -195,6 +376,14 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
     const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
     const skills = props.challenge.skills ?? []
+    const expandedTimeline = challengeTimelineItems(props.challenge, phase)
+    const timelineGridStyle: CSSProperties = {
+        gridTemplateColumns: [
+            '88px',
+            ...(props.challenge.phases ?? []).map(() => 'minmax(0, 1fr)'),
+            '88px',
+        ].join(' '),
+    }
 
     return (
         <header className={styles.header}>
@@ -313,23 +502,59 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                     </aside>
                 </div>
                 {timelineOpen && (
-                    <ol className={styles.expandedTimeline} id='challenge-timeline'>
-                        {(props.challenge.phases ?? []).map(item => (
-                            <li
-                                className={styles[timelineState(item, phase)]}
-                                key={item.id ?? item.name}
-                            >
-                                <span />
-                                <strong>{item.name}</strong>
-                                <small>
-                                    {dateRange(
-                                        item.actualStartDate ?? item.scheduledStartDate,
-                                        item.actualEndDate ?? item.scheduledEndDate,
-                                    )}
-                                </small>
-                            </li>
-                        ))}
-                    </ol>
+                    <section
+                        aria-label='Challenge timeline'
+                        className={styles.expandedTimeline}
+                        id='challenge-timeline'
+                    >
+                        <div className={styles.timelineGraphic}>
+                            <div aria-hidden='true' className={styles.timelineRail}>
+                                {expandedTimeline.map((item, index) => (
+                                    <Fragment key={item.key}>
+                                        {index > 0 && (
+                                            <span
+                                                className={classNames(
+                                                    styles.timelineConnector,
+                                                    styles[timelineConnectorState(
+                                                        expandedTimeline[index - 1].state,
+                                                        item.state,
+                                                    )],
+                                                )}
+                                                data-state={timelineConnectorState(
+                                                    expandedTimeline[index - 1].state,
+                                                    item.state,
+                                                )}
+                                            />
+                                        )}
+                                        <span
+                                            className={classNames(styles.timelineNode, styles[item.state])}
+                                            data-state={item.state}
+                                        >
+                                            <img alt='' src={item.icon} />
+                                        </span>
+                                    </Fragment>
+                                ))}
+                            </div>
+                            <ol className={styles.timelineItems} style={timelineGridStyle}>
+                                {expandedTimeline.map(item => (
+                                    <li className={styles[item.state]} data-state={item.state} key={item.key}>
+                                        <strong>{item.name}</strong>
+                                        <span className={styles.timelineDates}>
+                                            {item.startDate ? (
+                                                <time dateTime={item.startDate}>{timelineDate(item.startDate)}</time>
+                                            ) : <span>{timelineDate()}</span>}
+                                            {item.range && (item.endDate ? (
+                                                <time dateTime={item.endDate}>{timelineDate(item.endDate)}</time>
+                                            ) : <span>{timelineDate()}</span>)}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                        <small className={styles.timelineTimezone}>
+                            {`Time zone: ${timelineTimezone()}`}
+                        </small>
+                    </section>
                 )}
             </div>
         </header>
