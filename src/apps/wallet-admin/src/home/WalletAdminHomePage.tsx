@@ -3,6 +3,9 @@ import { FC, useContext } from 'react'
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { LoadingSpinner } from '~/libs/ui'
 
+import { canAccessWalletAdmin } from '../config/access.config'
+import RoleErrorPage from '../pages/role-error/RoleErrorPage'
+
 import { WalletAdminLayout } from './page-layout'
 
 const AccountSettingsPage: FC<{}> = () => {
@@ -11,7 +14,11 @@ const AccountSettingsPage: FC<{}> = () => {
     return (
         <>
             <LoadingSpinner hide={initialized} />
-            {initialized && profile && <WalletAdminLayout profile={profile} />}
+            {initialized && profile && (
+                canAccessWalletAdmin(profile.roles)
+                    ? <WalletAdminLayout profile={profile} />
+                    : <RoleErrorPage />
+            )}
         </>
     )
 }
