@@ -267,6 +267,11 @@ export const SKILLS_EXTRACTION_WORKFLOW_ID = getReactEnv<string>(
     'skillExtractionWorkflow',
 )
 
+export const RAG_CHALLENGE_INGESTION_WORKFLOW_ID = getReactEnv<string>(
+    'RAG_CHALLENGE_INGESTION_WORKFLOW_ID',
+    'challengeIngestionWorkflow',
+)
+
 export const ADMIN = {
     AGREE_ELECTRONICALLY: '5b2798b2-ae82-4210-9b4d-5d6428125ccb',
     AGREE_FOR_DOCUSIGN_TEMPLATE: '999a26ad-b334-453c-8425-165d4cf496d7',

@@ -2,6 +2,7 @@ import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
 import {
+    assistantsRouteId,
     flexiTalentRouteId,
     showcaseSearchRouteId,
     skillStatisticsRouteId,
@@ -27,6 +28,9 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean, isUnpri
         }, {
             id: flexiTalentRouteId,
             title: 'Flexi-Talent',
+        }, {
+            id: assistantsRouteId,
+            title: 'Assistants',
         }] : []),
     ]
 
