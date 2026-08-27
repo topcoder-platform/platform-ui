@@ -16,6 +16,7 @@ import {
     getMemberHandle,
 } from '../../services/wallet'
 import { PaymentView } from '.'
+import { formatAuditTimestamp } from './payment-view.utils'
 
 jest.mock('../../services/wallet', () => ({
     fetchAuditLogs: jest.fn(),
@@ -445,6 +446,41 @@ describe('PaymentView', () => {
             expect(mockedFetchAuditLogs)
                 .toHaveBeenCalledWith(topgearPayment.id)
         })
+    })
+
+    it('formats release date values in audit actions in the user timezone', async () => {
+        const fromIso = '2026-06-11T05:05:29.611Z'
+        const toIso = '2026-06-03T05:05:29.000Z'
+        const topgearPayment: Winning = {
+            ...payment,
+            description: 'Test Project Topgeader BA - Week Ending: May 02, 2026',
+            externalId: 'topgear-challenge-1',
+            type: 'topgear payment',
+        }
+
+        mockedFetchAuditLogs.mockResolvedValue([{
+            action: `Modified release date from ${fromIso} to ${toIso}`,
+            createdAt: '2026-05-27T05:49:00.000Z',
+            id: 'audit-1',
+            note: 'Changed payment and release date',
+            userId: 'mess',
+            winningsId: topgearPayment.id,
+        }])
+
+        render(<PaymentView payment={topgearPayment} onClose={jest.fn()} />)
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Audit History' }))
+
+        expect(await screen.findByText('Changed payment and release date'))
+            .toBeTruthy()
+        expect(screen.queryByText(fromIso))
+            .toBeNull()
+        expect(screen.queryByText(toIso))
+            .toBeNull()
+        expect(screen.getByText(formatAuditTimestamp(fromIso)))
+            .toBeTruthy()
+        expect(screen.getByText(formatAuditTimestamp(toIso)))
+            .toBeTruthy()
     })
 
     it('renders taas payment details with handle and payment summary only', async () => {
