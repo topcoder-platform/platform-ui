@@ -279,6 +279,69 @@ describe('challenge-editor schema test challenge default', () => {
     })
 })
 
+describe('challenge-editor schema gitea teams validation', () => {
+    const baseFormData = {
+        description: 'This is a valid public specification description.',
+        name: 'Gitea configured challenge',
+        skills: [{
+            id: 'skill-id',
+            name: 'JavaScript',
+        }],
+        tags: [],
+        trackId: 'track-id',
+        typeId: 'type-id',
+    }
+
+    it('defaults giteaTeams to an empty list', () => {
+        const result = challengeBasicInfoSchema.cast(baseFormData)
+
+        expect(result.giteaTeams)
+            .toEqual([])
+    })
+
+    it('accepts a list of distinct teams', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: [
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                    { id: 34, name: 'reviewers', organization: 'partner' },
+                ],
+            }),
+        )
+            .resolves
+            .toEqual([
+                { id: 12, name: 'devs', organization: 'topcoder' },
+                { id: 34, name: 'reviewers', organization: 'partner' },
+            ])
+    })
+
+    it('rejects duplicated teams', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: [
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow('Gitea teams must be unique')
+    })
+
+    it('rejects a team without an id', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: [{ name: 'devs', organization: 'topcoder' }],
+            }),
+        )
+            .rejects
+            .toThrow('Gitea team id is required')
+    })
+})
+
 describe('challenge-editor schema reviewer slot assignment validation', () => {
     const baseFormData = {
         roundType: ROUND_TYPES.SINGLE_ROUND,
