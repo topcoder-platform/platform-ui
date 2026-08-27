@@ -1,0 +1,81 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    color: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    padding: 8px 0 0;
+
+    h1 {
+        color: #151515;
+        font-family: 'Figtree', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 38px;
+        margin-top: 20px;
+        text-transform: none;
+    }
+}
+
+.subtitle {
+    color: #0a0a0a;
+    font-size: 18px;
+    line-height: 25px;
+    margin: 4px 0 0;
+}
+
+.status {
+    color: #545f71;
+    font-size: 14px;
+    padding: 16px 0;
+}
+
+.layout {
+    display: flex;
+    gap: 16px;
+    height: 70vh;
+    margin-top: 20px;
+    margin-bottom: 28px;
+    min-height: 480px;
+    width: 100%;
+
+    @include ltesm {
+        flex-direction: column;
+        height: auto;
+    }
+}
+
+.sidebar {
+    flex: 0 0 133px;
+    max-width: 133px;
+
+    @include ltesm {
+        flex: 0 0 auto;
+        max-height: 160px;
+        max-width: 100%;
+    }
+}
+
+.chatPanel {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    width: 100%;
+}
+
+.loadingOverlay {
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    bottom: 0;
+    color: #545f71;
+    display: flex;
+    font-size: 14px;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}

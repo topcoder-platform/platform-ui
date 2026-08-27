@@ -11,7 +11,7 @@ interface WorkflowRunResponse {
 }
 
 interface WorkflowInputData {
-    inputData: { jobDescription: string }
+    inputData: Record<string, unknown>
 }
 
 const sleep = (ms: number): Promise<void> => new Promise<void>(resolve => {
@@ -22,10 +22,11 @@ const sleep = (ms: number): Promise<void> => new Promise<void>(resolve => {
  * Start an AI workflow run
  *
  * @param workflowId - The ID of the workflow to run
- * @param input - The input data for the workflow
+ * @param inputData - The input data for the workflow, shaped to match that
+ * workflow's own input schema
  * @returns The run ID
  */
-async function startWorkflowRun(workflowId: string, input: string): Promise<string> {
+async function startWorkflowRun(workflowId: string, inputData: Record<string, unknown>): Promise<string> {
     try {
 
         // Step 1: Create the run
@@ -42,7 +43,7 @@ async function startWorkflowRun(workflowId: string, input: string): Promise<stri
         // Step 2: Start the run with input
         await xhrPostAsync<WorkflowInputData, void>(
             `${API_BASE_URL}/workflows/${workflowId}/start?runId=${runId}`,
-            { inputData: { jobDescription: input } },
+            { inputData },
         )
 
         return runId
@@ -246,7 +247,7 @@ export async function extractSkillsFromText(
     try {
         // Step 1: Start the workflow run
         console.log(`Starting workflow run for: ${workflowIdToUse}`)
-        const runId = await startWorkflowRun(workflowIdToUse, description)
+        const runId = await startWorkflowRun(workflowIdToUse, { jobDescription: description })
         console.log(`Workflow started with runId: ${runId}`)
 
         // Step 2: Poll for completion
@@ -257,6 +258,65 @@ export async function extractSkillsFromText(
         return normalizeSkillsExtractionResult(result)
     } catch (error) {
         console.error('Skills extraction workflow failed:', (error as Error).message)
+        throw error
+    }
+}
+
+export interface ChallengeIngestionResult {
+    chunks: number
+    dryRun: boolean
+    skipped: boolean
+    projectId: string | undefined
+}
+
+function normalizeChallengeIngestionResult(result: WorkflowRunResult): ChallengeIngestionResult {
+    const raw = (result?.result ?? {}) as Record<string, unknown>
+
+    return {
+        chunks: typeof raw.chunks === 'number' ? raw.chunks : 0,
+        dryRun: Boolean(raw.dryRun),
+        projectId: typeof raw.projectId === 'string' ? raw.projectId : undefined,
+        skipped: Boolean(raw.skipped),
+    }
+}
+
+/**
+ * Ingest a single challenge into the RAG vector index using AI workflow
+ *
+ * @example
+ * try {
+ *   const report = await ingestChallengeInRag('a1b2c3d4-...')
+ *   console.log('Ingested chunks:', report.chunks)
+ * } catch (error) {
+ *   console.error('Challenge ingestion failed:', error.message)
+ * }
+ */
+export async function ingestChallengeInRag(
+    challengeId: string,
+    workflowId?: string,
+): Promise<ChallengeIngestionResult> {
+    if (!challengeId || typeof challengeId !== 'string') {
+        throw new Error('Challenge id must be a non-empty string')
+    }
+
+    const workflowIdToUse = workflowId || EnvironmentConfig.RAG_CHALLENGE_INGESTION_WORKFLOW_ID
+
+    if (!workflowIdToUse) {
+        throw new Error('RAG Challenge Ingestion Workflow ID is not configured')
+    }
+
+    try {
+        console.log(`Starting workflow run for: ${workflowIdToUse}`)
+        const runId = await startWorkflowRun(workflowIdToUse, { challengeId })
+        console.log(`Workflow started with runId: ${runId}`)
+
+        console.log('Polling for workflow completion...')
+        const result = await pollWorkflowRunStatus(workflowIdToUse, runId)
+        console.log('Workflow completed successfully')
+
+        return normalizeChallengeIngestionResult(result)
+    } catch (error) {
+        console.error('Challenge RAG ingestion workflow failed:', (error as Error).message)
         throw error
     }
 }

@@ -115,6 +115,7 @@ export interface GlobalConfig {
         PROGRESS_INTERVAL: number
     },
     SKILLS_EXTRACTION_WORKFLOW_ID: string
+    RAG_CHALLENGE_INGESTION_WORKFLOW_ID: string
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string

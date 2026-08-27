@@ -1,0 +1,273 @@
+@import '@libs/ui/styles/includes';
+
+.root {
+    background-color: $tc-white;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.viewport {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $sp-6;
+}
+
+.empty {
+    align-items: center;
+    color: #545f71;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    font-size: 14px;
+    gap: 16px;
+    justify-content: center;
+    text-align: center;
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 480px;
+}
+
+.suggestion {
+    background-color: $blue-15;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: $blue-140;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+
+    &:hover {
+        border-color: $blue-110;
+    }
+}
+
+.userMessage,
+.assistantMessage {
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 22px;
+    max-width: 75%;
+    padding: 10px 14px;
+}
+
+.userMessage {
+    align-self: flex-end;
+    background-color: $blue-110;
+    color: $tc-white;
+    white-space: pre-wrap;
+}
+
+.assistantMessage {
+    align-self: flex-start;
+    background-color: $black-5;
+    color: $black-100;
+}
+
+.toolCall {
+    background-color: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 10px;
+    margin: 4px 0 16px;
+    overflow: hidden;
+    white-space: normal;
+}
+
+.toolCallHeader {
+    align-items: center;
+    background-color: $blue-10;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    padding: 6px 10px;
+    user-select: none;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+
+    &::marker {
+        content: '';
+    }
+}
+
+.toolCallChevron {
+    color: $blue-120;
+    flex: 0 0 auto;
+    height: 14px;
+    transition: transform 0.15s ease;
+    width: 14px;
+
+    .toolCall[open] & {
+        transform: rotate(180deg);
+    }
+}
+
+.toolCallName {
+    color: $blue-140;
+    flex: 1 1 auto;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.toolCallStatus {
+    align-items: center;
+    color: $blue-120;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 5px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.toolCallDots {
+    .thinkingDot {
+        background-color: currentcolor;
+        height: 3px;
+        width: 3px;
+    }
+}
+
+.thinking {
+    padding: 12px 14px;
+}
+
+.thinkingDots {
+    align-items: center;
+    display: inline-flex;
+    gap: 4px;
+}
+
+.thinkingDot {
+    animation: thinkingBounce 1.2s ease-in-out infinite;
+    background-color: $black-40;
+    border-radius: 50%;
+    height: 6px;
+    width: 6px;
+
+    &:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+}
+
+@keyframes thinkingBounce {
+    0%,
+    60%,
+    100% {
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+.toolCallError {
+    color: $red-120;
+}
+
+.toolCallSection {
+    border-top: 1px solid $black-10;
+    padding: 8px 10px;
+}
+
+.toolCallLabel {
+    color: #545f71;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.toolCallBody {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    line-height: 18px;
+    margin: 0;
+    max-height: 240px;
+    overflow: auto;
+    white-space: pre;
+}
+
+.composer {
+    align-items: flex-end;
+    border-top: 1px solid $black-10;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: $sp-4;
+}
+
+.memoryHint {
+    color: $black-40;
+    flex: 0 0 auto;
+    font-size: 11px;
+    margin: 0;
+    padding: 0 $sp-4 $sp-3;
+    text-align: right;
+}
+
+.input {
+    background-color: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 10px;
+    color: $black-100;
+    flex: 1 1 auto;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    max-height: 120px;
+    padding: 10px 12px;
+    resize: none;
+
+    &:focus {
+        border-color: $blue-110;
+        outline: none;
+    }
+}
+
+.send,
+.cancel {
+    background-color: $blue-110;
+    border: none;
+    border-radius: 10px;
+    color: $tc-white;
+    cursor: pointer;
+    flex: 0 0 auto;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+
+    &:disabled {
+        background-color: $black-20;
+        cursor: not-allowed;
+    }
+}
+
+.cancel {
+    background-color: $black-60;
+}
