@@ -6,6 +6,7 @@ export * from './applications.service'
 export * from './billing-accounts.service'
 export * from './challenges.service'
 export * from './engagements.service'
+export * from './gitea-teams.service'
 export {
     addGroupMember,
     bulkCreateGroup,

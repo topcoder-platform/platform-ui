@@ -189,12 +189,14 @@ describe('challenge-editor utils gitea teams mapping', () => {
             .toEqual([])
     })
 
-    it('loads unique team ids from the gitea metadata entry', () => {
+    it('loads unique teams from the gitea metadata entry', () => {
         const result = transformChallengeToFormData({
             description: 'Public specification',
             metadata: [{
                 name: 'gitea',
-                value: '{"teams":["12","34","12"]}',
+                value: '{"teams":[{"id":12,"name":"devs","organization":"topcoder"},'
+                    + '{"id":34,"name":"reviewers","organization":"partner"},'
+                    + '{"id":12,"name":"devs","organization":"topcoder"}]}',
             }],
             name: 'Challenge with git config',
             trackId: 'track-id',
@@ -202,13 +204,20 @@ describe('challenge-editor utils gitea teams mapping', () => {
         })
 
         expect(result.giteaTeams)
-            .toEqual(['12', '34'])
+            .toEqual([
+                { id: 12, name: 'devs', organization: 'topcoder' },
+                { id: 34, name: 'reviewers', organization: 'partner' },
+            ])
     })
 
-    it('serializes selected team ids into the gitea metadata entry', () => {
+    it('serializes selected teams into the gitea metadata entry', () => {
         const result = transformFormDataToChallenge({
             description: 'Public specification',
-            giteaTeams: ['12', '34', '12'],
+            giteaTeams: [
+                { id: 12, name: 'devs', organization: 'topcoder' },
+                { id: 34, name: 'reviewers', organization: 'partner' },
+                { id: 12, name: 'devs', organization: 'topcoder' },
+            ],
             name: 'Challenge with git config',
             skills: [],
             tags: [],
@@ -219,7 +228,8 @@ describe('challenge-editor utils gitea teams mapping', () => {
         expect(result.metadata)
             .toEqual(expect.arrayContaining([{
                 name: 'gitea',
-                value: '{"teams":["12","34"]}',
+                value: '{"teams":[{"id":12,"name":"devs","organization":"topcoder"},'
+                    + '{"id":34,"name":"reviewers","organization":"partner"}]}',
             }]))
     })
 
@@ -229,7 +239,7 @@ describe('challenge-editor utils gitea teams mapping', () => {
             giteaTeams: [],
             metadata: [{
                 name: 'gitea',
-                value: '{"teams":["12"]}',
+                value: '{"teams":[{"id":12,"name":"devs"}]}',
             }],
             name: 'Challenge without git config',
             skills: [],

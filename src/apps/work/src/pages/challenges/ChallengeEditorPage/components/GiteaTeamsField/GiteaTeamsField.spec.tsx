@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { FC } from 'react'
 import {
+    act,
     render,
     screen,
 } from '@testing-library/react'
@@ -12,7 +13,11 @@ import {
     useWatch,
 } from 'react-hook-form'
 
-import { ChallengeEditorFormData } from '../../../../../lib/models'
+import {
+    ChallengeEditorFormData,
+    GiteaTeam,
+} from '../../../../../lib/models'
+import { searchGiteaTeams } from '../../../../../lib/services'
 
 import { GiteaTeamsField } from './GiteaTeamsField'
 
@@ -25,12 +30,20 @@ interface MockFormSelectFieldProps {
     disabled?: boolean
     fromFieldValue?: (value: unknown) => MockFormSelectOption[]
     hint?: string
-    isCreatable?: boolean
+    isAsync?: boolean
     isMulti?: boolean
     label: string
+    loadOptions?: (inputValue: string) => Promise<MockFormSelectOption[]>
     name: string
     toFieldValue?: (selected: unknown) => unknown
 }
+
+let mockLastLoadOptions: ((inputValue: string) => Promise<MockFormSelectOption[]>) | undefined
+let mockLoadedOptions: MockFormSelectOption[] = []
+
+jest.mock('../../../../../lib/services', () => ({
+    searchGiteaTeams: jest.fn(),
+}))
 
 jest.mock('../../../../../lib/components/form', () => ({
     FormSelectField: function MockFormSelectField(props: MockFormSelectFieldProps) {
@@ -42,13 +55,12 @@ jest.mock('../../../../../lib/components/form', () => ({
         })
         const options = props.fromFieldValue?.(controller.field.value) || []
 
-        function handleAppendClick(): void {
+        mockLastLoadOptions = props.loadOptions
+
+        function handleAppendLoadedClick(): void {
             const nextOptions = [
                 ...options,
-                {
-                    label: '12',
-                    value: '12',
-                },
+                ...mockLoadedOptions,
             ]
             controller.field.onChange(props.toFieldValue?.(nextOptions) ?? nextOptions)
         }
@@ -60,20 +72,22 @@ jest.mock('../../../../../lib/components/form', () => ({
                 <output data-testid='select-flags'>
                     {JSON.stringify({
                         disabled: props.disabled === true,
-                        isCreatable: props.isCreatable === true,
+                        isAsync: props.isAsync === true,
                         isMulti: props.isMulti === true,
                     })}
                 </output>
                 <output data-testid='select-options'>{JSON.stringify(options)}</output>
                 {/* eslint-disable-next-line react/jsx-no-bind */}
-                <button onClick={handleAppendClick} type='button'>Add team 12</button>
+                <button onClick={handleAppendLoadedClick} type='button'>Add loaded teams</button>
             </div>
         )
     },
 }))
 
+const searchGiteaTeamsMock = searchGiteaTeams as jest.MockedFunction<typeof searchGiteaTeams>
+
 interface TestHarnessProps {
-    defaultGiteaTeams?: string[]
+    defaultGiteaTeams?: GiteaTeam[]
     disabled?: boolean
 }
 
@@ -106,8 +120,50 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
     )
 }
 
+const devsTeam: GiteaTeam = {
+    id: 12,
+    name: 'devs',
+    organization: 'topcoder',
+}
+
+const reviewersTeam: GiteaTeam = {
+    id: 34,
+    name: 'reviewers',
+    organization: 'partner',
+}
+
+const designersTeam: GiteaTeam = {
+    id: 56,
+    name: 'designers',
+    organization: 'topcoder',
+}
+
+async function loadOptions(inputValue: string): Promise<MockFormSelectOption[]> {
+    let result: MockFormSelectOption[] = []
+
+    await act(async () => {
+        const pending = mockLastLoadOptions?.(inputValue) ?? Promise.resolve([])
+        jest.advanceTimersByTime(500)
+        result = await pending
+    })
+
+    return result
+}
+
 describe('GiteaTeamsField', () => {
-    it('renders a creatable multi-select with the registration sync hint', () => {
+    beforeEach(() => {
+        jest.useFakeTimers()
+        mockLastLoadOptions = undefined
+        mockLoadedOptions = []
+        searchGiteaTeamsMock.mockReset()
+        searchGiteaTeamsMock.mockResolvedValue([])
+    })
+
+    afterEach(() => {
+        jest.useRealTimers()
+    })
+
+    it('renders an async multi-select with the registration sync hint', () => {
         render(<TestHarness />)
 
         expect(screen.getByTestId('select-label').textContent)
@@ -120,7 +176,7 @@ describe('GiteaTeamsField', () => {
         expect(JSON.parse(screen.getByTestId('select-flags').textContent || '{}'))
             .toEqual({
                 disabled: false,
-                isCreatable: true,
+                isAsync: true,
                 isMulti: true,
             })
     })
@@ -132,41 +188,119 @@ describe('GiteaTeamsField', () => {
             .toBe(true)
     })
 
-    it('loads the saved team ids as options, dropping blanks and duplicates', () => {
-        render(<TestHarness defaultGiteaTeams={[' 34 ', '12', '', '34']} />)
+    it('labels saved teams with the organization owning them', () => {
+        render(<TestHarness defaultGiteaTeams={[reviewersTeam, devsTeam, reviewersTeam]} />)
 
         expect(JSON.parse(screen.getByTestId('select-options').textContent || '[]'))
             .toEqual([
-                {
-                    label: '34',
+                expect.objectContaining({
+                    label: 'reviewers (partner)',
                     value: '34',
-                },
-                {
-                    label: '12',
+                }),
+                expect.objectContaining({
+                    label: 'devs (topcoder)',
                     value: '12',
-                },
+                }),
             ])
     })
 
-    it('keeps the persisted team ids unique when a duplicate is added', async () => {
-        const user = userEvent.setup()
+    it('omits the organization when the teams all come from one', () => {
+        render(<TestHarness defaultGiteaTeams={[devsTeam, designersTeam]} />)
 
-        render(<TestHarness defaultGiteaTeams={['12']} />)
-
-        await user.click(screen.getByRole('button', { name: 'Add team 12' }))
-
-        expect(screen.getByTestId('gitea-teams-value').textContent)
-            .toBe(JSON.stringify(['12']))
+        expect(JSON.parse(screen.getByTestId('select-options').textContent || '[]'))
+            .toEqual([
+                expect.objectContaining({
+                    label: 'devs',
+                    value: '12',
+                }),
+                expect.objectContaining({
+                    label: 'designers',
+                    value: '56',
+                }),
+            ])
     })
 
-    it('persists a newly created team id', async () => {
-        const user = userEvent.setup()
+    it('labels search results with the organization only when they span several', async () => {
+        searchGiteaTeamsMock.mockResolvedValue([devsTeam, designersTeam])
 
-        render(<TestHarness defaultGiteaTeams={['34']} />)
+        render(<TestHarness />)
 
-        await user.click(screen.getByRole('button', { name: 'Add team 12' }))
+        expect((await loadOptions('de')).map(option => option.label))
+            .toEqual(['devs', 'designers'])
+
+        searchGiteaTeamsMock.mockResolvedValue([devsTeam, reviewersTeam])
+
+        expect((await loadOptions('de')).map(option => option.label))
+            .toEqual(['devs (topcoder)', 'reviewers (partner)'])
+    })
+
+    it('searches teams once typing settles', async () => {
+        searchGiteaTeamsMock.mockResolvedValue([devsTeam])
+
+        render(<TestHarness />)
+
+        const optionsPromise = act(async () => {
+            mockLastLoadOptions?.('de')
+            mockLastLoadOptions?.('dev')
+            const pending = mockLastLoadOptions?.('devs')
+            jest.advanceTimersByTime(499)
+            expect(searchGiteaTeamsMock).not.toHaveBeenCalled()
+            jest.advanceTimersByTime(1)
+            await pending
+        })
+
+        await optionsPromise
+
+        expect(searchGiteaTeamsMock.mock.calls)
+            .toEqual([['devs']])
+    })
+
+    it('does not search until the keyword is long enough', async () => {
+        render(<TestHarness />)
+
+        expect(await loadOptions('d'))
+            .toEqual([])
+        expect(searchGiteaTeamsMock).not.toHaveBeenCalled()
+    })
+
+    it('resolves to no options when the search fails', async () => {
+        searchGiteaTeamsMock.mockRejectedValue(new Error('review api down'))
+
+        render(<TestHarness />)
+
+        expect(await loadOptions('devs'))
+            .toEqual([])
+    })
+
+    it('persists the id, name and organization of the selected teams', async () => {
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+
+        render(<TestHarness defaultGiteaTeams={[reviewersTeam]} />)
+        mockLoadedOptions = [{
+            label: 'devs (topcoder)',
+            value: '12',
+            ...{ team: devsTeam },
+        }]
+
+        await user.click(screen.getByRole('button', { name: 'Add loaded teams' }))
 
         expect(screen.getByTestId('gitea-teams-value').textContent)
-            .toBe(JSON.stringify(['34', '12']))
+            .toBe(JSON.stringify([reviewersTeam, devsTeam]))
+    })
+
+    it('keeps the persisted teams unique when a duplicate is added', async () => {
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+
+        render(<TestHarness defaultGiteaTeams={[devsTeam]} />)
+        mockLoadedOptions = [{
+            label: 'devs (topcoder)',
+            value: '12',
+            ...{ team: devsTeam },
+        }]
+
+        await user.click(screen.getByRole('button', { name: 'Add loaded teams' }))
+
+        expect(screen.getByTestId('gitea-teams-value').textContent)
+            .toBe(JSON.stringify([devsTeam]))
     })
 })

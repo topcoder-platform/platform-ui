@@ -299,26 +299,46 @@ describe('challenge-editor schema gitea teams validation', () => {
             .toEqual([])
     })
 
-    it('accepts a list of distinct team ids', async () => {
+    it('accepts a list of distinct teams', async () => {
         await expect(
             challengeBasicInfoSchema.validateAt('giteaTeams', {
                 ...baseFormData,
-                giteaTeams: ['12', '34'],
+                giteaTeams: [
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                    { id: 34, name: 'reviewers', organization: 'partner' },
+                ],
             }),
         )
             .resolves
-            .toEqual(['12', '34'])
+            .toEqual([
+                { id: 12, name: 'devs', organization: 'topcoder' },
+                { id: 34, name: 'reviewers', organization: 'partner' },
+            ])
     })
 
-    it('rejects duplicated team ids', async () => {
+    it('rejects duplicated teams', async () => {
         await expect(
             challengeBasicInfoSchema.validateAt('giteaTeams', {
                 ...baseFormData,
-                giteaTeams: ['12', '12'],
+                giteaTeams: [
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                    { id: 12, name: 'devs', organization: 'topcoder' },
+                ],
             }),
         )
             .rejects
-            .toThrow('Gitea team ids must be unique')
+            .toThrow('Gitea teams must be unique')
+    })
+
+    it('rejects a team without an id', async () => {
+        await expect(
+            challengeBasicInfoSchema.validateAt('giteaTeams', {
+                ...baseFormData,
+                giteaTeams: [{ name: 'devs', organization: 'topcoder' }],
+            }),
+        )
+            .rejects
+            .toThrow('Gitea team id is required')
     })
 })
 

@@ -40,7 +40,10 @@ export const CHALLENGE_APPROVAL_STATUS = {
 
 export const IS_TEST_CHALLENGE_METADATA_FIELD = 'is_test_challenge'
 
-/** Challenge metadata key holding the Gitea configuration (`{ teams: string[] }`). */
+/**
+ * Challenge metadata key holding the Gitea configuration
+ * (`{ teams: Array<{ id, name, organization }> }`).
+ */
 export const GITEA_METADATA_FIELD = 'gitea'
 
 export const PAGE_SIZE = 10

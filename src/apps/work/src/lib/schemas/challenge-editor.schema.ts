@@ -298,18 +298,29 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
             .default(false)
             .optional(),
         giteaTeams: yup.array()
-            .of(yup.string()
-                .trim()
-                .required('Gitea team id cannot be empty'))
+            .of(yup.object({
+                id: yup.number()
+                    .integer()
+                    .positive()
+                    .required('Gitea team id is required'),
+                name: yup.string()
+                    .trim()
+                    .required('Gitea team name is required'),
+                organization: yup.string()
+                    .trim()
+                    .default(''),
+            }))
             .test(
                 'unique-gitea-teams',
-                'Gitea team ids must be unique',
+                'Gitea teams must be unique',
                 (value: unknown): boolean => {
                     if (!Array.isArray(value)) {
                         return true
                     }
 
-                    return new Set(value).size === value.length
+                    const teamIds = value.map(team => (team as { id?: unknown })?.id)
+
+                    return new Set(teamIds).size === teamIds.length
                 },
             )
             .default([])
