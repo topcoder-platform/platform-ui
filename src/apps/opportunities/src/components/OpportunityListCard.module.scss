@@ -1,0 +1,693 @@
+.card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: #161616;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 223px;
+    min-height: 136px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+
+    &:link,
+    &:visited {
+        color: #161616;
+    }
+
+    &:hover {
+        border-color: #007d79;
+        box-shadow: 0 5px 18px rgba(0, 30, 46, .1);
+        transform: translateY(-1px);
+    }
+
+
+    &:focus-visible {
+        border-color: #007d79;
+        box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
+        outline: 0;
+    }
+}
+
+.cardTooltip {
+    background: #001e2e !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+    color: #fff !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
+    max-width: 237px !important;
+    padding: 16px !important;
+
+    ul {
+        margin: 0;
+        padding-left: 16px;
+    }
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 24px;
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 28px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    p {
+        color: #000;
+        display: -webkit-box;
+        font-size: 14px;
+        height: 40px;
+        line-height: 20px;
+        margin: 0;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+}
+
+.eyebrow {
+    align-items: center;
+    color: #161616;
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 4px;
+    height: 24px;
+    line-height: 12px;
+}
+
+.badge {
+    background: #a7f0ba;
+    border-radius: 2px;
+    color: #044317;
+    line-height: 12px;
+    padding: 4px;
+}
+
+.state {
+    align-items: center;
+    border: 1px solid #a8a8a8;
+    border-radius: 2px;
+    box-sizing: border-box;
+    color: #161616;
+    display: inline-flex;
+    gap: 2px;
+    height: 20px;
+    margin-left: auto;
+    padding: 3px 4px;
+    white-space: nowrap;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.stateApplied {
+    border-color: #198038;
+    color: #198038;
+}
+
+.stateAccepted {
+    background: #198038;
+    border-color: #198038;
+    color: #fff;
+}
+
+.stateClosed {
+    border-color: #c1294f;
+    color: #c1294f;
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    span {
+        background: #e9ecef;
+        border-radius: 2px;
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 12px;
+        padding: 4px;
+    }
+}
+
+.meta {
+    align-content: center;
+    border-left: 1px solid #e0e0e0;
+    color: #161616;
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 24px 32px;
+
+    div {
+        align-items: center;
+        display: grid;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        grid-template-columns: 20px auto minmax(0, 1fr);
+        line-height: 20px;
+    }
+
+    svg {
+        color: #007d79;
+        height: 20px;
+        width: 20px;
+    }
+
+    dt {
+        color: #161616;
+        font-weight: 700;
+    }
+
+    dd {
+        color: #161616;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.engagementCard:not(.gridCard),
+.copilotCard:not(.gridCard) {
+    min-height: 197px;
+
+    .main {
+        padding-bottom: 29px;
+    }
+
+    .skills {
+        padding-bottom: 8px;
+    }
+}
+
+.engagementCard:not(.gridCard) .meta {
+    padding-inline: 16px;
+}
+
+.competitionCard {
+    grid-template-columns: minmax(0, 1fr) 195px;
+    min-height: 212px;
+}
+
+.competitionMain {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 0;
+    padding: 24px;
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 28px;
+        margin: 0;
+        text-transform: none;
+    }
+}
+
+.competitionCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.competitionCard .eyebrow {
+    align-items: flex-start;
+    height: 24px;
+}
+
+.competitionCard .skills {
+    gap: 8px;
+
+    .primarySkill {
+        background: #fff;
+        border: 1px solid #a8a8a8;
+        padding: 3px;
+    }
+}
+
+.trackBadge {
+    box-sizing: border-box;
+    height: 20px;
+}
+
+.designBadge {
+    background: #d0e2ff;
+    color: #002d9c;
+}
+
+.developmentBadge {
+    background: #a7f0ba;
+    color: #044317;
+}
+
+.dataScienceBadge {
+    background: #ffd9be;
+    color: #5e2900;
+}
+
+.artificialIntelligenceBadge {
+    background: #e8daff;
+    color: #491d8b;
+}
+
+.qualityAssuranceBadge {
+    background: #ffd6e8;
+    color: #740937;
+}
+
+.competitionBadge {
+    background: #e9ecef;
+    color: #161616;
+}
+
+.challengeType,
+.registrationState {
+    align-items: center;
+    border-radius: 2px;
+    box-sizing: border-box;
+    color: #161616;
+    display: inline-flex;
+    gap: 2px;
+    height: 20px;
+    padding: 4px;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 14px;
+        height: 14px;
+        width: 14px;
+    }
+}
+
+.registrationState {
+    border: 1px solid #a8a8a8;
+    margin-left: auto;
+
+    svg {
+        flex-basis: 16px;
+        height: 16px;
+        width: 16px;
+    }
+}
+
+.registrationClosed {
+    border-color: #c1294f;
+    color: #c1294f;
+}
+
+.registrationRegistered {
+    border-color: #198038;
+    color: #198038;
+}
+
+.competitionFooter {
+    align-items: center;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.prizes {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-height: 28px;
+    min-width: 0;
+}
+
+.prize {
+    align-items: center;
+    color: #161616;
+    display: inline-flex;
+    gap: 4px;
+    white-space: nowrap;
+
+    strong {
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 22px;
+    }
+}
+
+.medalIcon {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 16px;
+    height: 16px;
+    justify-content: center;
+    overflow: hidden;
+    width: 16px;
+
+    svg {
+        display: block;
+        flex: none;
+        height: 90%;
+        width: 70%;
+    }
+}
+
+.morePrizes {
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 50%;
+    color: #161616;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.prizeUnavailable {
+    color: #6f6f6f;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.phase {
+    display: flex;
+    flex: 0 1 255px;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 255px;
+    min-width: 220px;
+}
+
+.phaseHeading {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.phaseLabel {
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 4px;
+    color: #161616;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 4px;
+    line-height: 20px;
+    min-width: 0;
+    padding: 2px 4px;
+    white-space: nowrap;
+
+    svg {
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.timeLeft {
+    color: #161616;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 12px;
+    white-space: nowrap;
+}
+
+.progress {
+    background: #e0e0e0;
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+    width: 100%;
+
+    span {
+        background: #007d79;
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        transition: width .2s ease;
+    }
+}
+
+.competitionMeta {
+    align-content: center;
+    gap: 16px;
+    padding: 32px;
+
+    div {
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        grid-template-columns: 20px auto 1fr;
+        line-height: 20px;
+    }
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.gridCard {
+    grid-template-columns: minmax(0, 1fr);
+    height: 100%;
+
+    .main {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 24px;
+
+        h3 {
+            color: #161616;
+            display: -webkit-box;
+            font-family: 'Figtree', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 28px;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        p {
+            color: #000;
+            display: -webkit-box;
+            font-size: 14px;
+            height: auto;
+            line-height: 20px;
+            margin: 0;
+            max-height: 60px;
+            overflow: hidden;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+    }
+
+    .eyebrow {
+        align-items: flex-start;
+        height: 24px;
+    }
+
+    .skills {
+        gap: 8px;
+    }
+
+    .meta {
+        border-left: 0;
+        border-top: 1px solid #e0e0e0;
+        box-sizing: border-box;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        padding: 24px;
+
+        div {
+            font-family: 'Nunito Sans', sans-serif;
+            font-size: 14px;
+            gap: 4px;
+            grid-template-columns: 20px auto minmax(0, 1fr);
+            line-height: 20px;
+        }
+
+        svg {
+            height: 20px;
+            width: 20px;
+        }
+    }
+}
+
+.gridCard:not(.competitionCard) {
+    align-content: start;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e0e0e0;
+
+    &:hover {
+        box-shadow:
+            inset 0 0 0 1px #007d79,
+            0 5px 18px rgba(0, 30, 46, .1);
+    }
+
+    .meta {
+        border-top: 0;
+        box-shadow: inset 0 1px #e0e0e0;
+    }
+}
+
+.competitionCard.gridCard {
+    .competitionMain {
+        gap: 0;
+        min-height: 0;
+    }
+
+    h3 {
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .competitionFooter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .phase {
+        flex-basis: auto;
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .competitionMeta {
+        grid-template-columns: repeat(3, max-content);
+        justify-content: space-between;
+        padding: 24px;
+
+        dd {
+            overflow: visible;
+        }
+    }
+}
+
+.engagementCard.gridCard .meta {
+    min-height: 176px;
+}
+
+.copilotCard.gridCard .meta,
+.reviewCard.gridCard .meta {
+    min-height: 140px;
+}
+
+.engagementCard.gridCard .skills,
+.copilotCard.gridCard .skills {
+    padding-bottom: 8px;
+}
+
+.engagementCard.gridCard .opportunityType {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .competitionFooter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .phase {
+        flex-basis: auto;
+        max-width: none;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 800px) {
+    .card,
+    .competitionCard {
+        grid-template-columns: 1fr;
+    }
+
+    .meta,
+    .competitionMeta {
+        border-left: 0;
+        border-top: 1px solid #e0e0e0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .competitionMeta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 24px;
+    }
+}
+
+@media (max-width: 520px) {
+    .competitionMain,
+    .main {
+        padding: 16px;
+    }
+
+    .gridCard .main,
+    .gridCard .meta {
+        padding: 16px;
+    }
+
+    .eyebrow {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .competitionCard .eyebrow {
+        height: auto;
+    }
+
+    .gridCard .eyebrow {
+        height: auto;
+    }
+
+    .registrationState {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .competitionMeta,
+    .meta {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+
+    .phaseHeading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

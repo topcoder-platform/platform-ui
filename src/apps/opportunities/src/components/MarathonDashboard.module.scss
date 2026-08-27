@@ -1,0 +1,76 @@
+.chart {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 24px;
+
+    h3 {
+        font-family: 'Figtree', sans-serif;
+        font-size: 18px;
+        line-height: 30px;
+        margin: 0 0 16px;
+        text-transform: none;
+    }
+}
+
+.loading,
+.message {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 360px;
+    text-align: center;
+}
+
+.message {
+    h2 {
+        font-family: 'Figtree', sans-serif;
+        font-size: 18px;
+        line-height: 26px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    p {
+        font-size: 14px;
+        line-height: 20px;
+        margin: 4px 0 0;
+    }
+
+    button {
+        background: #007d79;
+        border: 1px solid #007d79;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        margin-top: 16px;
+        padding: 8px 24px;
+    }
+}
+
+.screenReaderOnly {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+@media (max-width: 620px) {
+    .chart {
+        padding: 8px;
+    }
+}

@@ -229,8 +229,8 @@ workflows:
                           only:
                               - dev
                               - copilot_reviewer
-                              - support-app
                               - PM-5460
+                              - opportunities-v6
                       tags:
                           only: /^dev-.*/
 
