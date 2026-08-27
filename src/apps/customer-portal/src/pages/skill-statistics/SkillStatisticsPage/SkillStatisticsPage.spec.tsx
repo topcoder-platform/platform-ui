@@ -258,7 +258,7 @@ describe('SkillStatisticsPage', () => {
             .queryByText('billzedison'))
             .not.toBeInTheDocument()
         expect(within(table)
-            .getByText('1st'))
+            .getByText('2nd'))
             .toBeInTheDocument()
     })
 
@@ -277,7 +277,7 @@ describe('SkillStatisticsPage', () => {
             .toBeInTheDocument()
     })
 
-    it('reranks members when filtering by country', async () => {
+    it('keeps original rank when filtering by country', async () => {
         renderPage()
         fireEvent.click(await screen.findByRole('button', { name: 'Programming and Development' }))
 
@@ -299,7 +299,7 @@ describe('SkillStatisticsPage', () => {
             .queryByText('billzedison'))
             .not.toBeInTheDocument()
         expect(within(table)
-            .getByText('1st'))
+            .getByText('3rd'))
             .toBeInTheDocument()
     })
 

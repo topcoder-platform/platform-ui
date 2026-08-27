@@ -50,24 +50,33 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
             .sort((left, right) => left.name.localeCompare(right.name))
     }, [props.members])
 
+    const rankedMembers = useMemo(
+        () => [...props.members]
+            .sort((left, right) => right.wins - left.wins)
+            .map((member, index) => ({
+                member,
+                rank: index + 1,
+            })),
+        [props.members],
+    )
+
     const visibleMembers = useMemo(() => {
         const query = props.search.trim()
             .toLowerCase()
 
-        return props.members
-            .filter(member => {
-                const matchesSearch = !query
-                    || member.handle.toLowerCase()
-                        .includes(query)
-                    || member.name.toLowerCase()
-                        .includes(query)
-                const matchesCountry = !props.countryFilter
-                    || member.countryCode === props.countryFilter
+        return rankedMembers.filter(rankedMember => {
+            const member = rankedMember.member
+            const matchesSearch = !query
+                || member.handle.toLowerCase()
+                    .includes(query)
+                || member.name.toLowerCase()
+                    .includes(query)
+            const matchesCountry = !props.countryFilter
+                || member.countryCode === props.countryFilter
 
-                return matchesSearch && matchesCountry
-            })
-            .sort((left, right) => right.wins - left.wins)
-    }, [props.countryFilter, props.members, props.search])
+            return matchesSearch && matchesCountry
+        })
+    }, [props.countryFilter, props.search, rankedMembers])
 
     function toggleExpanded(handle: string): void {
         setExpandedHandles(current => {
@@ -144,14 +153,16 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
                                     </td>
                                 </tr>
                             )}
-                            {visibleMembers.map((member, index) => {
-                                const rankIcon = index === 0
+                            {visibleMembers.map(rankedMember => {
+                                const member = rankedMember.member
+                                const rank = rankedMember.rank
+                                const rankIcon = rank === 1
                                     ? <IconFirstPlace aria-hidden='true' />
-                                    : index === 1
+                                    : rank === 2
                                         ? <IconSecondPlace aria-hidden='true' />
-                                        : index === 2
+                                        : rank === 3
                                             ? <IconThirdPlace aria-hidden='true' />
-                                            : <>{index + 1}</>
+                                            : <>{rank}</>
                                 const [firstName, ...lastNameParts] = member.name.split(/\s+/)
                                 const lastName = lastNameParts.join(' ')
                                     .trim()
@@ -180,7 +191,7 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
                                             }}
                                         >
                                             <td>
-                                                <span className={styles[`rank${Math.min(index + 1, 4)}`]}>
+                                                <span className={styles[`rank${Math.min(rank, 4)}`]}>
                                                     {rankIcon}
                                                 </span>
                                             </td>
