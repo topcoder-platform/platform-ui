@@ -22,12 +22,26 @@ $payment-field-label-color: #2a2a2a;
 
 .summaryRowFive {
     gap: 12px;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    // Size columns to the nowrap labels so "Budget Approver" / "Payment Approver"
+    // stay on one line; extra space is shared equally.
+    grid-template-columns: repeat(5, minmax(max-content, 1fr));
+    min-width: min-content;
+
+    .summaryItem {
+        min-width: max-content;
+    }
 
     .summaryValue {
+        // Do not let long handles inflate column min-width; ellipsize instead.
+        min-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        width: 0;
+    }
+
+    .summaryItem:last-child {
+        margin-left: 16px;
     }
 }
 
@@ -42,6 +56,7 @@ $payment-field-label-color: #2a2a2a;
     color: $payment-field-label-color;
     font-size: 16px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .summaryValue {
@@ -307,5 +322,22 @@ $payment-field-label-color: #2a2a2a;
     .summaryRowFive,
     .detailsGrid {
         grid-template-columns: 1fr;
+    }
+
+    .summaryRowFive {
+        min-width: 0;
+    }
+
+    .summaryRowFive .summaryItem {
+        min-width: 0;
+    }
+
+    .summaryRowFive .summaryValue {
+        min-width: 0;
+        width: auto;
+    }
+
+    .summaryRowFive .summaryItem:last-child {
+        margin-left: 0;
     }
 }
