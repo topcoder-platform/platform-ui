@@ -11,7 +11,9 @@ import { BaseModal, IconOutline, Tooltip } from '~/libs/ui'
 import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
-import { ChallengeDetailContext } from '../../contexts'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
+import { SubmissionDuplicatesPanel } from '../SubmissionDuplicates/SubmissionDuplicatesPanel'
+import { ChallengeDetailContext } from '../../contexts/ChallengeDetailContext'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -318,6 +320,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                         <span className={styles.submissionCell}>
                             {renderedDownloadButton}
                             {copyButton}
+                            <SubmissionDuplicatesBadge submissionId={submission.id} />
                         </span>
                     </td>
                     <td className={styles.cellDate}>
@@ -352,6 +355,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                 {toggledRows.has(submission.id) && (
                     <tr>
                         <td className={styles.aiReviewersTableRow} colSpan={aiReviewersCount ? 6 : 4}>
+                            <SubmissionDuplicatesPanel submissionId={submission.id} />
                             <div className={styles.aiReviewersTable}>
                                 <AiReviewsTable submission={submission} aiReviewers={aiReviewers} />
                             </div>
