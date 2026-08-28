@@ -35,6 +35,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
+
+    > span {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
 }
 
 .blockPlacement {
