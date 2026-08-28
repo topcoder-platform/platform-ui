@@ -1,9 +1,10 @@
 @import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
 
 .wrap {
-    background-color: $black-5;
-    border: 1px solid $black-10;
-    border-radius: 10px;
+    background-color: $tc-2026-canvas;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-lg;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -14,18 +15,24 @@
 
 .newThread {
     align-items: center;
-    background-color: $blue-110;
+    background-color: $tc-2026-teal-bright;
     border: none;
-    border-radius: 6px;
-    color: $tc-white;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-surface;
     cursor: pointer;
     display: flex;
     flex: 0 0 auto;
+    font-family: $tc-2026-font-body;
     font-size: 12px;
     font-weight: 600;
     gap: 4px;
     justify-content: center;
     padding: 6px 8px;
+    transition: background-color .15s ease;
+
+    &:hover {
+        background-color: $tc-2026-teal;
+    }
 }
 
 .newThreadIcon {
@@ -34,7 +41,7 @@
 }
 
 .status {
-    color: #545f71;
+    color: $tc-2026-muted;
     font-size: 12px;
     padding: 6px 4px;
 }
@@ -52,25 +59,26 @@
 
 .threadItem {
     align-items: center;
-    border-radius: 8px;
+    border-radius: $tc-2026-radius-sm;
     display: flex;
     gap: 2px;
 
     &:hover {
-        background-color: $black-10;
+        background-color: $tc-2026-border;
     }
 
     &.active {
-        background-color: $blue-15;
+        background-color: rgba($tc-2026-teal, .14);
     }
 }
 
 .selectButton {
     background: none;
     border: none;
-    color: $black-100;
+    color: $tc-2026-body;
     cursor: pointer;
     flex: 1 1 auto;
+    font-family: $tc-2026-font-body;
     min-width: 0;
     padding: 5px 0 5px 5px;
     text-align: left;
@@ -88,7 +96,7 @@
     align-items: center;
     background: none;
     border: none;
-    border-radius: 5px;
+    border-radius: $tc-2026-radius-sm;
     cursor: pointer;
     display: flex;
     flex: 0 0 auto;
@@ -97,12 +105,12 @@
     padding: 3px;
 
     &:hover {
-        background-color: $black-20;
+        background-color: $tc-2026-border;
     }
 }
 
 .deleteIcon {
-    color: $black-60;
+    color: $tc-2026-muted;
     height: 11px;
     width: 11px;
 }
