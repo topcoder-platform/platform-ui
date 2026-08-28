@@ -1,7 +1,7 @@
 /**
  * Duplicate submission list rendered above the AI reviewers table.
  */
-import { FC, useContext, useMemo } from 'react'
+import { FC, MouseEventHandler, useContext, useMemo } from 'react'
 import moment from 'moment'
 
 import { EnvironmentConfig } from '~/config'
@@ -37,6 +37,8 @@ function formatSubmittedAt(submittedAt?: string): string {
         ? parsed.format(TABLE_DATE_FORMAT)
         : '--'
 }
+
+const prevenPropagation: MouseEventHandler = ev => ev.stopPropagation()
 
 /**
  * Renders a single duplicate entry, adding the originating challenge link when
@@ -77,6 +79,7 @@ const DuplicateEntry: FC<DuplicateEntryProps> = (props: DuplicateEntryProps) => 
                             href={challengeUrl}
                             rel='noreferrer'
                             target='_blank'
+                            onClick={prevenPropagation}
                         >
                             {duplicate.challengeTitle || duplicate.challenge}
                             <IconOutline.ExternalLinkIcon aria-hidden='true' />
