@@ -1,7 +1,10 @@
 @import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
 
 .root {
-    background-color: $tc-white;
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-lg;
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
@@ -24,7 +27,7 @@
 
 .empty {
     align-items: center;
-    color: #545f71;
+    color: $tc-2026-muted;
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
@@ -32,6 +35,19 @@
     gap: 16px;
     justify-content: center;
     text-align: center;
+
+    h4 {
+        color: $tc-2026-ink;
+        font-family: $tc-2026-font-heading;
+        font-size: 17px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    p {
+        margin: 0;
+        max-width: 420px;
+    }
 }
 
 .suggestions {
@@ -43,23 +59,25 @@
 }
 
 .suggestion {
-    background-color: $blue-15;
-    border: 1px solid transparent;
+    background-color: rgba($tc-2026-teal, .08);
+    border: 1px solid rgba($tc-2026-teal, .25);
     border-radius: 999px;
-    color: $blue-140;
+    color: $tc-2026-teal;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
     padding: 8px 14px;
+    transition: background-color .15s ease, border-color .15s ease;
 
     &:hover {
-        border-color: $blue-110;
+        background-color: rgba($tc-2026-teal, .14);
+        border-color: $tc-2026-teal;
     }
 }
 
 .userMessage,
 .assistantMessage {
-    border-radius: 14px;
+    border-radius: $tc-2026-radius-lg;
     font-size: 14px;
     line-height: 22px;
     max-width: 75%;
@@ -68,21 +86,21 @@
 
 .userMessage {
     align-self: flex-end;
-    background-color: $blue-110;
-    color: $tc-white;
+    background-color: $tc-2026-teal;
+    color: $tc-2026-surface;
     white-space: pre-wrap;
 }
 
 .assistantMessage {
     align-self: flex-start;
-    background-color: $black-5;
-    color: $black-100;
+    background-color: $tc-2026-canvas;
+    color: $tc-2026-body;
 }
 
 .toolCall {
-    background-color: $tc-white;
-    border: 1px solid $black-10;
-    border-radius: 10px;
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-md;
     margin: 4px 0 16px;
     overflow: hidden;
     white-space: normal;
@@ -90,7 +108,7 @@
 
 .toolCallHeader {
     align-items: center;
-    background-color: $blue-10;
+    background-color: $tc-2026-canvas;
     cursor: pointer;
     display: flex;
     gap: 8px;
@@ -108,7 +126,7 @@
 }
 
 .toolCallChevron {
-    color: $blue-120;
+    color: $tc-2026-teal;
     flex: 0 0 auto;
     height: 14px;
     transition: transform 0.15s ease;
@@ -120,7 +138,7 @@
 }
 
 .toolCallName {
-    color: $blue-140;
+    color: $tc-2026-ink;
     flex: 1 1 auto;
     font-family: 'Roboto Mono', monospace;
     font-size: 12px;
@@ -129,7 +147,7 @@
 
 .toolCallStatus {
     align-items: center;
-    color: $blue-120;
+    color: $tc-2026-teal;
     display: inline-flex;
     font-size: 11px;
     font-weight: 600;
@@ -158,7 +176,7 @@
 
 .thinkingDot {
     animation: thinkingBounce 1.2s ease-in-out infinite;
-    background-color: $black-40;
+    background-color: $tc-2026-border-strong;
     border-radius: 50%;
     height: 6px;
     width: 6px;
@@ -187,16 +205,16 @@
 }
 
 .toolCallError {
-    color: $red-120;
+    color: $tc-2026-danger;
 }
 
 .toolCallSection {
-    border-top: 1px solid $black-10;
+    border-top: 1px solid $tc-2026-border;
     padding: 8px 10px;
 }
 
 .toolCallLabel {
-    color: #545f71;
+    color: $tc-2026-muted;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -216,7 +234,7 @@
 
 .composer {
     align-items: flex-end;
-    border-top: 1px solid $black-10;
+    border-top: 1px solid $tc-2026-border;
     display: flex;
     flex: 0 0 auto;
     gap: 8px;
@@ -224,7 +242,7 @@
 }
 
 .memoryHint {
-    color: $black-40;
+    color: $tc-2026-muted;
     flex: 0 0 auto;
     font-size: 11px;
     margin: 0;
@@ -233,41 +251,54 @@
 }
 
 .input {
-    background-color: $tc-white;
-    border: 1px solid $black-20;
-    border-radius: 10px;
-    color: $black-100;
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border-strong;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-body;
     flex: 1 1 auto;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: $tc-2026-font-body;
     font-size: 14px;
     max-height: 120px;
     padding: 10px 12px;
     resize: none;
 
     &:focus {
-        border-color: $blue-110;
+        border-color: $tc-2026-teal;
         outline: none;
     }
 }
 
 .send,
 .cancel {
-    background-color: $blue-110;
     border: none;
-    border-radius: 10px;
-    color: $tc-white;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-surface;
     cursor: pointer;
     flex: 0 0 auto;
+    font-family: $tc-2026-font-body;
     font-size: 14px;
     font-weight: 600;
     padding: 10px 18px;
+    transition: background-color .15s ease;
+}
+
+.send {
+    background-color: $tc-2026-teal-bright;
+
+    &:hover {
+        background-color: $tc-2026-teal;
+    }
 
     &:disabled {
-        background-color: $black-20;
+        background-color: $tc-2026-border-strong;
         cursor: not-allowed;
     }
 }
 
 .cancel {
-    background-color: $black-60;
+    background-color: $tc-2026-ink-raised;
+
+    &:hover {
+        background-color: $tc-2026-ink;
+    }
 }

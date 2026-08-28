@@ -1,15 +1,17 @@
 @import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
 .page {
-    color: #0a0a0a;
+    color: $tc-2026-body;
     display: flex;
     flex-direction: column;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: $tc-2026-font-body;
     padding: 8px 0 0;
 
     h1 {
-        color: #151515;
-        font-family: 'Figtree', sans-serif;
+        color: $tc-2026-ink;
+        font-family: $tc-2026-font-heading;
         font-size: 32px;
         font-weight: 700;
         line-height: 38px;
@@ -19,14 +21,14 @@
 }
 
 .subtitle {
-    color: #0a0a0a;
+    color: $tc-2026-muted;
     font-size: 18px;
     line-height: 25px;
     margin: 4px 0 0;
 }
 
 .status {
-    color: #545f71;
+    color: $tc-2026-muted;
     font-size: 14px;
     padding: 16px 0;
 }
@@ -67,10 +69,10 @@
 
 .loadingOverlay {
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 16px;
+    background-color: rgba($tc-2026-surface, .75);
+    border-radius: $tc-2026-radius-lg;
     bottom: 0;
-    color: #545f71;
+    color: $tc-2026-muted;
     display: flex;
     font-size: 14px;
     justify-content: center;
