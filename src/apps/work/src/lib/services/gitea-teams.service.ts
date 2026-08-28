@@ -3,7 +3,7 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { GiteaTeam } from '../models'
 
-const GITEA_TEAMS_API_URL = `${EnvironmentConfig.API.V6}/gitea/teams`
+const GITEA_TEAMS_API_URL = `${EnvironmentConfig.API.V6}/reviews/gitea/teams`
 
 const DEFAULT_SEARCH_LIMIT = 20
 
