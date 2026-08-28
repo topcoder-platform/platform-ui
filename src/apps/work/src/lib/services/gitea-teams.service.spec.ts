@@ -50,6 +50,8 @@ describe('searchGiteaTeams', () => {
         const teams = await searchGiteaTeams('  reviewers  ')
 
         expect(mockedGet.mock.calls[0][0])
+            .toContain('/reviews/gitea/teams?')
+        expect(mockedGet.mock.calls[0][0])
             .toContain('q=reviewers')
         expect(mockedGet.mock.calls[0][0])
             .toContain('limit=20')
