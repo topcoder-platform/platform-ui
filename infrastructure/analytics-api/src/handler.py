@@ -23,6 +23,7 @@ MAX_RESULT_ROWS = 2_000
 REPORT_CACHE_SECONDS = 60
 FILTER_CACHE_SECONDS = 300
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
+NO_FILTER_PARAMETER = "*"
 
 _redshift_data = boto3.client("redshift-data")
 _cache: dict[str, tuple[float, dict[str, Any]]] = {}
@@ -89,10 +90,10 @@ WITH filtered_funnel AS (
     SELECT *
     FROM topcoder_web.challenge_funnel_daily_v1
     WHERE cohort_date BETWEEN CAST(:from_date AS date) AND CAST(:to_date AS date)
-      AND (:campaign = '' OR utm_campaign = :campaign)
-      AND (:campaign_id = '' OR utm_campaign_id = :campaign_id)
-      AND (:source = '' OR utm_source = :source)
-      AND (:medium = '' OR utm_medium = :medium)
+      AND (:campaign = '*' OR utm_campaign = :campaign)
+      AND (:campaign_id = '*' OR utm_campaign_id = :campaign_id)
+      AND (:source = '*' OR utm_source = :source)
+      AND (:medium = '*' OR utm_medium = :medium)
 ),
 filtered_clicks AS (
     SELECT
@@ -109,10 +110,10 @@ filtered_clicks AS (
     FROM topcoder_web.product_analytics_events_v1
     WHERE event_name = 'ui_click'
       AND event_date BETWEEN CAST(:from_date AS date) AND CAST(:to_date AS date)
-      AND (:campaign = '' OR utm_campaign = :campaign)
-      AND (:campaign_id = '' OR utm_campaign_id = :campaign_id)
-      AND (:source = '' OR utm_source = :source)
-      AND (:medium = '' OR utm_medium = :medium)
+      AND (:campaign = '*' OR utm_campaign = :campaign)
+      AND (:campaign_id = '*' OR utm_campaign_id = :campaign_id)
+      AND (:source = '*' OR utm_source = :source)
+      AND (:medium = '*' OR utm_medium = :medium)
 ),
 summary_row AS (
     SELECT
@@ -256,7 +257,7 @@ WITH filtered_events AS (
     SELECT *
     FROM topcoder_web.product_analytics_events_v1
     WHERE event_date BETWEEN CAST(:from_date AS date) AND CAST(:to_date AS date)
-      AND (:surface = '' OR surface = :surface)
+      AND (:surface = '*' OR surface = :surface)
 ),
 summary_row AS (
     SELECT
@@ -792,7 +793,8 @@ def _sql_parameters(filters: dict[str, str]) -> list[dict[str, str]]:
         filters: Validated campaign or general filter dictionary.
 
     Returns:
-        Data API parameter objects for keys referenced by the SQL template.
+        Data API parameter objects for keys referenced by the SQL template. Empty optional filters use
+        a non-empty sentinel that cannot pass public filter validation because Data API rejects empty values.
 
     Raises:
         Does not raise.
@@ -808,7 +810,7 @@ def _sql_parameters(filters: dict[str, str]) -> list[dict[str, str]]:
         "surface": "surface",
     }
     return [
-        {"name": names[key], "value": value}
+        {"name": names[key], "value": value or NO_FILTER_PARAMETER}
         for key, value in filters.items()
         if key in names
     ]

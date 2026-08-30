@@ -192,6 +192,24 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertEqual(400, response["statusCode"])
         execute.assert_not_called()
 
+    def test_unset_filters_use_nonempty_data_api_parameters(self) -> None:
+        """Optional filters use an unreachable sentinel because Data API rejects empty values."""
+
+        parameters = self.module._sql_parameters({
+            "from": "2026-08-01",
+            "to": "2026-08-30",
+            "campaign": "",
+            "source": "newsletter",
+        })
+        values = {parameter["name"]: parameter["value"] for parameter in parameters}
+
+        self.assertEqual("*", values["campaign"])
+        self.assertEqual("newsletter", values["source"])
+        self.assertTrue(all(parameter["value"] for parameter in parameters))
+        self.assertIsNone(self.module.SAFE_FILTER_PATTERN.fullmatch(self.module.NO_FILTER_PARAMETER))
+        self.assertIn(":campaign = '*' OR", self.module.CAMPAIGN_SQL)
+        self.assertIn(":surface = '*' OR", self.module.GENERAL_SQL)
+
     def test_shapes_campaign_funnel_and_click_location(self) -> None:
         """Campaign rows become totals, conversion rates, series, and safe click dimensions."""
 
