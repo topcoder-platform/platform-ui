@@ -48,6 +48,7 @@ jest.mock('react-toastify', () => ({
 jest.mock('~/libs/core', () => ({
     authUrlLogin: (url: string): string => url,
     getMemberStatsAsync: jest.fn(),
+    recordAnalyticsEvent: jest.fn(),
     useProfileContext: () => ({ profile: mockProfile }),
 }), { virtual: true })
 

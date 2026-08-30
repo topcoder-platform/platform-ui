@@ -704,12 +704,10 @@
                 <br />
             </li>
             <li>
-                Some analytics providers we partner with may provide specific
-                opt-out mechanisms and we may provide, as needed and as available,
-                additional tools and third-party services that allow you to better
-                understand cookies and how you can opt-out. For example, you may
-                manage the use and collection of certain information by Google
-                Analytics .
+                Topcoder's first-party analytics service honors supported browser
+                privacy controls.
+                It operates within Topcoder's AWS environment and does not initialize
+                when Global Privacy Control or Do Not Track is enabled.
             </li>
             <br />
             <li>

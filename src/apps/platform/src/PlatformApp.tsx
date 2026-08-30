@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 
+import { AnalyticsTracker } from '~/libs/core'
 import { NotificationsContainer, useViewportUnitsFix } from '~/libs/shared'
 
 import { AppFooter } from './components/app-footer'
@@ -13,6 +14,7 @@ const PlatformApp: FC<{}> = () => {
 
     return (
         <Providers>
+            <AnalyticsTracker />
             <AppHeader />
             <NotificationsContainer />
             <div className='root-container'>

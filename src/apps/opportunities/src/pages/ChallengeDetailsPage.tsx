@@ -15,6 +15,7 @@ import {
     authUrlLogin,
     getMemberStatsAsync,
     ProfileContextData,
+    recordAnalyticsEvent,
     useProfileContext,
     UserStats,
 } from '~/libs/core'
@@ -354,6 +355,11 @@ export const ChallengeDetailsPage: FC = () => {
         try {
             await agreeToChallengeTerms(terms)
             await registerForChallenge(challenge.id, profile.handle)
+            recordAnalyticsEvent('challenge_registered', {
+                challenge_id: challenge.id,
+                challenge_track: challengeCatalogKey(challenge.track),
+                member_id: profile.userId,
+            }, true)
             await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
             setTermsOpen(false)
             toast.success('You are registered for this competition.')

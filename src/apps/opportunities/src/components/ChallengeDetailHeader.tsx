@@ -468,6 +468,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 <>
                                     <button
                                         className={styles.secondary}
+                                        data-analytics-id='challenge-unregister'
+                                        data-analytics-placement='challenge-header'
                                         disabled={!canUnregister}
                                         onClick={props.onUnregister}
                                         type='button'
@@ -476,6 +478,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                     </button>
                                     <button
                                         className={styles.primary}
+                                        data-analytics-id='challenge-submit-start'
+                                        data-analytics-placement='challenge-header'
                                         disabled={!canSubmit}
                                         onClick={props.onSubmit}
                                         type='button'
@@ -487,6 +491,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             ) : (
                                 <button
                                     className={styles.primary}
+                                    data-analytics-id='challenge-register'
+                                    data-analytics-placement='challenge-header'
                                     disabled={!registrationOpen || registrationUnavailable || props.busy}
                                     onClick={props.onRegister}
                                     type='button'

@@ -10,6 +10,7 @@ import {
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
+import { recordAnalyticsEvent } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -203,6 +204,12 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                 setProgress,
                 controller.signal,
             )
+            recordAnalyticsEvent('challenge_submitted', {
+                challenge_id: props.challenge.id,
+                challenge_track: trackKey,
+                member_id: props.memberId,
+                submission_type: challengeSubmissionType(props.challenge),
+            }, true)
             setProgress(100)
             setSubmissionId(submission.id)
             setUploading(false)
@@ -474,6 +481,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                 </button>
                                 <button
                                     className={styles.primaryButton}
+                                    data-analytics-id='challenge-submit-confirm'
+                                    data-analytics-placement='challenge-submission'
                                     disabled={!file || !agreementAccepted || uploading}
                                     onClick={submit}
                                     type='button'

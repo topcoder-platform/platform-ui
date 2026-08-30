@@ -169,6 +169,11 @@ export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
 }
 
+export const ANALYTICS = {
+    APP_ID: getReactEnv<string>('AWS_ANALYTICS_APP_ID', ''),
+    ENDPOINT: getReactEnv<string>('AWS_ANALYTICS_ENDPOINT', ''),
+}
+
 export const LOGGING = {
     PUBLIC_TOKEN: getReactEnv<string | undefined>(
         'DATADOG_PUBLIC_TOKEN',
@@ -178,10 +183,6 @@ export const LOGGING = {
 }
 
 export const REAUTH_OFFSET = 55
-
-export const SPRIG = {
-    ENVIRONMENT_ID: getReactEnv<string | undefined>('SPRIG_ENV_ID', undefined),
-}
 
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
