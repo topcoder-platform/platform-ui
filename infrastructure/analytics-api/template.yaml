@@ -161,8 +161,8 @@ Resources:
       ProtocolType: HTTP
       CorsConfiguration:
         AllowHeaders:
-          - Authorization
-          - Content-Type
+          - authorization
+          - content-type
         AllowMethods:
           - GET
         AllowOrigins:
@@ -226,12 +226,13 @@ Resources:
 
   DefaultStage:
     Type: AWS::ApiGatewayV2::Stage
+    DependsOn: AnalyticsApiAccessLogGroup
     Properties:
       ApiId: !Ref AnalyticsHttpApi
       StageName: $default
       AutoDeploy: true
       AccessLogSettings:
-        DestinationArn: !GetAtt AnalyticsApiAccessLogGroup.Arn
+        DestinationArn: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigateway/topcoder-analytics-api-dev'
         Format: >-
           {"requestId":"$context.requestId","routeKey":"$context.routeKey","status":"$context.status","responseLength":"$context.responseLength","integrationError":"$context.integrationErrorMessage"}
       DefaultRouteSettings:
