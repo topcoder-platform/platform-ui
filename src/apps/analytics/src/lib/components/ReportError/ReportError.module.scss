@@ -1,0 +1,25 @@
+.error {
+    align-items: flex-start;
+    background: #fff4f4;
+    border: 1px solid #e57373;
+    border-radius: 8px;
+    color: #7f1d1d;
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+
+    > svg {
+        flex: 0 0 24px;
+        height: 24px;
+        width: 24px;
+    }
+
+    h2 {
+        font-size: 18px;
+        margin: 0 0 6px;
+    }
+
+    p {
+        margin: 0 0 16px;
+    }
+}

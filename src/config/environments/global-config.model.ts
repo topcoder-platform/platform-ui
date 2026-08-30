@@ -13,6 +13,7 @@ export type ChallengeTypeNamesByTrackConfig = Record<string, string[]>
 
 export interface GlobalConfig {
     ANALYTICS: {
+        API_URL: string
         APP_ID: string
         ENDPOINT: string
     }

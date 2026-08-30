@@ -52,7 +52,7 @@ that would double-count every host page.
 
 The deployed development environment is in AWS account 811668436784 in
 us-east-1. Project topcoder_web_dev and app topcoder_web are active at
-https://analytics.topcoder-dev.com/collect. The pipeline ID is
+https://events.topcoder-dev.com/collect. The pipeline ID is
 ead9a39a35334fafb77428073704ad7b. It uses the existing development VPC, a
 dedicated second private ingestion subnet in a supported availability zone,
 the existing Redshift/QuickSight subnets, daily processing, and the S3 bucket
@@ -60,6 +60,11 @@ topcoder-clickstream-data-dev-811668436784. A synthetic SDK-format event was
 accepted by the collector before the client configuration was enabled. A
 second event with source codex, medium integration, and campaign aws_analytics
 was then processed through S3 and EMR and verified in both Athena and Redshift.
+
+The collector's durable client hostname is
+https://events.topcoder-dev.com/collect. The original
+analytics.topcoder-dev.com ingestion alias remains available only during the
+cutover observation window; that hostname now belongs to the reporting UI.
 
 The development control-plane API has a narrow patch over upstream v1.2.1:
 endpoint security-group discovery treats a gateway VPC endpoint without a
@@ -185,6 +190,24 @@ create a SPICE copy. The reporting SQL, dataset requests, dashboard request, and
 runbook are archived at
 s3://topcoder-clickstream-templates-dev-811668436784/custom-assets/product-analytics/v1/.
 
+Platform UI also provides an operator-facing application at
+https://analytics.topcoder-dev.com. Every app route requires an authenticated
+profile with the exact analytics role. Its read-only HTTP API is exposed at
+https://analytics-api.topcoder-dev.com/v1/analytics. API Gateway validates the
+development Auth0 issuer and human-client audience; Lambda independently checks
+the https://topcoder-dev.com/roles claim before issuing fixed, parameterized,
+bounded Redshift Data API queries through the analytics_api_reader database
+role. The API returns aggregate data only and marks every response private and
+non-cacheable.
+
+The Campaigns tab exposes the ordered landing, click, registration, and
+submission funnel with UTM, landing-page, and privacy-safe click-location
+breakdowns. The General tab exposes page views, visitors, clicks, pages,
+traffic sources, and application surfaces over time. Both report warehouse
+freshness and limit callers to 366 inclusive days. QuickSight remains the AWS
+native exploratory dashboard; the Platform UI app is the narrowly scoped daily
+operational interface.
+
 ## Configuration
 
 Platform UI reads:
@@ -203,7 +226,7 @@ local or unprovisioned environments. Never expose the control-plane login,
 Redshift credentials, or AWS credentials to either client.
 
 Development uses app ID topcoder_web and endpoint
-https://analytics.topcoder-dev.com/collect. QA and production remain empty and
+https://events.topcoder-dev.com/collect. QA and production remain empty and
 disabled until their separate projects and endpoints are provisioned.
 
 ## Validation and operations
@@ -220,6 +243,9 @@ For each environment:
    browser requests reach the ingestion endpoint.
 7. Review failed ingestion responses, EMR jobs, Redshift load state, S3 growth,
    and the monthly cost forecast.
+8. Verify the reporting API returns `401` without a JWT, `403` for a verified
+   account without the analytics role, and aggregate JSON for an authorized
+   account; confirm that its logs contain no tokens, filters, SQL, or records.
 
 The deployment smoke test completed this path on 2026-08-30. Both synthetic
 events are present in event_v2; the tagged event retained codex, integration,

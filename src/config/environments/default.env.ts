@@ -170,6 +170,7 @@ export const AUTH = {
 }
 
 export const ANALYTICS = {
+    API_URL: getReactEnv<string>('ANALYTICS_API_URL', ''),
     APP_ID: getReactEnv<string>('AWS_ANALYTICS_APP_ID', ''),
     ENDPOINT: getReactEnv<string>('AWS_ANALYTICS_ENDPOINT', ''),
 }

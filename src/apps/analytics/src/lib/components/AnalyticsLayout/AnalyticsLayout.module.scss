@@ -1,0 +1,22 @@
+@import '@libs/ui/styles/includes';
+
+.content-layout-outer {
+    background: #f5f7fa;
+    min-height: calc(100vh - 180px);
+}
+
+.content-layout-inner {
+    max-width: 1440px;
+    padding-bottom: $sp-10;
+    padding-top: $sp-8;
+}
+
+.main {
+    width: 100%;
+}
+
+@include ltemd {
+    .content-layout-inner {
+        padding: $sp-5 $sp-4 $sp-8;
+    }
+}

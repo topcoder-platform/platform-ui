@@ -1,0 +1,38 @@
+.card {
+    background: #ffffff;
+    border: 1px solid #dce3e9;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(13, 52, 69, 0.04);
+    min-height: 124px;
+    padding: 20px;
+}
+
+.highlight {
+    border-top: 4px solid #2c95d7;
+}
+
+.success {
+    border-top: 4px solid #137d60;
+}
+
+.label {
+    color: #5a6f78;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.value {
+    color: #0d3445;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 8px;
+}
+
+.context {
+    color: #617681;
+    font-size: 13px;
+    margin-top: 8px;
+}

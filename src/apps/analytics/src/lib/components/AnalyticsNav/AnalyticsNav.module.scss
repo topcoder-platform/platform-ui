@@ -1,0 +1,118 @@
+@import '@libs/ui/styles/includes';
+
+.nav-bar {
+    background: #ffffff;
+    border-bottom: 1px solid #d9e1e8;
+    box-shadow: 0 2px 8px rgba(13, 52, 69, 0.05);
+}
+
+.inner {
+    align-items: stretch;
+    display: flex;
+    margin: 0 auto;
+    max-width: 1440px;
+    min-height: 64px;
+    padding: 0 $sp-8;
+}
+
+.title {
+    align-items: center;
+    color: #0d3445;
+    display: flex;
+    font-size: 20px;
+    font-weight: 800;
+    margin-right: $sp-10;
+}
+
+.tabs {
+    display: flex;
+    gap: $sp-8;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tab {
+    align-items: center;
+    border-bottom: 3px solid transparent;
+    color: #455b65;
+    display: flex;
+    font-size: 15px;
+    font-weight: 700;
+    height: 64px;
+    padding: 0 $sp-1;
+    text-decoration: none;
+
+    &:hover {
+        color: #0d3445;
+    }
+
+    &.active {
+        border-bottom-color: #137d60;
+        color: #137d60;
+    }
+}
+
+.mobile-trigger {
+    display: none;
+}
+
+@include ltemd {
+    .inner {
+        display: block;
+        min-height: 56px;
+        padding: 0 $sp-4;
+    }
+
+    .title {
+        display: none;
+    }
+
+    .mobile-trigger {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #0d3445;
+        display: flex;
+        font: inherit;
+        font-weight: 800;
+        height: 56px;
+        justify-content: space-between;
+        padding: 0;
+        width: 100%;
+    }
+
+    .chevron {
+        font-size: 22px;
+        transform: rotate(0deg);
+        transition: transform 150ms ease;
+    }
+
+    .tabs {
+        display: none;
+        padding-bottom: $sp-3;
+    }
+
+    .open {
+        .tabs {
+            display: block;
+        }
+
+        .chevron {
+            transform: rotate(180deg);
+        }
+    }
+
+    .tab {
+        border-bottom: 0;
+        border-left: 3px solid transparent;
+        height: 44px;
+        padding: 0 $sp-4;
+
+        &.active {
+            border-bottom: 0;
+            border-left-color: #137d60;
+            background: #eef8f4;
+        }
+    }
+}
