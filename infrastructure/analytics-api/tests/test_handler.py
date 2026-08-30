@@ -216,6 +216,58 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertNotIn("CONCAT(", self.module.CAMPAIGN_SQL)
         self.assertIn("|| ':' ||", self.module.CAMPAIGN_SQL)
 
+    def test_retries_one_failed_redshift_statement(self) -> None:
+        """A transient failed statement is retried once inside the request deadline."""
+
+        context = Mock()
+        context.get_remaining_time_in_millis.return_value = 28_000
+        with (
+            patch.object(
+                self.module._redshift_data,
+                "execute_statement",
+                side_effect=[{"Id": "failed"}, {"Id": "finished"}],
+            ) as execute,
+            patch.object(
+                self.module._redshift_data,
+                "describe_statement",
+                side_effect=[{"Status": "FAILED"}, {"Status": "FINISHED"}],
+            ),
+            patch.object(
+                self.module._redshift_data,
+                "get_statement_result",
+                return_value={
+                    "ColumnMetadata": [{"name": "value"}],
+                    "Records": [[{"stringValue": "recovered"}]],
+                },
+            ),
+        ):
+            rows = self.module._execute_query("SELECT 1", [], context)
+
+        self.assertEqual([{"value": "recovered"}], rows)
+        self.assertEqual(2, execute.call_count)
+
+    def test_stops_after_bounded_redshift_retries(self) -> None:
+        """Repeated failed statements surface an error after two attempts."""
+
+        context = Mock()
+        context.get_remaining_time_in_millis.return_value = 28_000
+        with (
+            patch.object(
+                self.module._redshift_data,
+                "execute_statement",
+                side_effect=[{"Id": "failed-1"}, {"Id": "failed-2"}],
+            ) as execute,
+            patch.object(
+                self.module._redshift_data,
+                "describe_statement",
+                side_effect=[{"Status": "FAILED"}, {"Status": "FAILED"}],
+            ),
+            self.assertRaises(self.module.QueryFailure),
+        ):
+            self.module._execute_query("SELECT 1", [], context)
+
+        self.assertEqual(2, execute.call_count)
+
     def test_shapes_campaign_funnel_and_click_location(self) -> None:
         """Campaign rows become totals, conversion rates, series, and safe click dimensions."""
 

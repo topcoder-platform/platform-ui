@@ -23,7 +23,8 @@ API named parameters; callers cannot provide SQL, object names, sort clauses,
 or result limits.
 
 Reports are limited to 366 inclusive days and 2,000 decoded rows. Query waits
-leave time for a sanitized response, concurrency and API throttles cap warehouse
+leave time for a sanitized response. A failed or aborted statement is retried
+once within the same deadline, concurrency and API throttles cap warehouse
 pressure, and successful responses use `Cache-Control: private, no-store`.
 Logs contain request IDs and service-owned error categories only.
 

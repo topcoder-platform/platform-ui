@@ -20,6 +20,7 @@ import boto3
 
 MAX_DATE_RANGE_DAYS = 366
 MAX_RESULT_ROWS = 2_000
+MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
 FILTER_CACHE_SECONDS = 300
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
@@ -821,7 +822,7 @@ def _execute_query(
     parameters: list[dict[str, str]],
     context: Any,
 ) -> list[dict[str, Any]]:
-    """Execute a fixed parameterized query and decode its bounded result.
+    """Execute a fixed parameterized query with one bounded provider retry.
 
     Args:
         sql: Server-owned SQL template.
@@ -832,7 +833,8 @@ def _execute_query(
         Query rows keyed by Redshift column name.
 
     Raises:
-        QueryFailure for provider failure or excess output and QueryTimeout when the deadline expires.
+        QueryFailure after repeated provider failure or excess output and
+        QueryTimeout when the shared deadline expires.
     """
 
     request: dict[str, Any] = {
@@ -844,23 +846,28 @@ def _execute_query(
     }
     if parameters:
         request["Parameters"] = parameters
-    statement_id = _redshift_data.execute_statement(**request)["Id"]
     deadline = time.monotonic() + _query_wait_seconds(context)
-    delay = 0.2
-    while time.monotonic() < deadline:
-        status = _redshift_data.describe_statement(Id=statement_id)
-        if status["Status"] == "FINISHED":
-            return _statement_rows(statement_id)
-        if status["Status"] in {"FAILED", "ABORTED"}:
-            raise QueryFailure("Redshift reporting query failed")
-        time.sleep(delay)
-        delay = min(delay * 1.5, 1.0)
+    for attempt in range(MAX_QUERY_ATTEMPTS):
+        statement_id = _redshift_data.execute_statement(**request)["Id"]
+        delay = 0.2
+        while time.monotonic() < deadline:
+            status = _redshift_data.describe_statement(Id=statement_id)
+            if status["Status"] == "FINISHED":
+                return _statement_rows(statement_id)
+            if status["Status"] in {"FAILED", "ABORTED"}:
+                if attempt + 1 < MAX_QUERY_ATTEMPTS:
+                    break
+                raise QueryFailure("Redshift reporting query failed")
+            time.sleep(delay)
+            delay = min(delay * 1.5, 1.0)
+        else:
+            try:
+                _redshift_data.cancel_statement(Id=statement_id)
+            except Exception:
+                pass
+            raise QueryTimeout("Redshift reporting query timed out")
 
-    try:
-        _redshift_data.cancel_statement(Id=statement_id)
-    except Exception:
-        pass
-    raise QueryTimeout("Redshift reporting query timed out")
+    raise QueryFailure("Redshift reporting query failed")
 
 
 def _query_wait_seconds(context: Any) -> float:
