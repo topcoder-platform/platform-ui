@@ -210,6 +210,12 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertIn(":campaign = '*' OR", self.module.CAMPAIGN_SQL)
         self.assertIn(":surface = '*' OR", self.module.GENERAL_SQL)
 
+    def test_campaign_sql_uses_redshift_coordinate_concatenation(self) -> None:
+        """Click-coordinate buckets use Redshift-compatible two-operand concatenation."""
+
+        self.assertNotIn("CONCAT(", self.module.CAMPAIGN_SQL)
+        self.assertIn("|| ':' ||", self.module.CAMPAIGN_SQL)
+
     def test_shapes_campaign_funnel_and_click_location(self) -> None:
         """Campaign rows become totals, conversion rates, series, and safe click dimensions."""
 

@@ -244,8 +244,8 @@ SELECT
     element_type,
     destination_host,
     destination_path,
-    CONCAT(COALESCE(CAST(click_x_bucket AS varchar), ''), ':',
-           COALESCE(CAST(click_y_bucket AS varchar), '')),
+    COALESCE(CAST(click_x_bucket AS varchar), '') || ':' ||
+        COALESCE(CAST(click_y_bucket AS varchar), ''),
     click_count, click_users, NULL, NULL, NULL, NULL, NULL, NULL
 FROM click_rows
 ORDER BY row_type, date_value, metric_1 DESC
