@@ -636,6 +636,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                         className={styles.cardTooltip}
                         content={item.name}
                         place='bottom'
+                        strategy='fixed'
                     >
                         <h3>{item.name}</h3>
                     </Tooltip>
@@ -661,6 +662,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                         </ul>
                                     )}
                                     place='bottom'
+                                    strategy='fixed'
                                 >
                                     <span>{`+${remainingSkills}`}</span>
                                 </Tooltip>
@@ -783,6 +785,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     className={styles.cardTooltip}
                     content={card.title}
                     place='bottom'
+                    strategy='fixed'
                 >
                     <h3>{card.title}</h3>
                 </Tooltip>
@@ -805,6 +808,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                                     </ul>
                                 )}
                                 place='bottom'
+                                strategy='fixed'
                             >
                                 <span>{`+${remaining}`}</span>
                             </Tooltip>

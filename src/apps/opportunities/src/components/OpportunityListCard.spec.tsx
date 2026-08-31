@@ -24,7 +24,13 @@ jest.mock('~/libs/ui', () => {
         IconOutline: new Proxy({}, {
             get: () => Icon,
         }),
-        Tooltip: ({ children }: { children: JSX.Element }): JSX.Element => children,
+        Tooltip: ({
+            children,
+            strategy,
+        }: {
+            children: JSX.Element
+            strategy?: string
+        }): JSX.Element => <span data-tooltip-strategy={strategy}>{children}</span>,
     }
 }, { virtual: true })
 
@@ -509,5 +515,22 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('3'))
             .toBeInTheDocument()
+    })
+
+    it('positions review title tooltips outside the card clipping context', () => {
+        const item: ReviewOpportunity = {
+            challengeId: 'challenge-id',
+            challengeName: 'Long review opportunity title',
+            id: 'review-id',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
+            .toHaveAttribute('data-tooltip-strategy', 'fixed')
     })
 })
