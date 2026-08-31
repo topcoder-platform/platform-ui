@@ -381,6 +381,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('formats the Copilot data science type as two words', () => {
+        const item: CopilotOpportunity = {
+            id: 'data-science-copilot',
+            opportunityTitle: 'Data Science Copilot',
+            projectType: 'datascience',
+            status: 'active',
+            type: 'datascience',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='copilots' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getAllByText('Data Science'))
+            .toHaveLength(2)
+        expect(screen.queryByText('Datascience'))
+            .not.toBeInTheDocument()
+    })
+
     it('normalizes closed and applied owner statuses to the authored pills', () => {
         const closed: EngagementOpportunity = {
             id: 'closed-engagement',

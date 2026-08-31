@@ -495,7 +495,7 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
         skills: (item.skills ?? []).map((skill: OpportunitySkill) => skill.name),
         state: applicationState(!!item.hasApplied, challengeCatalogKey(item.status) === 'active'),
         title: item.opportunityTitle || item.projectName || item.project?.name || 'Copilot Opportunity',
-        type: enumLabel(item.type) || 'Copilot',
+        type: opportunityTrackLabel(item.type || item.projectType || 'Copilot'),
     }
 }
 
