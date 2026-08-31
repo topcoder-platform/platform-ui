@@ -152,7 +152,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </div>
             </section>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
-                <p>The place to track your scores and feedback, and where to follow the final review.</p>
+                <p>The place to track your screening and review scores.</p>
                 <Link to={`/review/active-challenges/${props.challenge.id}/challenge-details`}>
                     View Review App
                     <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
