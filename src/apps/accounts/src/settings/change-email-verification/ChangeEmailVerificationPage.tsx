@@ -16,25 +16,26 @@ type VerificationStatus = 'error' | 'loading' | 'success'
  */
 const ChangeEmailVerificationPage: FC = () => {
     const [searchParams] = useSearchParams()
-    const token: string | null = searchParams.get('token')
+    const validationCode: string | null = searchParams.get('code')
+        ?? searchParams.get('token')
     const [status, setStatus] = useState<VerificationStatus>('loading')
     const [message, setMessage] = useState<string>('Validating your new email address…')
-    const requestedToken = useRef<string>()
+    const requestedCode = useRef<string>()
 
     useEffect(() => {
-        if (!token) {
-            requestedToken.current = undefined
+        if (!validationCode) {
+            requestedCode.current = undefined
             setStatus('error')
             setMessage('This email validation link is incomplete.')
             return
         }
 
-        if (requestedToken.current === token) {
+        if (requestedCode.current === validationCode) {
             return
         }
 
-        requestedToken.current = token
-        completeEmailChangeAsync(token)
+        requestedCode.current = validationCode
+        completeEmailChangeAsync(validationCode)
             .then(response => {
                 setStatus('success')
                 setMessage(`${response.email} is now your primary email address.`)
@@ -46,7 +47,7 @@ const ChangeEmailVerificationPage: FC = () => {
                     'This email validation link is invalid or has expired.',
                 ))
             })
-    }, [token])
+    }, [validationCode])
 
     return (
         <ContentLayout outerClass={styles.layout}>
