@@ -455,7 +455,6 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                     const medal = medalAssets[prize.placement - 1]
                                                     return (
                                                         <strong
-                                                            className={styles.primaryPrize}
                                                             key={`placement-${prize.placement}`}
                                                         >
                                                             <img alt={`${prize.placement} place`} src={medal} />
