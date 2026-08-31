@@ -22,6 +22,7 @@ import {
     getChallengeTermDocuSignUrl,
     getChallengeTermDetails,
     getMyWorkCounts,
+    getMemberChallengeRegistrationIds,
     getOpportunityPage,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
@@ -707,6 +708,24 @@ describe('opportunities service normalization', () => {
             .resolves.toBeUndefined()
         await expect(getChallengeRegistration('challenge', '123'))
             .resolves.toBeUndefined()
+    })
+
+    it('loads all Submitter challenge IDs used by public competition cards', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+            .mockResolvedValueOnce(['challenge-a', 'challenge-a', 'challenge-b'])
+
+        await expect(getMemberChallengeRegistrationIds('123'))
+            .resolves.toEqual(['challenge-a', 'challenge-b'])
+
+        const url = new URL(String(get.mock.calls.at(-1)?.[0]))
+        expect(url.pathname)
+            .toBe('/v6/resources/123/challenges')
+        expect(url.searchParams.get('resourceRoleId'))
+            .toBe('submitter-role')
+        expect(url.searchParams.get('useScroll'))
+            .toBe('true')
     })
 
     it('unregisters through Resource API\'s body-based Submitter contract', async () => {

@@ -1059,6 +1059,24 @@ export async function getChallengeRegistration(
 }
 
 /**
+ * Loads every challenge for which the authenticated member has a Submitter
+ * resource so public list cards can expose registration state independently
+ * of the active list filters.
+ *
+ * @param memberId authenticated member ID.
+ * @returns unique challenge UUIDs registered by the member.
+ * @throws Propagates Resource Role, Resource API, authorization, and network errors.
+ */
+export async function getMemberChallengeRegistrationIds(memberId: string): Promise<string[]> {
+    const role = await getSubmitterRole()
+    const url = new URL(`${V6_URL}/resources/${encodeURIComponent(memberId)}/challenges`)
+    url.searchParams.set('resourceRoleId', role.id)
+    url.searchParams.set('useScroll', 'true')
+    const response = await xhrGetAsync<string[] | ApiEnvelope<string[]>>(url.toString())
+    return Array.from(new Set(unwrap(response).map(String)))
+}
+
+/**
  * Registers the authenticated profile as a challenge submitter.
  *
  * @param challengeId challenge UUID.

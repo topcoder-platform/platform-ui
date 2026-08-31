@@ -32,7 +32,11 @@ import {
     OpportunitySummary,
     OpportunityView,
 } from '../models'
-import { getOpportunityPage, getOpportunitySummary } from '../services'
+import {
+    getMemberChallengeRegistrationIds,
+    getOpportunityPage,
+    getOpportunitySummary,
+} from '../services'
 import {
     defaultSort,
     opportunitySortOptions,
@@ -192,7 +196,18 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
             revalidateOnFocus: kind === 'competitions',
         },
     )
+    const registrationIdsResponse: SWRResponse<string[], Error> = useSWR(
+        kind === 'competitions' && filters.memberId
+            ? ['opportunities:competition-registration-ids', filters.memberId]
+            : undefined,
+        () => getMemberChallengeRegistrationIds(filters.memberId as string),
+        { revalidateOnFocus: false },
+    )
     const data = pageResponse.data
+    const registrationIds = useMemo(
+        () => new Set(registrationIdsResponse.data ?? []),
+        [registrationIdsResponse.data],
+    )
     const isReviewer = hasRole(profile?.roles, 'reviewer')
     const isCopilot = hasRole(profile?.roles, 'copilot')
 
@@ -364,7 +379,8 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                                 item={item}
                                 key={item.id}
                                 kind={kind}
-                                registered={kind === 'competitions' && applied}
+                                registered={kind === 'competitions'
+                                    && (applied || registrationIds.has(item.id))}
                                 view={props.view}
                             />
                         ))}

@@ -9,7 +9,11 @@ import {
 } from 'react-router-dom'
 import { SWRConfig } from 'swr'
 
-import { getOpportunityPage, getOpportunitySummary } from '../services'
+import {
+    getMemberChallengeRegistrationIds,
+    getOpportunityPage,
+    getOpportunitySummary,
+} from '../services'
 import { OpportunitiesPage } from './OpportunitiesPage'
 
 jest.mock('~/libs/core', () => ({
@@ -36,22 +40,29 @@ jest.mock('../components', () => ({
             {props.summary?.competitions?.count ?? 'pending'}
         </output>
     ),
-    OpportunityListCard: () => undefined,
+    OpportunityListCard: (props: { item: { id: string }; registered?: boolean }) => (
+        <output data-testid={`registration-${props.item.id}`}>{String(!!props.registered)}</output>
+    ),
     OpportunityPagination: () => undefined,
     OpportunityViewToggle: () => undefined,
 }))
 
 jest.mock('../services', () => ({
+    getMemberChallengeRegistrationIds: jest.fn(),
     getOpportunityPage: jest.fn(),
     getOpportunitySummary: jest.fn(),
 }))
 
 const mockedGetOpportunityPage = getOpportunityPage as jest.MockedFunction<typeof getOpportunityPage>
 const mockedGetOpportunitySummary = getOpportunitySummary as jest.MockedFunction<typeof getOpportunitySummary>
+const mockedGetRegistrationIds = getMemberChallengeRegistrationIds as jest.MockedFunction<
+    typeof getMemberChallengeRegistrationIds
+>
 
 describe('OpportunitiesPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockedGetRegistrationIds.mockResolvedValue([])
     })
 
     it('loads the public category summary without a separate destination tab', async () => {
@@ -86,5 +97,35 @@ describe('OpportunitiesPage', () => {
             .toHaveTextContent('1'))
         expect(mockedGetOpportunitySummary)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('shows registration state on competition cards outside My competitions', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 1 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [{ id: 'challenge-id', name: 'Registered challenge' }],
+            page: 1,
+            perPage: 10,
+            total: 1,
+            totalPages: 1,
+        })
+        mockedGetRegistrationIds.mockResolvedValue(['challenge-id'])
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(screen.getByTestId('registration-challenge-id'))
+            .toHaveTextContent('true'))
     })
 })
