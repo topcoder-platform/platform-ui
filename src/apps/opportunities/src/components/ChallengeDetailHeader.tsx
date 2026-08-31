@@ -67,6 +67,12 @@ interface ChallengeTimelineItem {
     state: ChallengeTimelineState
 }
 
+interface ChallengePhaseSummary {
+    phase: string
+    qualifier?: string
+    remaining?: string
+}
+
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
 function catalogName(value: string | { name?: string } | undefined, fallback: string): string {
     return typeof value === 'string' ? value : value?.name || fallback
@@ -113,16 +119,18 @@ function typeIcon(type: string): string {
  * Formats the active phase and remaining time for the masthead metric.
  *
  * @param phase current or next challenge phase.
- * @returns phase deadline summary suitable for a compact metric.
+ * @returns phase, regular-weight qualifier, and optional remaining-time segments.
  * @throws Does not throw; absent and malformed dates use stable fallbacks.
  */
-function phaseSummary(phase: ChallengePhase | undefined): string {
-    if (!phase) return 'Timeline complete'
+function phaseSummary(phase: ChallengePhase | undefined): ChallengePhaseSummary {
+    if (!phase) return { phase: 'Timeline complete' }
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
     const end = endValue ? new Date(endValue) : undefined
-    if (!end || Number.isNaN(end.getTime())) return `${phase.name} phase is active`
+    if (!end || Number.isNaN(end.getTime())) {
+        return { phase: phase.name, qualifier: ' phase is active' }
+    }
     const remainingMinutes = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 60000))
-    if (remainingMinutes === 0) return `${phase.name} phase is active`
+    if (remainingMinutes === 0) return { phase: phase.name, qualifier: ' phase is active' }
     const days = Math.floor(remainingMinutes / 1440)
     const hours = Math.floor((remainingMinutes % 1440) / 60)
     const minutes = remainingMinutes % 60
@@ -131,7 +139,11 @@ function phaseSummary(phase: ChallengePhase | undefined): string {
         hours > 0 ? `${hours}h` : '',
         days === 0 && minutes > 0 ? `${minutes}m` : '',
     ].filter(Boolean)
-    return `${phase.name} phase closes in ${parts.join(' ')}`
+    return {
+        phase: phase.name,
+        qualifier: ' phase closes in ',
+        remaining: parts.join(' '),
+    }
 }
 
 /**
@@ -369,6 +381,7 @@ function timelineTimezone(): string {
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
     const phase = challengeCurrentPhase(props.challenge)
+    const phaseCopy = phaseSummary(phase)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = catalogName(props.challenge.track, 'Competition')
@@ -430,7 +443,13 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </span>
                             <span>
                                 <img alt='' aria-hidden='true' src={challengeClockIcon} />
-                                {phaseSummary(phase)}
+                                <span>
+                                    <span>{phaseCopy.phase}</span>
+                                    {phaseCopy.qualifier && (
+                                        <span className={styles.phaseQualifier}>{phaseCopy.qualifier}</span>
+                                    )}
+                                    {phaseCopy.remaining && <span>{phaseCopy.remaining}</span>}
+                                </span>
                             </span>
                             <button
                                 aria-controls='challenge-timeline'

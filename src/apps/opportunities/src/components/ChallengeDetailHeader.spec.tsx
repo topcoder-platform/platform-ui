@@ -67,6 +67,8 @@ describe('ChallengeDetailHeader actions and presentation', () => {
 
         expect(screen.getByRole('button', { name: 'Register' }))
             .toBeEnabled()
+        expect(screen.getByText(/phase closes in/))
+            .toHaveClass('phaseQualifier')
         expect(screen.queryByText('Unregister'))
             .not.toBeInTheDocument()
         expect(screen.queryByText('Submit a solution'))
