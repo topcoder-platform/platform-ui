@@ -230,7 +230,7 @@ workflows:
                               - dev
                               - copilot_reviewer
                               - PM-5460
-                              - opportunities-v6
+                              - aws_analytics
                       tags:
                           only: /^dev-.*/
 
