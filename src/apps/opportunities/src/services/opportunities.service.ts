@@ -280,6 +280,8 @@ export async function getMyWorkCounts(
  * apply Submitter membership before filtering, sorting, and pagination.
  * Competition free text is emitted only through `search`; a hidden `tags`
  * filter would turn the authored unified search into an unintended AND query.
+ * Public active competitions require an open Submission phase, while member
+ * competitions retain every active challenge for which the member registered.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -310,6 +312,8 @@ export function buildOpportunityPageUrl(
         appendValues(url, 'status', competitionStatuses)
         if (filters.statuses?.includes('REGISTRATION')) {
             url.searchParams.set('currentPhaseName', 'Registration')
+        } else if (!filters.applied && filters.statuses?.includes('ACTIVE')) {
+            url.searchParams.set('currentPhaseName', 'Submission')
         }
 
         // Challenge API's query parser only coerces bracketed keys into arrays;

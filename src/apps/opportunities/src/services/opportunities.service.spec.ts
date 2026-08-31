@@ -158,6 +158,27 @@ describe('opportunities service normalization', () => {
             .toBe('asc')
     })
 
+    it('keeps scheduled challenges out of public active results without hiding member competitions', () => {
+        const publicUrl = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+        const memberUrl = new URL(buildOpportunityPageUrl('competitions', {
+            applied: true,
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            resourceRoleId: 'submitter-role',
+            statuses: ['ACTIVE'],
+        }))
+
+        expect(publicUrl.searchParams.get('currentPhaseName'))
+            .toBe('Submission')
+        expect(memberUrl.searchParams.has('currentPhaseName'))
+            .toBe(false)
+    })
+
     it('maps My competitions to the Challenge API member and Submitter-role filter', () => {
         const url = new URL(buildOpportunityPageUrl('competitions', {
             applied: true,
