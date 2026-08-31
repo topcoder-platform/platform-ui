@@ -375,6 +375,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const canUnregister = props.isRegistered && registrationOpen && !registrationUnavailable && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
     const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
+    const featuredPrizes = challengePrizes.slice(0, 3)
+    const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const timelineGridStyle: CSSProperties = {
@@ -438,28 +440,48 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         </div>
                     </div>
                     <aside className={styles.actionCard}>
-                        <div className={classNames(styles.prizeFrame, {
-                            [styles.extendedPrizeFrame]: challengePrizes.length > 3,
-                        })}
-                        >
+                        <div className={styles.prizeFrame}>
                             <small>Prizes</small>
                             <div className={styles.prizes}>
                                 {challengePrizes.length > 0
-                                    ? challengePrizes.slice(0, medalAssets.length)
-                                        .map(prize => {
-                                            const medal = medalAssets[prize.placement - 1]
-                                            return (
-                                                <strong
-                                                    className={prize.placement <= 3
-                                                        ? styles.primaryPrize
-                                                        : styles.secondaryPrize}
-                                                    key={`placement-${prize.placement}`}
+                                    ? (
+                                        <>
+                                            <div className={styles.featuredPrizes}>
+                                                {featuredPrizes.map(prize => {
+                                                    const medal = medalAssets[prize.placement - 1]
+                                                    return (
+                                                        <strong
+                                                            className={styles.primaryPrize}
+                                                            key={`placement-${prize.placement}`}
+                                                        >
+                                                            <img alt={`${prize.placement} place`} src={medal} />
+                                                            {formatPrize(prize)}
+                                                        </strong>
+                                                    )
+                                                })}
+                                            </div>
+                                            {additionalPrizes.length > 0 && (
+                                                <div
+                                                    aria-label='Additional placement prizes'
+                                                    className={styles.additionalPrizes}
+                                                    role='group'
                                                 >
-                                                    <img alt={`${prize.placement} place`} src={medal} />
-                                                    {formatPrize(prize)}
-                                                </strong>
-                                            )
-                                        })
+                                                    {additionalPrizes.map(prize => {
+                                                        const medal = medalAssets[prize.placement - 1]
+                                                        return (
+                                                            <strong
+                                                                className={styles.secondaryPrize}
+                                                                key={`placement-${prize.placement}`}
+                                                            >
+                                                                <img alt={`${prize.placement} place`} src={medal} />
+                                                                {formatPrize(prize)}
+                                                            </strong>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </>
+                                    )
                                     : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>

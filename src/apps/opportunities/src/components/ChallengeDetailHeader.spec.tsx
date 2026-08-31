@@ -160,6 +160,8 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveLength(10)
         expect(screen.getByAltText('10 place'))
             .toBeInTheDocument()
+        expect(screen.getByRole('group', { name: 'Additional placement prizes' }))
+            .toContainElement(screen.getByAltText('4 place'))
     })
 
     it('renders the Figma phase rail with date rows and challenge-end Winners milestone', () => {
