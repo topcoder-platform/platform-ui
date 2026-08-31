@@ -2,9 +2,13 @@
 import { FC, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-import { IconOutline } from '~/libs/ui'
+import { IconOutline, Tooltip } from '~/libs/ui'
 
-import { ChallengeOpportunity, ChallengeTerm } from '../models'
+import {
+    ChallengeAiReviewConfig,
+    ChallengeOpportunity,
+    ChallengeTerm,
+} from '../models'
 import {
     challengeFileTypes,
     challengeForumUrl,
@@ -17,15 +21,118 @@ import programBanner from '../assets/ai-exponential-program.png'
 import styles from './ChallengeSidebar.module.scss'
 
 interface ChallengeSidebarProps {
+    aiReviewConfig?: ChallengeAiReviewConfig
     challenge: ChallengeOpportunity
     onContactTeam: () => void
     onShowTerms: (term?: ChallengeTerm) => void
+    reviewStyleLoading?: boolean
+    reviewStyleUnavailable?: boolean
 }
 
 interface SidebarCardProps {
     children: ReactNode
     icon: ReactNode
     title: string
+}
+
+interface ReviewStyleItemProps {
+    label: string
+    tooltip: string
+}
+
+interface ReviewStyleSectionProps {
+    config?: ChallengeAiReviewConfig
+    loading?: boolean
+    unavailable?: boolean
+}
+
+interface ReviewStylePresentation {
+    label: string
+    tooltip: string
+}
+
+const MANUAL_REVIEW_STYLE: ReviewStylePresentation = {
+    label: 'Manual',
+    tooltip: 'Community Review Board performs a thorough review based on scorecards.',
+}
+
+const AI_REVIEW_STYLES: Record<ChallengeAiReviewConfig['mode'], ReviewStylePresentation> = {
+    AI_GATING: {
+        label: 'AI Gating',
+        tooltip: 'AI performs a preliminary review, then the Community Review Board evaluates submissions that pass.',
+    },
+    AI_ONLY: {
+        label: 'AI only',
+        tooltip: 'AI will perform a thorough review based on scorecards.',
+    },
+}
+
+/**
+ * Renders one Figma review-style bullet and its accessible explanation.
+ *
+ * @param props member-facing label and tooltip copy.
+ * @returns one review-style list item.
+ * @throws Does not throw.
+ */
+const ReviewStyleItem: FC<ReviewStyleItemProps> = props => (
+    <li>
+        <span className={styles.reviewStyleRow}>
+            <span>{props.label}</span>
+            <Tooltip
+                className={styles.reviewStyleTooltip}
+                content={props.tooltip}
+                place='top'
+                triggerOn='click-hover'
+            >
+                <button
+                    aria-label={`About ${props.label}`}
+                    className={styles.reviewStyleInfoButton}
+                    type='button'
+                >
+                    <IconOutline.InformationCircleIcon aria-hidden='true' />
+                </button>
+            </Tooltip>
+        </span>
+    </li>
+)
+
+/**
+ * Renders the API-backed Review Style rows shared by every challenge type.
+ *
+ * @param props AI review configuration and request state.
+ * @returns Review Style heading with manual or AI-specific detail rows.
+ * @throws Does not throw.
+ */
+const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
+    const presentation = props.config
+        ? AI_REVIEW_STYLES[props.config.mode] ?? MANUAL_REVIEW_STYLE
+        : MANUAL_REVIEW_STYLE
+
+    return (
+        <div className={styles.infoSection}>
+            <h3>
+                <IconOutline.DocumentSearchIcon />
+                Review Style
+            </h3>
+            {props.loading
+                ? <p className={styles.reviewStyleStatus}>Loading review style…</p>
+                : props.unavailable
+                    ? <p className={styles.reviewStyleStatus}>Review style is unavailable.</p>
+                    : (
+                        <ul className={styles.reviewStyleList}>
+                            <ReviewStyleItem {...presentation} />
+                            {props.config && (
+                                <ReviewStyleItem
+                                    label={`Instant Review is ${props.config.instantReview ? 'On' : 'Off'}`}
+                                    tooltip={props.config.instantReview
+                                        ? 'You will receive AI feedback during the submission phase'
+                                        : 'You will not receive AI feedback during the submission phase.'}
+                                />
+                            )}
+                        </ul>
+                    )}
+        </div>
+    )
 }
 
 /**
@@ -208,16 +315,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                     </>
                 )}
+                <ReviewStyleSection
+                    config={props.aiReviewConfig}
+                    loading={props.reviewStyleLoading}
+                    unavailable={props.reviewStyleUnavailable}
+                />
                 <div className={styles.infoSection}>
                     <h3>
-                        <IconOutline.UserGroupIcon />
-                        Review Style
-                    </h3>
-                    <p>{designChallenge ? 'Community Review Board' : 'Challenge Review'}</p>
-                </div>
-                <div className={styles.infoSection}>
-                    <h3>
-                        <IconOutline.ScaleIcon />
+                        <IconOutline.ShieldCheckIcon />
                         Challenge Terms
                     </h3>
                     {(props.challenge.terms ?? []).length > 0

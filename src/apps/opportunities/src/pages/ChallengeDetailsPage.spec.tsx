@@ -57,6 +57,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 
 jest.mock('../services', () => ({
     agreeToChallengeTerms: jest.fn(),
+    getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
     getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
