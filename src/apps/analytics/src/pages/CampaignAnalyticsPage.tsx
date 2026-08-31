@@ -157,7 +157,7 @@ export const CampaignAnalyticsPage: FC = () => {
                         <p className={styles.eyebrow}>Campaign efficiency</p>
                         <h1>Landing page to submission</h1>
                         <p>
-                            Measure first-touch campaign engagement through click, registration,
+                            Measure campaign engagement through click, registration,
                             and successful challenge submission.
                         </p>
                     </div>
@@ -175,7 +175,6 @@ export const CampaignAnalyticsPage: FC = () => {
                 <form className={styles.filters} onSubmit={applyFilters}>
                     <div className={styles.filterHeading}>
                         <h2>Filters</h2>
-                        <span>First-touch UTM attribution</span>
                     </div>
                     <label>
                         <span>From</span>
@@ -281,7 +280,7 @@ export const CampaignAnalyticsPage: FC = () => {
                             <div className={styles.panelHeader}>
                                 <div>
                                     <h2>Engagement over time</h2>
-                                    <p>Daily first-touch cohorts for each ordered funnel stage.</p>
+                                    <p>Daily cohorts for each ordered funnel stage.</p>
                                 </div>
                                 <strong>
                                     {`${formatAnalyticsPercent(

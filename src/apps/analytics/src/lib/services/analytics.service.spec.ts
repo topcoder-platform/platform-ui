@@ -10,7 +10,7 @@ import {
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
-        ANALYTICS: { API_URL: 'https://analytics-api.example.com/v1/analytics/' },
+        ANALYTICS: { API_URL: 'https://api.example.com/v1/analytics/' },
     },
 }), { virtual: true })
 
@@ -34,7 +34,7 @@ describe('Analytics API service', () => {
             to: '2026-08-30',
         }))
             .toBe(
-                'https://analytics-api.example.com/v1/analytics/campaign'
+                'https://api.example.com/v1/analytics/campaign'
                 + '?from=2026-08-01&to=2026-08-30&campaign=launch+2026',
             )
     })
@@ -55,18 +55,18 @@ describe('Analytics API service', () => {
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 1,
-                'https://analytics-api.example.com/v1/analytics/filters',
+                'https://api.example.com/v1/analytics/filters',
             )
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 2,
-                'https://analytics-api.example.com/v1/analytics/campaign'
+                'https://api.example.com/v1/analytics/campaign'
                 + '?from=2026-08-01&to=2026-08-30&campaign=launch',
             )
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 3,
-                'https://analytics-api.example.com/v1/analytics/general'
+                'https://api.example.com/v1/analytics/general'
                 + '?from=2026-08-01&to=2026-08-30&surface=platform_ui',
             )
     })

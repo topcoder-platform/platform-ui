@@ -193,11 +193,11 @@ s3://topcoder-clickstream-templates-dev-811668436784/custom-assets/product-analy
 Platform UI also provides an operator-facing application at
 https://analytics.topcoder-dev.com. Every app route requires an authenticated
 profile with the exact analytics role. Its read-only HTTP API is exposed at
-https://analytics-api.topcoder-dev.com/v1/analytics. API Gateway validates the
+https://api.topcoder-dev.com/v1/analytics. API Gateway validates the
 development Auth0 issuer and human-client audience; Lambda independently checks
-the https://topcoder-dev.com/roles claim before issuing fixed, parameterized,
-bounded Redshift Data API queries through the analytics_api_reader database
-role. The API returns aggregate data only and marks every response private and
+a verified Topcoder roles claim before issuing fixed, parameterized, bounded
+Redshift Data API queries through the analytics_api_reader database role. The
+API returns aggregate data only and marks every response private and
 non-cacheable.
 
 The Campaigns tab exposes the ordered landing, click, registration, and

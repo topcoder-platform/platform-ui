@@ -388,10 +388,13 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     request_id = _request_id(event, context)
     try:
+        route_key = str(event.get("routeKey", ""))
+        if route_key.startswith("OPTIONS "):
+            return _preflight_response()
+
         if not _has_required_role(event):
             return _response(403, {"message": "Analytics access is not permitted", "requestId": request_id})
 
-        route_key = str(event.get("routeKey", ""))
         query = event.get("queryStringParameters") or {}
 
         if route_key == "GET /v1/analytics/filters":
@@ -940,7 +943,7 @@ def _field_value(field: dict[str, Any]) -> Any:
 
 
 def _has_required_role(event: dict[str, Any]) -> bool:
-    """Require the exact configured role from API Gateway-verified JWT claims.
+    """Require the exact role from supported API Gateway-verified Topcoder claims.
 
     Args:
         event: API Gateway event containing JWT authorizer claims.
@@ -953,21 +956,74 @@ def _has_required_role(event: dict[str, Any]) -> bool:
     """
 
     claims = (((event.get("requestContext") or {}).get("authorizer") or {}).get("jwt") or {}).get("claims") or {}
-    raw_roles = claims.get(os.environ.get("HUMAN_ROLE_CLAIM", "https://topcoder-dev.com/roles"))
+    if not isinstance(claims, dict):
+        return False
+
+    configured_claim = os.environ.get("HUMAN_ROLE_CLAIM", "https://topcoder-dev.com/roles")
+    claim_names = [configured_claim]
+    claim_names.extend(
+        key for key in claims
+        if isinstance(key, str)
+        and key != configured_claim
+        and (key == "roles" or key.endswith("/roles"))
+    )
     roles: list[str] = []
+    for claim_name in claim_names:
+        roles.extend(_role_values(claims.get(claim_name)))
+    required = os.environ.get("REQUIRED_ROLE", "analytics").strip()
+    return required in {role.strip() for role in roles}
+
+
+def _role_values(raw_roles: Any) -> list[str]:
+    """Normalize one verified JWT role-claim representation.
+
+    Args:
+        raw_roles: List or string claim supplied by the API Gateway JWT authorizer.
+
+    Returns:
+        String role values, preserving their original case for exact matching.
+
+    Raises:
+        Does not raise; malformed claim values produce an empty list.
+    """
+
     if isinstance(raw_roles, list):
-        roles = [role for role in raw_roles if isinstance(role, str)]
-    elif isinstance(raw_roles, str):
+        return [role for role in raw_roles if isinstance(role, str)]
+    if isinstance(raw_roles, str):
         try:
             parsed = json.loads(raw_roles)
             if isinstance(parsed, list):
-                roles = [role for role in parsed if isinstance(role, str)]
-            else:
-                roles = [raw_roles]
+                return [role for role in parsed if isinstance(role, str)]
+            if isinstance(parsed, str):
+                return [parsed]
         except json.JSONDecodeError:
-            roles = [part for part in re.split(r"[\s,]+", raw_roles) if part]
-    required = os.environ.get("REQUIRED_ROLE", "analytics").strip()
-    return required in {role.strip() for role in roles}
+            return [
+                part.strip("[]\"'")
+                for part in re.split(r"[\s,]+", raw_roles)
+                if part.strip("[]\"'")
+            ]
+    return []
+
+
+def _preflight_response() -> dict[str, Any]:
+    """Build the empty response used by the shared API's analytics preflight route.
+
+    Returns:
+        HTTP API v2 response; the shared CloudFront response policy adds the
+        environment's public CORS headers.
+
+    Raises:
+        Does not raise.
+    """
+
+    return {
+        "statusCode": 204,
+        "headers": {
+            "Cache-Control": "no-store",
+            "Vary": "Origin",
+        },
+        "body": "",
+    }
 
 
 def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:

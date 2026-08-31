@@ -29,6 +29,14 @@ Parameters:
   HumanRoleClaim:
     Type: String
     Default: https://topcoder-dev.com/roles
+  SharedApiDomainName:
+    Type: String
+    Default: api.topcoder-dev.com
+    Description: Canonical public API hostname backed by the shared HTTP API.
+  SharedApiId:
+    Type: String
+    Default: oid1rrke97
+    Description: Existing environment HTTP API behind the public CloudFront distribution.
   WorkgroupArn:
     Type: String
     Description: Exact Redshift Serverless workgroup ARN allowed by the query role.
@@ -252,6 +260,71 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AnalyticsHttpApi}/*/GET/v1/analytics/*'
 
+  SharedAnalyticsJwtAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizerType: JWT
+      IdentitySource:
+        - $request.header.Authorization
+      JwtConfiguration:
+        Audience:
+          - !Ref HumanJwtAudience
+        Issuer: !Ref HumanJwtIssuer
+      Name: topcoder-human-jwt-analytics
+
+  SharedAnalyticsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref SharedApiId
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt AnalyticsFunction.Arn
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 29000
+
+  SharedFiltersRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/filters
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedCampaignRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/campaign
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedGeneralRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/general
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedPreflightRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: NONE
+      RouteKey: OPTIONS /v1/analytics/{proxy+}
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedAnalyticsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${SharedApiId}/*/*/v1/analytics/*'
+
   AnalyticsApiDomain:
     Type: AWS::ApiGatewayV2::DomainName
     Properties:
@@ -286,7 +359,7 @@ Resources:
 
 Outputs:
   ApiEndpoint:
-    Value: !Sub 'https://${DomainName}/v1/analytics'
+    Value: !Sub 'https://${SharedApiDomainName}/v1/analytics'
   FunctionArn:
     Value: !GetAtt AnalyticsFunction.Arn
   FunctionRoleName:

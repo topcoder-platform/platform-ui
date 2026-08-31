@@ -10,7 +10,7 @@ Clickstream data. It is bundled with Platform UI and is available at
 Every Analytics route requires an authenticated profile with the exact
 `analytics` role. The browser guard controls navigation only; the analytics API
 also validates the Auth0 JWT issuer and audience and independently checks the
-environment's namespaced roles claim before running a query.
+verified Topcoder roles claim before running a query.
 
 The route tree is:
 
@@ -53,7 +53,7 @@ a refresh fails.
 Set the following build variable for each provisioned environment:
 
 ```text
-REACT_APP_ANALYTICS_API_URL=https://analytics-api.<domain>/v1/analytics
+REACT_APP_ANALYTICS_API_URL=https://api.<domain>/v1/analytics
 ```
 
 Leave it empty where the API has not been provisioned. Authenticated requests

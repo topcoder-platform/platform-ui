@@ -85,6 +85,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
         route_key: str,
         roles: object = None,
         query: dict[str, str] | None = None,
+        role_claim: str = "https://topcoder-dev.com/roles",
     ) -> dict[str, object]:
         """Build one API Gateway v2 event.
 
@@ -92,6 +93,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
             route_key: API Gateway route key.
             roles: Namespaced role claim value.
             query: Optional query string parameters.
+            role_claim: Verified JWT claim name containing the roles.
 
         Returns:
             Synthetic API Gateway event.
@@ -102,7 +104,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
 
         claims = {}
         if roles is not None:
-            claims["https://topcoder-dev.com/roles"] = roles
+            claims[role_claim] = roles
         return {
             "queryStringParameters": query,
             "requestContext": {
@@ -150,6 +152,41 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertEqual("private, no-store", response["headers"]["Cache-Control"])
         self.assertEqual(["launch"], body["campaigns"])
         self.assertEqual("2026-08-30", body["dataThrough"])
+
+    def test_accepts_verified_topcoder_role_claim_variants(self) -> None:
+        """V2/V3 Topcoder role namespaces and API Gateway string forms authorize identically."""
+
+        variants = [
+            ("https://topcoder.com/roles", ["analytics"]),
+            ("roles", "analytics"),
+            ("roles", "[analytics]"),
+        ]
+        with patch.object(self.module, "_execute_query", return_value=[]):
+            for claim_name, roles in variants:
+                with self.subTest(claim_name=claim_name, roles=roles):
+                    self.module._cache.clear()
+                    response = self.module.handler(
+                        self._event(
+                            "GET /v1/analytics/filters",
+                            roles,
+                            role_claim=claim_name,
+                        ),
+                        None,
+                    )
+                    self.assertEqual(200, response["statusCode"])
+
+    def test_shared_api_preflight_does_not_require_a_role(self) -> None:
+        """The public OPTIONS route returns no data and never queries Redshift."""
+
+        with patch.object(self.module, "_execute_query") as execute:
+            response = self.module.handler(
+                self._event("OPTIONS /v1/analytics/{proxy+}"),
+                None,
+            )
+
+        self.assertEqual(204, response["statusCode"])
+        self.assertEqual("", response["body"])
+        execute.assert_not_called()
 
     def test_rejects_invalid_or_excessive_date_ranges(self) -> None:
         """Malformed and unbounded reporting requests fail before Redshift."""
