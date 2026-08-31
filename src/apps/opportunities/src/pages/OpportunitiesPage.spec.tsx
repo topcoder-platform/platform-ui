@@ -16,11 +16,13 @@ import {
 } from '../services'
 import { OpportunitiesPage } from './OpportunitiesPage'
 
+let mockProfileRoles: string[] = []
+
 jest.mock('~/libs/core', () => ({
     useProfileContext: () => ({
         initialized: true,
         isLoggedIn: true,
-        profile: { roles: [], userId: 123 },
+        profile: { roles: mockProfileRoles, userId: 123 },
     }),
 }), { virtual: true })
 
@@ -62,6 +64,7 @@ const mockedGetRegistrationIds = getMemberChallengeRegistrationIds as jest.Mocke
 describe('OpportunitiesPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockProfileRoles = []
         mockedGetRegistrationIds.mockResolvedValue([])
     })
 
@@ -159,5 +162,35 @@ describe('OpportunitiesPage', () => {
                 'href',
                 'https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder',
             )
+    })
+
+    it('keeps reviewer learning content visible after reviewer profile hydration', async () => {
+        mockProfileRoles = ['Reviewer']
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/reviews']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('heading', { name: 'How to become a reviewer?' }))
+            .toBeInTheDocument()
     })
 })

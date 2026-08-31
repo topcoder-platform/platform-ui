@@ -108,8 +108,8 @@ interface LearningCardProps {
 }
 
 /**
- * Renders the role-learning callout required for members who do not yet have a
- * reviewer or copilot role.
+ * Renders the role-learning callout shown beside reviewer listings and for
+ * members who do not yet have a copilot role.
  *
  * @param props title, explanatory text, and Thrive destination.
  * @returns role education callout.
@@ -208,7 +208,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         () => new Set(registrationIdsResponse.data ?? []),
         [registrationIdsResponse.data],
     )
-    const isReviewer = hasRole(profile?.roles, 'reviewer')
     const isCopilot = hasRole(profile?.roles, 'copilot')
 
     /** Resets active controls and their server page. */
@@ -321,7 +320,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         tracks={tracks}
                         types={types}
                     />
-                    {kind === 'reviews' && !isReviewer && (
+                    {kind === 'reviews' && (
                         <LearningCard
                             body='Interested in evaluating submissions on Topcoder?'
                             href='/thrive/articles/How%20to%20become%20a%20reviewer'
