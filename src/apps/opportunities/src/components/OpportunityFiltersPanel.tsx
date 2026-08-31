@@ -60,6 +60,7 @@ const COMPETITION_TYPES: FacetOption[] = [
     { label: 'Challenge', value: 'CH' },
     { label: 'First2Finish', value: 'F2F' },
     { label: 'Marathon Match', value: 'MM' },
+    { label: 'Task', value: 'TSK' },
 ]
 
 const ENGAGEMENT_ROLES: FacetOption[] = [
