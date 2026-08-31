@@ -39,6 +39,8 @@ import {
 const V6_URL = EnvironmentConfig.API.V6
 const LEGACY_COPILOT_PAGE_SIZE = 1000
 const MAX_LEGACY_COPILOT_PAGES = 20
+const LEGACY_COPILOT_APPLICATION_PAGE_SIZE = 200
+const LEGACY_COPILOT_APPLICATION_BATCH_SIZE = 12
 const SUBMISSION_HISTORY_PAGE_SIZE = 200
 const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
@@ -603,6 +605,70 @@ function filterLegacyCopilotOpportunities(
     })
 }
 
+interface LegacyCopilotApplication {
+    createdAt?: unknown
+    id?: unknown
+    status?: unknown
+    updatedAt?: unknown
+    userId?: unknown
+}
+
+/**
+ * Hydrates caller application state omitted by the deployed legacy Projects
+ * API list. Requests are bounded so the compatibility path cannot issue the
+ * full candidate set simultaneously.
+ *
+ * @param items already facet-filtered legacy opportunities.
+ * @param memberId authenticated member whose applications are required.
+ * @returns opportunities for which the member has an application, with card state attached.
+ * @throws Does not throw for an individual application-list failure; that opportunity is omitted.
+ */
+async function filterLegacyCopilotApplications(
+    items: CopilotOpportunity[],
+    memberId: string,
+): Promise<CopilotOpportunity[]> {
+    const hydrated: CopilotOpportunity[] = []
+
+    for (let offset = 0; offset < items.length; offset += LEGACY_COPILOT_APPLICATION_BATCH_SIZE) {
+        const batch = items.slice(offset, offset + LEGACY_COPILOT_APPLICATION_BATCH_SIZE)
+        // eslint-disable-next-line no-await-in-loop
+        const applications = await Promise.all(batch.map(async item => {
+            if (item.currentUserApplication || item.hasApplied) return item.currentUserApplication
+            const url = new URL(`${V6_URL}/projects/copilots/opportunity/${encodeURIComponent(item.id)}/applications`)
+            url.searchParams.set('page', '1')
+            url.searchParams.set('pageSize', String(LEGACY_COPILOT_APPLICATION_PAGE_SIZE))
+            try {
+                const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
+                    LegacyCopilotApplication[] | ApiEnvelope<LegacyCopilotApplication[]>
+                >
+                const rows = unwrap(response.data)
+                if (!Array.isArray(rows)) return undefined
+                const application = rows.find(row => String(row.userId ?? '') === memberId)
+                if (!application) return undefined
+                return {
+                    createdAt: String(application.createdAt ?? ''),
+                    id: String(application.id ?? ''),
+                    status: String(application.status ?? ''),
+                    updatedAt: String(application.updatedAt ?? ''),
+                }
+            } catch {
+                return undefined
+            }
+        }))
+        batch.forEach((item, index) => {
+            const application = applications[index]
+            if (!application && !item.hasApplied) return
+            hydrated.push({
+                ...item,
+                currentUserApplication: application ?? item.currentUserApplication,
+                hasApplied: true,
+            })
+        })
+    }
+
+    return hydrated
+}
+
 /**
  * Keeps Copilot Opportunities usable while an older Projects API deployment
  * is rolling forward to the server-side discovery contract.
@@ -631,10 +697,16 @@ async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<Opport
             LEGACY_COPILOT_PAGE_SIZE,
         ).items),
     ].map(normalizeCopilotOpportunity)
-    const filtered = sortLegacyCopilotOpportunities(
-        filterLegacyCopilotOpportunities(allItems, filters),
-        filters.sort,
-    )
+    const facetFiltered = filterLegacyCopilotOpportunities(allItems, {
+        ...filters,
+        applied: false,
+    })
+    const memberFiltered = filters.applied
+        ? filters.memberId
+            ? await filterLegacyCopilotApplications(facetFiltered, filters.memberId)
+            : facetFiltered.filter(item => !!item.hasApplied || !!item.currentUserApplication)
+        : facetFiltered
+    const filtered = sortLegacyCopilotOpportunities(memberFiltered, filters.sort)
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
     const offset = (page - 1) * perPage

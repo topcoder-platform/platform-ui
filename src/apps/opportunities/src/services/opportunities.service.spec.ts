@@ -465,6 +465,72 @@ describe('opportunities service normalization', () => {
             .toBe('createdAt desc')
     })
 
+    it('hydrates My Copilot applications when the legacy list rejects the applied filter', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockRejectedValueOnce({
+                data: { message: ['property applied should not exist'] },
+                status: 400,
+            })
+            .mockResolvedValueOnce({
+                data: [
+                    { id: 'mine', status: 'completed' },
+                    { id: 'another-member', status: 'completed' },
+                    { id: 'active', status: 'active' },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '1000',
+                        'x-total': '3',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                    id: 'application-id',
+                    status: 'accepted',
+                    updatedAt: '2026-01-02T00:00:00.000Z',
+                    userId: '123',
+                }],
+            })
+            .mockResolvedValueOnce({
+                data: [{ userId: '456' }],
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            applied: true,
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['completed'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    currentUserApplication: expect.objectContaining({
+                        id: 'application-id',
+                        status: 'accepted',
+                    }),
+                    hasApplied: true,
+                    id: 'mine',
+                }],
+                total: 1,
+            })
+
+        const applicationUrls = get.mock.calls.slice(2)
+            .map(call => new URL(String(call[0])))
+        expect(applicationUrls.map(url => url.pathname))
+            .toEqual([
+                '/v6/projects/copilots/opportunity/mine/applications',
+                '/v6/projects/copilots/opportunity/another-member/applications',
+            ])
+        expect(applicationUrls.every(url => url.searchParams.get('pageSize') === '200'))
+            .toBe(true)
+    })
+
     it('uses canonical Review API facets and descending payment sorting', () => {
         const url = new URL(buildOpportunityPageUrl('reviews', {
             page: 3,

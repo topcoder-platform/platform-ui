@@ -141,7 +141,10 @@ field is present for the caller.
   through the API's `requiredSkills` filter so skill and technology terms stay
   discoverable without weakening normal project search.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
-  opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`).
+  opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`). During
+  rollout, a legacy list that rejects `applied` is filtered locally and its
+  authenticated per-opportunity application lists supply My Copilot state in
+  bounded batches.
 - Review opportunities: Review API metadata search. The application action
   uses `defaultApplicationRole` or a role selected from `applicationRoles`.
 
