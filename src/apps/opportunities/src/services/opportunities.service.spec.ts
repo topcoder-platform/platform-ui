@@ -24,6 +24,7 @@ import {
     getMyWorkCounts,
     getMemberChallengeRegistrationIds,
     getOpportunityPage,
+    getOpportunitySummary,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
 } from './opportunities.service'
@@ -71,6 +72,34 @@ describe('opportunities service normalization', () => {
                 engagements: { count: 0 },
                 reviews: { count: 0 },
             })
+    })
+
+    it('uses the default Challenge API list total for the competition hero count', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce({
+            competitions: { amount: 5500, count: 234 },
+            copilots: { count: 2 },
+            engagements: { count: 3 },
+            reviews: { count: 4 },
+        })
+        globalGet.mockResolvedValueOnce({
+            data: [],
+            headers: {
+                get: (name: string) => (name === 'x-total' ? '238' : undefined),
+            },
+        })
+
+        await expect(getOpportunitySummary())
+            .resolves.toMatchObject({ competitions: { amount: 5500, count: 238 } })
+
+        const url = new URL(String(globalGet.mock.calls[0][0]))
+        expect(url.pathname)
+            .toBe('/v6/challenges')
+        expect(url.searchParams.get('currentPhaseName'))
+            .toBe('Submission')
+        expect(url.searchParams.get('perPage'))
+            .toBe('1')
     })
 
     it('loads member-work totals on count-only owner pages', async () => {

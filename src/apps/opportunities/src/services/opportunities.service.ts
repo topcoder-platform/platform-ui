@@ -234,14 +234,32 @@ export function normalizeOpportunitySummary(payload: unknown): OpportunitySummar
 }
 
 /**
- * Loads all four headline cells in one request to opportunities-api-v6.
+ * Loads all four headline cells and reconciles the public competition count
+ * with the exact Challenge API criteria used by the default list. If the
+ * owner-count request fails, the aggregation response remains available.
  *
  * @returns current public opportunity totals and available amounts.
  * @throws Propagates API/network errors to the page error boundary.
  */
 export async function getOpportunitySummary(): Promise<OpportunitySummary> {
-    const response = await xhrGetAsync<unknown>(`${V6_URL}/opportunities/summary`)
-    return normalizeOpportunitySummary(response)
+    const [response, competitionPage] = await Promise.all([
+        xhrGetAsync<unknown>(`${V6_URL}/opportunities/summary`),
+        getOpportunityPage('competitions', {
+            page: 1,
+            perPage: 1,
+            statuses: ['ACTIVE'],
+        }).catch(() => undefined),
+    ])
+    const summary = normalizeOpportunitySummary(response)
+    return competitionPage
+        ? {
+            ...summary,
+            competitions: {
+                ...summary.competitions,
+                count: competitionPage.total,
+            },
+        }
+        : summary
 }
 
 /**
