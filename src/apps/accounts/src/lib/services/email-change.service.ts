@@ -80,15 +80,15 @@ export async function initiateEmailChangeAsync(
 /**
  * Completes the deferred email update from the validation link.
  *
- * @param validationToken one-time token delivered to the proposed new email.
+ * @param validationCode one-time code delivered in the proposed-email link.
  * @returns the email address that is now primary.
  * @throws rejects when the validation link is invalid, expired, or already used.
  */
 export async function completeEmailChangeAsync(
-    validationToken: string,
+    validationCode: string,
 ): Promise<EmailChangeResponse> {
     return xhrGetAsync<EmailChangeResponse>(
-        `${usersUrl}/email-change/verify?token=${encodeURIComponent(validationToken)}`,
+        `${usersUrl}/email-change/verify?code=${encodeURIComponent(validationCode)}`,
     )
 }
 
