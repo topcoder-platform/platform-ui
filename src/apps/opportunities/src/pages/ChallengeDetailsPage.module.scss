@@ -46,6 +46,11 @@
         margin: 0 auto;
         max-width: 1200px;
         overflow-x: auto;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
 
     button {
