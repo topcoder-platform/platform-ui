@@ -71,6 +71,7 @@ const ChangeEmailModal: FC<ChangeEmailModalProps> = (
             allowBodyScroll
             blockScroll
             open={props.isOpen}
+            size='lg'
             title='Change Email'
             onClose={props.onClose}
         >
