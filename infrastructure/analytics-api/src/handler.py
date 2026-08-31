@@ -8,6 +8,7 @@ Topcoder AWS Clickstream reporting views.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -23,6 +24,7 @@ MAX_RESULT_ROWS = 2_000
 MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
 FILTER_CACHE_SECONDS = 300
+QUERY_TOKEN_WINDOW_SECONDS = 1_800
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
 NO_FILTER_PARAMETER = "*"
 
@@ -369,7 +371,7 @@ class QueryFailure(RuntimeError):
 
 
 class QueryTimeout(RuntimeError):
-    """Raised when a reporting query cannot finish inside the HTTP deadline."""
+    """Raised when a reusable reporting query cannot finish inside the HTTP deadline."""
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -825,7 +827,7 @@ def _execute_query(
     parameters: list[dict[str, str]],
     context: Any,
 ) -> list[dict[str, Any]]:
-    """Execute a fixed parameterized query with one bounded provider retry.
+    """Execute a fixed parameterized query with resumable timeout handling.
 
     Args:
         sql: Server-owned SQL template.
@@ -837,7 +839,8 @@ def _execute_query(
 
     Raises:
         QueryFailure after repeated provider failure or excess output and
-        QueryTimeout when the shared deadline expires.
+        QueryTimeout when the shared deadline expires. A timed-out statement
+        remains active so a client retry can resume polling it by idempotency token.
     """
 
     request: dict[str, Any] = {
@@ -851,6 +854,7 @@ def _execute_query(
         request["Parameters"] = parameters
     deadline = time.monotonic() + _query_wait_seconds(context)
     for attempt in range(MAX_QUERY_ATTEMPTS):
+        request["ClientToken"] = _query_client_token(sql, parameters, attempt)
         statement_id = _redshift_data.execute_statement(**request)["Id"]
         delay = 0.2
         while time.monotonic() < deadline:
@@ -864,13 +868,40 @@ def _execute_query(
             time.sleep(delay)
             delay = min(delay * 1.5, 1.0)
         else:
-            try:
-                _redshift_data.cancel_statement(Id=statement_id)
-            except Exception:
-                pass
             raise QueryTimeout("Redshift reporting query timed out")
 
     raise QueryFailure("Redshift reporting query failed")
+
+
+def _query_client_token(
+    sql: str,
+    parameters: list[dict[str, str]],
+    attempt: int,
+) -> str:
+    """Build a bounded idempotency key for one fixed reporting query.
+
+    Args:
+        sql: Server-owned SQL template.
+        parameters: Validated named parameters.
+        attempt: Provider retry index; failed statements receive a new token.
+
+    Returns:
+        Sixty-four-character SHA-256 token stable within a thirty-minute window.
+
+    Raises:
+        Does not raise for validated handler inputs and configured environment values.
+    """
+
+    token_window = int(time.time() // QUERY_TOKEN_WINDOW_SECONDS)
+    fingerprint = json.dumps({
+        "attempt": attempt,
+        "database": os.environ["REDSHIFT_DATABASE"],
+        "parameters": parameters,
+        "sql": sql,
+        "tokenWindow": token_window,
+        "workgroup": os.environ["REDSHIFT_WORKGROUP"],
+    }, separators=(",", ":"), sort_keys=True)
+    return hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()
 
 
 def _query_wait_seconds(context: Any) -> float:

@@ -282,6 +282,10 @@ class AnalyticsHandlerTests(unittest.TestCase):
 
         self.assertEqual([{"value": "recovered"}], rows)
         self.assertEqual(2, execute.call_count)
+        self.assertNotEqual(
+            execute.call_args_list[0].kwargs["ClientToken"],
+            execute.call_args_list[1].kwargs["ClientToken"],
+        )
 
     def test_stops_after_bounded_redshift_retries(self) -> None:
         """Repeated failed statements surface an error after two attempts."""
@@ -304,6 +308,52 @@ class AnalyticsHandlerTests(unittest.TestCase):
             self.module._execute_query("SELECT 1", [], context)
 
         self.assertEqual(2, execute.call_count)
+
+    def test_timeout_keeps_an_idempotent_statement_for_the_next_request(self) -> None:
+        """A client retry reuses rather than cancels a query that outlives one HTTP request."""
+
+        context = Mock()
+        context.get_remaining_time_in_millis.return_value = 28_000
+        with (
+            patch.object(self.module.time, "time", return_value=1_000),
+            patch.object(self.module, "_query_wait_seconds", return_value=0),
+            patch.object(
+                self.module._redshift_data,
+                "execute_statement",
+                return_value={"Id": "still-running"},
+            ) as execute,
+            patch.object(self.module._redshift_data, "cancel_statement") as cancel,
+        ):
+            for _ in range(2):
+                with self.assertRaises(self.module.QueryTimeout):
+                    self.module._execute_query("SELECT 1", [], context)
+
+        self.assertEqual(2, execute.call_count)
+        self.assertEqual(
+            execute.call_args_list[0].kwargs["ClientToken"],
+            execute.call_args_list[1].kwargs["ClientToken"],
+        )
+        cancel.assert_not_called()
+
+    def test_query_client_token_is_scoped_by_query_attempt_and_time_window(self) -> None:
+        """Idempotency tokens reuse only the same query attempt inside one bounded window."""
+
+        parameters = [{"name": "from_date", "value": "2026-08-01"}]
+        with patch.object(self.module.time, "time", return_value=1_000):
+            original = self.module._query_client_token("SELECT 1", parameters, 0)
+            same_query = self.module._query_client_token("SELECT 1", parameters, 0)
+            new_attempt = self.module._query_client_token("SELECT 1", parameters, 1)
+        with patch.object(
+            self.module.time,
+            "time",
+            return_value=1_000 + self.module.QUERY_TOKEN_WINDOW_SECONDS,
+        ):
+            next_window = self.module._query_client_token("SELECT 1", parameters, 0)
+
+        self.assertRegex(original, r"^[0-9a-f]{64}$")
+        self.assertEqual(original, same_query)
+        self.assertNotEqual(original, new_attempt)
+        self.assertNotEqual(original, next_window)
 
     def test_shapes_campaign_funnel_and_click_location(self) -> None:
         """Campaign rows become totals, conversion rates, series, and safe click dimensions."""

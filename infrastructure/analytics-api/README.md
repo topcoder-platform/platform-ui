@@ -25,9 +25,12 @@ or result limits.
 
 Reports are limited to 366 inclusive days and 2,000 decoded rows. Query waits
 leave time for a sanitized response. A failed or aborted statement is retried
-once within the same deadline, concurrency and API throttles cap warehouse
-pressure, and successful responses use `Cache-Control: private, no-store`.
-Logs contain request IDs and service-owned error categories only.
+once within the same deadline. If Redshift Serverless needs longer than one
+HTTP request to resume, the statement remains active and a browser retry
+reattaches to it through a server-generated, thirty-minute idempotency window
+instead of starting another warehouse query. Concurrency and API throttles cap
+warehouse pressure, and successful responses use `Cache-Control: private,
+no-store`. Logs contain request IDs and service-owned error categories only.
 
 ## Files
 
