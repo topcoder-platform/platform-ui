@@ -43,6 +43,8 @@ export type FormInputTooltipOptions = {
 }
 
 export interface FormInputModel {
+    /** Optional inline action displayed at the upper-right of a text input. */
+    readonly actionElement?: JSX.Element
     readonly autocomplete?: FormInputAutocompleteOption
     readonly cards?: ReadonlyArray<FormCard>
     checked?: boolean
