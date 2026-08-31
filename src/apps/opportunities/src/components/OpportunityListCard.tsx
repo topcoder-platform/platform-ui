@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
+import { EnvironmentConfig } from '~/config'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
@@ -447,7 +448,7 @@ function engagementView(item: EngagementOpportunity, memberApplied: boolean): Ca
     return {
         badge: opportunityTrackLabel(item.role),
         description: descriptionExcerpt(item.description),
-        href: `/engagements/${item.nanoId ?? item.id}`,
+        href: `${EnvironmentConfig.ENGAGEMENTS_URL}/${item.nanoId ?? item.id}`,
         meta: [
             { icon: <RoleMetricIcon />, label: 'Role', value: role },
             { icon: <CalendarMetricIcon />, label: 'Duration', value: formatEngagementDuration(item) },
@@ -742,7 +743,12 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     })
 
     return (
-        <Link className={cardClassName} to={card.href}>
+        <Link
+            className={cardClassName}
+            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
+            target={props.kind === 'engagements' ? '_blank' : undefined}
+            to={card.href}
+        >
             <div className={styles.main}>
                 <div className={styles.eyebrow}>
                     <span className={classNames(

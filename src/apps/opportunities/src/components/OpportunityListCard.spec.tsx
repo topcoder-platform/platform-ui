@@ -28,6 +28,10 @@ jest.mock('~/libs/ui', () => {
     }
 }, { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+}), { virtual: true })
+
 /**
  * Creates a complete competition-card fixture with an open registration and submission phase.
  *
@@ -317,6 +321,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             description: 'Build a member-facing experience with the client team.',
             durationWeeks: 44,
             id: 'engagement-id',
+            nanoId: 'engagement-nano',
             role: 'SOFTWARE_DEVELOPER',
             skills: [{ name: 'React' }, { name: 'Node.js' }],
             status: 'OPEN',
@@ -330,6 +335,10 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('gridCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('target', '_blank')
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()
         expect(screen.getByText('Development'))
