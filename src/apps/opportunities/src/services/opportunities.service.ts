@@ -305,6 +305,7 @@ export function buildOpportunityPageUrl(
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sortBy', startingSoon ? 'startDate' : 'updatedAt')
         url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        if (startingSoon) url.searchParams.set('startDateStart', new Date().toISOString())
         if (filters.search) url.searchParams.set('search', filters.search)
         const competitionStatuses = filters.statuses?.includes('REGISTRATION')
             ? ['ACTIVE']
@@ -344,6 +345,7 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('pageSize', String(perPage))
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sort', startingSoon ? 'startDate asc' : 'createdAt desc')
+        if (startingSoon) url.searchParams.set('startDateFrom', new Date().toISOString())
         url.searchParams.set('noGrouping', 'true')
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
@@ -478,6 +480,10 @@ function filterLegacyCopilotOpportunities(
         const itemSkills = (item.skills ?? []).map(skill => `${skill.id ?? ''} ${skill.name}`.toLowerCase())
         const itemStatus = String(item.status ?? '')
             .toLowerCase()
+        if (filters.sort === 'startingSoon') {
+            const startDate = Date.parse(item.startDate ?? '')
+            if (!Number.isFinite(startDate) || startDate < Date.now()) return false
+        }
         if (statuses.size && !statuses.has(itemStatus)) return false
         if (types.size && !types.has(itemType)) return false
         if (skills.length && !skills.some(skill => itemSkills.some(value => value.includes(skill)))) return false

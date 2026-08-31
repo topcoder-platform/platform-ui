@@ -156,6 +156,8 @@ describe('opportunities service normalization', () => {
             .toBe('startDate')
         expect(url.searchParams.get('sortOrder'))
             .toBe('asc')
+        expect(Date.parse(url.searchParams.get('startDateStart') ?? ''))
+            .toBeGreaterThan(0)
     })
 
     it('keeps scheduled challenges out of public active results without hiding member competitions', () => {
@@ -342,9 +344,10 @@ describe('opportunities service normalization', () => {
             })
             .mockResolvedValueOnce({
                 data: [
-                    { id: 'later', startDate: '2026-05-02T00:00:00.000Z', status: 'active' },
+                    { id: 'later', startDate: '2099-05-02T00:00:00.000Z', status: 'active' },
                     { id: 'missing', status: 'active' },
-                    { id: 'earlier', startDate: '2026-05-01T00:00:00.000Z', status: 'active' },
+                    { id: 'past', startDate: '2026-05-01T00:00:00.000Z', status: 'active' },
+                    { id: 'earlier', startDate: '2099-05-01T00:00:00.000Z', status: 'active' },
                 ],
                 headers: {
                     get: (name: string) => ({
@@ -366,9 +369,12 @@ describe('opportunities service normalization', () => {
                 items: [
                     expect.objectContaining({ id: 'earlier' }),
                     expect.objectContaining({ id: 'later' }),
-                    expect.objectContaining({ id: 'missing' }),
                 ],
             })
+
+        const initialUrl = new URL(String(globalGet.mock.calls[0][0]))
+        expect(Date.parse(initialUrl.searchParams.get('startDateFrom') ?? ''))
+            .toBeGreaterThan(0)
 
         const legacyUrl = new URL(String(globalGet.mock.calls.at(-1)?.[0]))
         expect(legacyUrl.searchParams.get('sort'))
