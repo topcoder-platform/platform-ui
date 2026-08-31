@@ -401,6 +401,35 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
+    it('shows accepted and applied states for member engagement results', () => {
+        const accepted: EngagementOpportunity = {
+            applicationStatus: 'ACCEPTED',
+            id: 'accepted-engagement',
+            status: 'OPEN',
+            title: 'Accepted engagement',
+        }
+        const applied: EngagementOpportunity = {
+            id: 'applied-engagement',
+            status: 'OPEN',
+            title: 'Applied engagement',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={accepted} kind='engagements' memberApplied />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Accepted').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={applied} kind='engagements' memberApplied />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Applied').className)
+            .toContain('stateApplied')
+    })
+
     it('lets My Work override the owning API state with the accepted treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',

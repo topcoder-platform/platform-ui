@@ -56,6 +56,7 @@ interface OpportunityListCardProps {
     applicationState?: string
     item: OpportunityItem
     kind: OpportunityKind
+    memberApplied?: boolean
     onSkillClick?: (skill: string) => void
     registered?: boolean
     view?: OpportunityView
@@ -248,6 +249,26 @@ function applicationState(applied: boolean, open: boolean): string {
 }
 
 /**
+ * Converts an Engagement API application status, with a My-engagements query
+ * fallback, into the authored card state.
+ *
+ * @param status owning API status when it is included with the engagement.
+ * @param memberApplied whether the active server filter guarantees an application.
+ * @param open whether the engagement still accepts applications.
+ * @returns Accepted, Applied, Open for application, or Application closed.
+ * @throws Does not throw.
+ */
+function engagementApplicationState(
+    status: string | undefined,
+    memberApplied: boolean,
+    open: boolean,
+): string {
+    const statusKey = challengeCatalogKey(status)
+    if (['accepted', 'approved', 'selected'].includes(statusKey)) return 'Accepted'
+    return applicationState(!!status || memberApplied, open)
+}
+
+/**
  * Maps owning-API discipline enums to the authored Opportunities track labels.
  *
  * @param value API role or track token.
@@ -420,8 +441,9 @@ function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
 }
 
 /** Converts engagement data to the shared card presentation model. */
-function engagementView(item: EngagementOpportunity): CardViewModel {
+function engagementView(item: EngagementOpportunity, memberApplied: boolean): CardViewModel {
     const role = enumLabel(item.role) || 'Contributor'
+    const memberApplicationStatus = item.applicationStatus ?? item.myApplication?.status
     return {
         badge: opportunityTrackLabel(item.role),
         description: descriptionExcerpt(item.description),
@@ -441,7 +463,11 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
             },
         ],
         skills: engagementSkillNames(item),
-        state: applicationState(false, challengeCatalogKey(item.status) === 'open'),
+        state: engagementApplicationState(
+            memberApplicationStatus,
+            memberApplied,
+            challengeCatalogKey(item.status) === 'open',
+        ),
         title: item.title,
     }
 }
@@ -514,11 +540,12 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
  *
  * @param kind opportunity domain selected in the hero.
  * @param item raw owning API response.
+ * @param memberApplied whether the active list is scoped to the member's applications.
  * @returns shared Figma card presentation data.
  * @throws Does not throw when called with matching kind/item data.
  */
-function toViewModel(kind: OpportunityKind, item: OpportunityItem): CardViewModel {
-    if (kind === 'engagements') return engagementView(item as EngagementOpportunity)
+function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied: boolean): CardViewModel {
+    if (kind === 'engagements') return engagementView(item as EngagementOpportunity, memberApplied)
     if (kind === 'copilots') return copilotView(item as CopilotOpportunity)
     return reviewView(item as ReviewOpportunity)
 }
@@ -700,7 +727,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     }
 
     const card = {
-        ...toViewModel(props.kind, props.item),
+        ...toViewModel(props.kind, props.item, !!props.memberApplied),
         ...(props.applicationState ? { state: props.applicationState } : {}),
     }
     const visibleSkills = card.skills.filter(Boolean)

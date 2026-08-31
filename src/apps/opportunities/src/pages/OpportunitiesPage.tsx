@@ -379,6 +379,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                                 item={item}
                                 key={item.id}
                                 kind={kind}
+                                memberApplied={applied}
                                 onSkillClick={updateSearch}
                                 registered={kind === 'competitions'
                                     && (applied || registrationIds.has(item.id))}
