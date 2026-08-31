@@ -8,7 +8,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -119,10 +119,10 @@ const LearningCard: FC<LearningCardProps> = props => (
     <aside className={styles.learning}>
         <h3>{props.title}</h3>
         <p>{props.body}</p>
-        <Link to={props.href}>
+        <a href={props.href}>
             Learn more
             <IconOutline.ArrowRightIcon />
-        </Link>
+        </a>
     </aside>
 )
 
@@ -331,7 +331,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     {kind === 'copilots' && !isCopilot && (
                         <LearningCard
                             body='Interested in managing challenges on Topcoder?'
-                            href='/thrive/articles/How%20to%20become%20a%20copilot'
+                            href='https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder'
                             title='How to become a copilot?'
                         />
                     )}

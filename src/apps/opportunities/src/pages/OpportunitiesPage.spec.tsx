@@ -128,4 +128,36 @@ describe('OpportunitiesPage', () => {
         await waitFor(() => expect(screen.getByTestId('registration-challenge-id'))
             .toHaveTextContent('true'))
     })
+
+    it('links the copilot learning card to the published Thrive article', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/copilots']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('link', { name: /learn more/i }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder',
+            )
+    })
 })
