@@ -6,6 +6,7 @@ import {
     xhrPostAsync,
     xhrRequestAsync,
 } from '~/libs/core'
+import { init } from 'filestack-js'
 import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
@@ -32,8 +33,18 @@ import {
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         API: { V5: 'https://api.example/v5', V6: 'https://api.example/v6' },
+        FILESTACK: {
+            API_KEY: 'filestack-key',
+            CNAME: 'filestack.example',
+            PROGRESS_INTERVAL: 100,
+            REGION: 'us-east-1',
+            RETRY: 2,
+            SUBMISSION_CONTAINER: 'submission-dmz',
+            TIMEOUT: 1000,
+        },
     },
 }), { virtual: true })
+jest.mock('filestack-js', () => ({ init: jest.fn() }))
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
@@ -478,15 +489,18 @@ describe('opportunities service normalization', () => {
             )
     })
 
-    it('uploads a multipart challenge submission and reports Axios progress', async () => {
+    it('uploads a challenge ZIP to DMZ before creating its URL-backed submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const upload = jest.fn().mockImplementation(async (_file, options) => {
+            options.onProgress({ totalPercent: 50 })
+            return { key: 'challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
+        })
+        const initMock = init as jest.MockedFunction<typeof init>
+        initMock.mockReturnValue({ upload } as never)
         const progress = jest.fn()
         const file = new File(['archive'], 'MySubmission.zip', { type: 'application/zip' })
         const controller = new AbortController()
-        post.mockImplementationOnce(async (_url, _payload, config) => {
-            config?.onUploadProgress?.({ loaded: 1, total: 2 } as never)
-            return { id: 'submission-id' } as never
-        })
+        post.mockResolvedValueOnce({ id: 'submission-id' } as never)
 
         await expect(createChallengeSubmission(
             'challenge-id',
@@ -507,6 +521,19 @@ describe('opportunities service normalization', () => {
                     signal: controller.signal,
                 }),
             )
+        expect(upload)
+            .toHaveBeenCalledWith(
+                file,
+                expect.objectContaining({
+                    progressInterval: 100,
+                    retry: 2,
+                    timeout: 1000,
+                }),
+                expect.objectContaining({
+                    container: 'submission-dmz',
+                    region: 'us-east-1',
+                }),
+            )
         const payload = post.mock.calls.at(-1)?.[1] as FormData
         expect(payload.get('challengeId'))
             .toBe('challenge-id')
@@ -514,12 +541,14 @@ describe('opportunities service normalization', () => {
             .toBe('123')
         expect(payload.get('type'))
             .toBe('CHECKPOINT_SUBMISSION')
-        expect(payload.get('fileName'))
-            .toBe('MySubmission.zip')
-        expect((payload.get('file') as File).name)
-            .toBe('MySubmission.zip')
+        expect(payload.get('url'))
+            .toBe('https://s3.amazonaws.com/submission-dmz/challenge-id-123-CHECKPOINT_SUBMISSION.zip')
+        expect(payload.has('file'))
+            .toBe(false)
         expect(progress)
-            .toHaveBeenCalledWith(50)
+            .toHaveBeenNthCalledWith(1, 50)
+        expect(progress)
+            .toHaveBeenLastCalledWith(100)
     })
 
     it('requests only the latest submission per member for the main table', async () => {

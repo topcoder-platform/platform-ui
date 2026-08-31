@@ -83,7 +83,7 @@ function formatFileSize(bytes: number): string {
  * the active My Submissions challenge tab.
  *
  * @param props challenge identity, member identity, navigation, legal, support, and cache callbacks.
- * @returns accessible direct-to-Review-API submission workflow.
+ * @returns accessible DMZ-to-Review-API submission workflow.
  * @throws Does not throw; upload and clipboard failures are rendered or toasted in place.
  */
 export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = props => {

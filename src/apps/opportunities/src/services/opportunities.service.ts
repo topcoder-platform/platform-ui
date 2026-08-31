@@ -1,4 +1,10 @@
 import { AxiosHeaders, AxiosResponse } from 'axios'
+import {
+    Client,
+    init,
+    StoreUploadOptions,
+    UploadOptions,
+} from 'filestack-js'
 
 import { EnvironmentConfig } from '~/config'
 import {
@@ -38,6 +44,7 @@ const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
 const MAX_DETAIL_PAGES = 100
 const PAGE_REQUEST_BATCH_SIZE = 4
+let submissionFilestackClient: Client | undefined
 
 const DEFAULT_SUMMARY: OpportunitySummary = {
     competitions: { amount: 0, count: 0 },
@@ -49,7 +56,28 @@ const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilo
 const MY_WORK_COUNT_PAGE_SIZE = 1
 
 /**
- * Uploads a member's ZIP directly to the v6 Review API for the active submission phase.
+ * Resolves the shared Filestack client used for challenge submissions.
+ *
+ * @returns configured Filestack browser client.
+ * @throws Error when file uploads are not configured for the environment.
+ */
+function getSubmissionFilestackClient(): Client {
+    const { API_KEY, CNAME, SECURITY } = EnvironmentConfig.FILESTACK
+    if (!API_KEY) throw new Error('File uploads are not configured for this environment.')
+    if (!submissionFilestackClient) {
+        submissionFilestackClient = init(API_KEY, {
+            cname: CNAME,
+            security: SECURITY
+                ? { policy: SECURITY.POLICY, signature: SECURITY.SIGNATURE }
+                : undefined,
+        })
+    }
+    return submissionFilestackClient
+}
+
+/**
+ * Uploads a member's ZIP to the submission DMZ, then creates the v6 Review API
+ * record with the resulting S3 URL for validation and virus scanning.
  *
  * @param challengeId Challenge API UUID receiving the submission.
  * @param memberId authenticated submitter's numeric member identifier serialized as text.
@@ -68,28 +96,45 @@ export async function createChallengeSubmission(
     onProgress?: (percent: number) => void,
     signal?: AbortSignal,
 ): Promise<ChallengeSubmission> {
+    if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
+    const storagePath = `${challengeId}-${memberId}-${type}-${Date.now()}.zip`
+    const uploadOptions: UploadOptions = {
+        onProgress: event => {
+            if (!onProgress) return
+            const percent = typeof event?.totalPercent === 'number' ? event.totalPercent : 0
+            onProgress(Math.min(99, Math.max(0, Math.round(percent))))
+        },
+        progressInterval: EnvironmentConfig.FILESTACK.PROGRESS_INTERVAL,
+        retry: EnvironmentConfig.FILESTACK.RETRY,
+        timeout: EnvironmentConfig.FILESTACK.TIMEOUT,
+    }
+    const storeOptions: StoreUploadOptions = {
+        container: EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER,
+        path: storagePath,
+        region: EnvironmentConfig.FILESTACK.REGION,
+    }
+    const upload = await getSubmissionFilestackClient().upload(file, uploadOptions, storeOptions)
+    if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
+    const storageKey = String(upload?.key ?? storagePath)
+    const storageUrl = `https://s3.amazonaws.com/${EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER}/${storageKey}`
     const formData = new FormData()
     formData.append('challengeId', challengeId)
     formData.append('memberId', memberId)
     formData.append('type', type)
-    formData.append('fileName', file.name)
-    formData.append('file', file, file.name)
+    formData.append('url', storageUrl)
 
-    return xhrPostAsync<FormData, ChallengeSubmission>(
+    const submission = await xhrPostAsync<FormData, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         formData,
         {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
-            onUploadProgress: event => {
-                const total = event.total ?? file.size
-                if (!onProgress || total <= 0) return
-                onProgress(Math.min(100, Math.round((event.loaded / total) * 100)))
-            },
             signal,
         },
     )
+    onProgress?.(100)
+    return submission
 }
 
 /**
