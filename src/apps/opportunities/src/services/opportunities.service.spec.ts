@@ -275,6 +275,49 @@ describe('opportunities service normalization', () => {
             .toBe('true')
     })
 
+    it('retries an empty engagement text search with matching standardized skill IDs', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        getAsync.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: [],
+                headers: { get: (name: string) => (name === 'x-total' ? '0' : undefined) },
+            })
+            .mockResolvedValueOnce({
+                data: [{ id: 'engagement-id', title: 'Systems engagement' }],
+                headers: { get: (name: string) => (name === 'x-total' ? '1' : undefined) },
+            })
+        getAsync.mockResolvedValueOnce([
+            { id: 'skill-id', name: 'Viable System Model' },
+        ] as never)
+
+        await expect(getOpportunityPage('engagements', {
+            page: 1,
+            perPage: 10,
+            search: 'Viable System Model',
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'engagement-id' })],
+                total: 1,
+            })
+
+        const textUrl = new URL(String(get.mock.calls[0][0]))
+        expect(textUrl.searchParams.get('search'))
+            .toBe('Viable System Model')
+        const skillUrl = new URL(String(get.mock.calls[1][0]))
+        expect(skillUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(skillUrl.searchParams.getAll('requiredSkills'))
+            .toEqual(['skill-id'])
+        expect(getAsync)
+            .toHaveBeenCalledWith(
+                'https://api.example/v5/standardized-skills/skills/autocomplete?size=25&term=Viable+System+Model',
+            )
+    })
+
     it('maps copilot track facets and skills to types and disables status grouping for honest sorting', () => {
         const url = new URL(buildOpportunityPageUrl('copilots', {
             applied: true,

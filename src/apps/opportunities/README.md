@@ -136,7 +136,10 @@ field is present for the caller.
 - Engagements: Engagements API, including top-level `durationWeeks` or
   `durationMonths` and `IMMEDIATE`, `FEW_DAYS`, or `FEW_WEEKS` anticipated
   start values. Cards display hydrated `skills[].name` values and retain
-  `requiredSkills` IDs only as a fallback for older API deployments.
+  `requiredSkills` IDs only as a fallback for older API deployments. An empty
+  title/description search resolves matching standardized skill IDs and retries
+  through the API's `requiredSkills` filter so skill and technology terms stay
+  discoverable without weakening normal project search.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
   opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`).
 - Review opportunities: Review API metadata search. The application action

@@ -54,6 +54,7 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
 }
 const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilots', 'reviews']
 const MY_WORK_COUNT_PAGE_SIZE = 1
+const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
 
 /**
  * Resolves the shared Filestack client used for challenge submissions.
@@ -211,6 +212,40 @@ function appendValues(url: URL, name: string, values?: string[]): void {
 function unwrap<T>(payload: T | ApiEnvelope<T>): T {
     const envelope = payload as ApiEnvelope<T>
     return envelope.result?.content ?? envelope.content ?? payload as T
+}
+
+interface StandardizedSkillSearchResult {
+    id?: unknown
+    name?: unknown
+}
+
+/**
+ * Resolves engagement free text to standardized skill IDs for the owning
+ * API's `requiredSkills` filter.
+ *
+ * @param search member-entered skill or technology text.
+ * @returns matching skill IDs, or an empty array when lookup is unavailable.
+ * @throws Does not throw; title and description search remains usable when the skills API fails.
+ */
+async function resolveEngagementSkillIds(search: string): Promise<string[]> {
+    const params = new URLSearchParams({
+        size: String(ENGAGEMENT_SKILL_SEARCH_SIZE),
+        term: search.trim(),
+    })
+
+    try {
+        const response = await xhrGetAsync<
+            StandardizedSkillSearchResult[] | ApiEnvelope<StandardizedSkillSearchResult[]>
+        >(`${EnvironmentConfig.API.V5}/standardized-skills/skills/autocomplete?${params.toString()}`)
+        const skills = unwrap(response)
+        if (!Array.isArray(skills)) return []
+        return Array.from(new Set(skills
+            .map(skill => String(skill.id ?? '')
+                .trim())
+            .filter(Boolean)))
+    } catch {
+        return []
+    }
 }
 
 /**
@@ -647,6 +682,17 @@ export async function getOpportunityPage(
             any[] | ApiEnvelope<any[]> | ApiListResponse<any>
         >
         const normalized = normalizePage(response, page, perPage)
+        if (kind === 'engagements' && filters.search?.trim() && normalized.total === 0 && !filters.skills?.length) {
+            const skillIds = await resolveEngagementSkillIds(filters.search)
+            if (skillIds.length) {
+                const skillResponse = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, {
+                    ...filters,
+                    search: undefined,
+                    skills: skillIds,
+                })) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+                return normalizePage(skillResponse, page, perPage)
+            }
+        }
         return kind === 'copilots'
             ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
             : normalized
