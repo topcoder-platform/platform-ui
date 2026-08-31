@@ -85,7 +85,7 @@ describe('opportunities service normalization', () => {
             })
     })
 
-    it('uses the default Challenge API list total for the competition hero count', async () => {
+    it('uses owning list totals for the competition and review hero counts', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         get.mockResolvedValueOnce({
@@ -94,15 +94,25 @@ describe('opportunities service normalization', () => {
             engagements: { count: 3 },
             reviews: { count: 4 },
         })
-        globalGet.mockResolvedValueOnce({
-            data: [],
-            headers: {
-                get: (name: string) => (name === 'x-total' ? '238' : undefined),
-            },
-        })
+        globalGet
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => (name === 'x-total' ? '238' : undefined),
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => (name === 'x-total' ? '140' : undefined),
+                },
+            })
 
         await expect(getOpportunitySummary())
-            .resolves.toMatchObject({ competitions: { amount: 5500, count: 238 } })
+            .resolves.toMatchObject({
+                competitions: { amount: 5500, count: 238 },
+                reviews: { count: 140 },
+            })
 
         const url = new URL(String(globalGet.mock.calls[0][0]))
         expect(url.pathname)
@@ -110,6 +120,13 @@ describe('opportunities service normalization', () => {
         expect(url.searchParams.get('currentPhaseName'))
             .toBe('Submission')
         expect(url.searchParams.get('perPage'))
+            .toBe('1')
+        const reviewUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(reviewUrl.pathname)
+            .toBe('/v6/review-opportunities/search')
+        expect(reviewUrl.searchParams.getAll('status'))
+            .toEqual(['OPEN'])
+        expect(reviewUrl.searchParams.get('limit'))
             .toBe('1')
     })
 
