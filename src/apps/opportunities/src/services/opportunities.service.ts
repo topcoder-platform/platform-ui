@@ -41,6 +41,10 @@ const LEGACY_COPILOT_PAGE_SIZE = 1000
 const MAX_LEGACY_COPILOT_PAGES = 20
 const LEGACY_COPILOT_APPLICATION_PAGE_SIZE = 200
 const LEGACY_COPILOT_APPLICATION_BATCH_SIZE = 12
+const AI_CHALLENGE_PAGE_SIZE = 100
+const MAX_AI_CHALLENGE_PAGES = 20
+const REVIEW_AI_PAGE_SIZE = 1000
+const MAX_REVIEW_AI_PAGES = 20
 const SUBMISSION_HISTORY_PAGE_SIZE = 200
 const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
@@ -151,6 +155,19 @@ export async function createChallengeSubmission(
 function toNumber(value: unknown, fallback: number = 0): number {
     const converted = Number(value)
     return Number.isFinite(converted) && converted >= 0 ? converted : fallback
+}
+
+/**
+ * Normalizes owner labels and enum tokens for case-insensitive facet matching.
+ *
+ * @param value raw track or facet label.
+ * @returns lowercase alphanumeric comparison key.
+ * @throws Does not throw.
+ */
+function opportunityFacetKey(value: unknown): string {
+    return String(value ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
 }
 
 /**
@@ -732,6 +749,111 @@ async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<Opport
 }
 
 /**
+ * Loads canonical challenge IDs carrying the synthetic AI track facet. Review
+ * API accepts only persisted track catalog values, while Challenge API owns
+ * the exact `AI` tag semantics used throughout Opportunities.
+ *
+ * @returns a bounded set of AI-tagged challenge UUIDs.
+ * @throws Propagates Challenge API and network errors.
+ */
+async function getAiChallengeIds(): Promise<Set<string>> {
+    /** Builds one Challenge API page for the synthetic AI facet. */
+    const buildUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}/challenges`)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(AI_CHALLENGE_PAGE_SIZE))
+        url.searchParams.append('tracks[]', 'AI')
+        return url.toString()
+    }
+    const firstResponse = await xhrGlobalInstance.get(buildUrl(1)) as AxiosResponse<
+        ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
+    >
+    const firstPage = normalizePage(firstResponse, 1, AI_CHALLENGE_PAGE_SIZE)
+    const totalPages = Math.min(MAX_AI_CHALLENGE_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildUrl(page)),
+        ) as AxiosResponse<
+            ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
+        >[]
+        : []
+    return new Set([
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            AI_CHALLENGE_PAGE_SIZE,
+        ).items),
+    ].map(item => item.id))
+}
+
+/**
+ * Applies Review's synthetic AI facet without submitting the unsupported `AI`
+ * track name to Review API. Owner-filtered pages are loaded in server order,
+ * then AI challenge IDs and persisted track names are combined with OR
+ * semantics before restoring the requested page.
+ *
+ * @param filters active Review filters containing the AI selection.
+ * @returns correctly filtered and paginated review opportunities.
+ * @throws Propagates owning API and network errors.
+ */
+async function getReviewPageWithAiTrack(
+    filters: OpportunityFilters,
+): Promise<OpportunityPage<ReviewOpportunity>> {
+    const aiChallengeIds = await getAiChallengeIds()
+    const ownerFilters: OpportunityFilters = {
+        ...filters,
+        page: 1,
+        perPage: REVIEW_AI_PAGE_SIZE,
+        tracks: undefined,
+    }
+    const firstResponse = await xhrGlobalInstance.get(buildOpportunityPageUrl('reviews', ownerFilters)) as AxiosResponse<
+        ReviewOpportunity[] | ApiEnvelope<ReviewOpportunity[]> | ApiListResponse<ReviewOpportunity>
+    >
+    const firstPage = normalizePage(firstResponse, 1, REVIEW_AI_PAGE_SIZE)
+    const totalPages = Math.min(MAX_REVIEW_AI_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildOpportunityPageUrl('reviews', {
+                ...ownerFilters,
+                page,
+            })),
+        ) as AxiosResponse<
+            ReviewOpportunity[] | ApiEnvelope<ReviewOpportunity[]> | ApiListResponse<ReviewOpportunity>
+        >[]
+        : []
+    const allItems = [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            REVIEW_AI_PAGE_SIZE,
+        ).items),
+    ]
+    const persistedTracks = new Set((filters.tracks ?? [])
+        .filter(track => opportunityFacetKey(track) !== 'ai')
+        .map(opportunityFacetKey))
+    const filtered = allItems.filter(item => (
+        aiChallengeIds.has(item.challengeId)
+        || persistedTracks.has(opportunityFacetKey(
+            String(item.challengeData?.track ?? item.challengeData?.trackName ?? ''),
+        ))
+    ))
+    const page = Math.max(1, filters.page)
+    const perPage = Math.max(1, filters.perPage)
+    const offset = (page - 1) * perPage
+    return {
+        items: filtered.slice(offset, offset + perPage),
+        page,
+        perPage,
+        total: filtered.length,
+        totalPages: filtered.length ? Math.ceil(filtered.length / perPage) : 0,
+    }
+}
+
+/**
  * Loads one filtered page from the owning domain API. For “My competitions,”
  * this first resolves the canonical Submitter role and then performs one
  * globally filtered, sorted, and paginated Challenge API request. Copilot
@@ -749,6 +871,9 @@ export async function getOpportunityPage(
 ): Promise<OpportunityPage<any>> {
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
+    if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
+        return getReviewPageWithAiTrack(filters)
+    }
     if (kind === 'competitions' && filters.applied && filters.memberId) {
         const submitterRole = await getSubmitterRole()
         const roleScopedFilters: OpportunityFilters = {

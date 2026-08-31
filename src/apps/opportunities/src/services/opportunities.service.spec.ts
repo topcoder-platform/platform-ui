@@ -572,6 +572,78 @@ describe('opportunities service normalization', () => {
             .toBe('desc')
     })
 
+    it('resolves the synthetic Review AI facet without sending an invalid track name', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: [{ id: 'ai-challenge' }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '100',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    result: {
+                        content: [
+                            {
+                                challengeData: { track: 'Data Science' },
+                                challengeId: 'ai-challenge',
+                                id: 'ai-review',
+                            },
+                            {
+                                challengeData: { track: 'Development' },
+                                challengeId: 'development-challenge',
+                                id: 'development-review',
+                            },
+                            {
+                                challengeData: { track: 'Design' },
+                                challengeId: 'design-challenge',
+                                id: 'design-review',
+                            },
+                        ],
+                        metadata: {
+                            limit: 1000,
+                            page: 1,
+                            total: 3,
+                            totalPages: 1,
+                        },
+                    },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('reviews', {
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+            tracks: ['AI', 'Development'],
+        }))
+            .resolves.toMatchObject({
+                items: [
+                    expect.objectContaining({ id: 'ai-review' }),
+                    expect.objectContaining({ id: 'development-review' }),
+                ],
+                total: 2,
+            })
+
+        const challengeUrl = new URL(String(get.mock.calls[0][0]))
+        expect(challengeUrl.pathname)
+            .toBe('/v6/challenges')
+        expect(challengeUrl.searchParams.getAll('tracks[]'))
+            .toEqual(['AI'])
+        const reviewUrl = new URL(String(get.mock.calls[1][0]))
+        expect(reviewUrl.pathname)
+            .toBe('/v6/review-opportunities/search')
+        expect(reviewUrl.searchParams.has('tracks'))
+            .toBe(false)
+    })
+
     it('maps Review newest-first and starting-soon labels to their supported date ordering', () => {
         const newest = new URL(buildOpportunityPageUrl('reviews', {
             page: 1,

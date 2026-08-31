@@ -147,6 +147,9 @@ field is present for the caller.
   bounded batches.
 - Review opportunities: Review API metadata search. The application action
   uses `defaultApplicationRole` or a role selected from `applicationRoles`.
+  Because AI is an exact-tag synthetic Challenge API facet rather than a
+  persisted Review track, Review searches resolve AI challenge IDs through
+  Challenge API and combine them with selected catalog tracks before paging.
 
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager
