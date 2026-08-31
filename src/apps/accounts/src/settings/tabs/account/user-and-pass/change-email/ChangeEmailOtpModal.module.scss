@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: $sp-5 $sp-5 0;
+
+    p {
+        color: $black-80;
+        margin: $sp-2 0 $sp-4;
+        max-width: 480px;
+        text-align: center;
+    }
+
+    .error {
+        color: $red-100;
+        margin-top: 0;
+    }
+}
+
+.otpInput {
+    border: $border solid $black-40;
+    border-radius: $sp-1;
+    font-size: 20px;
+    height: 48px;
+    margin: $sp-1;
+    text-align: center;
+    width: 48px !important;
+
+    &:focus {
+        border-color: $turq-160;
+        outline: none;
+    }
+
+    &:disabled {
+        background: $black-10;
+    }
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    &[type='number'] {
+        -moz-appearance: textfield;
+    }
+
+    @include ltesm {
+        height: 40px;
+        margin: 2px;
+        width: 40px !important;
+    }
+}
