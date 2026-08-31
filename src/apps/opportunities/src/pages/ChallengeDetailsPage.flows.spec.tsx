@@ -117,6 +117,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 jest.mock('../services', () => ({
     agreeToChallengeTerms: jest.fn(),
     deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
+    getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
     getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),

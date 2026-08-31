@@ -142,6 +142,12 @@ field is present for the caller.
 - Review opportunities: Review API metadata search. The application action
   uses `defaultApplicationRole` or a role selected from `applicationRoles`.
 
+Challenge details load the authenticated Review API
+`GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
+rail. `AI_ONLY` and `AI_GATING` map to their Figma labels and expose the
+configuration's Instant Review state; a missing configuration or an anonymous
+viewer uses the manual Community Review Board presentation.
+
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager
 resources. The Registrants tab requests bounded Resource API pages and uses its

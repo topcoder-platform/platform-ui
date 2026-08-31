@@ -12,6 +12,7 @@ import {
 import {
     ApiEnvelope,
     ApiListResponse,
+    ChallengeAiReviewConfig,
     ChallengeOpportunity,
     ChallengeProjectResult,
     ChallengeResource,
@@ -166,6 +167,21 @@ function appendValues(url: URL, name: string, values?: string[]): void {
 function unwrap<T>(payload: T | ApiEnvelope<T>): T {
     const envelope = payload as ApiEnvelope<T>
     return envelope.result?.content ?? envelope.content ?? payload as T
+}
+
+/**
+ * Reads the HTTP status exposed by either shared-XHR or Axios failures.
+ *
+ * @param error rejected request value.
+ * @returns numeric response status when one is available.
+ * @throws Does not throw.
+ */
+function requestStatus(error: unknown): number | undefined {
+    const failure = error as {
+        response?: { status?: number }
+        status?: number
+    }
+    return failure.status ?? failure.response?.status
 }
 
 /**
@@ -592,6 +608,26 @@ export async function getOpportunityPage(
  */
 export function getChallengeOpportunity(challengeId: string): Promise<ChallengeOpportunity> {
     return xhrGetAsync<ChallengeOpportunity>(`${V6_URL}/challenges/${encodeURIComponent(challengeId)}`)
+}
+
+/**
+ * Loads the latest AI review configuration used to explain a challenge's review style.
+ *
+ * @param challengeId challenge UUID.
+ * @returns AI configuration, or undefined when the challenge uses manual review.
+ * @throws Propagates authorization and network errors; a missing config is expected.
+ */
+export async function getChallengeAiReviewConfig(
+    challengeId: string,
+): Promise<ChallengeAiReviewConfig | undefined> {
+    try {
+        return await xhrGetAsync<ChallengeAiReviewConfig>(
+            `${V6_URL}/ai-review/configs/${encodeURIComponent(challengeId)}`,
+        )
+    } catch (error) {
+        if (requestStatus(error) === 404) return undefined
+        throw error
+    }
 }
 
 /**

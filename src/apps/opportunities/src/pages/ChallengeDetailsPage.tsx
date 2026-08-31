@@ -42,6 +42,7 @@ import {
     challengePlacementPrizes,
 } from '../components/challenge-card.utils'
 import {
+    ChallengeAiReviewConfig,
     ChallengeOpportunity,
     ChallengeProjectResult,
     ChallengeResource,
@@ -54,6 +55,7 @@ import {
 import {
     agreeToChallengeTerms,
     deleteChallengeSubmission,
+    getChallengeAiReviewConfig,
     getChallengeOpportunity,
     getChallengeProjectResults,
     getChallengeRegistration,
@@ -216,6 +218,11 @@ export const ChallengeDetailsPage: FC = () => {
         challengeId ? `opportunities:challenge:${challengeId}` : undefined,
         () => getChallengeOpportunity(challengeId),
         { revalidateOnFocus: false },
+    )
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        challengeId && profile ? ['opportunities:challenge-review-style', challengeId] : undefined,
+        () => getChallengeAiReviewConfig(challengeId),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
     const registrationResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
@@ -461,9 +468,14 @@ export const ChallengeDetailsPage: FC = () => {
                 </section>
                 {activeTab === 'requirements' && (
                     <ChallengeSidebar
+                        aiReviewConfig={aiReviewConfigResponse.data}
                         challenge={challenge}
                         onContactTeam={() => setIssueOpen(true)}
                         onShowTerms={showTerms}
+                        reviewStyleLoading={aiReviewConfigResponse.isValidating
+                            && aiReviewConfigResponse.data === undefined
+                            && !aiReviewConfigResponse.error}
+                        reviewStyleUnavailable={!!aiReviewConfigResponse.error}
                     />
                 )}
             </div>
