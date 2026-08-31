@@ -72,6 +72,10 @@
         width: 100%;
     }
 
+    option {
+        padding-inline: 8px;
+    }
+
     svg {
         height: 20px;
         pointer-events: none;
