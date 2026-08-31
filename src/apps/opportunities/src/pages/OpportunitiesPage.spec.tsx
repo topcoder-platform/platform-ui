@@ -1,12 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import React from 'react'
-import {
-    act,
-    render,
-    screen,
-    waitFor,
-} from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import {
     MemoryRouter,
     Route,
@@ -14,11 +9,7 @@ import {
 } from 'react-router-dom'
 import { SWRConfig } from 'swr'
 
-import {
-    getMyWorkCounts,
-    getOpportunityPage,
-    getOpportunitySummary,
-} from '../services'
+import { getOpportunityPage, getOpportunitySummary } from '../services'
 import { OpportunitiesPage } from './OpportunitiesPage'
 
 jest.mock('~/libs/core', () => ({
@@ -39,11 +30,10 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    MyWorkListing: () => undefined,
     OpportunityFiltersPanel: () => undefined,
-    OpportunityHero: (props: { mode: string; workCount?: number }) => (
-        <output data-mode={props.mode} data-testid='work-count'>
-            {props.workCount ?? 'pending'}
+    OpportunityHero: (props: { summary?: { competitions?: { count?: number } } }) => (
+        <output data-testid='competition-count'>
+            {props.summary?.competitions?.count ?? 'pending'}
         </output>
     ),
     OpportunityListCard: () => undefined,
@@ -52,12 +42,10 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../services', () => ({
-    getMyWorkCounts: jest.fn(),
     getOpportunityPage: jest.fn(),
     getOpportunitySummary: jest.fn(),
 }))
 
-const mockedGetMyWorkCounts = getMyWorkCounts as jest.MockedFunction<typeof getMyWorkCounts>
 const mockedGetOpportunityPage = getOpportunityPage as jest.MockedFunction<typeof getOpportunityPage>
 const mockedGetOpportunitySummary = getOpportunitySummary as jest.MockedFunction<typeof getOpportunitySummary>
 
@@ -66,11 +54,7 @@ describe('OpportunitiesPage', () => {
         jest.clearAllMocks()
     })
 
-    it('loads and displays the real My Work total while Browse is selected', async () => {
-        let resolveCounts!: (counts: Awaited<ReturnType<typeof getMyWorkCounts>>) => void
-        mockedGetMyWorkCounts.mockReturnValue(new Promise(resolve => {
-            resolveCounts = resolve
-        }))
+    it('loads the public category summary without a separate destination tab', async () => {
         mockedGetOpportunitySummary.mockResolvedValue({
             competitions: { count: 1 },
             copilots: { count: 1 },
@@ -96,25 +80,11 @@ describe('OpportunitiesPage', () => {
             </SWRConfig>,
         )
 
-        expect(screen.getByTestId('work-count'))
-            .toHaveAttribute('data-mode', 'browse')
-        expect(screen.getByTestId('work-count'))
+        expect(screen.getByTestId('competition-count'))
             .toHaveTextContent('pending')
-        expect(screen.getByTestId('work-count'))
-            .not.toHaveTextContent('3')
-        await waitFor(() => expect(mockedGetMyWorkCounts)
-            .toHaveBeenCalledWith('123'))
-
-        await act(async () => resolveCounts({
-            competitions: 40,
-            copilots: 20,
-            engagements: 30,
-            reviews: 15,
-        }))
-
-        await waitFor(() => expect(screen.getByTestId('work-count'))
-            .toHaveTextContent('105'))
-        expect(screen.getByTestId('work-count'))
-            .toHaveAttribute('data-mode', 'browse')
+        await waitFor(() => expect(screen.getByTestId('competition-count'))
+            .toHaveTextContent('1'))
+        expect(mockedGetOpportunitySummary)
+            .toHaveBeenCalledTimes(1)
     })
 })

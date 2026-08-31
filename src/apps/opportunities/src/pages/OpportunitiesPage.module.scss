@@ -8,7 +8,7 @@
 .content {
     margin: 0 auto;
     max-width: 1248px;
-    padding: 40px 24px;
+    padding: 72px 24px 40px;
 }
 
 .titleRow {
@@ -298,6 +298,12 @@
 @media (max-width: 960px) {
     .body {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1199px) {
+    .content {
+        padding-top: 40px;
     }
 }
 
