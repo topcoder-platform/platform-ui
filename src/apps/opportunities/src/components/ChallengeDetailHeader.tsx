@@ -6,7 +6,11 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import challengeCalendarIcon from '../assets/challenge-calendar.svg'
+import challengeChevronIcon from '../assets/challenge-chevron.svg'
+import challengeClockIcon from '../assets/challenge-clock.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
+import challengeUploadIcon from '../assets/challenge-upload.svg'
 import first2FinishTypeIcon from '../assets/first2finish-type.svg'
 import marathonTypeIcon from '../assets/marathon-type.svg'
 import medal1 from '../assets/medal-1.svg'
@@ -421,11 +425,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         )}
                         <div className={styles.timeline}>
                             <span>
-                                <IconOutline.CalendarIcon />
+                                <img alt='' aria-hidden='true' src={challengeCalendarIcon} />
                                 {dateRange(props.challenge.startDate, props.challenge.endDate)}
                             </span>
                             <span>
-                                <IconOutline.ClockIcon />
+                                <img alt='' aria-hidden='true' src={challengeClockIcon} />
                                 {phaseSummary(phase)}
                             </span>
                             <button
@@ -435,7 +439,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 type='button'
                             >
                                 {timelineOpen ? 'Hide full timeline' : 'Show full timeline'}
-                                <IconOutline.ChevronDownIcon />
+                                <img alt='' aria-hidden='true' src={challengeChevronIcon} />
                             </button>
                         </div>
                     </div>
@@ -502,7 +506,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                         onClick={props.onSubmit}
                                         type='button'
                                     >
-                                        <IconOutline.UploadIcon />
+                                        <img alt='' aria-hidden='true' src={challengeUploadIcon} />
                                         Submit a solution
                                     </button>
                                 </>

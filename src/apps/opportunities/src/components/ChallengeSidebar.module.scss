@@ -27,7 +27,8 @@
         margin: 0;
         text-transform: none;
 
-        svg {
+        > img,
+        > svg {
             color: #161616;
             flex: 0 0 20px;
             height: 20px;
@@ -77,6 +78,7 @@
         text-align: left;
         text-decoration: none;
 
+        img,
         svg {
             height: 20px;
             width: 20px;
