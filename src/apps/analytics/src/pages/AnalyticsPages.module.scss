@@ -7,7 +7,7 @@
     gap: $sp-6;
 }
 
-.page-header {
+.pageHeader {
     align-items: flex-start;
     display: flex;
     gap: $sp-6;
@@ -76,7 +76,7 @@
     }
 }
 
-.filter-heading {
+.filterHeading {
     grid-column: 1 / -1;
 
     h2 {
@@ -90,12 +90,12 @@
     }
 }
 
-.filter-actions {
+.filterActions {
     display: flex;
     gap: $sp-3;
 }
 
-.filter-error {
+.filterError {
     color: #b42318;
     font-size: 13px;
     grid-column: 1 / -1;
@@ -108,7 +108,7 @@
     text-align: right;
 }
 
-.stale-warning {
+.staleWarning {
     background: #fff8e1;
     border: 1px solid #e9b949;
     border-radius: 6px;
@@ -116,7 +116,7 @@
     padding: $sp-3 $sp-4;
 }
 
-.metric-grid {
+.metricGrid {
     display: grid;
     gap: $sp-4;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -131,7 +131,7 @@
     padding: $sp-5;
 }
 
-.panel-header {
+.panelHeader {
     align-items: flex-start;
     display: flex;
     gap: $sp-4;
@@ -156,20 +156,22 @@
     }
 }
 
-.two-column-grid {
+.twoColumnGrid {
     display: grid;
     gap: $sp-5;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.table-scroll {
+.tableScroll {
     overflow-x: auto;
+    width: 100%;
 
     table {
         border-collapse: collapse;
         font-size: 13px;
-        min-width: 100%;
+        min-width: 560px;
         text-align: left;
+        width: 100%;
     }
 
     th,
@@ -199,26 +201,26 @@
     }
 }
 
-.primary-cell,
-.secondary-cell {
+.primaryCell,
+.secondaryCell {
     display: block;
 }
 
-.secondary-cell {
+.secondaryCell {
     color: #71838b;
     font-size: 11px;
     font-weight: 400;
     margin-top: 3px;
 }
 
-.empty-table {
+.emptyTable {
     color: #71838b;
     padding: $sp-8 !important;
     text-align: center;
 }
 
 @include ltemd {
-    .page-header {
+    .pageHeader {
         align-items: stretch;
         flex-direction: column;
 
@@ -231,16 +233,16 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .metric-grid,
-    .two-column-grid {
+    .metricGrid,
+    .twoColumnGrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @include ltesm {
     .filters,
-    .metric-grid,
-    .two-column-grid {
+    .metricGrid,
+    .twoColumnGrid {
         grid-template-columns: 1fr;
     }
 
@@ -248,7 +250,7 @@
         padding: $sp-4;
     }
 
-    .panel-header {
+    .panelHeader {
         flex-direction: column;
     }
 

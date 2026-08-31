@@ -1,6 +1,6 @@
 @import '@libs/ui/styles/includes';
 
-.nav-bar {
+.navBar {
     background: #ffffff;
     border-bottom: 1px solid #d9e1e8;
     box-shadow: 0 2px 8px rgba(13, 52, 69, 0.05);
@@ -13,15 +13,6 @@
     max-width: 1440px;
     min-height: 64px;
     padding: 0 $sp-8;
-}
-
-.title {
-    align-items: center;
-    color: #0d3445;
-    display: flex;
-    font-size: 20px;
-    font-weight: 800;
-    margin-right: $sp-10;
 }
 
 .tabs {
@@ -53,7 +44,7 @@
     }
 }
 
-.mobile-trigger {
+.mobileTrigger {
     display: none;
 }
 
@@ -64,11 +55,7 @@
         padding: 0 $sp-4;
     }
 
-    .title {
-        display: none;
-    }
-
-    .mobile-trigger {
+    .mobileTrigger {
         align-items: center;
         background: transparent;
         border: 0;

@@ -40,6 +40,11 @@ ranges are inclusive and limited to 366 days. The UI displays the warehouse's
 `dataThrough` value because the development transform currently runs daily.
 Empty dates in a series are not inferred as provider outages.
 
+Redshift Serverless can take one request to resume after an idle period. The UI
+automatically retries one warehouse timeout after a one-second delay while
+keeping the loading state visible. A second timeout is surfaced with the
+explicit retry action so requests remain bounded.
+
 ## Privacy
 
 The UI receives aggregate counts only. It never receives member IDs,

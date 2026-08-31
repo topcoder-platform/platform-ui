@@ -1,11 +1,11 @@
 @import '@libs/ui/styles/includes';
 
-.content-layout-outer {
+.contentLayoutOuter {
     background: #f5f7fa;
     min-height: calc(100vh - 180px);
 }
 
-.content-layout-inner {
+.contentLayoutInner {
     max-width: 1440px;
     padding-bottom: $sp-10;
     padding-top: $sp-8;
@@ -16,7 +16,7 @@
 }
 
 @include ltemd {
-    .content-layout-inner {
+    .contentLayoutInner {
         padding: $sp-5 $sp-4 $sp-8;
     }
 }

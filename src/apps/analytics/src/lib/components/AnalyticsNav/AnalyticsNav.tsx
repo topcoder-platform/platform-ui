@@ -38,7 +38,7 @@ export function getActiveAnalyticsTab(pathname: string): string {
 }
 
 /**
- * Renders the campaign/general Analytics navigation and mobile disclosure.
+ * Renders only the Campaigns and General tabs with a mobile disclosure.
  *
  * @returns responsive Analytics tab navigation.
  * @throws Does not throw.
@@ -58,14 +58,9 @@ export const AnalyticsNav: FC = () => {
                     onClick={() => setIsOpen(current => !current)}
                     type='button'
                 >
-                    <span>
-                        Analytics ·
-                        {' '}
-                        {activeLabel}
-                    </span>
+                    <span>{activeLabel}</span>
                     <span aria-hidden='true' className={styles.chevron}>⌄</span>
                 </button>
-                <div className={styles.title}>Analytics</div>
                 <ul className={styles.tabs}>
                     {ANALYTICS_TABS.map(tab => {
                         const active = tab.id === activeTab
