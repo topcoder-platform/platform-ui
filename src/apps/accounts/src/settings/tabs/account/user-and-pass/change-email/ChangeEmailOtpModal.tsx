@@ -92,6 +92,7 @@ const ChangeEmailOtpModal: FC<ChangeEmailOtpModalProps> = (
     return (
         <BaseModal
             blockScroll
+            closeOnOverlayClick={false}
             open={props.isOpen}
             size='md'
             spacer={false}
