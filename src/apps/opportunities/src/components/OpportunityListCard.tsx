@@ -1,5 +1,11 @@
 /* eslint-disable ordered-imports/ordered-imports */
-import { FC, ReactNode, SVGProps } from 'react'
+import {
+    FC,
+    KeyboardEvent,
+    MouseEvent,
+    ReactNode,
+    SVGProps,
+} from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 import { IconOutline, Tooltip } from '~/libs/ui'
@@ -50,14 +56,22 @@ interface OpportunityListCardProps {
     applicationState?: string
     item: OpportunityItem
     kind: OpportunityKind
+    onSkillClick?: (skill: string) => void
     registered?: boolean
     view?: OpportunityView
 }
 
 interface CompetitionListCardProps {
     item: ChallengeOpportunity
+    onSkillClick?: (skill: string) => void
     registered?: boolean
     view?: OpportunityView
+}
+
+interface SkillFilterTagProps {
+    className?: string
+    onSelect?: (skill: string) => void
+    skill: string
 }
 
 interface CardViewModel {
@@ -84,6 +98,45 @@ const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
 }
 
 const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
+
+/**
+ * Renders a card skill as a keyboard-accessible filter control when the list
+ * supplies a selection callback, while preventing the containing card link.
+ *
+ * @param props skill label, optional styling, and list-filter callback.
+ * @returns interactive or presentational skill tag.
+ * @throws Does not throw.
+ */
+const SkillFilterTag: FC<SkillFilterTagProps> = props => {
+    /** Selects this skill without following the containing opportunity link. */
+    const select = (event: MouseEvent<HTMLSpanElement>): void => {
+        if (!props.onSelect) return
+        event.preventDefault()
+        event.stopPropagation()
+        props.onSelect(props.skill)
+    }
+
+    /** Gives the non-native filter tag standard Enter and Space activation. */
+    const selectByKeyboard = (event: KeyboardEvent<HTMLSpanElement>): void => {
+        if (!props.onSelect || (event.key !== 'Enter' && event.key !== ' ')) return
+        event.preventDefault()
+        event.stopPropagation()
+        props.onSelect(props.skill)
+    }
+
+    return (
+        <span
+            aria-label={props.onSelect ? `Filter by ${props.skill}` : undefined}
+            className={classNames(props.className, { [styles.filterableSkill]: !!props.onSelect })}
+            onClick={select}
+            onKeyDown={selectByKeyboard}
+            role={props.onSelect ? 'button' : undefined}
+            tabIndex={props.onSelect ? 0 : undefined}
+        >
+            {props.skill}
+        </span>
+    )
+}
 
 /**
  * Formats a date for compact card metadata.
@@ -561,14 +614,14 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
                             {visibleSkills.map((skill, index) => (
-                                <span
+                                <SkillFilterTag
                                     className={classNames({
                                         [styles.primarySkill]: trackKey === 'design' && index === 0,
                                     })}
                                     key={skill}
-                                >
-                                    {skill}
-                                </span>
+                                    onSelect={props.onSkillClick}
+                                    skill={skill}
+                                />
                             ))}
                             {remainingSkills > 0 && (
                                 <Tooltip
@@ -639,6 +692,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
         return (
             <CompetitionListCard
                 item={props.item as ChallengeOpportunity}
+                onSkillClick={props.onSkillClick}
                 registered={props.registered}
                 view={props.view}
             />
@@ -701,7 +755,13 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                 </Tooltip>
                 {visibleSkills.length > 0 && (
                     <div className={styles.skills}>
-                        {visibleSkills.map((skill: string) => <span key={skill}>{skill}</span>)}
+                        {visibleSkills.map((skill: string) => (
+                            <SkillFilterTag
+                                key={skill}
+                                onSelect={props.onSkillClick}
+                                skill={skill}
+                            />
+                        ))}
                         {remaining > 0 && (
                             <Tooltip
                                 className={styles.cardTooltip}

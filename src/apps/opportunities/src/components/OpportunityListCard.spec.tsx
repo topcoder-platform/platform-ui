@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import {
+    fireEvent,
     render,
     RenderResult,
     screen,
@@ -180,6 +181,26 @@ describe('OpportunityListCard competition presentation', () => {
             .toContain('registrationRegistered')
         expect(screen.queryByText('Open for registration'))
             .not.toBeInTheDocument()
+    })
+
+    it('filters by a clicked skill without following the challenge link', () => {
+        const onSkillClick = jest.fn()
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture()}
+                    kind='competitions'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        const skill = screen.getByRole('button', { name: 'Filter by Figma' })
+        fireEvent.click(skill)
+        expect(onSkillClick)
+            .toHaveBeenCalledWith('Figma')
+        expect(screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ }))
+            .toHaveAttribute('href', '/opportunities/challenge/challenge-id')
     })
 
     it('omits invented schedule progress when no phase is open', () => {
