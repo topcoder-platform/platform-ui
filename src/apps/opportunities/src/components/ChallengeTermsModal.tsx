@@ -84,7 +84,10 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const terms = response.data ?? (shouldLoad ? [] : props.terms)
     const externalAgreement = terms.some(requiresExternalAgreement)
     const registrationMode = props.mode === 'register'
-    const compactRegistration = registrationMode && props.terms.length === 0
+    const compactRegistration = registrationMode
+        && !response.error
+        && !response.isValidating
+        && terms.length === 0
     const fullTitle = terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {

@@ -805,17 +805,24 @@ describe('opportunities service normalization', () => {
             })
     })
 
-    it('loads only terms assigned to the canonical Submitter resource role', async () => {
+    it('loads only outstanding terms assigned to the canonical Submitter resource role', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get
             .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
-            .mockResolvedValueOnce({ id: 'submitter-term', text: '<p>Rules</p>' })
+            .mockResolvedValueOnce({ agreed: false, id: 'submitter-term', text: '<p>Rules</p>' })
+            .mockResolvedValueOnce({ agreed: true, id: 'accepted-term', text: '<p>Signed</p>' })
 
         await expect(getChallengeSubmitterTermsDetails([
             { id: 'submitter-term', roleId: 'submitter-role' },
+            { id: 'accepted-term', roleId: 'submitter-role' },
             { id: 'reviewer-term', roleId: 'reviewer-role' },
         ]))
-            .resolves.toEqual([{ id: 'submitter-term', roleId: 'submitter-role', text: '<p>Rules</p>' }])
+            .resolves.toEqual([{
+                agreed: false,
+                id: 'submitter-term',
+                roleId: 'submitter-role',
+                text: '<p>Rules</p>',
+            }])
         expect(get)
             .not.toHaveBeenCalledWith('https://api.example/v5/terms/reviewer-term')
     })

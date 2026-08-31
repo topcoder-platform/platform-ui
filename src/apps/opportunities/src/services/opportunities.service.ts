@@ -1177,19 +1177,21 @@ export function getChallengeTermsDetails(terms: ChallengeTerm[]): Promise<Challe
 }
 
 /**
- * Loads complete details only for challenge terms assigned to the canonical
+ * Loads outstanding details only for challenge terms assigned to the canonical
  * Submitter role. Challenge responses can also contain reviewer, copilot, and
- * manager terms; those must not be displayed or agreed during registration.
+ * manager terms; those and already accepted terms must not be displayed or
+ * agreed again during registration.
  *
  * @param terms lightweight role-scoped references from Challenge API.
- * @returns complete Submitter term records in challenge order.
+ * @returns unaccepted, complete Submitter term records in challenge order.
  * @throws Propagates Resource Role or Terms API failures.
  */
 export async function getChallengeSubmitterTermsDetails(
     terms: ChallengeTerm[],
 ): Promise<ChallengeTerm[]> {
     const submitterRole = await getSubmitterRole()
-    return getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+    const details = await getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+    return details.filter(term => !term.agreed)
 }
 
 /**
