@@ -167,3 +167,10 @@ $error-line-height: 14px;
         margin-right: $sp-1;
     }
 }
+
+.action {
+    position: absolute;
+    right: $form-pad-top;
+    top: $sp-2;
+    z-index: 1;
+}
