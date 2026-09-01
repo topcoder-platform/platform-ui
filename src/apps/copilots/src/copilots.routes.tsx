@@ -71,10 +71,6 @@ export const copilotsRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.copilots,
         element: <CopilotsApp />,
         id: toolTitle,
-        rolesRequired: [
-            UserRole.administrator,
-            UserRole.projectManager,
-        ],
         route: rootRoute,
     },
 ]

@@ -8,7 +8,8 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import { AppSubdomain, EnvironmentConfig } from '~/config'
+import { EnvironmentConfig } from '~/config'
+import { absoluteRootRoute as copilotAbsoluteRootRoute } from '~/apps/copilots'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
@@ -500,8 +501,7 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
     return {
         badge: opportunityTrackLabel(item.projectType || item.type || 'Copilot'),
         description: descriptionExcerpt(item.overview),
-        href: `https://${AppSubdomain.copilots}.${EnvironmentConfig.TC_DOMAIN}`
-            + `/opportunity/${encodeURIComponent(String(item.id))}`,
+        href: `${copilotAbsoluteRootRoute}/opportunity/${encodeURIComponent(String(item.id))}`,
         meta: [
             {
                 icon: <HoursMetricIcon />,
