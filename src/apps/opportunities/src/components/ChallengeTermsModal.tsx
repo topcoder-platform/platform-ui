@@ -88,6 +88,10 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         && !response.error
         && !response.isValidating
         && terms.length === 0
+    const hydratingRegistration = registrationMode
+        && shouldLoad
+        && response.isValidating
+        && !response.data
     const fullTitle = terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
@@ -168,7 +172,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 modal: compactRegistration ? styles.compactModal : styles.termsModal,
             }}
             onClose={props.onClose}
-            open={props.open}
+            open={props.open && !hydratingRegistration}
             size={compactRegistration ? 'md' : 'body'}
             spacer={false}
             title={compactRegistration ? 'Important Reminder' : fullTitle}
