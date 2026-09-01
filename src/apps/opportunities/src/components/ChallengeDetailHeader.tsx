@@ -562,7 +562,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 </>
                             ) : (
                                 <button
-                                    className={styles.primary}
+                                    className={styles.secondary}
                                     data-analytics-id='challenge-register'
                                     data-analytics-placement='challenge-header'
                                     disabled={!registrationOpen || registrationUnavailable || props.busy}

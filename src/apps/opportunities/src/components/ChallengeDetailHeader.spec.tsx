@@ -65,8 +65,11 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('button', { name: 'Register' }))
+        const register = screen.getByRole('button', { name: 'Register' })
+        expect(register)
             .toBeEnabled()
+        expect(register.className)
+            .toContain('secondary')
         expect(screen.getByText(/phase closes in/))
             .toHaveClass('phaseQualifier')
         expect(screen.queryByText('Unregister'))
