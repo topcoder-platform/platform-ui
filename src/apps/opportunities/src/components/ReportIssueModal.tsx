@@ -3,6 +3,7 @@ import {
     ChangeEvent,
     DragEvent,
     FC,
+    useEffect,
     useRef,
     useState,
 } from 'react'
@@ -40,6 +41,19 @@ interface IssueAttachment {
     id: number
     result?: ReviewAttachmentUploadResult
     status: 'error' | 'uploaded' | 'uploading'
+}
+
+/**
+ * Creates a non-authoritative upload grouping ID for attachments added before
+ * the support ticket exists.
+ *
+ * @returns unique draft upload context.
+ * @throws Does not throw.
+ */
+function createUploadContext(): string {
+    return `draft-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}`
 }
 
 /**
@@ -105,6 +119,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     const [dragActive, setDragActive] = useState(false)
     const [error, setError] = useState<string>()
     const [subject, setSubject] = useState('')
+    const [uploadContext, setUploadContext] = useState(createUploadContext)
     const attachmentId = useRef(0)
     const fileInput = useRef<HTMLInputElement>(null)
     const uploading = attachments.some(attachment => attachment.status === 'uploading')
@@ -118,6 +133,12 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         && uploaded.length > 0
         && !uploading
         && !busy
+
+    useEffect(() => {
+        if (props.open) {
+            setUploadContext(createUploadContext())
+        }
+    }, [props.open])
 
     /**
      * Clears local form and confirmation state for the next modal session.
@@ -133,6 +154,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         setDragActive(false)
         setError(undefined)
         setSubject('')
+        setUploadContext(createUploadContext())
         if (fileInput.current) fileInput.current.value = ''
     }
 
@@ -178,7 +200,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
             try {
                 const result = await uploadReviewAttachment(attachment.file, {
                     category: 'support-ticket',
-                    challengeId: `opportunity-${props.challengeId ?? 'general'}`,
+                    challengeId: uploadContext,
                 })
                 setAttachments(current => current.map(item => (item.id === attachment.id
                     ? { ...item, result, status: 'uploaded' }

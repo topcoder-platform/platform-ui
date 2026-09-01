@@ -34,11 +34,13 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('~/config', () => ({
-    AppSubdomain: { copilots: 'copilots' },
     EnvironmentConfig: {
         ENGAGEMENTS_URL: 'https://engagements.example',
-        TC_DOMAIN: 'topcoder.example',
     },
+}), { virtual: true })
+
+jest.mock('~/apps/copilots', () => ({
+    absoluteRootRoute: 'https://platform.example/copilots',
 }), { virtual: true })
 
 /**
@@ -401,7 +403,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByRole('link'))
             .toHaveAttribute(
                 'href',
-                'https://copilots.topcoder.example/opportunity/copilot-id',
+                'https://platform.example/copilots/opportunity/copilot-id',
             )
         expect(screen.getByText('Hours / week:'))
             .toBeInTheDocument()
@@ -463,25 +465,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('shows accepted and applied states for member engagement results', () => {
-        const accepted: EngagementOpportunity = {
+    it('shows selected and applied states for member engagement results', () => {
+        const selected: EngagementOpportunity = {
             applicationStatus: 'ACCEPTED',
-            id: 'accepted-engagement',
+            id: 'selected-engagement',
             status: 'OPEN',
-            title: 'Accepted engagement',
+            title: 'Selected engagement',
         }
         const applied: EngagementOpportunity = {
+            applicationStatus: 'SUBMITTED',
             id: 'applied-engagement',
             status: 'OPEN',
             title: 'Applied engagement',
         }
         const { rerender }: RenderResult = render(
             <MemoryRouter>
-                <OpportunityListCard item={accepted} kind='engagements' memberApplied />
+                <OpportunityListCard item={selected} kind='engagements' memberApplied />
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Accepted').className)
+        expect(screen.getByText('Selected').className)
             .toContain('stateAccepted')
         rerender(
             <MemoryRouter>
@@ -492,7 +495,106 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('lets My Work override the owning API state with the accepted treatment', () => {
+    it('prefers member engagement status over public availability when assignments are present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [{ status: 'SELECTED' }],
+            id: 'selected-engagement',
+            status: 'CLOSED',
+            title: 'Selected engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Selected').className)
+            .toContain('stateAccepted')
+        expect(screen.queryByText('Application closed'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows authored under-review, on-hold, and declined engagement labels', () => {
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'UNDER_REVIEW',
+                        id: 'review-engagement',
+                        status: 'CLOSED',
+                        title: 'Review engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Under Review').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        id: 'hold-engagement',
+                        status: 'ON_HOLD',
+                        title: 'On hold engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('On Hold').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        assignments: [{ status: 'OFFER_REJECTED' }],
+                        id: 'declined-engagement',
+                        status: 'CLOSED',
+                        title: 'Declined engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Offer Declined').className)
+            .toContain('stateClosed')
+    })
+
+    it('uses the latest engagement assignment status when history is present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [
+                {
+                    createdAt: '2026-02-11T11:00:00.000Z',
+                    id: 'assignment-selected',
+                    status: 'SELECTED',
+                    updatedAt: '2026-02-11T11:00:00.000Z',
+                },
+                {
+                    createdAt: '2026-02-10T11:00:00.000Z',
+                    id: 'assignment-terminated',
+                    status: 'TERMINATED',
+                    updatedAt: '2026-02-13T11:00:00.000Z',
+                },
+            ],
+            id: 'historical-engagement',
+            status: 'OPEN',
+            title: 'Historical engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Terminated').className)
+            .toContain('stateClosed')
+        expect(screen.queryByText('Selected'))
+            .not.toBeInTheDocument()
+    })
+
+    it('lets My Work override the owning API state with the selected treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
             status: 'OPEN',
@@ -501,14 +603,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         render(
             <MemoryRouter>
                 <OpportunityListCard
-                    applicationState='Accepted'
+                    applicationState='Selected'
                     item={item}
                     kind='engagements'
                 />
             </MemoryRouter>,
         )
 
-        const state = screen.getByText('Accepted')
+        const state = screen.getByText('Selected')
         expect(state.className)
             .toContain('stateAccepted')
         expect(state.querySelector('svg'))
@@ -548,6 +650,29 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('falls back to review challenge skills when technologies are absent', () => {
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'MyTag' }, 'Test'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Reviewer test',
+            id: 'review-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('MyTag'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Test'))
+            .toBeInTheDocument()
+    })
+
     it('positions review title tooltips outside the card clipping context', () => {
         const item: ReviewOpportunity = {
             challengeId: 'challenge-id',
@@ -563,6 +688,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
             .toHaveAttribute('data-tooltip-strategy', 'fixed')
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).className)
+            .toContain('reviewTitle')
     })
 
     it('shows approved and rejected Review API application decisions', () => {

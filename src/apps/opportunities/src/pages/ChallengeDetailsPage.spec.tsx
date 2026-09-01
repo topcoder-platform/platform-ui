@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { PropsWithChildren } from 'react'
 import '@testing-library/jest-dom'
 import {
     fireEvent,
@@ -33,6 +34,9 @@ jest.mock('~/libs/core', () => ({
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
+        ConfirmModal: (props: PropsWithChildren<{ open: boolean }>): JSX.Element => (
+            props.open ? <div>{props.children}</div> : <></>
+        ),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
     }

@@ -61,6 +61,15 @@ describe('challenge detail utilities', () => {
             .toBe(3)
     })
 
+    it('retains a single authored file type when the API does not return a JSON array', () => {
+        expect(challengeFileTypes({
+            id: 'challenge',
+            metadata: [{ name: 'fileTypes', value: 'Figma' }],
+            name: 'Challenge',
+        }))
+            .toEqual(['Figma'])
+    })
+
     it('returns only safe authored challenge and attachment links', () => {
         const links = challengeSidebarLinks({
             attachments: [
@@ -113,6 +122,8 @@ describe('challenge detail utilities', () => {
             track: 'Development',
         }, 'https://vanilla.topcoder.com/api/v2'))
             .toBe('https://discussions.topcoder.com/?module=Category&categoryID=456')
+        expect(challengeForumUrl({ id: 'no-forum', name: 'No forum' }, 'https://vanilla.topcoder-dev.com/api/v2'))
+            .toBeUndefined()
         expect(challengeForumUrl({ id: 'bad', name: 'Bad config' }, 'javascript:alert(1)'))
             .toBeUndefined()
     })

@@ -1,1 +1,1 @@
-export { copilotsRoutes } from './copilots.routes'
+export { absoluteRootRoute, copilotsRoutes } from './copilots.routes'

@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import useSWR, { SWRResponse } from 'swr'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
 
@@ -16,6 +17,13 @@ import {
     challengeSidebarLinks,
     challengeSubmissionLimit,
 } from '../utils'
+import {
+    CHALLENGE_EXPLAINED_URL,
+    CHECKPOINT_FEEDBACK_LEARNING_URL,
+    DESIGN_CHALLENGE_LEARNING_URL,
+    SCREENING_LEARNING_URL,
+} from '../utils/opportunity-learning.utils'
+import { getChallengeTermsDetails } from '../services'
 import programBanner from '../assets/ai-exponential-program.png'
 import sidebarArrowIcon from '../assets/sidebar-arrow.svg'
 import sidebarBookIcon from '../assets/sidebar-book.svg'
@@ -29,6 +37,9 @@ import sidebarReviewIcon from '../assets/sidebar-review.svg'
 import sidebarSearchIcon from '../assets/sidebar-search.svg'
 
 import styles from './ChallengeSidebar.module.scss'
+
+const FILE_SUBMISSION_POLICY_URL
+    = 'https://help.topcoder.com/hc/en-us/articles/24958207774103-File-Submission-and-Review'
 
 interface ChallengeSidebarProps {
     aiReviewConfig?: ChallengeAiReviewConfig
@@ -219,6 +230,22 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const developmentChallenge = catalogName(props.challenge.track)
         .toLowerCase() === 'development'
     const submissionGuidance = designChallenge || developmentChallenge
+    const termsRequestKey = props.challenge.terms?.some(term => !!term.id && !term.title)
+        ? ['opportunities:challenge-sidebar-terms', props.challenge.id]
+        : undefined
+    const termsResponse: SWRResponse<ChallengeTerm[], Error> = useSWR(
+        termsRequestKey,
+        () => getChallengeTermsDetails(props.challenge.terms ?? []),
+        { revalidateOnFocus: false },
+    )
+    const displayedTerms = useMemo(() => {
+        const hydratedTerms = termsResponse.data
+        if (!hydratedTerms || hydratedTerms.length !== (props.challenge.terms ?? []).length) {
+            return props.challenge.terms ?? []
+        }
+
+        return hydratedTerms
+    }, [props.challenge.terms, termsResponse.data])
     /**
      * Opens the all-terms fallback used when the challenge has no individual term rows.
      *
@@ -267,11 +294,15 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
-                <Link to='/thrive/search'>Topcoder Challenge Explained</Link>
-                {submissionGuidance && (
+                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenge Explained</a>
+                {designChallenge && (
                     <>
-                        <Link to='/thrive/tracks'>How to Compete in Design Challenges</Link>
-                        <Link to='/thrive/search'>How to Approach the Checkpoint Feed</Link>
+                        <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
+                            How to Compete in Design Challenges
+                        </a>
+                        <a href={CHECKPOINT_FEEDBACK_LEARNING_URL} rel='noreferrer' target='_blank'>
+                            How to Approach the Checkpoint Feed
+                        </a>
                     </>
                 )}
             </SidebarCard>
@@ -298,21 +329,40 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 <li>
                                     <strong>Declaration.txt:</strong>
                                     {' '}
-                                    Declare your fonts, stock photos, and icons.
+                                    Declare your fonts, stock photos, and icons in a txt file.
                                 </li>
                                 <li>
                                     <strong>Preview.jpg:</strong>
                                     {' '}
-                                    Create the requested preview image file.
+                                    Create a 1024 x 1024 px preview image file.
+                                </li>
+                                <li>
+                                    Place the 4 files you just created into a single zip file.
+                                    This will be what you upload.
                                 </li>
                             </ol>
+                            <p>
+                                Trouble formatting your submission or want to learn more?
+                                {' '}
+                                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Read the FAQ.</a>
+                            </p>
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
                                 <img alt='' aria-hidden='true' src={sidebarFrameIcon} />
                                 Fonts, Stock Photos, and Icons
                             </h3>
-                            <p>All third-party assets within your design must be declared when you submit.</p>
+                            <p>
+                                All fonts, stock photos, and icons within your design must be declared when you
+                                submit. DO NOT include any 3rd party files in your submission or source files.
+                                {' '}
+                                Read about the
+                                {' '}
+                                <a href={FILE_SUBMISSION_POLICY_URL}>
+                                    Policy
+                                </a>
+                                .
+                            </p>
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
@@ -320,7 +370,15 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 Screening
                             </h3>
                             <p>
-                                All submissions are screened for eligibility before the challenge holder picks winners.
+                                All submissions are screened for eligibility before the challenge
+                                holder picks winners.
+                                {' '}
+                                Don&apos;t let your hard work go to waste. Learn more about
+                                {' '}
+                                <a href={SCREENING_LEARNING_URL} rel='noreferrer' target='_blank'>
+                                    how to pass screening
+                                </a>
+                                .
                             </p>
                         </div>
                     </>
@@ -335,8 +393,8 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         <img alt='' aria-hidden='true' src={sidebarPolicyIcon} />
                         Challenge Terms
                     </h3>
-                    {(props.challenge.terms ?? []).length > 0
-                        ? props.challenge.terms?.map((term, index) => (
+                    {displayedTerms.length > 0
+                        ? displayedTerms.map((term, index) => (
                             <ChallengeTermButton
                                 index={index}
                                 key={term.id ?? term.title ?? `term-${index}`}
@@ -364,7 +422,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             </h3>
                             {fileTypes.length > 0
                                 ? <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
-                                : <p>You must include all source files requested in the Requirements content.</p>}
+                                : designChallenge
+                                    ? <ul><li>Figma</li></ul>
+                                    : <p>You must include all source files requested in the Requirements content.</p>}
+                            {designChallenge && (
+                                <p>You must include all source files with your submission.</p>
+                            )}
                             {links.attachments.length > 0 && (
                                 <div className={styles.resourceLinks}>{links.attachments.map(externalLink)}</div>
                             )}

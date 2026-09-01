@@ -44,26 +44,34 @@
 }
 
 .rings {
-    border: 2px dashed rgba(61, 219, 217, .42);
-    border-radius: 50%;
     height: 498px;
+    mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, .14) 18%, rgba(0, 0, 0, .56) 43%, #000 72%);
+    pointer-events: none;
     position: absolute;
-    right: 61px;
-    top: -122px;
+    right: -50px;
+    top: -168px;
     width: 498px;
+}
 
-    &::before,
-    &::after {
-        border: 2px dashed rgba(61, 219, 217, .42);
-        border-radius: 50%;
-        content: '';
-        inset: 61px;
-        position: absolute;
-    }
+.ring {
+    border: 2px dashed rgba(0, 125, 121, .7);
+    border-radius: 50%;
+    inset: 0;
+    position: absolute;
+}
 
-    &::after {
-        inset: 121px;
-    }
+.ringOuter {
+    opacity: 1;
+}
+
+.ringMiddle {
+    border-color: rgba(0, 125, 121, .58);
+    inset: 60px;
+}
+
+.ringInner {
+    border-color: rgba(0, 125, 121, .46);
+    inset: 121px;
 }
 
 .layout {
@@ -240,10 +248,11 @@
     gap: 20px;
     height: 252px;
     justify-content: space-between;
-    justify-self: stretch;
+    justify-self: end;
+    max-width: 100%;
     padding: 24px;
     position: relative;
-    width: 100%;
+    width: 384px;
 
     button,
     a {
@@ -319,12 +328,19 @@
     gap: 24px;
 }
 
+.compactFeaturedPrizes {
+    flex-wrap: wrap;
+    gap: 8px 20px;
+}
+
+.compactPrize {
+    font-size: 24px !important;
+    min-width: 0;
+}
+
 .additionalPrizes {
     flex-wrap: wrap;
     gap: 4px 12px;
-    max-height: 40px;
-    overflow-y: auto;
-    scrollbar-width: thin;
 }
 
 .secondaryPrize {
@@ -488,6 +504,7 @@
         strong {
             display: block;
             font-weight: 400;
+            margin-bottom: 4px;
         }
     }
 }

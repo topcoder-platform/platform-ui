@@ -491,7 +491,10 @@ export function buildOpportunityPageUrl(
         if (filters.statuses?.[0]) url.searchParams.set('status', filters.statuses[0])
         appendValues(url, 'requiredSkills', filters.skills)
         if (filters.role) url.searchParams.set('role', filters.role)
-        if (filters.applied) url.searchParams.set('appliedByMe', 'true')
+        if (filters.applied) {
+            url.searchParams.set('appliedByMe', 'true')
+            url.searchParams.set('includePrivate', 'true')
+        }
     } else if (kind === 'copilots') {
         endpoint = `${V6_URL}/projects/copilots/opportunities`
         url.pathname = new URL(endpoint).pathname
