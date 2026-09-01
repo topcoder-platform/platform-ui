@@ -28,11 +28,27 @@ const Home: LazyLoadedComponent = lazyLoad(
     'HomePage',
 )
 
+const NotFound: LazyLoadedComponent = lazyLoad(
+    () => import('./routes/not-found'),
+    'NotFoundPage',
+)
+
 const homeRoutes: ReadonlyArray<PlatformRoute> = [
     {
         element: <Home />,
         id: 'Home page',
         route: '',
+    },
+]
+
+// Catch-all for paths Platform UI is served for but does not own a route for,
+// eg. `/opportunities` on the Topcoder apex host. React-router ranks the `*`
+// path last, so this never shadows a route declared above.
+const notFoundRoutes: ReadonlyArray<PlatformRoute> = [
+    {
+        element: <NotFound />,
+        id: 'Not found page',
+        route: '*',
     },
 ]
 
@@ -64,4 +80,5 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...adminRoutes,
     ...reportsRoutes,
     ...customerPortalRoutes,
+    ...notFoundRoutes,
 ]
