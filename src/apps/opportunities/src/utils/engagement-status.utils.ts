@@ -33,6 +33,19 @@ const ASSIGNMENT_STATUS_PRIORITY: Record<string, number> = {
     terminated: 4,
 }
 
+const TERMINAL_MEMBER_STATUS_KEYS: Set<string> = new Set([
+    'completed',
+    'offerdeclined',
+    'offerrejected',
+    'rejected',
+    'terminated',
+])
+
+const TERMINAL_LIFECYCLE_STATUS_KEYS: Set<string> = new Set([
+    'cancelled',
+    'closed',
+])
+
 function statusKey(value: unknown): string {
     return String(value ?? '')
         .toLowerCase()
@@ -118,4 +131,21 @@ export function myEngagementState(item: EngagementOpportunity): string {
     if (memberLabel) return memberLabel
     if (statusKey(item.status) === 'onhold') return 'On Hold'
     return 'Applied'
+}
+
+/**
+ * Resolves whether a My Work engagement should land in the active or past bucket.
+ *
+ * Member-specific assignment or application state wins over the public engagement
+ * lifecycle so completed, terminated, or rejected member outcomes still appear in
+ * Past even when the engagement remains publicly active. When no member-specific
+ * status exists, the public lifecycle acts as the fallback bucket source.
+ */
+export function myEngagementBucket(item: EngagementOpportunity): 'active' | 'past' {
+    const memberStatus = statusKey(engagementMemberStatus(item))
+    if (memberStatus) {
+        return TERMINAL_MEMBER_STATUS_KEYS.has(memberStatus) ? 'past' : 'active'
+    }
+
+    return TERMINAL_LIFECYCLE_STATUS_KEYS.has(statusKey(item.status)) ? 'past' : 'active'
 }
