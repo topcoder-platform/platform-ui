@@ -20,13 +20,35 @@ export function defaultSort(): string {
  * Builds the authored toolbar options for one opportunity domain.
  *
  * @param kind active opportunity domain.
- * @returns common sort options plus the review-only highest-payment choice.
+ * @param status active owner status, used to remove time-forward sorting from completed engagements.
+ * @returns valid sort options plus the review-only highest-payment choice.
  * @throws Does not throw.
  */
-export function opportunitySortOptions(kind: OpportunityKind): OpportunitySortOption[] {
+export function opportunitySortOptions(kind: OpportunityKind, status?: string): OpportunitySortOption[] {
+    const statusKey = String(status ?? '')
+        .trim()
+        .toLowerCase()
+    const completedEngagement = kind === 'engagements'
+        && (statusKey === 'closed' || statusKey === 'completed')
     return [
         { label: 'Newest first', value: 'newest' },
-        { label: 'Starting soon', value: 'startingSoon' },
+        ...(!completedEngagement ? [{ label: 'Starting soon', value: 'startingSoon' }] : []),
         ...(kind === 'reviews' ? [{ label: 'Highest payment', value: 'highestPayment' }] : []),
     ]
+}
+
+/**
+ * Keeps a selected sort valid when another filter changes its available choices.
+ *
+ * @param kind active opportunity domain.
+ * @param status newly selected owner status.
+ * @param value currently selected sort value.
+ * @returns the current value when still supported, otherwise the default sort.
+ * @throws Does not throw.
+ */
+export function normalizeOpportunitySort(kind: OpportunityKind, status: string, value: string): string {
+    return opportunitySortOptions(kind, status)
+        .some(option => option.value === value)
+        ? value
+        : defaultSort()
 }

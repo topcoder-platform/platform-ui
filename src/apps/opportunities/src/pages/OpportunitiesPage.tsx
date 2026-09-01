@@ -43,6 +43,7 @@ import {
 } from '../utils/opportunity-learning.utils'
 import {
     defaultSort,
+    normalizeOpportunitySort,
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
@@ -256,6 +257,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     /** Updates the active status and starts again at page one. */
     const updateStatus = (value: string): void => {
         setStatus(value)
+        setSort(current => normalizeOpportunitySort(kind, value, current))
         setPage(1)
     }
 
@@ -293,7 +295,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         <strong>Sort by</strong>
                         <OpportunitySortSelect
                             onChange={updateSort}
-                            options={opportunitySortOptions(kind)}
+                            options={opportunitySortOptions(kind, status)}
                             value={sort}
                         />
                     </div>
