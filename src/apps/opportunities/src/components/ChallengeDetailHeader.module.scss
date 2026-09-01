@@ -240,10 +240,11 @@
     gap: 20px;
     height: 252px;
     justify-content: space-between;
-    justify-self: stretch;
+    justify-self: end;
+    max-width: 100%;
     padding: 24px;
     position: relative;
-    width: 100%;
+    width: 384px;
 
     button,
     a {
