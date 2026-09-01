@@ -77,11 +77,13 @@ export function myWorkStatuses(
     if (status === 'active') {
         if (kind === 'competitions') return ['ACTIVE']
         if (kind === 'copilots') return ['active']
+        if (kind === 'engagements') return ['OPEN', 'ACTIVE', 'ON_HOLD']
         return ['OPEN']
     }
 
     if (kind === 'competitions') return ['COMPLETED']
     if (kind === 'copilots') return ['completed']
+    if (kind === 'engagements') return ['CANCELLED', 'CLOSED']
     return ['CLOSED']
 }
 
