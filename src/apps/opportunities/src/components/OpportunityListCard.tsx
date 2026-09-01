@@ -267,8 +267,16 @@ function engagementApplicationState(
     open: boolean,
 ): string {
     const statusKey = challengeCatalogKey(status)
-    if (['accepted', 'approved', 'selected'].includes(statusKey)) return 'Accepted'
+    if (['accepted', 'approved', 'assigned', 'completed', 'selected'].includes(statusKey)) {
+        return 'Accepted'
+    }
+
     return applicationState(!!status || memberApplied, open)
+}
+
+/** Returns the most specific engagement status available for the signed-in member. */
+function engagementMemberStatus(item: EngagementOpportunity): string | undefined {
+    return item.assignments?.[0]?.status ?? item.applicationStatus ?? item.myApplication?.status
 }
 
 /**
@@ -467,7 +475,7 @@ function renderChallengePrizes(prizes: ChallengePlacementPrize[], funChallenge: 
 /** Converts engagement data to the shared card presentation model. */
 function engagementView(item: EngagementOpportunity, memberApplied: boolean): CardViewModel {
     const role = enumLabel(item.role) || 'Contributor'
-    const memberApplicationStatus = item.applicationStatus ?? item.myApplication?.status
+    const memberApplicationStatus = engagementMemberStatus(item)
     return {
         badge: opportunityTrackLabel(item.role),
         description: descriptionExcerpt(item.description),

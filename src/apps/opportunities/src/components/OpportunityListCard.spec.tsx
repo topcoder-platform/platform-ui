@@ -494,6 +494,25 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
+    it('prefers member engagement status over public availability when assignments are present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [{ status: 'SELECTED' }],
+            id: 'selected-engagement',
+            status: 'CLOSED',
+            title: 'Selected engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Accepted').className)
+            .toContain('stateAccepted')
+        expect(screen.queryByText('Application closed'))
+            .not.toBeInTheDocument()
+    })
+
     it('lets My Work override the owning API state with the accepted treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
