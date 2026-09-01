@@ -72,6 +72,11 @@ interface ChallengePhaseSummary {
     remaining?: string
 }
 
+interface IndexedChallengePhase {
+    index: number
+    item: ChallengePhase
+}
+
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
 function catalogName(value: string | { name?: string } | undefined, fallback: string): string {
     return typeof value === 'string' ? value : value?.name || fallback
@@ -285,15 +290,36 @@ function challengeTimelineItems(
     const startTimestamp = timelineTimestamp(challenge.startDate)
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
-    const phases = (challenge.phases ?? []).map((item, index): ChallengeTimelineItem => ({
-        endDate: item.actualEndDate ?? item.scheduledEndDate,
-        icon: timelinePhaseIcon(item.name),
-        key: item.id ?? `phase-${challengeCatalogKey(item.name)}-${index}`,
-        name: item.name,
-        range: true,
-        startDate: item.actualStartDate ?? item.scheduledStartDate,
-        state: timelineState(item, selected, challenge.currentPhaseNames),
-    }))
+    const phases = (challenge.phases ?? [])
+        .map((item, index) => ({ index, item }))
+        .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            const leftStart = timelineTimestamp(
+                left.item.actualStartDate ?? left.item.scheduledStartDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            const rightStart = timelineTimestamp(
+                right.item.actualStartDate ?? right.item.scheduledStartDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            if (leftStart !== rightStart) return leftStart - rightStart
+
+            const leftEnd = timelineTimestamp(
+                left.item.actualEndDate ?? left.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            const rightEnd = timelineTimestamp(
+                right.item.actualEndDate ?? right.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            if (leftEnd !== rightEnd) return leftEnd - rightEnd
+
+            return left.index - right.index
+        })
+        .map((entry: IndexedChallengePhase): ChallengeTimelineItem => ({
+            endDate: entry.item.actualEndDate ?? entry.item.scheduledEndDate,
+            icon: timelinePhaseIcon(entry.item.name),
+            key: entry.item.id ?? `phase-${challengeCatalogKey(entry.item.name)}-${entry.index}`,
+            name: entry.item.name,
+            range: true,
+            startDate: entry.item.actualStartDate ?? entry.item.scheduledStartDate,
+            state: timelineState(entry.item, selected, challenge.currentPhaseNames),
+        }))
 
     return [{
         icon: timelineLaunchIcon,
@@ -457,7 +483,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 onClick={() => setTimelineOpen(value => !value)}
                                 type='button'
                             >
-                                {timelineOpen ? 'Hide full timeline' : 'Show full timeline'}
+                                {timelineOpen ? 'Hide timeline' : 'Show full timeline'}
                                 <img alt='' aria-hidden='true' src={challengeChevronIcon} />
                             </button>
                         </div>

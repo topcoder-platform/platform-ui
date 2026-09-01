@@ -98,10 +98,10 @@ subtype icons and member-facing labels.
 
 ## Challenge detail timeline
 
-The expanded challenge timeline follows the Challenge API phase order between
-the synthetic Launch and Winners boundaries. Launch uses the challenge start,
-each authored phase displays its actual (then scheduled fallback) start and end
-on separate rows, and Winners uses the top-level challenge end. Only responses
+The expanded challenge timeline follows chronological phase order between the
+synthetic Launch and Winners boundaries. Launch uses the challenge start, each
+authored phase displays its actual (then scheduled fallback) start and end on
+separate rows, and Winners uses the top-level challenge end. Only responses
 without a valid challenge end fall back to the latest valid phase end.
 
 Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping

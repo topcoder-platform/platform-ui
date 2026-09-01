@@ -289,4 +289,52 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .getByText(/^Time zone:/))
             .toBeInTheDocument()
     })
+
+    it('sorts expanded timeline phases chronologically and uses the short hide label', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: '2026-08-20T12:30:00.000Z',
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-10T00:29:00.000Z',
+                                actualStartDate: '2026-08-10T00:12:00.000Z',
+                                id: 'checkpoint-submission',
+                                name: 'Checkpoint Submission',
+                            },
+                            {
+                                actualEndDate: '2026-08-10T00:40:00.000Z',
+                                actualStartDate: '2026-08-10T00:00:00.000Z',
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                            {
+                                actualEndDate: '2026-08-10T00:35:00.000Z',
+                                actualStartDate: '2026-08-10T00:30:00.000Z',
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                        ],
+                        startDate: '2026-08-10T00:00:00.000Z',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        expect(screen.getByRole('button', { name: 'Hide timeline' }))
+            .toBeInTheDocument()
+
+        const itemLabels = within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Submission', 'Winners'])
+    })
 })

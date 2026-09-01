@@ -49,7 +49,7 @@
     height: 498px;
     position: absolute;
     right: 61px;
-    top: -122px;
+    top: -168px;
     width: 498px;
 
     &::before,
@@ -486,6 +486,7 @@
         strong {
             display: block;
             font-weight: 400;
+            margin-bottom: 4px;
         }
     }
 }
