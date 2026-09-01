@@ -23,7 +23,7 @@ import metricSubmissionsIcon from '../assets/metric-submissions.svg'
 import { ChallengeMarkdown, ReportIssueModal } from '../components'
 import { ReviewApplicationSummary, ReviewOpportunity } from '../models'
 import { applyToReviewOpportunity, getReviewOpportunity } from '../services'
-import { memberProfileUrl } from '../utils'
+import { memberProfileUrl, REVIEWER_LEARNING_URL } from '../utils'
 
 import styles from './ReviewOpportunityDetailsPage.module.scss'
 
@@ -480,10 +480,10 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                 <section className={styles.learning}>
                                     <h2>How to become a reviewer?</h2>
                                     <p>Interested in evaluating submissions on Topcoder?</p>
-                                    <Link to='/thrive/articles/How%20to%20become%20a%20reviewer'>
+                                    <a href={REVIEWER_LEARNING_URL} rel='noreferrer' target='_blank'>
                                         Learn more
                                         <IconOutline.ArrowRightIcon />
-                                    </Link>
+                                    </a>
                                 </section>
                             )}
                             <section className={styles.card}>

@@ -165,8 +165,12 @@ describe('OpportunitiesPage', () => {
         expect(await screen.findByRole('link', { name: /learn more/i }))
             .toHaveAttribute(
                 'href',
-                'https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder',
+                'https://www.topcoder.example/thrive/articles/become-a-copilot-at-topcoder',
             )
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('rel', 'noreferrer')
     })
 
     it('keeps reviewer learning content visible after reviewer profile hydration', async () => {
@@ -202,5 +206,9 @@ describe('OpportunitiesPage', () => {
                 'href',
                 'https://www.topcoder.example/thrive/articles/Reviewer%20Qualification%20Requirements',
             )
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('rel', 'noreferrer')
     })
 })

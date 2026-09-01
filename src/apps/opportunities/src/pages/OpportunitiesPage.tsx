@@ -14,7 +14,6 @@ import {
     ProfileContextData,
     useProfileContext,
 } from '~/libs/core'
-import { EnvironmentConfig } from '~/config'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -38,6 +37,10 @@ import {
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
+import {
+    COPILOT_LEARNING_URL,
+    REVIEWER_LEARNING_URL,
+} from '../utils/opportunity-learning.utils'
 import {
     defaultSort,
     opportunitySortOptions,
@@ -64,8 +67,6 @@ const VALID_KINDS = new Set<OpportunityKind>([
 ])
 
 const COMPETITION_REFRESH_INTERVAL_MS = 60 * 1000
-const REVIEWER_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
-    + '/thrive/articles/Reviewer%20Qualification%20Requirements'
 
 /**
  * Resolves an optional route segment to a supported opportunity domain.
@@ -121,7 +122,7 @@ const LearningCard: FC<LearningCardProps> = props => (
     <aside className={styles.learning}>
         <h3>{props.title}</h3>
         <p>{props.body}</p>
-        <a href={props.href}>
+        <a href={props.href} rel='noreferrer' target='_blank'>
             Learn more
             <IconOutline.ArrowRightIcon />
         </a>
@@ -328,7 +329,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     {kind === 'copilots' && !isCopilot && (
                         <LearningCard
                             body='Interested in managing challenges on Topcoder?'
-                            href='https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder'
+                            href={COPILOT_LEARNING_URL}
                             title='How to become a copilot?'
                         />
                     )}

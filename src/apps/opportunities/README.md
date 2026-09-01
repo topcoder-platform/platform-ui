@@ -54,6 +54,9 @@ to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
 
+Opportunity cards preserve same-tab navigation. External role-learning links
+open in a separate tab and include `rel="noreferrer"`.
+
 Review cards include the Review API's first role payment, falling back to its
 base payment. Missing amounts are labeled `TBD` rather than presented as free
 work.
