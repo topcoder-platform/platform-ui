@@ -1,6 +1,6 @@
 export type SubmissionStatus = 'active' | 'completed' | 'deleted' | 'failed' | 'pending' | string
 export type MarathonMatchTestProcess = 'provisional' | 'system' | string
-export type MarathonMatchTestStatus = 'FAILED' | 'IN PROGRESS' | 'SUCCESS' | string
+export type MarathonMatchTestStatus = 'CANCELLED' | 'FAILED' | 'IN PROGRESS' | 'SUCCESS' | string
 
 export interface SubmissionReview {
     createdAt?: string

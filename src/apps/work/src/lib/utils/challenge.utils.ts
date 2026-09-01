@@ -15,6 +15,7 @@ interface SubmissionScore {
 }
 
 type MarathonMatchScoreProcess = 'example' | 'provisional' | 'system'
+type MarathonMatchTestStatusDisplay = 'CANCELLED' | 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
 
 interface ScoredSubmissionLike {
     review?: Array<{
@@ -34,7 +35,7 @@ interface ScoredSubmissionLike {
 export interface SubmissionTestProgressDisplay {
     process?: MarathonMatchScoreProcess
     progressPercent?: string
-    status?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
+    status?: MarathonMatchTestStatusDisplay
 }
 
 interface SubmissionTestProgressCandidate extends SubmissionTestProgressDisplay {
@@ -270,14 +271,21 @@ function normalizeTestProcess(value: unknown): MarathonMatchScoreProcess | undef
  * @param value Metadata status value from Review API.
  * @returns Supported UI status or `undefined` when the status is absent/unknown.
  * Used by `getSubmissionTestProgress` before choosing the current summation.
+ * `CANCELLED` marks a scorer that was stopped because the member submitted a
+ * newer solution, so the run is terminal without producing a score.
  */
-function normalizeTestStatus(value: unknown): 'FAILED' | 'IN PROGRESS' | 'SUCCESS' | undefined {
+function normalizeTestStatus(value: unknown): MarathonMatchTestStatusDisplay | undefined {
     const normalized = typeof value === 'string'
         ? value.trim()
             .toUpperCase()
         : ''
 
-    if (normalized === 'FAILED' || normalized === 'IN PROGRESS' || normalized === 'SUCCESS') {
+    if (
+        normalized === 'CANCELLED'
+        || normalized === 'FAILED'
+        || normalized === 'IN PROGRESS'
+        || normalized === 'SUCCESS'
+    ) {
         return normalized
     }
 
@@ -355,7 +363,7 @@ function toSubmissionTestProgressCandidate(
     const progress = normalizeTestProgress(entry.metadata?.testProgress)
     let statusPriority = 0
 
-    if (status === 'FAILED') {
+    if (status === 'FAILED' || status === 'CANCELLED') {
         statusPriority = 2
     } else if (status === 'SUCCESS') {
         statusPriority = 1

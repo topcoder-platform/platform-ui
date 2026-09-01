@@ -14,6 +14,7 @@ jest.mock('~/config', () => ({
 })
 jest.mock('~/libs/ui', () => ({
     IconOutline: {
+        BanIcon: (): JSX.Element => <svg data-testid='ban-icon' />,
         ChevronDownIcon: (): JSX.Element => <svg data-testid='chevron-down-icon' />,
         ClockIcon: (): JSX.Element => <svg data-testid='clock-icon' />,
         ExclamationIcon: (): JSX.Element => <svg data-testid='exclamation-icon' />,
@@ -68,7 +69,7 @@ jest.mock('../../utils', () => ({
                 metadata?: {
                     testProcess?: 'example' | 'provisional' | 'system'
                     testProgress?: number
-                    testStatus?: 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
+                    testStatus?: 'CANCELLED' | 'FAILED' | 'IN PROGRESS' | 'SUCCESS'
                     testType?: 'example' | 'provisional' | 'system'
                 }
             }>
@@ -348,6 +349,45 @@ describe('SubmissionsTable', () => {
             .toBeTruthy()
         expect(screen.getByRole('img', { name: 'Test status: FAILED' }))
             .toBeTruthy()
+    })
+
+    it('renders a cancelled test status without a score for a superseded marathon run', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                showMarathonMatchTestProgress
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        reviewSummation: [
+                            {
+                                aggregateScore: -1,
+                                isProvisional: true,
+                                metadata: {
+                                    testProcess: 'provisional',
+                                    testProgress: 1,
+                                    testStatus: 'CANCELLED',
+                                },
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByRole('img', { name: 'Test status: CANCELLED' }))
+            .toBeTruthy()
+        expect(screen.queryByText('-1.00'))
+            .toBeNull()
     })
 
     it('renders marathon scores from provisional and system summations only', () => {

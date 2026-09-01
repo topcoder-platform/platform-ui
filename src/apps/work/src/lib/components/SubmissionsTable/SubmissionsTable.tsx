@@ -138,6 +138,17 @@ function getCreatedAt(submission: Submission): string {
         || ''
 }
 
+/**
+ * Returns whether a marathon test status means no score was produced.
+ * @param status Normalized test status from review summation metadata.
+ * @returns `true` while tests are running and when a run was cancelled.
+ * Used by `SubmissionsTable` so the placeholder aggregate score written for a
+ * superseded scorer run is not displayed as a real score.
+ */
+function isUnscoredTestStatus(status?: string): boolean {
+    return status === 'IN PROGRESS' || status === 'CANCELLED'
+}
+
 function formatScore(value?: number, emptyValue: string = 'N/A'): string {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
         return emptyValue
@@ -280,6 +291,19 @@ function renderTestStatusIcon(status: string | undefined): ReactElement | undefi
         )
     }
 
+    if (status === 'CANCELLED') {
+        return (
+            <span
+                aria-label='Test status: CANCELLED'
+                className={classNames(styles.testStatusIcon, styles.testStatusCancelled)}
+                role='img'
+                title='CANCELLED'
+            >
+                <IconOutline.BanIcon aria-hidden='true' />
+            </span>
+        )
+    }
+
     return undefined
 }
 
@@ -388,17 +412,17 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const emptyScoreValue = props.showMarathonMatchTestProgress
                             ? '-'
                             : 'N/A'
-                        const isInitialScoreInProgress = testProgress?.status === 'IN PROGRESS'
+                        const isInitialScoreUnscored = isUnscoredTestStatus(testProgress?.status)
                             && (
-                                testProgress.process === 'example'
-                                || testProgress.process === 'provisional'
+                                testProgress?.process === 'example'
+                                || testProgress?.process === 'provisional'
                             )
-                        const isFinalScoreInProgress = testProgress?.status === 'IN PROGRESS'
-                            && testProgress.process === 'system'
-                        const initialScore = isInitialScoreInProgress
+                        const isFinalScoreUnscored = isUnscoredTestStatus(testProgress?.status)
+                            && testProgress?.process === 'system'
+                        const initialScore = isInitialScoreUnscored
                             ? 'N/A'
                             : formatScore(initialScoreValue, emptyScoreValue)
-                        const finalScore = isFinalScoreInProgress
+                        const finalScore = isFinalScoreUnscored
                             ? 'N/A'
                             : formatScore(finalScoreValue, emptyScoreValue)
                         const reviewTab = submission.type === 'CHECKPOINT_SUBMISSION'
