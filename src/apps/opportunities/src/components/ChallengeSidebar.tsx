@@ -295,7 +295,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
                 <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenge Explained</a>
-                {submissionGuidance && (
+                {designChallenge && (
                     <>
                         <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
                             How to Compete in Design Challenges
@@ -424,8 +424,8 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 ? <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
                                 : designChallenge
                                     ? <ul><li>Figma</li></ul>
-                                    : <p>You must include all source files with your submission.</p>}
-                            {submissionGuidance && (
+                                    : <p>You must include all source files requested in the Requirements content.</p>}
+                            {designChallenge && (
                                 <p>You must include all source files with your submission.</p>
                             )}
                             {links.attachments.length > 0 && (

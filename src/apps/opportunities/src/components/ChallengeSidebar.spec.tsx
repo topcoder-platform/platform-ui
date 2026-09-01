@@ -55,12 +55,25 @@ const challenge: ChallengeOpportunity = {
     track: 'Quality Assurance',
 }
 
-function renderSidebar(aiReviewConfig?: ChallengeAiReviewConfig): void {
+const designChallenge: ChallengeOpportunity = {
+    ...challenge,
+    track: 'Design',
+}
+
+const developmentChallenge: ChallengeOpportunity = {
+    ...challenge,
+    track: 'Development',
+}
+
+function renderSidebar(
+    aiReviewConfig?: ChallengeAiReviewConfig,
+    sidebarChallenge: ChallengeOpportunity = challenge,
+): void {
     render(
         <MemoryRouter>
             <ChallengeSidebar
                 aiReviewConfig={aiReviewConfig}
-                challenge={challenge}
+                challenge={sidebarChallenge}
                 onContactTeam={jest.fn()}
                 onShowTerms={jest.fn()}
             />
@@ -134,6 +147,23 @@ describe('ChallengeSidebar Review Style', () => {
             )
     })
 
+    it('keeps design-only educational links and copy out of development challenges', () => {
+        renderSidebar(undefined, developmentChallenge)
+
+        expect(screen.getByRole('link', { name: 'Topcoder Challenge Explained' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'How to Compete in Design Challenges' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'How to Approach the Checkpoint Feed' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Submission Format' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('You must include all source files requested in the Requirements content.'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('You must include all source files with your submission.'))
+            .not.toBeInTheDocument()
+    })
+
     it('hydrates term titles before rendering challenge term buttons', () => {
         mockUseSWR.mockReturnValue({
             data: [{ id: 'term-id', title: 'Standard Terms 2026' }],
@@ -143,7 +173,7 @@ describe('ChallengeSidebar Review Style', () => {
             <MemoryRouter>
                 <ChallengeSidebar
                     challenge={{
-                        ...challenge,
+                        ...designChallenge,
                         terms: [{ id: 'term-id' }],
                     }}
                     onContactTeam={jest.fn()}
@@ -163,5 +193,14 @@ describe('ChallengeSidebar Review Style', () => {
 
         expect(screen.queryByRole('heading', { name: 'Challenge Links' }))
             .not.toBeInTheDocument()
+    })
+
+    it('shows design educational links for design challenges', () => {
+        renderSidebar(undefined, designChallenge)
+
+        expect(screen.getByRole('link', { name: 'How to Compete in Design Challenges' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'How to Approach the Checkpoint Feed' }))
+            .toBeInTheDocument()
     })
 })
