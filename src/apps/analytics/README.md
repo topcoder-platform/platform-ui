@@ -25,11 +25,11 @@ On `analytics.<domain>`, the same children are `/campaigns` and `/general`.
 
 ## Reports
 
-Campaign Analytics uses first-touch UTM attribution and an ordered cohort
-funnel. Its totals answer how many distinct landing visitors clicked, then
-registered for a challenge after clicking, then submitted after registering.
-It also shows campaign and landing-page breakdowns plus aggregate click
-locations by semantic element fields and ten-percentage-point viewport buckets.
+Campaign Analytics uses UTM attribution and an ordered cohort funnel. Its
+totals answer how many distinct landing visitors clicked, then registered for
+a challenge after clicking, then submitted after registering. It also shows
+campaign and landing-page breakdowns plus aggregate click locations by semantic
+element fields and ten-percentage-point viewport buckets.
 
 General Analytics shows page views, distinct visitors, clicks, and distinct
 clickers over time, with page, traffic-source, and instrumented-application
@@ -40,10 +40,12 @@ ranges are inclusive and limited to 366 days. The UI displays the warehouse's
 `dataThrough` value because the development transform currently runs daily.
 Empty dates in a series are not inferred as provider outages.
 
-Redshift Serverless can take one request to resume after an idle period. The UI
-automatically retries one warehouse timeout after a one-second delay while
-keeping the loading state visible. A second timeout is surfaced with the
-explicit retry action so requests remain bounded.
+Redshift Serverless can take longer than one HTTP request after an idle period.
+The UI opts into resumable queries and transparently polls `202` responses with
+the server-issued query token while keeping the loading state visible. Polling
+is bounded to twelve requests (roughly five minutes at the API's maximum query
+wait); after that, or after a genuine failure, the explicit retry action is
+shown.
 
 ## Privacy
 

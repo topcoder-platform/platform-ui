@@ -25,10 +25,14 @@ or result limits.
 
 Reports are limited to 366 inclusive days and 2,000 decoded rows. Query waits
 leave time for a sanitized response. A failed or aborted statement is retried
-once within the same deadline. If Redshift Serverless needs longer than one
-HTTP request to resume, the statement remains active and a browser retry
-reattaches to it through a server-generated, thirty-minute idempotency window
-instead of starting another warehouse query. Concurrency and API throttles cap
+once within the same deadline. Clients can opt into resumable requests with
+`async=true`. If Redshift Serverless needs longer than one HTTP request, the API
+returns `202`, `Retry-After`, and a server-generated query token. The browser
+polls with that token until the original statement completes instead of
+starting another warehouse query. Tokens are accepted only for the exact SQL,
+validated parameters, retry attempt, and current or previous thirty-minute
+window, which permits one boundary crossing without making tokens reusable for
+other reports. Browser polling is bounded. Concurrency and API throttles cap
 warehouse pressure, and successful responses use `Cache-Control: private,
 no-store`. Logs contain request IDs and service-owned error categories only.
 
@@ -96,7 +100,7 @@ After deployment, expected public authorization behavior is:
 ```text
 no or malformed bearer token -> 401 from API Gateway
 valid token without analytics -> 403 from Lambda
-valid token with analytics    -> 200 aggregate JSON
+valid token with analytics    -> 200 aggregate JSON, or 202 until the query completes
 ```
 
 The canonical development endpoint is
@@ -105,6 +109,7 @@ route settings when adding 5 requests/second, burst 10, detailed metrics for
 the three `GET` routes and the public `OPTIONS /v1/analytics/{proxy+}` route.
 
 Also verify an invalid date returns `400`, an unsupported route returns `404`,
+an opted-in cold query returns resumable `202` responses instead of `504`,
 responses are `private, no-store`, and CloudWatch logs do not contain tokens,
 filters, SQL, or record values.
 

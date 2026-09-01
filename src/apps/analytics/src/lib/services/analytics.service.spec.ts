@@ -6,6 +6,7 @@ import {
     getAnalyticsFilters,
     getCampaignReport,
     getGeneralReport,
+    requestAnalyticsReport,
 } from './analytics.service'
 
 jest.mock('~/config', () => ({
@@ -35,7 +36,7 @@ describe('Analytics API service', () => {
         }))
             .toBe(
                 'https://api.example.com/v1/analytics/campaign'
-                + '?from=2026-08-01&to=2026-08-30&campaign=launch+2026',
+                + '?from=2026-08-01&to=2026-08-30&campaign=launch+2026&async=true',
             )
     })
 
@@ -55,19 +56,63 @@ describe('Analytics API service', () => {
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 1,
-                'https://api.example.com/v1/analytics/filters',
+                'https://api.example.com/v1/analytics/filters?async=true',
             )
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 2,
                 'https://api.example.com/v1/analytics/campaign'
-                + '?from=2026-08-01&to=2026-08-30&campaign=launch',
+                + '?from=2026-08-01&to=2026-08-30&campaign=launch&async=true',
             )
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
                 3,
                 'https://api.example.com/v1/analytics/general'
-                + '?from=2026-08-01&to=2026-08-30&surface=platform_ui',
+                + '?from=2026-08-01&to=2026-08-30&surface=platform_ui&async=true',
             )
+    })
+
+    it('polls a pending warehouse query with its server-issued token', async () => {
+        const queryToken = 'a'.repeat(64)
+        const report = { campaigns: [], generatedAt: '2026-09-01T00:00:00Z' }
+        const wait = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedXhrGetAsync
+            .mockResolvedValueOnce({
+                queryToken,
+                retryAfterMs: 1_000,
+                status: 'pending',
+            })
+            .mockResolvedValueOnce(report)
+
+        await expect(requestAnalyticsReport('filters', {}, wait))
+            .resolves.toEqual(report)
+        expect(wait)
+            .toHaveBeenCalledWith(1_000)
+        expect(mockedXhrGetAsync)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://api.example.com/v1/analytics/filters'
+                + `?async=true&queryToken=${queryToken}`,
+            )
+    })
+
+    it('bounds polling and exposes a timeout-shaped error', async () => {
+        const wait = jest.fn()
+            .mockResolvedValue(undefined)
+        mockedXhrGetAsync.mockResolvedValue({
+            queryToken: 'b'.repeat(64),
+            retryAfterMs: 10_000,
+            status: 'pending',
+        })
+
+        await expect(requestAnalyticsReport('filters', {}, wait))
+            .rejects.toMatchObject({ response: { status: 504 } })
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledTimes(12)
+        expect(wait)
+            .toHaveBeenCalledTimes(11)
+        expect(wait)
+            .toHaveBeenLastCalledWith(5_000)
     })
 })

@@ -25,7 +25,9 @@ MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
 FILTER_CACHE_SECONDS = 300
 QUERY_TOKEN_WINDOW_SECONDS = 1_800
+QUERY_POLL_DELAY_MILLISECONDS = 1_000
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
+QUERY_TOKEN_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 NO_FILTER_PARAMETER = "*"
 
 _redshift_data = boto3.client("redshift-data")
@@ -371,7 +373,7 @@ class QueryFailure(RuntimeError):
 
 
 class QueryTimeout(RuntimeError):
-    """Raised when a reusable reporting query cannot finish inside the HTTP deadline."""
+    """Raised with a reusable query token when work outlives one HTTP deadline."""
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -389,6 +391,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
 
     request_id = _request_id(event, context)
+    asynchronous = False
     try:
         route_key = str(event.get("routeKey", ""))
         if route_key.startswith("OPTIONS "):
@@ -398,16 +401,26 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             return _response(403, {"message": "Analytics access is not permitted", "requestId": request_id})
 
         query = event.get("queryStringParameters") or {}
+        asynchronous = _asynchronous_query_requested(query)
+        query_token = _resume_query_token(query, asynchronous)
 
         if route_key == "GET /v1/analytics/filters":
-            return _response(200, _cached_report("filters", FILTER_CACHE_SECONDS, _filters_report, context))
+            return _response(
+                200,
+                _cached_report(
+                    "filters",
+                    FILTER_CACHE_SECONDS,
+                    lambda: _filters_report(context, query_token),
+                    context,
+                ),
+            )
         if route_key == "GET /v1/analytics/campaign":
             filters = _campaign_filters(query)
             cache_key = f"campaign:{json.dumps(filters, sort_keys=True)}"
             report = _cached_report(
                 cache_key,
                 REPORT_CACHE_SECONDS,
-                lambda: _campaign_report(filters, context),
+                lambda: _campaign_report(filters, context, query_token),
                 context,
             )
             return _response(200, report)
@@ -417,7 +430,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             report = _cached_report(
                 cache_key,
                 REPORT_CACHE_SECONDS,
-                lambda: _general_report(filters, context),
+                lambda: _general_report(filters, context, query_token),
                 context,
             )
             return _response(200, report)
@@ -425,7 +438,18 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         return _response(404, {"message": "Analytics route not found", "requestId": request_id})
     except ValueError as error:
         return _response(400, {"message": str(error), "requestId": request_id})
-    except QueryTimeout:
+    except QueryTimeout as error:
+        if asynchronous:
+            return _response(
+                202,
+                {
+                    "status": "pending",
+                    "queryToken": str(error),
+                    "retryAfterMs": QUERY_POLL_DELAY_MILLISECONDS,
+                    "requestId": request_id,
+                },
+                {"Retry-After": str(QUERY_POLL_DELAY_MILLISECONDS // 1_000)},
+            )
         return _response(504, {"message": "Analytics data is still being prepared. Please retry.", "requestId": request_id})
     except QueryFailure:
         _log_error(request_id, "redshift-query-failed")
@@ -468,8 +492,12 @@ def _cached_report(
     return result
 
 
-def _filters_report() -> dict[str, Any]:
+def _filters_report(context: Any, query_token: str | None = None) -> dict[str, Any]:
     """Load bounded campaign and surface filter options.
+
+    Args:
+        context: Lambda context used to respect the remaining deadline.
+        query_token: Optional server-issued token that resumes a pending statement.
 
     Returns:
         Filter option arrays and available event-date bounds.
@@ -478,7 +506,7 @@ def _filters_report() -> dict[str, Any]:
         QueryFailure or QueryTimeout when Redshift cannot return data.
     """
 
-    rows = _execute_query(FILTERS_SQL, [], None)
+    rows = _execute_query(FILTERS_SQL, [], context, query_token)
     options: dict[str, list[str]] = {
         "campaigns": [],
         "campaignIds": [],
@@ -515,12 +543,17 @@ def _filters_report() -> dict[str, Any]:
     }
 
 
-def _campaign_report(filters: dict[str, str], context: Any) -> dict[str, Any]:
+def _campaign_report(
+    filters: dict[str, str],
+    context: Any,
+    query_token: str | None = None,
+) -> dict[str, Any]:
     """Load and shape the ordered campaign funnel report.
 
     Args:
         filters: Validated date and UTM filter values.
         context: Lambda context used to respect the remaining deadline.
+        query_token: Optional server-issued token that resumes a pending statement.
 
     Returns:
         Funnel totals, daily series, campaign/landing breakdowns, and click locations.
@@ -529,7 +562,7 @@ def _campaign_report(filters: dict[str, str], context: Any) -> dict[str, Any]:
         QueryFailure or QueryTimeout when Redshift cannot return data.
     """
 
-    rows = _execute_query(CAMPAIGN_SQL, _sql_parameters(filters), context)
+    rows = _execute_query(CAMPAIGN_SQL, _sql_parameters(filters), context, query_token)
     summary = next((row for row in rows if row.get("row_type") == "summary"), {})
     totals = {
         "landingUsers": _integer(summary.get("metric_1")),
@@ -589,12 +622,17 @@ def _campaign_report(filters: dict[str, str], context: Any) -> dict[str, Any]:
     }
 
 
-def _general_report(filters: dict[str, str], context: Any) -> dict[str, Any]:
+def _general_report(
+    filters: dict[str, str],
+    context: Any,
+    query_token: str | None = None,
+) -> dict[str, Any]:
     """Load and shape general Topcoder site engagement analytics.
 
     Args:
         filters: Validated date and optional surface filter values.
         context: Lambda context used to respect the remaining deadline.
+        query_token: Optional server-issued token that resumes a pending statement.
 
     Returns:
         General totals, daily series, pages, traffic sources, and surfaces.
@@ -603,7 +641,7 @@ def _general_report(filters: dict[str, str], context: Any) -> dict[str, Any]:
         QueryFailure or QueryTimeout when Redshift cannot return data.
     """
 
-    rows = _execute_query(GENERAL_SQL, _sql_parameters(filters), context)
+    rows = _execute_query(GENERAL_SQL, _sql_parameters(filters), context, query_token)
     summary = next((row for row in rows if row.get("row_type") == "summary"), {})
     return {
         "generatedAt": _now_iso(),
@@ -724,6 +762,51 @@ def _general_filters(query: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def _asynchronous_query_requested(query: dict[str, Any]) -> bool:
+    """Validate and resolve the opt-in asynchronous warehouse protocol.
+
+    Args:
+        query: Untrusted API Gateway query string values.
+
+    Returns:
+        True only when the caller explicitly requests ``async=true``.
+
+    Raises:
+        ValueError when an unsupported async value is supplied.
+    """
+
+    value = query.get("async")
+    if value in (None, ""):
+        return False
+    if value != "true":
+        raise ValueError("The async query option must be true")
+    return True
+
+
+def _resume_query_token(query: dict[str, Any], asynchronous: bool) -> str | None:
+    """Validate an opaque server-issued token used to resume one statement.
+
+    Args:
+        query: Untrusted API Gateway query string values.
+        asynchronous: Whether the caller opted into asynchronous polling.
+
+    Returns:
+        A normalized SHA-256 token, or null when starting a new query.
+
+    Raises:
+        ValueError when a token is malformed or supplied without async polling.
+    """
+
+    value = query.get("queryToken")
+    if value in (None, ""):
+        return None
+    if not asynchronous:
+        raise ValueError("A query token requires async=true")
+    if not isinstance(value, str) or not QUERY_TOKEN_PATTERN.fullmatch(value):
+        raise ValueError("The query token is invalid")
+    return value
+
+
 def _date_filters(query: dict[str, Any]) -> dict[str, str]:
     """Parse an inclusive UTC date range with a safe 30-day default.
 
@@ -826,6 +909,7 @@ def _execute_query(
     sql: str,
     parameters: list[dict[str, str]],
     context: Any,
+    query_token: str | None = None,
 ) -> list[dict[str, Any]]:
     """Execute a fixed parameterized query with resumable timeout handling.
 
@@ -833,14 +917,16 @@ def _execute_query(
         sql: Server-owned SQL template.
         parameters: Validated Data API named parameters.
         context: Lambda context or null for the cached filter loader.
+        query_token: Optional server-issued token that resumes a pending statement.
 
     Returns:
         Query rows keyed by Redshift column name.
 
     Raises:
         QueryFailure after repeated provider failure or excess output and
-        QueryTimeout when the shared deadline expires. A timed-out statement
-        remains active so a client retry can resume polling it by idempotency token.
+        QueryTimeout containing the reusable token when the shared deadline
+        expires. ValueError when a token does not match this query and its
+        validated parameters.
     """
 
     request: dict[str, Any] = {
@@ -853,8 +939,14 @@ def _execute_query(
     if parameters:
         request["Parameters"] = parameters
     deadline = time.monotonic() + _query_wait_seconds(context)
-    for attempt in range(MAX_QUERY_ATTEMPTS):
-        request["ClientToken"] = _query_client_token(sql, parameters, attempt)
+    initial_attempt = _query_token_attempt(sql, parameters, query_token) if query_token else 0
+    for attempt in range(initial_attempt, MAX_QUERY_ATTEMPTS):
+        client_token = query_token if query_token and attempt == initial_attempt else _query_client_token(
+            sql,
+            parameters,
+            attempt,
+        )
+        request["ClientToken"] = client_token
         statement_id = _redshift_data.execute_statement(**request)["Id"]
         delay = 0.2
         while time.monotonic() < deadline:
@@ -868,7 +960,7 @@ def _execute_query(
             time.sleep(delay)
             delay = min(delay * 1.5, 1.0)
         else:
-            raise QueryTimeout("Redshift reporting query timed out")
+            raise QueryTimeout(client_token)
 
     raise QueryFailure("Redshift reporting query failed")
 
@@ -877,6 +969,7 @@ def _query_client_token(
     sql: str,
     parameters: list[dict[str, str]],
     attempt: int,
+    token_window: int | None = None,
 ) -> str:
     """Build a bounded idempotency key for one fixed reporting query.
 
@@ -884,6 +977,7 @@ def _query_client_token(
         sql: Server-owned SQL template.
         parameters: Validated named parameters.
         attempt: Provider retry index; failed statements receive a new token.
+        token_window: Optional explicit thirty-minute bucket used to validate a resume token.
 
     Returns:
         Sixty-four-character SHA-256 token stable within a thirty-minute window.
@@ -892,16 +986,44 @@ def _query_client_token(
         Does not raise for validated handler inputs and configured environment values.
     """
 
-    token_window = int(time.time() // QUERY_TOKEN_WINDOW_SECONDS)
+    effective_window = token_window if token_window is not None else int(time.time() // QUERY_TOKEN_WINDOW_SECONDS)
     fingerprint = json.dumps({
         "attempt": attempt,
         "database": os.environ["REDSHIFT_DATABASE"],
         "parameters": parameters,
         "sql": sql,
-        "tokenWindow": token_window,
+        "tokenWindow": effective_window,
         "workgroup": os.environ["REDSHIFT_WORKGROUP"],
     }, separators=(",", ":"), sort_keys=True)
     return hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()
+
+
+def _query_token_attempt(
+    sql: str,
+    parameters: list[dict[str, str]],
+    query_token: str,
+) -> int:
+    """Verify a resume token belongs to this exact server-owned query.
+
+    Args:
+        sql: Server-owned SQL template.
+        parameters: Validated Data API named parameters.
+        query_token: SHA-256 token returned by a pending response.
+
+    Returns:
+        Provider attempt encoded into the valid current or prior-window token.
+
+    Raises:
+        ValueError when the token belongs to another query, filter set, or expired window.
+    """
+
+    current_window = int(time.time() // QUERY_TOKEN_WINDOW_SECONDS)
+    for token_window in (current_window, current_window - 1):
+        for attempt in range(MAX_QUERY_ATTEMPTS):
+            expected = _query_client_token(sql, parameters, attempt, token_window)
+            if query_token == expected:
+                return attempt
+    raise ValueError("The query token is invalid or expired")
 
 
 def _query_wait_seconds(context: Any) -> float:
@@ -1057,12 +1179,17 @@ def _preflight_response() -> dict[str, Any]:
     }
 
 
-def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
+def _response(
+    status_code: int,
+    body: dict[str, Any],
+    additional_headers: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Build a private JSON API Gateway proxy response.
 
     Args:
         status_code: HTTP response status.
         body: JSON-serializable response document.
+        additional_headers: Optional service-owned headers merged into the secure defaults.
 
     Returns:
         HTTP API v2 Lambda proxy response.
@@ -1071,16 +1198,19 @@ def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
         Does not raise for the service-owned response shapes.
     """
 
+    headers = {
+        "Cache-Control": "private, no-store",
+        "Content-Type": "application/json; charset=utf-8",
+        "Referrer-Policy": "no-referrer",
+        "Vary": "Authorization, Origin",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+    }
+    if additional_headers:
+        headers.update(additional_headers)
     return {
         "statusCode": status_code,
-        "headers": {
-            "Cache-Control": "private, no-store",
-            "Content-Type": "application/json; charset=utf-8",
-            "Referrer-Policy": "no-referrer",
-            "Vary": "Authorization, Origin",
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "DENY",
-        },
+        "headers": headers,
         "body": json.dumps(body, separators=(",", ":")),
     }
 
