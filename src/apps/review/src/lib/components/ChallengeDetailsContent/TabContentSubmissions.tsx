@@ -45,6 +45,7 @@ import {
 import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 import {
@@ -437,6 +438,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 >
                                     <IconOutline.DocumentDuplicateIcon />
                                 </button>
+                                <SubmissionDuplicatesBadge submissionId={submission.id} />
                                 {canShowTopgearReprocess && (
                                     <button
                                         type='button'

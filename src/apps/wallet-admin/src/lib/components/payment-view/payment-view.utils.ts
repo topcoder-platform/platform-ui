@@ -322,6 +322,20 @@ export function formatAuditTimestamp(value: string): string {
     return `${parts.dateLine} ${parts.timeLine}`
 }
 
+const ISO_DATE_TIME_PATTERN
+    = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/
+
+/** Formats ISO datetimes in audit action from/to values using the user's timezone. */
+export function formatAuditActionValue(value: string): string {
+    const trimmed = value.trim()
+
+    if (!ISO_DATE_TIME_PATTERN.test(trimmed)) {
+        return trimmed
+    }
+
+    return formatAuditTimestamp(trimmed)
+}
+
 export function getEngagementHoursPerDay(
     engagementDetails?: PaymentEngagementDetails,
 ): number | undefined {

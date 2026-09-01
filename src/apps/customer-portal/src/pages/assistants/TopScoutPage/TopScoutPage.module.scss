@@ -1,0 +1,83 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
+
+.page {
+    color: $tc-2026-body;
+    display: flex;
+    flex-direction: column;
+    font-family: $tc-2026-font-body;
+    padding: 8px 0 0;
+
+    h1 {
+        color: $tc-2026-ink;
+        font-family: $tc-2026-font-heading;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 38px;
+        margin-top: 20px;
+        text-transform: none;
+    }
+}
+
+.subtitle {
+    color: $tc-2026-muted;
+    font-size: 18px;
+    line-height: 25px;
+    margin: 4px 0 0;
+}
+
+.status {
+    color: $tc-2026-muted;
+    font-size: 14px;
+    padding: 16px 0;
+}
+
+.layout {
+    display: flex;
+    gap: 16px;
+    height: 70vh;
+    margin-top: 20px;
+    margin-bottom: 28px;
+    min-height: 480px;
+    width: 100%;
+
+    @include ltesm {
+        flex-direction: column;
+        height: auto;
+    }
+}
+
+.sidebar {
+    flex: 0 0 133px;
+    max-width: 133px;
+
+    @include ltesm {
+        flex: 0 0 auto;
+        max-height: 160px;
+        max-width: 100%;
+    }
+}
+
+.chatPanel {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    width: 100%;
+}
+
+.loadingOverlay {
+    align-items: center;
+    background-color: rgba($tc-2026-surface, .75);
+    border-radius: $tc-2026-radius-lg;
+    bottom: 0;
+    color: $tc-2026-muted;
+    display: flex;
+    font-size: 14px;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}

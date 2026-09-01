@@ -98,6 +98,9 @@ import {
     getProjectBillingAccountChallengeIssue,
 } from '../../../../lib/utils/project-billing-account.utils'
 import {
+    hasChallengeSubmissions,
+} from '../../../../lib/utils/submission-limit.utils'
+import {
     resolveMatchingChallengeViewPath,
 } from '../ChallengeEditorPage.utils'
 
@@ -158,6 +161,9 @@ import {
 import {
     FunChallengeField,
 } from './FunChallengeField'
+import {
+    GiteaTeamsField,
+} from './GiteaTeamsField'
 import {
     GroupsField,
 } from './GroupsField'
@@ -2088,6 +2094,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     const validationContextRef = useRef<ChallengeEditorValidationContext>({
         isDesignChallenge: false,
+        isSubmissionLimitConfigurable: false,
     })
     const formMethods = useForm<ChallengeEditorFormData>({
         context: validationContextRef.current,
@@ -2427,6 +2434,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         shouldUseSimplifiedDesignReview,
         trigger,
     ])
+
+    /*
+     * The submission limit is only editable inside Design submission settings, and it is locked
+     * once members have uploaded submissions. Publishing that state to the validation context keeps
+     * the required-count rule from blocking saves on challenges where the copilot cannot change it.
+     */
+    const isSubmissionLimitConfigurable = showSubmissionSettingsSection
+        && !hasChallengeSubmissions({
+            numOfCheckpointSubmissions: values.numOfCheckpointSubmissions,
+            numOfSubmissions: values.numOfSubmissions,
+        })
+
+    useEffect(() => {
+        validationContextRef.current.isSubmissionLimitConfigurable = isSubmissionLimitConfigurable
+    }, [isSubmissionLimitConfigurable])
+
     /**
      * Validates the copilot required for hidden private Design reviewer assignments.
      *
@@ -4574,6 +4597,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             ? <ShowDashboardField disabled={isReadOnly} />
                                             : undefined}
                                         <TestChallengeField disabled={isReadOnly} />
+                                    </div>
+                                </section>
+
+                                <section className={styles.section}>
+                                    <h3 className={styles.sectionTitle}>Git</h3>
+                                    <div className={styles.grid}>
+                                        <GiteaTeamsField disabled={isReadOnly} />
                                     </div>
                                 </section>
 

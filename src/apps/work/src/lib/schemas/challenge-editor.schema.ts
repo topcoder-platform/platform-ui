@@ -13,12 +13,17 @@ import {
 } from '../constants/challenge-editor.constants'
 import {
     ChallengeEditorFormData,
+    ChallengeMetadata,
     ChallengeReviewer,
 } from '../models'
 import {
     isSkillsRequired,
 } from '../utils/challenge-editor.utils'
 import { isReviewerAssignmentOptional } from '../utils/reviewer.utils'
+import {
+    isSubmissionLimitCountMissing,
+    SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+} from '../utils/submission-limit.utils'
 
 /**
  * Validation context supplied to the challenge editor schema by the challenge editor form.
@@ -30,6 +35,10 @@ export interface ChallengeEditorValidationContext {
     /** Whether the edited challenge is a Design `Challenge`, whose private reviewers are
      * automatically assigned to the selected copilot during save. */
     isDesignChallenge?: boolean
+    /** Whether the submission-limit control is currently editable. The limit is only rendered for
+     * Design submission settings and is locked once members have uploaded submissions, so the
+     * required-count rule is skipped when the copilot cannot correct the value. */
+    isSubmissionLimitConfigurable?: boolean
 }
 
 function isSchedulingApiEnabled(value: unknown): boolean {
@@ -288,6 +297,34 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
         funChallenge: yup.boolean()
             .default(false)
             .optional(),
+        giteaTeams: yup.array()
+            .of(yup.object({
+                id: yup.number()
+                    .integer()
+                    .positive()
+                    .required('Gitea team id is required'),
+                name: yup.string()
+                    .trim()
+                    .required('Gitea team name is required'),
+                organization: yup.string()
+                    .trim()
+                    .default(''),
+            }))
+            .test(
+                'unique-gitea-teams',
+                'Gitea teams must be unique',
+                (value: unknown): boolean => {
+                    if (!Array.isArray(value)) {
+                        return true
+                    }
+
+                    const teamIds = value.map(team => (team as { id?: unknown })?.id)
+
+                    return new Set(teamIds).size === teamIds.length
+                },
+            )
+            .default([])
+            .optional(),
         id: yup.string()
             .optional(),
         isTestChallenge: yup.boolean()
@@ -421,7 +458,32 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     metadata: yup.array()
         .of(metadataSchema)
-        .optional(),
+        .optional()
+        .test(
+            'submission-limit-count-required',
+            SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+            function validateSubmissionLimitCount(value: unknown): boolean | yup.ValidationError {
+                const isSubmissionLimitConfigurable = (
+                    this.options.context as ChallengeEditorValidationContext | undefined
+                )?.isSubmissionLimitConfigurable === true
+
+                if (
+                    !isSubmissionLimitConfigurable
+                    || !isSubmissionLimitCountMissing(value as ChallengeMetadata[] | undefined)
+                ) {
+                    return true
+                }
+
+                /*
+                 * The limit is edited through display-only form fields, so the error is reported on
+                 * the visible count input instead of the metadata array that stores the value.
+                 */
+                return this.createError({
+                    message: SUBMISSION_LIMIT_COUNT_REQUIRED_MESSAGE,
+                    path: 'submissionLimitCount',
+                })
+            },
+        ),
     reviewer: yup.string()
         .transform(emptyStringToUndefined)
         .optional(),

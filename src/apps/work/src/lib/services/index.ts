@@ -6,6 +6,7 @@ export * from './applications.service'
 export * from './billing-accounts.service'
 export * from './challenges.service'
 export * from './engagements.service'
+export * from './gitea-teams.service'
 export {
     addGroupMember,
     bulkCreateGroup,
@@ -37,6 +38,7 @@ export * from './resources.service'
 export * from './reviews.service'
 export * from './skills.service'
 export * from './submissions.service'
+export * from './submission-duplicates.service'
 export * from './taas-projects.service'
 export * from './terms.service'
 export * from './timeline-templates.service'

@@ -11,5 +11,8 @@ export const rootRoute: string
 export const talentSearchRouteId = 'talent-search'
 export const showcaseSearchRouteId = 'showcase'
 export const flexiTalentRouteId = 'flexi-talent'
+export const statisticsNavRouteId = 'statistics-nav'
 export const statisticsRouteId = 'statistics'
 export const skillStatisticsRouteId = 'skill-statistics'
+export const assistantsRouteId = 'assistants'
+export const topScoutRouteId = 'topScout'

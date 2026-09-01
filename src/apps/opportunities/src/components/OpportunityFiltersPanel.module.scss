@@ -1,0 +1,273 @@
+.panel {
+    align-self: start;
+    background: #fff;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    width: 100%;
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-weight: 700;
+        text-transform: none;
+    }
+
+    h3 {
+        font-size: 18px;
+        line-height: 30px;
+        margin: 0;
+    }
+
+    legend {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 22px;
+        margin-bottom: 8px;
+        text-transform: none;
+    }
+
+    small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    fieldset {
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.competitions {
+    min-height: 706px;
+}
+
+.heading {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+
+    button {
+        background: none;
+        border: 0;
+        color: #007d79;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 700;
+        height: 24px;
+        line-height: 22px;
+        padding: 0;
+    }
+}
+
+.searchGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+        margin: 0;
+    }
+}
+
+.search {
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    gap: 4px;
+    height: 38px;
+    padding: 0 16px;
+
+    svg {
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
+    }
+
+    input {
+        border: 0;
+        color: #161616;
+        font: inherit;
+        font-size: 16px;
+        line-height: 22px;
+        min-width: 0;
+        outline: none;
+        padding: 7px 0;
+        width: 100%;
+
+        &::placeholder {
+            color: #6f6f6f;
+            opacity: 1;
+        }
+
+        // The container supplies the visible teal focus indicator. This
+        // higher-specificity rule prevents the app-wide blue input outline
+        // from rendering a second focus ring inside it.
+        &:focus-visible {
+            outline: 0;
+        }
+    }
+
+    &:focus-within {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+    }
+}
+
+.selectGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    > strong {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        line-height: 22px;
+    }
+}
+
+.select {
+    position: relative;
+}
+
+.selectControl {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    height: 38px;
+    justify-content: space-between;
+    line-height: 22px;
+    padding: 0 16px;
+    text-align: left;
+    width: 100%;
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+
+    &:focus-visible {
+        border-color: #007d79;
+        box-shadow: 0 0 0 1px #007d79;
+        outline: 0;
+    }
+}
+
+.placeholder {
+    color: #6f6f6f;
+}
+
+.roleMenu {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(22, 22, 22, .3);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 160px;
+    left: 0;
+    padding: 8px 0;
+    position: absolute;
+    top: 42px;
+    width: 234px;
+    z-index: 20;
+}
+
+.roleOption {
+    background: #fff;
+    border: 0;
+    color: #161616;
+    cursor: pointer;
+    flex: 0 0 36px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    padding: 7px 16px;
+    text-align: left;
+}
+
+.activeRoleOption,
+.roleOption:hover,
+.roleOption:focus-visible {
+    background: #f5f7fa;
+    outline: 0;
+}
+
+.checkRow,
+.radioRow {
+    align-items: center;
+    color: #161616;
+    cursor: pointer;
+    display: flex;
+    font-size: 16px;
+    gap: 8px;
+    height: 32px;
+    line-height: 22px;
+
+    input {
+        appearance: none;
+        background: #fff;
+        border: 1px solid #a8a8a8;
+        border-radius: 4px;
+        flex: 0 0 16px;
+        height: 16px;
+        margin: 0;
+        width: 16px;
+
+        &:checked[type='checkbox'] {
+            background: url('../assets/filter-checkbox-checked.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &[type='radio'] {
+            border-radius: 50%;
+        }
+
+        &:checked[type='radio'] {
+            background: url('../assets/filter-radio-selected.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #161616;
+            outline-offset: 2px;
+        }
+    }
+}
+
+.visuallyHidden {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+@media (max-width: 760px) {
+    .panel {
+        min-height: 0;
+        position: static;
+    }
+}

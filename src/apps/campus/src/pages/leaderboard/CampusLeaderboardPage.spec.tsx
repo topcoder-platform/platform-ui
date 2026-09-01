@@ -40,9 +40,34 @@ jest.mock('~/config', () => ({
     },
 }), { virtual: true })
 
+let mockWindowWidth = 1280
+
 jest.mock('~/libs/shared', () => ({
-    ProfilePicture: (): JSX.Element => <span />,
     textFormatDateLocaleShortString: (date?: Date): string | undefined => date?.toISOString(),
+    useWindowSize: () => ({ height: 800, width: mockWindowWidth }),
+}), { virtual: true })
+
+jest.mock('~/apps/admin/src/lib/components/common/TableMobile', () => ({
+    TableMobile: <T, >(props: {
+        columns: ReadonlyArray<StubColumn<T>[]>,
+        data: ReadonlyArray<T>,
+    }): JSX.Element => (
+        <table>
+            <tbody>
+                {props.data.map((row, rowIndex) => props.columns.map((group, groupIndex) => (
+                    <tr key={`${rowIndex}-${groupIndex}`}>
+                        {group.map((column, cellIndex) => (
+                            <td key={cellIndex}>
+                                {column.renderer
+                                    ? column.renderer(row)
+                                    : String((row as Record<string, unknown>)[column.propertyName ?? ''])}
+                            </td>
+                        ))}
+                    </tr>
+                )))}
+            </tbody>
+        </table>
+    ),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
@@ -116,6 +141,7 @@ const participation = (overrides: Partial<CampusParticipation> = {}): CampusPart
     placement: 1,
     registered: true,
     registeredAt: '2026-01-05T00:00:00.000Z',
+    reviewed: true,
     score: 95,
     submitted: true,
     submittedDate: '2026-01-20T00:00:00.000Z',
@@ -175,6 +201,7 @@ function renderPage(): void {
 
 describe('CampusLeaderboardPage', () => {
     beforeEach(() => {
+        mockWindowWidth = 1280
         mockUseCampusLeaderboard.mockReturnValue({ data: leaderboard(), isLoading: false })
     })
 
@@ -219,6 +246,147 @@ describe('CampusLeaderboardPage', () => {
         expect(screen.getByText('Campus Sprint'))
             .toBeInTheDocument()
         expect(screen.getByLabelText('1st place'))
+            .toBeInTheDocument()
+    })
+
+    it('falls back to the placeholder avatar when a member has no photo', () => {
+        mockUseCampusLeaderboard.mockReturnValue({
+            data: {
+                ...leaderboard(),
+                members: [
+                    member({ handle: 'with_photo', photoURL: 'https://images.example.test/a.png' }),
+                    member({ handle: 'without_photo', photoURL: null, userId: '2' }),
+                ],
+            },
+            isLoading: false,
+        })
+        renderPage()
+
+        const avatars = Array.from(document.querySelectorAll('img'))
+
+        expect(avatars)
+            .toHaveLength(2)
+        expect(avatars[0].getAttribute('src'))
+            .toBe('https://images.example.test/a.png')
+        expect(avatars[1].getAttribute('src'))
+            .toContain('avatar-placeholder')
+    })
+
+    it('swaps in the placeholder avatar when a member photo fails to load', () => {
+        mockUseCampusLeaderboard.mockReturnValue({
+            data: {
+                ...leaderboard(),
+                members: [member({ photoURL: 'https://images.example.test/broken.png' })],
+            },
+            isLoading: false,
+        })
+        renderPage()
+
+        const avatar = document.querySelector('img') as HTMLImageElement
+
+        expect(avatar.getAttribute('src'))
+            .toBe('https://images.example.test/broken.png')
+
+        fireEvent.error(avatar)
+
+        expect(avatar.getAttribute('src'))
+            .toContain('avatar-placeholder')
+    })
+
+    it('keeps a still running review out of the failed review state', () => {
+        mockUseCampusLeaderboard.mockReturnValue({
+            data: {
+                ...leaderboard(),
+                members: [member({
+                    challenges: [participation({
+                        passedReview: false,
+                        placement: null,
+                        reviewed: false,
+                        won: false,
+                    })],
+                })],
+            },
+            isLoading: false,
+        })
+        renderPage()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: /View participation history for testaws1/i,
+        }))
+
+        expect(screen.getByText('In Review'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Failed Review'))
+            .not.toBeInTheDocument()
+    })
+
+    it('orders the participation history by submission date, then registration date', () => {
+        mockUseCampusLeaderboard.mockReturnValue({
+            data: {
+                ...leaderboard(),
+                members: [member({
+                    challenges: [
+                        participation({
+                            challengeId: 'c1',
+                            challengeName: 'Submitted first',
+                            submittedDate: '2026-01-10T00:00:00.000Z',
+                        }),
+                        participation({
+                            challengeId: 'c2',
+                            challengeName: 'Registered first, never submitted',
+                            registeredAt: '2026-01-05T00:00:00.000Z',
+                            submittedDate: null,
+                        }),
+                        participation({
+                            challengeId: 'c3',
+                            challengeName: 'Submitted last',
+                            submittedDate: '2026-02-20T00:00:00.000Z',
+                        }),
+                        participation({
+                            challengeId: 'c4',
+                            challengeName: 'Registered last, never submitted',
+                            registeredAt: '2026-01-20T00:00:00.000Z',
+                            submittedDate: null,
+                        }),
+                    ],
+                })],
+            },
+            isLoading: false,
+        })
+        renderPage()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: /View participation history for testaws1/i,
+        }))
+
+        const isChallengeLink = (link: HTMLElement): boolean => Boolean(
+            link.getAttribute('href')
+                ?.startsWith('https://review.example.test'),
+        )
+        const challengeNames = screen.getAllByRole('link')
+            .filter(isChallengeLink)
+            .map(link => link.textContent)
+
+        expect(challengeNames)
+            .toEqual([
+                'Submitted last',
+                'Submitted first',
+                'Registered last, never submitted',
+                'Registered first, never submitted',
+            ])
+    })
+
+    it('stacks the participation history into labelled rows on small screens', () => {
+        mockWindowWidth = 375
+        renderPage()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: /View participation history for testaws1/i,
+        }))
+
+        expect(screen.getByText('Registration Date:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Campus Sprint'))
             .toBeInTheDocument()
     })
 

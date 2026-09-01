@@ -9,12 +9,21 @@
     gap: $sp-2;
     min-width: 0;
     padding: $sp-4 $sp-6;
+
+    @include ltemd {
+        padding: $sp-3;
+    }
 }
 
 .icon {
     flex: 0 0 auto;
     height: 50px;
     width: 50px;
+
+    @include ltemd {
+        height: 40px;
+        width: 40px;
+    }
 }
 
 .stat {

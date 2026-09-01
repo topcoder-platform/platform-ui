@@ -202,9 +202,6 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             <PageTitle>
                 Copilot Opportunity
             </PageTitle>
-            {isValidating && !showNotFound && (
-                <LoadingSpinner />
-            ) }
             <div className={styles.wrapper}>
                 <h1 className={styles.header}>
                     {opportunity?.opportunityTitle ?? opportunity?.projectName}

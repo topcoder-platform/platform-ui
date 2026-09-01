@@ -1,12 +1,25 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 
 import { SubmissionsTable } from './SubmissionsTable'
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        URLS: {
+            CHALLENGES_PAGE: 'https://example.com/challenges',
+        },
+    },
+}), {
+    virtual: true,
+})
 jest.mock('~/libs/ui', () => ({
     IconOutline: {
         BanIcon: (): JSX.Element => <svg data-testid='ban-icon' />,
+        ChevronDownIcon: (): JSX.Element => <svg data-testid='chevron-down-icon' />,
         ClockIcon: (): JSX.Element => <svg data-testid='clock-icon' />,
+        ExclamationIcon: (): JSX.Element => <svg data-testid='exclamation-icon' />,
+        ExternalLinkIcon: (): JSX.Element => <svg data-testid='external-link-icon' />,
+        LightningBoltIcon: (): JSX.Element => <svg data-testid='lightning-bolt-icon' />,
         XCircleIcon: (): JSX.Element => <svg data-testid='x-circle-icon' />,
     },
     IconSolid: {
@@ -604,5 +617,132 @@ describe('SubmissionsTable', () => {
             .toBeTruthy()
         expect(screen.getByRole('img', { name: 'Test status: FAILED' }))
             .toBeTruthy()
+    })
+    describe('duplicate submissions', () => {
+        const submissions = [
+            {
+                challengeId: 'challenge-123',
+                createdBy: 'member-1',
+                id: 'submission-1',
+                review: [
+                    {
+                        finalScore: 95,
+                        initialScore: 90,
+                    },
+                ],
+                type: 'SUBMISSION',
+            },
+        ]
+
+        function renderWithDuplicates(
+            duplicatesBySubmissionId?: Record<string, Array<Record<string, unknown>>>,
+        ): void {
+            render(
+                <SubmissionsTable
+                    canDownloadSubmissions
+                    challengeId='challenge-123'
+                    duplicatesBySubmissionId={duplicatesBySubmissionId as never}
+                    onDownloadSubmission={jest.fn()}
+                    onOpenArtifacts={jest.fn()}
+                    onSort={jest.fn()}
+                    sortBy='createdAt'
+                    sortOrder='desc'
+                    submissions={submissions as never}
+                />,
+            )
+        }
+
+        it('hides the duplicates row when the submission has no duplicates', () => {
+            renderWithDuplicates({ 'submission-1': [] })
+
+            expect(screen.queryByRole('button', { name: /duplicate/ }))
+                .toBeNull()
+        })
+
+        it('hides the duplicates row when duplicates were never fetched', () => {
+            renderWithDuplicates(undefined)
+
+            expect(screen.queryByRole('button', { name: /duplicate/ }))
+                .toBeNull()
+        })
+
+        it('renders a collapsed duplicates row and expands it on click', () => {
+            renderWithDuplicates({
+                'submission-1': [
+                    {
+                        challenge: 'challenge-123',
+                        isCrossChallenge: false,
+                        submissionId: 'PNM4cbZgII428Iv',
+                        submittedAt: '2026-07-13T07:39:00.000Z',
+                        user: '2001',
+                        userHandle: 'taasintake500',
+                    },
+                    {
+                        challenge: 'challenge-999',
+                        challengeTitle: 'Basketball Stats App',
+                        isCrossChallenge: true,
+                        submissionId: '12I.RbObnTFCVt',
+                        submittedAt: '2026-07-10T14:15:00.000Z',
+                        user: '2002',
+                        userHandle: 'testmfa1',
+                    },
+                ],
+            })
+
+            const toggle = screen.getByRole('button', { name: /2 duplicates/ })
+            expect(toggle.getAttribute('aria-expanded'))
+                .toBe('false')
+            expect(screen.queryByText('taasintake500'))
+                .toBeNull()
+
+            fireEvent.click(toggle)
+
+            expect(toggle.getAttribute('aria-expanded'))
+                .toBe('true')
+            expect(screen.getByText('taasintake500'))
+                .toBeTruthy()
+            expect(screen.getByText('(PNM4cbZgII428Iv)'))
+                .toBeTruthy()
+            expect(
+                screen.getByRole('link', { name: 'Basketball Stats App' })
+                    .getAttribute('href'),
+            )
+                .toBe('https://example.com/challenges/challenge-999')
+        })
+
+        it('singularizes the duplicate count label', () => {
+            renderWithDuplicates({
+                'submission-1': [
+                    {
+                        challenge: 'challenge-123',
+                        isCrossChallenge: false,
+                        submissionId: 'other-submission',
+                    },
+                ],
+            })
+
+            expect(screen.getByRole('button', { name: /1 duplicate$/ }))
+                .toBeTruthy()
+        })
+
+        it('falls back to the member id and a dash when handle or date are missing', () => {
+            renderWithDuplicates({
+                'submission-1': [
+                    {
+                        challenge: 'challenge-123',
+                        isCrossChallenge: false,
+                        submissionId: 'other-submission',
+                        user: '2003',
+                    },
+                ],
+            })
+
+            fireEvent.click(screen.getByRole('button', { name: /1 duplicate/ }))
+
+            expect(screen.getByText('2003'))
+                .toBeTruthy()
+            expect(screen.getByText('- -'))
+                .toBeTruthy()
+        })
     })
 })

@@ -1,0 +1,116 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
+
+.wrap {
+    background-color: $tc-2026-canvas;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-lg;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 100%;
+    overflow: hidden;
+    padding: 6px;
+}
+
+.newThread {
+    align-items: center;
+    background-color: $tc-2026-teal-bright;
+    border: none;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-surface;
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 auto;
+    font-family: $tc-2026-font-body;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 4px;
+    justify-content: center;
+    padding: 6px 8px;
+    transition: background-color .15s ease;
+
+    &:hover {
+        background-color: $tc-2026-teal;
+    }
+}
+
+.newThreadIcon {
+    height: 13px;
+    width: 13px;
+}
+
+.status {
+    color: $tc-2026-muted;
+    font-size: 12px;
+    padding: 6px 4px;
+}
+
+.list {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.threadItem {
+    align-items: center;
+    border-radius: $tc-2026-radius-sm;
+    display: flex;
+    gap: 2px;
+
+    &:hover {
+        background-color: $tc-2026-border;
+    }
+
+    &.active {
+        background-color: rgba($tc-2026-teal, .14);
+    }
+}
+
+.selectButton {
+    background: none;
+    border: none;
+    color: $tc-2026-body;
+    cursor: pointer;
+    flex: 1 1 auto;
+    font-family: $tc-2026-font-body;
+    min-width: 0;
+    padding: 5px 0 5px 5px;
+    text-align: left;
+}
+
+.threadTitle {
+    display: block;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.deleteButton {
+    align-items: center;
+    background: none;
+    border: none;
+    border-radius: $tc-2026-radius-sm;
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    margin-right: 1px;
+    padding: 3px;
+
+    &:hover {
+        background-color: $tc-2026-border;
+    }
+}
+
+.deleteIcon {
+    color: $tc-2026-muted;
+    height: 11px;
+    width: 11px;
+}

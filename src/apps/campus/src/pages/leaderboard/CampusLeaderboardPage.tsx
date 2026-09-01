@@ -16,7 +16,6 @@ import {
     TableColumn,
     Tooltip,
 } from '~/libs/ui'
-import { ProfilePicture } from '~/libs/shared'
 import { EnvironmentConfig } from '~/config'
 
 import {
@@ -32,7 +31,7 @@ import {
     IconStatSubmitted,
     placementIcons,
 } from '../../lib/assets/icons'
-import { StatCard } from '../../lib/components'
+import { MemberAvatar, StatCard } from '../../lib/components'
 
 import { ParticipationHistoryModal } from './ParticipationHistoryModal'
 import { RankingRulesModal } from './RankingRulesModal'
@@ -100,14 +99,7 @@ function renderHandle(member: CampusLeaderboardMember): JSX.Element {
 
     return (
         <div className={styles.handleCell}>
-            <ProfilePicture
-                className={styles.avatar}
-                member={{
-                    firstName: member.firstName ?? '',
-                    lastName: member.lastName ?? '',
-                    photoURL: member.photoURL ?? undefined,
-                }}
-            />
+            <MemberAvatar className={styles.avatar} photoURL={member.photoURL} />
             {profileUrl ? (
                 <a
                     className={styles.handle}
@@ -219,6 +211,7 @@ export const CampusLeaderboardPage: FC = () => {
             type: 'number',
         },
         {
+            className: styles.actionCell,
             columnId: 'open',
             label: '',
             renderer: (member: CampusLeaderboardMember) => (member.hasActivity ? (

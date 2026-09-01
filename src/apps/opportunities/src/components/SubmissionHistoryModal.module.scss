@@ -1,0 +1,128 @@
+.modal {
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: #161616;
+    font-family: 'Nunito Sans', sans-serif;
+    max-width: min(1040px, calc(100vw - 32px));
+    padding: 24px;
+    width: 100%;
+}
+
+.modalBody {
+    padding-top: 24px;
+}
+
+.modalHeading {
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 16px;
+
+    h2 {
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        line-height: 34px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        cursor: pointer;
+        display: flex;
+        padding: 4px;
+    }
+
+    svg {
+        height: 24px;
+        width: 24px;
+    }
+}
+
+.loading,
+.message {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.message {
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    text-align: center;
+
+    p {
+        margin: 0;
+    }
+
+    button {
+        background: #007d79;
+        border: 1px solid #007d79;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        padding: 8px 24px;
+    }
+}
+
+.tableWrap {
+    overflow-x: auto;
+
+    table {
+        border-collapse: collapse;
+        min-width: 760px;
+        width: 100%;
+    }
+
+    th,
+    td {
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 14px;
+        height: 52px;
+        line-height: 20px;
+        padding: 8px 16px;
+        text-align: left;
+    }
+
+    th {
+        border-bottom-color: #a8a8a8;
+        font-weight: 700;
+    }
+
+    td:first-child span {
+        display: block;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+        padding-left: 0;
+    }
+
+    th:last-child,
+    td:last-child {
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 620px) {
+    .modal {
+        padding: 16px;
+    }
+
+    .modalHeading h2 {
+        font-size: 20px;
+        line-height: 28px;
+    }
+}

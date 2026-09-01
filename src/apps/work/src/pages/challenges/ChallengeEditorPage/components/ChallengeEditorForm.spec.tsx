@@ -698,6 +698,16 @@ jest.mock('./FunChallengeField', () => ({
         )
     },
 }))
+jest.mock('./GiteaTeamsField', () => ({
+    GiteaTeamsField: (props: { disabled?: boolean }) => (
+        <div
+            data-disabled={props.disabled === true
+                ? 'true'
+                : 'false'}
+            data-testid='gitea-teams-field'
+        />
+    ),
+}))
 jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
 }))
@@ -1290,6 +1300,27 @@ describe('ChallengeEditorForm', () => {
                 .queryByRole('checkbox', { name: 'Test Challenge' }),
         )
             .toBeNull()
+    })
+
+    it('renders the Gitea teams editor in a Git section after Advanced Options', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const gitSection = screen.getByRole('heading', { name: 'Git' })
+            .closest('section')
+        const sectionTitles = Array.from(document.querySelectorAll('section > h3'))
+            .map(heading => heading.textContent)
+
+        expect(
+            within(gitSection as HTMLElement)
+                .getByTestId('gitea-teams-field'),
+        )
+            .toBeInTheDocument()
+        expect(sectionTitles.indexOf('Git'))
+            .toBe(sectionTitles.indexOf('Advanced Options') + 1)
     })
 
     it('renders the registered-member download setting for existing challenges', () => {

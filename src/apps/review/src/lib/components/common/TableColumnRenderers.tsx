@@ -22,6 +22,7 @@ import type {
 } from '../../models'
 import { isReviewPhaseCurrentlyOpen } from '../../utils'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
+import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 
 import {
     formatScoreDisplay,
@@ -146,6 +147,7 @@ export function renderSubmissionIdCell(
             >
                 <IconOutline.DocumentDuplicateIcon />
             </button>
+            <SubmissionDuplicatesBadge submissionId={submission.id} />
         </span>
     )
 }

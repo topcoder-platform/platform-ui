@@ -5,7 +5,9 @@ import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { BaseModal, Table, TableColumn } from '~/libs/ui'
-import { textFormatDateLocaleShortString } from '~/libs/shared'
+import { textFormatDateLocaleShortString, useWindowSize, WindowSize } from '~/libs/shared'
+import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
+import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { EnvironmentConfig } from '~/config'
 
 import { CampusLeaderboardMember, CampusParticipation } from '../../lib/models'
@@ -39,8 +41,35 @@ function formatDate(value: string | null): string {
 }
 
 /**
+ * Reads an api date as a sortable timestamp. Missing dates sort last.
+ *
+ * @param value iso date string.
+ * @returns timestamp, or -Infinity when there is no usable date.
+ */
+function toTime(value: string | null): number {
+    const time: number = value ? Date.parse(value) : NaN
+
+    return Number.isFinite(time) ? time : -Infinity
+}
+
+/**
+ * Orders two api dates, most recent first.
+ *
+ * @param left first date.
+ * @param right second date.
+ * @returns comparator result.
+ */
+function compareDatesDesc(left: string | null, right: string | null): number {
+    const leftTime: number = toTime(left)
+    const rightTime: number = toTime(right)
+
+    return leftTime === rightTime ? 0 : rightTime - leftTime
+}
+
+/**
  * Renders the outcome of a member's participation: a medal for a top three
- * placement, a pass or fail tag once the submission was reviewed.
+ * placement, a pass or fail tag once the submission was reviewed, and the
+ * pending state while the review is still running.
  *
  * @param entry participation entry.
  * @returns result cell.
@@ -70,6 +99,11 @@ function renderResult(entry: CampusParticipation): JSX.Element {
         )
     }
 
+    // a review that has not finished yet is not a failed review
+    if (entry.submitted && !entry.reviewed) {
+        return <span className={styles.result}>In Review</span>
+    }
+
     if (entry.submitted) {
         return (
             <span className={styles.result}>
@@ -88,6 +122,10 @@ function renderResult(entry: CampusParticipation): JSX.Element {
 
 export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = props => {
     const member: CampusLeaderboardMember | undefined = props.member
+    const { width: screenWidth }: WindowSize = useWindowSize()
+    // five columns need more room than a tablet viewport offers, so anything
+    // narrower falls back to the stacked label/value layout
+    const isStacked: boolean = useMemo(() => screenWidth <= 984, [screenWidth])
 
     const columns = useMemo<ReadonlyArray<TableColumn<CampusParticipation>>>(() => [
         {
@@ -137,6 +175,33 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
         },
     ], [])
 
+    // most recently submitted first, then most recently registered
+    const challenges = useMemo<ReadonlyArray<CampusParticipation>>(
+        () => [...member?.challenges ?? []].sort((left, right) => (
+            compareDatesDesc(left.submittedDate, right.submittedDate)
+                || compareDatesDesc(left.registeredAt, right.registeredAt)
+        )),
+        [member?.challenges],
+    )
+
+    // one "Label: value" row per column, stacked into a block per challenge
+    const stackedColumns = useMemo<MobileTableColumn<CampusParticipation>[][]>(
+        () => columns.map(column => [
+            {
+                ...column,
+                className: '',
+                mobileType: 'label',
+                renderer: () => <div>{`${column.label as string}:`}</div>,
+                type: 'element',
+            },
+            {
+                ...column,
+                mobileType: 'last-value',
+            },
+        ] as MobileTableColumn<CampusParticipation>[]),
+        [columns],
+    )
+
     if (!member) {
         return <></>
     }
@@ -174,13 +239,21 @@ export const ParticipationHistoryModal: FC<ParticipationHistoryModalProps> = pro
                     />
                 </div>
 
-                <Table
-                    className={classNames('campus-table', styles.historyTable)}
-                    columns={columns}
-                    data={member.challenges}
-                    disableSorting
-                    removeDefaultSort
-                />
+                {isStacked ? (
+                    <TableMobile
+                        className={styles.stackedTable}
+                        columns={stackedColumns}
+                        data={challenges}
+                    />
+                ) : (
+                    <Table
+                        className={classNames('campus-table', styles.historyTable)}
+                        columns={columns}
+                        data={challenges}
+                        disableSorting
+                        removeDefaultSort
+                    />
+                )}
             </div>
         </BaseModal>
     )
