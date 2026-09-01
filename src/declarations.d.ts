@@ -1,4 +1,4 @@
-declare module 'tc-auth-lib'
+declare module '@topcoder-platform/tc-auth-lib'
 declare module 'city-timezones'
 
 declare module '*.svg' {
