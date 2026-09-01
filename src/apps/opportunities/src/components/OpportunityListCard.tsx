@@ -535,6 +535,12 @@ export function formatReviewPayment(value?: number): string {
 function reviewView(item: ReviewOpportunity): CardViewModel {
     const track = String(item.challengeData?.track ?? item.challengeData?.trackName ?? 'Review')
     const technologies = item.challengeData?.technologies
+    const challengeSkills = item.challengeData?.skills
+    const skillsSource = Array.isArray(technologies) && technologies.length
+        ? technologies
+        : Array.isArray(challengeSkills)
+            ? challengeSkills
+            : []
     return {
         badge: track,
         href: `/opportunities/review/${item.id}`,
@@ -552,7 +558,11 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
                 value: String(reviewApplicationTotal(item)),
             },
         ],
-        skills: Array.isArray(technologies) ? technologies.map(String) : [],
+        skills: skillsSource.map(skill => {
+            if (typeof skill === 'string') return skill
+            if (skill && typeof skill === 'object' && 'name' in skill) return String(skill.name)
+            return String(skill)
+        }),
         state: reviewApplicationState(
             item,
             item.canApply === true || challengeCatalogKey(item.status) === 'open',
@@ -822,7 +832,12 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     place='bottom'
                     strategy='fixed'
                 >
-                    <h3>{card.title}</h3>
+                    <h3 className={classNames({
+                        [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
+                    })}
+                    >
+                        {card.title}
+                    </h3>
                 </Tooltip>
                 {visibleSkills.length > 0 && (
                     <div className={styles.skills}>

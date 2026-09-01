@@ -650,6 +650,29 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('falls back to review challenge skills when technologies are absent', () => {
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'MyTag' }, 'Test'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Reviewer test',
+            id: 'review-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('MyTag'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Test'))
+            .toBeInTheDocument()
+    })
+
     it('positions review title tooltips outside the card clipping context', () => {
         const item: ReviewOpportunity = {
             challengeId: 'challenge-id',
@@ -665,6 +688,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
             .toHaveAttribute('data-tooltip-strategy', 'fixed')
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).className)
+            .toContain('reviewTitle')
     })
 
     it('shows approved and rejected Review API application decisions', () => {
