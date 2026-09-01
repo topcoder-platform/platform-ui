@@ -72,6 +72,11 @@ interface ChallengePhaseSummary {
     remaining?: string
 }
 
+interface IndexedChallengePhase {
+    index: number
+    item: ChallengePhase
+}
+
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
 function catalogName(value: string | { name?: string } | undefined, fallback: string): string {
     return typeof value === 'string' ? value : value?.name || fallback
@@ -285,15 +290,36 @@ function challengeTimelineItems(
     const startTimestamp = timelineTimestamp(challenge.startDate)
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
-    const phases = (challenge.phases ?? []).map((item, index): ChallengeTimelineItem => ({
-        endDate: item.actualEndDate ?? item.scheduledEndDate,
-        icon: timelinePhaseIcon(item.name),
-        key: item.id ?? `phase-${challengeCatalogKey(item.name)}-${index}`,
-        name: item.name,
-        range: true,
-        startDate: item.actualStartDate ?? item.scheduledStartDate,
-        state: timelineState(item, selected, challenge.currentPhaseNames),
-    }))
+    const phases = (challenge.phases ?? [])
+        .map((item, index) => ({ index, item }))
+        .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            const leftStart = timelineTimestamp(
+                left.item.actualStartDate ?? left.item.scheduledStartDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            const rightStart = timelineTimestamp(
+                right.item.actualStartDate ?? right.item.scheduledStartDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            if (leftStart !== rightStart) return leftStart - rightStart
+
+            const leftEnd = timelineTimestamp(
+                left.item.actualEndDate ?? left.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            const rightEnd = timelineTimestamp(
+                right.item.actualEndDate ?? right.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            if (leftEnd !== rightEnd) return leftEnd - rightEnd
+
+            return left.index - right.index
+        })
+        .map((entry: IndexedChallengePhase): ChallengeTimelineItem => ({
+            endDate: entry.item.actualEndDate ?? entry.item.scheduledEndDate,
+            icon: timelinePhaseIcon(entry.item.name),
+            key: entry.item.id ?? `phase-${challengeCatalogKey(entry.item.name)}-${entry.index}`,
+            name: entry.item.name,
+            range: true,
+            startDate: entry.item.actualStartDate ?? entry.item.scheduledStartDate,
+            state: timelineState(entry.item, selected, challenge.currentPhaseNames),
+        }))
 
     return [{
         icon: timelineLaunchIcon,
@@ -394,6 +420,12 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
     const featuredPrizes = challengePrizes.slice(0, 3)
     const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
+    const featuredPrizeLabels = featuredPrizes.map(prize => formatPrize(prize))
+    const compactFeaturedPrizes = featuredPrizes.some((prize, index) => {
+        const prizeType = prize.type?.trim()
+            .toUpperCase()
+        return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
+    })
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const timelineGridStyle: CSSProperties = {
@@ -416,7 +448,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                 </div>
             </div>
             <div className={styles.masthead}>
-                <div className={styles.rings} aria-hidden='true' />
+                <div className={styles.rings} aria-hidden='true'>
+                    <span className={classNames(styles.ring, styles.ringOuter)} />
+                    <span className={classNames(styles.ring, styles.ringMiddle)} />
+                    <span className={classNames(styles.ring, styles.ringInner)} />
+                </div>
                 <div className={styles.layout}>
                     <div className={styles.copy}>
                         <div className={styles.catalog}>
@@ -457,7 +493,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 onClick={() => setTimelineOpen(value => !value)}
                                 type='button'
                             >
-                                {timelineOpen ? 'Hide full timeline' : 'Show full timeline'}
+                                {timelineOpen ? 'Hide timeline' : 'Show full timeline'}
                                 <img alt='' aria-hidden='true' src={challengeChevronIcon} />
                             </button>
                         </div>
@@ -471,15 +507,21 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                     : challengePrizes.length > 0
                                         ? (
                                             <>
-                                                <div className={styles.featuredPrizes}>
-                                                    {featuredPrizes.map(prize => {
+                                                <div className={classNames(styles.featuredPrizes, {
+                                                    [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                })}
+                                                >
+                                                    {featuredPrizes.map((prize, index) => {
                                                         const medal = medalAssets[prize.placement - 1]
                                                         return (
                                                             <strong
+                                                                className={classNames({
+                                                                    [styles.compactPrize]: compactFeaturedPrizes,
+                                                                })}
                                                                 key={`placement-${prize.placement}`}
                                                             >
                                                                 <img alt={`${prize.placement} place`} src={medal} />
-                                                                {formatPrize(prize)}
+                                                                {featuredPrizeLabels[index]}
                                                             </strong>
                                                         )
                                                     })}
@@ -536,7 +578,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 </>
                             ) : (
                                 <button
-                                    className={styles.primary}
+                                    className={styles.secondary}
                                     data-analytics-id='challenge-register'
                                     data-analytics-placement='challenge-header'
                                     disabled={!registrationOpen || registrationUnavailable || props.busy}

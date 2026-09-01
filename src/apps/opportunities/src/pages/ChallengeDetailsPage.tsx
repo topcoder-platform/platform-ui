@@ -19,7 +19,7 @@ import {
     useProfileContext,
     UserStats,
 } from '~/libs/core'
-import { IconOutline, LoadingSpinner } from '~/libs/ui'
+import { ConfirmModal, IconOutline, LoadingSpinner } from '~/libs/ui'
 
 import {
     ChallengeDescription,
@@ -214,6 +214,7 @@ export const ChallengeDetailsPage: FC = () => {
     const [issueOpen, setIssueOpen] = useState(false)
     const [registrationBusy, setRegistrationBusy] = useState(false)
     const [submissionFlowOpen, setSubmissionFlowOpen] = useState(false)
+    const [unregisterConfirmOpen, setUnregisterConfirmOpen] = useState(false)
     const [visibleTerms, setVisibleTerms] = useState<ChallengeTerm[]>([])
     const challengeResponse: SWRResponse<ChallengeOpportunity, Error> = useSWR(
         challengeId ? `opportunities:challenge:${challengeId}` : undefined,
@@ -377,12 +378,18 @@ export const ChallengeDetailsPage: FC = () => {
         }
     }
 
+    /** Opens the authored unregister confirmation modal. */
+    const startUnregister = (): void => {
+        if (!registration || !profile) return
+        setUnregisterConfirmOpen(true)
+    }
+
     /** Deletes the caller's Submitter resource after explicit confirmation. */
     const unregister = async (): Promise<void> => {
-        // eslint-disable-next-line no-alert
-        if (!registration || !profile || !window.confirm('Unregister from this competition?')) return
+        if (!registration || !profile) return
         setRegistrationBusy(true)
         try {
+            setUnregisterConfirmOpen(false)
             await unregisterFromChallenge(challengeId, profile.handle)
             setActiveTab('requirements')
             setSubmissionFlowOpen(false)
@@ -418,7 +425,7 @@ export const ChallengeDetailsPage: FC = () => {
                 isRegistered={isRegistered}
                 onRegister={startRegistration}
                 onSubmit={startSubmission}
-                onUnregister={unregister}
+                onUnregister={startUnregister}
                 registrationError={!!memberId && !!registrationResponse.error}
                 registrationLoading={!!memberId
                     && registrationResponse.isValidating
@@ -493,6 +500,17 @@ export const ChallengeDetailsPage: FC = () => {
                 open={termsOpen}
                 terms={visibleTerms}
             />
+            <ConfirmModal
+                action='Unregister'
+                isLoading={registrationBusy}
+                isProcessing={registrationBusy}
+                onClose={() => setUnregisterConfirmOpen(false)}
+                onConfirm={unregister}
+                open={unregisterConfirmOpen}
+                title='Unregister from competition?'
+            >
+                <p>Are you sure you want to unregister from this competition?</p>
+            </ConfirmModal>
             <ReportIssueModal
                 challengeId={challenge.id}
                 onClose={() => setIssueOpen(false)}

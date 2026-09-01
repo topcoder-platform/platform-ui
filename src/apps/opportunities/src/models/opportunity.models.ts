@@ -163,6 +163,12 @@ export interface ChallengeResourceRole {
 
 export interface EngagementOpportunity {
     applicationStatus?: string
+    assignments?: Array<{
+        createdAt?: string
+        id?: string
+        status?: string
+        updatedAt?: string
+    }>
     anticipatedStart?: 'IMMEDIATE' | 'FEW_DAYS' | 'FEW_WEEKS' | string
     compensationRange?: string
     countries?: string[]

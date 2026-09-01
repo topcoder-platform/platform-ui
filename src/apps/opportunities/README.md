@@ -98,10 +98,10 @@ subtype icons and member-facing labels.
 
 ## Challenge detail timeline
 
-The expanded challenge timeline follows the Challenge API phase order between
-the synthetic Launch and Winners boundaries. Launch uses the challenge start,
-each authored phase displays its actual (then scheduled fallback) start and end
-on separate rows, and Winners uses the top-level challenge end. Only responses
+The expanded challenge timeline follows chronological phase order between the
+synthetic Launch and Winners boundaries. Launch uses the challenge start, each
+authored phase displays its actual (then scheduled fallback) start and end on
+separate rows, and Winners uses the top-level challenge end. Only responses
 without a valid challenge end fall back to the latest valid phase end.
 
 Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping
@@ -150,7 +150,9 @@ field is present for the caller.
   `requiredSkills` IDs only as a fallback for older API deployments. An empty
   title/description search resolves matching standardized skill IDs and retries
   through the API's `requiredSkills` filter so skill and technology terms stay
-  discoverable without weakening normal project search.
+  discoverable without weakening normal project search. The authored `My
+  engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
+  accepted or assigned private work remains visible to the current member.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
   opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`). During
   rollout, a legacy list that rejects `applied` is filtered locally and its

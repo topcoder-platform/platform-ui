@@ -141,7 +141,7 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 24px;
     max-height: 532px;
     overflow: auto;
     padding: 24px;
@@ -159,13 +159,31 @@
         color: #161616;
         font-family: 'Figtree', sans-serif;
         font-size: 20px;
-        line-height: 32px;
-        margin: 0 0 8px;
+        line-height: 28px;
+        margin: 0 0 4px;
         text-transform: none;
     }
 
-    p {
-        margin: 0 0 24px;
+    > div {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        line-height: 22px;
+    }
+
+    > div > :first-child {
+        margin-top: 0;
+    }
+
+    p,
+    ul,
+    ol {
+        margin: 0 0 16px;
+    }
+
+    ul,
+    ol {
+        padding-left: 24px;
     }
 
     small {

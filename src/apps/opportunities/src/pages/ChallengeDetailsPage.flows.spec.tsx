@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { PropsWithChildren } from 'react'
 import '@testing-library/jest-dom'
 import {
     fireEvent,
@@ -55,6 +56,21 @@ jest.mock('~/libs/core', () => ({
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
+        ConfirmModal: (props: PropsWithChildren<{
+            action?: string
+            onClose?: () => void
+            onConfirm: () => void
+            open: boolean
+            title: string
+        }>): JSX.Element => (
+            props.open ? (
+                <div aria-label={props.title} role='dialog'>
+                    <div>{props.children}</div>
+                    <button onClick={props.onClose} type='button'>Cancel</button>
+                    <button onClick={props.onConfirm} type='button'>{props.action || 'Confirm'}</button>
+                </div>
+            ) : <></>
+        ),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
     }
@@ -459,8 +475,7 @@ describe('ChallengeDetailsPage member flows', () => {
     it('resets the selected member tab when unregistering', async () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
-        jest.spyOn(window, 'confirm')
-            .mockReturnValue(true)
+        const confirmSpy = jest.spyOn(window, 'confirm')
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -468,6 +483,11 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveAttribute('aria-selected', 'true')
 
         fireEvent.click(screen.getByRole('button', { name: 'Unregister' }))
+        const dialog = screen.getByRole('dialog', { name: 'Unregister from competition?' })
+        expect(confirmSpy)
+            .not.toHaveBeenCalled()
+        fireEvent.click(within(dialog)
+            .getByRole('button', { name: 'Unregister' }))
 
         await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
             .toHaveAttribute('aria-selected', 'true'))

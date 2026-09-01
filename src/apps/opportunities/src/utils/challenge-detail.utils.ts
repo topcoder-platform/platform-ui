@@ -55,7 +55,12 @@ export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
     const raw = challengeMetadataValue(challenge.metadata, 'fileTypes')
     try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-        if (!Array.isArray(parsed)) return []
+        if (!Array.isArray(parsed)) {
+            if (typeof parsed === 'string' && parsed.trim()) return [parsed.trim()]
+
+            return []
+        }
+
         const seen = new Set<string>()
         return parsed.reduce<string[]>((result, item) => {
             if (typeof item !== 'string' || !item.trim()) return result
@@ -69,6 +74,7 @@ export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
             return result
         }, [])
     } catch (error) {
+        if (typeof raw === 'string' && raw.trim()) return [raw.trim()]
         return []
     }
 }
@@ -240,7 +246,7 @@ export function challengeForumUrl(
     const origin = vanillaWebOrigin(v2Url)
     if (!origin) return undefined
     const forumId = challenge.legacy?.forumId ?? challenge.forumId
-    if (!forumId) return `${origin}/`
+    if (!forumId) return undefined
     const design = typeof challenge.track === 'string'
         ? challenge.track.toLowerCase() === 'design'
         : challenge.track?.name?.toLowerCase() === 'design'
