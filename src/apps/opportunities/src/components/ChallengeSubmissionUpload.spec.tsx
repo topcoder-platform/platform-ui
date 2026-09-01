@@ -18,6 +18,11 @@ import {
     validateChallengeSubmissionFile,
 } from './ChallengeSubmissionUpload'
 
+const mockRecordAnalyticsEvent = jest.fn()
+
+jest.mock('~/libs/core', () => ({
+    recordAnalyticsEvent: (...args: unknown[]) => mockRecordAnalyticsEvent(...args),
+}), { virtual: true })
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
@@ -157,5 +162,12 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Submit another solution' }))
             .toBeInTheDocument()
+        expect(mockRecordAnalyticsEvent)
+            .toHaveBeenCalledWith('challenge_submitted', {
+                challenge_id: 'challenge-id',
+                challenge_track: 'design',
+                member_id: '123',
+                submission_type: 'CHECKPOINT_SUBMISSION',
+            }, true)
     })
 })

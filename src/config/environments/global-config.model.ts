@@ -12,6 +12,11 @@ export interface LocalServiceOverride {
 export type ChallengeTypeNamesByTrackConfig = Record<string, string[]>
 
 export interface GlobalConfig {
+    ANALYTICS: {
+        API_URL: string
+        APP_ID: string
+        ENDPOINT: string
+    }
     TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string

@@ -1,0 +1,260 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    color: #0d3445;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+}
+
+.pageHeader {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-6;
+    justify-content: space-between;
+
+    h1 {
+        font-size: 32px;
+        line-height: 1.2;
+        margin: 2px 0 $sp-2;
+    }
+
+    p:not(.eyebrow) {
+        color: #5a6f78;
+        margin: 0;
+        max-width: 760px;
+    }
+}
+
+.eyebrow {
+    color: #137d60;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.filters {
+    align-items: end;
+    background: #ffffff;
+    border: 1px solid #dce3e9;
+    border-radius: 10px;
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(4, minmax(145px, 1fr));
+    padding: $sp-5;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    label > span {
+        color: #455b65;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    input,
+    select {
+        background: #ffffff;
+        border: 1px solid #aebbc2;
+        border-radius: 6px;
+        color: #0d3445;
+        font: inherit;
+        height: 42px;
+        min-width: 0;
+        padding: 0 11px;
+
+        &:focus {
+            border-color: #137d60;
+            box-shadow: 0 0 0 2px rgba(19, 125, 96, 0.2);
+            outline: none;
+        }
+    }
+}
+
+.filterHeading {
+    grid-column: 1 / -1;
+
+    h2 {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    span {
+        color: #71838b;
+        font-size: 13px;
+    }
+}
+
+.filterActions {
+    display: flex;
+    gap: $sp-3;
+}
+
+.filterError {
+    color: #b42318;
+    font-size: 13px;
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.freshness {
+    color: #617681;
+    font-size: 13px;
+    text-align: right;
+}
+
+.staleWarning {
+    background: #fff8e1;
+    border: 1px solid #e9b949;
+    border-radius: 6px;
+    color: #704d00;
+    padding: $sp-3 $sp-4;
+}
+
+.metricGrid {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.panel {
+    background: #ffffff;
+    border: 1px solid #dce3e9;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(13, 52, 69, 0.035);
+    min-width: 0;
+    padding: $sp-5;
+}
+
+.panelHeader {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+    margin-bottom: $sp-4;
+
+    h2 {
+        font-size: 20px;
+        margin: 0 0 3px;
+    }
+
+    p {
+        color: #617681;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    > strong {
+        color: #137d60;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+}
+
+.twoColumnGrid {
+    display: grid;
+    gap: $sp-5;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tableScroll {
+    overflow-x: auto;
+    width: 100%;
+
+    table {
+        border-collapse: collapse;
+        font-size: 13px;
+        min-width: 560px;
+        text-align: left;
+        width: 100%;
+    }
+
+    th,
+    td {
+        border-bottom: 1px solid #e4eaee;
+        padding: 12px 14px;
+        vertical-align: top;
+    }
+
+    thead th {
+        background: #f2f6f8;
+        color: #455b65;
+        font-size: 11px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    tbody th {
+        color: #0d3445;
+        font-weight: 700;
+    }
+
+    tbody tr:last-child th,
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+.primaryCell,
+.secondaryCell {
+    display: block;
+}
+
+.secondaryCell {
+    color: #71838b;
+    font-size: 11px;
+    font-weight: 400;
+    margin-top: 3px;
+}
+
+.emptyTable {
+    color: #71838b;
+    padding: $sp-8 !important;
+    text-align: center;
+}
+
+@include ltemd {
+    .pageHeader {
+        align-items: stretch;
+        flex-direction: column;
+
+        h1 {
+            font-size: 27px;
+        }
+    }
+
+    .filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metricGrid,
+    .twoColumnGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@include ltesm {
+    .filters,
+    .metricGrid,
+    .twoColumnGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
+        padding: $sp-4;
+    }
+
+    .panelHeader {
+        flex-direction: column;
+    }
+
+    .freshness {
+        text-align: left;
+    }
+}

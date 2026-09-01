@@ -1,4 +1,5 @@
 export enum UserRole {
+    analytics = 'analytics',
     gamificationAdmin = 'Gamification Admin',
     customer = 'Self-Service Customer',
     member = 'Topcoder User',

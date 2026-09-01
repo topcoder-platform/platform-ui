@@ -1,0 +1,366 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Role-gated read-only Topcoder product analytics API.
+
+Parameters:
+  CodeBucket:
+    Type: String
+    Description: S3 bucket containing the versioned Lambda zip.
+  CodeKey:
+    Type: String
+    Description: S3 key containing the versioned Lambda zip.
+  CertificateArn:
+    Type: String
+    Description: us-east-1 ACM wildcard certificate for the custom API domain.
+  DatabaseName:
+    Type: String
+    Default: topcoder_web_dev
+  DomainName:
+    Type: String
+    Default: analytics-api.topcoder-dev.com
+  HostedZoneId:
+    Type: String
+    Description: Public Route 53 hosted zone ID for topcoder-dev.com.
+  HumanJwtAudience:
+    Type: String
+    Default: BXWXUWnilVUPdN01t2Se29Tw2ZYNGZvH
+  HumanJwtIssuer:
+    Type: String
+    Default: https://auth.topcoder-dev.com/
+  HumanRoleClaim:
+    Type: String
+    Default: https://topcoder-dev.com/roles
+  SharedApiDomainName:
+    Type: String
+    Default: api.topcoder-dev.com
+    Description: Canonical public API hostname backed by the shared HTTP API.
+  SharedApiId:
+    Type: String
+    Default: oid1rrke97
+    Description: Existing environment HTTP API behind the public CloudFront distribution.
+  WorkgroupArn:
+    Type: String
+    Description: Exact Redshift Serverless workgroup ARN allowed by the query role.
+  WorkgroupName:
+    Type: String
+    Default: clickstream-topcoder-web-dev
+
+Resources:
+  AnalyticsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /aws/lambda/topcoder-analytics-api-dev
+      RetentionInDays: 30
+      Tags:
+        - Key: Application
+          Value: topcoder-web-analytics
+        - Key: CostCenter
+          Value: product-analytics
+        - Key: Environment
+          Value: dev
+
+  AnalyticsFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: topcoder-analytics-api-dev-query-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: analytics-read-only-query
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: WriteOwnLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub '${AnalyticsFunctionLogGroup.Arn}:*'
+              - Sid: ExecuteAgainstAnalyticsWorkgroup
+                Effect: Allow
+                Action: redshift-data:ExecuteStatement
+                Resource: !Ref WorkgroupArn
+              - Sid: ReadOwnStatement
+                Effect: Allow
+                Action:
+                  - redshift-data:CancelStatement
+                  - redshift-data:DescribeStatement
+                  - redshift-data:GetStatementResult
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    redshift-data:statement-owner-iam-userid: '${aws:userid}'
+              - Sid: GetExactWorkgroupCredentials
+                Effect: Allow
+                Action: redshift-serverless:GetCredentials
+                Resource: !Ref WorkgroupArn
+              - Sid: ResolveDatabaseRoleTag
+                Effect: Allow
+                Action:
+                  - tag:GetResources
+                  - tag:GetTagKeys
+                Resource: '*'
+      Tags:
+        - Key: Application
+          Value: topcoder-web-analytics
+        - Key: CostCenter
+          Value: product-analytics
+        - Key: Environment
+          Value: dev
+        - Key: RedshiftDbRoles
+          Value: analytics_api_reader
+
+  AnalyticsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: AnalyticsFunctionLogGroup
+    Properties:
+      FunctionName: topcoder-analytics-api-dev
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      Description: Read-only role-gated Topcoder campaign and site analytics.
+      Environment:
+        Variables:
+          HUMAN_ROLE_CLAIM: !Ref HumanRoleClaim
+          REDSHIFT_DATABASE: !Ref DatabaseName
+          REDSHIFT_WORKGROUP: !Ref WorkgroupName
+          REQUIRED_ROLE: analytics
+      Handler: handler.handler
+      MemorySize: 256
+      ReservedConcurrentExecutions: 5
+      Role: !GetAtt AnalyticsFunctionRole.Arn
+      Runtime: python3.12
+      Timeout: 28
+      Tags:
+        - Key: Application
+          Value: topcoder-web-analytics
+        - Key: CostCenter
+          Value: product-analytics
+        - Key: Environment
+          Value: dev
+
+  AnalyticsApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /aws/apigateway/topcoder-analytics-api-dev
+      RetentionInDays: 30
+      Tags:
+        - Key: Application
+          Value: topcoder-web-analytics
+        - Key: CostCenter
+          Value: product-analytics
+        - Key: Environment
+          Value: dev
+
+  AnalyticsHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: topcoder-analytics-api-dev
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowHeaders:
+          - authorization
+          - content-type
+        AllowMethods:
+          - GET
+        AllowOrigins:
+          - https://analytics.topcoder-dev.com
+          - https://platform-ui.topcoder-dev.com
+          - https://local.topcoder-dev.com
+        MaxAge: 300
+      Tags:
+        Application: topcoder-web-analytics
+        CostCenter: product-analytics
+        Environment: dev
+
+  AnalyticsJwtAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      AuthorizerType: JWT
+      IdentitySource:
+        - $request.header.Authorization
+      JwtConfiguration:
+        Audience:
+          - !Ref HumanJwtAudience
+        Issuer: !Ref HumanJwtIssuer
+      Name: topcoder-human-jwt
+
+  AnalyticsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt AnalyticsFunction.Arn
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 29000
+
+  FiltersRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/filters
+      Target: !Sub 'integrations/${AnalyticsIntegration}'
+
+  CampaignRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/campaign
+      Target: !Sub 'integrations/${AnalyticsIntegration}'
+
+  GeneralRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/general
+      Target: !Sub 'integrations/${AnalyticsIntegration}'
+
+  DefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    DependsOn: AnalyticsApiAccessLogGroup
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      StageName: $default
+      AutoDeploy: true
+      AccessLogSettings:
+        DestinationArn: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigateway/topcoder-analytics-api-dev'
+        Format: >-
+          {"requestId":"$context.requestId","routeKey":"$context.routeKey","status":"$context.status","responseLength":"$context.responseLength","integrationError":"$context.integrationErrorMessage"}
+      DefaultRouteSettings:
+        DetailedMetricsEnabled: true
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 5
+      Tags:
+        Application: topcoder-web-analytics
+        CostCenter: product-analytics
+        Environment: dev
+
+  AnalyticsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${AnalyticsHttpApi}/*/GET/v1/analytics/*'
+
+  SharedAnalyticsJwtAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizerType: JWT
+      IdentitySource:
+        - $request.header.Authorization
+      JwtConfiguration:
+        Audience:
+          - !Ref HumanJwtAudience
+        Issuer: !Ref HumanJwtIssuer
+      Name: topcoder-human-jwt-analytics
+
+  SharedAnalyticsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref SharedApiId
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt AnalyticsFunction.Arn
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 29000
+
+  SharedFiltersRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/filters
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedCampaignRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/campaign
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedGeneralRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/general
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedPreflightRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: NONE
+      RouteKey: OPTIONS /v1/analytics/{proxy+}
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedAnalyticsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${SharedApiId}/*/*/v1/analytics/*'
+
+  AnalyticsApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Ref DomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CertificateArn
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+      Tags:
+        Application: topcoder-web-analytics
+        CostCenter: product-analytics
+        Environment: dev
+
+  AnalyticsApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    DependsOn: DefaultStage
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      DomainName: !Ref AnalyticsApiDomain
+      Stage: !Ref DefaultStage
+
+  AnalyticsApiDns:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt AnalyticsApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt AnalyticsApiDomain.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+
+Outputs:
+  ApiEndpoint:
+    Value: !Sub 'https://${SharedApiDomainName}/v1/analytics'
+  FunctionArn:
+    Value: !GetAtt AnalyticsFunction.Arn
+  FunctionRoleName:
+    Value: !Ref AnalyticsFunctionRole
