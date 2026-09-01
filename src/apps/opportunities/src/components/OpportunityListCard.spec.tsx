@@ -465,25 +465,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('shows accepted and applied states for member engagement results', () => {
-        const accepted: EngagementOpportunity = {
+    it('shows selected and applied states for member engagement results', () => {
+        const selected: EngagementOpportunity = {
             applicationStatus: 'ACCEPTED',
-            id: 'accepted-engagement',
+            id: 'selected-engagement',
             status: 'OPEN',
-            title: 'Accepted engagement',
+            title: 'Selected engagement',
         }
         const applied: EngagementOpportunity = {
+            applicationStatus: 'SUBMITTED',
             id: 'applied-engagement',
             status: 'OPEN',
             title: 'Applied engagement',
         }
         const { rerender }: RenderResult = render(
             <MemoryRouter>
-                <OpportunityListCard item={accepted} kind='engagements' memberApplied />
+                <OpportunityListCard item={selected} kind='engagements' memberApplied />
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Accepted').className)
+        expect(screen.getByText('Selected').className)
             .toContain('stateAccepted')
         rerender(
             <MemoryRouter>
@@ -507,13 +508,93 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Accepted').className)
+        expect(screen.getByText('Selected').className)
             .toContain('stateAccepted')
         expect(screen.queryByText('Application closed'))
             .not.toBeInTheDocument()
     })
 
-    it('lets My Work override the owning API state with the accepted treatment', () => {
+    it('shows authored under-review, on-hold, and declined engagement labels', () => {
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'UNDER_REVIEW',
+                        id: 'review-engagement',
+                        status: 'CLOSED',
+                        title: 'Review engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Under Review').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        id: 'hold-engagement',
+                        status: 'ON_HOLD',
+                        title: 'On hold engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('On Hold').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        assignments: [{ status: 'OFFER_REJECTED' }],
+                        id: 'declined-engagement',
+                        status: 'CLOSED',
+                        title: 'Declined engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Offer Declined').className)
+            .toContain('stateClosed')
+    })
+
+    it('uses the latest engagement assignment status when history is present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [
+                {
+                    createdAt: '2026-02-11T11:00:00.000Z',
+                    id: 'assignment-selected',
+                    status: 'SELECTED',
+                    updatedAt: '2026-02-11T11:00:00.000Z',
+                },
+                {
+                    createdAt: '2026-02-10T11:00:00.000Z',
+                    id: 'assignment-terminated',
+                    status: 'TERMINATED',
+                    updatedAt: '2026-02-13T11:00:00.000Z',
+                },
+            ],
+            id: 'historical-engagement',
+            status: 'OPEN',
+            title: 'Historical engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Terminated').className)
+            .toContain('stateClosed')
+        expect(screen.queryByText('Selected'))
+            .not.toBeInTheDocument()
+    })
+
+    it('lets My Work override the owning API state with the selected treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
             status: 'OPEN',
@@ -522,14 +603,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         render(
             <MemoryRouter>
                 <OpportunityListCard
-                    applicationState='Accepted'
+                    applicationState='Selected'
                     item={item}
                     kind='engagements'
                 />
             </MemoryRouter>,
         )
 
-        const state = screen.getByText('Accepted')
+        const state = screen.getByText('Selected')
         expect(state.className)
             .toContain('stateAccepted')
         expect(state.querySelector('svg'))

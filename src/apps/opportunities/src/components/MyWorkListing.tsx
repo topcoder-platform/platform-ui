@@ -30,6 +30,7 @@ import {
     defaultSort,
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
+import { myEngagementState } from '../utils/engagement-status.utils'
 
 import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
@@ -198,9 +199,10 @@ export function myWorkState(result: MyWorkItem): string {
     if (result.kind === 'competitions') return 'Registered'
     let value: string | undefined
     if (result.kind === 'engagements') {
-        const item = result.item as EngagementOpportunity
-        value = item.applicationStatus ?? item.myApplication?.status
-    } else if (result.kind === 'copilots') {
+        return myEngagementState(result.item as EngagementOpportunity)
+    }
+
+    if (result.kind === 'copilots') {
         value = (result.item as CopilotOpportunity).currentUserApplication?.status
     } else {
         value = (result.item as ReviewOpportunity).myApplications?.[0]?.status

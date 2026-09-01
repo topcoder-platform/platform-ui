@@ -121,7 +121,7 @@ describe('My Work normalization', () => {
             .toBe('first2finish')
     })
 
-    it('uses registered, accepted, and applied member-facing states', () => {
+    it('uses registered, engagement-status, and applied member-facing states', () => {
         expect(myWorkState(workItem('competitions', {
             id: 'challenge',
             name: 'Challenge',
@@ -132,7 +132,30 @@ describe('My Work normalization', () => {
             id: 'engagement',
             title: 'Engagement',
         } as EngagementOpportunity)))
-            .toBe('Accepted')
+            .toBe('Selected')
+        expect(myWorkState(workItem('engagements', {
+            applicationStatus: 'UNDER_REVIEW',
+            id: 'engagement-review',
+            title: 'Review engagement',
+        } as EngagementOpportunity)))
+            .toBe('Under Review')
+        expect(myWorkState(workItem('engagements', {
+            assignments: [{
+                createdAt: '2026-02-10T11:00:00.000Z',
+                id: 'assignment-completed',
+                status: 'COMPLETED',
+                updatedAt: '2026-02-12T11:00:00.000Z',
+            }],
+            id: 'engagement-completed',
+            title: 'Completed engagement',
+        } as EngagementOpportunity)))
+            .toBe('Completed')
+        expect(myWorkState(workItem('engagements', {
+            id: 'engagement-hold',
+            status: 'ON_HOLD',
+            title: 'On hold engagement',
+        } as EngagementOpportunity)))
+            .toBe('On Hold')
         expect(myWorkState(workItem('copilots', {
             currentUserApplication: {
                 createdAt: '2026-08-01',
