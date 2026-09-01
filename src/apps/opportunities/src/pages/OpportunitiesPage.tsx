@@ -14,6 +14,7 @@ import {
     ProfileContextData,
     useProfileContext,
 } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
 import { IconOutline } from '~/libs/ui'
 
 import {
@@ -63,6 +64,8 @@ const VALID_KINDS = new Set<OpportunityKind>([
 ])
 
 const COMPETITION_REFRESH_INTERVAL_MS = 60 * 1000
+const REVIEWER_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
+    + '/thrive/articles/Reviewer%20Qualification%20Requirements'
 
 /**
  * Resolves an optional route segment to a supported opportunity domain.
@@ -318,7 +321,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     {kind === 'reviews' && (
                         <LearningCard
                             body='Interested in evaluating submissions on Topcoder?'
-                            href='/thrive/articles/How%20to%20become%20a%20reviewer'
+                            href={REVIEWER_LEARNING_URL}
                             title='How to become a reviewer?'
                         />
                     )}

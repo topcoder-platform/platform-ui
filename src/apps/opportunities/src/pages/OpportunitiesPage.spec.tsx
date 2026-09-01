@@ -26,6 +26,10 @@ jest.mock('~/libs/core', () => ({
     }),
 }), { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { TOPCODER_URL: 'https://www.topcoder.example' },
+}), { virtual: true })
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): undefined => undefined
     return {
@@ -193,5 +197,10 @@ describe('OpportunitiesPage', () => {
 
         expect(await screen.findByRole('heading', { name: 'How to become a reviewer?' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/Reviewer%20Qualification%20Requirements',
+            )
     })
 })
