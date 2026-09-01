@@ -150,6 +150,25 @@ describe('OpportunityListCard competition presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it('labels fun competitions as leaderboard-scored instead of showing prizes', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({ funChallenge: true })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const prizes = screen.getByLabelText('Placement prizes')
+        expect(within(prizes)
+            .getByText('No individual prize - leaderboard scoring'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .queryByText('$1000'))
+            .not.toBeInTheDocument()
+    })
+
     it('uses the compact Figma card structure in grid view', () => {
         render(
             <MemoryRouter>

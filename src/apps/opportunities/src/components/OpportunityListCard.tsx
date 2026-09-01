@@ -50,6 +50,7 @@ import {
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     formatChallengeTimeLeft,
+    FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
 import styles from './OpportunityListCard.module.scss'
 
@@ -434,10 +435,12 @@ function challengeTrackClass(trackKey: string): string {
  * Renders the visible placement prizes from the Challenge API PLACEMENT set.
  *
  * @param prizes placement prizes with stable source-order positions.
+ * @param funChallenge whether leaderboard scoring replaces individual prizes.
  * @returns Figma medal/value row with an overflow count when required.
  * @throws Does not throw.
  */
-function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
+function renderChallengePrizes(prizes: ChallengePlacementPrize[], funChallenge: boolean): ReactNode {
+    if (funChallenge) return <span className={styles.prizeUnavailable}>{FUN_CHALLENGE_PRIZE_LABEL}</span>
     if (!prizes.length) return <span className={styles.prizeUnavailable}>Prize details coming soon</span>
 
     const visiblePrizes = prizes.slice(0, medalIcons.length)
@@ -691,7 +694,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                 </div>
                 <div className={styles.competitionFooter}>
                     <div aria-label='Placement prizes' className={styles.prizes}>
-                        {renderChallengePrizes(placementPrizes)}
+                        {renderChallengePrizes(placementPrizes, item.funChallenge === true)}
                     </div>
                     {phase && (
                         <div className={styles.phase}>
