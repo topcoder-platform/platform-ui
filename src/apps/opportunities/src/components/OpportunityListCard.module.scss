@@ -148,6 +148,19 @@
         line-height: 12px;
         padding: 4px;
     }
+
+    .filterableSkill {
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid #0f62fe;
+            outline-offset: 2px;
+        }
+
+        &:hover {
+            background: #d9e1e8;
+        }
+    }
 }
 
 .meta {

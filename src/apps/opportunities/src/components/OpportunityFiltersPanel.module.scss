@@ -9,8 +9,7 @@
     padding: 24px;
     width: 100%;
 
-    h3,
-    legend {
+    h3 {
         color: #161616;
         font-family: 'Figtree', sans-serif;
         font-weight: 700;
@@ -24,9 +23,13 @@
     }
 
     legend {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
         font-size: 14px;
+        font-weight: 700;
         line-height: 22px;
         margin-bottom: 8px;
+        text-transform: none;
     }
 
     small {
@@ -110,6 +113,13 @@
         &::placeholder {
             color: #6f6f6f;
             opacity: 1;
+        }
+
+        // The container supplies the visible teal focus indicator. This
+        // higher-specificity rule prevents the app-wide blue input outline
+        // from rendering a second focus ring inside it.
+        &:focus-visible {
+            outline: 0;
         }
     }
 

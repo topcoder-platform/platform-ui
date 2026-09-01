@@ -8,7 +8,7 @@
 .content {
     margin: 0 auto;
     max-width: 1248px;
-    padding: 40px 24px;
+    padding: 72px 24px 40px;
 }
 
 .titleRow {
@@ -47,6 +47,7 @@
 
     strong {
         flex: 0 0 auto;
+        font-weight: 700;
         white-space: nowrap;
     }
 }
@@ -69,6 +70,10 @@
         outline-offset: 2px;
         padding: 0 20px 0 0;
         width: 100%;
+    }
+
+    option {
+        padding-inline: 8px;
     }
 
     svg {
@@ -298,6 +303,12 @@
 @media (max-width: 960px) {
     .body {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1199px) {
+    .content {
+        padding-top: 40px;
     }
 }
 

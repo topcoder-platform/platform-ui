@@ -39,6 +39,20 @@ describe('ChallengeDescription', () => {
             .toBe('## Markdown requirements')
     })
 
+    it('preserves authored bold and italic elements in sanitized HTML', () => {
+        const container = render(
+            <ChallengeDescription
+                content='<p><strong>Bold</strong> and <em>Italic</em></p>'
+                format='html'
+            />,
+        ).container
+
+        expect(container.querySelector('strong')?.textContent)
+            .toBe('Bold')
+        expect(container.querySelector('em')?.textContent)
+            .toBe('Italic')
+    })
+
     it('shows API-authorized private details and omits an empty private section', () => {
         const view: RenderResult = render(
             <ChallengeDescription

@@ -333,6 +333,10 @@ export const FILESTACK = {
                 SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
             }
             : undefined,
+    SUBMISSION_CONTAINER: getReactEnv<string>(
+        'FILESTACK_SUBMISSION_CONTAINER',
+        'topcoder-dev-submissions-dmz',
+    ),
     TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
 }
 

@@ -17,6 +17,16 @@ import {
     challengeSubmissionLimit,
 } from '../utils'
 import programBanner from '../assets/ai-exponential-program.png'
+import sidebarArrowIcon from '../assets/sidebar-arrow.svg'
+import sidebarBookIcon from '../assets/sidebar-book.svg'
+import sidebarFolderIcon from '../assets/sidebar-folder.svg'
+import sidebarFrameIcon from '../assets/sidebar-frame.svg'
+import sidebarHelpIcon from '../assets/sidebar-help.svg'
+import sidebarInventoryIcon from '../assets/sidebar-inventory.svg'
+import sidebarLimitIcon from '../assets/sidebar-limit.svg'
+import sidebarPolicyIcon from '../assets/sidebar-policy.svg'
+import sidebarReviewIcon from '../assets/sidebar-review.svg'
+import sidebarSearchIcon from '../assets/sidebar-search.svg'
 
 import styles from './ChallengeSidebar.module.scss'
 
@@ -244,18 +254,18 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     <p>Where elite AI builders compete to solve real-world challenges and grow fast.</p>
                     <Link to='/thrive'>
                         Explore the program
-                        <IconOutline.ArrowRightIcon />
+                        <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </Link>
                 </div>
             </section>
-            <SidebarCard icon={<IconOutline.DocumentSearchIcon />} title='Review App'>
-                <p>The place to track your scores and feedback, and where to follow the final review.</p>
+            <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
+                <p>The place to track your screening and review scores.</p>
                 <Link to={`/review/active-challenges/${props.challenge.id}/challenge-details`}>
                     View Review App
-                    <IconOutline.ArrowRightIcon />
+                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                 </Link>
             </SidebarCard>
-            <SidebarCard icon={<IconOutline.BookOpenIcon />} title='Educational Materials'>
+            <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
                 <Link to='/thrive/search'>Topcoder Challenge Explained</Link>
                 {submissionGuidance && (
@@ -270,7 +280,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     <>
                         <div className={styles.infoSection}>
                             <h3>
-                                <IconOutline.FolderOpenIcon />
+                                <img alt='' aria-hidden='true' src={sidebarFolderIcon} />
                                 Submission Format
                             </h3>
                             <ol>
@@ -299,14 +309,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
-                                <IconOutline.ColorSwatchIcon />
+                                <img alt='' aria-hidden='true' src={sidebarFrameIcon} />
                                 Fonts, Stock Photos, and Icons
                             </h3>
                             <p>All third-party assets within your design must be declared when you submit.</p>
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
-                                <IconOutline.ShieldCheckIcon />
+                                <img alt='' aria-hidden='true' src={sidebarSearchIcon} />
                                 Screening
                             </h3>
                             <p>
@@ -322,7 +332,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 />
                 <div className={styles.infoSection}>
                     <h3>
-                        <IconOutline.ShieldCheckIcon />
+                        <img alt='' aria-hidden='true' src={sidebarPolicyIcon} />
                         Challenge Terms
                     </h3>
                     {(props.challenge.terms ?? []).length > 0
@@ -349,7 +359,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     <>
                         <div className={styles.infoSection}>
                             <h3>
-                                <IconOutline.FolderOpenIcon />
+                                <img alt='' aria-hidden='true' src={sidebarInventoryIcon} />
                                 Source files
                             </h3>
                             {fileTypes.length > 0
@@ -361,7 +371,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
-                                <IconOutline.BanIcon />
+                                <img alt='' aria-hidden='true' src={sidebarLimitIcon} />
                                 Submission limit
                             </h3>
                             <p>
@@ -373,11 +383,11 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     </>
                 )}
             </section>
-            <SidebarCard icon={<IconOutline.QuestionMarkCircleIcon />} title='Need help?'>
+            <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarHelpIcon} />} title='Need help?'>
                 <p>If you are facing technical difficulties with this challenge, contact the team to get assistance.</p>
                 <button onClick={props.onContactTeam} type='button'>
                     Contact the team
-                    <IconOutline.ArrowRightIcon />
+                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                 </button>
             </SidebarCard>
         </aside>

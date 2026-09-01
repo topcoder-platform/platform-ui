@@ -8,7 +8,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -23,19 +23,17 @@ import {
     OpportunityListCard,
     OpportunityPagination,
     OpportunityViewToggle,
-    MyWorkListing,
 } from '../components'
 import {
     OpportunityFilters,
     OpportunityItem,
     OpportunityKind,
-    OpportunityMode,
     OpportunityPage,
     OpportunitySummary,
     OpportunityView,
 } from '../models'
 import {
-    getMyWorkCounts,
+    getMemberChallengeRegistrationIds,
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
@@ -66,13 +64,6 @@ const VALID_KINDS = new Set<OpportunityKind>([
 ])
 
 const COMPETITION_REFRESH_INTERVAL_MS = 60 * 1000
-
-const EMPTY_WORK_COUNTS: Record<OpportunityKind, number> = {
-    competitions: 0,
-    copilots: 0,
-    engagements: 0,
-    reviews: 0,
-}
 
 /**
  * Resolves an optional route segment to a supported opportunity domain.
@@ -117,8 +108,8 @@ interface LearningCardProps {
 }
 
 /**
- * Renders the role-learning callout required for members who do not yet have a
- * reviewer or copilot role.
+ * Renders the role-learning callout shown beside reviewer listings and for
+ * members who do not yet have a copilot role.
  *
  * @param props title, explanatory text, and Thrive destination.
  * @returns role education callout.
@@ -128,10 +119,10 @@ const LearningCard: FC<LearningCardProps> = props => (
     <aside className={styles.learning}>
         <h3>{props.title}</h3>
         <p>{props.body}</p>
-        <Link to={props.href}>
+        <a href={props.href}>
             Learn more
             <IconOutline.ArrowRightIcon />
-        </Link>
+        </a>
     </aside>
 )
 
@@ -205,8 +196,18 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
             revalidateOnFocus: kind === 'competitions',
         },
     )
+    const registrationIdsResponse: SWRResponse<string[], Error> = useSWR(
+        kind === 'competitions' && filters.memberId
+            ? ['opportunities:competition-registration-ids', filters.memberId]
+            : undefined,
+        () => getMemberChallengeRegistrationIds(filters.memberId as string),
+        { revalidateOnFocus: false },
+    )
     const data = pageResponse.data
-    const isReviewer = hasRole(profile?.roles, 'reviewer')
+    const registrationIds = useMemo(
+        () => new Set(registrationIdsResponse.data ?? []),
+        [registrationIdsResponse.data],
+    )
     const isCopilot = hasRole(profile?.roles, 'copilot')
 
     /** Resets active controls and their server page. */
@@ -319,7 +320,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         tracks={tracks}
                         types={types}
                     />
-                    {kind === 'reviews' && !isReviewer && (
+                    {kind === 'reviews' && (
                         <LearningCard
                             body='Interested in evaluating submissions on Topcoder?'
                             href='/thrive/articles/How%20to%20become%20a%20reviewer'
@@ -329,7 +330,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     {kind === 'copilots' && !isCopilot && (
                         <LearningCard
                             body='Interested in managing challenges on Topcoder?'
-                            href='/thrive/articles/How%20to%20become%20a%20copilot'
+                            href='https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder'
                             title='How to become a copilot?'
                         />
                     )}
@@ -377,7 +378,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                                 item={item}
                                 key={item.id}
                                 kind={kind}
-                                registered={kind === 'competitions' && applied}
+                                memberApplied={applied}
+                                onSkillClick={updateSearch}
+                                registered={kind === 'competitions'
+                                    && (applied || registrationIds.has(item.id))}
                                 view={props.view}
                             />
                         ))}
@@ -399,8 +403,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
 }
 
 /**
- * Resolves the route domain, loads authenticated My Work totals independently
- * of the selected destination, and keys the stateful listing by its domain.
+ * Resolves the route domain and keys the stateful listing by its domain.
  * The listing key resets every filter before a request to a different owning
  * API begins.
  *
@@ -411,29 +414,13 @@ export const OpportunitiesPage: FC = () => {
     const params = useParams<{ kind?: string }>()
     const kind = resolveOpportunityKind(params.kind)
     const viewContext: OpportunityViewContextData = useContext(opportunityViewContext)
-    const { initialized, profile }: ProfileContextData = useProfileContext()
-    const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
-    const [mode, setMode] = useState<OpportunityMode>('browse')
-    const [workKinds, setWorkKinds] = useState<OpportunityKind[]>([])
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
         'opportunities:summary',
         getOpportunitySummary,
         { revalidateOnFocus: false },
     )
-    const workCountsResponse: SWRResponse<Record<OpportunityKind, number>, Error> = useSWR(
-        memberId ? ['opportunities:my-work-counts', memberId] : undefined,
-        () => getMyWorkCounts(memberId as string),
-    )
-    const workCounts = memberId
-        ? workCountsResponse.data
-        : initialized ? EMPTY_WORK_COUNTS : undefined
-    const workCount = workCounts
-        ? Object.values(workCounts)
-            .reduce((total, count) => total + count, 0)
-        : undefined
-
     /**
-     * Retries both public and authenticated header totals after a summary failure.
+     * Retries public header totals after a summary failure.
      *
      * @returns void after scheduling the available SWR revalidations.
      * @throws Does not throw; SWR retains and exposes request failures.
@@ -441,56 +428,23 @@ export const OpportunitiesPage: FC = () => {
     const retrySummaries = (): void => {
         summaryResponse.mutate()
             .catch(() => undefined)
-        if (memberId) {
-            workCountsResponse.mutate()
-                .catch(() => undefined)
-        }
-    }
-
-    /**
-     * Uses a My Work summary card as an exclusive domain shortcut, and clears
-     * the shortcut when the already-selected card is pressed again.
-     *
-     * @param selectedKind domain selected from the summary row.
-     * @returns void.
-     * @throws Does not throw.
-     */
-    const selectWorkKind = (selectedKind: OpportunityKind): void => {
-        setWorkKinds(current => (current.length === 1 && current[0] === selectedKind
-            ? []
-            : [selectedKind]))
     }
 
     return (
         <main className={styles.page}>
             <OpportunityHero
                 active={kind}
-                error={!!summaryResponse.error || !!(memberId && workCountsResponse.error)}
+                error={!!summaryResponse.error}
                 loading={summaryResponse.isValidating && !summaryResponse.data}
-                mode={mode}
-                onModeChange={setMode}
                 onRetry={retrySummaries}
-                onWorkKindSelect={selectWorkKind}
                 summary={summaryResponse.data}
-                workCount={workCount}
-                workCounts={workCounts}
             />
-            {mode === 'browse' ? (
-                <OpportunityListing
-                    key={kind}
-                    kind={kind}
-                    onViewChange={viewContext.onViewChange}
-                    view={viewContext.view}
-                />
-            ) : (
-                <MyWorkListing
-                    kinds={workKinds}
-                    memberId={memberId}
-                    onKindsChange={setWorkKinds}
-                    onViewChange={viewContext.onViewChange}
-                    view={viewContext.view}
-                />
-            )}
+            <OpportunityListing
+                key={kind}
+                kind={kind}
+                onViewChange={viewContext.onViewChange}
+                view={viewContext.view}
+            />
         </main>
     )
 }

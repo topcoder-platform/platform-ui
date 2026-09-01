@@ -16,6 +16,7 @@ jest.mock('~/libs/ui', () => {
 describe('OpportunityFiltersPanel', () => {
     it('uses the single authored competition search control and helper', () => {
         const onSearchChange = jest.fn()
+        const onTypeChange = jest.fn()
 
         render(
             <OpportunityFiltersPanel
@@ -28,7 +29,7 @@ describe('OpportunityFiltersPanel', () => {
                 onSearchChange={onSearchChange}
                 onStatusChange={jest.fn()}
                 onTrackChange={jest.fn()}
-                onTypeChange={jest.fn()}
+                onTypeChange={onTypeChange}
                 search=''
                 selectedRole=''
                 status='ACTIVE'
@@ -54,6 +55,10 @@ describe('OpportunityFiltersPanel', () => {
         fireEvent.change(search, { target: { value: 'React project' } })
         expect(onSearchChange)
             .toHaveBeenCalledWith('React project')
+
+        fireEvent.click(screen.getByRole('checkbox', { name: 'Task' }))
+        expect(onTypeChange)
+            .toHaveBeenCalledWith('TSK', true)
     })
 
     it('uses the authored unified search and supported My engagements filter', () => {

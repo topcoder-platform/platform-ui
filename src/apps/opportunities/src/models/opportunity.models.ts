@@ -3,9 +3,6 @@ export type OpportunityKind = 'competitions' | 'engagements' | 'copilots' | 'rev
 /** Member-selected presentation for an Opportunities result page. */
 export type OpportunityView = 'list' | 'grid'
 
-/** Top-level authored destination within the Opportunities discovery experience. */
-export type OpportunityMode = 'browse' | 'work'
-
 /** Lifecycle facet shared by the mixed My Work result set. */
 export type OpportunityWorkStatus = 'all' | 'active' | 'past'
 
@@ -119,6 +116,7 @@ export interface ChallengeOpportunity {
     endDate?: string
     events?: Array<{ key?: string; name?: string }>
     forumId?: number
+    funChallenge?: boolean
     id: string
     legacyId?: number
     legacy?: ChallengeLegacy

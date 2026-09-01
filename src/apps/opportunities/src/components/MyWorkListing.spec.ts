@@ -23,6 +23,10 @@ jest.mock('~/libs/core', () => ({
     authUrlLogin: (): string => '/accounts?retUrl=opportunities',
 }), { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+}), { virtual: true })
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): undefined => undefined
     return {
@@ -139,5 +143,17 @@ describe('My Work normalization', () => {
             id: 'copilot',
         } as CopilotOpportunity)))
             .toBe('Applied')
+        expect(myWorkState(workItem('reviews', {
+            challengeId: 'approved-challenge',
+            id: 'approved-review',
+            myApplications: [{ status: 'APPROVED' }],
+        } as ReviewOpportunity)))
+            .toBe('Approved')
+        expect(myWorkState(workItem('reviews', {
+            challengeId: 'rejected-challenge',
+            id: 'rejected-review',
+            myApplications: [{ status: 'REJECTED' }],
+        } as ReviewOpportunity)))
+            .toBe('Rejected')
     })
 })

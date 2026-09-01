@@ -3,10 +3,12 @@ import { CSSProperties, FC, Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { IconOutline } from '~/libs/ui'
-
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import challengeCalendarIcon from '../assets/challenge-calendar.svg'
+import challengeChevronIcon from '../assets/challenge-chevron.svg'
+import challengeClockIcon from '../assets/challenge-clock.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
+import challengeUploadIcon from '../assets/challenge-upload.svg'
 import first2FinishTypeIcon from '../assets/first2finish-type.svg'
 import marathonTypeIcon from '../assets/marathon-type.svg'
 import medal1 from '../assets/medal-1.svg'
@@ -37,6 +39,7 @@ import {
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
+    FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
@@ -61,6 +64,12 @@ interface ChallengeTimelineItem {
     range: boolean
     startDate?: string
     state: ChallengeTimelineState
+}
+
+interface ChallengePhaseSummary {
+    phase: string
+    qualifier?: string
+    remaining?: string
 }
 
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
@@ -109,16 +118,19 @@ function typeIcon(type: string): string {
  * Formats the active phase and remaining time for the masthead metric.
  *
  * @param phase current or next challenge phase.
- * @returns phase deadline summary suitable for a compact metric.
+ * @returns phase, regular-weight qualifier, and optional remaining-time segments.
  * @throws Does not throw; absent and malformed dates use stable fallbacks.
  */
-function phaseSummary(phase: ChallengePhase | undefined): string {
-    if (!phase) return 'Timeline complete'
+function phaseSummary(phase: ChallengePhase | undefined): ChallengePhaseSummary {
+    if (!phase) return { phase: 'Timeline complete' }
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
     const end = endValue ? new Date(endValue) : undefined
-    if (!end || Number.isNaN(end.getTime())) return `${phase.name} phase is active`
+    if (!end || Number.isNaN(end.getTime())) {
+        return { phase: phase.name, qualifier: ' phase is active' }
+    }
+
     const remainingMinutes = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 60000))
-    if (remainingMinutes === 0) return `${phase.name} phase is active`
+    if (remainingMinutes === 0) return { phase: phase.name, qualifier: ' phase is active' }
     const days = Math.floor(remainingMinutes / 1440)
     const hours = Math.floor((remainingMinutes % 1440) / 60)
     const minutes = remainingMinutes % 60
@@ -127,7 +139,11 @@ function phaseSummary(phase: ChallengePhase | undefined): string {
         hours > 0 ? `${hours}h` : '',
         days === 0 && minutes > 0 ? `${minutes}m` : '',
     ].filter(Boolean)
-    return `${phase.name} phase closes in ${parts.join(' ')}`
+    return {
+        phase: phase.name,
+        qualifier: ' phase closes in ',
+        remaining: parts.join(' '),
+    }
 }
 
 /**
@@ -365,6 +381,7 @@ function timelineTimezone(): string {
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
     const phase = challengeCurrentPhase(props.challenge)
+    const phaseCopy = phaseSummary(phase)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = catalogName(props.challenge.track, 'Competition')
@@ -375,6 +392,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const canUnregister = props.isRegistered && registrationOpen && !registrationUnavailable && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
     const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
+    const featuredPrizes = challengePrizes.slice(0, 3)
+    const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const timelineGridStyle: CSSProperties = {
@@ -419,12 +438,18 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         )}
                         <div className={styles.timeline}>
                             <span>
-                                <IconOutline.CalendarIcon />
+                                <img alt='' aria-hidden='true' src={challengeCalendarIcon} />
                                 {dateRange(props.challenge.startDate, props.challenge.endDate)}
                             </span>
                             <span>
-                                <IconOutline.ClockIcon />
-                                {phaseSummary(phase)}
+                                <img alt='' aria-hidden='true' src={challengeClockIcon} />
+                                <span>
+                                    <span>{phaseCopy.phase}</span>
+                                    {phaseCopy.qualifier && (
+                                        <span className={styles.phaseQualifier}>{phaseCopy.qualifier}</span>
+                                    )}
+                                    {phaseCopy.remaining && <span>{phaseCopy.remaining}</span>}
+                                </span>
                             </span>
                             <button
                                 aria-controls='challenge-timeline'
@@ -433,34 +458,55 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 type='button'
                             >
                                 {timelineOpen ? 'Hide full timeline' : 'Show full timeline'}
-                                <IconOutline.ChevronDownIcon />
+                                <img alt='' aria-hidden='true' src={challengeChevronIcon} />
                             </button>
                         </div>
                     </div>
                     <aside className={styles.actionCard}>
-                        <div className={classNames(styles.prizeFrame, {
-                            [styles.extendedPrizeFrame]: challengePrizes.length > 3,
-                        })}
-                        >
+                        <div className={styles.prizeFrame}>
                             <small>Prizes</small>
                             <div className={styles.prizes}>
-                                {challengePrizes.length > 0
-                                    ? challengePrizes.slice(0, medalAssets.length)
-                                        .map(prize => {
-                                            const medal = medalAssets[prize.placement - 1]
-                                            return (
-                                                <strong
-                                                    className={prize.placement <= 3
-                                                        ? styles.primaryPrize
-                                                        : styles.secondaryPrize}
-                                                    key={`placement-${prize.placement}`}
-                                                >
-                                                    <img alt={`${prize.placement} place`} src={medal} />
-                                                    {formatPrize(prize)}
-                                                </strong>
-                                            )
-                                        })
-                                    : <strong>Prize details coming soon</strong>}
+                                {props.challenge.funChallenge
+                                    ? <strong>{FUN_CHALLENGE_PRIZE_LABEL}</strong>
+                                    : challengePrizes.length > 0
+                                        ? (
+                                            <>
+                                                <div className={styles.featuredPrizes}>
+                                                    {featuredPrizes.map(prize => {
+                                                        const medal = medalAssets[prize.placement - 1]
+                                                        return (
+                                                            <strong
+                                                                key={`placement-${prize.placement}`}
+                                                            >
+                                                                <img alt={`${prize.placement} place`} src={medal} />
+                                                                {formatPrize(prize)}
+                                                            </strong>
+                                                        )
+                                                    })}
+                                                </div>
+                                                {additionalPrizes.length > 0 && (
+                                                    <div
+                                                        aria-label='Additional placement prizes'
+                                                        className={styles.additionalPrizes}
+                                                        role='group'
+                                                    >
+                                                        {additionalPrizes.map(prize => {
+                                                            const medal = medalAssets[prize.placement - 1]
+                                                            return (
+                                                                <strong
+                                                                    className={styles.secondaryPrize}
+                                                                    key={`placement-${prize.placement}`}
+                                                                >
+                                                                    <img alt={`${prize.placement} place`} src={medal} />
+                                                                    {formatPrize(prize)}
+                                                                </strong>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )
+                                        : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>
                         <div className={styles.actions}>
@@ -480,7 +526,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                         onClick={props.onSubmit}
                                         type='button'
                                     >
-                                        <IconOutline.UploadIcon />
+                                        <img alt='' aria-hidden='true' src={challengeUploadIcon} />
                                         Submit a solution
                                     </button>
                                 </>

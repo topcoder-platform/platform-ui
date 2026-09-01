@@ -9,6 +9,9 @@ const MILLISECONDS_PER_MINUTE = 60 * 1000
 const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE
 const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR
 
+/** Canonical Challenge API copy for leaderboard-scored fun challenges. */
+export const FUN_CHALLENGE_PRIZE_LABEL = 'No individual prize - leaderboard scoring'
+
 /** Placement prize enriched with its source-order finishing position. */
 export interface ChallengePlacementPrize extends ChallengePrize {
     placement: number

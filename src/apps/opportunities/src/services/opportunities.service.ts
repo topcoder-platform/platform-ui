@@ -1,4 +1,10 @@
 import { AxiosHeaders, AxiosResponse } from 'axios'
+import {
+    Client,
+    init,
+    StoreUploadOptions,
+    UploadOptions,
+} from 'filestack-js'
 
 import { EnvironmentConfig } from '~/config'
 import {
@@ -34,11 +40,18 @@ import {
 const V6_URL = EnvironmentConfig.API.V6
 const LEGACY_COPILOT_PAGE_SIZE = 1000
 const MAX_LEGACY_COPILOT_PAGES = 20
+const LEGACY_COPILOT_APPLICATION_PAGE_SIZE = 200
+const LEGACY_COPILOT_APPLICATION_BATCH_SIZE = 12
+const AI_CHALLENGE_PAGE_SIZE = 100
+const MAX_AI_CHALLENGE_PAGES = 20
+const REVIEW_AI_PAGE_SIZE = 1000
+const MAX_REVIEW_AI_PAGES = 20
 const SUBMISSION_HISTORY_PAGE_SIZE = 200
 const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
 const MAX_DETAIL_PAGES = 100
 const PAGE_REQUEST_BATCH_SIZE = 4
+let submissionFilestackClient: Client | undefined
 
 const DEFAULT_SUMMARY: OpportunitySummary = {
     competitions: { amount: 0, count: 0 },
@@ -48,9 +61,32 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
 }
 const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilots', 'reviews']
 const MY_WORK_COUNT_PAGE_SIZE = 1
+const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
 
 /**
- * Uploads a member's ZIP directly to the v6 Review API for the active submission phase.
+ * Resolves the shared Filestack client used for challenge submissions.
+ *
+ * @returns configured Filestack browser client.
+ * @throws Error when file uploads are not configured for the environment.
+ */
+function getSubmissionFilestackClient(): Client {
+    const { API_KEY, CNAME, SECURITY }: typeof EnvironmentConfig.FILESTACK = EnvironmentConfig.FILESTACK
+    if (!API_KEY) throw new Error('File uploads are not configured for this environment.')
+    if (!submissionFilestackClient) {
+        submissionFilestackClient = init(API_KEY, {
+            cname: CNAME,
+            security: SECURITY
+                ? { policy: SECURITY.POLICY, signature: SECURITY.SIGNATURE }
+                : undefined,
+        })
+    }
+
+    return submissionFilestackClient
+}
+
+/**
+ * Uploads a member's ZIP to the submission DMZ, then creates the v6 Review API
+ * record with the resulting S3 URL for validation and virus scanning.
  *
  * @param challengeId Challenge API UUID receiving the submission.
  * @param memberId authenticated submitter's numeric member identifier serialized as text.
@@ -69,28 +105,46 @@ export async function createChallengeSubmission(
     onProgress?: (percent: number) => void,
     signal?: AbortSignal,
 ): Promise<ChallengeSubmission> {
+    if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
+    const storagePath = `${challengeId}-${memberId}-${type}-${Date.now()}.zip`
+    const uploadOptions: UploadOptions = {
+        onProgress: event => {
+            if (!onProgress) return
+            const percent = typeof event?.totalPercent === 'number' ? event.totalPercent : 0
+            onProgress(Math.min(99, Math.max(0, Math.round(percent))))
+        },
+        progressInterval: EnvironmentConfig.FILESTACK.PROGRESS_INTERVAL,
+        retry: EnvironmentConfig.FILESTACK.RETRY,
+        timeout: EnvironmentConfig.FILESTACK.TIMEOUT,
+    }
+    const storeOptions: StoreUploadOptions = {
+        container: EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER,
+        path: storagePath,
+        region: EnvironmentConfig.FILESTACK.REGION,
+    }
+    const upload = await getSubmissionFilestackClient()
+        .upload(file, uploadOptions, storeOptions)
+    if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
+    const storageKey = String(upload?.key ?? storagePath)
+    const storageUrl = `https://s3.amazonaws.com/${EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER}/${storageKey}`
     const formData = new FormData()
     formData.append('challengeId', challengeId)
     formData.append('memberId', memberId)
     formData.append('type', type)
-    formData.append('fileName', file.name)
-    formData.append('file', file, file.name)
+    formData.append('url', storageUrl)
 
-    return xhrPostAsync<FormData, ChallengeSubmission>(
+    const submission = await xhrPostAsync<FormData, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         formData,
         {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
-            onUploadProgress: event => {
-                const total = event.total ?? file.size
-                if (!onProgress || total <= 0) return
-                onProgress(Math.min(100, Math.round((event.loaded / total) * 100)))
-            },
             signal,
         },
     )
+    onProgress?.(100)
+    return submission
 }
 
 /**
@@ -104,6 +158,19 @@ export async function createChallengeSubmission(
 function toNumber(value: unknown, fallback: number = 0): number {
     const converted = Number(value)
     return Number.isFinite(converted) && converted >= 0 ? converted : fallback
+}
+
+/**
+ * Normalizes owner labels and enum tokens for case-insensitive facet matching.
+ *
+ * @param value raw track or facet label.
+ * @returns lowercase alphanumeric comparison key.
+ * @throws Does not throw.
+ */
+function opportunityFacetKey(value: unknown): string {
+    return String(value ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
 }
 
 /**
@@ -167,6 +234,40 @@ function appendValues(url: URL, name: string, values?: string[]): void {
 function unwrap<T>(payload: T | ApiEnvelope<T>): T {
     const envelope = payload as ApiEnvelope<T>
     return envelope.result?.content ?? envelope.content ?? payload as T
+}
+
+interface StandardizedSkillSearchResult {
+    id?: unknown
+    name?: unknown
+}
+
+/**
+ * Resolves engagement free text to standardized skill IDs for the owning
+ * API's `requiredSkills` filter.
+ *
+ * @param search member-entered skill or technology text.
+ * @returns matching skill IDs, or an empty array when lookup is unavailable.
+ * @throws Does not throw; title and description search remains usable when the skills API fails.
+ */
+async function resolveEngagementSkillIds(search: string): Promise<string[]> {
+    const params = new URLSearchParams({
+        size: String(ENGAGEMENT_SKILL_SEARCH_SIZE),
+        term: search.trim(),
+    })
+
+    try {
+        const response = await xhrGetAsync<
+            StandardizedSkillSearchResult[] | ApiEnvelope<StandardizedSkillSearchResult[]>
+        >(`${EnvironmentConfig.API.V5}/standardized-skills/skills/autocomplete?${params.toString()}`)
+        const skills = unwrap(response)
+        if (!Array.isArray(skills)) return []
+        return Array.from(new Set(skills
+            .map(skill => String(skill.id ?? '')
+                .trim())
+            .filter(Boolean)))
+    } catch {
+        return []
+    }
 }
 
 /**
@@ -250,14 +351,46 @@ export function normalizeOpportunitySummary(payload: unknown): OpportunitySummar
 }
 
 /**
- * Loads all four headline cells in one request to opportunities-api-v6.
+ * Loads all four headline cells and reconciles the public competition and
+ * review counts with the exact owning-API criteria used by their default
+ * lists. If either owner-count request fails, that aggregation cell remains
+ * available.
  *
  * @returns current public opportunity totals and available amounts.
  * @throws Propagates API/network errors to the page error boundary.
  */
 export async function getOpportunitySummary(): Promise<OpportunitySummary> {
-    const response = await xhrGetAsync<unknown>(`${V6_URL}/opportunities/summary`)
-    return normalizeOpportunitySummary(response)
+    const [response, competitionPage, reviewPage] = await Promise.all([
+        xhrGetAsync<unknown>(`${V6_URL}/opportunities/summary`),
+        getOpportunityPage('competitions', {
+            page: 1,
+            perPage: 1,
+            statuses: ['ACTIVE'],
+        })
+            .catch(() => undefined),
+        getOpportunityPage('reviews', {
+            page: 1,
+            perPage: 1,
+            statuses: ['OPEN'],
+        })
+            .catch(() => undefined),
+    ])
+    const summary = normalizeOpportunitySummary(response)
+    return {
+        ...summary,
+        ...(competitionPage ? {
+            competitions: {
+                ...summary.competitions,
+                count: competitionPage.total,
+            },
+        } : {}),
+        ...(reviewPage ? {
+            reviews: {
+                ...summary.reviews,
+                count: reviewPage.total,
+            },
+        } : {}),
+    }
 }
 
 /**
@@ -296,6 +429,8 @@ export async function getMyWorkCounts(
  * apply Submitter membership before filtering, sorting, and pagination.
  * Competition free text is emitted only through `search`; a hidden `tags`
  * filter would turn the authored unified search into an unintended AND query.
+ * Public active competitions require an open Submission phase, while member
+ * competitions retain every active challenge for which the member registered.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -319,6 +454,11 @@ export function buildOpportunityPageUrl(
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sortBy', startingSoon ? 'startDate' : 'updatedAt')
         url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        if (startingSoon) {
+            url.searchParams.set('startDateStart', new Date()
+                .toISOString())
+        }
+
         if (filters.search) url.searchParams.set('search', filters.search)
         const competitionStatuses = filters.statuses?.includes('REGISTRATION')
             ? ['ACTIVE']
@@ -326,6 +466,8 @@ export function buildOpportunityPageUrl(
         appendValues(url, 'status', competitionStatuses)
         if (filters.statuses?.includes('REGISTRATION')) {
             url.searchParams.set('currentPhaseName', 'Registration')
+        } else if (!filters.applied && filters.statuses?.includes('ACTIVE')) {
+            url.searchParams.set('currentPhaseName', 'Submission')
         }
 
         // Challenge API's query parser only coerces bracketed keys into arrays;
@@ -356,6 +498,11 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('pageSize', String(perPage))
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sort', startingSoon ? 'startDate asc' : 'createdAt desc')
+        if (startingSoon) {
+            url.searchParams.set('startDateFrom', new Date()
+                .toISOString())
+        }
+
         url.searchParams.set('noGrouping', 'true')
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
@@ -490,6 +637,11 @@ function filterLegacyCopilotOpportunities(
         const itemSkills = (item.skills ?? []).map(skill => `${skill.id ?? ''} ${skill.name}`.toLowerCase())
         const itemStatus = String(item.status ?? '')
             .toLowerCase()
+        if (filters.sort === 'startingSoon') {
+            const startDate = Date.parse(item.startDate ?? '')
+            if (!Number.isFinite(startDate) || startDate < Date.now()) return false
+        }
+
         if (statuses.size && !statuses.has(itemStatus)) return false
         if (types.size && !types.has(itemType)) return false
         if (skills.length && !skills.some(skill => itemSkills.some(value => value.includes(skill)))) return false
@@ -509,6 +661,70 @@ function filterLegacyCopilotOpportunities(
             .toLowerCase()
             .includes(search)
     })
+}
+
+interface LegacyCopilotApplication {
+    createdAt?: unknown
+    id?: unknown
+    status?: unknown
+    updatedAt?: unknown
+    userId?: unknown
+}
+
+/**
+ * Hydrates caller application state omitted by the deployed legacy Projects
+ * API list. Requests are bounded so the compatibility path cannot issue the
+ * full candidate set simultaneously.
+ *
+ * @param items already facet-filtered legacy opportunities.
+ * @param memberId authenticated member whose applications are required.
+ * @returns opportunities for which the member has an application, with card state attached.
+ * @throws Does not throw for an individual application-list failure; that opportunity is omitted.
+ */
+async function filterLegacyCopilotApplications(
+    items: CopilotOpportunity[],
+    memberId: string,
+): Promise<CopilotOpportunity[]> {
+    const hydrated: CopilotOpportunity[] = []
+
+    for (let offset = 0; offset < items.length; offset += LEGACY_COPILOT_APPLICATION_BATCH_SIZE) {
+        const batch = items.slice(offset, offset + LEGACY_COPILOT_APPLICATION_BATCH_SIZE)
+        // eslint-disable-next-line no-await-in-loop
+        const applications = await Promise.all(batch.map(async item => {
+            if (item.currentUserApplication || item.hasApplied) return item.currentUserApplication
+            const url = new URL(`${V6_URL}/projects/copilots/opportunity/${encodeURIComponent(item.id)}/applications`)
+            url.searchParams.set('page', '1')
+            url.searchParams.set('pageSize', String(LEGACY_COPILOT_APPLICATION_PAGE_SIZE))
+            try {
+                const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
+                    LegacyCopilotApplication[] | ApiEnvelope<LegacyCopilotApplication[]>
+                >
+                const rows = unwrap(response.data)
+                if (!Array.isArray(rows)) return undefined
+                const application = rows.find(row => String(row.userId ?? '') === memberId)
+                if (!application) return undefined
+                return {
+                    createdAt: String(application.createdAt ?? ''),
+                    id: String(application.id ?? ''),
+                    status: String(application.status ?? ''),
+                    updatedAt: String(application.updatedAt ?? ''),
+                }
+            } catch {
+                return undefined
+            }
+        }))
+        batch.forEach((item, index) => {
+            const application = applications[index]
+            if (!application && !item.hasApplied) return
+            hydrated.push({
+                ...item,
+                currentUserApplication: application ?? item.currentUserApplication,
+                hasApplied: true,
+            })
+        })
+    }
+
+    return hydrated
 }
 
 /**
@@ -539,10 +755,124 @@ async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<Opport
             LEGACY_COPILOT_PAGE_SIZE,
         ).items),
     ].map(normalizeCopilotOpportunity)
-    const filtered = sortLegacyCopilotOpportunities(
-        filterLegacyCopilotOpportunities(allItems, filters),
-        filters.sort,
-    )
+    const facetFiltered = filterLegacyCopilotOpportunities(allItems, {
+        ...filters,
+        applied: false,
+    })
+    const memberFiltered = filters.applied
+        ? filters.memberId
+            ? await filterLegacyCopilotApplications(facetFiltered, filters.memberId)
+            : facetFiltered.filter(item => !!item.hasApplied || !!item.currentUserApplication)
+        : facetFiltered
+    const filtered = sortLegacyCopilotOpportunities(memberFiltered, filters.sort)
+    const page = Math.max(1, filters.page)
+    const perPage = Math.max(1, filters.perPage)
+    const offset = (page - 1) * perPage
+    return {
+        items: filtered.slice(offset, offset + perPage),
+        page,
+        perPage,
+        total: filtered.length,
+        totalPages: filtered.length ? Math.ceil(filtered.length / perPage) : 0,
+    }
+}
+
+/**
+ * Loads canonical challenge IDs carrying the synthetic AI track facet. Review
+ * API accepts only persisted track catalog values, while Challenge API owns
+ * the exact `AI` tag semantics used throughout Opportunities.
+ *
+ * @returns a bounded set of AI-tagged challenge UUIDs.
+ * @throws Propagates Challenge API and network errors.
+ */
+async function getAiChallengeIds(): Promise<Set<string>> {
+    /** Builds one Challenge API page for the synthetic AI facet. */
+    const buildUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}/challenges`)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(AI_CHALLENGE_PAGE_SIZE))
+        url.searchParams.append('tracks[]', 'AI')
+        return url.toString()
+    }
+
+    const firstResponse = await xhrGlobalInstance.get(buildUrl(1)) as AxiosResponse<
+        ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
+    >
+    const firstPage = normalizePage(firstResponse, 1, AI_CHALLENGE_PAGE_SIZE)
+    const totalPages = Math.min(MAX_AI_CHALLENGE_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildUrl(page)),
+        ) as AxiosResponse<
+            ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
+        >[]
+        : []
+    return new Set([
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            AI_CHALLENGE_PAGE_SIZE,
+        ).items),
+    ].map(item => item.id))
+}
+
+/**
+ * Applies Review's synthetic AI facet without submitting the unsupported `AI`
+ * track name to Review API. Owner-filtered pages are loaded in server order,
+ * then AI challenge IDs and persisted track names are combined with OR
+ * semantics before restoring the requested page.
+ *
+ * @param filters active Review filters containing the AI selection.
+ * @returns correctly filtered and paginated review opportunities.
+ * @throws Propagates owning API and network errors.
+ */
+async function getReviewPageWithAiTrack(
+    filters: OpportunityFilters,
+): Promise<OpportunityPage<ReviewOpportunity>> {
+    const aiChallengeIds = await getAiChallengeIds()
+    const ownerFilters: OpportunityFilters = {
+        ...filters,
+        page: 1,
+        perPage: REVIEW_AI_PAGE_SIZE,
+        tracks: undefined,
+    }
+    const firstResponse = await xhrGlobalInstance.get(
+        buildOpportunityPageUrl('reviews', ownerFilters),
+    ) as AxiosResponse<
+        ReviewOpportunity[] | ApiEnvelope<ReviewOpportunity[]> | ApiListResponse<ReviewOpportunity>
+    >
+    const firstPage = normalizePage(firstResponse, 1, REVIEW_AI_PAGE_SIZE)
+    const totalPages = Math.min(MAX_REVIEW_AI_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildOpportunityPageUrl('reviews', {
+                ...ownerFilters,
+                page,
+            })),
+        ) as AxiosResponse<
+            ReviewOpportunity[] | ApiEnvelope<ReviewOpportunity[]> | ApiListResponse<ReviewOpportunity>
+        >[]
+        : []
+    const allItems = [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            REVIEW_AI_PAGE_SIZE,
+        ).items),
+    ]
+    const persistedTracks = new Set((filters.tracks ?? [])
+        .filter(track => opportunityFacetKey(track) !== 'ai')
+        .map(opportunityFacetKey))
+    const filtered = allItems.filter(item => (
+        aiChallengeIds.has(item.challengeId)
+        || persistedTracks.has(opportunityFacetKey(
+            String(item.challengeData?.track ?? item.challengeData?.trackName ?? ''),
+        ))
+    ))
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
     const offset = (page - 1) * perPage
@@ -573,6 +903,10 @@ export async function getOpportunityPage(
 ): Promise<OpportunityPage<any>> {
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
+    if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
+        return getReviewPageWithAiTrack(filters)
+    }
+
     if (kind === 'competitions' && filters.applied && filters.memberId) {
         const submitterRole = await getSubmitterRole()
         const roleScopedFilters: OpportunityFilters = {
@@ -590,6 +924,18 @@ export async function getOpportunityPage(
             any[] | ApiEnvelope<any[]> | ApiListResponse<any>
         >
         const normalized = normalizePage(response, page, perPage)
+        if (kind === 'engagements' && filters.search?.trim() && normalized.total === 0 && !filters.skills?.length) {
+            const skillIds = await resolveEngagementSkillIds(filters.search)
+            if (skillIds.length) {
+                const skillResponse = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, {
+                    ...filters,
+                    search: undefined,
+                    skills: skillIds,
+                })) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+                return normalizePage(skillResponse, page, perPage)
+            }
+        }
+
         return kind === 'copilots'
             ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
             : normalized
@@ -1085,6 +1431,25 @@ export async function getChallengeRegistration(
 }
 
 /**
+ * Loads every challenge for which the authenticated member has a Submitter
+ * resource so public list cards can expose registration state independently
+ * of the active list filters.
+ *
+ * @param memberId authenticated member ID.
+ * @returns unique challenge UUIDs registered by the member.
+ * @throws Propagates Resource Role, Resource API, authorization, and network errors.
+ */
+export async function getMemberChallengeRegistrationIds(memberId: string): Promise<string[]> {
+    const role = await getSubmitterRole()
+    const url = new URL(`${V6_URL}/resources/${encodeURIComponent(memberId)}/challenges`)
+    url.searchParams.set('resourceRoleId', role.id)
+    url.searchParams.set('useScroll', 'true')
+    const response = await xhrGetAsync<string[] | ApiEnvelope<string[]>>(url.toString())
+    return Array.from(new Set(unwrap(response)
+        .map(String)))
+}
+
+/**
  * Registers the authenticated profile as a challenge submitter.
  *
  * @param challengeId challenge UUID.
@@ -1203,19 +1568,21 @@ export function getChallengeTermsDetails(terms: ChallengeTerm[]): Promise<Challe
 }
 
 /**
- * Loads complete details only for challenge terms assigned to the canonical
+ * Loads outstanding details only for challenge terms assigned to the canonical
  * Submitter role. Challenge responses can also contain reviewer, copilot, and
- * manager terms; those must not be displayed or agreed during registration.
+ * manager terms; those and already accepted terms must not be displayed or
+ * agreed again during registration.
  *
  * @param terms lightweight role-scoped references from Challenge API.
- * @returns complete Submitter term records in challenge order.
+ * @returns unaccepted, complete Submitter term records in challenge order.
  * @throws Propagates Resource Role or Terms API failures.
  */
 export async function getChallengeSubmitterTermsDetails(
     terms: ChallengeTerm[],
 ): Promise<ChallengeTerm[]> {
     const submitterRole = await getSubmitterRole()
-    return getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+    const details = await getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+    return details.filter(term => !term.agreed)
 }
 
 /**

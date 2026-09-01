@@ -191,7 +191,7 @@ export function myWorkType(result: MyWorkItem): string | undefined {
  * Resolves the member-facing application pill for a mixed My Work card.
  *
  * @param result tagged opportunity from an owning API.
- * @returns Registered for competitions, Accepted for approved work, otherwise Applied.
+ * @returns owner-appropriate registration or application state.
  * @throws Does not throw.
  */
 export function myWorkState(result: MyWorkItem): string {
@@ -204,6 +204,12 @@ export function myWorkState(result: MyWorkItem): string {
         value = (result.item as CopilotOpportunity).currentUserApplication?.status
     } else {
         value = (result.item as ReviewOpportunity).myApplications?.[0]?.status
+        const reviewLabels: Record<string, string> = {
+            approved: 'Approved',
+            cancelled: 'Cancelled',
+            rejected: 'Rejected',
+        }
+        return reviewLabels[challengeCatalogKey(value)] ?? 'Applied'
     }
 
     const accepted = ['accepted', 'approved', 'selected']

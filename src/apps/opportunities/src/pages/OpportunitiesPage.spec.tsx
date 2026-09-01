@@ -1,12 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import React from 'react'
-import {
-    act,
-    render,
-    screen,
-    waitFor,
-} from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import {
     MemoryRouter,
     Route,
@@ -15,17 +10,19 @@ import {
 import { SWRConfig } from 'swr'
 
 import {
-    getMyWorkCounts,
+    getMemberChallengeRegistrationIds,
     getOpportunityPage,
     getOpportunitySummary,
 } from '../services'
 import { OpportunitiesPage } from './OpportunitiesPage'
 
+let mockProfileRoles: string[] = []
+
 jest.mock('~/libs/core', () => ({
     useProfileContext: () => ({
         initialized: true,
         isLoggedIn: true,
-        profile: { roles: [], userId: 123 },
+        profile: { roles: mockProfileRoles, userId: 123 },
     }),
 }), { virtual: true })
 
@@ -39,38 +36,39 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    MyWorkListing: () => undefined,
     OpportunityFiltersPanel: () => undefined,
-    OpportunityHero: (props: { mode: string; workCount?: number }) => (
-        <output data-mode={props.mode} data-testid='work-count'>
-            {props.workCount ?? 'pending'}
+    OpportunityHero: (props: { summary?: { competitions?: { count?: number } } }) => (
+        <output data-testid='competition-count'>
+            {props.summary?.competitions?.count ?? 'pending'}
         </output>
     ),
-    OpportunityListCard: () => undefined,
+    OpportunityListCard: (props: { item: { id: string }; registered?: boolean }) => (
+        <output data-testid={`registration-${props.item.id}`}>{String(!!props.registered)}</output>
+    ),
     OpportunityPagination: () => undefined,
     OpportunityViewToggle: () => undefined,
 }))
 
 jest.mock('../services', () => ({
-    getMyWorkCounts: jest.fn(),
+    getMemberChallengeRegistrationIds: jest.fn(),
     getOpportunityPage: jest.fn(),
     getOpportunitySummary: jest.fn(),
 }))
 
-const mockedGetMyWorkCounts = getMyWorkCounts as jest.MockedFunction<typeof getMyWorkCounts>
 const mockedGetOpportunityPage = getOpportunityPage as jest.MockedFunction<typeof getOpportunityPage>
 const mockedGetOpportunitySummary = getOpportunitySummary as jest.MockedFunction<typeof getOpportunitySummary>
+const mockedGetRegistrationIds = getMemberChallengeRegistrationIds as jest.MockedFunction<
+    typeof getMemberChallengeRegistrationIds
+>
 
 describe('OpportunitiesPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockProfileRoles = []
+        mockedGetRegistrationIds.mockResolvedValue([])
     })
 
-    it('loads and displays the real My Work total while Browse is selected', async () => {
-        let resolveCounts!: (counts: Awaited<ReturnType<typeof getMyWorkCounts>>) => void
-        mockedGetMyWorkCounts.mockReturnValue(new Promise(resolve => {
-            resolveCounts = resolve
-        }))
+    it('loads the public category summary without a separate destination tab', async () => {
         mockedGetOpportunitySummary.mockResolvedValue({
             competitions: { count: 1 },
             copilots: { count: 1 },
@@ -96,25 +94,103 @@ describe('OpportunitiesPage', () => {
             </SWRConfig>,
         )
 
-        expect(screen.getByTestId('work-count'))
-            .toHaveAttribute('data-mode', 'browse')
-        expect(screen.getByTestId('work-count'))
+        expect(screen.getByTestId('competition-count'))
             .toHaveTextContent('pending')
-        expect(screen.getByTestId('work-count'))
-            .not.toHaveTextContent('3')
-        await waitFor(() => expect(mockedGetMyWorkCounts)
-            .toHaveBeenCalledWith('123'))
+        await waitFor(() => expect(screen.getByTestId('competition-count'))
+            .toHaveTextContent('1'))
+        expect(mockedGetOpportunitySummary)
+            .toHaveBeenCalledTimes(1)
+    })
 
-        await act(async () => resolveCounts({
-            competitions: 40,
-            copilots: 20,
-            engagements: 30,
-            reviews: 15,
-        }))
+    it('shows registration state on competition cards outside My competitions', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 1 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [{ id: 'challenge-id', name: 'Registered challenge' }],
+            page: 1,
+            perPage: 10,
+            total: 1,
+            totalPages: 1,
+        })
+        mockedGetRegistrationIds.mockResolvedValue(['challenge-id'])
 
-        await waitFor(() => expect(screen.getByTestId('work-count'))
-            .toHaveTextContent('105'))
-        expect(screen.getByTestId('work-count'))
-            .toHaveAttribute('data-mode', 'browse')
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(screen.getByTestId('registration-challenge-id'))
+            .toHaveTextContent('true'))
+    })
+
+    it('links the copilot learning card to the published Thrive article', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/copilots']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('link', { name: /learn more/i }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder',
+            )
+    })
+
+    it('keeps reviewer learning content visible after reviewer profile hydration', async () => {
+        mockProfileRoles = ['Reviewer']
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/reviews']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('heading', { name: 'How to become a reviewer?' }))
+            .toBeInTheDocument()
     })
 })

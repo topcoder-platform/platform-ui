@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import {
+    fireEvent,
     render,
     RenderResult,
     screen,
@@ -23,9 +24,18 @@ jest.mock('~/libs/ui', () => {
         IconOutline: new Proxy({}, {
             get: () => Icon,
         }),
-        Tooltip: ({ children }: { children: JSX.Element }): JSX.Element => children,
+        Tooltip: (props: {
+            children: JSX.Element
+            strategy?: string
+        }): JSX.Element => (
+            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+        ),
     }
 }, { virtual: true })
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+}), { virtual: true })
 
 /**
  * Creates a complete competition-card fixture with an open registration and submission phase.
@@ -139,6 +149,25 @@ describe('OpportunityListCard competition presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it('labels fun competitions as leaderboard-scored instead of showing prizes', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({ funChallenge: true })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const prizes = screen.getByLabelText('Placement prizes')
+        expect(within(prizes)
+            .getByText('No individual prize - leaderboard scoring'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .queryByText('$1000'))
+            .not.toBeInTheDocument()
+    })
+
     it('uses the compact Figma card structure in grid view', () => {
         render(
             <MemoryRouter>
@@ -180,6 +209,26 @@ describe('OpportunityListCard competition presentation', () => {
             .toContain('registrationRegistered')
         expect(screen.queryByText('Open for registration'))
             .not.toBeInTheDocument()
+    })
+
+    it('filters by a clicked skill without following the challenge link', () => {
+        const onSkillClick = jest.fn()
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture()}
+                    kind='competitions'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        const skill = screen.getByRole('button', { name: 'Filter by Figma' })
+        fireEvent.click(skill)
+        expect(onSkillClick)
+            .toHaveBeenCalledWith('Figma')
+        expect(screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ }))
+            .toHaveAttribute('href', '/opportunities/challenge/challenge-id')
     })
 
     it('omits invented schedule progress when no phase is open', () => {
@@ -296,6 +345,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             description: 'Build a member-facing experience with the client team.',
             durationWeeks: 44,
             id: 'engagement-id',
+            nanoId: 'engagement-nano',
             role: 'SOFTWARE_DEVELOPER',
             skills: [{ name: 'React' }, { name: 'Node.js' }],
             status: 'OPEN',
@@ -309,6 +359,10 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('gridCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('target', '_blank')
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()
         expect(screen.getByText('Development'))
@@ -351,6 +405,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('formats the Copilot data science type as two words', () => {
+        const item: CopilotOpportunity = {
+            id: 'data-science-copilot',
+            opportunityTitle: 'Data Science Copilot',
+            projectType: 'datascience',
+            status: 'active',
+            type: 'datascience',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='copilots' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getAllByText('Data Science'))
+            .toHaveLength(2)
+        expect(screen.queryByText('Datascience'))
+            .not.toBeInTheDocument()
+    })
+
     it('normalizes closed and applied owner statuses to the authored pills', () => {
         const closed: EngagementOpportunity = {
             id: 'closed-engagement',
@@ -374,6 +448,35 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         rerender(
             <MemoryRouter>
                 <OpportunityListCard item={applied} kind='copilots' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Applied').className)
+            .toContain('stateApplied')
+    })
+
+    it('shows accepted and applied states for member engagement results', () => {
+        const accepted: EngagementOpportunity = {
+            applicationStatus: 'ACCEPTED',
+            id: 'accepted-engagement',
+            status: 'OPEN',
+            title: 'Accepted engagement',
+        }
+        const applied: EngagementOpportunity = {
+            id: 'applied-engagement',
+            status: 'OPEN',
+            title: 'Applied engagement',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={accepted} kind='engagements' memberApplied />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Accepted').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={applied} kind='engagements' memberApplied />
             </MemoryRouter>,
         )
         expect(screen.getByText('Applied').className)
@@ -430,5 +533,54 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('3'))
             .toBeInTheDocument()
+    })
+
+    it('positions review title tooltips outside the card clipping context', () => {
+        const item: ReviewOpportunity = {
+            challengeId: 'challenge-id',
+            challengeName: 'Long review opportunity title',
+            id: 'review-id',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
+            .toHaveAttribute('data-tooltip-strategy', 'fixed')
+    })
+
+    it('shows approved and rejected Review API application decisions', () => {
+        const approved: ReviewOpportunity = {
+            challengeId: 'approved-challenge',
+            challengeName: 'Approved review',
+            id: 'approved-review',
+            myApplications: [{ status: 'APPROVED' }],
+            status: 'OPEN',
+        }
+        const rejected: ReviewOpportunity = {
+            challengeId: 'rejected-challenge',
+            challengeName: 'Rejected review',
+            id: 'rejected-review',
+            myApplications: [{ status: 'REJECTED' }],
+            status: 'OPEN',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={approved} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Approved').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={rejected} kind='reviews' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Rejected').className)
+            .toContain('stateClosed')
     })
 })

@@ -105,6 +105,7 @@ export interface GlobalConfig {
         CNAME?: string
         REGION: string
         CONTAINER: string
+        SUBMISSION_CONTAINER: string
         PATH_PREFIX: string
         SECURITY?: {
             POLICY: string
