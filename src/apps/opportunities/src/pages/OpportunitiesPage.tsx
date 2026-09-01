@@ -1,7 +1,6 @@
 /* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
 import classNames from 'classnames'
 import {
-    ChangeEvent,
     FC,
     useContext,
     useDeferredValue,
@@ -22,6 +21,7 @@ import {
     OpportunityHero,
     OpportunityListCard,
     OpportunityPagination,
+    OpportunitySortSelect,
     OpportunityViewToggle,
 } from '../components'
 import {
@@ -43,7 +43,6 @@ import {
 } from '../utils/opportunity-listing.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 
-import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as ResetIcon } from '../assets/reset.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
@@ -275,8 +274,8 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     }
 
     /** Applies list sorting selected in the toolbar. */
-    const updateSort = (event: ChangeEvent<HTMLSelectElement>): void => {
-        setSort(event.target.value)
+    const updateSort = (value: string): void => {
+        setSort(value)
         setPage(1)
     }
 
@@ -285,19 +284,15 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
             <div className={styles.titleRow}>
                 <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
                 <div className={styles.toolbar}>
-                    <label className={styles.sort}>
+                    <div className={styles.sort}>
                         <SortIcon aria-hidden='true' />
                         <strong>Sort by</strong>
-                        <span className={styles.sortSelect}>
-                            <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                                {opportunitySortOptions(kind)
-                                    .map(option => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                            </select>
-                            <ChevronDownIcon aria-hidden='true' />
-                        </span>
-                    </label>
+                        <OpportunitySortSelect
+                            onChange={updateSort}
+                            options={opportunitySortOptions(kind)}
+                            value={sort}
+                        />
+                    </div>
                     <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
                 </div>
             </div>

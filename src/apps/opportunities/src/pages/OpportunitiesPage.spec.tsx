@@ -46,6 +46,7 @@ jest.mock('../components', () => ({
         <output data-testid={`registration-${props.item.id}`}>{String(!!props.registered)}</output>
     ),
     OpportunityPagination: () => undefined,
+    OpportunitySortSelect: () => undefined,
     OpportunityViewToggle: () => undefined,
 }))
 

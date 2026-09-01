@@ -1,0 +1,78 @@
+.root {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+}
+
+.control {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #161616;
+    cursor: pointer;
+    display: flex;
+    font: inherit;
+    gap: 2px;
+    min-width: 0;
+    padding: 0;
+    width: 100%;
+
+    &:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid #161616;
+        outline-offset: 2px;
+    }
+
+    span {
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    svg {
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.menu {
+    background: #fff;
+    border: 1px solid #a8a8a8;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .16);
+    box-sizing: border-box;
+    min-width: 148px;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+}
+
+.option {
+    background: #fff;
+    border: 0;
+    box-sizing: border-box;
+    color: #161616;
+    cursor: pointer;
+    display: block;
+    font: inherit;
+    line-height: 20px;
+    padding: 8px 16px;
+    text-align: left;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.option:hover,
+.activeOption {
+    background: #e8f6f6;
+}
+
+.option:focus-visible {
+    outline: 2px solid #0f62fe;
+    outline-offset: -2px;
+}
