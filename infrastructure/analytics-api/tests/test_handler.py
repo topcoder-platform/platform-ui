@@ -175,6 +175,56 @@ class AnalyticsHandlerTests(unittest.TestCase):
                     )
                     self.assertEqual(200, response["statusCode"])
 
+    def test_async_timeout_returns_a_private_pending_poll_response(self) -> None:
+        """Opted-in clients receive a reusable token instead of an HTTP failure."""
+
+        query_token = "a" * 64
+        with patch.object(
+            self.module,
+            "_execute_query",
+            side_effect=self.module.QueryTimeout(query_token),
+        ):
+            pending = self.module.handler(
+                self._event(
+                    "GET /v1/analytics/filters",
+                    ["analytics"],
+                    {"async": "true"},
+                ),
+                None,
+            )
+            legacy = self.module.handler(
+                self._event("GET /v1/analytics/filters", ["analytics"]),
+                None,
+            )
+
+        body = json.loads(pending["body"])
+        self.assertEqual(202, pending["statusCode"])
+        self.assertEqual("1", pending["headers"]["Retry-After"])
+        self.assertEqual("pending", body["status"])
+        self.assertEqual(query_token, body["queryToken"])
+        self.assertEqual(1_000, body["retryAfterMs"])
+        self.assertEqual(504, legacy["statusCode"])
+
+    def test_rejects_invalid_async_options_and_resume_tokens(self) -> None:
+        """Only opted-in clients can send a bounded server-issued query token."""
+
+        cases = [
+            {"async": "false"},
+            {"async": "true", "queryToken": "not-a-token"},
+            {"queryToken": "a" * 64},
+        ]
+        with patch.object(self.module, "_execute_query") as execute:
+            responses = [
+                self.module.handler(
+                    self._event("GET /v1/analytics/filters", ["analytics"], query),
+                    None,
+                )
+                for query in cases
+            ]
+
+        self.assertTrue(all(response["statusCode"] == 400 for response in responses))
+        execute.assert_not_called()
+
     def test_shared_api_preflight_does_not_require_a_role(self) -> None:
         """The public OPTIONS route returns no data and never queries Redshift."""
 
@@ -309,13 +359,12 @@ class AnalyticsHandlerTests(unittest.TestCase):
 
         self.assertEqual(2, execute.call_count)
 
-    def test_timeout_keeps_an_idempotent_statement_for_the_next_request(self) -> None:
-        """A client retry reuses rather than cancels a query that outlives one HTTP request."""
+    def test_timeout_token_resumes_across_an_idempotency_window_boundary(self) -> None:
+        """A pending response pins its statement even when the clock enters a new token window."""
 
         context = Mock()
         context.get_remaining_time_in_millis.return_value = 28_000
         with (
-            patch.object(self.module.time, "time", return_value=1_000),
             patch.object(self.module, "_query_wait_seconds", return_value=0),
             patch.object(
                 self.module._redshift_data,
@@ -324,16 +373,42 @@ class AnalyticsHandlerTests(unittest.TestCase):
             ) as execute,
             patch.object(self.module._redshift_data, "cancel_statement") as cancel,
         ):
-            for _ in range(2):
-                with self.assertRaises(self.module.QueryTimeout):
-                    self.module._execute_query("SELECT 1", [], context)
+            with (
+                patch.object(
+                    self.module.time,
+                    "time",
+                    return_value=self.module.QUERY_TOKEN_WINDOW_SECONDS - 1,
+                ),
+                self.assertRaises(self.module.QueryTimeout) as initial_timeout,
+            ):
+                self.module._execute_query("SELECT 1", [], context)
+            query_token = str(initial_timeout.exception)
+            with (
+                patch.object(
+                    self.module.time,
+                    "time",
+                    return_value=self.module.QUERY_TOKEN_WINDOW_SECONDS + 1,
+                ),
+                self.assertRaises(self.module.QueryTimeout) as resumed_timeout,
+            ):
+                self.module._execute_query("SELECT 1", [], context, query_token)
 
+        self.assertEqual(query_token, str(resumed_timeout.exception))
+        self.assertRegex(query_token, r"^[0-9a-f]{64}$")
         self.assertEqual(2, execute.call_count)
         self.assertEqual(
             execute.call_args_list[0].kwargs["ClientToken"],
             execute.call_args_list[1].kwargs["ClientToken"],
         )
         cancel.assert_not_called()
+
+    def test_resume_token_cannot_be_reused_for_another_query(self) -> None:
+        """A server token is bound to the fixed SQL and validated parameter set."""
+
+        with patch.object(self.module.time, "time", return_value=1_000):
+            query_token = self.module._query_client_token("SELECT 1", [], 0)
+            with self.assertRaisesRegex(ValueError, "invalid or expired"):
+                self.module._query_token_attempt("SELECT 2", [], query_token)
 
     def test_query_client_token_is_scoped_by_query_attempt_and_time_window(self) -> None:
         """Idempotency tokens reuse only the same query attempt inside one bounded window."""
