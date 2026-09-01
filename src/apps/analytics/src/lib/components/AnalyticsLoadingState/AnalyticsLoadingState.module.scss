@@ -1,0 +1,16 @@
+@import '@libs/ui/styles/includes';
+
+.region {
+    background: #ffffff;
+    border: 1px solid #dce3e9;
+    border-radius: 10px;
+    min-height: 320px;
+    overflow: hidden;
+    position: relative;
+}
+
+@include ltesm {
+    .region {
+        min-height: 240px;
+    }
+}

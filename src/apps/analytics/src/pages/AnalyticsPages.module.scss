@@ -199,6 +199,50 @@
     tbody tr:last-child td {
         border-bottom: 0;
     }
+
+    tbody tr:nth-child(even) {
+        background: #f7f9fa;
+    }
+}
+
+.pagination {
+    align-items: center;
+    border-top: 1px solid #e4eaee;
+    color: #617681;
+    display: flex;
+    font-size: 13px;
+    justify-content: space-between;
+    margin-top: $sp-4;
+    padding-top: $sp-4;
+
+    nav {
+        align-items: center;
+        display: flex;
+        gap: $sp-3;
+    }
+
+    button {
+        background: #ffffff;
+        border: 1px solid #aebbc2;
+        border-radius: 6px;
+        color: #0d3445;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        min-height: 36px;
+        padding: 0 $sp-4;
+
+        &:disabled {
+            background: #f2f6f8;
+            color: #93a2a9;
+            cursor: default;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #137d60;
+            outline-offset: 2px;
+        }
+    }
 }
 
 .primaryCell,
@@ -256,5 +300,11 @@
 
     .freshness {
         text-align: left;
+    }
+
+    .pagination {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: $sp-3;
     }
 }

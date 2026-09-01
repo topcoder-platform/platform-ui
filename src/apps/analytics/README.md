@@ -32,18 +32,27 @@ campaign and landing-page breakdowns plus aggregate click locations by semantic
 element fields and ten-percentage-point viewport buckets.
 
 General Analytics shows page views, distinct visitors, clicks, and distinct
-clickers over time, with page, traffic-source, and instrumented-application
-breakdowns.
+clickers. Page views, visitors, and clicks use separate daily area charts, and
+the ranked page table is paginated twenty rows at a time. Traffic-source and
+page breakdowns remain available; the application-surface breakdown is not
+shown.
 
 Counts are daily aggregates from the AWS Clickstream reporting views. Date
 ranges are inclusive and limited to 366 days. The UI displays the warehouse's
 `dataThrough` value because the development transform currently runs daily.
 Empty dates in a series are not inferred as provider outages.
 
+Development includes a clearly labeled synthetic campaign named
+`aws_analytics` with UTM ID `dev_fixture_20260902`. Its verified ordered funnel
+contains 30 landing visitors, 22 clickers, 14 registrations, and 8 submissions,
+plus multiple landing paths and click placements. Treat it as UI test data, not
+member traffic.
+
 Redshift Serverless can take longer than one HTTP request after an idle period.
 The UI opts into resumable queries and transparently polls `202` responses with
-the server-issued query token while keeping the loading state visible. Polling
-is bounded to twelve requests (roughly five minutes at the API's maximum query
+the server-issued query token. The report spinner stays in a contained region
+below the filters, leaving filters and Analytics navigation usable. Polling is
+bounded to twelve requests (roughly five minutes at the API's maximum query
 wait); after that, or after a genuine failure, the explicit retry action is
 shown.
 
@@ -81,6 +90,7 @@ yarn lint
 CI=true yarn test --watchAll=false --runTestsByPath \
   src/apps/analytics/src/config/routes.config.spec.ts \
   src/apps/analytics/src/analytics-app.routes.spec.tsx \
+  src/apps/analytics/src/pages/AnalyticsPages.spec.tsx \
   src/apps/analytics/src/lib/services/analytics.service.spec.ts \
   src/apps/analytics/src/lib/utils/analytics.utils.spec.ts \
   src/apps/analytics/src/lib/hooks/useAnalyticsResource.spec.ts

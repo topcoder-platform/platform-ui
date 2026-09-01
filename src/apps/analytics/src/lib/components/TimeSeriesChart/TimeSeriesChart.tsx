@@ -16,6 +16,7 @@ interface TimeSeriesChartProps {
     ariaLabel: string
     points: object[]
     series: TimeSeriesDefinition[]
+    variant?: 'area' | 'line'
 }
 
 /**
@@ -46,12 +47,13 @@ function dateLabel(value: string): string {
 /**
  * Renders a multi-series daily line chart and an equivalent screen-reader table.
  *
- * @param props accessible label, normalized points, and series definitions.
+ * @param props accessible label, normalized points, series definitions, and optional line/area variant.
  * @returns chart, accessible table, or explicit empty state.
  * @throws Does not throw.
  */
 export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
     const hasData = props.points.some(point => props.series.some(series => pointValue(point, series.key) > 0))
+    const chartType = props.variant ?? 'line'
     const options = useMemo<Highcharts.Options>(() => ({
         accessibility: { enabled: false },
         chart: {
@@ -59,17 +61,22 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             backgroundColor: 'transparent',
             height: 360,
             spacing: [16, 12, 8, 4],
-            type: 'line',
+            type: chartType,
         },
         colors: props.series.map(series => series.color),
         credits: { enabled: false },
         exporting: { enabled: false },
         legend: {
             align: 'center',
+            enabled: props.series.length > 1,
             itemStyle: { color: '#0d3445', fontSize: '12px', fontWeight: '600' },
             verticalAlign: 'top',
         },
         plotOptions: {
+            area: {
+                fillOpacity: 0.14,
+                lineWidth: 2,
+            },
             line: { lineWidth: 3 },
             series: {
                 animation: false,
@@ -81,7 +88,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             color: series.color,
             data: props.points.map(point => pointValue(point, series.key)),
             name: series.label,
-            type: 'line',
+            type: chartType,
         })) as Highcharts.SeriesOptionsType[],
         title: { text: undefined },
         tooltip: {
@@ -104,7 +111,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             min: 0,
             title: { text: undefined },
         },
-    }), [props.points, props.series])
+    }), [chartType, props.points, props.series])
 
     if (!hasData) {
         return <div className={styles.empty} role='status'>No activity is available for this period.</div>

@@ -202,11 +202,11 @@ non-cacheable.
 
 The Campaigns tab exposes the ordered landing, click, registration, and
 submission funnel with UTM, landing-page, and privacy-safe click-location
-breakdowns. The General tab exposes page views, visitors, clicks, pages,
-traffic sources, and application surfaces over time. Both report warehouse
-freshness and limit callers to 366 inclusive days. QuickSight remains the AWS
-native exploratory dashboard; the Platform UI app is the narrowly scoped daily
-operational interface.
+breakdowns. The General tab exposes page views, visitors, and clicks in
+separate daily charts plus paginated page and traffic-source tables. Both
+report warehouse freshness and limit callers to 366 inclusive days. QuickSight
+remains the AWS native exploratory dashboard; the Platform UI app is the
+narrowly scoped daily operational interface.
 
 ## Configuration
 
@@ -252,6 +252,14 @@ events are present in event_v2; the tagged event retained codex, integration,
 and aws_analytics while the control event remained Direct. The default AWS
 Clickstream dashboard, Topcoder reporting dashboard, Redshift data source, and
 all three custom datasets reported successful creation status.
+
+On 2026-09-02, the development collector received a larger pseudonymous fixture
+for campaign `aws_analytics` and UTM ID `dev_fixture_20260902`. The standard
+transform and Redshift load completed successfully, and both the reporting view
+and role-gated API returned an ordered 30 landing visitors, 22 clickers, 14
+registrations, and 8 submissions. Three landing paths and three semantic click
+placements provide non-empty table data. These aggregates are synthetic UI
+test data and must not be interpreted as member traffic.
 
 If the daily pipeline misses its freshness objective, first inspect failures and
 job duration. Increasing processing frequency is a cost-bearing design change,
