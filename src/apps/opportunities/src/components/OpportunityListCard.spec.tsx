@@ -517,7 +517,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders Review role, start, and application metrics without a description', () => {
+    it('renders Review role, payment, start, and application metrics without a description', () => {
         const item: ReviewOpportunity = {
             applicationCount: 3,
             canApply: true,
@@ -537,6 +537,10 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Payment:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('$100'))
             .toBeInTheDocument()
         expect(screen.getByText('Applications:'))
             .toBeInTheDocument()

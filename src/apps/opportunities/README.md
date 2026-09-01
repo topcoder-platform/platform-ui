@@ -54,6 +54,10 @@ to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
 
+Review cards include the Review API's first role payment, falling back to its
+base payment. Missing amounts are labeled `TBD` rather than presented as free
+work.
+
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
