@@ -1,4 +1,4 @@
-import { decodeToken } from 'tc-auth-lib'
+import { decodeToken } from '@topcoder-platform/tc-auth-lib'
 
 import { authInitializeAsync } from '../authentication-functions'
 import { logError } from '../../logger'

@@ -1,4 +1,4 @@
-import { decodeToken } from 'tc-auth-lib'
+import { decodeToken } from '@topcoder-platform/tc-auth-lib'
 
 import type { Project } from '../models'
 
@@ -7,7 +7,7 @@ import {
     buildProjectLandingPath,
 } from './navigation.utils'
 
-jest.mock('tc-auth-lib', () => ({
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
     decodeToken: jest.fn(),
 }))
 

@@ -1,6 +1,6 @@
-import { configureConnector, decodeToken, getFreshToken } from 'tc-auth-lib'
 import cookies from 'browser-cookies'
 
+import { configureConnector, decodeToken, getFreshToken } from '@topcoder-platform/tc-auth-lib'
 import { EnvironmentConfig, ToolTitle } from '~/config'
 
 import { PlatformRoute } from '../../router'

@@ -1,11 +1,11 @@
 import { AnchorHTMLAttributes, FC } from 'react'
-import remarkGfm from 'remark-gfm-v4'
 
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
+import remarkGfm from '@topcoder-platform/remark-gfm-v4'
 
 import styles from './MarkdownText.module.scss'
 
-// remark-gfm-v4 is aliased to remark-gfm@4 (see package.json) instead of the
+// The scoped remark-gfm-v4 dependency is aliased to remark-gfm@4 (see package.json) instead of the
 // shared `remark-gfm@^3.0.1` top-level pin: @assistant-ui/react-markdown
 // vendors its own react-markdown@10/unified@11 pipeline, which remark-gfm@3
 // (built for unified@9/10) isn't guaranteed to parse tables correctly

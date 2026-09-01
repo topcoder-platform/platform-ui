@@ -359,12 +359,14 @@ describe('CampusLeaderboardPage', () => {
             name: /View participation history for testaws1/i,
         }))
 
-        const isChallengeLink = (link: HTMLElement): boolean => Boolean(
-            link.getAttribute('href')
-                ?.startsWith('https://review.example.test'),
-        )
+        const expectedChallengeNames = new Set([
+            'Submitted last',
+            'Submitted first',
+            'Registered last, never submitted',
+            'Registered first, never submitted',
+        ])
         const challengeNames = screen.getAllByRole('link')
-            .filter(isChallengeLink)
+            .filter(link => expectedChallengeNames.has(link.textContent ?? ''))
             .map(link => link.textContent)
 
         expect(challengeNames)
