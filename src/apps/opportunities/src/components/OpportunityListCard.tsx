@@ -1,4 +1,4 @@
-/* eslint-disable ordered-imports/ordered-imports */
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex, ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     FC,
     KeyboardEvent,

@@ -69,7 +69,7 @@ const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
  * @throws Error when file uploads are not configured for the environment.
  */
 function getSubmissionFilestackClient(): Client {
-    const { API_KEY, CNAME, SECURITY } = EnvironmentConfig.FILESTACK
+    const { API_KEY, CNAME, SECURITY }: typeof EnvironmentConfig.FILESTACK = EnvironmentConfig.FILESTACK
     if (!API_KEY) throw new Error('File uploads are not configured for this environment.')
     if (!submissionFilestackClient) {
         submissionFilestackClient = init(API_KEY, {
@@ -79,6 +79,7 @@ function getSubmissionFilestackClient(): Client {
                 : undefined,
         })
     }
+
     return submissionFilestackClient
 }
 
@@ -120,7 +121,8 @@ export async function createChallengeSubmission(
         path: storagePath,
         region: EnvironmentConfig.FILESTACK.REGION,
     }
-    const upload = await getSubmissionFilestackClient().upload(file, uploadOptions, storeOptions)
+    const upload = await getSubmissionFilestackClient()
+        .upload(file, uploadOptions, storeOptions)
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
     const storageKey = String(upload?.key ?? storagePath)
     const storageUrl = `https://s3.amazonaws.com/${EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER}/${storageKey}`
@@ -348,12 +350,14 @@ export async function getOpportunitySummary(): Promise<OpportunitySummary> {
             page: 1,
             perPage: 1,
             statuses: ['ACTIVE'],
-        }).catch(() => undefined),
+        })
+            .catch(() => undefined),
         getOpportunityPage('reviews', {
             page: 1,
             perPage: 1,
             statuses: ['OPEN'],
-        }).catch(() => undefined),
+        })
+            .catch(() => undefined),
     ])
     const summary = normalizeOpportunitySummary(response)
     return {
@@ -434,7 +438,11 @@ export function buildOpportunityPageUrl(
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sortBy', startingSoon ? 'startDate' : 'updatedAt')
         url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
-        if (startingSoon) url.searchParams.set('startDateStart', new Date().toISOString())
+        if (startingSoon) {
+            url.searchParams.set('startDateStart', new Date()
+                .toISOString())
+        }
+
         if (filters.search) url.searchParams.set('search', filters.search)
         const competitionStatuses = filters.statuses?.includes('REGISTRATION')
             ? ['ACTIVE']
@@ -474,7 +482,11 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('pageSize', String(perPage))
         const startingSoon = filters.sort === 'startingSoon'
         url.searchParams.set('sort', startingSoon ? 'startDate asc' : 'createdAt desc')
-        if (startingSoon) url.searchParams.set('startDateFrom', new Date().toISOString())
+        if (startingSoon) {
+            url.searchParams.set('startDateFrom', new Date()
+                .toISOString())
+        }
+
         url.searchParams.set('noGrouping', 'true')
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
@@ -613,6 +625,7 @@ function filterLegacyCopilotOpportunities(
             const startDate = Date.parse(item.startDate ?? '')
             if (!Number.isFinite(startDate) || startDate < Date.now()) return false
         }
+
         if (statuses.size && !statuses.has(itemStatus)) return false
         if (types.size && !types.has(itemType)) return false
         if (skills.length && !skills.some(skill => itemSkills.some(value => value.includes(skill)))) return false
@@ -765,6 +778,7 @@ async function getAiChallengeIds(): Promise<Set<string>> {
         url.searchParams.append('tracks[]', 'AI')
         return url.toString()
     }
+
     const firstResponse = await xhrGlobalInstance.get(buildUrl(1)) as AxiosResponse<
         ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
     >
@@ -808,7 +822,9 @@ async function getReviewPageWithAiTrack(
         perPage: REVIEW_AI_PAGE_SIZE,
         tracks: undefined,
     }
-    const firstResponse = await xhrGlobalInstance.get(buildOpportunityPageUrl('reviews', ownerFilters)) as AxiosResponse<
+    const firstResponse = await xhrGlobalInstance.get(
+        buildOpportunityPageUrl('reviews', ownerFilters),
+    ) as AxiosResponse<
         ReviewOpportunity[] | ApiEnvelope<ReviewOpportunity[]> | ApiListResponse<ReviewOpportunity>
     >
     const firstPage = normalizePage(firstResponse, 1, REVIEW_AI_PAGE_SIZE)
@@ -874,6 +890,7 @@ export async function getOpportunityPage(
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
         return getReviewPageWithAiTrack(filters)
     }
+
     if (kind === 'competitions' && filters.applied && filters.memberId) {
         const submitterRole = await getSubmitterRole()
         const roleScopedFilters: OpportunityFilters = {
@@ -902,6 +919,7 @@ export async function getOpportunityPage(
                 return normalizePage(skillResponse, page, perPage)
             }
         }
+
         return kind === 'copilots'
             ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
             : normalized
@@ -1391,7 +1409,8 @@ export async function getMemberChallengeRegistrationIds(memberId: string): Promi
     url.searchParams.set('resourceRoleId', role.id)
     url.searchParams.set('useScroll', 'true')
     const response = await xhrGetAsync<string[] | ApiEnvelope<string[]>>(url.toString())
-    return Array.from(new Set(unwrap(response).map(String)))
+    return Array.from(new Set(unwrap(response)
+        .map(String)))
 }
 
 /**

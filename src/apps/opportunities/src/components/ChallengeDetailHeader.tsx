@@ -3,8 +3,6 @@ import { CSSProperties, FC, Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { IconOutline } from '~/libs/ui'
-
 import { ChallengeOpportunity, ChallengePhase } from '../models'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
@@ -130,6 +128,7 @@ function phaseSummary(phase: ChallengePhase | undefined): ChallengePhaseSummary 
     if (!end || Number.isNaN(end.getTime())) {
         return { phase: phase.name, qualifier: ' phase is active' }
     }
+
     const remainingMinutes = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 60000))
     if (remainingMinutes === 0) return { phase: phase.name, qualifier: ' phase is active' }
     const days = Math.floor(remainingMinutes / 1440)
@@ -470,32 +469,13 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 {props.challenge.funChallenge
                                     ? <strong>{FUN_CHALLENGE_PRIZE_LABEL}</strong>
                                     : challengePrizes.length > 0
-                                    ? (
-                                        <>
-                                            <div className={styles.featuredPrizes}>
-                                                {featuredPrizes.map(prize => {
-                                                    const medal = medalAssets[prize.placement - 1]
-                                                    return (
-                                                        <strong
-                                                            key={`placement-${prize.placement}`}
-                                                        >
-                                                            <img alt={`${prize.placement} place`} src={medal} />
-                                                            {formatPrize(prize)}
-                                                        </strong>
-                                                    )
-                                                })}
-                                            </div>
-                                            {additionalPrizes.length > 0 && (
-                                                <div
-                                                    aria-label='Additional placement prizes'
-                                                    className={styles.additionalPrizes}
-                                                    role='group'
-                                                >
-                                                    {additionalPrizes.map(prize => {
+                                        ? (
+                                            <>
+                                                <div className={styles.featuredPrizes}>
+                                                    {featuredPrizes.map(prize => {
                                                         const medal = medalAssets[prize.placement - 1]
                                                         return (
                                                             <strong
-                                                                className={styles.secondaryPrize}
                                                                 key={`placement-${prize.placement}`}
                                                             >
                                                                 <img alt={`${prize.placement} place`} src={medal} />
@@ -504,9 +484,28 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                         )
                                                     })}
                                                 </div>
-                                            )}
-                                        </>
-                                    )
+                                                {additionalPrizes.length > 0 && (
+                                                    <div
+                                                        aria-label='Additional placement prizes'
+                                                        className={styles.additionalPrizes}
+                                                        role='group'
+                                                    >
+                                                        {additionalPrizes.map(prize => {
+                                                            const medal = medalAssets[prize.placement - 1]
+                                                            return (
+                                                                <strong
+                                                                    className={styles.secondaryPrize}
+                                                                    key={`placement-${prize.placement}`}
+                                                                >
+                                                                    <img alt={`${prize.placement} place`} src={medal} />
+                                                                    {formatPrize(prize)}
+                                                                </strong>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )
                                         : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>

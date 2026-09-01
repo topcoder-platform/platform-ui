@@ -319,10 +319,6 @@ export const FILESTACK = {
         'FILESTACK_CONTAINER',
         'tc-challenge-v5-dev',
     ),
-    SUBMISSION_CONTAINER: getReactEnv<string>(
-        'FILESTACK_SUBMISSION_CONTAINER',
-        'topcoder-dev-submissions-dmz',
-    ),
     PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'v6-review-app'),
     PROGRESS_INTERVAL: getReactEnv<number>(
         'FILESTACK_UPLOAD_PROGRESS_INTERVAL',
@@ -337,6 +333,10 @@ export const FILESTACK = {
                 SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
             }
             : undefined,
+    SUBMISSION_CONTAINER: getReactEnv<string>(
+        'FILESTACK_SUBMISSION_CONTAINER',
+        'topcoder-dev-submissions-dmz',
+    ),
     TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
 }
 

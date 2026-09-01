@@ -48,11 +48,11 @@ export const FILESTACK = {
     ...DefaultFileStack,
     CNAME: getReactEnv<string>('FILESTACK_CNAME', 'fs.topcoder.com'),
     CONTAINER: getReactEnv<string>('FILESTACK_CONTAINER', 'topcoder-submissions'),
+    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'review-app'),
     SUBMISSION_CONTAINER: getReactEnv<string>(
         'FILESTACK_SUBMISSION_CONTAINER',
         'topcoder-submissions-dmz',
     ),
-    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'review-app'),
 }
 
 export const FILESTACK_SHOWCASE_MEDIA_CDN_URL

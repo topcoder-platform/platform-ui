@@ -689,10 +689,11 @@ describe('opportunities service normalization', () => {
 
     it('uploads a challenge ZIP to DMZ before creating its URL-backed submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
-        const upload = jest.fn().mockImplementation(async (_file, options) => {
-            options.onProgress({ totalPercent: 50 })
-            return { key: 'challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
-        })
+        const upload = jest.fn()
+            .mockImplementation(async (_file, options) => {
+                options.onProgress({ totalPercent: 50 })
+                return { key: 'challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
+            })
         const initMock = init as jest.MockedFunction<typeof init>
         initMock.mockReturnValue({ upload } as never)
         const progress = jest.fn()

@@ -24,13 +24,12 @@ jest.mock('~/libs/ui', () => {
         IconOutline: new Proxy({}, {
             get: () => Icon,
         }),
-        Tooltip: ({
-            children,
-            strategy,
-        }: {
+        Tooltip: (props: {
             children: JSX.Element
             strategy?: string
-        }): JSX.Element => <span data-tooltip-strategy={strategy}>{children}</span>,
+        }): JSX.Element => (
+            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+        ),
     }
 }, { virtual: true })
 
