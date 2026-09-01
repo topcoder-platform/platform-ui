@@ -7,7 +7,8 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 223px;
     min-height: 136px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
     text-decoration: none;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 
@@ -20,6 +21,7 @@
         border-color: #007d79;
         box-shadow: 0 5px 18px rgba(0, 30, 46, .1);
         transform: translateY(-1px);
+        z-index: 10;
     }
 
 
@@ -27,6 +29,10 @@
         border-color: #007d79;
         box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
         outline: 0;
+    }
+
+    &:focus-within {
+        z-index: 10;
     }
 }
 
@@ -266,37 +272,32 @@
 }
 
 .trackBadge {
+    background: #d0e2ff;
     box-sizing: border-box;
     height: 20px;
 }
 
 .designBadge {
-    background: #d0e2ff;
     color: #002d9c;
 }
 
 .developmentBadge {
-    background: #a7f0ba;
     color: #044317;
 }
 
 .dataScienceBadge {
-    background: #ffd9be;
     color: #5e2900;
 }
 
 .artificialIntelligenceBadge {
-    background: #e8daff;
     color: #491d8b;
 }
 
 .qualityAssuranceBadge {
-    background: #ffd6e8;
     color: #740937;
 }
 
 .competitionBadge {
-    background: #e9ecef;
     color: #161616;
 }
 

@@ -26,6 +26,10 @@ jest.mock('~/libs/core', () => ({
     }),
 }), { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { TOPCODER_URL: 'https://www.topcoder.example' },
+}), { virtual: true })
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): undefined => undefined
     return {
@@ -46,6 +50,7 @@ jest.mock('../components', () => ({
         <output data-testid={`registration-${props.item.id}`}>{String(!!props.registered)}</output>
     ),
     OpportunityPagination: () => undefined,
+    OpportunitySortSelect: () => undefined,
     OpportunityViewToggle: () => undefined,
 }))
 
@@ -160,8 +165,12 @@ describe('OpportunitiesPage', () => {
         expect(await screen.findByRole('link', { name: /learn more/i }))
             .toHaveAttribute(
                 'href',
-                'https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder',
+                'https://www.topcoder.example/thrive/articles/become-a-copilot-at-topcoder',
             )
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('rel', 'noreferrer')
     })
 
     it('keeps reviewer learning content visible after reviewer profile hydration', async () => {
@@ -192,5 +201,14 @@ describe('OpportunitiesPage', () => {
 
         expect(await screen.findByRole('heading', { name: 'How to become a reviewer?' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/Reviewer%20Qualification%20Requirements',
+            )
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('rel', 'noreferrer')
     })
 })

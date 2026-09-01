@@ -54,6 +54,17 @@ to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
 
+Opportunity cards preserve same-tab navigation. External role-learning links
+open in a separate tab and include `rel="noreferrer"`.
+
+Completed Engagements omit `Starting soon`, since a future-start ordering is
+not meaningful for closed work. Changing to Completed while that sort is active
+resets the listing to `Newest first`.
+
+Review cards include the Review API's first role payment, falling back to its
+base payment. Missing amounts are labeled `TBD` rather than presented as free
+work.
+
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The

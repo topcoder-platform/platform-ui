@@ -34,7 +34,11 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('~/config', () => ({
-    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+    AppSubdomain: { copilots: 'copilots' },
+    EnvironmentConfig: {
+        ENGAGEMENTS_URL: 'https://engagements.example',
+        TC_DOMAIN: 'topcoder.example',
+    },
 }), { virtual: true })
 
 /**
@@ -394,6 +398,11 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('copilotCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute(
+                'href',
+                'https://copilots.topcoder.example/opportunity/copilot-id',
+            )
         expect(screen.getByText('Hours / week:'))
             .toBeInTheDocument()
         expect(screen.getByText('Challenge')
@@ -508,7 +517,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders Review role, start, and application metrics without a description', () => {
+    it('renders Review role, payment, start, and application metrics without a description', () => {
         const item: ReviewOpportunity = {
             applicationCount: 3,
             canApply: true,
@@ -528,6 +537,10 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Payment:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('$100'))
             .toBeInTheDocument()
         expect(screen.getByText('Applications:'))
             .toBeInTheDocument()

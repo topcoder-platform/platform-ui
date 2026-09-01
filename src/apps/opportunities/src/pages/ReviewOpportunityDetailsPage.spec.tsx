@@ -37,6 +37,7 @@ jest.mock('~/libs/core', () => ({
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
+        TOPCODER_URL: 'https://www.topcoder.example',
         URLS: { USER_PROFILE: 'https://profiles.topcoder-dev.com' },
     },
 }), { virtual: true })
@@ -158,6 +159,15 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
         expect(screen.getByText('How to become a reviewer?'))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/Reviewer%20Qualification%20Requirements',
+            )
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: /learn more/i }))
+            .toHaveAttribute('rel', 'noreferrer')
         expect(screen.getByRole('button', { name: 'Apply to be a reviewer' }))
             .toBeDisabled()
         expect(screen.getByText(/Please read the challenge specification carefully/))

@@ -1,7 +1,6 @@
 /* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
 import classNames from 'classnames'
 import {
-    ChangeEvent,
     FC,
     useContext,
     useDeferredValue,
@@ -22,6 +21,7 @@ import {
     OpportunityHero,
     OpportunityListCard,
     OpportunityPagination,
+    OpportunitySortSelect,
     OpportunityViewToggle,
 } from '../components'
 import {
@@ -38,12 +38,16 @@ import {
     getOpportunitySummary,
 } from '../services'
 import {
+    COPILOT_LEARNING_URL,
+    REVIEWER_LEARNING_URL,
+} from '../utils/opportunity-learning.utils'
+import {
     defaultSort,
+    normalizeOpportunitySort,
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 
-import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as ResetIcon } from '../assets/reset.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
@@ -119,7 +123,7 @@ const LearningCard: FC<LearningCardProps> = props => (
     <aside className={styles.learning}>
         <h3>{props.title}</h3>
         <p>{props.body}</p>
-        <a href={props.href}>
+        <a href={props.href} rel='noreferrer' target='_blank'>
             Learn more
             <IconOutline.ArrowRightIcon />
         </a>
@@ -253,6 +257,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     /** Updates the active status and starts again at page one. */
     const updateStatus = (value: string): void => {
         setStatus(value)
+        setSort(current => normalizeOpportunitySort(kind, value, current))
         setPage(1)
     }
 
@@ -275,8 +280,8 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     }
 
     /** Applies list sorting selected in the toolbar. */
-    const updateSort = (event: ChangeEvent<HTMLSelectElement>): void => {
-        setSort(event.target.value)
+    const updateSort = (value: string): void => {
+        setSort(value)
         setPage(1)
     }
 
@@ -285,19 +290,15 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
             <div className={styles.titleRow}>
                 <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
                 <div className={styles.toolbar}>
-                    <label className={styles.sort}>
+                    <div className={styles.sort}>
                         <SortIcon aria-hidden='true' />
                         <strong>Sort by</strong>
-                        <span className={styles.sortSelect}>
-                            <select aria-label='Sort opportunities' onChange={updateSort} value={sort}>
-                                {opportunitySortOptions(kind)
-                                    .map(option => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                            </select>
-                            <ChevronDownIcon aria-hidden='true' />
-                        </span>
-                    </label>
+                        <OpportunitySortSelect
+                            onChange={updateSort}
+                            options={opportunitySortOptions(kind, status)}
+                            value={sort}
+                        />
+                    </div>
                     <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
                 </div>
             </div>
@@ -323,14 +324,14 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     {kind === 'reviews' && (
                         <LearningCard
                             body='Interested in evaluating submissions on Topcoder?'
-                            href='/thrive/articles/How%20to%20become%20a%20reviewer'
+                            href={REVIEWER_LEARNING_URL}
                             title='How to become a reviewer?'
                         />
                     )}
                     {kind === 'copilots' && !isCopilot && (
                         <LearningCard
                             body='Interested in managing challenges on Topcoder?'
-                            href='https://www.topcoder.com/thrive/articles/become-a-copilot-at-topcoder'
+                            href={COPILOT_LEARNING_URL}
                             title='How to become a copilot?'
                         />
                     )}

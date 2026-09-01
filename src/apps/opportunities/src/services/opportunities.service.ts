@@ -127,19 +127,20 @@ export async function createChallengeSubmission(
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
     const storageKey = String(upload?.key ?? storagePath)
     const storageUrl = `https://s3.amazonaws.com/${EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER}/${storageKey}`
-    const formData = new FormData()
-    formData.append('challengeId', challengeId)
-    formData.append('memberId', memberId)
-    formData.append('type', type)
-    formData.append('url', storageUrl)
-
-    const submission = await xhrPostAsync<FormData, ChallengeSubmission>(
+    const submission = await xhrPostAsync<{
+        challengeId: string
+        memberId: string
+        type: ChallengeSubmissionType
+        url: string
+    }, ChallengeSubmission>(
         `${V6_URL}/submissions`,
-        formData,
         {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
+            challengeId,
+            memberId,
+            type,
+            url: storageUrl,
+        },
+        {
             signal,
         },
     )

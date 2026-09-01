@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import { EnvironmentConfig } from '~/config'
+import { AppSubdomain, EnvironmentConfig } from '~/config'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
@@ -500,7 +500,8 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
     return {
         badge: opportunityTrackLabel(item.projectType || item.type || 'Copilot'),
         description: descriptionExcerpt(item.overview),
-        href: `/copilots/opportunity/${item.id}`,
+        href: `https://${AppSubdomain.copilots}.${EnvironmentConfig.TC_DOMAIN}`
+            + `/opportunity/${encodeURIComponent(String(item.id))}`,
         meta: [
             {
                 icon: <HoursMetricIcon />,
@@ -532,6 +533,24 @@ export function reviewApplicationTotal(item: ReviewOpportunity): number {
     return item.applicationCount ?? item.applications?.length ?? 0
 }
 
+/**
+ * Formats the reviewer compensation shown on an opportunity card.
+ *
+ * @param value Review API payment value.
+ * @returns concise USD amount, or `TBD` when no finite amount is available.
+ * @throws Does not throw.
+ */
+export function formatReviewPayment(value?: number): string {
+    if (value === undefined || !Number.isFinite(value)) return 'TBD'
+    return new Intl.NumberFormat('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        style: 'currency',
+    })
+        .format(value)
+}
+
 /** Converts review data to the shared card presentation model. */
 function reviewView(item: ReviewOpportunity): CardViewModel {
     const track = String(item.challengeData?.track ?? item.challengeData?.trackName ?? 'Review')
@@ -541,6 +560,11 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
         href: `/opportunities/review/${item.id}`,
         meta: [
             { icon: <RoleMetricIcon />, label: 'Role', value: item.payments?.[0]?.role || 'Reviewer' },
+            {
+                icon: <PaymentMetricIcon />,
+                label: 'Payment',
+                value: formatReviewPayment(item.payments?.[0]?.payment ?? item.basePayment),
+            },
             { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
             {
                 icon: <SubmissionsMetricIcon />,

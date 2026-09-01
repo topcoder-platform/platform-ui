@@ -240,9 +240,10 @@
     gap: 20px;
     height: 252px;
     justify-content: space-between;
-    justify-self: end;
+    justify-self: stretch;
     padding: 24px;
     position: relative;
+    width: 100%;
 
     button,
     a {
@@ -295,6 +296,7 @@
         font-weight: 700;
         gap: 4px;
         line-height: normal;
+        white-space: nowrap;
 
         img {
             flex: 0 0 auto;
