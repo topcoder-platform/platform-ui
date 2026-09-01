@@ -746,9 +746,14 @@ describe('opportunities service normalization', () => {
         expect(post)
             .toHaveBeenCalledWith(
                 'https://api.example/v6/submissions',
-                expect.any(FormData),
+                {
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CHECKPOINT_SUBMISSION',
+                    url: 'https://s3.amazonaws.com/submission-dmz/'
+                        + 'challenge-id-123-CHECKPOINT_SUBMISSION.zip',
+                },
                 expect.objectContaining({
-                    headers: { 'Content-Type': 'multipart/form-data' },
                     signal: controller.signal,
                 }),
             )
@@ -765,17 +770,6 @@ describe('opportunities service normalization', () => {
                     region: 'us-east-1',
                 }),
             )
-        const payload = post.mock.calls.at(-1)?.[1] as FormData
-        expect(payload.get('challengeId'))
-            .toBe('challenge-id')
-        expect(payload.get('memberId'))
-            .toBe('123')
-        expect(payload.get('type'))
-            .toBe('CHECKPOINT_SUBMISSION')
-        expect(payload.get('url'))
-            .toBe('https://s3.amazonaws.com/submission-dmz/challenge-id-123-CHECKPOINT_SUBMISSION.zip')
-        expect(payload.has('file'))
-            .toBe(false)
         expect(progress)
             .toHaveBeenNthCalledWith(1, 50)
         expect(progress)
