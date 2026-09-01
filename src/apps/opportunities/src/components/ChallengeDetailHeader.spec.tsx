@@ -166,6 +166,28 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toContainElement(screen.getByAltText('4 place'))
     })
 
+    it('replaces detail prizes with the leaderboard label for fun challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({ funChallenge: true })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('No individual prize - leaderboard scoring'))
+            .toBeInTheDocument()
+        expect(screen.queryByAltText('1 place'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Prize details coming soon'))
+            .not.toBeInTheDocument()
+    })
+
     it('renders the Figma phase rail with date rows and challenge-end Winners milestone', () => {
         const challengeEnd = '2999-08-20T12:30:00.000Z'
         render(

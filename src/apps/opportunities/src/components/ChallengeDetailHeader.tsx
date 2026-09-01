@@ -41,6 +41,7 @@ import {
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
+    FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
@@ -466,7 +467,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         <div className={styles.prizeFrame}>
                             <small>Prizes</small>
                             <div className={styles.prizes}>
-                                {challengePrizes.length > 0
+                                {props.challenge.funChallenge
+                                    ? <strong>{FUN_CHALLENGE_PRIZE_LABEL}</strong>
+                                    : challengePrizes.length > 0
                                     ? (
                                         <>
                                             <div className={styles.featuredPrizes}>
@@ -504,7 +507,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             )}
                                         </>
                                     )
-                                    : <strong>Prize details coming soon</strong>}
+                                        : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>
                         <div className={styles.actions}>
