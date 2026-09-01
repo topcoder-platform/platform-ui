@@ -135,6 +135,11 @@ describe('ReportIssueModal', () => {
             }))
         expect(await screen.findByText('Thank you for reporting this issue.'))
             .toBeInTheDocument()
+        expect(mockedUploadAttachment)
+            .toHaveBeenCalledWith(file, expect.objectContaining({
+                category: 'support-ticket',
+                challengeId: expect.stringMatching(/^draft-/),
+            }))
     })
 
     it('rejects files larger than the authored two-megabyte limit', async () => {
