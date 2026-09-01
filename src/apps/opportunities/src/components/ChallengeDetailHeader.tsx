@@ -420,6 +420,12 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
     const featuredPrizes = challengePrizes.slice(0, 3)
     const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
+    const featuredPrizeLabels = featuredPrizes.map(prize => formatPrize(prize))
+    const compactFeaturedPrizes = featuredPrizes.some((prize, index) => {
+        const prizeType = prize.type?.trim()
+            .toUpperCase()
+        return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
+    })
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const timelineGridStyle: CSSProperties = {
@@ -497,15 +503,21 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                     : challengePrizes.length > 0
                                         ? (
                                             <>
-                                                <div className={styles.featuredPrizes}>
-                                                    {featuredPrizes.map(prize => {
+                                                <div className={classNames(styles.featuredPrizes, {
+                                                    [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                })}
+                                                >
+                                                    {featuredPrizes.map((prize, index) => {
                                                         const medal = medalAssets[prize.placement - 1]
                                                         return (
                                                             <strong
+                                                                className={classNames({
+                                                                    [styles.compactPrize]: compactFeaturedPrizes,
+                                                                })}
                                                                 key={`placement-${prize.placement}`}
                                                             >
                                                                 <img alt={`${prize.placement} place`} src={medal} />
-                                                                {formatPrize(prize)}
+                                                                {featuredPrizeLabels[index]}
                                                             </strong>
                                                         )
                                                     })}

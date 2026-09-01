@@ -320,6 +320,16 @@
     gap: 24px;
 }
 
+.compactFeaturedPrizes {
+    flex-wrap: wrap;
+    gap: 8px 20px;
+}
+
+.compactPrize {
+    font-size: 24px !important;
+    min-width: 0;
+}
+
 .additionalPrizes {
     flex-wrap: wrap;
     gap: 4px 12px;

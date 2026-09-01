@@ -225,6 +225,36 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it('uses the compact featured prize layout for long point labels', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        prizeSets: [{
+                            prizes: [
+                                { type: 'POINT', value: 1200 },
+                                { type: 'POINT', value: 600 },
+                                { type: 'POINT', value: 400 },
+                            ],
+                            type: 'PLACEMENT',
+                        }],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('1,200 pts').className)
+            .toContain('compactPrize')
+        expect(screen.getByText('1,200 pts')
+            .parentElement?.className)
+            .toContain('compactFeaturedPrizes')
+    })
+
     it('renders the Figma phase rail with date rows and challenge-end Winners milestone', () => {
         const challengeEnd = '2999-08-20T12:30:00.000Z'
         render(
