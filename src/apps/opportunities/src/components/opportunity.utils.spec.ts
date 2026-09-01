@@ -19,6 +19,9 @@ import { parseSkillsFilter } from '../utils/opportunity-filter.utils'
 jest.mock('react-markdown', () => () => undefined)
 jest.mock('remark-breaks', () => jest.fn())
 jest.mock('remark-gfm', () => jest.fn())
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+}), { virtual: true })
 jest.mock('~/libs/cms', () => ({ getSafeCmsLink: jest.fn(value => value) }), { virtual: true })
 jest.mock('~/libs/ui', () => ({ IconOutline: {} }), { virtual: true })
 jest.mock('dompurify', () => ({ sanitize: jest.fn(value => value) }))
