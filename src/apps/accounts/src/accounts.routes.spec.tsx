@@ -15,13 +15,18 @@ describe('Account Settings routes', () => {
     it('protects settings while allowing validation links to work logged out', () => {
         const [root] = accountsRoutes
         const settingsRoute = root.children?.find(route => route.route === '')
-        const validationRoute = root.children?.find(route => route.route === 'changeEmail')
+        const validationRoute = root.children
+            ?.find(route => route.route === 'email-change/verify')
+        const legacyValidationRoute = root.children
+            ?.find(route => route.route === 'changeEmail')
 
         expect(root.authRequired)
             .toBeUndefined()
         expect(settingsRoute?.authRequired)
             .toBe(true)
         expect(validationRoute?.authRequired)
+            .toBeUndefined()
+        expect(legacyValidationRoute?.authRequired)
             .toBeUndefined()
     })
 })

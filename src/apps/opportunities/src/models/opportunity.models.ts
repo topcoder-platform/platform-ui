@@ -95,6 +95,17 @@ export interface ChallengeMetadata {
     value: unknown
 }
 
+/** AI review modes exposed by Review API for a challenge. */
+export type ChallengeAiReviewMode = 'AI_GATING' | 'AI_ONLY'
+
+/** Public-facing subset of a challenge's AI review configuration. */
+export interface ChallengeAiReviewConfig {
+    challengeId: string
+    id: string
+    instantReview: boolean
+    mode: ChallengeAiReviewMode
+}
+
 export interface ChallengeOpportunity {
     attachments?: ChallengeAttachment[]
     currentPhase?: ChallengePhase

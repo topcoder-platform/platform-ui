@@ -151,6 +151,12 @@ field is present for the caller.
   persisted Review track, Review searches resolve AI challenge IDs through
   Challenge API and combine them with selected catalog tracks before paging.
 
+Challenge details load the authenticated Review API
+`GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
+rail. `AI_ONLY` and `AI_GATING` map to their Figma labels and expose the
+configuration's Instant Review state; a missing configuration or an anonymous
+viewer uses the manual Community Review Board presentation.
+
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager
 resources. The Registrants tab requests bounded Resource API pages and uses its

@@ -140,6 +140,62 @@
     button {
         margin-top: 0;
     }
+
+    a,
+    button {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+    }
+}
+
+.reviewStyleList {
+    margin: 0;
+    padding-left: 21px;
+
+    li + li {
+        margin-top: 8px;
+    }
+}
+
+.reviewStyleRow {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+    vertical-align: top;
+}
+
+.card button.reviewStyleInfoButton {
+    color: #161616;
+    flex: 0 0 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    width: 20px;
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.reviewStyleStatus {
+    color: #617178;
+    margin: 0;
+}
+
+.reviewStyleTooltip {
+    background: #001e2e;
+    border-radius: 8px;
+    box-shadow: none;
+    color: #fff;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    max-width: 248px;
+    padding: 16px;
+    text-align: center;
 }
 
 .resourceLinks {

@@ -11,6 +11,7 @@ import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
     deleteChallengeSubmission,
+    getChallengeAiReviewConfig,
     getChallengeProjectResults,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
@@ -664,6 +665,37 @@ describe('opportunities service normalization', () => {
             .toBe('startDate')
         expect(startingSoon.searchParams.get('sortOrder'))
             .toBe('asc')
+    })
+
+    it('loads the challenge AI review configuration used by Review Style', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            challengeId: 'challenge/id',
+            id: 'config-id',
+            instantReview: true,
+            mode: 'AI_GATING',
+        })
+
+        await expect(getChallengeAiReviewConfig('challenge/id'))
+            .resolves.toEqual(expect.objectContaining({
+                instantReview: true,
+                mode: 'AI_GATING',
+            }))
+        expect(get)
+            .toHaveBeenLastCalledWith('https://api.example/v6/ai-review/configs/challenge%2Fid')
+    })
+
+    it('treats a missing AI review config as manual review and propagates other failures', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const networkError = new Error('Network unavailable')
+        get
+            .mockRejectedValueOnce({ response: { status: 404 } })
+            .mockRejectedValueOnce(networkError)
+
+        await expect(getChallengeAiReviewConfig('manual-challenge'))
+            .resolves.toBeUndefined()
+        await expect(getChallengeAiReviewConfig('failed-challenge'))
+            .rejects.toBe(networkError)
     })
 
     it('normalizes the public preview gallery totalCount contract', async () => {
