@@ -166,6 +166,40 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toContainElement(screen.getByAltText('4 place'))
     })
 
+    it('keeps the fourth and fifth placement prizes visible without collapsing them into overflow UI', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        prizeSets: [{
+                            prizes: Array.from({ length: 5 }, (_value, index) => ({
+                                type: 'USD',
+                                value: 1000 - (index * 100),
+                            })),
+                            type: 'PLACEMENT',
+                        }],
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const additionalPrizes = screen.getByRole('group', { name: 'Additional placement prizes' })
+        expect(within(additionalPrizes)
+            .getByAltText('4 place'))
+            .toBeInTheDocument()
+        expect(within(additionalPrizes)
+            .getByAltText('5 place'))
+            .toBeInTheDocument()
+        expect(within(additionalPrizes)
+            .getAllByRole('img'))
+            .toHaveLength(2)
+    })
+
     it('replaces detail prizes with the leaderboard label for fun challenges', () => {
         render(
             <MemoryRouter>
