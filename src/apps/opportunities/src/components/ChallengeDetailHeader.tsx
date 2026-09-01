@@ -448,7 +448,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                 </div>
             </div>
             <div className={styles.masthead}>
-                <div className={styles.rings} aria-hidden='true' />
+                <div className={styles.rings} aria-hidden='true'>
+                    <span className={classNames(styles.ring, styles.ringOuter)} />
+                    <span className={classNames(styles.ring, styles.ringMiddle)} />
+                    <span className={classNames(styles.ring, styles.ringInner)} />
+                </div>
                 <div className={styles.layout}>
                     <div className={styles.copy}>
                         <div className={styles.catalog}>

@@ -146,7 +146,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
     })
 
     it('uses the exact Data Science header color and all ten placement prizes', () => {
-        render(
+        const renderResult: RenderResult = render(
             <MemoryRouter>
                 <ChallengeDetailHeader
                     busy={false}
@@ -167,6 +167,15 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('group', { name: 'Additional placement prizes' }))
             .toContainElement(screen.getByAltText('4 place'))
+        const rings: HTMLDivElement | null = renderResult.container.querySelector('.rings')
+        expect(rings?.children)
+            .toHaveLength(3)
+        expect(rings?.querySelector('.ringOuter'))
+            .toBeInTheDocument()
+        expect(rings?.querySelector('.ringMiddle'))
+            .toBeInTheDocument()
+        expect(rings?.querySelector('.ringInner'))
+            .toBeInTheDocument()
     })
 
     it('keeps the fourth and fifth placement prizes visible without collapsing them into overflow UI', () => {
