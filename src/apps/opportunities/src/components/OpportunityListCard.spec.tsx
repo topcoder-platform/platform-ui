@@ -34,7 +34,11 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('~/config', () => ({
-    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+    AppSubdomain: { copilots: 'copilots' },
+    EnvironmentConfig: {
+        ENGAGEMENTS_URL: 'https://engagements.example',
+        TC_DOMAIN: 'topcoder.example',
+    },
 }), { virtual: true })
 
 /**
@@ -394,6 +398,11 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByRole('link').className)
             .toEqual(expect.stringContaining('copilotCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute(
+                'href',
+                'https://copilots.topcoder.example/opportunity/copilot-id',
+            )
         expect(screen.getByText('Hours / week:'))
             .toBeInTheDocument()
         expect(screen.getByText('Challenge')

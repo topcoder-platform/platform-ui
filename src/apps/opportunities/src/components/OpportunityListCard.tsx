@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import { EnvironmentConfig } from '~/config'
+import { AppSubdomain, EnvironmentConfig } from '~/config'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
@@ -500,7 +500,8 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
     return {
         badge: opportunityTrackLabel(item.projectType || item.type || 'Copilot'),
         description: descriptionExcerpt(item.overview),
-        href: `/copilots/opportunity/${item.id}`,
+        href: `https://${AppSubdomain.copilots}.${EnvironmentConfig.TC_DOMAIN}`
+            + `/opportunity/${encodeURIComponent(String(item.id))}`,
         meta: [
             {
                 icon: <HoursMetricIcon />,
