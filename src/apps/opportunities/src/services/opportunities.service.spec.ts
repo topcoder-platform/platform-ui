@@ -291,6 +291,8 @@ describe('opportunities service normalization', () => {
             .toBe('asc')
         expect(url.searchParams.get('appliedByMe'))
             .toBe('true')
+        expect(url.searchParams.get('includePrivate'))
+            .toBe('true')
     })
 
     it('retries an empty engagement text search with matching standardized skill IDs', async () => {

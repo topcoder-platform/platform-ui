@@ -150,7 +150,9 @@ field is present for the caller.
   `requiredSkills` IDs only as a fallback for older API deployments. An empty
   title/description search resolves matching standardized skill IDs and retries
   through the API's `requiredSkills` filter so skill and technology terms stay
-  discoverable without weakening normal project search.
+  discoverable without weakening normal project search. The authored `My
+  engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
+  accepted or assigned private work remains visible to the current member.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
   opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`). During
   rollout, a legacy list that rejects `applied` is filtered locally and its
