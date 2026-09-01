@@ -533,4 +533,36 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
             .toHaveAttribute('data-tooltip-strategy', 'fixed')
     })
+
+    it('shows approved and rejected Review API application decisions', () => {
+        const approved: ReviewOpportunity = {
+            challengeId: 'approved-challenge',
+            challengeName: 'Approved review',
+            id: 'approved-review',
+            myApplications: [{ status: 'APPROVED' }],
+            status: 'OPEN',
+        }
+        const rejected: ReviewOpportunity = {
+            challengeId: 'rejected-challenge',
+            challengeName: 'Rejected review',
+            id: 'rejected-review',
+            myApplications: [{ status: 'REJECTED' }],
+            status: 'OPEN',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={approved} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Approved').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={rejected} kind='reviews' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Rejected').className)
+            .toContain('stateClosed')
+    })
 })

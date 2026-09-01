@@ -270,6 +270,25 @@ function engagementApplicationState(
 }
 
 /**
+ * Converts the caller's Review API application status to its authored card
+ * label instead of reducing terminal decisions to the generic Applied state.
+ *
+ * @param item Review API opportunity containing caller-scoped applications.
+ * @param open whether the review opportunity still accepts applications.
+ * @returns Approved, Rejected, Cancelled, Applied, or the public availability state.
+ * @throws Does not throw.
+ */
+function reviewApplicationState(item: ReviewOpportunity, open: boolean): string {
+    const statusKey = challengeCatalogKey(item.myApplications?.[0]?.status)
+    const terminalLabels: Record<string, string> = {
+        approved: 'Approved',
+        cancelled: 'Cancelled',
+        rejected: 'Rejected',
+    }
+    return terminalLabels[statusKey] ?? applicationState(!!item.myApplications?.length, open)
+}
+
+/**
  * Maps owning-API discipline enums to the authored Opportunities track labels.
  *
  * @param value API role or track token.
@@ -527,8 +546,8 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
             },
         ],
         skills: Array.isArray(technologies) ? technologies.map(String) : [],
-        state: applicationState(
-            !!item.myApplications?.length,
+        state: reviewApplicationState(
+            item,
             item.canApply === true || challengeCatalogKey(item.status) === 'open',
         ),
         title: item.challengeName || String(item.challengeData?.name ?? 'Review Opportunity'),
@@ -737,6 +756,8 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
         .slice(0, props.view === 'grid' ? 3 : 5)
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
     const stateKey = challengeCatalogKey(card.state)
+    const stateIsAccepted = stateKey === 'accepted' || stateKey === 'approved'
+    const stateIsClosed = ['applicationclosed', 'cancelled', 'rejected'].includes(stateKey)
     const cardClassName = classNames(styles.card, {
         [styles.copilotCard]: props.kind === 'copilots',
         [styles.engagementCard]: props.kind === 'engagements',
@@ -769,14 +790,14 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     {card.state && (
                         <span className={classNames(styles.state, {
                             [styles.stateApplied]: stateKey === 'applied',
-                            [styles.stateAccepted]: stateKey === 'accepted',
-                            [styles.stateClosed]: stateKey === 'applicationclosed',
+                            [styles.stateAccepted]: stateIsAccepted,
+                            [styles.stateClosed]: stateIsClosed,
                         })}
                         >
                             {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
                             {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
-                            {stateKey === 'accepted' && <IconOutline.CheckIcon aria-hidden='true' />}
-                            {stateKey === 'applicationclosed' && <IconOutline.XIcon aria-hidden='true' />}
+                            {stateIsAccepted && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateIsClosed && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}
                         </span>
                     )}
