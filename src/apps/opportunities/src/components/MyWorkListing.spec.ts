@@ -27,6 +27,10 @@ jest.mock('~/config', () => ({
     EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
 }), { virtual: true })
 
+jest.mock('~/apps/copilots', () => ({
+    absoluteRootRoute: 'https://platform.example/copilots',
+}), { virtual: true })
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): undefined => undefined
     return {
