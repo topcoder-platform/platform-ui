@@ -33,6 +33,7 @@ interface ChallengeSubmissionUploadProps {
     onShowRequirements: () => void
     onShowTerms: () => void
     onSubmitted: (submission: ChallengeSubmission) => Promise<unknown> | unknown
+    onValidateRegistration: () => Promise<boolean>
 }
 
 /**
@@ -183,7 +184,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     }
 
     /**
-     * Uploads the accepted archive and advances to the immutable confirmation state.
+     * Revalidates challenge registration, uploads the accepted archive, and advances
+     * to the immutable confirmation state.
      *
      * @returns promise settled after the Review API response and cache refresh callback.
      * @throws Does not throw; request failures restore the ready state with an error message.
@@ -196,6 +198,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         setProgress(0)
         setUploading(true)
         try {
+            const registrationIsCurrent = await props.onValidateRegistration()
+            if (!registrationIsCurrent || controller.signal.aborted) return
             const submission = await createChallengeSubmission(
                 props.challenge.id,
                 props.memberId,
@@ -212,16 +216,15 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
             }, true)
             setProgress(100)
             setSubmissionId(submission.id)
-            setUploading(false)
             await props.onSubmitted(submission)
         } catch (caughtError) {
             if (controller.signal.aborted) return
             setError(caughtError instanceof Error
                 ? caughtError.message
                 : 'Unable to upload this submission.')
-            setUploading(false)
         } finally {
             if (abortController.current === controller) abortController.current = undefined
+            setUploading(false)
         }
     }
 
