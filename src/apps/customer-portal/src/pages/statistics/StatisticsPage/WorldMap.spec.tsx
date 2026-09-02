@@ -262,4 +262,51 @@ describe('WorldMap tooltip', () => {
         expect(html)
             .toContain('fi-in')
     })
+    it('moves percentages to the legend when a segment is too narrow', () => {
+        render(
+            <WorldMap
+                countries={[
+                    {
+                        code: 'IN',
+                        count: 730554,
+                        name: 'India',
+                        skillsBreakdown: [
+                            { count: 40, name: 'Java', percentage: 4 },
+                            { count: 30, name: 'Python', percentage: 4 },
+                            { count: 15, name: 'Swift', percentage: 3 },
+                        ],
+                        topMembers: [],
+                        totalSkills: 1059,
+                    },
+                ]}
+                showWinnerDetails={false}
+                valueLabel='Members'
+            />,
+        )
+
+        const html = formatTooltip({
+            code: 'IN',
+            name: 'India',
+            skillsBreakdown: [
+                { count: 40, name: 'Java', percentage: 4 },
+                { count: 30, name: 'Python', percentage: 4 },
+                { count: 15, name: 'Swift', percentage: 3 },
+            ],
+            topMembers: [],
+            topWinners: [],
+            totalSkills: 1059,
+            value: 730554,
+        })
+
+        expect(html)
+            .toContain('Java (4%)')
+        expect(html)
+            .toContain('Swift (3%)')
+        expect(html)
+            .toContain('Others (89%)')
+        // the bar segments themselves carry no label
+        expect(html)
+            .not
+            .toContain('%</span>')
+    })
 })
