@@ -118,8 +118,8 @@ describe('opportunities service normalization', () => {
         const url = new URL(String(globalGet.mock.calls[0][0]))
         expect(url.pathname)
             .toBe('/v6/challenges')
-        expect(url.searchParams.get('currentPhaseName'))
-            .toBe('Submission')
+        expect(url.searchParams.get('hasCurrentPhase'))
+            .toBe('true')
         expect(url.searchParams.get('perPage'))
             .toBe('1')
         const reviewUrl = new URL(String(globalGet.mock.calls[1][0]))
@@ -133,16 +133,12 @@ describe('opportunities service normalization', () => {
 
     it('loads member-work totals on count-only owner pages', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const totals: Record<string, number> = {
             '/v6/challenges': 40,
             '/v6/engagements/engagements': 30,
             '/v6/projects/copilots/opportunities': 20,
             '/v6/review-opportunities/search': 15,
         }
-        getAsync.mockResolvedValueOnce([
-            { id: 'submitter-role', name: 'Submitter' },
-        ] as never)
         get.mockImplementation(async requestUrl => {
             const url = new URL(String(requestUrl))
             return {
@@ -172,7 +168,7 @@ describe('opportunities service normalization', () => {
         expect(byPath.get('/v6/challenges')?.searchParams.get('memberId'))
             .toBe('123')
         expect(byPath.get('/v6/challenges')?.searchParams.get('resourceRoleId'))
-            .toBe('submitter-role')
+            .toBeNull()
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('perPage'))
             .toBe('1')
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('appliedByMe'))
@@ -234,19 +230,18 @@ describe('opportunities service normalization', () => {
             statuses: ['ACTIVE'],
         }))
 
-        expect(publicUrl.searchParams.get('currentPhaseName'))
-            .toBe('Submission')
-        expect(memberUrl.searchParams.has('currentPhaseName'))
+        expect(publicUrl.searchParams.get('hasCurrentPhase'))
+            .toBe('true')
+        expect(memberUrl.searchParams.has('hasCurrentPhase'))
             .toBe(false)
     })
 
-    it('maps My competitions to the Challenge API member and Submitter-role filter', () => {
+    it('maps My competitions to every Challenge API resource role for the member', () => {
         const url = new URL(buildOpportunityPageUrl('competitions', {
             applied: true,
             memberId: '123',
             page: 2,
             perPage: 10,
-            resourceRoleId: '2425bb20-9a2c-4316-9f85-8b24f9ce43b8',
             search: 'design systems',
             sort: 'newest',
             tracks: ['Des'],
@@ -255,7 +250,7 @@ describe('opportunities service normalization', () => {
         expect(url.searchParams.get('memberId'))
             .toBe('123')
         expect(url.searchParams.get('resourceRoleId'))
-            .toBe('2425bb20-9a2c-4316-9f85-8b24f9ce43b8')
+            .toBeNull()
         expect(url.searchParams.get('search'))
             .toBe('design systems')
         expect(url.searchParams.getAll('tracks[]'))
@@ -1034,11 +1029,8 @@ describe('opportunities service normalization', () => {
             })
     })
 
-    it('globally filters and pages My competitions in one role-aware Challenge API request', async () => {
-        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+    it('globally filters and pages all member-role competitions in one Challenge API request', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        const submitterRoleId = '2425bb20-9a2c-4316-9f85-8b24f9ce43b8'
-        get.mockResolvedValueOnce([{ id: submitterRoleId, name: 'Submitter' }])
         globalGet.mockResolvedValueOnce({
             data: [{ id: 'challenge-b', name: 'Design challenge' }],
             headers: {
@@ -1074,7 +1066,7 @@ describe('opportunities service normalization', () => {
         expect(requestUrl.searchParams.get('memberId'))
             .toBe('123')
         expect(requestUrl.searchParams.get('resourceRoleId'))
-            .toBe(submitterRoleId)
+            .toBeNull()
         expect(requestUrl.searchParams.get('search'))
             .toBe('design')
         expect(requestUrl.searchParams.getAll('status'))

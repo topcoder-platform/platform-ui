@@ -382,7 +382,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                                 memberApplied={applied}
                                 onSkillClick={updateSearch}
                                 registered={kind === 'competitions'
-                                    && (applied || registrationIds.has(item.id))}
+                                    && registrationIds.has(item.id)}
                                 view={props.view}
                             />
                         ))}

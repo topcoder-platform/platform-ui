@@ -82,8 +82,13 @@ subtype icons and member-facing labels.
 
 - “Open for registration” requires an `ACTIVE` challenge and an open
   `Registration` phase (or legacy combined `Open` phase). `ACTIVE` by itself
-  is not treated as an open registration window. The server-filtered “My
-  competitions” result marks those cards Registered without per-card calls.
+  is not treated as an open registration window. “Active competitions” uses
+  Challenge API's `hasCurrentPhase` filter so scheduled challenges remain
+  hidden while Submission, Review, and every other open phase remain visible.
+  “My competitions” uses the member's complete Challenge resource membership
+  so active work remains visible to Submitters, Copilots, and challenge
+  Managers. The separate member-registration request keeps the Registered card
+  state limited to actual Submitter resources.
 - The prize footer uses only the `PLACEMENT` prize set and preserves its API
   order as first, second, and third place. Checkpoint, copilot, and reviewer
   payments are not mixed into competitor prizes.

@@ -425,13 +425,14 @@ export async function getMyWorkCounts(
  * UI sort choices are intentionally semantic so each domain receives the
  * field, direction, and grouping parameters that actually implement the label.
  * Track values are already normalized by the filter panel for the selected
- * domain; copilot tracks map to its opportunity `type` enum. A competition's
- * `memberId` and `resourceRoleId` are emitted together so Challenge API can
- * apply Submitter membership before filtering, sorting, and pagination.
+ * domain; copilot tracks map to its opportunity `type` enum. My competitions
+ * emit `memberId` without narrowing the challenge resource role, preserving
+ * Submitter, Copilot, Manager, and other challenge-resource memberships.
  * Competition free text is emitted only through `search`; a hidden `tags`
  * filter would turn the authored unified search into an unintended AND query.
- * Public active competitions require an open Submission phase, while member
- * competitions retain every active challenge for which the member registered.
+ * Public active competitions require any current phase, while member
+ * competitions retain every active challenge where the caller has a resource
+ * role, including active challenges that have moved beyond submission.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -468,16 +469,18 @@ export function buildOpportunityPageUrl(
         if (filters.statuses?.includes('REGISTRATION')) {
             url.searchParams.set('currentPhaseName', 'Registration')
         } else if (!filters.applied && filters.statuses?.includes('ACTIVE')) {
-            url.searchParams.set('currentPhaseName', 'Submission')
+            url.searchParams.set('hasCurrentPhase', 'true')
         }
 
         // Challenge API's query parser only coerces bracketed keys into arrays;
         // even a single facet must be sent as `tracks[]=Dev` / `types[]=MM`.
         appendValues(url, 'tracks[]', filters.tracks)
         appendValues(url, 'types[]', filters.types)
-        if (filters.applied && filters.memberId && filters.resourceRoleId) {
+        if (filters.applied && filters.memberId) {
             url.searchParams.set('memberId', filters.memberId)
-            url.searchParams.set('resourceRoleId', filters.resourceRoleId)
+            if (filters.resourceRoleId) {
+                url.searchParams.set('resourceRoleId', filters.resourceRoleId)
+            }
         }
     } else if (kind === 'engagements') {
         endpoint = `${V6_URL}/engagements/engagements`
@@ -890,11 +893,12 @@ async function getReviewPageWithAiTrack(
 }
 
 /**
- * Loads one filtered page from the owning domain API. For “My competitions,”
- * this first resolves the canonical Submitter role and then performs one
- * globally filtered, sorted, and paginated Challenge API request. Copilot
- * validation failures from an older Projects API use the bounded legacy
- * fetch-and-filter fallback until that deployment supports discovery filters.
+ * Loads one filtered page from the owning domain API. “My competitions” uses
+ * the Challenge API's member filter without a resource-role restriction so
+ * Submitters, Copilots, and challenge Managers retain their active work.
+ * Copilot validation failures from an older Projects API use the bounded
+ * legacy fetch-and-filter fallback until that deployment supports discovery
+ * filters.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -909,18 +913,6 @@ export async function getOpportunityPage(
     const perPage = Math.max(1, filters.perPage)
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
         return getReviewPageWithAiTrack(filters)
-    }
-
-    if (kind === 'competitions' && filters.applied && filters.memberId) {
-        const submitterRole = await getSubmitterRole()
-        const roleScopedFilters: OpportunityFilters = {
-            ...filters,
-            resourceRoleId: submitterRole.id,
-        }
-        const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, roleScopedFilters)) as AxiosResponse<
-            any[] | ApiEnvelope<any[]> | ApiListResponse<any>
-        >
-        return normalizePage(response, page, perPage)
     }
 
     try {
