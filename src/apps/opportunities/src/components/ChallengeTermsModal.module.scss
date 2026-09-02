@@ -48,7 +48,7 @@
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
     font-size: 16px;
-    gap: 16px;
+    gap: 12px;
     line-height: 22px;
 
     p,
@@ -141,16 +141,16 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
     max-height: 532px;
     overflow: auto;
-    padding: 24px;
+    padding: 16px 24px 24px;
 }
 
 .term {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 
     h3,
     h1,
@@ -160,7 +160,8 @@
         font-family: 'Figtree', sans-serif;
         font-size: 20px;
         line-height: 28px;
-        margin: 0 0 4px;
+        font-weight: 600;
+        margin: 0;
         text-transform: none;
     }
 
@@ -169,6 +170,14 @@
         font-family: 'Nunito Sans', sans-serif;
         font-size: 16px;
         line-height: 22px;
+
+        p,
+        li,
+        a {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
     }
 
     > div > :first-child {
@@ -178,7 +187,7 @@
     p,
     ul,
     ol {
-        margin: 0 0 16px;
+        margin: 0 0 12px;
     }
 
     ul,
