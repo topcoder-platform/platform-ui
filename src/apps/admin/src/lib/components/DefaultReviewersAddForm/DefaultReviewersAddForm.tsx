@@ -21,8 +21,8 @@ import {
 } from '../../hooks'
 import { FormAddWrapper } from '../common/FormAddWrapper'
 import { FormAddDefaultReviewer } from '../../models'
-import { formAddDefaultReviewerSchema } from '../../utils'
-import { getAiWorkflows } from '../../services/ai-workflows.service'
+import { formAddDefaultReviewerSchema, handleError } from '../../utils'
+import { AiReviewTemplate, getAiReviewTemplates } from '../../services/ai-templates.service'
 
 import styles from './DefaultReviewersAddForm.module.scss'
 
@@ -118,7 +118,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         formState: { errors, isDirty },
     }: UseFormReturn<FormAddDefaultReviewer> = useForm({
         defaultValues: {
-            aiWorkflowId: '',
+            aiConfigTemplateId: '',
             baseCoefficient: 0,
             fixedAmount: 0,
             incrementalCoefficient: 0,
@@ -160,7 +160,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 requestBody.isMemberReview = false
             } else {
                 // eslint-disable-next-line unicorn/no-null
-                requestBody.aiWorkflowId = null
+                requestBody.aiConfigTemplateId = null
                 requestBody.isMemberReview = true
             }
 
@@ -177,13 +177,25 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         [doAddDefaultReviewer, doUpdateDefaultReviewer, isEdit, navigate],
     )
 
-    const [aiWorkflows, setAiWorkflows] = useState<{ label: string; value: string }[]>([])
+    const [aiTemplates, setAiTemplates] = useState<{ label: string; value: string }[]>([])
+    const [isFetchingAiTemplates, setIsFetchingAiTemplates] = useState(false)
 
     useEffect(() => {
-        getAiWorkflows()
-            .then((workflows: { id: string; name: string }[]) => {
-                const options = workflows.map((wf: { id: string; name: string }) => ({ label: wf.name, value: wf.id }))
-                setAiWorkflows(options)
+        setIsFetchingAiTemplates(true)
+        getAiReviewTemplates()
+            .then((templates: AiReviewTemplate[]) => {
+                // Only active (not disabled) templates can be assigned to a default reviewer
+                const options = templates
+                    .filter((template: AiReviewTemplate) => template.disabled !== true)
+                    .map((template: AiReviewTemplate) => ({
+                        label: template.title,
+                        value: template.id,
+                    }))
+                setAiTemplates(options)
+            })
+            .catch(handleError)
+            .finally(() => {
+                setIsFetchingAiTemplates(false)
             })
     }, [])
 
@@ -192,7 +204,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
     useEffect(() => {
         if (defaultReviewerInfo) {
             reset({
-                aiWorkflowId: defaultReviewerInfo.aiWorkflowId ?? '',
+                aiConfigTemplateId: defaultReviewerInfo.aiConfigTemplateId ?? '',
                 baseCoefficient: defaultReviewerInfo.baseCoefficient ?? 0,
                 fixedAmount: defaultReviewerInfo.fixedAmount ?? 0,
                 incrementalCoefficient: defaultReviewerInfo.incrementalCoefficient ?? 0,
@@ -537,24 +549,25 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 }
                 {isMemberReview && (
                     <Controller
-                        name='aiWorkflowId'
+                        name='aiConfigTemplateId'
                         control={control}
                         render={function render(controlProps: {
-                        field: ControllerRenderProps<FormAddDefaultReviewer, 'aiWorkflowId'>
+                        field: ControllerRenderProps<FormAddDefaultReviewer, 'aiConfigTemplateId'>
                     }) {
                             return (
                                 <InputSelectReact
-                                    name='aiWorkflowId'
-                                    label='AI Workflow'
-                                    placeholder='Select AI Workflow'
-                                    options={aiWorkflows}
+                                    name='aiConfigTemplateId'
+                                    label='AI Review Template'
+                                    placeholder='Select AI Review Template'
+                                    options={aiTemplates}
                                     value={controlProps.field.value ?? ''}
                                     onChange={controlProps.field.onChange}
                                     onBlur={controlProps.field.onBlur}
                                     classNameWrapper={styles.inputField}
                                     disabled={isLoading}
+                                    isLoading={isFetchingAiTemplates}
                                     dirty
-                                    error={_.get(errors, 'aiWorkflowId.message')}
+                                    error={_.get(errors, 'aiConfigTemplateId.message')}
                                 />
                             )
                         }}
