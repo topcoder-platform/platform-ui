@@ -249,10 +249,10 @@ official announcements and can reply throughout every challenge forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
 1000-character description while keeping attachments optional. Files upload
-through the shared Filestack support-ticket pipeline with a 2MB-per-file UI
-limit, grouped under the active challenge ID when one exists or a draft upload
-context before ticket creation otherwise. Because support-api-v6 accepts only
-`challengeId` and Markdown `description`, the client serializes the subject,
+through the authenticated `POST /v6/support/attachments` multipart endpoint
+with a 2 MiB-per-file UI limit, so the browser does not connect directly to an
+S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
+`description` when creating the ticket, the client serializes the subject,
 category, body, and any uploaded links into that description without inventing
 unsupported request fields.
 

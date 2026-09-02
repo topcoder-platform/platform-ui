@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react'
 import { PropsWithChildren, ReactNode } from 'react'
 
-import { uploadReviewAttachment } from '~/apps/review/src/lib/services/file-upload.service'
+import { uploadSupportAttachment } from '~/apps/support/src/lib/services/support-attachment.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
 
 import {
@@ -20,8 +20,9 @@ jest.mock('react-toastify', () => ({
     toast: { success: jest.fn() },
 }))
 
-jest.mock('~/apps/review/src/lib/services/file-upload.service', () => ({
-    uploadReviewAttachment: jest.fn(),
+jest.mock('~/apps/support/src/lib/services/support-attachment.service', () => ({
+    MAX_SUPPORT_ATTACHMENT_BYTES: 2 * 1024 * 1024,
+    uploadSupportAttachment: jest.fn(),
 }), { virtual: true })
 
 jest.mock('~/apps/support/src/lib/services/support.service', () => ({
@@ -58,7 +59,7 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 const mockedCreateSupportTicket = createSupportTicket as jest.Mock
-const mockedUploadAttachment = uploadReviewAttachment as jest.MockedFunction<typeof uploadReviewAttachment>
+const mockedUploadAttachment = uploadSupportAttachment as jest.MockedFunction<typeof uploadSupportAttachment>
 
 describe('ReportIssueModal', () => {
     beforeEach(() => {
@@ -170,13 +171,10 @@ describe('ReportIssueModal', () => {
         expect(await screen.findByText('Thank you for reporting this issue.'))
             .toBeInTheDocument()
         expect(mockedUploadAttachment)
-            .toHaveBeenCalledWith(file, expect.objectContaining({
-                category: 'support-ticket',
-                challengeId: 'challenge-id',
-            }))
+            .toHaveBeenCalledWith(file)
     })
 
-    it('falls back to a draft upload context when the report is not challenge-scoped', async () => {
+    it('uses the same authenticated Support upload without a draft context outside a challenge', async () => {
         render(<ReportIssueModal onClose={jest.fn()} open />)
         const file = new File(['screenshot'], 'Screenshot.png', { type: 'image/png' })
         Object.defineProperty(file, 'size', { value: 1153434 })
@@ -186,10 +184,7 @@ describe('ReportIssueModal', () => {
         })
 
         await waitFor(() => expect(mockedUploadAttachment)
-            .toHaveBeenCalledWith(file, expect.objectContaining({
-                category: 'support-ticket',
-                challengeId: expect.stringMatching(/^draft-/),
-            })))
+            .toHaveBeenCalledWith(file))
     })
 
     it('rejects files larger than the authored two-megabyte limit', async () => {

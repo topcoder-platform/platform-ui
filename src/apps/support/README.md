@@ -27,10 +27,14 @@ The app calls `${EnvironmentConfig.API.V6}/support`. Local Platform UI rewrites
 the `/v6/support` prefix to `http://localhost:3014`, so run support-api-v6 on
 that port before starting Platform UI.
 
-Ticket and response fields use the shared Review `FieldMarkdownEditor` and
-`uploadReviewAttachment`. Uploads are grouped under the `support-ticket` or
-`support-ticket-response` category. Display uses `react-markdown` with GFM and
-line breaks; raw HTML is deliberately disabled.
+Ticket and response fields use the shared Review `FieldMarkdownEditor`, but
+attachments use the Support-owned `uploadSupportAttachment` client. It posts
+one `file` field as authenticated multipart form data to
+`POST /v6/support/attachments`; support-api-v6 then uses the standard hosted
+upload flow and returns the canonical HTTPS URL inserted into Markdown. The
+browser never connects directly to the configured storage bucket. Both the UI
+and API enforce a 2 MiB limit. Display uses `react-markdown` with GFM and line
+breaks; raw HTML is deliberately disabled.
 
 ## Domain infrastructure follow-ups
 

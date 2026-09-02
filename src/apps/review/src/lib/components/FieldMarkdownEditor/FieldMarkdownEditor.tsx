@@ -48,6 +48,7 @@ interface Props {
     disabled?: boolean
     uploadCategory?: string
     uploadAttachment?: UploadAttachment
+    maxUploadSize?: number
     maxCharactersAllowed?: number
     textareaId?: string
     ariaLabel?: string
@@ -63,7 +64,7 @@ const errorMessages = {
     typeNotAllowed:
         'Uploading #image_name# was failed. The file type (#image_type#) is not supported.',
 }
-const maxUploadSize = 40 * 1024 * 1024
+const defaultMaxUploadSize = 40 * 1024 * 1024
 const imageExtensions = ['gif', 'png', 'jpeg', 'jpg', 'bmp', 'svg']
 const allowedImageExtensions = [
     ...imageExtensions,
@@ -684,7 +685,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 ...allowedImageExtensions,
                 ...allowedOtherExtensions,
             ].join(', '), // A comma-separated list of mime-types and extensions
-            imageMaxSize: maxUploadSize, // Maximum image size in bytes
+            imageMaxSize: props.maxUploadSize ?? defaultMaxUploadSize, // Maximum image size in bytes
             imageTexts: {
                 sbInit: 'Attach files by dragging & dropping, selecting or pasting them.',
                 sbOnDragEnter: 'Drop file to upload it.',

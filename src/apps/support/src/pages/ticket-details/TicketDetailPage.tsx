@@ -109,7 +109,7 @@ export const TicketDetailPage: FC = () => {
         : undefined
     const ticketOwner = Boolean(currentUserId && String(data.memberUserId) === currentUserId)
     const canReply = ticketOwner || (!closed && (!supportTeam || assignedToCurrentUser))
-    const replyContext = `${data.id}-reply-${replyRevision}`
+    const replyEditorId = `${data.id}-reply-${replyRevision}`
 
     /**
      * Adds or removes the authenticated staff assignment and refreshes detail.
@@ -328,16 +328,15 @@ export const TicketDetailPage: FC = () => {
                 <section className={styles.replyPanel}>
                     <h2>Add a reply</h2>
                     <SupportMarkdownEditor
-                        contextId={replyContext}
                         disabled={submittingReply}
+                        editorId={replyEditorId}
                         error={replyError}
-                        key={replyContext}
+                        key={replyEditorId}
                         label='Reply'
                         onChange={value => {
                             setReply(value)
                             if (value.trim()) setReplyError(undefined)
                         }}
-                        uploadCategory='support-ticket-response'
                         value={reply}
                     />
                     <div className={styles.replyActions}>

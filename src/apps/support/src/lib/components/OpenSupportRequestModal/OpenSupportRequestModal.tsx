@@ -39,18 +39,6 @@ interface ChallengeOption {
 }
 
 /**
- * Creates a non-authoritative upload grouping ID for attachments added before ticket creation.
- *
- * @returns unique draft upload context.
- * @throws Does not throw.
- */
-function createUploadContext(): string {
-    return `draft-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}`
-}
-
-/**
  * Renders and validates the member-only Open support request modal.
  *
  * @param props open state and close/success callbacks.
@@ -65,7 +53,7 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
     const [descriptionError, setDescriptionError] = useState<string | undefined>()
     const [requestError, setRequestError] = useState<string | undefined>()
     const [submitting, setSubmitting] = useState(false)
-    const [uploadContext, setUploadContext] = useState(createUploadContext)
+    const [editorRevision, setEditorRevision] = useState(0)
     const challengeRequestKey: string | undefined = props.open && memberId
         ? `support-active-challenges:${memberId}`
         : undefined
@@ -98,7 +86,7 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
         setDescription('')
         setDescriptionError(undefined)
         setRequestError(undefined)
-        setUploadContext(createUploadContext())
+        setEditorRevision(current => current + 1)
     }
 
     /**
@@ -220,13 +208,12 @@ export const OpenSupportRequestModal: FC<OpenSupportRequestModalProps> = props =
                     )}
                 </div>
                 <SupportMarkdownEditor
-                    contextId={uploadContext}
                     disabled={submitting}
+                    editorId={`support-request-${editorRevision}`}
                     error={descriptionError}
-                    key={uploadContext}
+                    key={editorRevision}
                     label='Description'
                     onChange={handleDescriptionChange}
-                    uploadCategory='support-ticket'
                     value={description}
                 />
                 {requestError && <p className={styles.requestError} role='alert'>{requestError}</p>}
