@@ -356,12 +356,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 All fonts, stock photos, and icons within your design must be declared when you
                                 submit. DO NOT include any 3rd party files in your submission or source files.
                                 {' '}
-                                Read about the
+                                Read about
                                 {' '}
-                                <a href={FILE_SUBMISSION_POLICY_URL}>
-                                    Policy
-                                </a>
-                                .
+                                <span className={styles.inlineLinkText}>
+                                    the
+                                    {' '}
+                                    <a href={FILE_SUBMISSION_POLICY_URL}>Policy</a>
+                                    .
+                                </span>
                             </p>
                         </div>
                         <div className={styles.infoSection}>
@@ -375,10 +377,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 Don&apos;t let your hard work go to waste. Learn more about
                                 {' '}
-                                <a href={SCREENING_LEARNING_URL} rel='noreferrer' target='_blank'>
-                                    how to pass screening
-                                </a>
-                                .
+                                <span className={styles.inlineLinkText}>
+                                    <a href={SCREENING_LEARNING_URL} rel='noreferrer' target='_blank'>
+                                        how to pass screening
+                                    </a>
+                                    .
+                                </span>
                             </p>
                         </div>
                     </>
