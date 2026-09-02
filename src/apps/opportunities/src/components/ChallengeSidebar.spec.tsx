@@ -234,9 +234,21 @@ describe('ChallengeSidebar Review Style', () => {
     it('keeps the policy and screening links inline with their punctuation', () => {
         renderSidebar(undefined, designChallenge)
 
-        expect(screen.getByRole('link', { name: 'Policy' }).parentElement)
+        const policyLink = screen.getByRole('link', { name: 'Policy' })
+        const screeningLink = screen.getByRole('link', { name: 'how to pass screening' })
+        const faqLink = screen.getByRole('link', { name: 'Read the FAQ.' })
+
+        expect(policyLink.className)
+            .toContain('inlineAnchor')
+        expect(screeningLink.className)
+            .toContain('inlineAnchor')
+        expect(faqLink.className)
+            .toContain('inlineAnchor')
+        expect(policyLink.parentElement)
             .toHaveTextContent('the Policy.')
-        expect(screen.getByRole('link', { name: 'how to pass screening' }).parentElement)
+        expect(screeningLink.parentElement)
             .toHaveTextContent('how to pass screening.')
+        expect(faqLink.parentElement)
+            .toHaveTextContent('Trouble formatting your submission or want to learn more? Read the FAQ.')
     })
 })

@@ -153,8 +153,18 @@
     font-weight: 700;
 }
 
-.inlineLinkText {
+.card a.inlineAnchor {
+    display: inline;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    margin-top: 0;
+    text-decoration: underline;
     white-space: nowrap;
+
+    &:hover {
+        text-decoration: none;
+    }
 }
 
 .reviewStyleList {

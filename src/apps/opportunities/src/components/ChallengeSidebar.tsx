@@ -344,7 +344,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             <p>
                                 Trouble formatting your submission or want to learn more?
                                 {' '}
-                                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Read the FAQ.</a>
+                                <a
+                                    className={styles.inlineAnchor}
+                                    href={CHALLENGE_EXPLAINED_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
+                                    Read the FAQ.
+                                </a>
                             </p>
                         </div>
                         <div className={styles.infoSection}>
@@ -358,12 +365,10 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 Read about
                                 {' '}
-                                <span className={styles.inlineLinkText}>
-                                    the
-                                    {' '}
-                                    <a href={FILE_SUBMISSION_POLICY_URL}>Policy</a>
-                                    .
-                                </span>
+                                the
+                                {' '}
+                                <a className={styles.inlineAnchor} href={FILE_SUBMISSION_POLICY_URL}>Policy</a>
+                                .
                             </p>
                         </div>
                         <div className={styles.infoSection}>
@@ -377,12 +382,15 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 Don&apos;t let your hard work go to waste. Learn more about
                                 {' '}
-                                <span className={styles.inlineLinkText}>
-                                    <a href={SCREENING_LEARNING_URL} rel='noreferrer' target='_blank'>
-                                        how to pass screening
-                                    </a>
-                                    .
-                                </span>
+                                <a
+                                    className={styles.inlineAnchor}
+                                    href={SCREENING_LEARNING_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
+                                    how to pass screening
+                                </a>
+                                .
                             </p>
                         </div>
                     </>
