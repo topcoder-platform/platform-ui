@@ -149,6 +149,24 @@
     }
 }
 
+.fileNameLabel {
+    font-weight: 700;
+}
+
+.card a.inlineAnchor {
+    display: inline;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    margin-top: 0;
+    text-decoration: underline;
+    white-space: nowrap;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
 .reviewStyleList {
     margin: 0;
     padding-left: 21px;

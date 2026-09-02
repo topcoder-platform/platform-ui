@@ -85,10 +85,44 @@ describe('ReportIssueModal', () => {
             .toHaveAttribute('maxlength', '1000')
         expect(screen.getByText('Attach Files'))
             .toBeInTheDocument()
+        expect(screen.queryByText('Attach Files *'))
+            .not.toBeInTheDocument()
         expect(screen.getByText('Max. 2 MB per file'))
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Send report' }))
             .toBeDisabled()
+    })
+
+    it('submits the required fields without an attachment', async () => {
+        render(<ReportIssueModal challengeId='challenge-id' onClose={jest.fn()} open />)
+
+        fireEvent.change(screen.getByPlaceholderText('Enter the subject of your issue'), {
+            target: { value: 'Submission timeout' },
+        })
+        fireEvent.change(screen.getByRole('combobox', { name: /Category/ }), {
+            target: { value: 'Submission' },
+        })
+        fireEvent.change(screen.getByPlaceholderText('Explain your issue'), {
+            target: { value: 'I tried to submit several times, but it always reaches a timeout error.' },
+        })
+
+        const submit = screen.getByRole('button', { name: 'Send report' })
+        await waitFor(() => expect(submit)
+            .toBeEnabled())
+        fireEvent.click(submit)
+
+        await waitFor(() => expect(mockedCreateSupportTicket)
+            .toHaveBeenCalledWith({
+                challengeId: 'challenge-id',
+                description: [
+                    '**Subject:** Submission timeout',
+                    '**Category:** Submission',
+                    '',
+                    'I tried to submit several times, but it always reaches a timeout error.',
+                ].join('\n'),
+            }))
+        expect(mockedUploadAttachment)
+            .not.toHaveBeenCalled()
     })
 
     it('uploads the authored file row and submits every field through the support contract', async () => {
@@ -138,8 +172,24 @@ describe('ReportIssueModal', () => {
         expect(mockedUploadAttachment)
             .toHaveBeenCalledWith(file, expect.objectContaining({
                 category: 'support-ticket',
-                challengeId: expect.stringMatching(/^draft-/),
+                challengeId: 'challenge-id',
             }))
+    })
+
+    it('falls back to a draft upload context when the report is not challenge-scoped', async () => {
+        render(<ReportIssueModal onClose={jest.fn()} open />)
+        const file = new File(['screenshot'], 'Screenshot.png', { type: 'image/png' })
+        Object.defineProperty(file, 'size', { value: 1153434 })
+
+        fireEvent.change(screen.getByLabelText('Attach files'), {
+            target: { files: [file] },
+        })
+
+        await waitFor(() => expect(mockedUploadAttachment)
+            .toHaveBeenCalledWith(file, expect.objectContaining({
+                category: 'support-ticket',
+                challengeId: expect.stringMatching(/^draft-/),
+            })))
     })
 
     it('rejects files larger than the authored two-megabyte limit', async () => {

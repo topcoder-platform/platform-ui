@@ -1,7 +1,12 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react'
 import {
     MemoryRouter,
     Route,
@@ -40,7 +45,10 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    OpportunityFiltersPanel: () => undefined,
+    OpportunityFiltersPanel: (props: { onAppliedChange: (checked: boolean) => void }) => {
+        const selectMyCompetitions = (): void => props.onAppliedChange(true)
+        return <button onClick={selectMyCompetitions} type='button'>My competitions</button>
+    },
     OpportunityHero: (props: { summary?: { competitions?: { count?: number } } }) => (
         <output data-testid='competition-count'>
             {props.summary?.competitions?.count ?? 'pending'}
@@ -135,6 +143,38 @@ describe('OpportunitiesPage', () => {
 
         await waitFor(() => expect(screen.getByTestId('registration-challenge-id'))
             .toHaveTextContent('true'))
+    })
+
+    it('does not label a non-submitter My competition as registered', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 1 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [{ id: 'managed-challenge', name: 'Managed challenge' }],
+            page: 1,
+            perPage: 10,
+            total: 1,
+            totalPages: 1,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'My competitions' }))
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('competitions', expect.objectContaining({ applied: true })))
+        expect(await screen.findByTestId('registration-managed-challenge'))
+            .toHaveTextContent('false')
     })
 
     it('links the copilot learning card to the published Thrive article', async () => {

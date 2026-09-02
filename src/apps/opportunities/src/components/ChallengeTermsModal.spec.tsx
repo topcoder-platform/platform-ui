@@ -98,4 +98,33 @@ describe('ChallengeTermsModal', () => {
         expect(screen.getByRole('alert'))
             .toHaveTextContent("We couldn't load the full challenge terms.")
     })
+
+    it('renders hydrated term headings and body copy in view mode', () => {
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [{
+                id: 'standard-terms',
+                text: '<h1>Acceptance of Terms and Conditions</h1><p>Welcome to topcoder.com.</p>',
+                title: 'Standard Terms 2026',
+            }],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='view'
+                onAccept={jest.fn()}
+                onClose={jest.fn()}
+                open
+                terms={[{ id: 'standard-terms', title: 'Standard Terms 2026' }]}
+            />,
+        )
+
+        expect(screen.getByRole('dialog', { name: 'Standard Terms 2026' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('Acceptance of Terms and Conditions'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Welcome to topcoder.com.'))
+            .toBeInTheDocument()
+    })
 })

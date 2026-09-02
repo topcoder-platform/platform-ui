@@ -54,6 +54,7 @@ import {
     formatChallengeTimeLeft,
     FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
+import { reviewOpportunityLabels } from '../utils/review-opportunity.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -534,13 +535,6 @@ export function formatReviewPayment(value?: number): string {
 /** Converts review data to the shared card presentation model. */
 function reviewView(item: ReviewOpportunity): CardViewModel {
     const track = String(item.challengeData?.track ?? item.challengeData?.trackName ?? 'Review')
-    const technologies = item.challengeData?.technologies
-    const challengeSkills = item.challengeData?.skills
-    const skillsSource = Array.isArray(technologies) && technologies.length
-        ? technologies
-        : Array.isArray(challengeSkills)
-            ? challengeSkills
-            : []
     return {
         badge: track,
         href: `/opportunities/review/${item.id}`,
@@ -558,11 +552,7 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
                 value: String(reviewApplicationTotal(item)),
             },
         ],
-        skills: skillsSource.map(skill => {
-            if (typeof skill === 'string') return skill
-            if (skill && typeof skill === 'object' && 'name' in skill) return String(skill.name)
-            return String(skill)
-        }),
+        skills: reviewOpportunityLabels(item),
         state: reviewApplicationState(
             item,
             item.canApply === true || challengeCatalogKey(item.status) === 'open',

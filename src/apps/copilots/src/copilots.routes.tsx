@@ -14,7 +14,44 @@ export const rootRoute: string = (
 )
 
 export const toolTitle: string = ToolTitle.copilots
-export const absoluteRootRoute: string = `${window.location.origin}${rootRoute}`
+
+/**
+ * Resolves the canonical absolute Copilots app root used for full-page and new-tab links.
+ *
+ * On Topcoder hosts, opening `/copilots/...` on the main site redirects to `www` and can
+ * render the site-level 404 instead of the Copilots SPA. To keep direct opens working,
+ * cross-app links target the dedicated Copilots subdomain. Non-Topcoder hosts such as
+ * localhost keep the current-origin path fallback so local development still works.
+ *
+ * @param origin current browser origin.
+ * @param subdomain active environment subdomain derived from the current host.
+ * @param tcDomain configured Topcoder base domain such as `topcoder-dev.com`.
+ * @returns canonical absolute Copilots root for the current runtime host.
+ */
+export function getCopilotsAbsoluteRootRoute(
+    origin: string,
+    subdomain: string,
+    tcDomain: string,
+): string {
+    const currentOrigin = new URL(origin)
+    if (subdomain === AppSubdomain.copilots) return currentOrigin.origin
+
+    const normalizedDomain = tcDomain.toLowerCase()
+    const hostname = currentOrigin.hostname.toLowerCase()
+    const onTopcoderHost = hostname === normalizedDomain
+        || hostname === `www.${normalizedDomain}`
+        || hostname.endsWith(`.${normalizedDomain}`)
+
+    return onTopcoderHost
+        ? `${currentOrigin.protocol}//${AppSubdomain.copilots}.${normalizedDomain}`
+        : `${currentOrigin.origin}${rootRoute}`
+}
+
+export const absoluteRootRoute: string = getCopilotsAbsoluteRootRoute(
+    window.location.origin,
+    EnvironmentConfig.SUBDOMAIN,
+    EnvironmentConfig.TC_DOMAIN,
+)
 
 export const childRoutes = [
     {

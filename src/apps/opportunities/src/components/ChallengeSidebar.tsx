@@ -294,14 +294,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
-                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenge Explained</a>
+                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenges Explained</a>
                 {designChallenge && (
                     <>
                         <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
-                            How to Compete in Design Challenges
+                            How to compete in design challenges
                         </a>
                         <a href={CHECKPOINT_FEEDBACK_LEARNING_URL} rel='noreferrer' target='_blank'>
-                            How to Approach the Checkpoint Feed
+                            How to approach the checkpoint feedback
                         </a>
                     </>
                 )}
@@ -317,22 +317,22 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             <ol>
                                 <li>Look for instructions in this challenge regarding what files to provide.</li>
                                 <li>
-                                    <strong>Submission.zip:</strong>
+                                    <strong className={styles.fileNameLabel}>Submission.zip:</strong>
                                     {' '}
                                     Place your submission files into a zip file.
                                 </li>
                                 <li>
-                                    <strong>Source.zip:</strong>
+                                    <strong className={styles.fileNameLabel}>Source.zip:</strong>
                                     {' '}
                                     Place all of your source files into a zip file.
                                 </li>
                                 <li>
-                                    <strong>Declaration.txt:</strong>
+                                    <strong className={styles.fileNameLabel}>Declaration.txt:</strong>
                                     {' '}
                                     Declare your fonts, stock photos, and icons in a txt file.
                                 </li>
                                 <li>
-                                    <strong>Preview.jpg:</strong>
+                                    <strong className={styles.fileNameLabel}>Preview.jpg:</strong>
                                     {' '}
                                     Create a 1024 x 1024 px preview image file.
                                 </li>
@@ -344,7 +344,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             <p>
                                 Trouble formatting your submission or want to learn more?
                                 {' '}
-                                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Read the FAQ.</a>
+                                <a
+                                    className={styles.inlineAnchor}
+                                    href={CHALLENGE_EXPLAINED_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
+                                    Read the FAQ.
+                                </a>
                             </p>
                         </div>
                         <div className={styles.infoSection}>
@@ -356,11 +363,11 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 All fonts, stock photos, and icons within your design must be declared when you
                                 submit. DO NOT include any 3rd party files in your submission or source files.
                                 {' '}
-                                Read about the
+                                Read about
                                 {' '}
-                                <a href={FILE_SUBMISSION_POLICY_URL}>
-                                    Policy
-                                </a>
+                                the
+                                {' '}
+                                <a className={styles.inlineAnchor} href={FILE_SUBMISSION_POLICY_URL}>Policy</a>
                                 .
                             </p>
                         </div>
@@ -375,7 +382,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 Don&apos;t let your hard work go to waste. Learn more about
                                 {' '}
-                                <a href={SCREENING_LEARNING_URL} rel='noreferrer' target='_blank'>
+                                <a
+                                    className={styles.inlineAnchor}
+                                    href={SCREENING_LEARNING_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
                                     how to pass screening
                                 </a>
                                 .

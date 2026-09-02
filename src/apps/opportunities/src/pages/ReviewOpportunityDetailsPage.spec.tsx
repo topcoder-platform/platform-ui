@@ -96,6 +96,8 @@ function reviewFixture(overrides: Partial<ReviewOpportunity> = {}): ReviewOpport
         canApply: true,
         challengeData: {
             createdAt: '2026-06-19T00:00:00',
+            skills: ['TypeScript'],
+            tags: ['Featured'],
             technologies: ['React.js', { name: 'TypeScript' }],
             track: 'Development',
             type: 'Challenge',
@@ -147,8 +149,12 @@ describe('ReviewOpportunityDetailsPage', () => {
 
         expect(screen.getByRole('heading', { name: 'Admin Challenge Curation UI Prototype' }))
             .toBeInTheDocument()
+        expect(screen.getByText('Featured'))
+            .toBeInTheDocument()
         expect(screen.getByText('React.js'))
             .toBeInTheDocument()
+        expect(screen.getAllByText('TypeScript'))
+            .toHaveLength(1)
         expect(screen.getByText('$20'))
             .toBeInTheDocument()
         expect(screen.getByText('$10'))

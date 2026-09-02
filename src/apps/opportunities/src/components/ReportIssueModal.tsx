@@ -76,8 +76,8 @@ function formatAttachmentSize(bytes: number): string {
  * @param subject member-entered issue subject.
  * @param category selected authored issue category.
  * @param description member-entered issue details.
- * @param attachments successfully uploaded file metadata.
- * @returns Markdown description accepted by support-api-v6.
+ * @param attachments optional uploaded file metadata.
+ * @returns Markdown description accepted by support-api-v6, with attachments appended only when present.
  * @throws Does not throw.
  */
 export function buildReportIssueDescription(
@@ -90,21 +90,25 @@ export function buildReportIssueDescription(
         const label = attachment.filename.replace(/\[|\]/g, '') || 'Attachment'
         return `- [${label}](${attachment.url})`
     })
-    return [
+    const lines = [
         `**Subject:** ${subject.trim()}`,
         `**Category:** ${category.trim()}`,
         '',
         description.trim(),
-        '',
-        '**Attachments:**',
-        ...attachmentLines,
-    ].join('\n')
+    ]
+
+    if (attachmentLines.length) {
+        lines.push('', '**Attachments:**', ...attachmentLines)
+    }
+
+    return lines.join('\n')
 }
 
 /**
  * Renders both authored Report an Issue states while adapting their richer
  * fields to support-api-v6's challenge-id plus Markdown-description contract.
- * Attachments upload through the shared Filestack pipeline before submission.
+ * Attachments are optional and upload through the shared Filestack pipeline
+ * before submission.
  *
  * @param props optional challenge context and modal state.
  * @returns subject, category, description, attachment, and success states.
@@ -130,9 +134,9 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     const canSubmit = !!subject.trim()
         && !!category
         && !!description.trim()
-        && uploaded.length > 0
         && !uploading
         && !busy
+    const uploadOwnerId = props.challengeId?.trim() || uploadContext
 
     useEffect(() => {
         if (props.open) {
@@ -200,7 +204,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
             try {
                 const result = await uploadReviewAttachment(attachment.file, {
                     category: 'support-ticket',
-                    challengeId: uploadContext,
+                    challengeId: uploadOwnerId,
                 })
                 setAttachments(current => current.map(item => (item.id === attachment.id
                     ? { ...item, result, status: 'uploaded' }
@@ -263,7 +267,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
      */
     const submit = async (): Promise<void> => {
         if (!canSubmit) {
-            setError('Complete every required field and attach at least one file.')
+            setError('Complete every required field before sending the report.')
             return
         }
 
@@ -404,7 +408,6 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                     <div className={styles.attachmentField}>
                         <span className={styles.attachmentLabel}>
                             {attachments.length ? 'Attach Screenshots, Files' : 'Attach Files'}
-                            <em>*</em>
                         </span>
                         <input
                             aria-label='Attach files'
