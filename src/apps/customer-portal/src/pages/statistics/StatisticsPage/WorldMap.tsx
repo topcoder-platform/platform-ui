@@ -179,6 +179,23 @@ function buildColorAxisDataClasses(
     })
 }
 
+// Width available to the skill bar inside the country tooltip: the tooltip is
+// 360px wide with 24px of horizontal padding on each side.
+const TOOLTIP_SKILL_BAR_WIDTH = 312
+// Rough width of one character of the 12px tooltip font, plus a little breathing
+// room, used to tell whether a segment can fit its own percentage label.
+const TOOLTIP_SKILL_LABEL_CHAR_WIDTH = 7
+const TOOLTIP_SKILL_LABEL_PADDING = 6
+
+function segmentFitsLabel(widthPercentage: number, label: string): boolean {
+    const segmentWidth = (widthPercentage / 100) * TOOLTIP_SKILL_BAR_WIDTH
+    const labelWidth
+        = label.length * TOOLTIP_SKILL_LABEL_CHAR_WIDTH
+        + TOOLTIP_SKILL_LABEL_PADDING
+
+    return segmentWidth >= labelWidth
+}
+
 function renderSkillBreakdown(point: StatisticsMapPoint): string {
     const topSkillsPercentage = point.skillsBreakdown.reduce(
         (total, skill) => total + skill.percentage,
@@ -211,12 +228,17 @@ function renderSkillBreakdown(point: StatisticsMapPoint): string {
             width: skill.percentage,
         }
     })
+    // Narrow segments clip their label, so as soon as one of them cannot fit we
+    // move every percentage down to the legend instead.
+    const showPercentageInLegend = breakdown.some(
+        item => !segmentFitsLabel(item.width, `${item.percentage}%`),
+    )
     const segments = breakdown.map(
         item => `
         <span
             class="${styles.tooltipSkillSegment}"
             style="background-color: ${item.color}; width: ${item.width}%"
-        >${item.percentage}%</span>
+        >${showPercentageInLegend ? '' : `${item.percentage}%`}</span>
     `,
     )
     const legend = breakdown.map(
@@ -226,16 +248,21 @@ function renderSkillBreakdown(point: StatisticsMapPoint): string {
                 class="${styles.tooltipSkillDot}"
                 style="background-color: ${item.color}"
             ></span>
-            <span>${escapeHtml(item.name)}</span>
+            <span>${escapeHtml(item.name)}${
+    showPercentageInLegend ? ` (${item.percentage}%)` : ''
+}</span>
         </span>
     `,
     )
+    const legendClass = showPercentageInLegend
+        ? `${styles.tooltipSkillLegend} ${styles.tooltipSkillLegendWrapped}`
+        : styles.tooltipSkillLegend
 
     return `
         <div class="${styles.tooltipSkillBreakdown}">
             <span>Sub-Skill Breakdown</span>
             <div class="${styles.tooltipSkillBar}">${segments.join('')}</div>
-            <div class="${styles.tooltipSkillLegend}">${legend.join('')}</div>
+            <div class="${legendClass}">${legend.join('')}</div>
         </div>
     `
 }
