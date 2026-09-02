@@ -185,7 +185,9 @@ filters, global sorting, counts, and pagination. The terms modal similarly
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
 agreement. Passive “Review challenge terms” mode never registers or agrees on
-a member's behalf.
+a member's behalf. Terms API HTML retains its semantic structure and safe links,
+but document-authored inline styles are removed so modal-scoped Figtree headings,
+Nunito Sans body copy, and spacing remain authoritative.
 DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.

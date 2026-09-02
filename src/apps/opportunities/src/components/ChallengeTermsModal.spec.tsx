@@ -99,12 +99,27 @@ describe('ChallengeTermsModal', () => {
             .toHaveTextContent("We couldn't load the full challenge terms.")
     })
 
-    it('renders hydrated term headings and body copy in view mode', () => {
+    it('normalizes Word-exported term styles while preserving semantic content and safe links', () => {
         mockSWRResponse = {
             ...mockSWRResponse,
             data: [{
                 id: 'standard-terms',
-                text: '<h1>Acceptance of Terms and Conditions</h1><p>Welcome to topcoder.com.</p>',
+                text: `
+                    <div class="WordSection1">
+                        <h4 style="margin-top:30pt;margin-bottom:8pt;line-height:111%">
+                            <span style="font-size:25.5pt;line-height:111%;color:#2a2a2a">
+                                Acceptance of Terms and Conditions
+                            </span>
+                        </h4>
+                        <p class="MsoNormal" style="margin-bottom:15pt;line-height:150%">
+                            <span style="font-family:Roboto;font-size:12pt;line-height:150%">Welcome to </span>
+                            <a href="https://www.topcoder.com">
+                                <span style="font-family:Roboto;font-size:12pt;line-height:150%">topcoder.com</span>
+                            </a>
+                            <a href="javascript:alert('unsafe')">Unsafe link</a>
+                        </p>
+                    </div>
+                `,
                 title: 'Standard Terms 2026',
             }],
             isValidating: false,
@@ -120,11 +135,27 @@ describe('ChallengeTermsModal', () => {
             />,
         )
 
-        expect(screen.getByRole('dialog', { name: 'Standard Terms 2026' }))
+        const dialog = screen.getByRole('dialog', { name: 'Standard Terms 2026' })
+        const heading = screen.getByRole('heading', {
+            level: 4,
+            name: 'Acceptance of Terms and Conditions',
+        })
+        const safeLink = screen.getByRole('link', { name: 'topcoder.com' })
+        const unsafeLink = screen.getByText('Unsafe link')
+
+        expect(dialog)
             .toBeInTheDocument()
-        expect(screen.getByText('Acceptance of Terms and Conditions'))
+        expect(heading.tagName)
+            .toBe('H4')
+        expect(screen.getByText('Welcome to'))
             .toBeInTheDocument()
-        expect(screen.getByText('Welcome to topcoder.com.'))
-            .toBeInTheDocument()
+        expect(safeLink)
+            .toHaveAttribute('href', 'https://www.topcoder.com')
+        expect(unsafeLink)
+            .toHaveProperty('tagName', 'A')
+        expect(unsafeLink)
+            .not.toHaveAttribute('href')
+        expect(dialog.querySelector('[style]'))
+            .toBeNull()
     })
 })
