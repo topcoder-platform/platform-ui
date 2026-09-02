@@ -36,6 +36,10 @@ interface TrackDisplayStats {
     value: number
 }
 
+interface TrackStatProps {
+    stat: TrackDisplayStats
+}
+
 interface ChallengePointsBarProps {
     canViewBreakdown: boolean
     challengeCount?: number
@@ -68,41 +72,82 @@ const numberFormatter = new Intl.NumberFormat('en-US')
 const formatStatValue = (value: number): string => numberFormatter.format(value)
 
 /**
- * Returns the stat value, label, and icon treatment for a member stats track.
+ * Returns the visible stats for a member stats track.
+ *
+ * Rating and wins are shown together when both exist. Submissions and challenges
+ * are fallbacks only when the track has no rating and no wins.
  *
  * @param {MemberStatsTrack} track - Aggregated stats for a Topcoder track.
- * @returns {TrackDisplayStats} Display metadata for the compact member stats card.
+ * @returns {TrackDisplayStats[]} Display metadata for the compact member stats card.
  */
-const getTrackDisplayStats = (track: MemberStatsTrack): TrackDisplayStats => {
+const getTrackDisplayStats = (track: MemberStatsTrack): TrackDisplayStats[] => {
+    const stats: TrackDisplayStats[] = []
+
     if (track.rating) {
-        return {
+        stats.push({
             indicator: 'rating',
             label: 'Rating',
             value: track.rating,
-        }
+        })
     }
 
     if (track.wins > 0) {
-        return {
+        stats.push({
             indicator: 'winner',
             label: formatPlural(track.wins, 'Win'),
             value: track.wins,
-        }
+        })
+    }
+
+    if (stats.length > 0) {
+        return stats
     }
 
     const submissions = track.submissions ?? 0
     if (submissions > 0) {
-        return {
+        return [{
             label: formatPlural(submissions, 'Submission'),
             value: submissions,
-        }
+        }]
     }
 
-    return {
+    return [{
         label: formatPlural(track.challenges ?? 0, 'Challenge'),
         value: track.challenges ?? 0,
-    }
+    }]
 }
+
+/**
+ * Renders one rating, wins, or fallback count with its matching icon.
+ *
+ * @param {TrackStatProps} props - Display metadata for a single track stat.
+ * @returns {JSX.Element} The compact track stat.
+ */
+const TrackStat: FC<TrackStatProps> = props => (
+    <div
+        className={styles.trackStat}
+        data-testid={`track-stat-${props.stat.indicator ?? 'count'}`}
+    >
+        {props.stat.indicator === 'winner' && (
+            <WinnerIcon className={classNames('icon-xxl', styles.winnerIcon)} />
+        )}
+        {props.stat.indicator === 'rating' && (
+            <span
+                className={styles.icon}
+                data-testid='rating-icon'
+                style={{ color: getRatingColor(props.stat.value) }}
+            />
+        )}
+        <span className={styles.trackStats}>
+            <span className={styles.count}>
+                {formatStatValue(props.stat.value)}
+            </span>
+            <span className={styles.label}>
+                {props.stat.label}
+            </span>
+        </span>
+    </div>
+)
 
 /**
  * Sorts tracks into the Figma member-stats card order while keeping unknown tracks visible.
@@ -219,23 +264,12 @@ const TrackListItem: FC<TrackListItemProps> = props => {
             >
                 <span className={styles.trackName}>{props.track.name}</span>
                 <div className={styles.trackDetails}>
-                    {displayStats.indicator === 'winner' && (
-                        <WinnerIcon className={classNames('icon-xxl', styles.winnerIcon)} />
-                    )}
-                    {displayStats.indicator === 'rating' && (
-                        <span
-                            className={styles.icon}
-                            style={{ color: getRatingColor(displayStats.value) }}
+                    {displayStats.map(stat => (
+                        <TrackStat
+                            key={stat.indicator ?? stat.label}
+                            stat={stat}
                         />
-                    )}
-                    <span className={styles.trackStats}>
-                        <span className={styles.count}>
-                            {formatStatValue(displayStats.value)}
-                        </span>
-                        <span className={styles.label}>
-                            {displayStats.label}
-                        </span>
-                    </span>
+                    ))}
                     <IconOutline.ChevronRightIcon
                         className={classNames('icon-lg', styles.rightArrowIcon)}
                     />
