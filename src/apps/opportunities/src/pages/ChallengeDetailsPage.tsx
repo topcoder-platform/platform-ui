@@ -94,6 +94,8 @@ type ChallengeTab = 'requirements' | 'registrants' | 'submissions' | 'mine' | 'd
 
 const HISTORY_ICON_PATH = 'M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3z'
     + 'M12 8v5l4.25 2.52.77-1.28-3.52-2.09V8z'
+const STALE_REGISTRATION_MESSAGE
+    = 'Your registration is no longer active. Register again before submitting.'
 
 /**
  * Builds the challenge-scoped Review App destination used by authored actions.
@@ -275,17 +277,45 @@ export const ChallengeDetailsPage: FC = () => {
     }
 
     /**
-     * Opens the Figma submission flow under the registered member's My Submissions tab.
+     * Refreshes the authenticated member's Submitter resource before an upload can start.
      *
-     * @returns void after selecting the tab, or redirecting an anonymous member to sign in.
+     * @returns true when registration still exists; false after restoring an actionable page state.
+     * @throws Does not throw; Resource API failures are reported to the member.
+     */
+    const validateSubmissionRegistration = async (): Promise<boolean> => {
+        if (!memberId) return false
+        setRegistrationBusy(true)
+        try {
+            const currentRegistration = await registrationResponse.mutate()
+            if (currentRegistration) return true
+            setActiveTab('requirements')
+            setSubmissionFlowOpen(false)
+            toast.error(STALE_REGISTRATION_MESSAGE)
+            return false
+        } catch (error) {
+            toast.error(error instanceof Error && error.message.trim()
+                ? error.message
+                : 'Unable to verify your challenge registration. Please try again.')
+            return false
+        } finally {
+            setRegistrationBusy(false)
+        }
+    }
+
+    /**
+     * Opens the Figma submission flow under the member's revalidated My Submissions tab.
+     *
+     * @returns promise settled after selecting the tab, restoring registration state,
+     * or redirecting an anonymous member to sign in.
      * @throws Does not throw.
      */
-    const startSubmission = (): void => {
+    const startSubmission = async (): Promise<void> => {
         if (!memberId) {
             window.location.assign(authUrlLogin(window.location.href))
             return
         }
 
+        if (!await validateSubmissionRegistration()) return
         setActiveTab('mine')
         setSubmissionFlowOpen(true)
     }
@@ -476,6 +506,7 @@ export const ChallengeDetailsPage: FC = () => {
                             ...challenge,
                             numOfSubmissions: (challenge.numOfSubmissions ?? 0) + 1,
                         }, { revalidate: false })}
+                        onValidateRegistration={validateSubmissionRegistration}
                         submissionFlowOpen={submissionFlowOpen}
                     />
                 </section>
@@ -531,6 +562,7 @@ interface ChallengeTabContentProps {
     onShowTerms: (term?: ChallengeTerm) => void
     onStartSubmission: () => void
     onSubmitted: () => Promise<unknown> | unknown
+    onValidateRegistration: () => Promise<boolean>
     submissionFlowOpen: boolean
 }
 
@@ -564,6 +596,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
                     onShowRequirements={props.onShowRequirements}
                     onShowTerms={props.onShowTerms}
                     onSubmitted={props.onSubmitted}
+                    onValidateRegistration={props.onValidateRegistration}
                 />
             )
         }

@@ -54,8 +54,18 @@ function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): Challe
     }
 }
 
-/** Renders the upload workflow with stable no-op callbacks and optional prop overrides. */
-function renderUpload(challenge: ChallengeOpportunity = challengeFixture()): RenderResult {
+/**
+ * Renders the upload workflow with stable callbacks.
+ *
+ * @param challenge challenge fixture rendered by the form.
+ * @param onValidateRegistration pre-upload registration result.
+ * @returns Testing Library render result.
+ * @throws Does not throw.
+ */
+function renderUpload(
+    challenge: ChallengeOpportunity = challengeFixture(),
+    onValidateRegistration: () => Promise<boolean> = async () => true,
+): RenderResult {
     return render(
         <ChallengeSubmissionUpload
             challenge={challenge}
@@ -65,6 +75,7 @@ function renderUpload(challenge: ChallengeOpportunity = challengeFixture()): Ren
             onShowRequirements={jest.fn()}
             onShowTerms={jest.fn()}
             onSubmitted={jest.fn()}
+            onValidateRegistration={onValidateRegistration}
         />,
     )
 }
@@ -169,5 +180,47 @@ describe('ChallengeSubmissionUpload', () => {
                 member_id: '123',
                 submission_type: 'CHECKPOINT_SUBMISSION',
             }, true)
+    })
+
+    it('does not upload when the submitter registration is no longer current', async () => {
+        const validateRegistration = jest.fn()
+            .mockResolvedValue(false)
+        renderUpload(challengeFixture(), validateRegistration)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
+            .not.toBeDisabled())
+        expect(validateRegistration)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
+    })
+
+    it('keeps cancellation effective while registration validation is pending', async () => {
+        let resolveRegistration: ((value: boolean) => void) | undefined
+        const validateRegistration = jest.fn(() => new Promise<boolean>(resolve => {
+            resolveRegistration = resolve
+        }))
+        renderUpload(challengeFixture(), validateRegistration)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+        await waitFor(() => expect(validateRegistration)
+            .toHaveBeenCalledTimes(1))
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel upload' }))
+        await act(async () => resolveRegistration?.(true))
+
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
     })
 })

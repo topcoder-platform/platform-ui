@@ -13,14 +13,17 @@ import {
     Route,
     Routes,
 } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 
 const mockUseSWR = jest.fn()
 const mockDeleteSubmission = jest.fn()
+const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
 let mockProfile: { handle: string; roles?: string[]; userId: number } | undefined
 let mockRegistration: { id: string } | undefined
+let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
 let mockProjectResults: Record<string, unknown>[]
@@ -267,6 +270,7 @@ describe('ChallengeDetailsPage member flows', () => {
         jest.clearAllMocks()
         mockProfile = undefined
         mockRegistration = undefined
+        mockRegistrationRemoved = false
         mockMemberProfiles = []
         mockProjectResults = []
         mockPreviewSubmissions = []
@@ -286,13 +290,19 @@ describe('ChallengeDetailsPage member flows', () => {
         }
         mockUnregister.mockResolvedValue(undefined)
         mockDeleteSubmission.mockResolvedValue(undefined)
+        mockRegistrationMutate.mockImplementation(async () => (
+            mockRegistrationRemoved ? undefined : mockRegistration
+        ))
         mockUseSWR.mockImplementation((key: unknown) => {
             if (typeof key === 'string' && key.startsWith('opportunities:challenge:')) {
                 return swrResponse(mockChallenge)
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:registration') {
-                return swrResponse(mockRegistration)
+                return {
+                    ...swrResponse(mockRegistration),
+                    mutate: mockRegistrationMutate,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
@@ -456,20 +466,42 @@ describe('ChallengeDetailsPage member flows', () => {
             ])
     })
 
-    it('opens the in-tab upload workflow from the registered header action', () => {
+    it('opens the in-tab upload workflow from the revalidated registered header action', async () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
 
         renderPage()
         fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
 
-        expect(screen.getByRole('tab', { name: 'My Submissions' }))
-            .toHaveAttribute('aria-selected', 'true')
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .toHaveAttribute('aria-selected', 'true'))
+        expect(mockRegistrationMutate)
+            .toHaveBeenCalledTimes(1)
         expect(screen.getByText('Submission upload form'))
             .toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'Back to submissions' }))
         expect(screen.getByText('You have no submissions yet'))
             .toBeInTheDocument()
+    })
+
+    it('does not open the upload workflow when the cached registration was removed', async () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'stale-resource-id' }
+        mockRegistrationRemoved = true
+
+        renderPage()
+        fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
+
+        await waitFor(() => expect(toast.error)
+            .toHaveBeenCalledWith(
+                'Your registration is no longer active. Register again before submitting.',
+            ))
+        expect(mockRegistrationMutate)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true')
+        expect(screen.queryByText('Submission upload form'))
+            .not.toBeInTheDocument()
     })
 
     it('resets the selected member tab when unregistering', async () => {
