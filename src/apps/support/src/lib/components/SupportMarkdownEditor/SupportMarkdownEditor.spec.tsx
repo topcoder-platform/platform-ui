@@ -3,11 +3,13 @@ import { render } from '@testing-library/react'
 
 import {
     MAX_SUPPORT_ATTACHMENT_BYTES,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
     uploadSupportAttachment,
 } from '../../services'
 import { SupportMarkdownEditor } from './SupportMarkdownEditor'
 
 let mockEditorProps: {
+    acceptedUploadTypes?: readonly string[]
     maxUploadSize?: number
     uploadAttachment?: typeof uploadSupportAttachment
 } = {}
@@ -21,6 +23,7 @@ jest.mock('~/apps/review/src/lib/components/FieldMarkdownEditor', () => ({
 
 jest.mock('../../services', () => ({
     MAX_SUPPORT_ATTACHMENT_BYTES: 2 * 1024 * 1024,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES: ['.png', 'image/png'],
     uploadSupportAttachment: jest.fn(),
 }))
 
@@ -53,6 +56,8 @@ describe('SupportMarkdownEditor', () => {
 
         expect(mockEditorProps.maxUploadSize)
             .toBe(MAX_SUPPORT_ATTACHMENT_BYTES)
+        expect(mockEditorProps.acceptedUploadTypes)
+            .toBe(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
         expect(mockedUpload)
             .toHaveBeenCalledWith(file, { onProgress })
     })

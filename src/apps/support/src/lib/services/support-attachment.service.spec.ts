@@ -3,6 +3,8 @@ import { xhrPostAsync } from '~/libs/core'
 
 import {
     MAX_SUPPORT_ATTACHMENT_BYTES,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+    SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION,
     uploadSupportAttachment,
 } from './support-attachment.service'
 import { SUPPORT_API_BASE } from './support.service'
@@ -70,6 +72,46 @@ describe('Support attachment service', () => {
 
         expect(onProgress.mock.calls)
             .toEqual([[13], [100]])
+    })
+
+    it('exports the API extension and MIME allowlist for upload controls', () => {
+        expect(Object.keys(SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION))
+            .toEqual([
+                '.7z', '.bmp', '.csv', '.doc', '.docx', '.gif', '.gz', '.jpeg', '.jpg',
+                '.json', '.log', '.pdf', '.png', '.ppt', '.pptx', '.rar', '.tar', '.tgz',
+                '.tif', '.tiff', '.txt', '.webp', '.xls', '.xlsx', '.xml', '.zip',
+            ])
+        expect(SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION['.gz'])
+            .toEqual(['application/gzip', 'application/x-gzip'])
+        expect(SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION['.xml'])
+            .toEqual(['application/xml', 'text/xml'])
+        expect(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
+            .toEqual(expect.arrayContaining([
+                '.png',
+                '.tgz',
+                'application/gzip',
+                'image/png',
+            ]))
+        expect(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
+            .not.toContain('.html')
+        expect(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
+            .not.toContain('.svg')
+        expect(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
+            .not.toContain('image/svg+xml')
+        expect(SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES)
+            .not.toContain('text/html')
+    })
+
+    it('rejects unsupported extensions and extension/MIME mismatches before upload', async () => {
+        const svg = new File(['svg'], 'diagram.svg', { type: 'image/svg+xml' })
+        const mismatch = new File(['text'], 'notes.txt', { type: 'application/json' })
+
+        await expect(uploadSupportAttachment(svg))
+            .rejects.toThrow('This file type is not allowed for support attachments.')
+        await expect(uploadSupportAttachment(mismatch))
+            .rejects.toThrow('This file type is not allowed for support attachments.')
+        expect(mockedPost)
+            .not.toHaveBeenCalled()
     })
 
     it('rejects empty and oversized files before making a request', async () => {

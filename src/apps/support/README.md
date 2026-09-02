@@ -33,8 +33,14 @@ one `file` field as authenticated multipart form data to
 `POST /v6/support/attachments`; support-api-v6 then uses the standard hosted
 upload flow and returns the canonical HTTPS URL inserted into Markdown. The
 browser never connects directly to the configured storage bucket. Both the UI
-and API enforce a 2 MiB limit. Display uses `react-markdown` with GFM and line
-breaks; raw HTML is deliberately disabled.
+and API enforce a 2 MiB limit. The Support editor and API share the exact
+extension/MIME allowlist: `.7z`, `.bmp`, `.csv`, `.doc`, `.docx`, `.gif`, `.gz`,
+`.jpeg`, `.jpg`, `.json`, `.log`, `.pdf`, `.png`, `.ppt`, `.pptx`, `.rar`,
+`.tar`, `.tgz`, `.tif`, `.tiff`, `.txt`, `.webp`, `.xls`, `.xlsx`, `.xml`, and
+`.zip`; the declared MIME type must match its extension. Active formats such as
+SVG and HTML are not offered by the file picker and remain rejected by the API.
+Display uses `react-markdown` with GFM and line breaks; raw HTML is deliberately
+disabled.
 
 ## Domain infrastructure follow-ups
 

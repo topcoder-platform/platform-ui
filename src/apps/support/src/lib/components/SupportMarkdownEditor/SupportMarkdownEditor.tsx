@@ -10,6 +10,7 @@ import {
     MAX_SUPPORT_ATTACHMENT_BYTES,
     SupportAttachmentUploadOptions,
     SupportAttachmentUploadResult,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
     uploadSupportAttachment,
 } from '../../services'
 
@@ -55,6 +56,7 @@ export const SupportMarkdownEditor: FC<SupportMarkdownEditorProps> = props => {
                 <span aria-hidden='true'>*</span>
             </span>
             <FieldMarkdownEditor
+                acceptedUploadTypes={SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES}
                 ariaLabel={props.label}
                 disabled={props.disabled}
                 error={props.error}
