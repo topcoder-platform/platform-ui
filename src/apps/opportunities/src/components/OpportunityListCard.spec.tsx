@@ -650,10 +650,12 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
     })
 
-    it('falls back to review challenge skills when technologies are absent', () => {
+    it('merges review tags, technologies, and skills without duplicate chips', () => {
         const item: ReviewOpportunity = {
             challengeData: {
                 skills: [{ name: 'MyTag' }, 'Test'],
+                tags: ['Featured', 'Test'],
+                technologies: [{ name: 'MyTag' }, 'React'],
                 track: 'Development',
             },
             challengeId: 'review-challenge',
@@ -667,10 +669,16 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
+        expect(screen.getByText('Featured'))
+            .toBeInTheDocument()
         expect(screen.getByText('MyTag'))
             .toBeInTheDocument()
         expect(screen.getByText('Test'))
             .toBeInTheDocument()
+        expect(screen.getByText('React'))
+            .toBeInTheDocument()
+        expect(screen.getAllByText('Test'))
+            .toHaveLength(1)
     })
 
     it('positions review title tooltips outside the card clipping context', () => {

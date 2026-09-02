@@ -23,7 +23,7 @@ import metricSubmissionsIcon from '../assets/metric-submissions.svg'
 import { ChallengeMarkdown, ReportIssueModal } from '../components'
 import { ReviewApplicationSummary, ReviewOpportunity } from '../models'
 import { applyToReviewOpportunity, getReviewOpportunity } from '../services'
-import { memberProfileUrl, REVIEWER_LEARNING_URL } from '../utils'
+import { memberProfileUrl, reviewOpportunityLabels, REVIEWER_LEARNING_URL } from '../utils'
 
 import styles from './ReviewOpportunityDetailsPage.module.scss'
 
@@ -154,24 +154,6 @@ function reviewRoleLabel(value?: string): string {
 }
 
 /**
- * Extracts human-readable technology labels from embedded Challenge API data.
- *
- * @param opportunity Review opportunity containing an optional challenge snapshot.
- * @returns unique skill labels in API order.
- * @throws Does not throw.
- */
-function reviewSkillLabels(opportunity: ReviewOpportunity): string[] {
-    const values = opportunity.challengeData?.technologies ?? opportunity.challengeData?.skills
-    if (!Array.isArray(values)) return []
-    return Array.from(new Set(values.map(value => {
-        if (typeof value === 'string') return value
-        if (value && typeof value === 'object' && 'name' in value) return String(value.name ?? '')
-        return ''
-    })
-        .filter(Boolean)))
-}
-
-/**
  * Formats a reviewer payment without adding insignificant decimal places.
  *
  * @param value Review API payment value.
@@ -291,7 +273,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     const basePayment = selectedPayment?.payment ?? opportunity.basePayment ?? 0
     const incrementalPayment = opportunity.incrementalPayment ?? 0
     const hasIncrementalPayment = incrementalPayment > 0
-    const skills = reviewSkillLabels(opportunity)
+    const skills = reviewOpportunityLabels(opportunity)
     const postedAt = typeof opportunity.challengeData?.createdAt === 'string'
         ? opportunity.challengeData.createdAt
         : undefined
