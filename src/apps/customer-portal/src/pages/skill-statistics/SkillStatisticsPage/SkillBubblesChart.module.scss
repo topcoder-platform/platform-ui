@@ -55,12 +55,28 @@
     justify-content: center;
     overflow: hidden;
     width: 80%;
+}
 
-    svg {
-        color: #fff;
-        flex: 0 0 auto;
-        margin-bottom: 4px;
-    }
+.materialIcon {
+    color: #fff;
+    direction: ltr;
+    display: block;
+    flex: 0 0 auto;
+    font-family: 'Material Symbols Rounded';
+    font-feature-settings: 'liga';
+    font-style: normal;
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 1;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-transform: none;
+    user-select: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
 }
 
 .label {
