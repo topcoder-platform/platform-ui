@@ -48,6 +48,12 @@ interface Props {
     disabled?: boolean
     uploadCategory?: string
     uploadAttachment?: UploadAttachment
+    /**
+     * Overrides the file-extension and MIME accept tokens advertised and
+     * validated by EasyMDE. Review's existing file set remains the default.
+     */
+    acceptedUploadTypes?: readonly string[]
+    maxUploadSize?: number
     maxCharactersAllowed?: number
     textareaId?: string
     ariaLabel?: string
@@ -63,7 +69,7 @@ const errorMessages = {
     typeNotAllowed:
         'Uploading #image_name# was failed. The file type (#image_type#) is not supported.',
 }
-const maxUploadSize = 40 * 1024 * 1024
+const defaultMaxUploadSize = 40 * 1024 * 1024
 const imageExtensions = ['gif', 'png', 'jpeg', 'jpg', 'bmp', 'svg']
 const allowedImageExtensions = [
     ...imageExtensions,
@@ -616,7 +622,24 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             position.end = end
         }
 
-        if (!editor.options.imageAccept.includes(getFileType())) {
+        const acceptedUploadTypes = String(editor.options.imageAccept)
+            .split(',')
+            .map(type => type.trim()
+                .toLowerCase())
+            .filter(Boolean)
+        const extensionIndex = file.name.lastIndexOf('.')
+        const extension = extensionIndex >= 0
+            ? file.name.slice(extensionIndex)
+                .toLowerCase()
+            : ''
+        const candidateTypes = [
+            file.type.trim()
+                .toLowerCase(),
+            extension,
+            extension.slice(1),
+        ].filter(Boolean)
+
+        if (!candidateTypes.some(type => acceptedUploadTypes.includes(type))) {
             onErrorSup(
                 fillErrorMessage(editor.options.errorMessages.typeNotAllowed),
             )
@@ -680,11 +703,11 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             errorMessages,
             forceSync: true, // true, force text changes made in EasyMDE to be immediately stored in original text area.
             hideIcons: ['guide', 'heading', 'preview', 'side-by-side'],
-            imageAccept: [
+            imageAccept: (props.acceptedUploadTypes ?? [
                 ...allowedImageExtensions,
                 ...allowedOtherExtensions,
-            ].join(', '), // A comma-separated list of mime-types and extensions
-            imageMaxSize: maxUploadSize, // Maximum image size in bytes
+            ]).join(', '), // A comma-separated list of mime-types and extensions
+            imageMaxSize: props.maxUploadSize ?? defaultMaxUploadSize, // Maximum image size in bytes
             imageTexts: {
                 sbInit: 'Attach files by dragging & dropping, selecting or pasting them.',
                 sbOnDragEnter: 'Drop file to upload it.',

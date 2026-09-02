@@ -3,23 +3,23 @@ import {
     ChangeEvent,
     DragEvent,
     FC,
-    useEffect,
     useRef,
     useState,
 } from 'react'
 import { toast } from 'react-toastify'
 
 import {
-    ReviewAttachmentUploadResult,
-    uploadReviewAttachment,
-} from '~/apps/review/src/lib/services/file-upload.service'
+    MAX_SUPPORT_ATTACHMENT_BYTES,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+    SupportAttachmentUploadResult,
+    uploadSupportAttachment,
+} from '~/apps/support/src/lib/services/support-attachment.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
 import { BaseModal, Button, IconOutline } from '~/libs/ui'
 
 import styles from './ReportIssueModal.module.scss'
 
 const DESCRIPTION_LIMIT = 1000
-const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
 const ISSUE_CATEGORIES = [
     'Registration',
     'Submission',
@@ -39,21 +39,8 @@ interface IssueAttachment {
     error?: string
     file: File
     id: number
-    result?: ReviewAttachmentUploadResult
+    result?: SupportAttachmentUploadResult
     status: 'error' | 'uploaded' | 'uploading'
-}
-
-/**
- * Creates a non-authoritative upload grouping ID for attachments added before
- * the support ticket exists.
- *
- * @returns unique draft upload context.
- * @throws Does not throw.
- */
-function createUploadContext(): string {
-    return `draft-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}`
 }
 
 /**
@@ -84,7 +71,7 @@ export function buildReportIssueDescription(
     subject: string,
     category: string,
     description: string,
-    attachments: ReviewAttachmentUploadResult[],
+    attachments: SupportAttachmentUploadResult[],
 ): string {
     const attachmentLines = attachments.map(attachment => {
         const label = attachment.filename.replace(/\[|\]/g, '') || 'Attachment'
@@ -107,7 +94,7 @@ export function buildReportIssueDescription(
 /**
  * Renders both authored Report an Issue states while adapting their richer
  * fields to support-api-v6's challenge-id plus Markdown-description contract.
- * Attachments are optional and upload through the shared Filestack pipeline
+ * Attachments are optional and upload through the authenticated Support API
  * before submission.
  *
  * @param props optional challenge context and modal state.
@@ -123,12 +110,11 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     const [dragActive, setDragActive] = useState(false)
     const [error, setError] = useState<string>()
     const [subject, setSubject] = useState('')
-    const [uploadContext, setUploadContext] = useState(createUploadContext)
     const attachmentId = useRef(0)
     const fileInput = useRef<HTMLInputElement>(null)
     const uploading = attachments.some(attachment => attachment.status === 'uploading')
     const uploaded = attachments
-        .filter((attachment): attachment is IssueAttachment & { result: ReviewAttachmentUploadResult } => (
+        .filter((attachment): attachment is IssueAttachment & { result: SupportAttachmentUploadResult } => (
             attachment.status === 'uploaded' && !!attachment.result
         ))
     const canSubmit = !!subject.trim()
@@ -136,13 +122,6 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         && !!description.trim()
         && !uploading
         && !busy
-    const uploadOwnerId = props.challengeId?.trim() || uploadContext
-
-    useEffect(() => {
-        if (props.open) {
-            setUploadContext(createUploadContext())
-        }
-    }, [props.open])
 
     /**
      * Clears local form and confirmation state for the next modal session.
@@ -158,7 +137,6 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         setDragActive(false)
         setError(undefined)
         setSubject('')
-        setUploadContext(createUploadContext())
         if (fileInput.current) fileInput.current.value = ''
     }
 
@@ -184,7 +162,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     const addAttachments = async (files: FileList | File[]): Promise<void> => {
         const candidates = Array.from(files)
         if (!candidates.length) return
-        const oversized = candidates.find(file => file.size > MAX_ATTACHMENT_BYTES)
+        const oversized = candidates.find(file => file.size > MAX_SUPPORT_ATTACHMENT_BYTES)
         if (oversized) {
             setError(`${oversized.name} is larger than the 2 MB attachment limit.`)
             return
@@ -202,10 +180,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         setAttachments(current => [...current, ...pending])
         await Promise.all(pending.map(async attachment => {
             try {
-                const result = await uploadReviewAttachment(attachment.file, {
-                    category: 'support-ticket',
-                    challengeId: uploadOwnerId,
-                })
+                const result = await uploadSupportAttachment(attachment.file)
                 setAttachments(current => current.map(item => (item.id === attachment.id
                     ? { ...item, result, status: 'uploaded' }
                     : item)))
@@ -410,6 +385,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                             {attachments.length ? 'Attach Screenshots, Files' : 'Attach Files'}
                         </span>
                         <input
+                            accept={SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES.join(',')}
                             aria-label='Attach files'
                             disabled={busy || uploading}
                             multiple

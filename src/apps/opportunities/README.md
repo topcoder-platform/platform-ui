@@ -185,7 +185,9 @@ filters, global sorting, counts, and pagination. The terms modal similarly
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
 agreement. Passive “Review challenge terms” mode never registers or agrees on
-a member's behalf.
+a member's behalf. Terms API HTML retains its semantic structure and safe links,
+but document-authored inline styles are removed so modal-scoped Figtree headings,
+Nunito Sans body copy, and spacing remain authoritative.
 DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
@@ -247,10 +249,10 @@ official announcements and can reply throughout every challenge forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
 1000-character description while keeping attachments optional. Files upload
-through the shared Filestack support-ticket pipeline with a 2MB-per-file UI
-limit, grouped under the active challenge ID when one exists or a draft upload
-context before ticket creation otherwise. Because support-api-v6 accepts only
-`challengeId` and Markdown `description`, the client serializes the subject,
+through the authenticated `POST /v6/support/attachments` multipart endpoint
+with a 2 MiB-per-file UI limit, so the browser does not connect directly to an
+S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
+`description` when creating the ticket, the client serializes the subject,
 category, body, and any uploaded links into that description without inventing
 unsupported request fields.
 

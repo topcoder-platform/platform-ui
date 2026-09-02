@@ -101,8 +101,20 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         }
     }, [props.open, props.mode])
 
-    /** Sanitizes trusted-format Terms API HTML before inserting it. */
-    const sanitizedText = (text: string): string => String(DOMPurify.sanitize(text))
+    /**
+     * Sanitizes Terms API HTML while removing document-authored inline CSS.
+     *
+     * The API can return Word-exported markup whose inline typography and
+     * spacing override the Opportunities design system. Semantic elements and
+     * safe links remain available for the modal's scoped styles to format.
+     *
+     * @param text Terms API HTML to sanitize.
+     * @returns safe semantic HTML without inline style attributes.
+     * @throws Does not throw.
+     */
+    const sanitizedText = (text: string): string => String(DOMPurify.sanitize(text, {
+        FORBID_ATTR: ['style'],
+    }))
 
     /** Submits the exact resolved term records displayed to the member. */
     const accept = (): void => props.onAccept(terms)

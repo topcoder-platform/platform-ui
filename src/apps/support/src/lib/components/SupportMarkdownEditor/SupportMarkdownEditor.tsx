@@ -1,72 +1,73 @@
-/** Support wrapper around the Work/Review Markdown editor and uploader. */
+/** Support wrapper around the Work/Review Markdown editor. */
 import {
     FC,
     useCallback,
 } from 'react'
 
 import { FieldMarkdownEditor } from '~/apps/review/src/lib/components/FieldMarkdownEditor'
+
 import {
-    ReviewAttachmentUploadOptions,
-    ReviewAttachmentUploadResult,
-    uploadReviewAttachment,
-} from '~/apps/review/src/lib/services/file-upload.service'
+    MAX_SUPPORT_ATTACHMENT_BYTES,
+    SupportAttachmentUploadOptions,
+    SupportAttachmentUploadResult,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+    uploadSupportAttachment,
+} from '../../services'
 
 import styles from './SupportMarkdownEditor.module.scss'
 
 export interface SupportMarkdownEditorProps {
-    contextId: string
     disabled?: boolean
+    editorId: string
     error?: string
     label: string
     onChange: (value: string) => void
     value: string
-    uploadCategory: 'support-ticket' | 'support-ticket-response'
 }
 
 /**
  * Reuses the challenge-spec editor toolbar plus drag/drop, picker, and paste uploads.
  *
- * @param props controlled value, upload context, validation state, and change handler.
+ * @param props controlled value, editor identity, validation state, and change handler.
  * @returns the shared Markdown editor configured for Support attachments.
  * @throws Upload failures are displayed by the underlying editor.
  */
 export const SupportMarkdownEditor: FC<SupportMarkdownEditorProps> = props => {
     /**
-     * Uploads through the existing Review attachment pipeline with Support grouping.
+     * Uploads through the authenticated Support API, forwarding editor progress.
      *
      * @param file browser-selected, dropped, or pasted attachment.
-     * @param options editor progress and upload metadata.
+     * @param options editor upload progress callback.
      * @returns uploaded attachment metadata for Markdown insertion.
-     * @throws The returned promise rejects when the shared uploader fails.
+     * @throws The returned promise rejects when the Support uploader fails.
      */
     const uploadAttachment = useCallback((
         file: File,
-        options?: ReviewAttachmentUploadOptions,
-    ): Promise<ReviewAttachmentUploadResult> => uploadReviewAttachment(file, {
-        ...options,
-        category: props.uploadCategory,
-        challengeId: props.contextId,
-    }), [props.contextId, props.uploadCategory])
+        options?: SupportAttachmentUploadOptions,
+    ): Promise<SupportAttachmentUploadResult> => uploadSupportAttachment(file, {
+        onProgress: options?.onProgress,
+    }), [])
 
     return (
         <div className={styles.field}>
-            <span className={styles.label} id={`${props.contextId}-editor-label`}>
+            <span className={styles.label} id={`${props.editorId}-editor-label`}>
                 {props.label}
                 {' '}
                 <span aria-hidden='true'>*</span>
             </span>
             <FieldMarkdownEditor
+                acceptedUploadTypes={SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES}
                 ariaLabel={props.label}
                 disabled={props.disabled}
                 error={props.error}
                 hideErrorMessage
                 initialValue={props.value}
                 maxCharactersAllowed={50000}
+                maxUploadSize={MAX_SUPPORT_ATTACHMENT_BYTES}
                 onChange={props.onChange}
                 placeholder='Describe the issue and include any steps needed to reproduce it.'
                 showBorder
                 uploadAttachment={uploadAttachment}
-                uploadCategory={props.uploadCategory}
             />
             {props.error && <p className={styles.error} role='alert'>{props.error}</p>}
         </div>

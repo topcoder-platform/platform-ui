@@ -155,5 +155,21 @@ describe('FieldMarkdownEditor', () => {
 
         expect(mockEasyMDEInstances[0].options.uploadImage)
             .toBe(true)
+        expect(mockEasyMDEInstances[0].options.imageAccept)
+            .toContain('svg')
+    })
+
+    it('uses an accepted-upload-types override', async () => {
+        render(
+            <FieldMarkdownEditor acceptedUploadTypes={['.png', 'image/png']} />,
+        )
+
+        await waitFor(() => {
+            expect(mockEasyMDEInstances)
+                .toHaveLength(1)
+        })
+
+        expect(mockEasyMDEInstances[0].options.imageAccept)
+            .toBe('.png, image/png')
     })
 })
