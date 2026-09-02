@@ -317,22 +317,22 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             <ol>
                                 <li>Look for instructions in this challenge regarding what files to provide.</li>
                                 <li>
-                                    <strong>Submission.zip:</strong>
+                                    <strong className={styles.fileNameLabel}>Submission.zip:</strong>
                                     {' '}
                                     Place your submission files into a zip file.
                                 </li>
                                 <li>
-                                    <strong>Source.zip:</strong>
+                                    <strong className={styles.fileNameLabel}>Source.zip:</strong>
                                     {' '}
                                     Place all of your source files into a zip file.
                                 </li>
                                 <li>
-                                    <strong>Declaration.txt:</strong>
+                                    <strong className={styles.fileNameLabel}>Declaration.txt:</strong>
                                     {' '}
                                     Declare your fonts, stock photos, and icons in a txt file.
                                 </li>
                                 <li>
-                                    <strong>Preview.jpg:</strong>
+                                    <strong className={styles.fileNameLabel}>Preview.jpg:</strong>
                                     {' '}
                                     Create a 1024 x 1024 px preview image file.
                                 </li>

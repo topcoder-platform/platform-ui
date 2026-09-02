@@ -215,4 +215,15 @@ describe('ChallengeSidebar Review Style', () => {
                 'https://www.topcoder.example/thrive/articles/how-to-approach-the-checkpoint-feedback-to-decipher-hidden-codes',
             )
     })
+
+    it('emphasizes required submission filenames in the design submission format list', () => {
+        renderSidebar(undefined, designChallenge)
+
+        for (const fileName of ['Submission.zip:', 'Source.zip:', 'Declaration.txt:', 'Preview.jpg:']) {
+            const label = screen.getByText(fileName)
+
+            expect(label.tagName)
+                .toBe('STRONG')
+        }
+    })
 })
