@@ -294,14 +294,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
-                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenge Explained</a>
+                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenges Explained</a>
                 {designChallenge && (
                     <>
                         <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
-                            How to Compete in Design Challenges
+                            How to compete in design challenges
                         </a>
                         <a href={CHECKPOINT_FEEDBACK_LEARNING_URL} rel='noreferrer' target='_blank'>
-                            How to Approach the Checkpoint Feed
+                            How to approach the checkpoint feedback
                         </a>
                     </>
                 )}

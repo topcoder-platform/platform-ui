@@ -40,11 +40,12 @@ jest.mock('../services', () => ({
     getChallengeTermsDetails: jest.fn(),
 }))
 jest.mock('../utils/opportunity-learning.utils', () => ({
-    CHALLENGE_EXPLAINED_URL: 'https://www.topcoder.example/thrive/search?title=Topcoder%20Challenge%20Explained',
+    CHALLENGE_EXPLAINED_URL:
+        'https://www.topcoder.example/thrive/articles/all-about-topcoder-challenges-tasks-and-gig-work-opportunities',
     CHECKPOINT_FEEDBACK_LEARNING_URL:
-        'https://www.topcoder.example/thrive/search?title=How%20to%20Approach%20the%20Checkpoint%20Feed',
+        'https://www.topcoder.example/thrive/articles/how-to-approach-the-checkpoint-feedback-to-decipher-hidden-codes',
     DESIGN_CHALLENGE_LEARNING_URL:
-        'https://www.topcoder.example/thrive/search?title=How%20to%20Compete%20in%20Design%20Challenges',
+        'https://www.topcoder.example/thrive/articles/How%20To%20Compete%20in%20Design',
     SCREENING_LEARNING_URL: 'https://www.topcoder.example/thrive/search?title=How%20to%20Pass%20Screening',
 }))
 
@@ -140,21 +141,21 @@ describe('ChallengeSidebar Review Style', () => {
     it('uses published challenge-learning article links for the educational materials rail', () => {
         renderSidebar()
 
-        expect(screen.getByRole('link', { name: 'Topcoder Challenge Explained' }))
+        expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
             .toHaveAttribute(
                 'href',
-                'https://www.topcoder.example/thrive/search?title=Topcoder%20Challenge%20Explained',
+                'https://www.topcoder.example/thrive/articles/all-about-topcoder-challenges-tasks-and-gig-work-opportunities',
             )
     })
 
     it('keeps design-only educational links and copy out of development challenges', () => {
         renderSidebar(undefined, developmentChallenge)
 
-        expect(screen.getByRole('link', { name: 'Topcoder Challenge Explained' }))
+        expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
             .toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'How to Compete in Design Challenges' }))
+        expect(screen.queryByRole('link', { name: 'How to compete in design challenges' }))
             .not.toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'How to Approach the Checkpoint Feed' }))
+        expect(screen.queryByRole('link', { name: 'How to approach the checkpoint feedback' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Submission Format' }))
             .not.toBeInTheDocument()
@@ -198,9 +199,20 @@ describe('ChallengeSidebar Review Style', () => {
     it('shows design educational links for design challenges', () => {
         renderSidebar(undefined, designChallenge)
 
-        expect(screen.getByRole('link', { name: 'How to Compete in Design Challenges' }))
-            .toBeInTheDocument()
-        expect(screen.getByRole('link', { name: 'How to Approach the Checkpoint Feed' }))
-            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/all-about-topcoder-challenges-tasks-and-gig-work-opportunities',
+            )
+        expect(screen.getByRole('link', { name: 'How to compete in design challenges' }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/How%20To%20Compete%20in%20Design',
+            )
+        expect(screen.getByRole('link', { name: 'How to approach the checkpoint feedback' }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/how-to-approach-the-checkpoint-feedback-to-decipher-hidden-codes',
+            )
     })
 })
