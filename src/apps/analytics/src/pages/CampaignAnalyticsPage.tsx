@@ -11,11 +11,11 @@ import {
 import {
     Button,
     IconOutline,
-    LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
 
 import {
+    AnalyticsLoadingState,
     MetricCard,
     ReportError,
     TimeSeriesChart,
@@ -145,12 +145,10 @@ export const CampaignAnalyticsPage: FC = () => {
     }, [])
 
     const data = report.data
+    const reportPending = report.loading || report.refreshing
     return (
         <>
             <PageTitle>Campaign Analytics</PageTitle>
-            {(report.loading || report.refreshing) && (
-                <LoadingSpinner message='Loading campaign analytics…' overlay />
-            )}
             <div className={styles.page}>
                 <header className={styles.pageHeader}>
                     <div>
@@ -233,8 +231,11 @@ export const CampaignAnalyticsPage: FC = () => {
                     )}
                 </form>
 
+                {reportPending && (
+                    <AnalyticsLoadingState message='Loading campaign analytics…' />
+                )}
                 {report.error && !data && <ReportError error={report.error} onRetry={report.refresh} />}
-                {data && (
+                {data && !reportPending && (
                     <>
                         <div className={styles.freshness} role='status'>
                             Data through
@@ -299,7 +300,7 @@ export const CampaignAnalyticsPage: FC = () => {
                             <div className={styles.panelHeader}>
                                 <div>
                                     <h2>Campaign performance</h2>
-                                    <p>First-touch attribution grouped by campaign, source, medium, and UTM ID.</p>
+                                    <p>Attribution grouped by campaign, source, medium, and UTM ID.</p>
                                 </div>
                             </div>
                             <div className={styles.tableScroll}>

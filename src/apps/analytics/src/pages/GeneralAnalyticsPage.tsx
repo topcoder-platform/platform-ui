@@ -11,11 +11,11 @@ import {
 import {
     Button,
     IconOutline,
-    LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
 
 import {
+    AnalyticsLoadingState,
     MetricCard,
     ReportError,
     TimeSeriesChart,
@@ -41,11 +41,10 @@ import {
 
 import styles from './AnalyticsPages.module.scss'
 
-const generalSeries = [
-    { color: '#2c95d7', key: 'pageViews', label: 'Page views' },
-    { color: '#6f42c1', key: 'visitors', label: 'Visitors' },
-    { color: '#137d60', key: 'clicks', label: 'Clicks' },
-]
+const MOST_VISITED_PAGE_SIZE = 20
+const pageViewSeries = [{ color: '#2c5de5', key: 'pageViews', label: 'Page views' }]
+const visitorSeries = [{ color: '#6f42c1', key: 'visitors', label: 'Unique visitors' }]
+const clickSeries = [{ color: '#137d60', key: 'clicks', label: 'Clicks' }]
 
 /**
  * Creates the complete default general analytics filter state.
@@ -72,8 +71,52 @@ const EmptyTableRow: FC<{ columns: number }> = props => (
     </tr>
 )
 
+interface AnalyticsTablePaginationProps {
+    onNext: () => void
+    onPrevious: () => void
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+}
+
 /**
- * Renders general site totals, engagement graph, and page/source/surface tables.
+ * Renders compact previous/next controls and the visible range for a local analytics table.
+ *
+ * @param props current page metadata and stable navigation callbacks.
+ * @returns accessible pagination summary and controls.
+ * @throws Does not throw.
+ */
+const AnalyticsTablePagination: FC<AnalyticsTablePaginationProps> = props => {
+    const start = props.total === 0 ? 0 : ((props.page - 1) * props.pageSize) + 1
+    const end = Math.min(props.total, props.page * props.pageSize)
+
+    return (
+        <div className={styles.pagination}>
+            <span>{`Showing ${start}–${end} of ${props.total} pages`}</span>
+            <nav aria-label='Most visited pages pagination'>
+                <button
+                    disabled={props.page <= 1}
+                    onClick={props.onPrevious}
+                    type='button'
+                >
+                    Previous
+                </button>
+                <span>{`Page ${props.page} of ${props.totalPages}`}</span>
+                <button
+                    disabled={props.page >= props.totalPages}
+                    onClick={props.onNext}
+                    type='button'
+                >
+                    Next
+                </button>
+            </nav>
+        </div>
+    )
+}
+
+/**
+ * Renders general totals, separate daily charts, and paginated page/source tables.
  *
  * @returns role-gated General Analytics page.
  * @throws Does not throw; request failures are rendered inline.
@@ -83,6 +126,7 @@ export const GeneralAnalyticsPage: FC = () => {
     const [draftFilters, setDraftFilters] = useState<GeneralFilters>(initialFilters)
     const [appliedFilters, setAppliedFilters] = useState<GeneralFilters>(initialFilters)
     const [filterError, setFilterError] = useState<string>()
+    const [visitedPagesPage, setVisitedPagesPage] = useState(1)
     const filterOptions = useAnalyticsResource<AnalyticsFilterOptions>('analytics-filters', getAnalyticsFilters)
     const reportKey = analyticsRequestKey('general', appliedFilters)
     const report = useAnalyticsResource<GeneralReport>(
@@ -98,22 +142,42 @@ export const GeneralAnalyticsPage: FC = () => {
         event.preventDefault()
         const error = validateAnalyticsDateRange(draftFilters)
         setFilterError(error)
-        if (!error) setAppliedFilters({ ...draftFilters })
+        if (!error) {
+            setAppliedFilters({ ...draftFilters })
+            setVisitedPagesPage(1)
+        }
     }, [draftFilters])
     const resetFilters = useCallback(() => {
         const next = initialGeneralFilters()
         setDraftFilters(next)
         setAppliedFilters(next)
+        setVisitedPagesPage(1)
         setFilterError(undefined)
     }, [])
 
     const data = report.data
+    const reportPending = report.loading || report.refreshing
+    const visitedPagesTotal = data?.pages.length ?? 0
+    const visitedPagesTotalPages = Math.max(
+        1,
+        Math.ceil(visitedPagesTotal / MOST_VISITED_PAGE_SIZE),
+    )
+    const activeVisitedPagesPage = Math.min(visitedPagesPage, visitedPagesTotalPages)
+    const visibleVisitedPages = data?.pages.slice(
+        (activeVisitedPagesPage - 1) * MOST_VISITED_PAGE_SIZE,
+        activeVisitedPagesPage * MOST_VISITED_PAGE_SIZE,
+    ) ?? []
+    const showPreviousVisitedPages = useCallback(() => {
+        setVisitedPagesPage(current => Math.max(1, current - 1))
+    }, [])
+    const showNextVisitedPages = useCallback(() => {
+        setVisitedPagesPage(current => Math.min(visitedPagesTotalPages, current + 1))
+    }, [visitedPagesTotalPages])
+    const reportingPeriod = `${formatAnalyticsFreshness(appliedFilters.from)} – ${
+        formatAnalyticsFreshness(appliedFilters.to)}`
     return (
         <>
             <PageTitle>General Analytics</PageTitle>
-            {(report.loading || report.refreshing) && (
-                <LoadingSpinner message='Loading general analytics…' overlay />
-            )}
             <div className={styles.page}>
                 <header className={styles.pageHeader}>
                     <div>
@@ -177,8 +241,11 @@ export const GeneralAnalyticsPage: FC = () => {
                     )}
                 </form>
 
+                {reportPending && (
+                    <AnalyticsLoadingState message='Loading general analytics…' />
+                )}
                 {report.error && !data && <ReportError error={report.error} onRetry={report.refresh} />}
-                {data && (
+                {data && !reportPending && (
                     <>
                         <div className={styles.freshness} role='status'>
                             Data through
@@ -214,14 +281,45 @@ export const GeneralAnalyticsPage: FC = () => {
                         <section className={styles.panel}>
                             <div className={styles.panelHeader}>
                                 <div>
-                                    <h2>Site engagement over time</h2>
-                                    <p>Daily views, visitors, and interactions across the selected surface.</p>
+                                    <h2>Page views</h2>
+                                    <p>{reportingPeriod}</p>
                                 </div>
                             </div>
                             <TimeSeriesChart
-                                ariaLabel='Daily Topcoder site engagement'
+                                ariaLabel='Daily page views'
                                 points={data.series}
-                                series={generalSeries}
+                                series={pageViewSeries}
+                                variant='area'
+                            />
+                        </section>
+
+                        <section className={styles.panel}>
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <h2>Unique visitors</h2>
+                                    <p>{reportingPeriod}</p>
+                                </div>
+                            </div>
+                            <TimeSeriesChart
+                                ariaLabel='Daily unique visitors'
+                                points={data.series}
+                                series={visitorSeries}
+                                variant='area'
+                            />
+                        </section>
+
+                        <section className={styles.panel}>
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <h2>Clicks</h2>
+                                    <p>{reportingPeriod}</p>
+                                </div>
+                            </div>
+                            <TimeSeriesChart
+                                ariaLabel='Daily clicks'
+                                points={data.series}
+                                series={clickSeries}
+                                variant='area'
                             />
                         </section>
 
@@ -229,7 +327,7 @@ export const GeneralAnalyticsPage: FC = () => {
                             <div className={styles.panelHeader}>
                                 <div>
                                     <h2>Most visited pages</h2>
-                                    <p>Query-free paths grouped by application surface.</p>
+                                    <p>Top query-free paths ranked by page views.</p>
                                 </div>
                             </div>
                             <div className={styles.tableScroll}>
@@ -243,7 +341,7 @@ export const GeneralAnalyticsPage: FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data.pages.map(row => (
+                                        {visibleVisitedPages.map(row => (
                                             <tr key={`${row.surface}-${row.path}`}>
                                                 <td>{formatAnalyticsSurface(row.surface)}</td>
                                                 <th scope='row'>{row.path}</th>
@@ -251,74 +349,50 @@ export const GeneralAnalyticsPage: FC = () => {
                                                 <td>{formatAnalyticsInteger(row.visitors)}</td>
                                             </tr>
                                         ))}
-                                        {data.pages.length === 0 && <EmptyTableRow columns={4} />}
+                                        {visibleVisitedPages.length === 0 && <EmptyTableRow columns={4} />}
                                     </tbody>
                                 </table>
                             </div>
+                            {visitedPagesTotal > 0 && (
+                                <AnalyticsTablePagination
+                                    onNext={showNextVisitedPages}
+                                    onPrevious={showPreviousVisitedPages}
+                                    page={activeVisitedPagesPage}
+                                    pageSize={MOST_VISITED_PAGE_SIZE}
+                                    total={visitedPagesTotal}
+                                    totalPages={visitedPagesTotalPages}
+                                />
+                            )}
                         </section>
 
-                        <section className={styles.twoColumnGrid}>
-                            <article className={styles.panel}>
-                                <div className={styles.panelHeader}>
-                                    <div>
-                                        <h2>Traffic sources</h2>
-                                        <p>First-touch source for viewed pages.</p>
-                                    </div>
+                        <section className={styles.panel}>
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <h2>Traffic sources</h2>
+                                    <p>Attributed source for viewed pages.</p>
                                 </div>
-                                <div className={styles.tableScroll}>
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th scope='col'>Source</th>
-                                                <th scope='col'>Page views</th>
-                                                <th scope='col'>Visitors</th>
+                            </div>
+                            <div className={styles.tableScroll}>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th scope='col'>Source</th>
+                                            <th scope='col'>Page views</th>
+                                            <th scope='col'>Visitors</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.sources.map(row => (
+                                            <tr key={row.source}>
+                                                <th scope='row'>{row.source}</th>
+                                                <td>{formatAnalyticsInteger(row.pageViews)}</td>
+                                                <td>{formatAnalyticsInteger(row.visitors)}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.sources.map(row => (
-                                                <tr key={row.source}>
-                                                    <th scope='row'>{row.source}</th>
-                                                    <td>{formatAnalyticsInteger(row.pageViews)}</td>
-                                                    <td>{formatAnalyticsInteger(row.visitors)}</td>
-                                                </tr>
-                                            ))}
-                                            {data.sources.length === 0 && <EmptyTableRow columns={3} />}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </article>
-
-                            <article className={styles.panel}>
-                                <div className={styles.panelHeader}>
-                                    <div>
-                                        <h2>Application surfaces</h2>
-                                        <p>Engagement split between instrumented Topcoder web applications.</p>
-                                    </div>
-                                </div>
-                                <div className={styles.tableScroll}>
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th scope='col'>Surface</th>
-                                                <th scope='col'>Views</th>
-                                                <th scope='col'>Visitors</th>
-                                                <th scope='col'>Clicks</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.surfaces.map(row => (
-                                                <tr key={row.surface}>
-                                                    <th scope='row'>{formatAnalyticsSurface(row.surface)}</th>
-                                                    <td>{formatAnalyticsInteger(row.pageViews)}</td>
-                                                    <td>{formatAnalyticsInteger(row.visitors)}</td>
-                                                    <td>{formatAnalyticsInteger(row.clicks)}</td>
-                                                </tr>
-                                            ))}
-                                            {data.surfaces.length === 0 && <EmptyTableRow columns={4} />}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </article>
+                                        ))}
+                                        {data.sources.length === 0 && <EmptyTableRow columns={3} />}
+                                    </tbody>
+                                </table>
+                            </div>
                         </section>
                     </>
                 )}
