@@ -10,6 +10,7 @@ import { toast } from 'react-toastify'
 
 import {
     MAX_SUPPORT_ATTACHMENT_BYTES,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
     SupportAttachmentUploadResult,
     uploadSupportAttachment,
 } from '~/apps/support/src/lib/services/support-attachment.service'
@@ -384,6 +385,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                             {attachments.length ? 'Attach Screenshots, Files' : 'Attach Files'}
                         </span>
                         <input
+                            accept={SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES.join(',')}
                             aria-label='Attach files'
                             disabled={busy || uploading}
                             multiple

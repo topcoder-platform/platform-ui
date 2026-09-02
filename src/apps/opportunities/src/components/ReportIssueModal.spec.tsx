@@ -8,7 +8,10 @@ import {
 } from '@testing-library/react'
 import { PropsWithChildren, ReactNode } from 'react'
 
-import { uploadSupportAttachment } from '~/apps/support/src/lib/services/support-attachment.service'
+import {
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+    uploadSupportAttachment,
+} from '~/apps/support/src/lib/services/support-attachment.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
 
 import {
@@ -22,6 +25,7 @@ jest.mock('react-toastify', () => ({
 
 jest.mock('~/apps/support/src/lib/services/support-attachment.service', () => ({
     MAX_SUPPORT_ATTACHMENT_BYTES: 2 * 1024 * 1024,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES: ['.png', 'image/png'],
     uploadSupportAttachment: jest.fn(),
 }), { virtual: true })
 
@@ -90,6 +94,8 @@ describe('ReportIssueModal', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText('Max. 2 MB per file'))
             .toBeInTheDocument()
+        expect(screen.getByLabelText('Attach files'))
+            .toHaveAttribute('accept', SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES.join(','))
         expect(screen.getByRole('button', { name: 'Send report' }))
             .toBeDisabled()
     })
