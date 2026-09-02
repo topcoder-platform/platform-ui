@@ -1,6 +1,7 @@
 import { FC, useEffect } from 'react'
 
-import { ProfileContextData, useProfileContext } from '../profile'
+import type { ProfileContextData } from '../profile/profile-context/profile-context-data.model'
+import { useProfileContext } from '../profile/profile-context/profile.context'
 
 import {
     initializeAnalytics,

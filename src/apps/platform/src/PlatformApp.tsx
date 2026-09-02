@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 
-import { AnalyticsTracker } from '~/libs/core'
+import { AnalyticsTracker } from '~/libs/core/lib/analytics/AnalyticsTracker'
 import { NotificationsContainer, useViewportUnitsFix } from '~/libs/shared'
 
 import { AppFooter } from './components/app-footer'
