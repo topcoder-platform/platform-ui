@@ -23,3 +23,15 @@ export const CHECKPOINT_FEEDBACK_LEARNING_URL = `${EnvironmentConfig.TOPCODER_UR
 /** Published screening guidance on the environment's main site. */
 export const SCREENING_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/search?title=How%20to%20Pass%20Screening'
+
+/** Published Design screening guide required by the challenge-details rail. */
+export const DESIGN_SCREENING_LEARNING_URL
+    = 'https://www.topcoder.com/blog/ultimate-guide-pass-screening-design-challenges'
+
+/** Published Design submission-format FAQ required by the challenge-details rail. */
+export const DESIGN_SUBMISSION_FORMAT_URL
+    = 'https://www.topcoder.com/thrive/articles/Formatting%20Your%20Submission%20for%20Design%20Challenges'
+
+/** Published Marathon Match competition guide required by the challenge-details rail. */
+export const MARATHON_MATCH_LEARNING_URL
+    = 'https://www.topcoder.com/thrive/articles/How%20To%20Compete%20in%20a%20Marathon%20Match'

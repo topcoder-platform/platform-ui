@@ -36,6 +36,11 @@ interface ChallengeSubmissionUploadProps {
     onValidateRegistration: () => Promise<boolean>
 }
 
+/** Renders the compact extension badge used by Design required-file rows. */
+const FileTypeIcon: FC<{ extension: 'JPG' | 'TXT' | 'ZIP' }> = props => (
+    <span aria-hidden='true' className={styles.fileTypeIcon}>{props.extension}</span>
+)
+
 /**
  * Selects the Review API submission type represented by the currently open phase.
  *
@@ -280,19 +285,19 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                         {designChallenge ? (
                             <ul className={styles.requiredFiles}>
                                 <li>
-                                    <IconOutline.ArchiveIcon aria-hidden='true' />
+                                    <FileTypeIcon extension='ZIP' />
                                     Source folder zip file
                                 </li>
                                 <li>
-                                    <IconOutline.ArchiveIcon aria-hidden='true' />
+                                    <FileTypeIcon extension='ZIP' />
                                     Submission folder zip file
                                 </li>
                                 <li>
-                                    <IconOutline.DocumentTextIcon aria-hidden='true' />
+                                    <FileTypeIcon extension='TXT' />
                                     Declarations txt file
                                 </li>
                                 <li>
-                                    <IconOutline.PhotographIcon aria-hidden='true' />
+                                    <FileTypeIcon extension='JPG' />
                                     Preview jpg image
                                 </li>
                             </ul>
@@ -309,7 +314,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     </section>
                     <section className={styles.infoCard}>
                         <h3>
-                            <IconOutline.BadgeCheckIcon aria-hidden='true' />
+                            <IconOutline.CogIcon aria-hidden='true' />
                             Submission tips
                         </h3>
                         <ul className={styles.tips}>
@@ -416,7 +421,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             </div>
                             {file && (
                                 <div className={styles.uploadedFile}>
-                                    <strong>Uploading</strong>
+                                    <strong aria-live='polite'>{uploading ? 'Uploading' : 'Ready to upload'}</strong>
                                     <div className={styles.fileRow}>
                                         <IconOutline.PhotographIcon aria-hidden='true' />
                                         <div className={styles.fileCopy}>

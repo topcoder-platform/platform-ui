@@ -424,7 +424,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('uses the Design submission table when private previews are disabled', () => {
+    it('keeps Design submissions private unless released previews are enabled', () => {
         mockChallenge = { ...mockChallenge, track: 'Design' }
         mockSubmissions = [{
             id: 'submission-1',
@@ -435,11 +435,54 @@ describe('ChallengeDetailsPage member flows', () => {
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
 
-        const headers = ['Handle', 'Submission Date', 'Action']
-        headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
-            .toBeInTheDocument())
-        expect(screen.queryByRole('columnheader', { name: 'Rating' }))
+        expect(screen.getByText('Submissions are private'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('table'))
             .not.toBeInTheDocument()
+    })
+
+    it('toggles server-backed registration and submission date ordering', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockRegistrants = [{
+            created: '2026-06-03T09:30:00.000Z',
+            id: 'resource-1',
+            memberHandle: 'registrant',
+            memberId: '456',
+        }]
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            memberId: '456',
+            submitterHandle: 'registrant',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+        expect(screen.getByRole('columnheader', { name: 'Registration Date' }))
+            .toHaveAttribute('aria-sort', 'descending')
+        fireEvent.click(screen.getByRole('button', { name: 'Registration Date' }))
+        expect(screen.getByRole('columnheader', { name: 'Registration Date' }))
+            .toHaveAttribute('aria-sort', 'ascending')
+        expect(mockUseSWR.mock.calls.some(([key]) => (
+            Array.isArray(key)
+            && key[0] === 'opportunities:registrants'
+            && key[4] === 'asc'
+        )))
+            .toBe(true)
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
+            .toHaveAttribute('aria-sort', 'descending')
+        fireEvent.click(screen.getByRole('button', { name: 'Submission Date' }))
+        expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
+            .toHaveAttribute('aria-sort', 'ascending')
+        expect(mockUseSWR.mock.calls.some(([key]) => (
+            Array.isArray(key)
+            && key[0] === 'opportunities:submissions'
+            && key[5] === 'asc'
+        )))
+            .toBe(true)
     })
 
     it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
@@ -566,8 +609,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('In Review'))
             .toBeInTheDocument()
-        expect(screen.getByRole('link', { name: /Open Review App/ }))
-            .toHaveAttribute('href', '/review/active-challenges/challenge-id/challenge-details?tab=submission')
+        expect(screen.queryByRole('link', { name: /^Open Review App$/ }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open submission submission-1 in Review App' }))
+            .toHaveAttribute('href', '/review/challenge-id?tab=submission')
+        expect(screen.getByText('submission-1')
+            .closest('a'))
+            .toBeNull()
         expect(screen.queryByRole('button', { name: 'Download submission submission-1' }))
             .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'View history for submission submission-1' }))
@@ -577,7 +625,11 @@ describe('ChallengeDetailsPage member flows', () => {
     it('renders and deletes the compact Design My Submissions actions', async () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
-        mockChallenge = { ...mockChallenge, track: 'Design' }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{ isOpen: true, name: 'Submission' }],
+            track: 'Design',
+        }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
             id: 'submission-1',
@@ -606,6 +658,34 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveBeenCalledWith('submission-1'))
         await waitFor(() => expect(deleteButton)
             .not.toBeDisabled())
+    })
+
+    it('disables Design submission deletion after the submission phase closes', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{ isOpen: true, name: 'Review' }],
+            track: 'Design',
+        }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-closed',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const deleteButton = screen.getByRole('button', {
+            name: 'Delete submission submission-closed',
+        })
+        expect(deleteButton)
+            .toBeDisabled()
+        expect(deleteButton)
+            .toHaveAttribute('title', 'Submission deletion is closed')
+        expect(mockDeleteSubmission)
+            .not.toHaveBeenCalled()
     })
 
     it('renders the compact QA My Submissions columns and authored actions', () => {

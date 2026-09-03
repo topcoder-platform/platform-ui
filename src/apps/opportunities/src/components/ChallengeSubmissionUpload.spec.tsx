@@ -149,11 +149,19 @@ describe('ChallengeSubmissionUpload', () => {
         fireEvent.change(screen.getByLabelText(/Upload File\*/), {
             target: { files: [file] },
         })
+        expect(screen.getByText('Ready to upload'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         expect(await screen.findByText('25%'))
             .toBeInTheDocument()
+        expect(screen.getByText('Uploading'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('progressbar'))
+            .toHaveAttribute('aria-valuenow', '25')
         expect(mockedCreateSubmission)
             .toHaveBeenCalledWith(
                 'challenge-id',

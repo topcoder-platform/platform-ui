@@ -200,6 +200,17 @@
         color: #137d60;
         font-weight: 700;
     }
+
+    > a {
+        align-items: center;
+        display: inline-flex;
+        gap: 4px;
+
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
 }
 
 .externalButton {

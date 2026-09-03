@@ -514,7 +514,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
-    it('shows authored under-review, on-hold, and declined engagement labels', () => {
+    it('shows authored under-review, shortlisted, on-hold, and declined engagement labels', () => {
         const { rerender }: RenderResult = render(
             <MemoryRouter>
                 <OpportunityListCard
@@ -530,6 +530,21 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         )
 
         expect(screen.getByText('Under Review').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'SHORTLISTED',
+                        id: 'shortlisted-engagement',
+                        status: 'OPEN',
+                        title: 'Shortlisted engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Shortlisted').className)
             .toContain('stateApplied')
         rerender(
             <MemoryRouter>

@@ -13,6 +13,14 @@ const designChallengeLearningUrl
     = 'https://www.topcoder.example/thrive/articles/How%20To%20Compete%20in%20Design'
 const checkpointFeedbackLearningUrl
     = 'https://www.topcoder.example/thrive/articles/how-to-approach-the-checkpoint-feedback-to-decipher-hidden-codes'
+const marathonMatchLearningUrl
+    = 'https://www.topcoder.com/thrive/articles/How%20To%20Compete%20in%20a%20Marathon%20Match'
+const designSubmissionFormatUrl
+    = 'https://www.topcoder.com/thrive/articles/Formatting%20Your%20Submission%20for%20Design%20Challenges'
+const designScreeningLearningUrl
+    = 'https://www.topcoder.com/blog/ultimate-guide-pass-screening-design-challenges'
+const designPolicyUrl
+    = 'https://help.topcoder.com/hc/en-us/articles/217959447-Font-Policy-for-Design-Challenges'
 
 const mockUseSWR = jest.fn()
 
@@ -42,6 +50,7 @@ jest.mock('../utils', () => ({
         challengeLinks: [],
     }),
     challengeSubmissionLimit: (): undefined => undefined,
+    isMarathonMatchChallenge: (value: ChallengeOpportunity): boolean => value.type === 'Marathon Match',
 }))
 jest.mock('../services', () => ({
     getChallengeTermsDetails: jest.fn(),
@@ -50,7 +59,9 @@ jest.mock('../utils/opportunity-learning.utils', () => ({
     CHALLENGE_EXPLAINED_URL: challengeExplainedUrl,
     CHECKPOINT_FEEDBACK_LEARNING_URL: checkpointFeedbackLearningUrl,
     DESIGN_CHALLENGE_LEARNING_URL: designChallengeLearningUrl,
-    SCREENING_LEARNING_URL: 'https://www.topcoder.example/thrive/search?title=How%20to%20Pass%20Screening',
+    DESIGN_SCREENING_LEARNING_URL: designScreeningLearningUrl,
+    DESIGN_SUBMISSION_FORMAT_URL: designSubmissionFormatUrl,
+    MARATHON_MATCH_LEARNING_URL: marathonMatchLearningUrl,
 }))
 
 const challenge: ChallengeOpportunity = {
@@ -68,6 +79,11 @@ const designChallenge: ChallengeOpportunity = {
 const developmentChallenge: ChallengeOpportunity = {
     ...challenge,
     track: 'Development',
+}
+
+const marathonChallenge: ChallengeOpportunity = {
+    ...challenge,
+    type: 'Marathon Match',
 }
 
 function renderSidebar(
@@ -150,6 +166,18 @@ describe('ChallengeSidebar Review Style', () => {
                 'href',
                 challengeExplainedUrl,
             )
+        expect(screen.getByText('The place to see your scores and feedback, and improve before the final review.'))
+            .toBeInTheDocument()
+    })
+
+    it('adds the authored Marathon Match guide and arrow indicators', () => {
+        renderSidebar(undefined, marathonChallenge)
+
+        expect(screen.getByRole('link', { name: 'How to Compete in a Marathon Match' }))
+            .toHaveAttribute('href', marathonMatchLearningUrl)
+        expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' })
+            .querySelector('img'))
+            .not.toBeNull()
     })
 
     it('keeps design-only educational links and copy out of development challenges', () => {
@@ -250,5 +278,13 @@ describe('ChallengeSidebar Review Style', () => {
             .toHaveTextContent('how to pass screening.')
         expect(faqLink.parentElement)
             .toHaveTextContent('Trouble formatting your submission or want to learn more? Read the FAQ.')
+        expect(policyLink)
+            .toHaveAttribute('href', designPolicyUrl)
+        expect(policyLink)
+            .toHaveAttribute('target', '_blank')
+        expect(screeningLink)
+            .toHaveAttribute('href', designScreeningLearningUrl)
+        expect(faqLink)
+            .toHaveAttribute('href', designSubmissionFormatUrl)
     })
 })

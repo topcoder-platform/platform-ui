@@ -334,6 +334,62 @@ describe('opportunities service normalization', () => {
             )
     })
 
+    it('hydrates public engagement cards with the caller application and assignment states', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [
+                        { id: 'applied-engagement', status: 'OPEN', title: 'Applied' },
+                        { id: 'assigned-engagement', status: 'OPEN', title: 'Assigned' },
+                    ],
+                    meta: { page: 1, perPage: 10, totalCount: 2, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{
+                        engagementId: 'applied-engagement',
+                        status: 'SHORTLISTED',
+                        updatedAt: '2026-09-01T00:00:00.000Z',
+                    }],
+                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{
+                        assignments: [{ id: 'assignment', status: 'ASSIGNED' }],
+                        id: 'assigned-engagement',
+                    }],
+                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [
+                    { applicationStatus: 'SHORTLISTED', id: 'applied-engagement' },
+                    { assignments: [{ status: 'ASSIGNED' }], id: 'assigned-engagement' },
+                ],
+            })
+        expect(get.mock.calls.map(call => new URL(String(call[0])).pathname))
+            .toEqual([
+                '/v6/engagements/engagements',
+                '/v6/engagements/applications',
+                '/v6/engagements/engagements/my-assignments',
+            ])
+    })
+
     it('maps copilot track facets and skills to types and disables status grouping for honest sorting', () => {
         const url = new URL(buildOpportunityPageUrl('copilots', {
             applied: true,
@@ -665,6 +721,49 @@ describe('opportunities service normalization', () => {
             .toBe('asc')
     })
 
+    it('hydrates Review cards with standardized challenge skills', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    result: {
+                        content: [{
+                            challengeData: { technologies: [] },
+                            challengeId: 'challenge-id',
+                            id: 'review-id',
+                        }],
+                        metadata: { limit: 10, page: 1, total: 1, totalPages: 1 },
+                    },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ id: 'challenge-id', skills: [{ id: 'skill-id', name: 'TypeScript' }] }],
+                    meta: { page: 1, perPage: 1, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('reviews', {
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    challengeData: { skills: [{ id: 'skill-id', name: 'TypeScript' }] },
+                    id: 'review-id',
+                }],
+            })
+        const challengeUrl = new URL(String(get.mock.calls[1][0]))
+        expect(challengeUrl.pathname)
+            .toBe('/v6/challenges')
+        expect(challengeUrl.searchParams.getAll('ids[]'))
+            .toEqual(['challenge-id'])
+    })
+
     it('loads the challenge AI review configuration used by Review Style', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get.mockResolvedValueOnce({
@@ -836,27 +935,27 @@ describe('opportunities service normalization', () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get
             .mockResolvedValueOnce({
-                data: [{ id: 'older', submittedDate: '2026-06-01T00:00:00.000Z' }],
+                data: [{ id: 'older', memberId: '123', submittedDate: '2026-06-01T00:00:00.000Z' }],
                 meta: { page: 1, perPage: 200, totalCount: 2, totalPages: 2 },
             })
             .mockResolvedValueOnce({
-                data: [{ id: 'newer', submittedDate: '2026-06-02T00:00:00.000Z' }],
+                data: [{ id: 'newer', memberId: '123', submittedDate: '2026-06-02T00:00:00.000Z' }],
                 meta: { page: 2, perPage: 200, totalCount: 2, totalPages: 2 },
             })
 
         await expect(getChallengeSubmissionHistory('challenge', '123', 'CONTEST_SUBMISSION'))
             .resolves.toEqual([
-                { id: 'newer', submittedDate: '2026-06-02T00:00:00.000Z' },
-                { id: 'older', submittedDate: '2026-06-01T00:00:00.000Z' },
+                { id: 'newer', memberId: '123', submittedDate: '2026-06-02T00:00:00.000Z' },
+                { id: 'older', memberId: '123', submittedDate: '2026-06-01T00:00:00.000Z' },
             ])
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=1&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&page=1&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=2&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&page=2&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
     })
@@ -946,7 +1045,8 @@ describe('opportunities service normalization', () => {
             .toHaveBeenCalledWith('https://api.example/v6/resource-roles')
         expect(globalGet)
             .toHaveBeenLastCalledWith(
-                'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role',
+                'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role'
+                + '&sortBy=created&sortOrder=desc',
             )
     })
 

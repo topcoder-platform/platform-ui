@@ -764,7 +764,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
     const stateKey = challengeCatalogKey(card.state)
     const stateIsAccepted = ['accepted', 'approved', 'assigned', 'completed', 'selected'].includes(stateKey)
-    const stateIsApplied = ['applied', 'onhold', 'underreview'].includes(stateKey)
+    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview'].includes(stateKey)
     const stateIsClosed = [
         'applicationclosed',
         'cancelled',
