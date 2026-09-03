@@ -76,6 +76,27 @@ describe('ChallengeTermsModal', () => {
             .toBeInTheDocument()
     })
 
+    it('does not flash stale hydrated terms while a new registration request is loading', () => {
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [{ id: 'previous-terms', title: 'Challenge Terms' }],
+            isValidating: true,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onAccept={jest.fn()}
+                onClose={jest.fn()}
+                open
+                terms={[{ id: 'current-terms', title: 'Challenge Terms' }]}
+            />,
+        )
+
+        expect(screen.queryByRole('dialog'))
+            .not.toBeInTheDocument()
+    })
+
     it('still opens a retryable dialog when accepted-term hydration fails', () => {
         mockSWRResponse = {
             ...mockSWRResponse,

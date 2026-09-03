@@ -12,6 +12,26 @@ export interface ChallengeSidebarLink {
 }
 
 /**
+ * Builds the canonical Review App challenge-detail destination.
+ *
+ * The Review App uses its own configured origin in deployed environments, so
+ * Opportunities must not route these links through the current www host.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded active-challenge detail URL.
+ * @throws Does not throw.
+ */
+export function challengeReviewAppUrl(
+    challengeId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}/challenge-details`
+}
+
+/**
  * Builds a member profile URL on the environment-specific Profiles app.
  *
  * @param handle public Topcoder handle.

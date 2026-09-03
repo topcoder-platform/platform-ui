@@ -45,6 +45,7 @@ import {
     defaultSort,
     normalizeOpportunitySort,
     opportunitySortOptions,
+    sortOpportunityItems,
 } from '../utils/opportunity-listing.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 
@@ -208,6 +209,10 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         { revalidateOnFocus: false },
     )
     const data = pageResponse.data
+    const displayedItems = useMemo(
+        () => sortOpportunityItems(data?.items ?? [], sort),
+        [data?.items, sort],
+    )
     const registrationIds = useMemo(
         () => new Set(registrationIdsResponse.data ?? []),
         [registrationIdsResponse.data],
@@ -257,7 +262,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     /** Updates the active status and starts again at page one. */
     const updateStatus = (value: string): void => {
         setStatus(value)
-        setSort(current => normalizeOpportunitySort(kind, value, current))
+        setSort(current => normalizeOpportunitySort(current))
         setPage(1)
     }
 
@@ -279,6 +284,12 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setPage(1)
     }
 
+    /** Changes result pages and returns the member to the top of the listing. */
+    const updatePage = (value: number): void => {
+        setPage(value)
+        window.scrollTo({ left: 0, top: 0 })
+    }
+
     /** Applies list sorting selected in the toolbar. */
     const updateSort = (value: string): void => {
         setSort(value)
@@ -295,7 +306,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         <strong>Sort by</strong>
                         <OpportunitySortSelect
                             onChange={updateSort}
-                            options={opportunitySortOptions(kind, status)}
+                            options={opportunitySortOptions()}
                             value={sort}
                         />
                     </div>
@@ -338,7 +349,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                 </div>
                 <div className={styles.results} aria-live='polite'>
                     <OpportunityPagination
-                        onPageChange={setPage}
+                        onPageChange={updatePage}
                         onPerPageChange={updatePerPage}
                         page={data?.page ?? page}
                         perPage={data?.perPage ?? perPage}
@@ -374,7 +385,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         [styles.grid]: props.view === 'grid',
                     })}
                     >
-                        {data?.items.map((item: OpportunityItem) => (
+                        {displayedItems.map((item: OpportunityItem) => (
                             <OpportunityListCard
                                 item={item}
                                 key={item.id}
@@ -389,7 +400,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                     </div>
                     {(data?.items.length ?? 0) > 0 && (
                         <OpportunityPagination
-                            onPageChange={setPage}
+                            onPageChange={updatePage}
                             onPerPageChange={updatePerPage}
                             page={data?.page ?? page}
                             perPage={data?.perPage ?? perPage}

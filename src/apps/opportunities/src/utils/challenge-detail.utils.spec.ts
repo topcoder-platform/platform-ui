@@ -2,6 +2,7 @@
 import {
     challengeFileTypes,
     challengeForumUrl,
+    challengeReviewAppUrl,
     challengeScorecardUrl,
     challengeSidebarLinks,
     challengeSubmissionLimit,
@@ -11,6 +12,8 @@ import {
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         ADMIN: { ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review' },
+        REVIEW_APP_URL: 'https://review.topcoder-dev.com',
+        TC_DOMAIN: 'topcoder-dev.com',
         URLS: { USER_PROFILE: 'https://profiles.topcoder-dev.com' },
         VANILLA_FORUM: { V2_URL: 'https://vanilla.topcoder-dev.com/api/v2' },
     },
@@ -35,6 +38,14 @@ jest.mock('~/libs/cms', () => ({
 }), { virtual: true })
 
 describe('challenge detail utilities', () => {
+    it('builds Review App links on the dedicated configured host', () => {
+        expect(challengeReviewAppUrl('challenge with/slash'))
+            .toBe('https://review.topcoder-dev.com/active-challenges/'
+                + 'challenge%20with%2Fslash/challenge-details')
+        expect(challengeReviewAppUrl('challenge-id', 'https://review.example/'))
+            .toBe('https://review.example/active-challenges/challenge-id/challenge-details')
+    })
+
     it('builds encoded links on the configured Profiles app host', () => {
         expect(memberProfileUrl('handle with/slash'))
             .toBe('https://profiles.topcoder-dev.com/handle%20with%2Fslash')

@@ -12,6 +12,7 @@ import {
     createChallengeSubmission,
     deleteChallengeSubmission,
     getChallengeAiReviewConfig,
+    getChallengeMemberResource,
     getChallengeProjectResults,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
@@ -216,6 +217,28 @@ describe('opportunities service normalization', () => {
             .toBeGreaterThan(0)
     })
 
+    it('maps the clarified competition prize and title sorts to Challenge API fields', () => {
+        const prize = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            sort: 'prizeLowToHigh',
+        }))
+        const title = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            sort: 'titleAZ',
+        }))
+
+        expect(prize.searchParams.get('sortBy'))
+            .toBe('overview.totalPrizes')
+        expect(prize.searchParams.get('sortOrder'))
+            .toBe('asc')
+        expect(title.searchParams.get('sortBy'))
+            .toBe('name')
+        expect(title.searchParams.get('sortOrder'))
+            .toBe('asc')
+    })
+
     it('keeps scheduled challenges out of public active results without hiding member competitions', () => {
         const publicUrl = new URL(buildOpportunityPageUrl('competitions', {
             page: 1,
@@ -262,6 +285,19 @@ describe('opportunities service normalization', () => {
             .toBe('2')
         expect(url.searchParams.get('sortOrder'))
             .toBe('desc')
+    })
+
+    it('maps the clarified low-prize sort to Review API payment ordering', () => {
+        const url = new URL(buildOpportunityPageUrl('reviews', {
+            page: 1,
+            perPage: 10,
+            sort: 'prizeLowToHigh',
+        }))
+
+        expect(url.searchParams.get('sortBy'))
+            .toBe('basePayment')
+        expect(url.searchParams.get('sortOrder'))
+            .toBe('asc')
     })
 
     it('maps engagement filters to its scalar status, skill IDs, and semantic sort', () => {
@@ -1089,6 +1125,38 @@ describe('opportunities service normalization', () => {
             .resolves.toBeUndefined()
         await expect(getChallengeRegistration('challenge', '123'))
             .resolves.toBeUndefined()
+    })
+
+    it('accepts any exact caller-owned challenge resource for member forum access', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{
+                    challengeId: 'challenge',
+                    id: 'copilot-resource',
+                    memberId: '123',
+                    roleId: 'copilot-role',
+                }],
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    challengeId: 'another-challenge',
+                    id: 'stale-resource',
+                    memberId: '123',
+                    roleId: 'copilot-role',
+                }],
+                headers: { get: () => undefined },
+            })
+
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toMatchObject({ id: 'copilot-resource', roleId: 'copilot-role' })
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toBeUndefined()
+        expect(globalGet)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=1&memberId=123',
+            )
     })
 
     it('loads all Submitter challenge IDs used by public competition cards', async () => {

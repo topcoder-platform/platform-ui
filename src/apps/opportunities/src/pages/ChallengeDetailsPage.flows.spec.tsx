@@ -26,6 +26,7 @@ let mockRegistration: { id: string } | undefined
 let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
+let mockMemberResource: { id: string } | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
@@ -162,11 +163,19 @@ jest.mock('../utils', () => ({
             ...summations.filter(summation => summation.submissionId === submission.id),
         ],
     })),
+    challengeReviewAppUrl: (challengeId: string): string => (
+        `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
+    ),
     challengeTrackLabel: (track?: string): string => track ?? 'challenge',
     challengeTrackWins: (stats?: {
+        DATA_SCIENCE?: Record<string, { wins?: number } | number>
         DEVELOP?: { wins?: number }
         wins?: number
-    }): number | undefined => stats?.DEVELOP?.wins ?? stats?.wins,
+    }): number | undefined => (stats?.DEVELOP?.wins ?? 0)
+        + (typeof stats?.DATA_SCIENCE?.['AI Engineering'] === 'object'
+            ? stats.DATA_SCIENCE['AI Engineering'].wins ?? 0
+            : 0)
+        || stats?.wins,
     formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
         score === undefined ? fallback : String(Math.max(0, score))
     ),
@@ -229,7 +238,16 @@ jest.mock('../utils', () => ({
     winnerFinalScore: (
         winner: { placement?: number; userId?: string },
         projectResults: Array<{ finalScore?: number; placement?: number; userId?: string }>,
-    ): number | undefined => projectResults.find(result => (
+        reviewSummations: Array<{
+            aggregateScore?: number
+            isFinal?: boolean
+            memberId?: string
+            submitterId?: string
+        }> = [],
+    ): number | undefined => reviewSummations.find(summation => (
+        summation.isFinal
+        && [summation.memberId, summation.submitterId].includes(winner.userId)
+    ))?.aggregateScore ?? projectResults.find(result => (
         result.userId === winner.userId && result.placement === winner.placement
     ))?.finalScore,
 }))
@@ -272,6 +290,7 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegistration = undefined
         mockRegistrationRemoved = false
         mockMemberProfiles = []
+        mockMemberResource = undefined
         mockProjectResults = []
         mockPreviewSubmissions = []
         mockRegistrants = []
@@ -303,6 +322,10 @@ describe('ChallengeDetailsPage member flows', () => {
                     ...swrResponse(mockRegistration),
                     mutate: mockRegistrationMutate,
                 }
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:challenge-member-resource') {
+                return swrResponse(mockMemberResource)
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
@@ -394,6 +417,21 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
             .not.toBeInTheDocument()
+    })
+
+    it('shows the member forum to a copilot resource without treating it as registration', () => {
+        mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
+        mockMemberResource = { id: 'copilot-resource' }
+
+        renderPage()
+
+        expect(screen.getByRole('tab', { name: 'Forum 3' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+            .not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
+        expect(screen.getByText('Forum content'))
+            .toBeInTheDocument()
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {
@@ -609,10 +647,16 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('In Review'))
             .toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: /^Open Review App$/ }))
-            .not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /^Open Review App$/ }))
+            .toHaveAttribute(
+                'href',
+                'https://review.topcoder-dev.com/active-challenges/challenge-id/challenge-details',
+            )
         expect(screen.getByRole('link', { name: 'Open submission submission-1 in Review App' }))
-            .toHaveAttribute('href', '/review/challenge-id?tab=submission')
+            .toHaveAttribute(
+                'href',
+                'https://review.topcoder-dev.com/active-challenges/challenge-id/challenge-details',
+            )
         expect(screen.getByText('submission-1')
             .closest('a'))
             .toBeNull()
@@ -956,6 +1000,35 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()
+    })
+
+    it('uses an exact-member final summation when a Marathon project result contains zero', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{
+                isOpen: false,
+                name: 'Review',
+                scheduledStartDate: '2026-06-04T09:30:00.000Z',
+            }],
+            status: 'COMPLETED',
+            type: 'Marathon Match',
+            winners: [{ handle: 'winner', placement: 1, userId: '42' }],
+        }
+        mockProjectResults = [{ finalScore: 0, placement: 1, userId: '42' }]
+        mockReviewSummations = [{
+            aggregateScore: 100,
+            isFinal: true,
+            submitterId: '42',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByRole('article'))
+            .toHaveTextContent('with a final score of 100')
+        expect(screen.getByRole('article'))
+            .not.toHaveTextContent('with a final score of 0')
     })
 
     it('omits ratings from the exact three-winner podium state', () => {

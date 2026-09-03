@@ -13,6 +13,7 @@ import {
 import {
     challengeFileTypes,
     challengeForumUrl,
+    challengeReviewAppUrl,
     ChallengeSidebarLink,
     challengeSidebarLinks,
     challengeSubmissionLimit,
@@ -281,9 +282,13 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             <section className={styles.promo}>
                 <img alt='' aria-hidden='true' className={styles.promoArt} src={programBanner} />
                 <div>
-                    <h3>Join the AI Exponential league</h3>
-                    <p>Where elite AI builders compete to solve real-world challenges and grow fast.</p>
-                    <Link to='/thrive'>
+                    <h3>{marathonMatch ? 'Marathon Match Tournament' : 'Join the AI Exponential league'}</h3>
+                    <p>
+                        {marathonMatch
+                            ? 'Join the battle of competitors in a series of challenging Marathon Matches.'
+                            : 'Where elite AI builders compete to solve real-world challenges and grow fast.'}
+                    </p>
+                    <Link to={marathonMatch ? MARATHON_MATCH_LEARNING_URL : '/thrive'}>
                         Explore the program
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </Link>
@@ -291,10 +296,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             </section>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
                 <p>The place to see your scores and feedback, and improve before the final review.</p>
-                <Link to={`/review/active-challenges/${props.challenge.id}/challenge-details`}>
+                <a
+                    href={challengeReviewAppUrl(props.challenge.id)}
+                    rel='noreferrer'
+                    target='_blank'
+                >
                     View Review App
                     <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                </Link>
+                </a>
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
@@ -304,7 +313,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </a>
                 {marathonMatch && (
                     <a href={MARATHON_MATCH_LEARNING_URL} rel='noreferrer' target='_blank'>
-                        How to Compete in a Marathon Match
+                        How to Compete on Marathon Match
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
@@ -420,11 +429,13 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                     </>
                 )}
-                <ReviewStyleSection
-                    config={props.aiReviewConfig}
-                    loading={props.reviewStyleLoading}
-                    unavailable={props.reviewStyleUnavailable}
-                />
+                {!marathonMatch && (
+                    <ReviewStyleSection
+                        config={props.aiReviewConfig}
+                        loading={props.reviewStyleLoading}
+                        unavailable={props.reviewStyleUnavailable}
+                    />
+                )}
                 <div className={styles.infoSection}>
                     <h3>
                         <img alt='' aria-hidden='true' src={sidebarPolicyIcon} />

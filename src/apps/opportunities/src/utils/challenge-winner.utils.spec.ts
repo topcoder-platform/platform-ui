@@ -11,7 +11,7 @@ describe('challenge winner utilities', () => {
         const stats = {
             DEVELOP: { wins: 7 },
             wins: 12,
-        } as UserStats
+        } as unknown as UserStats
 
         expect(challengeTrackWins(stats, 'Development'))
             .toBe(7)
@@ -23,6 +23,22 @@ describe('challenge winner utilities', () => {
             .toBe('DATA_SCIENCE')
     })
 
+    it('matches profile Development wins by including migrated AI Engineering contests', () => {
+        const stats = {
+            DATA_SCIENCE: {
+                'AI Engineering': { wins: 5 },
+                wins: 26,
+            },
+            DEVELOP: { wins: 80 },
+            wins: 126,
+        } as unknown as UserStats
+
+        expect(challengeTrackWins(stats, 'Development'))
+            .toBe(85)
+        expect(challengeTrackWins(stats, 'Data Science'))
+            .toBe(26)
+    })
+
     it('uses the canonical result matching both winner ID and placement', () => {
         expect(winnerFinalScore(
             { handle: 'Winner', placement: 1, userId: '42' },
@@ -32,6 +48,18 @@ describe('challenge winner utilities', () => {
             ],
         ))
             .toBe(98.98)
+    })
+
+    it('prefers the exact winner final summation over a legacy zero project result', () => {
+        expect(winnerFinalScore(
+            { handle: 'Winner', placement: 1, userId: '42' },
+            [{ finalScore: 0, placement: 1, userId: '42' }],
+            [
+                { aggregateScore: 75, isFinal: true, submitterId: '99' },
+                { aggregateScore: 100, isFinal: true, submitterId: 42 },
+            ],
+        ))
+            .toBe(100)
     })
 
     it('does not infer a result from a handle or placement alone', () => {

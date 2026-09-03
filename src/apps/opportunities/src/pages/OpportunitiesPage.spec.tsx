@@ -57,7 +57,9 @@ jest.mock('../components', () => ({
     OpportunityListCard: (props: { item: { id: string }; registered?: boolean }) => (
         <output data-testid={`registration-${props.item.id}`}>{String(!!props.registered)}</output>
     ),
-    OpportunityPagination: () => undefined,
+    OpportunityPagination: (props: { onPageChange: (page: number) => void }) => (
+        <button aria-label='Go to page 2' onClick={() => props.onPageChange(2)} type='button' />
+    ),
     OpportunitySortSelect: () => undefined,
     OpportunityViewToggle: () => undefined,
 }))
@@ -143,6 +145,42 @@ describe('OpportunitiesPage', () => {
 
         await waitFor(() => expect(screen.getByTestId('registration-challenge-id'))
             .toHaveTextContent('true'))
+    })
+
+    it('scrolls to the top when the member selects another results page', async () => {
+        const scrollTo = jest.spyOn(window, 'scrollTo')
+            .mockImplementation()
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 20 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [{ id: 'challenge-id', name: 'Challenge' }],
+            page: 1,
+            perPage: 10,
+            total: 20,
+            totalPages: 2,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        fireEvent.click((await screen.findAllByRole('button', { name: 'Go to page 2' }))[0])
+
+        expect(scrollTo)
+            .toHaveBeenCalledWith({ left: 0, top: 0 })
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('competitions', expect.objectContaining({ page: 2 })))
+        scrollTo.mockRestore()
     })
 
     it('does not label a non-submitter My competition as registered', async () => {

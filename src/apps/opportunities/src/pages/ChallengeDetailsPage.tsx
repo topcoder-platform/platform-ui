@@ -50,6 +50,7 @@ import {
     ChallengeReviewSummation,
     ChallengeSubmission,
     ChallengeTerm,
+    ForumTopicCollection,
     MemberProfileSummary,
     OpportunityPage,
 } from '../models'
@@ -57,6 +58,8 @@ import {
     agreeToChallengeTerms,
     deleteChallengeSubmission,
     getChallengeAiReviewConfig,
+    getChallengeForumTopics,
+    getChallengeMemberResource,
     getChallengeOpportunity,
     getChallengeProjectResults,
     getChallengeRegistration,
@@ -71,6 +74,7 @@ import {
 } from '../services'
 import {
     attachMarathonReviewSummations,
+    challengeReviewAppUrl,
     challengeTrackLabel,
     challengeTrackWins,
     formatMarathonFinalScore,
@@ -95,21 +99,6 @@ type ChallengeTab = 'requirements' | 'registrants' | 'submissions' | 'mine' | 'd
 
 const STALE_REGISTRATION_MESSAGE
     = 'Your registration is no longer active. Register again before submitting.'
-
-/**
- * Builds the challenge-scoped Review App destination used by authored actions.
- *
- * @param challengeId Challenge API UUID.
- * @param submissionType optional checkpoint or standard submission type.
- * @returns encoded Review App challenge-detail URL.
- * @throws Does not throw.
- */
-function challengeReviewUrl(challengeId: string, submissionType?: string): string {
-    const tab = submissionType === 'CHECKPOINT_SUBMISSION'
-        ? 'checkpoint-submission'
-        : 'submission'
-    return `/review/${encodeURIComponent(challengeId)}?tab=${tab}`
-}
 
 /**
  * Determines whether a Design submission can still be removed while an
@@ -267,8 +256,11 @@ export const ChallengeDetailsPage: FC = () => {
         () => getChallengeOpportunity(challengeId),
         { revalidateOnFocus: false },
     )
+    const challenge = challengeResponse.data
     const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile ? ['opportunities:challenge-review-style', challengeId] : undefined,
+        challengeId && profile && challenge && !isMarathonMatchChallenge(challenge)
+            ? ['opportunities:challenge-review-style', challengeId]
+            : undefined,
         () => getChallengeAiReviewConfig(challengeId),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
@@ -278,12 +270,23 @@ export const ChallengeDetailsPage: FC = () => {
         () => getChallengeRegistration(challengeId, memberId as string),
         { revalidateOnFocus: false },
     )
+    const memberResourceResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
+        challengeId && memberId ? ['opportunities:challenge-member-resource', challengeId, memberId] : undefined,
+        () => getChallengeMemberResource(challengeId, memberId as string),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
     const registration = registrationResponse.data
-    const challenge = challengeResponse.data
     const isAdministrator = profile?.roles?.some(role => role.trim()
         .toLowerCase() === 'administrator') ?? false
     const isRegistered = !!registration
     const hasMemberTabAccess = isRegistered || isAdministrator
+    const hasForumAccess = hasMemberTabAccess || !!memberResourceResponse.data
+    const forumResponse: SWRResponse<ForumTopicCollection, Error> = useSWR(
+        hasForumAccess && challengeId ? ['opportunities:forum-topics', challengeId] : undefined,
+        () => getChallengeForumTopics(challengeId),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+    const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
@@ -301,12 +304,12 @@ export const ChallengeDetailsPage: FC = () => {
             ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
-            ...(hasMemberTabAccess
-                ? [{ count: challenge?.numOfPosts, id: 'forum' as ChallengeTab, label: 'Forum' }]
+            ...(hasForumAccess
+                ? [{ count: forumTopicCount, id: 'forum' as ChallengeTab, label: 'Forum' }]
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
-    }, [challenge, hasMemberTabAccess, isRegistered, memberId])
+    }, [challenge, forumTopicCount, hasForumAccess, hasMemberTabAccess, isRegistered, memberId])
 
     /**
      * Selects a challenge tab and closes the transient in-tab submission form.
@@ -1101,6 +1104,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             return (
                 <MySubmissionsEmpty
                     onStartSubmission={props.onStartSubmission}
+                    reviewUrl={challengeReviewAppUrl(props.challenge.id)}
                 />
             )
         }
@@ -1135,6 +1139,17 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     <h2>{props.mine ? 'My Submissions' : 'All Submissions'}</h2>
                     {props.mine && <p>Manage your submissions or upload new.</p>}
                 </div>
+                {props.mine && (
+                    <a
+                        className={styles.reviewAppButton}
+                        href={challengeReviewAppUrl(props.challenge.id)}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
+                        Open Review App
+                        <IconOutline.ExternalLinkIcon aria-hidden='true' />
+                    </a>
+                )}
                 {!props.mine && isMarathonMatch && (
                     <div aria-label='Submission view' className={styles.submissionViewToggle} role='group'>
                         <button
@@ -1211,7 +1226,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                             {submissions.map(submission => {
                                 const scores = marathonSubmissionScores(submission)
                                 const progress = marathonSubmissionTestProgress(submission)
-                                const reviewUrl = challengeReviewUrl(props.challenge.id, submission.type)
+                                const reviewUrl = challengeReviewAppUrl(props.challenge.id)
                                 const statusClass = progress.status
                                     ? styles[`testStatus${progress.status.replace(' ', '')}`]
                                     : ''
@@ -1724,6 +1739,13 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         () => getChallengeProjectResults(props.challenge.id),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
+    const winnerReviewSummationResponse: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
+        winners?.length && props.memberId && isMarathonMatchChallenge(props.challenge)
+            ? ['opportunities:mm-review-summations', props.challenge.id]
+            : undefined,
+        () => getChallengeReviewSummations(props.challenge.id),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
 
     if (!winners?.length) {
         return (
@@ -1753,7 +1775,10 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
     const showWinnerFinalScores = !!props.memberId && shouldShowFinalSubmissionScores(
         props.challenge,
         [],
-        (projectResultResponse.data ?? []).map(result => result.finalScore),
+        [
+            ...(projectResultResponse.data ?? []).map(result => result.finalScore),
+            ...(winnerReviewSummationResponse.data ?? []).map(result => result.aggregateScore),
+        ],
     )
     const rankedWinners = ranked.map(entry => {
         const profile = profilesById.get(String(entry.winner.userId ?? ''))
@@ -1768,6 +1793,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                 ? winnerFinalScore(
                     { ...entry.winner, placement: entry.placement },
                     projectResultResponse.data ?? [],
+                    winnerReviewSummationResponse.data ?? [],
                 )
                 : undefined,
             handle,
@@ -1873,6 +1899,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
  */
 const MySubmissionsEmpty: FC<{
     onStartSubmission?: () => void
+    reviewUrl: string
 }> = props => (
     <section className={styles.mySubmissionsEmpty}>
         <div className={styles.submissionHeading}>
@@ -1880,6 +1907,15 @@ const MySubmissionsEmpty: FC<{
                 <h2>My Submissions</h2>
                 <p>Manage your submissions or upload new.</p>
             </div>
+            <a
+                className={styles.reviewAppButton}
+                href={props.reviewUrl}
+                rel='noreferrer'
+                target='_blank'
+            >
+                Open Review App
+                <IconOutline.ExternalLinkIcon aria-hidden='true' />
+            </a>
         </div>
         <EmptyTab
             action={(

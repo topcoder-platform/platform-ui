@@ -124,6 +124,35 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toBeDisabled()
     })
 
+    it('labels a challenge without an active phase as completed', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status: 'COMPLETED',
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Challenge completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Timeline complete'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Register' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
+    })
+
     it('avoids flashing Register while member registration is unresolved', () => {
         render(
             <MemoryRouter>
