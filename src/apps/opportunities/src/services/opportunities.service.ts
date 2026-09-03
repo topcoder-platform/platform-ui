@@ -62,6 +62,7 @@ const DEFAULT_SUMMARY: OpportunitySummary = {
 const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilots', 'reviews']
 const MY_WORK_COUNT_PAGE_SIZE = 1
 const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
+const MEMBER_STATE_PAGE_SIZE = 200
 
 /**
  * Resolves the shared Filestack client used for challenge submissions.
@@ -315,6 +316,137 @@ function normalizePage<T>(
     const totalPages = readNumericHeader(headers, ['x-total-pages'])
         ?? toNumber(metadata.totalPages, perPage > 0 ? Math.ceil(total / perPage) : 0)
     return { items, page, perPage, total, totalPages }
+}
+
+interface EngagementApplicationState {
+    createdAt?: string
+    engagementId: string
+    id?: string
+    status?: string
+    updatedAt?: string
+}
+
+/**
+ * Loads every page of a member-scoped Engagement API collection within the
+ * same defensive page cap used by challenge-detail expansion requests.
+ *
+ * @param pathname v6 path below the configured API root.
+ * @returns flattened records in API order.
+ * @throws Propagates Engagement API authentication and network errors.
+ */
+async function getEngagementMemberCollection<T>(pathname: string): Promise<T[]> {
+    /** Builds one authenticated member-state collection URL. */
+    const makeUrl = (page: number): string => {
+        const url = new URL(`${V6_URL}${pathname}`)
+        url.searchParams.set('page', String(page))
+        url.searchParams.set('perPage', String(MEMBER_STATE_PAGE_SIZE))
+        return url.toString()
+    }
+
+    /** Loads and normalizes one member-state page. */
+    const loadPage = async (page: number): Promise<OpportunityPage<T>> => {
+        const response = await xhrGlobalInstance.get(makeUrl(page)) as AxiosResponse<
+            T[] | ApiEnvelope<T[]> | ApiListResponse<T>
+        >
+        return normalizePage(response, page, MEMBER_STATE_PAGE_SIZE)
+    }
+
+    const firstPage = await loadPage(1)
+    const totalPages = Math.min(MAX_DETAIL_PAGES, Math.max(1, firstPage.totalPages))
+    if (totalPages === 1) return firstPage.items
+    const additionalPages = await loadPagesInBatches(
+        Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+        async page => (await loadPage(page)).items,
+    )
+    return [...firstPage.items, ...additionalPages.flat()]
+}
+
+/**
+ * Adds the signed-in member's own application and assignment state to a public
+ * engagement page without narrowing the public result set.
+ *
+ * @param page public engagement page from the list endpoint.
+ * @returns the same page with caller-owned state merged by engagement ID.
+ * @throws Propagates Engagement API authentication and network errors.
+ */
+async function hydrateEngagementMemberState(
+    page: OpportunityPage<EngagementOpportunity>,
+): Promise<OpportunityPage<EngagementOpportunity>> {
+    const [applications, assignedEngagements] = await Promise.all([
+        getEngagementMemberCollection<EngagementApplicationState>('/engagements/applications'),
+        getEngagementMemberCollection<EngagementOpportunity>('/engagements/engagements/my-assignments'),
+    ])
+    const latestApplications = new Map<string, EngagementApplicationState>()
+    for (const application of applications) {
+        const existing = latestApplications.get(application.engagementId)
+        const existingTime = Date.parse(existing?.updatedAt ?? existing?.createdAt ?? '')
+        const applicationTime = Date.parse(application.updatedAt ?? application.createdAt ?? '')
+        if (!existing || (Number.isFinite(applicationTime) ? applicationTime : 0)
+            >= (Number.isFinite(existingTime) ? existingTime : 0)) {
+            latestApplications.set(application.engagementId, application)
+        }
+    }
+
+    const assignmentsByEngagement = new Map(
+        assignedEngagements.map(engagement => [engagement.id, engagement.assignments ?? []]),
+    )
+
+    return {
+        ...page,
+        items: page.items.map(item => {
+            const application = latestApplications.get(item.id)
+            const assignments = assignmentsByEngagement.get(item.id)
+            return {
+                ...item,
+                ...(application?.status ? {
+                    applicationStatus: application.status,
+                    myApplication: { status: application.status },
+                } : {}),
+                ...(assignments?.length ? { assignments } : {}),
+            }
+        }),
+    }
+}
+
+/**
+ * Hydrates Review API opportunity snapshots with the standardized skill names
+ * returned by Challenge API's batched ID search.
+ *
+ * @param page review opportunity page whose embedded snapshots may omit skills.
+ * @returns the same page with challenge skills merged into each snapshot.
+ * @throws Propagates Challenge API visibility and network errors.
+ */
+async function hydrateReviewOpportunitySkills(
+    page: OpportunityPage<ReviewOpportunity>,
+): Promise<OpportunityPage<ReviewOpportunity>> {
+    const missingSkillItems = page.items.filter(item => (
+        !Array.isArray(item.challengeData?.skills) || !item.challengeData.skills.length
+    ))
+    if (!missingSkillItems.length) return page
+
+    const url = new URL(`${V6_URL}/challenges`)
+    url.searchParams.set('page', '1')
+    url.searchParams.set('perPage', String(missingSkillItems.length))
+    for (const item of missingSkillItems) url.searchParams.append('ids[]', item.challengeId)
+    const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
+        ChallengeOpportunity[] | ApiEnvelope<ChallengeOpportunity[]> | ApiListResponse<ChallengeOpportunity>
+    >
+    const challenges = normalizePage(response, 1, missingSkillItems.length).items
+    const skillsByChallenge = new Map(challenges.map(challenge => [challenge.id, challenge.skills ?? []]))
+    return {
+        ...page,
+        items: page.items.map(item => {
+            const skills = skillsByChallenge.get(item.challengeId)
+            if (!skills?.length) return item
+            return {
+                ...item,
+                challengeData: {
+                    ...(item.challengeData ?? {}),
+                    skills,
+                },
+            }
+        }),
+    }
 }
 
 /**
@@ -913,14 +1045,16 @@ export async function getOpportunityPage(
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
-        return getReviewPageWithAiTrack(filters)
+        const reviewPage = await getReviewPageWithAiTrack(filters)
+        return hydrateReviewOpportunitySkills(reviewPage)
+            .catch(() => reviewPage)
     }
 
     try {
         const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
             any[] | ApiEnvelope<any[]> | ApiListResponse<any>
         >
-        const normalized = normalizePage(response, page, perPage)
+        let normalized = normalizePage(response, page, perPage)
         if (kind === 'engagements' && filters.search?.trim() && normalized.total === 0 && !filters.skills?.length) {
             const skillIds = await resolveEngagementSkillIds(filters.search)
             if (skillIds.length) {
@@ -929,8 +1063,18 @@ export async function getOpportunityPage(
                     search: undefined,
                     skills: skillIds,
                 })) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
-                return normalizePage(skillResponse, page, perPage)
+                normalized = normalizePage(skillResponse, page, perPage)
             }
+        }
+
+        if (kind === 'engagements' && filters.memberId && !filters.applied) {
+            normalized = await hydrateEngagementMemberState(normalized)
+                .catch(() => normalized)
+        }
+
+        if (kind === 'reviews') {
+            normalized = await hydrateReviewOpportunitySkills(normalized)
+                .catch(() => normalized)
         }
 
         return kind === 'copilots'
@@ -1104,6 +1248,7 @@ function normalizeSubmissionPage(
  * @param perPage page size.
  * @param memberId optional member filter for the My Submissions tab.
  * @param latestOnly whether to retain only the newest attempt per member.
+ * @param orderBy submitted-date direction requested by the interactive table header.
  * @returns normalized submissions page.
  * @throws Propagates Review API and network errors.
  */
@@ -1113,6 +1258,7 @@ export async function getChallengeSubmissions(
     perPage: number,
     memberId?: string,
     latestOnly: boolean = true,
+    orderBy: 'asc' | 'desc' = 'desc',
 ): Promise<OpportunityPage<ChallengeSubmission>> {
     const url = new URL(`${V6_URL}/submissions`)
     url.searchParams.set('challengeId', challengeId)
@@ -1120,7 +1266,7 @@ export async function getChallengeSubmissions(
     url.searchParams.set('perPage', String(perPage))
     if (latestOnly) url.searchParams.set('isLatest', 'true')
     url.searchParams.set('sortBy', 'submittedDate')
-    url.searchParams.set('orderBy', 'desc')
+    url.searchParams.set('orderBy', orderBy)
     if (memberId) url.searchParams.set('memberId', memberId)
     const response = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(url.toString())
     return normalizeSubmissionPage(response, page, perPage)
@@ -1155,7 +1301,10 @@ export async function deleteChallengeSubmission(submissionId: string): Promise<v
 
 /**
  * Loads every submission attempt for one challenge member for the History
- * dialog. The latest-only flag is deliberately omitted on this request.
+ * dialog. The latest-only and server-side member filters are deliberately
+ * omitted: Review API authorizes challenge-wide reads but rejects another
+ * member's ID filter for ordinary challenge participants. Matching member rows
+ * are retained locally after the authorized challenge page is loaded.
  *
  * @param challengeId challenge UUID.
  * @param memberId submitter member ID from the selected latest submission.
@@ -1172,12 +1321,11 @@ export async function getChallengeSubmissionHistory(
      * Builds one non-latest submission-history request.
      *
      * @param page one-based Review API page.
-     * @returns absolute submissions URL for the selected member and type.
+     * @returns absolute submissions URL for the selected challenge and type.
      */
     const makeUrl = (page: number): string => {
         const url = new URL(`${V6_URL}/submissions`)
         url.searchParams.set('challengeId', challengeId)
-        url.searchParams.set('memberId', memberId)
         url.searchParams.set('page', String(page))
         url.searchParams.set('perPage', String(SUBMISSION_HISTORY_PAGE_SIZE))
         url.searchParams.set('sortBy', 'submittedDate')
@@ -1199,6 +1347,9 @@ export async function getChallengeSubmissionHistory(
         )
         : []
     return [...firstPage.items, ...additionalPages.flat()]
+        .filter(submission => String(
+            submission.memberId ?? submission.registrant?.userId ?? '',
+        ) === memberId)
         .sort((first, second) => {
             const firstDate = Date.parse(first.submittedDate ?? first.createdAt ?? '')
             const secondDate = Date.parse(second.submittedDate ?? second.createdAt ?? '')
@@ -1346,6 +1497,8 @@ export async function getChallengeSubmissionPreviews(
  * @param perPage bounded page size.
  * @param memberId optional authenticated member ID.
  * @param roleId optional canonical resource-role ID.
+ * @param sortBy Resource API field used by an interactive table header.
+ * @param sortOrder Resource API direction used by an interactive table header.
  * @returns paginated challenge resources visible to the caller.
  * @throws Propagates Resource API and network errors.
  */
@@ -1355,6 +1508,8 @@ export async function getChallengeResources(
     perPage: number,
     memberId?: string,
     roleId?: string,
+    sortBy?: 'created' | 'memberHandle',
+    sortOrder?: 'asc' | 'desc',
 ): Promise<OpportunityPage<ChallengeResource>> {
     const url = new URL(`${V6_URL}/resources`)
     url.searchParams.set('challengeId', challengeId)
@@ -1362,6 +1517,8 @@ export async function getChallengeResources(
     url.searchParams.set('perPage', String(Math.max(1, perPage)))
     if (memberId) url.searchParams.set('memberId', memberId)
     if (roleId) url.searchParams.set('roleId', roleId)
+    if (sortBy) url.searchParams.set('sortBy', sortBy)
+    if (sortOrder) url.searchParams.set('sortOrder', sortOrder)
     const response = await xhrGlobalInstance.get(url.toString()) as AxiosResponse<
         ChallengeResource[] | ApiEnvelope<ChallengeResource[]> | ApiListResponse<ChallengeResource>
     >
@@ -1393,6 +1550,7 @@ export async function getSubmitterRole(): Promise<ChallengeResourceRole> {
  * @param page one-based Resource API page.
  * @param perPage bounded page size.
  * @param memberId optional authenticated member ID.
+ * @param sortOrder registration-date direction requested by the interactive table header.
  * @returns paginated resources whose role matches the canonical Submitter role.
  * @throws Propagates role resolution, Resource API, and network errors.
  */
@@ -1401,9 +1559,10 @@ export async function getChallengeSubmitters(
     page: number,
     perPage: number,
     memberId?: string,
+    sortOrder: 'asc' | 'desc' = 'desc',
 ): Promise<OpportunityPage<ChallengeResource>> {
     const role = await getSubmitterRole()
-    return getChallengeResources(challengeId, page, perPage, memberId, role.id)
+    return getChallengeResources(challengeId, page, perPage, memberId, role.id, 'created', sortOrder)
 }
 
 /**

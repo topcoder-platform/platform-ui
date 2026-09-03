@@ -269,7 +269,7 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-sizing: border-box;
-    overflow-x: auto;
+    overflow-x: visible;
     padding: 24px;
 
     table {
@@ -354,21 +354,33 @@
     gap: 4px;
     text-decoration: none;
 
-    svg {
-        height: 20px;
-        width: 20px;
+    img {
+        height: 16px;
+        width: 16px;
     }
 }
 
 .sortedHeader {
     align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
     display: inline-flex;
+    font: inherit;
     gap: 4px;
+    padding: 0;
 
     svg {
         height: 16px;
+        transition: transform 150ms ease;
         width: 16px;
     }
+}
+
+.sortAscending {
+    transform: rotate(180deg);
 }
 
 .ratedRegistrantTable,
@@ -380,7 +392,7 @@
 .myCompactSubmissionTable,
 .mySubmissionTable,
 .myMarathonTable {
-    min-width: 1152px;
+    min-width: 0;
 }
 
 .ratedRegistrantTable {
@@ -447,9 +459,8 @@
     th:nth-child(8) { width: 108px; }
 }
 
-.submissionIdLink {
-    color: #007d79;
-    text-decoration: none;
+.submissionId {
+    color: #161616;
 }
 
 .currentStatus {
@@ -519,7 +530,7 @@
     }
 
     button:disabled {
-        cursor: wait;
+        cursor: not-allowed;
         opacity: .45;
     }
 
@@ -527,6 +538,14 @@
         height: 20px;
         width: 20px;
     }
+}
+
+.reviewAppActionIcon {
+    background: currentColor;
+    display: inline-block;
+    height: 20px;
+    mask: url('../assets/sidebar-review.svg') center / contain no-repeat;
+    width: 20px;
 }
 
 .scoreNotice {
@@ -704,15 +723,16 @@
         background: #e9ecef;
         border-radius: 50%;
         color: #161616;
-        height: 20px;
-        padding: 6px;
-        width: 20px;
+        height: 24px;
+        padding: 8px;
+        width: 24px;
     }
 
     h2,
     > strong {
         font-family: 'Figtree', sans-serif;
         font-size: 16px;
+        font-weight: 700;
         line-height: 22px;
         margin: 12px 0 0;
         text-transform: none;
@@ -1070,6 +1090,22 @@
     .previewCard,
     .winnersPanel {
         padding: 16px;
+    }
+
+    .tableCard {
+        overflow-x: auto;
+    }
+
+    .ratedRegistrantTable,
+    .designRegistrantTable,
+    .developmentSubmissionTable,
+    .designSubmissionTable,
+    .qaSubmissionTable,
+    .marathonTable,
+    .myCompactSubmissionTable,
+    .mySubmissionTable,
+    .myMarathonTable {
+        min-width: 720px;
     }
 
     .previewCard {

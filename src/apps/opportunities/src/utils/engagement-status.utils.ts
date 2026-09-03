@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
     pendingassignment: 'On Hold',
     rejected: 'Rejected',
     selected: 'Selected',
-    shortlisted: 'Under Review',
+    shortlisted: 'Shortlisted',
     submitted: 'Applied',
     terminated: 'Terminated',
     underreview: 'Under Review',

@@ -125,7 +125,7 @@ const LearningCard: FC<LearningCardProps> = props => (
         <p>{props.body}</p>
         <a href={props.href} rel='noreferrer' target='_blank'>
             Learn more
-            <IconOutline.ArrowRightIcon />
+            <IconOutline.ExternalLinkIcon aria-hidden='true' />
         </a>
     </aside>
 )

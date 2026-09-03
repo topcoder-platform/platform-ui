@@ -9,7 +9,12 @@ import DOMPurify from 'dompurify'
 import useSWR, { SWRResponse } from 'swr'
 
 import { getSafeCmsLink } from '~/libs/cms'
-import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
+import {
+    BaseModal,
+    Button,
+    IconOutline,
+    LoadingSpinner,
+} from '~/libs/ui'
 
 import { ChallengeTerm } from '../models'
 import {
@@ -240,6 +245,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                                 {getSafeCmsLink(term.url) && (
                                     <a href={getSafeCmsLink(term.url)} rel='noreferrer' target='_blank'>
                                         Open this term in a new window
+                                        <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                     </a>
                                 )}
                                 {registrationMode && requiresExternalAgreement(term) && term.docusignTemplateId && (

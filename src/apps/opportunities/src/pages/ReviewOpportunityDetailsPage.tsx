@@ -464,7 +464,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                     <p>Interested in evaluating submissions on Topcoder?</p>
                                     <a href={REVIEWER_LEARNING_URL} rel='noreferrer' target='_blank'>
                                         Learn more
-                                        <IconOutline.ArrowRightIcon />
+                                        <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                     </a>
                                 </section>
                             )}

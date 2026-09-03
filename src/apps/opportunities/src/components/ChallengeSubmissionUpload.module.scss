@@ -119,6 +119,22 @@
     }
 }
 
+.fileTypeIcon {
+    align-items: center;
+    border: 1.5px solid #161616;
+    border-radius: 1px;
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 16px;
+    font-size: 6px;
+    font-weight: 800;
+    height: 18px;
+    justify-content: center;
+    letter-spacing: -0.25px;
+    line-height: 8px;
+    width: 16px;
+}
+
 .tips svg {
     flex-basis: 20px;
     height: 20px;

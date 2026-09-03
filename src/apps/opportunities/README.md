@@ -199,7 +199,9 @@ submission metadata needed for locked cards, while the public-safe
 that Review API has released. Anonymous visitors receive only that public page.
 Review API remains authoritative for group, whitelist, screening, and
 review-phase release checks; absent previews render as locked placeholders.
-Design challenges without the flag retain the authored submission-list state.
+Design challenges without the flag keep challenge-wide submissions private and
+render the explicit private state. A registered member's My Submissions table
+remains available independently of that public release flag.
 
 Opportunity detail tabs keep their page header and tab navigation mounted while
 the selected panel changes. Lazy challenge panels use a panel-scoped loading
@@ -209,8 +211,11 @@ are reserved for the initial detail-route request. Review and copilot detail
 tabs likewise switch in place, and engagement detail background checks render
 inside their owning section.
 
-The standard Submissions tab follows community-app's authenticated-member
-gate; registration is required only for My Submissions and authored actions.
+The standard non-Design Submissions tab follows community-app's
+authenticated-member gate; registration is required only for My Submissions
+and authored actions. Registrants and standard submission tables order newest
+dates first and expose accessible date headers that toggle the owning API's
+ascending or descending ordering.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. Final Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
@@ -223,14 +228,18 @@ scores are requested only for authenticated members.
 
 Registered members submit without leaving challenge details. The My
 Submissions flow accepts one `.zip` archive up to 500MB, requires the authored
-declaration, reports live multipart progress, and posts the file directly to
-`POST /v6/submissions`. The active phase selects `CONTEST_SUBMISSION`,
+declaration, and reports live upload progress. The browser uploads to
+Filestack's S3 endpoint using the environment's canonical submissions DMZ
+bucket, then sends the resulting storage URL to `POST /v6/submissions`. The
+active phase selects `CONTEST_SUBMISSION`,
 `CHECKPOINT_SUBMISSION`, or `STUDIO_FINAL_FIX_SUBMISSION`; Review API remains
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
 Requirements content. Successful uploads expose the created submission ID and
-refresh challenge counts without leaving the confirmation state.
+refresh challenge counts without leaving the confirmation state. Design
+submissions can be deleted only while Submission or Checkpoint Submission is
+open.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits and

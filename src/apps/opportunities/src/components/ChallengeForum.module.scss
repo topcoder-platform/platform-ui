@@ -134,7 +134,7 @@
         color: #007d79;
         cursor: pointer;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
         line-height: 20px;
         padding: 0;
@@ -231,7 +231,7 @@
         color: #161616;
         cursor: pointer;
         display: flex;
-        font-size: 14px;
+        font-size: 16px;
         gap: 8px;
         line-height: 32px;
         min-height: 32px;
@@ -330,6 +330,11 @@
     dd {
         margin: 0;
     }
+}
+
+.discussionInfo dl > div {
+    font-size: 14px;
+    line-height: 20px;
 }
 
 .member {
@@ -524,8 +529,13 @@
         }
     }
 
+    p strong {
+        font-weight: 700;
+    }
+
     > strong {
         font-size: 14px;
+        font-weight: 700;
         line-height: 20px;
         margin-top: 16px;
     }
@@ -854,9 +864,9 @@
 .topicExcerpt {
     color: #161616;
     display: -webkit-box;
-    font-size: 14px;
+    font-size: 16px;
     -webkit-line-clamp: 3;
-    line-height: 20px;
+    line-height: 22px;
     margin: 20px 0 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
@@ -891,7 +901,7 @@
         color: #007d79;
         display: inline-flex;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
         gap: 5px;
         line-height: 20px;
@@ -1300,8 +1310,8 @@
 
 .postContent {
     color: #161616;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    line-height: 22px;
     min-height: 80px;
 }
 

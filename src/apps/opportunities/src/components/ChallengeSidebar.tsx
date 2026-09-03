@@ -16,12 +16,15 @@ import {
     ChallengeSidebarLink,
     challengeSidebarLinks,
     challengeSubmissionLimit,
+    isMarathonMatchChallenge,
 } from '../utils'
 import {
     CHALLENGE_EXPLAINED_URL,
     CHECKPOINT_FEEDBACK_LEARNING_URL,
     DESIGN_CHALLENGE_LEARNING_URL,
-    SCREENING_LEARNING_URL,
+    DESIGN_SCREENING_LEARNING_URL,
+    DESIGN_SUBMISSION_FORMAT_URL,
+    MARATHON_MATCH_LEARNING_URL,
 } from '../utils/opportunity-learning.utils'
 import { getChallengeTermsDetails } from '../services'
 import programBanner from '../assets/ai-exponential-program.png'
@@ -39,7 +42,7 @@ import sidebarSearchIcon from '../assets/sidebar-search.svg'
 import styles from './ChallengeSidebar.module.scss'
 
 const FILE_SUBMISSION_POLICY_URL
-    = 'https://help.topcoder.com/hc/en-us/articles/24958207774103-File-Submission-and-Review'
+    = 'https://help.topcoder.com/hc/en-us/articles/217959447-Font-Policy-for-Design-Challenges'
 
 interface ChallengeSidebarProps {
     aiReviewConfig?: ChallengeAiReviewConfig
@@ -227,6 +230,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const forumUrl = challengeForumUrl(props.challenge)
     const designChallenge = catalogName(props.challenge.track)
         .toLowerCase() === 'design'
+    const marathonMatch = isMarathonMatchChallenge(props.challenge)
     const developmentChallenge = catalogName(props.challenge.track)
         .toLowerCase() === 'development'
     const submissionGuidance = designChallenge || developmentChallenge
@@ -286,7 +290,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </div>
             </section>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
-                <p>The place to track your screening and review scores.</p>
+                <p>The place to see your scores and feedback, and improve before the final review.</p>
                 <Link to={`/review/active-challenges/${props.challenge.id}/challenge-details`}>
                     View Review App
                     <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
@@ -294,14 +298,25 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
                 <p>Read educational material in Topcoder Thrive.</p>
-                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>Topcoder Challenges Explained</a>
+                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>
+                    Topcoder Challenges Explained
+                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                </a>
+                {marathonMatch && (
+                    <a href={MARATHON_MATCH_LEARNING_URL} rel='noreferrer' target='_blank'>
+                        How to Compete in a Marathon Match
+                        <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                    </a>
+                )}
                 {designChallenge && (
                     <>
                         <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
                             How to compete in design challenges
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
                         <a href={CHECKPOINT_FEEDBACK_LEARNING_URL} rel='noreferrer' target='_blank'>
                             How to approach the checkpoint feedback
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
                     </>
                 )}
@@ -346,11 +361,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 <a
                                     className={styles.inlineAnchor}
-                                    href={CHALLENGE_EXPLAINED_URL}
+                                    href={DESIGN_SUBMISSION_FORMAT_URL}
                                     rel='noreferrer'
                                     target='_blank'
                                 >
                                     Read the FAQ.
+                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                 </a>
                             </p>
                         </div>
@@ -367,7 +383,15 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 the
                                 {' '}
-                                <a className={styles.inlineAnchor} href={FILE_SUBMISSION_POLICY_URL}>Policy</a>
+                                <a
+                                    className={styles.inlineAnchor}
+                                    href={FILE_SUBMISSION_POLICY_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
+                                    Policy
+                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
+                                </a>
                                 .
                             </p>
                         </div>
@@ -384,11 +408,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 {' '}
                                 <a
                                     className={styles.inlineAnchor}
-                                    href={SCREENING_LEARNING_URL}
+                                    href={DESIGN_SCREENING_LEARNING_URL}
                                     rel='noreferrer'
                                     target='_blank'
                                 >
                                     how to pass screening
+                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                 </a>
                                 .
                             </p>
