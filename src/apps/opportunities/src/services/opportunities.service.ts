@@ -36,6 +36,7 @@ import {
     OpportunitySummary,
     ReviewOpportunity,
 } from '../models'
+import { sortOpportunityItems } from '../utils/opportunity-listing.utils'
 
 const V6_URL = EnvironmentConfig.API.V6
 const LEGACY_COPILOT_PAGE_SIZE = 1000
@@ -63,6 +64,8 @@ const MY_WORK_KINDS: OpportunityKind[] = ['competitions', 'engagements', 'copilo
 const MY_WORK_COUNT_PAGE_SIZE = 1
 const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
 const MEMBER_STATE_PAGE_SIZE = 200
+const CLIENT_SORT_PAGE_SIZE = 1000
+const MAX_CLIENT_SORT_PAGES = 20
 
 /**
  * Resolves the shared Filestack client used for challenge submissions.
@@ -740,14 +743,14 @@ function buildLegacyCopilotPageUrl(page: number): string {
  *
  * @param items filtered legacy copilot opportunities.
  * @param sort semantic Opportunities sort selection.
- * @returns a new starting-soon array, or the already-newest API ordering.
+ * @returns a copied semantic sort, or a copy preserving newest API ordering.
  * @throws Does not throw.
  */
 function sortLegacyCopilotOpportunities(
     items: CopilotOpportunity[],
     sort?: string,
 ): CopilotOpportunity[] {
-    if (sort !== 'startingSoon') return items
+    if (sort !== 'startingSoon') return sortOpportunityItems(items, sort ?? 'newest')
     return [...items].sort((first, second) => {
         const firstDate = Date.parse(first.startDate ?? '')
         const secondDate = Date.parse(second.startDate ?? '')
@@ -757,6 +760,112 @@ function sortLegacyCopilotOpportunities(
             || String(first.id)
                 .localeCompare(String(second.id))
     })
+}
+
+/**
+ * Identifies semantic sorts that an owner API cannot apply to the complete result set.
+ *
+ * @param kind active opportunity owner.
+ * @param sort selected semantic sort.
+ * @returns true when bounded owner pages must be combined before pagination.
+ * @throws Does not throw.
+ */
+function requiresClientSort(kind: OpportunityKind, sort?: string): boolean {
+    const prizeSort = sort === 'prizeHighToLow' || sort === 'prizeLowToHigh'
+    return (kind === 'engagements' && prizeSort)
+        || (kind === 'copilots' && (prizeSort || sort === 'titleAZ'))
+}
+
+/**
+ * Loads bounded owner pages in their stable newest-first order for a global client sort.
+ *
+ * @param kind engagement or copilot owner.
+ * @param filters active owner filters with requested pagination ignored.
+ * @returns normalized owner rows across every available bounded page.
+ * @throws Propagates owner API and network failures.
+ */
+async function loadClientSortItems(
+    kind: 'copilots' | 'engagements',
+    filters: OpportunityFilters,
+): Promise<any[]> {
+    const ownerFilters: OpportunityFilters = {
+        ...filters,
+        page: 1,
+        perPage: CLIENT_SORT_PAGE_SIZE,
+        sort: 'newest',
+    }
+    const firstResponse = await xhrGlobalInstance.get(
+        buildOpportunityPageUrl(kind, ownerFilters),
+    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+    const firstPage = normalizePage(firstResponse, 1, CLIENT_SORT_PAGE_SIZE)
+    const totalPages = Math.min(MAX_CLIENT_SORT_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildOpportunityPageUrl(kind, {
+                ...ownerFilters,
+                page,
+            })),
+        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
+        : []
+    return [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            CLIENT_SORT_PAGE_SIZE,
+        ).items),
+    ]
+}
+
+/**
+ * Applies a semantic owner-wide sort before restoring the requested UI page.
+ *
+ * Engagement and Projects APIs do not expose comparable prize fields in their
+ * list sort contracts. Fetching and sorting one visible page would therefore
+ * produce incorrect ordering at every page boundary.
+ *
+ * @param kind engagement or copilot owner.
+ * @param filters active discovery filters and requested page.
+ * @returns globally sorted, paginated, and member-hydrated owner results.
+ * @throws Propagates owner API, skill lookup, and network failures.
+ */
+async function getClientSortedOpportunityPage(
+    kind: 'copilots' | 'engagements',
+    filters: OpportunityFilters,
+): Promise<OpportunityPage<any>> {
+    let allItems = await loadClientSortItems(kind, filters)
+    if (kind === 'engagements' && filters.search?.trim() && !allItems.length && !filters.skills?.length) {
+        const skillIds = await resolveEngagementSkillIds(filters.search)
+        if (skillIds.length) {
+            allItems = await loadClientSortItems(kind, {
+                ...filters,
+                search: undefined,
+                skills: skillIds,
+            })
+        }
+    }
+
+    const normalizedItems = kind === 'copilots'
+        ? allItems.map(normalizeCopilotOpportunity)
+        : allItems
+    const sorted = sortOpportunityItems(normalizedItems, filters.sort ?? 'newest')
+    const page = Math.max(1, filters.page)
+    const perPage = Math.max(1, filters.perPage)
+    const offset = (page - 1) * perPage
+    let result: OpportunityPage<any> = {
+        items: sorted.slice(offset, offset + perPage),
+        page,
+        perPage,
+        total: sorted.length,
+        totalPages: sorted.length ? Math.ceil(sorted.length / perPage) : 0,
+    }
+    if (kind === 'engagements' && filters.memberId && !filters.applied) {
+        result = await hydrateEngagementMemberState(result)
+            .catch(() => result)
+    }
+
+    return result
 }
 
 /**
@@ -1059,6 +1168,14 @@ export async function getOpportunityPage(
     }
 
     try {
+        if (requiresClientSort(kind, filters.sort)) {
+            const sortedPage = await getClientSortedOpportunityPage(
+                kind as 'copilots' | 'engagements',
+                filters,
+            )
+            return sortedPage
+        }
+
         const response = await xhrGlobalInstance.get(buildOpportunityPageUrl(kind, filters)) as AxiosResponse<
             any[] | ApiEnvelope<any[]> | ApiListResponse<any>
         >

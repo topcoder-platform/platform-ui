@@ -327,6 +327,45 @@ describe('opportunities service normalization', () => {
             .toBe('true')
     })
 
+    it('sorts Engagement prizes across owner pages before applying UI pagination', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ compensationRange: '$100', id: 'lower', title: 'Lower prize' }],
+                    meta: { page: 1, perPage: 1000, totalCount: 1001, totalPages: 2 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ compensationRange: '$2,000', id: 'higher', title: 'Higher prize' }],
+                    meta: { page: 2, perPage: 1000, totalCount: 1001, totalPages: 2 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            page: 1,
+            perPage: 1,
+            sort: 'prizeHighToLow',
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'higher' })],
+                page: 1,
+                perPage: 1,
+                total: 2,
+                totalPages: 2,
+            })
+
+        expect(get.mock.calls.map(call => {
+            const url = new URL(String(call[0]))
+            return [url.searchParams.get('page'), url.searchParams.get('perPage')]
+        }))
+            .toEqual([['1', '1000'], ['2', '1000']])
+    })
+
     it('retries an empty engagement text search with matching standardized skill IDs', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
@@ -452,6 +491,45 @@ describe('opportunities service normalization', () => {
             .toEqual(['active'])
         expect(url.searchParams.getAll('skills'))
             .toEqual(['React'])
+    })
+
+    it('normalizes and sorts Copilot payment values before applying UI pagination', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get.mockResolvedValueOnce({
+            data: [
+                {
+                    data: { opportunityTitle: 'Higher', otherPaymentType: '$2,000' },
+                    id: 'higher',
+                },
+                {
+                    data: { opportunityTitle: 'Lower', otherPaymentType: '$100' },
+                    id: 'lower',
+                },
+            ],
+            headers: {
+                get: (name: string) => ({
+                    'x-page': '1',
+                    'x-per-page': '1000',
+                    'x-total': '2',
+                    'x-total-pages': '1',
+                } as Record<string, string>)[name],
+            },
+        })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 1,
+            sort: 'prizeLowToHigh',
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({
+                    id: 'lower',
+                    opportunityTitle: 'Lower',
+                })],
+                total: 2,
+                totalPages: 2,
+            })
     })
 
     it('falls back to locally filtered legacy Copilot results during API rollout', async () => {

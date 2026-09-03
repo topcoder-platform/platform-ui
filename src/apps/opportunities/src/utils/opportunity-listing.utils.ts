@@ -98,7 +98,12 @@ export function compareOpportunityItems(
     }
 
     if (sort === 'prizeHighToLow' || sort === 'prizeLowToHigh') {
-        const difference = opportunityPrizeValue(first) - opportunityPrizeValue(second)
+        const firstPrize = opportunityPrizeValue(first)
+        const secondPrize = opportunityPrizeValue(second)
+        const firstHasPrize = Number.isFinite(firstPrize)
+        const secondHasPrize = Number.isFinite(secondPrize)
+        if (firstHasPrize !== secondHasPrize) return firstHasPrize ? -1 : 1
+        const difference = firstPrize - secondPrize
 
         if (difference !== 0 && !Number.isNaN(difference)) {
             return sort === 'prizeLowToHigh' ? difference : -difference

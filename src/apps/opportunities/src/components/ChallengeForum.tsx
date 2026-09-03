@@ -51,6 +51,7 @@ type ForumRatingClass = 'ratingBlue' | 'ratingGray' | 'ratingGreen' | 'ratingRed
 
 interface ChallengeForumProps {
     canCreateAnnouncements?: boolean
+    canDeleteTopics?: boolean
     challenge: ChallengeOpportunity
     memberId?: string
 }
@@ -388,14 +389,16 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
 )
 
 /**
- * Renders challenge forum counters and the in-page create-topic action.
+ * Renders challenge forum counters and the available in-page creation actions.
  *
- * @param props visible topics, source total, and create callback.
+ * @param props visible topics, source total, ordinary creation, and administrator announcement creation.
  * @returns authored forum overview rail.
  * @throws Does not throw.
  */
 const ForumOverview: FC<{
+    canCreateAnnouncements: boolean
     onCreate: () => void
+    onCreateAnnouncement: () => void
     topics: ForumTopicSummary[]
     total: number
 }> = props => {
@@ -423,10 +426,18 @@ const ForumOverview: FC<{
                     posts
                 </span>
             </div>
-            <button onClick={props.onCreate} type='button'>
-                <IconOutline.PlusCircleIcon aria-hidden='true' />
-                Create new topic
-            </button>
+            <div className={styles.overviewActions}>
+                <button onClick={props.onCreate} type='button'>
+                    <IconOutline.PlusCircleIcon aria-hidden='true' />
+                    Create new topic
+                </button>
+                {props.canCreateAnnouncements && (
+                    <button onClick={props.onCreateAnnouncement} type='button'>
+                        <IconOutline.SpeakerphoneIcon aria-hidden='true' />
+                        Create announcement
+                    </button>
+                )}
+            </div>
         </section>
     )
 }
@@ -548,6 +559,7 @@ const DiscussionInfo: FC<{
  * @throws Does not throw; callbacks own API error handling.
  */
 const ForumTopicCard: FC<{
+    canDelete: boolean
     memberId: string
     onDelete: (topic: ForumTopicSummary) => void
     onEdit: (topic: ForumTopicSummary) => void
@@ -604,16 +616,16 @@ const ForumTopicCard: FC<{
                     </span>
                     <div className={styles.topicActions}>
                         {owner && !props.topic.locked && (
-                            <>
-                                <button onClick={() => props.onEdit(props.topic)} type='button'>
-                                    <IconOutline.PencilIcon aria-hidden='true' />
-                                    Edit
-                                </button>
-                                <button onClick={() => props.onDelete(props.topic)} type='button'>
-                                    <IconOutline.TrashIcon aria-hidden='true' />
-                                    Delete
-                                </button>
-                            </>
+                            <button onClick={() => props.onEdit(props.topic)} type='button'>
+                                <IconOutline.PencilIcon aria-hidden='true' />
+                                Edit
+                            </button>
+                        )}
+                        {props.canDelete && !props.topic.locked && (
+                            <button onClick={() => props.onDelete(props.topic)} type='button'>
+                                <IconOutline.TrashIcon aria-hidden='true' />
+                                Delete
+                            </button>
                         )}
                         <button
                             disabled={props.pendingAction === `watch:${props.topic.id}`}
@@ -787,12 +799,13 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
 const ForumCreateTopicView: FC<{
     canCreateAnnouncements: boolean
     challenge: ChallengeOpportunity
+    initialIsAnnouncement: boolean
     onBack: () => void
     onCreate: (title: string, content: string, isAnnouncement: boolean) => Promise<boolean>
 }> = props => {
     const [content, setContent] = useState('')
     const [error, setError] = useState<string>()
-    const [isAnnouncement, setIsAnnouncement] = useState(false)
+    const [isAnnouncement, setIsAnnouncement] = useState(props.initialIsAnnouncement)
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
     const [title, setTitle] = useState('')
@@ -1250,6 +1263,7 @@ const ForumTopicView: FC<{
     profilesByMemberId: MemberProfilesById
 }> = props => {
     const [comment, setComment] = useState('')
+    const [commentError, setCommentError] = useState<string>()
     const [error, setError] = useState<string>()
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
@@ -1267,15 +1281,29 @@ const ForumTopicView: FC<{
             ?.focus())
     }
 
-    /** Selects a post as the nested reply target. */
+    /**
+     * Selects a post as the nested reply target and clears stale composer errors.
+     *
+     * @param post visible post receiving the reply.
+     * @returns void after updating controlled composer state.
+     * @throws Does not throw.
+     */
     const reply = (post: ForumPost): void => {
+        setCommentError(undefined)
         setReplyTarget(post)
         setPreview(false)
         focusComposer()
     }
 
-    /** Adds an attributed bounded quote and selects the quoted post as parent. */
+    /**
+     * Adds an attributed bounded quote and selects the quoted post as parent.
+     *
+     * @param post visible post quoted into the controlled composer.
+     * @returns void after updating and focusing composer state.
+     * @throws Does not throw.
+     */
     const quote = (post: ForumPost): void => {
+        setCommentError(undefined)
         setReplyTarget(post)
         setComment(value => `${value}${value ? '\n\n' : ''}${quoteForumPost(post)}`.slice(0, COMMENT_CHARACTER_LIMIT))
         setPreview(false)
@@ -1332,15 +1360,21 @@ const ForumTopicView: FC<{
         }
     }
 
-    /** Creates a top-level comment or nested reply from the controlled composer. */
+    /**
+     * Creates a top-level comment or nested reply from the controlled composer.
+     *
+     * @param event comment-form submission event.
+     * @returns promise settled after validation or the API write and refresh complete.
+     * @throws Does not throw; validation and API errors render beside the editor.
+     */
     const submitComment = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault()
         if (!comment.trim()) {
-            setError('Write a comment before posting.')
+            setCommentError('Write a comment before posting.')
             return
         }
 
-        setError(undefined)
+        setCommentError(undefined)
         setPending(true)
         try {
             await createForumPost(props.detail.topic.id, replyTarget
@@ -1355,7 +1389,7 @@ const ForumTopicView: FC<{
             setPreview(false)
             await props.onChanged()
         } catch (mutationError) {
-            setError(forumErrorMessage(mutationError))
+            setCommentError(forumErrorMessage(mutationError))
         } finally {
             setPending(false)
         }
@@ -1462,6 +1496,9 @@ const ForumTopicView: FC<{
                                 preview={preview}
                                 value={comment}
                             />
+                            {commentError && (
+                                <p className={styles.actionError} role='alert'>{commentError}</p>
+                            )}
                             <div className={styles.formActions}>
                                 <button disabled={pending} type='submit'>
                                     {pending ? 'Posting…' : 'Post comment'}
@@ -1508,12 +1545,13 @@ const ForumTopicView: FC<{
  * watch state, and read state. A legacy link is retained only as recovery when
  * the v6 API cannot be reached or the member is signed out.
  *
- * @param props challenge context, optional authenticated member ID, and administrator announcement access.
+ * @param props challenge context, optional member ID, and administrator announcement/delete access.
  * @returns embedded topic list, creation form, detail discussion, or recovery state.
  * @throws Does not throw; API failures render stable, actionable UI states.
  */
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
+    const [createAsAnnouncement, setCreateAsAnnouncement] = useState(false)
     const [creatingTopic, setCreatingTopic] = useState(false)
     const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
     const [mutationError, setMutationError] = useState<string>()
@@ -1610,8 +1648,15 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         ])
     }
 
-    /** Opens a topic and records its current activity as read without blocking navigation. */
+    /**
+     * Opens a topic and records its current activity as read without blocking navigation.
+     *
+     * @param topicId selected topic identifier.
+     * @returns void after updating local navigation state and scheduling read-state refresh.
+     * @throws Does not throw; read-state failures are intentionally non-blocking.
+     */
     const openTopic = (topicId: string): void => {
+        setCreateAsAnnouncement(false)
         setCreatingTopic(false)
         setSelectedTopicId(topicId)
         setMutationError(undefined)
@@ -1620,7 +1665,15 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             .catch(() => undefined)
     }
 
-    /** Creates a challenge topic and opens its new detail view. */
+    /**
+     * Creates a challenge topic and opens its new detail view.
+     *
+     * @param title authored topic title.
+     * @param content authored starter-post Markdown.
+     * @param isAnnouncement whether the administrator selected announcement presentation.
+     * @returns true after creation and navigation, otherwise false after rendering the API error.
+     * @throws Does not throw; command failures are converted to visible mutation state.
+     */
     const createTopic = async (
         title: string,
         content: string,
@@ -1635,6 +1688,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 title,
             })
             await response.mutate()
+            setCreateAsAnnouncement(false)
             setCreatingTopic(false)
             setSelectedTopicId(created.topic.id)
             return true
@@ -1741,7 +1795,11 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 <ForumCreateTopicView
                     canCreateAnnouncements={!!props.canCreateAnnouncements}
                     challenge={props.challenge}
-                    onBack={() => setCreatingTopic(false)}
+                    initialIsAnnouncement={createAsAnnouncement}
+                    onBack={() => {
+                        setCreateAsAnnouncement(false)
+                        setCreatingTopic(false)
+                    }}
                     onCreate={createTopic}
                 />
             </>
@@ -1789,8 +1847,15 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         <div className={styles.forumLayout}>
             <aside className={styles.leftPanel}>
                 <ForumOverview
+                    canCreateAnnouncements={!!props.canCreateAnnouncements}
                     onCreate={() => {
                         setMutationError(undefined)
+                        setCreateAsAnnouncement(false)
+                        setCreatingTopic(true)
+                    }}
+                    onCreateAnnouncement={() => {
+                        setMutationError(undefined)
+                        setCreateAsAnnouncement(true)
                         setCreatingTopic(true)
                     }}
                     topics={topics}
@@ -1834,6 +1899,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 )}
                 {visibleTopics.map(topic => (
                     <ForumTopicCard
+                        canDelete={!!props.canDeleteTopics}
                         key={topic.id}
                         memberId={props.memberId as string}
                         onDelete={removeTopic}

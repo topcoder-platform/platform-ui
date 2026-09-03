@@ -23,7 +23,7 @@ describe('challenge winner utilities', () => {
             .toBe('DATA_SCIENCE')
     })
 
-    it('matches profile Development wins by including migrated AI Engineering contests', () => {
+    it('matches the Members API top-level Development win count', () => {
         const stats = {
             DATA_SCIENCE: {
                 'AI Engineering': { wins: 5 },
@@ -34,7 +34,7 @@ describe('challenge winner utilities', () => {
         } as unknown as UserStats
 
         expect(challengeTrackWins(stats, 'Development'))
-            .toBe(85)
+            .toBe(80)
         expect(challengeTrackWins(stats, 'Data Science'))
             .toBe(26)
     })

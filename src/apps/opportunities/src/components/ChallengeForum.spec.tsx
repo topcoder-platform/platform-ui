@@ -358,8 +358,21 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('post-1', 'Updated **formatted** content.')
     })
 
-    it('confirms topic deletion inside the application', async () => {
-        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />)
+    it('allows only an administrator to delete a topic inside the application', async () => {
+        const ownerView = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />,
+        )
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .not.toBeInTheDocument()
+        ownerView.unmount()
+
+        render(
+            <ChallengeForum
+                canDeleteTopics
+                challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                memberId='10'
+            />,
+        )
 
         fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
         expect(screen.getByRole('dialog', { name: 'Delete topic?' }))
@@ -378,14 +391,15 @@ describe('ChallengeForum', () => {
                 memberId='10'
             />,
         )
-        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        fireEvent.click(screen.getByRole('button', { name: /Create announcement/ }))
+        expect(screen.getByRole('checkbox', { name: /Post as announcement/ }))
+            .toBeChecked()
         fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
             target: { value: 'Submission deadline extended' },
         })
         fireEvent.change(screen.getByPlaceholderText(/Describe your question/), {
             target: { value: 'The submission deadline is now Friday at 18:00 UTC.' },
         })
-        fireEvent.click(screen.getByRole('checkbox', { name: /Post as announcement/ }))
         await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create topic' })))
 
         await waitFor(() => expect(mockCreateForumTopic)
@@ -395,6 +409,21 @@ describe('ChallengeForum', () => {
                 isAnnouncement: true,
                 title: 'Submission deadline extended',
             }))
+    })
+
+    it('shows comment validation next to the editor', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        fireEvent.click(screen.getByRole('button', { name: 'Post comment' }))
+
+        const alert = await screen.findByRole('alert')
+        expect(alert)
+            .toHaveTextContent('Write a comment before posting.')
+        expect(screen.getByPlaceholderText('Type here')
+            .closest('form')
+            ?.contains(alert))
+            .toBe(true)
     })
 
     it('toggles topic watches through forums-api-v6', async () => {

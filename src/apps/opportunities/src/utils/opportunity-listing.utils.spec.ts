@@ -51,16 +51,17 @@ describe('opportunity listing sorting', () => {
         const items = [
             { id: 'b', name: 'Zulu', overview: { totalPrizes: 100 } },
             { id: 'a', name: 'alpha', overview: { totalPrizes: 500 } },
+            { id: 'missing', name: 'No amount yet' },
         ]
 
         expect(sortOpportunityItems(items, 'prizeHighToLow')
             .map(item => item.id))
-            .toEqual(['a', 'b'])
+            .toEqual(['a', 'b', 'missing'])
         expect(sortOpportunityItems(items, 'prizeLowToHigh')
             .map(item => item.id))
-            .toEqual(['b', 'a'])
+            .toEqual(['b', 'a', 'missing'])
         expect(sortOpportunityItems(items, 'titleAZ')
             .map(item => item.id))
-            .toEqual(['a', 'b'])
+            .toEqual(['a', 'missing', 'b'])
     })
 })

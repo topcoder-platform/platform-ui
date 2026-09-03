@@ -13,7 +13,11 @@ jest.mock('react-markdown', () => function MarkdownMock(props: Record<string, un
     return <div data-testid='markdown-renderer'>{props.children as string}</div>
 })
 jest.mock('rehype-raw', () => jest.fn())
-jest.mock('rehype-sanitize', () => jest.fn())
+jest.mock('rehype-sanitize', () => ({
+    __esModule: true,
+    default: jest.fn(),
+    defaultSchema: { tagNames: ['p'] },
+}))
 jest.mock('remark-breaks', () => jest.fn())
 jest.mock('remark-gfm', () => jest.fn())
 
@@ -55,7 +59,9 @@ describe('ChallengeDescription', () => {
             .toEqual(expect.arrayContaining([expect.objectContaining({
                 rehypePlugins: expect.arrayContaining([
                     expect.any(Function),
-                    expect.any(Function),
+                    [expect.any(Function), expect.objectContaining({
+                        tagNames: expect.arrayContaining(['p', 'u']),
+                    })],
                 ]),
             })]))
     })

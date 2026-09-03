@@ -18,6 +18,7 @@ import { toast } from 'react-toastify'
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 
 const mockUseSWR = jest.fn()
+const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
@@ -27,6 +28,7 @@ let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
 let mockMemberResource: { id: string } | undefined
+let mockMySubmissionCount: number | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
@@ -84,11 +86,15 @@ jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
         isRegistered: boolean
+        onRegister: () => void
         onSubmit: () => void
         onUnregister: () => Promise<void>
     }): JSX.Element => (
         <header>
             Challenge header
+            {!props.isRegistered && (
+                <button onClick={props.onRegister} type='button'>Register</button>
+            )}
             {props.isRegistered && (
                 <>
                     <button onClick={props.onUnregister} type='button'>Unregister</button>
@@ -107,7 +113,18 @@ jest.mock('../components', () => ({
             <button onClick={props.onBack} type='button'>Back to submissions</button>
         </div>
     ),
-    ChallengeTermsModal: (): JSX.Element => <></>,
+    ChallengeTermsModal: (props: {
+        onAccept: () => Promise<void>
+        onClose: () => void
+        open: boolean
+    }): JSX.Element => (
+        props.open ? (
+            <div aria-label='Challenge terms' role='dialog'>
+                <button onClick={props.onAccept} type='button'>Accept terms</button>
+                <button onClick={props.onClose} type='button'>Close terms</button>
+            </div>
+        ) : <></>
+    ),
     extractTableOfContents: (): [] => [],
     isHtmlDescriptionFormat: (): boolean => false,
     MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
@@ -136,7 +153,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 }))
 
 jest.mock('../services', () => ({
-    agreeToChallengeTerms: jest.fn(),
+    agreeToChallengeTerms: (...args: unknown[]) => mockAgreeToTerms(...args),
     deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
     getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
@@ -168,14 +185,9 @@ jest.mock('../utils', () => ({
     ),
     challengeTrackLabel: (track?: string): string => track ?? 'challenge',
     challengeTrackWins: (stats?: {
-        DATA_SCIENCE?: Record<string, { wins?: number } | number>
         DEVELOP?: { wins?: number }
         wins?: number
-    }): number | undefined => (stats?.DEVELOP?.wins ?? 0)
-        + (typeof stats?.DATA_SCIENCE?.['AI Engineering'] === 'object'
-            ? stats.DATA_SCIENCE['AI Engineering'].wins ?? 0
-            : 0)
-        || stats?.wins,
+    }): number | undefined => stats?.DEVELOP?.wins ?? stats?.wins,
     formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
         score === undefined ? fallback : String(Math.max(0, score))
     ),
@@ -291,6 +303,7 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegistrationRemoved = false
         mockMemberProfiles = []
         mockMemberResource = undefined
+        mockMySubmissionCount = undefined
         mockProjectResults = []
         mockPreviewSubmissions = []
         mockRegistrants = []
@@ -308,6 +321,7 @@ describe('ChallengeDetailsPage member flows', () => {
             type: 'Challenge',
         }
         mockUnregister.mockResolvedValue(undefined)
+        mockAgreeToTerms.mockResolvedValue(undefined)
         mockDeleteSubmission.mockResolvedValue(undefined)
         mockRegistrationMutate.mockImplementation(async () => (
             mockRegistrationRemoved ? undefined : mockRegistration
@@ -330,6 +344,10 @@ describe('ChallengeDetailsPage member flows', () => {
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
                 return swrResponse(submissionPage(mockSubmissions))
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:my-submission-count') {
+                return swrResponse(mockMySubmissionCount)
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submission-previews') {
@@ -373,6 +391,23 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: /^Submissions/ }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('closes challenge terms immediately while registration is pending', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockAgreeToTerms.mockReturnValue(new Promise<void>(() => {
+            // Keep the request pending so the modal state can be asserted independently.
+        }))
+
+        renderPage()
+        fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+        expect(screen.getByRole('dialog', { name: 'Challenge terms' }))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Accept terms' }))
+
+        expect(screen.queryByRole('dialog', { name: 'Challenge terms' }))
             .not.toBeInTheDocument()
     })
 
@@ -526,6 +561,7 @@ describe('ChallengeDetailsPage member flows', () => {
     it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
+        mockMySubmissionCount = 2
         mockChallenge = {
             ...mockChallenge,
             metadata: [{ name: 'show_data_dashboard', value: true }],
@@ -540,7 +576,7 @@ describe('ChallengeDetailsPage member flows', () => {
                 'Requirements',
                 'Registrants8',
                 'Submissions5',
-                'My Submissions',
+                'My Submissions2',
                 'Dashboard',
                 'Forum3',
                 'Winners',
