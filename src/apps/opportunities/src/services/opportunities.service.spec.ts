@@ -33,6 +33,7 @@ import {
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
+        ADMIN: { AWS_DMZ_BUCKET: 'submission-dmz' },
         API: { V5: 'https://api.example/v5', V6: 'https://api.example/v6' },
         FILESTACK: {
             API_KEY: 'filestack-key',
@@ -40,7 +41,7 @@ jest.mock('~/config', () => ({
             PROGRESS_INTERVAL: 100,
             REGION: 'us-east-1',
             RETRY: 2,
-            SUBMISSION_CONTAINER: 'submission-dmz',
+            SUBMISSION_CONTAINER: 'general-assets-bucket',
             TIMEOUT: 1000,
         },
     },
@@ -716,7 +717,7 @@ describe('opportunities service normalization', () => {
             )
     })
 
-    it('uploads a challenge ZIP to DMZ before creating its URL-backed submission', async () => {
+    it('uploads a challenge ZIP to the canonical DMZ before creating its URL-backed submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
         const upload = jest.fn()
             .mockImplementation(async (_file, options) => {

@@ -106,6 +106,7 @@ export async function createChallengeSubmission(
     signal?: AbortSignal,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
+    const submissionContainer = EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
     const storagePath = `${challengeId}-${memberId}-${type}-${Date.now()}.zip`
     const uploadOptions: UploadOptions = {
         onProgress: event => {
@@ -118,7 +119,7 @@ export async function createChallengeSubmission(
         timeout: EnvironmentConfig.FILESTACK.TIMEOUT,
     }
     const storeOptions: StoreUploadOptions = {
-        container: EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER,
+        container: submissionContainer,
         path: storagePath,
         region: EnvironmentConfig.FILESTACK.REGION,
     }
@@ -126,7 +127,7 @@ export async function createChallengeSubmission(
         .upload(file, uploadOptions, storeOptions)
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
     const storageKey = String(upload?.key ?? storagePath)
-    const storageUrl = `https://s3.amazonaws.com/${EnvironmentConfig.FILESTACK.SUBMISSION_CONTAINER}/${storageKey}`
+    const storageUrl = `https://s3.amazonaws.com/${submissionContainer}/${storageKey}`
     const submission = await xhrPostAsync<{
         challengeId: string
         memberId: string
