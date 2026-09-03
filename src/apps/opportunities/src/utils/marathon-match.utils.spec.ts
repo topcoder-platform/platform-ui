@@ -170,6 +170,29 @@ describe('Marathon Match challenge detail utilities', () => {
             })
     })
 
+    it('falls back to truthful submission lifecycle states when test metadata is absent', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'failed-screening',
+            status: 'ACTIVE',
+            virusScan: false,
+        }))
+            .toEqual({ process: 'System', status: 'Failed' })
+        expect(marathonSubmissionTestProgress({
+            id: 'legacy-quarantine',
+            url: 'https://s3.amazonaws.com/submissions-quarantine/member/file.zip',
+        }))
+            .toEqual({ process: 'System', status: 'Failed' })
+        expect(marathonSubmissionTestProgress({
+            id: 'active',
+            status: 'ACTIVE',
+        }))
+            .toEqual({
+                process: 'System',
+                progress: 0,
+                status: 'In progress',
+            })
+    })
+
     it('builds the provisional score timeline, excludes failures, and keeps the latest rewrite', () => {
         expect(buildMarathonDashboardData([
             {

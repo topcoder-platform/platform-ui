@@ -60,8 +60,10 @@ open in a separate tab and include `rel="noreferrer"`.
 Every domain exposes the same four product-authored options: `Newest first`,
 `Prize high to low`, `Prize low to high`, and `Title A-Z`. Challenge API owns
 global competition prize/title ordering, Engagements owns title ordering, and
-Review API owns payment ordering. The shared page comparator supplies the same
-visible behavior where an owner API does not expose the selected field.
+Review API owns payment ordering. For Engagement and Copilot prize sorts, the
+client combines bounded owner pages before sorting and then restores the
+requested page, so ordering remains correct across page boundaries. Missing
+numeric compensation remains after priced opportunities in both directions.
 Selecting a different result page scrolls the browser back to the top so the
 new page begins at its heading rather than at the prior page's footer.
 
@@ -231,8 +233,8 @@ score from Challenge API winners or a sibling submission; protected winner
 scores are requested only for authenticated members. Marathon winner cards
 prefer an exact-member final Review Summation when legacy project-result rows
 contain a zero placeholder. Their separators use the corresponding podium
-placement color. Winner stats mirror the profile grouping by adding migrated
-AI Engineering wins to the Development total.
+placement color. Winner stats use the Members API top-level track totals;
+Development does not add the nested AI Engineering value a second time.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
@@ -246,13 +248,17 @@ authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
 Requirements content. Successful uploads expose the created submission ID and
-refresh challenge counts without leaving the confirmation state. Design
-submissions can be deleted only while Submission or Checkpoint Submission is
-open.
+refresh challenge and member submission counts without leaving the confirmation
+state. The declaration opens the public Topcoder Terms of Use in a new tab.
+Marathon Match attempts fall back to Review submission, virus-scan, and scoring
+lifecycle fields when test metadata is absent, preserving truthful Failed, In
+progress, and completed states. Design submissions can be deleted only while
+Submission or Checkpoint Submission is open.
 
 Challenge Discussion reads and writes use the authenticated
-`/v6/forums` API. Topic creation, comments and nested replies, owner edits and
-soft deletes use in-app dialogs rather than browser prompts; per-member
+`/v6/forums` API. Topic creation, comments and nested replies, owner edits,
+administrator topic deletes, and authored comment deletes use in-app dialogs
+rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
 challenge detail page. The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
@@ -268,7 +274,9 @@ Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
 actions remain registration-only. Administrators may create ordinary topics or
-official announcements and can reply throughout every challenge forum.
+official announcements, delete topics, and reply throughout every challenge
+forum. Topic authors may edit their own unlocked topics, but deletion remains
+administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
 1000-character description while keeping attachments optional. Files upload

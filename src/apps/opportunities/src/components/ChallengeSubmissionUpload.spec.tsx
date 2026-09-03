@@ -20,6 +20,9 @@ import {
 
 const mockRecordAnalyticsEvent = jest.fn()
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { URLS: { TERMS_OF_USE: 'https://www.example.com/terms' } },
+}), { virtual: true })
 jest.mock('~/libs/core', () => ({
     recordAnalyticsEvent: (...args: unknown[]) => mockRecordAnalyticsEvent(...args),
 }), { virtual: true })
@@ -73,7 +76,6 @@ function renderUpload(
             onBack={jest.fn()}
             onContactSupport={jest.fn()}
             onShowRequirements={jest.fn()}
-            onShowTerms={jest.fn()}
             onSubmitted={jest.fn()}
             onValidateRegistration={onValidateRegistration}
         />,
@@ -109,6 +111,15 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeInTheDocument()
         expect(screen.queryByText('Source folder zip file'))
             .not.toBeInTheDocument()
+    })
+
+    it('opens the site Terms of Use instead of challenge registration terms', () => {
+        renderUpload()
+
+        expect(screen.getByRole('link', { name: /Terms of Use/ }))
+            .toHaveAttribute('href', 'https://www.example.com/terms')
+        expect(screen.getByRole('link', { name: /Terms of Use/ }))
+            .toHaveAttribute('target', '_blank')
     })
 
     it('rejects a non-ZIP and an archive over 500MB', () => {

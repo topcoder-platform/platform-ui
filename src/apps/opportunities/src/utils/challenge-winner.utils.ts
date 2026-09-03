@@ -58,14 +58,7 @@ export function challengeTrackWins(
         .toLowerCase()
     let trackWins: unknown
     if (trackKey === 'development' || trackKey === 'develop') {
-        const developmentWins = finiteNumber(stats.DEVELOP?.wins)
-        const migratedAiEngineeringStats = stats.DATA_SCIENCE?.['AI Engineering']
-        const migratedAiEngineeringWins = typeof migratedAiEngineeringStats === 'object'
-            ? finiteNumber(migratedAiEngineeringStats?.wins)
-            : undefined
-        trackWins = developmentWins === undefined && migratedAiEngineeringWins === undefined
-            ? undefined
-            : (developmentWins ?? 0) + (migratedAiEngineeringWins ?? 0)
+        trackWins = stats.DEVELOP?.wins
     } else if (trackKey === 'design') {
         trackWins = stats.DESIGN?.wins
     } else if (trackKey === 'datascience') {

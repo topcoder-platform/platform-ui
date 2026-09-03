@@ -60,6 +60,7 @@ export interface GlobalConfig {
         ACADEMY_COURSE: string
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
+        TERMS_OF_USE: string
         UNIVERSAL_NAV: string
         CHALLENGES_PAGE: string
         WORK_APP: string

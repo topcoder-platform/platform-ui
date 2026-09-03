@@ -82,7 +82,7 @@
 }
 
 .overview > a,
-.overview > button,
+.overviewActions > button,
 .fallback > a {
     align-items: center;
     background: #007d79;
@@ -114,6 +114,31 @@
     svg {
         height: 18px;
         width: 18px;
+    }
+}
+
+.overviewActions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 24px;
+
+    > button {
+        cursor: pointer;
+        font-family: inherit;
+        margin-top: 0;
+        width: 100%;
+    }
+
+    > button + button {
+        background: #fff;
+        color: #007d79;
+
+        &:hover,
+        &:focus-visible {
+            background: #e8f6f6;
+            color: #006b68;
+        }
     }
 }
 
@@ -430,9 +455,9 @@
 }
 
 .newPost {
-    background: #c1294f;
+    background: #ffe5ec;
     border: 1px solid #c1294f;
-    color: #fff;
+    color: #c1294f;
 }
 
 .locked {
@@ -575,10 +600,11 @@
     > svg {
         background: #e9ecef;
         border-radius: 50%;
+        box-sizing: content-box;
         color: #161616;
-        height: 20px;
-        padding: 6px;
-        width: 20px;
+        height: 24px;
+        padding: 8px;
+        width: 24px;
     }
 
     h2 {
@@ -809,12 +835,6 @@
     .noResults {
         padding: 32px 20px;
     }
-}
-
-.overview > button {
-    cursor: pointer;
-    font-family: inherit;
-    width: 100%;
 }
 
 .member > .ratingGray {

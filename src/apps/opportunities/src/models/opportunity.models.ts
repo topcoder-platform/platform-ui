@@ -384,6 +384,8 @@ export interface ChallengeSubmission {
     submitterHandle?: string
     submitterMaxRating?: number | null
     type?: string
+    url?: string
+    virusScan?: boolean
 }
 
 /** Submission categories accepted by the v6 Review API upload endpoint. */

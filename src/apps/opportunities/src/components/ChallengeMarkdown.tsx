@@ -10,7 +10,7 @@ import DOMPurify from 'dompurify'
 import ReactMarkdown, { Components, Options as ReactMarkdownOptions } from 'react-markdown'
 import type { HeadingProps } from 'react-markdown/lib/ast-to-react'
 import rehypeRaw from 'rehype-raw'
-import rehypeSanitize from 'rehype-sanitize'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 
@@ -132,6 +132,11 @@ const MARKDOWN_COMPONENTS: Components = {
     h3: MarkdownHeading,
 }
 
+const MARKDOWN_SANITIZE_SCHEMA = {
+    ...defaultSchema,
+    tagNames: [...(defaultSchema.tagNames ?? []), 'u'],
+}
+
 /**
  * Renders a challenge Markdown specification with fragment-addressable headings.
  *
@@ -151,7 +156,10 @@ export const ChallengeMarkdown: FC<ChallengeMarkdownProps> = props => {
         <article className={styles.markdown}>
             <Markdown
                 components={MARKDOWN_COMPONENTS}
-                rehypePlugins={[rehypeRaw as any, rehypeSanitize as any]}
+                rehypePlugins={[
+                    rehypeRaw as any,
+                    [rehypeSanitize, MARKDOWN_SANITIZE_SCHEMA] as any,
+                ]}
                 remarkPlugins={[
                     [remarkGfm, { singleTilde: false }],
                     remarkBreaks,

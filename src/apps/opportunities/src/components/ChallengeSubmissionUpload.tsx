@@ -10,6 +10,7 @@ import {
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { recordAnalyticsEvent } from '~/libs/core'
 import { IconOutline } from '~/libs/ui'
 
@@ -31,7 +32,6 @@ interface ChallengeSubmissionUploadProps {
     onBack: () => void
     onContactSupport: () => void
     onShowRequirements: () => void
-    onShowTerms: () => void
     onSubmitted: (submission: ChallengeSubmission) => Promise<unknown> | unknown
     onValidateRegistration: () => Promise<boolean>
 }
@@ -464,9 +464,14 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                 <p>
                                     Submitting your files means you hereby agree to the
                                     {' '}
-                                    <button className={styles.inlineButton} onClick={props.onShowTerms} type='button'>
+                                    <a
+                                        className={styles.inlineButton}
+                                        href={EnvironmentConfig.URLS.TERMS_OF_USE}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
                                         Topcoder Terms of Use
-                                    </button>
+                                    </a>
                                     {' '}
                                     and to the extent your uploaded file wins a Topcoder competition, you hereby assign,
                                     grant and transfer and agree to assign, grant and transfer to Topcoder all right and

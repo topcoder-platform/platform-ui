@@ -281,6 +281,19 @@ export const ChallengeDetailsPage: FC = () => {
     const isRegistered = !!registration
     const hasMemberTabAccess = isRegistered || isAdministrator
     const hasForumAccess = hasMemberTabAccess || !!memberResourceResponse.data
+    const mySubmissionCountResponse: SWRResponse<number, Error> = useSWR(
+        challengeId && memberId && isRegistered
+            ? ['opportunities:my-submission-count', challengeId, memberId]
+            : undefined,
+        async () => (await getChallengeSubmissions(
+            challengeId,
+            1,
+            1,
+            memberId,
+            false,
+        )).total,
+        { revalidateOnFocus: false },
+    )
     const forumResponse: SWRResponse<ForumTopicCollection, Error> = useSWR(
         hasForumAccess && challengeId ? ['opportunities:forum-topics', challengeId] : undefined,
         () => getChallengeForumTopics(challengeId),
@@ -300,7 +313,11 @@ export const ChallengeDetailsPage: FC = () => {
                     label: 'Submissions',
                 }]
                 : []),
-            ...(isRegistered ? [{ id: 'mine' as ChallengeTab, label: 'My Submissions' }] : []),
+            ...(isRegistered ? [{
+                count: mySubmissionCountResponse.data,
+                id: 'mine' as ChallengeTab,
+                label: 'My Submissions',
+            }] : []),
             ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
@@ -309,7 +326,15 @@ export const ChallengeDetailsPage: FC = () => {
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
-    }, [challenge, forumTopicCount, hasForumAccess, hasMemberTabAccess, isRegistered, memberId])
+    }, [
+        challenge,
+        forumTopicCount,
+        hasForumAccess,
+        hasMemberTabAccess,
+        isRegistered,
+        memberId,
+        mySubmissionCountResponse.data,
+    ])
 
     /**
      * Selects a challenge tab and closes the transient in-tab submission form.
@@ -433,9 +458,16 @@ export const ChallengeDetailsPage: FC = () => {
         buttons?.[nextIndex]?.focus()
     }
 
-    /** Agrees to electronic terms and creates the Submitter resource. */
+    /**
+     * Closes registration terms, records agreement, and creates the Submitter resource.
+     *
+     * @param terms challenge terms accepted by the member.
+     * @returns promise settled after registration caches and user feedback are updated.
+     * @throws Does not throw; agreement and registration errors are shown as toasts.
+     */
     const completeRegistration = async (terms: ChallengeTerm[]): Promise<void> => {
         if (!challenge || !profile) return
+        setTermsOpen(false)
         setRegistrationBusy(true)
         try {
             await agreeToChallengeTerms(terms)
@@ -446,7 +478,6 @@ export const ChallengeDetailsPage: FC = () => {
                 member_id: profile.userId,
             }, true)
             await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
-            setTermsOpen(false)
             toast.success('You are registered for this competition.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Registration failed.')
@@ -461,9 +492,15 @@ export const ChallengeDetailsPage: FC = () => {
         setUnregisterConfirmOpen(true)
     }
 
-    /** Deletes the caller's Submitter resource after explicit confirmation. */
+    /**
+     * Deletes the caller's Submitter resource after explicit confirmation.
+     *
+     * @returns promise settled after member and challenge caches are refreshed.
+     * @throws Does not throw; unregister failures are shown as toasts.
+     */
     const unregister = async (): Promise<void> => {
         if (!registration || !profile) return
+        setTermsOpen(false)
         setRegistrationBusy(true)
         try {
             setUnregisterConfirmOpen(false)
@@ -477,6 +514,26 @@ export const ChallengeDetailsPage: FC = () => {
         } finally {
             setRegistrationBusy(false)
         }
+    }
+
+    /**
+     * Updates challenge and member submission counters after a successful upload.
+     *
+     * @returns promise settled after both optimistic SWR cache updates.
+     * @throws Propagates an unexpected SWR cache mutation failure to the upload workflow.
+     */
+    const recordSubmittedSolution = async (): Promise<void> => {
+        if (!challenge) return
+        await Promise.all([
+            challengeResponse.mutate({
+                ...challenge,
+                numOfSubmissions: (challenge.numOfSubmissions ?? 0) + 1,
+            }, { revalidate: false }),
+            mySubmissionCountResponse.mutate(
+                current => (current ?? 0) + 1,
+                { revalidate: false },
+            ),
+        ])
     }
 
     if (challengeResponse.isValidating && !challenge) {
@@ -547,12 +604,8 @@ export const ChallengeDetailsPage: FC = () => {
                         onCloseSubmission={closeSubmission}
                         onContactSupport={() => setIssueOpen(true)}
                         onShowRequirements={showSubmissionRequirements}
-                        onShowTerms={showTerms}
                         onStartSubmission={startSubmission}
-                        onSubmitted={() => challengeResponse.mutate({
-                            ...challenge,
-                            numOfSubmissions: (challenge.numOfSubmissions ?? 0) + 1,
-                        }, { revalidate: false })}
+                        onSubmitted={recordSubmittedSolution}
                         onValidateRegistration={validateSubmissionRegistration}
                         submissionFlowOpen={submissionFlowOpen}
                     />
@@ -606,7 +659,6 @@ interface ChallengeTabContentProps {
     onCloseSubmission: () => void
     onContactSupport: () => void
     onShowRequirements: () => void
-    onShowTerms: (term?: ChallengeTerm) => void
     onStartSubmission: () => void
     onSubmitted: () => Promise<unknown> | unknown
     onValidateRegistration: () => Promise<boolean>
@@ -641,7 +693,6 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
                     onBack={props.onCloseSubmission}
                     onContactSupport={props.onContactSupport}
                     onShowRequirements={props.onShowRequirements}
-                    onShowTerms={props.onShowTerms}
                     onSubmitted={props.onSubmitted}
                     onValidateRegistration={props.onValidateRegistration}
                 />
@@ -1548,6 +1599,7 @@ const ForumTab: FC<{
 }> = props => (
     <ChallengeForum
         canCreateAnnouncements={props.canCreateAnnouncements}
+        canDeleteTopics={props.canCreateAnnouncements}
         challenge={props.challenge}
         memberId={props.memberId}
     />

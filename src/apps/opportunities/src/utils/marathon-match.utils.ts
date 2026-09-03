@@ -168,7 +168,7 @@ function testProgressValue(value: unknown): number | undefined {
  */
 function testStatusValue(value: unknown): MarathonTestProgress['status'] {
     const status = normalizeToken(value)
-    if (['failed', 'error'].includes(status)) return 'Failed'
+    if (status.startsWith('failed') || ['error', 'aifailedreview'].includes(status)) return 'Failed'
     if (['success', 'passed', 'complete', 'completed'].includes(status)) return 'Passed'
     if (['inprogress', 'pending', 'processing', 'running'].includes(status)) return 'In progress'
     return undefined
@@ -327,11 +327,11 @@ export function shouldShowFinalSubmissionScores(
 }
 
 /**
- * Resolves the most relevant member-safe scorer progress metadata embedded by
- * Review API on a Marathon Match submission.
+ * Resolves the most relevant member-safe scorer progress metadata, then falls
+ * back to virus-scan, review, score, and submission lifecycle fields.
  *
  * @param submission Review API submission with attached summations.
- * @returns highest-priority process, progress, and status values.
+ * @returns highest-priority truthful process, progress, and status values.
  * @throws Does not throw.
  */
 export function marathonSubmissionTestProgress(
@@ -374,13 +374,43 @@ export function marathonSubmissionTestProgress(
             || second.timestamp - first.timestamp
             || second.index - first.index)
     const current = candidates[0]
-    return current
-        ? {
+    if (current) {
+        return {
             process: current.process,
             progress: current.progress,
             status: current.status,
         }
-        : {}
+    }
+
+    const reviewStatuses = (submission.review ?? [])
+        .map(review => testStatusValue(review.status))
+        .filter((status): status is NonNullable<MarathonTestProgress['status']> => !!status)
+    const quarantineUrl = submission.url?.toLowerCase()
+        .includes('submissions-quarantine/') ?? false
+    if (
+        submission.virusScan === false
+        || quarantineUrl
+        || reviewStatuses.includes('Failed')
+        || testStatusValue(submission.status) === 'Failed'
+    ) {
+        return { process: 'System', status: 'Failed' }
+    }
+
+    const scores = marathonSubmissionScores(submission)
+
+    if (scores.finalScore !== undefined) {
+        return { process: 'System', progress: 100, status: 'Passed' }
+    }
+
+    if (scores.provisionalScore !== undefined) {
+        return { process: 'Provisional', progress: 100, status: 'Passed' }
+    }
+
+    if (reviewStatuses.includes('In progress') || normalizeToken(submission.status) === 'active') {
+        return { process: 'System', progress: 0, status: 'In progress' }
+    }
+
+    return {}
 }
 
 /**

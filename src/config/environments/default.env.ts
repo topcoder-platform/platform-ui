@@ -210,6 +210,7 @@ export const URLS = {
     ACADEMY_COURSE: `https://academy.${TC_DOMAIN}/freeCodeCamp`,
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
+    TERMS_OF_USE: 'https://www.topcoder.com/community/how-it-works/terms/',
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
     USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
     WORK_APP: `https://work.${TC_DOMAIN}`,
