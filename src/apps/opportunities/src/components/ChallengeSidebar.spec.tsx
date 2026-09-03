@@ -45,6 +45,9 @@ jest.mock('~/libs/ui', () => {
 jest.mock('../utils', () => ({
     challengeFileTypes: (): string[] => [],
     challengeForumUrl: (): undefined => undefined,
+    challengeReviewAppUrl: (challengeId: string): string => (
+        `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
+    ),
     challengeSidebarLinks: (): { attachments: []; challengeLinks: [] } => ({
         attachments: [],
         challengeLinks: [],
@@ -173,11 +176,31 @@ describe('ChallengeSidebar Review Style', () => {
     it('adds the authored Marathon Match guide and arrow indicators', () => {
         renderSidebar(undefined, marathonChallenge)
 
-        expect(screen.getByRole('link', { name: 'How to Compete in a Marathon Match' }))
+        expect(screen.getByRole('heading', { name: 'Marathon Match Tournament' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('Join the battle of competitors in a series of challenging Marathon Matches.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Explore the program' }))
+            .toHaveAttribute('href', marathonMatchLearningUrl)
+        expect(screen.queryByRole('heading', { name: 'Join the AI Exponential league' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'How to Compete on Marathon Match' }))
             .toHaveAttribute('href', marathonMatchLearningUrl)
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' })
             .querySelector('img'))
             .not.toBeNull()
+    })
+
+    it('uses the dedicated Review App host and hides Review Style for Marathon Matches', () => {
+        renderSidebar(undefined, marathonChallenge)
+
+        expect(screen.getByRole('link', { name: 'View Review App' }))
+            .toHaveAttribute(
+                'href',
+                'https://review.topcoder-dev.com/active-challenges/challenge-id/challenge-details',
+            )
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
     })
 
     it('keeps design-only educational links and copy out of development challenges', () => {

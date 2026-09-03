@@ -1,15 +1,16 @@
-/* eslint-disable no-alert, no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
+/* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     ChangeEvent,
     FC,
     FormEvent,
+    KeyboardEvent,
     useMemo,
     useRef,
     useState,
 } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
-import { IconOutline } from '~/libs/ui'
+import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
 
 import {
     ChallengeOpportunity,
@@ -64,10 +65,53 @@ interface ForumParticipant {
     memberId: string
 }
 
-interface MarkdownSelectionResult {
+export interface MarkdownSelectionResult {
     selectionEnd: number
     selectionStart: number
     value: string
+}
+
+/**
+ * Continues the Markdown list marker on the current line when Enter is pressed.
+ * An empty marker exits the list, matching conventional Markdown editors.
+ *
+ * @param value complete editor value.
+ * @param selectionStart inclusive selection start.
+ * @param selectionEnd exclusive selection end.
+ * @returns updated value/caret, or undefined when the current line is not a list item.
+ * @throws Does not throw; selection bounds are clamped to the input length.
+ */
+export function continueMarkdownList(
+    value: string,
+    selectionStart: number,
+    selectionEnd: number,
+): MarkdownSelectionResult | undefined {
+    const start = Math.max(0, Math.min(selectionStart, value.length))
+    const end = Math.max(start, Math.min(selectionEnd, value.length))
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1
+    const lineBeforeCaret = value.slice(lineStart, start)
+    const unordered = /^(\s*)([-+*])\s+(.*)$/.exec(lineBeforeCaret)
+    const ordered = /^(\s*)(\d+)\.\s+(.*)$/.exec(lineBeforeCaret)
+    const match = unordered ?? ordered
+    if (!match) return undefined
+
+    if (!match[3].trim()) {
+        const nextValue = `${value.slice(0, lineStart)}${value.slice(end)}`
+        return {
+            selectionEnd: lineStart,
+            selectionStart: lineStart,
+            value: nextValue,
+        }
+    }
+
+    const marker = unordered ? match[2] : `${Number(match[2]) + 1}.`
+    const insertion = `\n${match[1]}${marker} `
+    const nextSelection = start + insertion.length
+    return {
+        selectionEnd: nextSelection,
+        selectionStart: nextSelection,
+        value: `${value.slice(0, start)}${insertion}${value.slice(end)}`,
+    }
 }
 
 type MemberProfilesById = ReadonlyMap<string, MemberProfileSummary>
@@ -514,7 +558,7 @@ const ForumTopicCard: FC<{
     topic: ForumTopicSummary
 }> = props => {
     const participants = topicParticipants(props.topic)
-    const excerpt = plainForumExcerpt(props.topic.starterPostExcerpt)
+    const excerpt = props.topic.starterPostExcerpt?.trim()
     const owner = props.topic.authorMemberId === props.memberId
     const cardClass = props.topic.isAnnouncement
         ? `${styles.topicCard} ${styles.announcementCard}`
@@ -547,7 +591,11 @@ const ForumTopicCard: FC<{
                         {formatForumDate(props.topic.createdAt)}
                     </span>
                 </div>
-                {excerpt && <p className={styles.topicExcerpt}>{excerpt}</p>}
+                {excerpt && (
+                    <div className={styles.topicExcerpt}>
+                        <ChallengeMarkdown markdown={excerpt} />
+                    </div>
+                )}
                 <div className={styles.topicFooter}>
                     <span>
                         Last post at
@@ -653,6 +701,25 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
         ['Quote', '> ', ''],
     ]
 
+    /** Continues or exits the active Markdown list without a toolbar round trip. */
+    const continueList = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+        if (event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+        const result = continueMarkdownList(
+            props.value,
+            event.currentTarget.selectionStart,
+            event.currentTarget.selectionEnd,
+        )
+        if (!result) return
+        event.preventDefault()
+        const value = result.value.slice(0, props.maxLength)
+        const selection = Math.min(result.selectionStart, value.length)
+        props.onChange(value)
+        window.setTimeout(() => {
+            textareaRef.current?.focus()
+            textareaRef.current?.setSelectionRange(selection, selection)
+        })
+    }
+
     return (
         <div className={styles.markdownField}>
             <label htmlFor={props.id}>{props.label}</label>
@@ -691,6 +758,7 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
                             id={props.id}
                             maxLength={props.maxLength}
                             onChange={event => props.onChange(event.target.value)}
+                            onKeyDown={continueList}
                             placeholder={props.placeholder}
                             ref={textareaRef}
                             value={props.value}
@@ -820,6 +888,207 @@ const ForumCreateTopicView: FC<{
                 </form>
             </div>
         </div>
+    )
+}
+
+interface ForumTopicEditModalProps {
+    detail: ForumTopicDetail
+    onClose: () => void
+    onSave: (title: string, content: string, starterPost: ForumPost) => Promise<void>
+}
+
+/**
+ * Renders an in-app topic editor for both the title and starter-post content.
+ *
+ * @param props loaded topic detail and controlled save/close actions.
+ * @returns modal Markdown form for an owned discussion.
+ * @throws Does not throw; mutation failures remain visible inside the modal.
+ */
+const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
+    const starterPost = props.detail.posts.find(post => (
+        post.parentType === 'TOPIC' && post.parentId === props.detail.topic.id
+    )) ?? props.detail.posts[0]
+    const [content, setContent] = useState(starterPost?.content ?? '')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+    const [title, setTitle] = useState(props.detail.topic.title)
+
+    /** Validates and saves both editable topic fields. */
+    const save = async (): Promise<void> => {
+        if (!title.trim() || !content.trim() || !starterPost) {
+            setError('Add a topic title and description before saving your changes.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        try {
+            await props.onSave(title.trim(), content.trim(), starterPost)
+            props.onClose()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    return (
+        <BaseModal
+            ariaLabelledby='forum-edit-topic-title'
+            buttons={(
+                <>
+                    <button
+                        className={styles.modalSecondary}
+                        disabled={pending}
+                        onClick={props.onClose}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className={styles.modalPrimary}
+                        disabled={pending}
+                        onClick={save}
+                        type='button'
+                    >
+                        {pending ? 'Saving…' : 'Save changes'}
+                    </button>
+                </>
+            )}
+            center
+            classNames={{ modal: styles.editModal }}
+            onClose={props.onClose}
+            open
+            showCloseIcon={!pending}
+            size='md'
+            spacer={false}
+            title={<h2 className={styles.modalTitle} id='forum-edit-topic-title'>Edit topic</h2>}
+        >
+            <div className={styles.editModalBody}>
+                <label className={styles.titleField}>
+                    <span>Topic Title</span>
+                    <input
+                        disabled={pending}
+                        maxLength={255}
+                        onChange={event => setTitle(event.target.value)}
+                        value={title}
+                    />
+                </label>
+                <MarkdownEditor
+                    id='forum-edit-topic-content'
+                    label='Topic Content'
+                    maxLength={TOPIC_CHARACTER_LIMIT}
+                    onChange={setContent}
+                    placeholder='Describe your topic'
+                    preview={preview}
+                    value={content}
+                />
+                <button
+                    className={styles.previewButton}
+                    disabled={pending}
+                    onClick={() => setPreview(value => !value)}
+                    type='button'
+                >
+                    {preview ? 'Write' : 'Preview'}
+                </button>
+                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+            </div>
+        </BaseModal>
+    )
+}
+
+interface ForumPostEditModalProps {
+    onClose: () => void
+    onSave: (content: string) => Promise<void>
+    post: ForumPost
+}
+
+/**
+ * Renders an in-app Markdown editor for an owned forum post.
+ *
+ * @param props selected post and controlled save/close actions.
+ * @returns modal comment editor.
+ * @throws Does not throw; mutation failures remain visible inside the modal.
+ */
+const ForumPostEditModal: FC<ForumPostEditModalProps> = props => {
+    const [content, setContent] = useState(props.post.content ?? '')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+
+    /** Validates and saves the replacement post content. */
+    const save = async (): Promise<void> => {
+        if (!content.trim()) {
+            setError('Add comment text before saving your changes.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        try {
+            await props.onSave(content.trim())
+            props.onClose()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    return (
+        <BaseModal
+            ariaLabelledby='forum-edit-post-title'
+            buttons={(
+                <>
+                    <button
+                        className={styles.modalSecondary}
+                        disabled={pending}
+                        onClick={props.onClose}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className={styles.modalPrimary}
+                        disabled={pending}
+                        onClick={save}
+                        type='button'
+                    >
+                        {pending ? 'Saving…' : 'Save changes'}
+                    </button>
+                </>
+            )}
+            center
+            classNames={{ modal: styles.editModal }}
+            onClose={props.onClose}
+            open
+            showCloseIcon={!pending}
+            size='md'
+            spacer={false}
+            title={<h2 className={styles.modalTitle} id='forum-edit-post-title'>Edit comment</h2>}
+        >
+            <div className={styles.editModalBody}>
+                <MarkdownEditor
+                    id='forum-edit-post-content'
+                    label='Comment'
+                    maxLength={COMMENT_CHARACTER_LIMIT}
+                    onChange={setContent}
+                    placeholder='Type here'
+                    preview={preview}
+                    value={content}
+                />
+                <button
+                    className={styles.previewButton}
+                    disabled={pending}
+                    onClick={() => setPreview(value => !value)}
+                    type='button'
+                >
+                    {preview ? 'Write' : 'Preview'}
+                </button>
+                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+            </div>
+        </BaseModal>
     )
 }
 
@@ -986,6 +1255,8 @@ const ForumTopicView: FC<{
     const [preview, setPreview] = useState(false)
     const [reactionPendingPostId, setReactionPendingPostId] = useState<string>()
     const [replyTarget, setReplyTarget] = useState<ForumPost>()
+    const [postToDelete, setPostToDelete] = useState<ForumPost>()
+    const [postToEdit, setPostToEdit] = useState<ForumPost>()
     const flatPosts = flattenForumPosts(props.detail.posts)
     const postById = new Map(flatPosts.map(item => [item.post.id, item.post]))
     const participants = topicParticipants(props.detail.topic)
@@ -1011,31 +1282,29 @@ const ForumTopicView: FC<{
         focusComposer()
     }
 
-    /** Updates an owned post after native confirmation of the replacement copy. */
-    const editPost = async (post: ForumPost): Promise<void> => {
-        const content = window.prompt('Edit your comment', post.content ?? '')
-            ?.trim()
-        if (!content || content === post.content) return
+    /** Opens the in-app editor for an owned post. */
+    const editPost = (post: ForumPost): void => setPostToEdit(post)
+
+    /** Persists replacement content from the in-app post editor. */
+    const savePost = async (content: string): Promise<void> => {
+        if (!postToEdit || content === postToEdit.content) return
         setError(undefined)
-        setPending(true)
-        try {
-            await updateForumPost(post.id, content)
-            await props.onChanged()
-        } catch (mutationError) {
-            setError(forumErrorMessage(mutationError))
-        } finally {
-            setPending(false)
-        }
+        await updateForumPost(postToEdit.id, content)
+        await props.onChanged()
     }
 
-    /** Soft-deletes an owned post after explicit member confirmation. */
-    const removePost = async (post: ForumPost): Promise<void> => {
-        if (!window.confirm('Delete this comment? Replies will remain in the discussion.')) return
+    /** Opens the in-app delete confirmation for an owned post. */
+    const removePost = (post: ForumPost): void => setPostToDelete(post)
+
+    /** Soft-deletes the selected owned post after in-app confirmation. */
+    const confirmRemovePost = async (): Promise<void> => {
+        if (!postToDelete) return
         setError(undefined)
         setPending(true)
         try {
-            await deleteForumPost(post.id)
+            await deleteForumPost(postToDelete.id)
             await props.onChanged()
+            setPostToDelete(undefined)
         } catch (mutationError) {
             setError(forumErrorMessage(mutationError))
         } finally {
@@ -1208,6 +1477,25 @@ const ForumTopicView: FC<{
                     )}
                 </div>
             </div>
+            {postToEdit && (
+                <ForumPostEditModal
+                    key={postToEdit.id}
+                    onClose={() => setPostToEdit(undefined)}
+                    onSave={savePost}
+                    post={postToEdit}
+                />
+            )}
+            <ConfirmModal
+                action='Delete comment'
+                isLoading={pending}
+                isProcessing={pending}
+                onClose={() => setPostToDelete(undefined)}
+                onConfirm={confirmRemovePost}
+                open={!!postToDelete}
+                title='Delete comment?'
+            >
+                <p>Replies will remain in the discussion. This action cannot be undone.</p>
+            </ConfirmModal>
         </div>
     )
 }
@@ -1227,6 +1515,7 @@ const ForumTopicView: FC<{
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
     const [creatingTopic, setCreatingTopic] = useState(false)
+    const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
     const [mutationError, setMutationError] = useState<string>()
     const [page, setPage] = useState(1)
     const [pendingAction, setPendingAction] = useState<string>()
@@ -1235,6 +1524,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const [search, setSearch] = useState('')
     const [selectedTopicId, setSelectedTopicId] = useState<string>()
     const [sort, setSort] = useState<ForumSort>('recent')
+    const [topicToDelete, setTopicToDelete] = useState<ForumTopicSummary>()
     const response: SWRResponse<ForumTopicCollection, Error> = useSWR(
         props.memberId ? ['opportunities:forum-topics', props.challenge.id] : undefined,
         () => getChallengeForumTopics(props.challenge.id),
@@ -1354,16 +1644,12 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         }
     }
 
-    /** Updates one owned topic title through the v6 API. */
+    /** Loads an owned topic into the in-app title and Markdown editor. */
     const editTopic = async (topic: ForumTopicSummary): Promise<void> => {
-        const title = window.prompt('Edit topic title', topic.title)
-            ?.trim()
-        if (!title || title === topic.title) return
         setPendingAction(`edit:${topic.id}`)
         setMutationError(undefined)
         try {
-            await updateForumTopic(topic.id, title)
-            await refreshForum()
+            setEditingTopicDetail(await getForumTopicDetail(topic.id))
         } catch (error) {
             setMutationError(forumErrorMessage(error))
         } finally {
@@ -1371,15 +1657,38 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         }
     }
 
-    /** Soft-deletes one owned topic after explicit confirmation. */
-    const removeTopic = async (topic: ForumTopicSummary): Promise<void> => {
-        if (!window.confirm(`Delete “${topic.title}” and its discussion?`)) return
-        setPendingAction(`delete:${topic.id}`)
+    /** Saves the editable topic title and starter-post body through their owning endpoints. */
+    const saveTopic = async (
+        title: string,
+        content: string,
+        starterPost: ForumPost,
+    ): Promise<void> => {
+        if (!editingTopicDetail) return
+
+        if (title !== editingTopicDetail.topic.title) {
+            await updateForumTopic(editingTopicDetail.topic.id, title)
+        }
+
+        if (content !== starterPost.content) {
+            await updateForumPost(starterPost.id, content)
+        }
+
+        await refreshForum()
+    }
+
+    /** Opens the in-app delete confirmation for an owned topic. */
+    const removeTopic = (topic: ForumTopicSummary): void => setTopicToDelete(topic)
+
+    /** Soft-deletes the selected owned topic after in-app confirmation. */
+    const confirmRemoveTopic = async (): Promise<void> => {
+        if (!topicToDelete) return
+        setPendingAction(`delete:${topicToDelete.id}`)
         setMutationError(undefined)
         try {
-            await deleteForumTopic(topic.id)
-            if (selectedTopicId === topic.id) setSelectedTopicId(undefined)
+            await deleteForumTopic(topicToDelete.id)
+            if (selectedTopicId === topicToDelete.id) setSelectedTopicId(undefined)
             await response.mutate()
+            setTopicToDelete(undefined)
         } catch (error) {
             setMutationError(forumErrorMessage(error))
         } finally {
@@ -1485,7 +1794,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                         setCreatingTopic(true)
                     }}
                     topics={topics}
-                    total={topics.length}
+                    total={response.data?.sourceTotalCount ?? topics.length}
                 />
                 <ForumFilters
                     onReset={resetFilters}
@@ -1561,6 +1870,29 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                     />
                 )}
             </section>
+            {editingTopicDetail && (
+                <ForumTopicEditModal
+                    detail={editingTopicDetail}
+                    key={editingTopicDetail.topic.id}
+                    onClose={() => setEditingTopicDetail(undefined)}
+                    onSave={saveTopic}
+                />
+            )}
+            <ConfirmModal
+                action='Delete topic'
+                isLoading={pendingAction === `delete:${topicToDelete?.id}`}
+                isProcessing={pendingAction === `delete:${topicToDelete?.id}`}
+                onClose={() => setTopicToDelete(undefined)}
+                onConfirm={confirmRemoveTopic}
+                open={!!topicToDelete}
+                title='Delete topic?'
+            >
+                <p>
+                    <span>Delete “</span>
+                    <strong>{topicToDelete?.title}</strong>
+                    <span>” and its discussion? This action cannot be undone.</span>
+                </p>
+            </ConfirmModal>
         </div>
     )
 }

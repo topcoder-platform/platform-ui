@@ -127,7 +127,7 @@ function typeIcon(type: string): string {
  * @throws Does not throw; absent and malformed dates use stable fallbacks.
  */
 function phaseSummary(phase: ChallengePhase | undefined): ChallengePhaseSummary {
-    if (!phase) return { phase: 'Timeline complete' }
+    if (!phase) return { phase: 'Challenge completed' }
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
     const end = endValue ? new Date(endValue) : undefined
     if (!end || Number.isNaN(end.getTime())) {
@@ -414,6 +414,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const trackKey = challengeCatalogKey(props.challenge.track)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
+    const completedChallenge = challengeCatalogKey(props.challenge.status) === 'completed'
     const registrationUnavailable = props.registrationLoading || props.registrationError
     const canUnregister = props.isRegistered && registrationOpen && !registrationUnavailable && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
@@ -552,17 +553,21 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </div>
                         </div>
                         <div className={styles.actions}>
-                            {props.isRegistered ? (
+                            {props.isRegistered || completedChallenge ? (
                                 <>
                                     <button
                                         className={styles.secondary}
-                                        data-analytics-id='challenge-unregister'
+                                        data-analytics-id={props.isRegistered
+                                            ? 'challenge-unregister'
+                                            : 'challenge-register'}
                                         data-analytics-placement='challenge-header'
-                                        disabled={!canUnregister}
-                                        onClick={props.onUnregister}
+                                        disabled={props.isRegistered
+                                            ? !canUnregister
+                                            : !registrationOpen || registrationUnavailable || props.busy}
+                                        onClick={props.isRegistered ? props.onUnregister : props.onRegister}
                                         type='button'
                                     >
-                                        Unregister
+                                        {props.isRegistered ? 'Unregister' : 'Register'}
                                     </button>
                                     <button
                                         className={styles.primary}

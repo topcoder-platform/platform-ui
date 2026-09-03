@@ -430,9 +430,9 @@
 }
 
 .newPost {
-    background: #fff;
+    background: #c1294f;
     border: 1px solid #c1294f;
-    color: #c1294f;
+    color: #fff;
 }
 
 .locked {
@@ -870,6 +870,27 @@
     margin: 20px 0 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
+
+    article {
+        font-size: inherit;
+        line-height: inherit;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        p,
+        ul,
+        ol,
+        blockquote,
+        pre {
+            margin: 0 0 4px;
+        }
+
+        h1 { font-size: 22px; line-height: 30px; }
+        h2 { font-size: 20px; line-height: 28px; }
+        h3 { font-size: 18px; line-height: 26px; }
+    }
 }
 
 .topicFooter {
@@ -1258,6 +1279,68 @@
         line-height: 16px;
         margin-left: auto;
     }
+}
+
+.editModal {
+    border-radius: 8px !important;
+    box-sizing: border-box;
+    color: #161616;
+    font-family: 'Nunito Sans', sans-serif;
+    max-height: calc(100vh - 32px) !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 32px !important;
+    width: 720px !important;
+}
+
+.modalTitle {
+    color: #161616;
+    font-family: 'Figtree', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 38px;
+    margin: 0 0 24px;
+    text-transform: none;
+}
+
+.editModalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.previewButton,
+.modalPrimary,
+.modalSecondary {
+    align-items: center;
+    border: 1px solid #007d79;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    font: 700 16px/20px 'Nunito Sans', sans-serif;
+    height: 38px;
+    justify-content: center;
+    padding: 8px 24px;
+
+    &:disabled {
+        cursor: wait;
+        opacity: .6;
+    }
+}
+
+.previewButton,
+.modalSecondary {
+    background: #fff;
+    color: #007d79;
+}
+
+.previewButton {
+    align-self: flex-start;
+}
+
+.modalPrimary {
+    background: #007d79;
+    color: #fff;
 }
 
 .post,

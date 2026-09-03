@@ -14,7 +14,7 @@ The August 2026 masthead has two destinations. Browse Opportunities renders
 the four dark category cards and the active owner-backed listing. My Work
 renders the four light member-summary cards and combines the authenticated
 member's competitions, engagements, copilot work, and review work into one
-newest-first list. Anonymous visitors receive an in-page sign-in handoff; no
+shared sortable list. Anonymous visitors receive an in-page sign-in handoff; no
 member-scoped request is issued until a profile ID is available.
 
 My Work requests at most the first 100 member records from each owning API in
@@ -57,9 +57,13 @@ buttons remain keyboard accessible and expose their active state with
 Opportunity cards preserve same-tab navigation. External role-learning links
 open in a separate tab and include `rel="noreferrer"`.
 
-Completed Engagements omit `Starting soon`, since a future-start ordering is
-not meaningful for closed work. Changing to Completed while that sort is active
-resets the listing to `Newest first`.
+Every domain exposes the same four product-authored options: `Newest first`,
+`Prize high to low`, `Prize low to high`, and `Title A-Z`. Challenge API owns
+global competition prize/title ordering, Engagements owns title ordering, and
+Review API owns payment ordering. The shared page comparator supplies the same
+visible behavior where an owner API does not expose the selected field.
+Selecting a different result page scrolls the browser back to the top so the
+new page begins at its heading rather than at the prior page's footer.
 
 Review cards include the Review API's first role payment, falling back to its
 base payment. Missing amounts are labeled `TBD` rather than presented as free
@@ -224,10 +228,15 @@ Figma keeps separate Provisional Score and Final Score columns and uses `-`
 when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
-scores are requested only for authenticated members.
+scores are requested only for authenticated members. Marathon winner cards
+prefer an exact-member final Review Summation when legacy project-result rows
+contain a zero placeholder. Their separators use the corresponding podium
+placement color. Winner stats mirror the profile grouping by adding migrated
+AI Engineering wins to the Development total.
 
-Registered members submit without leaving challenge details. The My
-Submissions flow accepts one `.zip` archive up to 500MB, requires the authored
+Registered members submit without leaving challenge details. My Submissions
+also exposes the environment-specific Review App handoff before and after an
+upload. The flow accepts one `.zip` archive up to 500MB, requires the authored
 declaration, and reports live upload progress. The browser uploads to
 Filestack's S3 endpoint using the environment's canonical submissions DMZ
 bucket, then sends the resulting storage URL to `POST /v6/submissions`. The
@@ -243,14 +252,19 @@ open.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits and
-soft deletes, per-member thumbs-up/thumbs-down reactions, watch state, and read
-state remain inside the challenge detail page. Each visible post shows shared
+soft deletes use in-app dialogs rather than browser prompts; per-member
+thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
+challenge detail page. The Markdown editor continues ordered and unordered
+lists on Enter; safe Markdown styling is retained in topic excerpts and full
+posts. Each visible post shows shared
 reaction counts and the current member's selected state; clicking the selected
 thumb again removes it, while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
-v6 API is unavailable or the member is signed out. Unregistered administrators
+v6 API is unavailable or the member is signed out. Forum counts come from the
+complete API result, including topics created by the current member.
+Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
 actions remain registration-only. Administrators may create ordinary topics or
@@ -270,4 +284,5 @@ The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
 and attachments, and fails closed for unsafe or retired-host URLs. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
-handoff.
+handoff. Marathon Match challenges replace the general AI Exponential promo
+with the Marathon Match Tournament heading, copy, and guide destination.

@@ -587,8 +587,14 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('page', String(page))
         url.searchParams.set('perPage', String(perPage))
         const startingSoon = filters.sort === 'startingSoon'
-        url.searchParams.set('sortBy', startingSoon ? 'startDate' : 'updatedAt')
-        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        const prizeSort = filters.sort === 'prizeHighToLow' || filters.sort === 'prizeLowToHigh'
+        const titleSort = filters.sort === 'titleAZ'
+        url.searchParams.set('sortBy', prizeSort
+            ? 'overview.totalPrizes'
+            : titleSort ? 'name' : startingSoon ? 'startDate' : 'updatedAt')
+        url.searchParams.set('sortOrder', filters.sort === 'prizeLowToHigh' || titleSort || startingSoon
+            ? 'asc'
+            : 'desc')
         if (startingSoon) {
             url.searchParams.set('startDateStart', new Date()
                 .toISOString())
@@ -621,8 +627,9 @@ export function buildOpportunityPageUrl(
         url.searchParams.set('page', String(page))
         url.searchParams.set('perPage', String(perPage))
         const startingSoon = filters.sort === 'startingSoon'
-        url.searchParams.set('sortBy', startingSoon ? 'anticipatedStart' : 'createdAt')
-        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        const titleSort = filters.sort === 'titleAZ'
+        url.searchParams.set('sortBy', titleSort ? 'title' : startingSoon ? 'anticipatedStart' : 'createdAt')
+        url.searchParams.set('sortOrder', titleSort || startingSoon ? 'asc' : 'desc')
         if (filters.search) url.searchParams.set('search', filters.search)
         if (filters.statuses?.[0]) url.searchParams.set('status', filters.statuses[0])
         appendValues(url, 'requiredSkills', filters.skills)
@@ -654,12 +661,13 @@ export function buildOpportunityPageUrl(
         url.pathname = new URL(endpoint).pathname
         url.searchParams.set('offset', String((page - 1) * perPage))
         url.searchParams.set('limit', String(perPage))
-        const highestPayment = filters.sort === 'highestPayment'
+        const highestPayment = filters.sort === 'highestPayment' || filters.sort === 'prizeHighToLow'
+        const lowestPayment = filters.sort === 'prizeLowToHigh'
         const startingSoon = filters.sort === 'startingSoon'
-        url.searchParams.set('sortBy', highestPayment
+        url.searchParams.set('sortBy', highestPayment || lowestPayment
             ? 'basePayment'
             : startingSoon ? 'startDate' : 'createdAt')
-        url.searchParams.set('sortOrder', startingSoon ? 'asc' : 'desc')
+        url.searchParams.set('sortOrder', startingSoon || lowestPayment ? 'asc' : 'desc')
         if (filters.search) url.searchParams.set('search', filters.search)
         appendValues(url, 'status', filters.statuses)
         appendValues(url, 'tracks', filters.tracks)
@@ -1583,6 +1591,29 @@ export async function getChallengeRegistration(
     const resources = await getChallengeResources(challengeId, 1, 1, memberId, role.id)
     return resources.items.find(resource => (
         String(resource.memberId) === memberId && resource.roleId === role.id
+    ))
+}
+
+/**
+ * Resolves any challenge resource belonging to the authenticated member.
+ *
+ * This membership check intentionally does not restrict the resource role so
+ * copilots, managers, reviewers, and submitters can reach member-only forum
+ * communication. The response is rechecked defensively because a broad or
+ * stale Resource API page must not grant access for another member/challenge.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberId authenticated member ID.
+ * @returns caller-owned challenge resource, or undefined when absent/mismatched.
+ * @throws Propagates authorization, Resource API, and network errors.
+ */
+export async function getChallengeMemberResource(
+    challengeId: string,
+    memberId: string,
+): Promise<ChallengeResource | undefined> {
+    const resources = await getChallengeResources(challengeId, 1, 1, memberId)
+    return resources.items.find(resource => (
+        resource.challengeId === challengeId && String(resource.memberId) === memberId
     ))
 }
 

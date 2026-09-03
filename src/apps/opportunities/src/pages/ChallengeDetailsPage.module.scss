@@ -722,6 +722,7 @@
     > svg {
         background: #e9ecef;
         border-radius: 50%;
+        box-sizing: content-box;
         color: #161616;
         height: 24px;
         padding: 8px;
@@ -848,18 +849,30 @@
         font-size: 30px;
         line-height: 38px;
     }
+
+    .winnerDivider {
+        background: #f1c21b;
+    }
 }
 
 .place2 {
     background: #f7fbff;
     border-color: #82cfff;
     order: 1;
+
+    .winnerDivider {
+        background: #82cfff;
+    }
 }
 
 .place3 {
     background: #fff3eb;
     border-color: #ffb784;
     order: 3;
+
+    .winnerDivider {
+        background: #ffb784;
+    }
 }
 
 .otherPlace {
@@ -891,14 +904,19 @@
 }
 
 .winnerPlacement {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
 }
 
 .winnerScore {
     font-size: 14px;
     line-height: 20px;
     margin-top: 8px;
+
+    strong {
+        font-weight: 700;
+    }
 }
 
 .winnerPrize {
@@ -1012,6 +1030,10 @@
     justify-content: center;
     line-height: 20px;
     margin: 0;
+
+    strong {
+        font-weight: 700;
+    }
 
     img {
         background: #d9fbfb;

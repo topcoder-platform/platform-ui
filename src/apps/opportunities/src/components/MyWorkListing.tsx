@@ -28,6 +28,7 @@ import {
 import { getOpportunityPage } from '../services'
 import {
     defaultSort,
+    compareOpportunityItems,
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
 import { myEngagementBucket, myEngagementState } from '../utils/engagement-status.utils'
@@ -350,9 +351,13 @@ export const MyWorkListing: FC<MyWorkListingProps> = props => {
             .filter(result => !tracks.length || tracks.includes(myWorkTrack(result) ?? ''))
             .filter(result => !types.length || types.includes(myWorkType(result) ?? ''))
         const startingSoon = sort === 'startingSoon'
-        return [...items].sort((first, second) => (startingSoon
-            ? myWorkDate(first, true) - myWorkDate(second, true)
-            : myWorkDate(second, false) - myWorkDate(first, false)))
+        return [...items].sort((first, second) => {
+            const semanticDifference = compareOpportunityItems(first.item, second.item, sort)
+            if (semanticDifference !== 0) return semanticDifference
+            return startingSoon
+                ? myWorkDate(first, true) - myWorkDate(second, true)
+                : myWorkDate(second, false) - myWorkDate(first, false)
+        })
     }, [deferredSearch, props.kinds, response.data, sort, status, tracks, types])
 
     const totalPages = filtered.length ? Math.ceil(filtered.length / perPage) : 0
@@ -471,7 +476,7 @@ export const MyWorkListing: FC<MyWorkListingProps> = props => {
                         <strong>Sort by</strong>
                         <span className={styles.sortSelect}>
                             <select aria-label='Sort my work' onChange={updateSort} value={sort}>
-                                {opportunitySortOptions('competitions')
+                                {opportunitySortOptions()
                                     .map(option => (
                                         <option key={option.value} value={option.value}>{option.label}</option>
                                     ))}

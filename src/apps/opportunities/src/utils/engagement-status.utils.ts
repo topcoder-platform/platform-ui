@@ -28,6 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 const ASSIGNMENT_STATUS_PRIORITY: Record<string, number> = {
     assigned: 2,
     completed: 3,
+    offerdeclined: 5,
     offerrejected: 5,
     selected: 1,
     terminated: 4,
@@ -77,7 +78,7 @@ function compareAssignments(
     right: EngagementAssignmentSummary,
 ): number {
     const timestampDifference = assignmentTimestamp(right) - assignmentTimestamp(left)
-    if (timestampDifference !== 0) return timestampDifference
+    if (timestampDifference !== 0 && !Number.isNaN(timestampDifference)) return timestampDifference
 
     const priorityDifference = (ASSIGNMENT_STATUS_PRIORITY[statusKey(right.status)] ?? 0)
         - (ASSIGNMENT_STATUS_PRIORITY[statusKey(left.status)] ?? 0)

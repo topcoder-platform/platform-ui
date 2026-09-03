@@ -3,7 +3,10 @@ import { UserStats } from '~/libs/core'
 import {
     ChallengeCatalogValue,
     ChallengeProjectResult,
+    ChallengeReviewSummation,
 } from '../models'
+
+import { marathonSubmissionScores } from './marathon-match.utils'
 
 export interface ChallengeWinnerIdentity {
     handle?: string
@@ -55,7 +58,14 @@ export function challengeTrackWins(
         .toLowerCase()
     let trackWins: unknown
     if (trackKey === 'development' || trackKey === 'develop') {
-        trackWins = stats.DEVELOP?.wins
+        const developmentWins = finiteNumber(stats.DEVELOP?.wins)
+        const migratedAiEngineeringStats = stats.DATA_SCIENCE?.['AI Engineering']
+        const migratedAiEngineeringWins = typeof migratedAiEngineeringStats === 'object'
+            ? finiteNumber(migratedAiEngineeringStats?.wins)
+            : undefined
+        trackWins = developmentWins === undefined && migratedAiEngineeringWins === undefined
+            ? undefined
+            : (developmentWins ?? 0) + (migratedAiEngineeringWins ?? 0)
     } else if (trackKey === 'design') {
         trackWins = stats.DESIGN?.wins
     } else if (trackKey === 'datascience') {
@@ -94,22 +104,36 @@ function normalizedPlacement(value: unknown): number | undefined {
 }
 
 /**
- * Resolves a winner's final score from Review API's canonical project result.
- * Both member ID and placement must match, preventing a sibling submission or
- * a same-placement record from being attributed to the wrong winner.
+ * Resolves a winner's final score from Review API's exact-member aggregates or
+ * canonical project result. The final summation is preferred for Marathon
+ * records whose legacy project-result score is a zero placeholder. Both member
+ * ID and placement still gate project results, preventing a sibling submission
+ * or a same-placement record from being attributed to the wrong winner.
  *
  * @param winner Challenge API winner identity.
  * @param projectResults authorized Review API final-placement results.
+ * @param reviewSummations authorized Review API aggregates for the challenge.
  * @returns canonical finite final score, or undefined.
  * @throws Does not throw.
  */
 export function winnerFinalScore(
     winner: ChallengeWinnerIdentity,
     projectResults: ChallengeProjectResult[],
+    reviewSummations: ChallengeReviewSummation[] = [],
 ): number | undefined {
     const winnerId = normalizedIdentifier(winner.userId)
     const winnerPlacement = normalizedPlacement(winner.placement)
     if (!winnerId || winnerPlacement === undefined) return undefined
+    const matchingSummations = reviewSummations.filter(summation => (
+        [summation.submitterId, summation.memberId]
+            .some(identifier => normalizedIdentifier(identifier) === winnerId)
+    ))
+    const summationScore = marathonSubmissionScores({
+        id: `winner-${winnerId}`,
+        reviewSummation: matchingSummations,
+    }).finalScore
+    if (summationScore !== undefined) return summationScore
+
     const result = projectResults.find(candidate => (
         normalizedIdentifier(candidate.userId) === winnerId
         && normalizedPlacement(candidate.placement) === winnerPlacement

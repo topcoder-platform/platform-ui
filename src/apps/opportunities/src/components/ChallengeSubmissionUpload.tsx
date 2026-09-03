@@ -314,24 +314,24 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     </section>
                     <section className={styles.infoCard}>
                         <h3>
-                            <IconOutline.CogIcon aria-hidden='true' />
+                            <IconOutline.BadgeCheckIcon aria-hidden='true' />
                             Submission tips
                         </h3>
                         <ul className={styles.tips}>
                             <li>
-                                <IconOutline.LightBulbIcon aria-hidden='true' />
+                                <IconOutline.SunIcon aria-hidden='true' />
                                 Upload a single ZIP file only
                             </li>
                             <li>
-                                <IconOutline.LightBulbIcon aria-hidden='true' />
+                                <IconOutline.SunIcon aria-hidden='true' />
                                 Do not password protect the files
                             </li>
                             <li>
-                                <IconOutline.LightBulbIcon aria-hidden='true' />
+                                <IconOutline.SunIcon aria-hidden='true' />
                                 Include all files as per guidelines
                             </li>
                             <li>
-                                <IconOutline.LightBulbIcon aria-hidden='true' />
+                                <IconOutline.SunIcon aria-hidden='true' />
                                 Keep your handle out of your files and file names
                             </li>
                         </ul>

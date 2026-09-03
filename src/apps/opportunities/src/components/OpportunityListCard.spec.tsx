@@ -609,6 +609,28 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it('does not let an undated selected assignment mask an offer decline', () => {
+        const item: EngagementOpportunity = {
+            assignments: [
+                { id: 'assignment-selected', status: 'SELECTED' },
+                { id: 'assignment-declined', status: 'OFFER_DECLINED' },
+            ],
+            id: 'declined-engagement',
+            status: 'OPEN',
+            title: 'Declined engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Offer Declined'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Selected'))
+            .not.toBeInTheDocument()
+    })
+
     it('lets My Work override the owning API state with the selected treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',

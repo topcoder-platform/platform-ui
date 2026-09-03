@@ -2,40 +2,65 @@ import {
     defaultSort,
     normalizeOpportunitySort,
     opportunitySortOptions,
+    sortOpportunityItems,
 } from './opportunity-listing.utils'
 
 describe('opportunity listing sorting', () => {
-    it('uses and displays Newest first as the Review default', () => {
+    it('uses the clarified four shared sort choices', () => {
         expect(defaultSort())
             .toBe('newest')
-        expect(opportunitySortOptions('reviews'))
+        expect(opportunitySortOptions())
             .toEqual([
                 { label: 'Newest first', value: 'newest' },
-                { label: 'Starting soon', value: 'startingSoon' },
-                { label: 'Highest payment', value: 'highestPayment' },
+                { label: 'Prize high to low', value: 'prizeHighToLow' },
+                { label: 'Prize low to high', value: 'prizeLowToHigh' },
+                { label: 'Title A-Z', value: 'titleAZ' },
             ])
     })
 
-    it('keeps the common sorts concise on non-Review listings', () => {
-        expect(opportunitySortOptions('engagements'))
+    it('uses the same product vocabulary on non-Review listings', () => {
+        expect(opportunitySortOptions())
             .toEqual([
                 { label: 'Newest first', value: 'newest' },
-                { label: 'Starting soon', value: 'startingSoon' },
+                { label: 'Prize high to low', value: 'prizeHighToLow' },
+                { label: 'Prize low to high', value: 'prizeLowToHigh' },
+                { label: 'Title A-Z', value: 'titleAZ' },
             ])
     })
 
-    it('removes Starting soon and normalizes it for completed engagements only', () => {
-        expect(opportunitySortOptions('engagements', 'CLOSED'))
+    it('normalizes retired sort values to Newest first', () => {
+        expect(opportunitySortOptions())
             .toEqual([
                 { label: 'Newest first', value: 'newest' },
+                { label: 'Prize high to low', value: 'prizeHighToLow' },
+                { label: 'Prize low to high', value: 'prizeLowToHigh' },
+                { label: 'Title A-Z', value: 'titleAZ' },
             ])
-        expect(normalizeOpportunitySort('engagements', 'CLOSED', 'startingSoon'))
+        expect(normalizeOpportunitySort('startingSoon'))
             .toBe('newest')
-        expect(opportunitySortOptions('reviews', 'CLOSED'))
+        expect(opportunitySortOptions())
             .toEqual([
                 { label: 'Newest first', value: 'newest' },
-                { label: 'Starting soon', value: 'startingSoon' },
-                { label: 'Highest payment', value: 'highestPayment' },
+                { label: 'Prize high to low', value: 'prizeHighToLow' },
+                { label: 'Prize low to high', value: 'prizeLowToHigh' },
+                { label: 'Title A-Z', value: 'titleAZ' },
             ])
+    })
+
+    it('sorts the visible owner page by numeric prize and title', () => {
+        const items = [
+            { id: 'b', name: 'Zulu', overview: { totalPrizes: 100 } },
+            { id: 'a', name: 'alpha', overview: { totalPrizes: 500 } },
+        ]
+
+        expect(sortOpportunityItems(items, 'prizeHighToLow')
+            .map(item => item.id))
+            .toEqual(['a', 'b'])
+        expect(sortOpportunityItems(items, 'prizeLowToHigh')
+            .map(item => item.id))
+            .toEqual(['b', 'a'])
+        expect(sortOpportunityItems(items, 'titleAZ')
+            .map(item => item.id))
+            .toEqual(['a', 'b'])
     })
 })

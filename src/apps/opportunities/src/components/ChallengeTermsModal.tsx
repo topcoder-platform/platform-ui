@@ -96,7 +96,6 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const hydratingRegistration = registrationMode
         && shouldLoad
         && response.isValidating
-        && !response.data
     const fullTitle = terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
