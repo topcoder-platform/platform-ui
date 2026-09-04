@@ -376,7 +376,10 @@
     display: inline-flex;
     font: inherit;
     gap: 4px;
+    justify-content: flex-start;
     padding: 0;
+    text-align: left;
+    width: 100%;
 
     svg {
         height: 16px;
@@ -463,6 +466,10 @@
     th:nth-child(6) { width: 120px; }
     th:nth-child(7) { width: 141px; }
     th:nth-child(8) { width: 108px; }
+
+    .scoreColumn {
+        text-align: right;
+    }
 }
 
 .submissionId {
@@ -999,11 +1006,20 @@
         font-weight: 700;
     }
 
+    th:nth-child(n+3) {
+        text-align: right;
+    }
+
+    th:nth-child(5) .sortedHeader {
+        justify-content: flex-end;
+    }
+
     th:first-child { width: 64px; }
-    th:nth-child(2) { width: 448px; }
-    th:nth-child(3) { width: 176px; }
-    th:nth-child(4),
-    th:nth-child(5) { width: 136px; }
+    th:nth-child(2) { width: 336px; }
+    th:nth-child(3) { width: 152px; }
+    th:nth-child(4) { width: 112px; }
+    th:nth-child(5),
+    th:nth-child(6) { width: 148px; }
 
     td:first-child {
         font-weight: 700;
@@ -1011,7 +1027,8 @@
 
     td:nth-child(3),
     td:nth-child(4),
-    td:nth-child(5) {
+    td:nth-child(5),
+    td:nth-child(6) {
         text-align: right;
     }
 }

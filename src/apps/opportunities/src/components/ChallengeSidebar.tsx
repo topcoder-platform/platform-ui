@@ -27,6 +27,7 @@ import {
     DESIGN_SCREENING_LEARNING_URL,
     DESIGN_SUBMISSION_FORMAT_URL,
     MARATHON_MATCH_LEARNING_URL,
+    MARATHON_MATCH_TOURNAMENT_URL,
     USABLE_CODE_RULES_URL,
 } from '../utils/opportunity-learning.utils'
 import { getChallengeTermsDetails } from '../services'
@@ -289,13 +290,24 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             ? 'Join the battle of competitors in a series of challenging Marathon Matches.'
                             : 'Where elite AI builders compete to solve real-world challenges and grow fast.'}
                     </p>
-                    <Link
-                        className={styles.promoLink}
-                        to={marathonMatch ? MARATHON_MATCH_LEARNING_URL : '/thrive'}
-                    >
-                        Explore the program
-                        <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                    </Link>
+                    {marathonMatch
+                        ? (
+                            <a
+                                className={styles.promoLink}
+                                href={MARATHON_MATCH_TOURNAMENT_URL}
+                                rel='noreferrer'
+                                target='_blank'
+                            >
+                                Explore the program
+                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            </a>
+                        )
+                        : (
+                            <Link className={styles.promoLink} to='/thrive'>
+                                Explore the program
+                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            </Link>
+                        )}
                 </div>
             </section>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>

@@ -1,6 +1,7 @@
 /* eslint-disable ordered-imports/ordered-imports */
 import {
     xhrDeleteAsync,
+    xhrGetBlobAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
@@ -11,11 +12,13 @@ import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
     deleteChallengeSubmission,
+    downloadChallengeSubmissionArtifact,
     getChallengeAiReviewConfig,
     getChallengeMemberResource,
     getChallengeProjectResults,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
+    getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
     getChallengeSubmissionDownloadUrl,
     getChallengeSubmissions,
@@ -51,6 +54,7 @@ jest.mock('filestack-js', () => ({ init: jest.fn() }))
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
+    xhrGetBlobAsync: jest.fn(),
     xhrGlobalInstance: { get: jest.fn() },
     xhrPostAsync: jest.fn(),
     xhrRequestAsync: jest.fn(),
@@ -1085,6 +1089,27 @@ describe('opportunities service normalization', () => {
         expect(get)
             .toHaveBeenLastCalledWith(
                 'https://api.example/v6/submissions/submission%2Fid/download-url',
+            )
+    })
+
+    it('loads supported Review API artifact envelopes and downloads an encoded artifact', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const getBlob = xhrGetBlobAsync as jest.MockedFunction<typeof xhrGetBlobAsync>
+        const blob = new Blob(['artifact'], { type: 'application/zip' })
+        get.mockResolvedValueOnce({ data: { artifacts: [' scorer output ', '', 123] } })
+        getBlob.mockResolvedValueOnce(blob)
+
+        await expect(getChallengeSubmissionArtifacts('submission/id'))
+            .resolves.toEqual(['scorer output'])
+        expect(get)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts',
+            )
+        await expect(downloadChallengeSubmissionArtifact('submission/id', 'result/file.zip'))
+            .resolves.toBe(blob)
+        expect(getBlob)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts/result%2Ffile.zip/download',
             )
     })
 

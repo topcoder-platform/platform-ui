@@ -93,6 +93,8 @@ describe('SubmissionHistoryModal', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('columnheader', { name: 'Final Score' }))
             .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Status' }))
+            .not.toBeInTheDocument()
         expect(screen.getByText('31.25'))
             .toBeInTheDocument()
         expect(screen.getByText('50'))
@@ -103,5 +105,32 @@ describe('SubmissionHistoryModal', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Close submission history' }))
         expect(onClose)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('replaces the non-Marathon status column with the final score', async () => {
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    onClose={jest.fn()}
+                    open
+                    submission={{
+                        id: 'submission-two',
+                        memberId: '123',
+                        submitterHandle: 'coder',
+                        type: 'CONTEST_SUBMISSION',
+                    }}
+                />
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('columnheader', { name: 'Final Score' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Status' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '50' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Provisional Score' }))
+            .not.toBeInTheDocument()
     })
 })

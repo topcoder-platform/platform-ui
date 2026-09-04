@@ -15,6 +15,8 @@ const checkpointFeedbackLearningUrl
     = 'https://www.topcoder.example/thrive/articles/how-to-approach-the-checkpoint-feedback-to-decipher-hidden-codes'
 const marathonMatchLearningUrl
     = 'https://www.topcoder.com/thrive/articles/How%20To%20Compete%20in%20a%20Marathon%20Match'
+const marathonMatchTournamentUrl
+    = 'https://www.topcoder.example/marathon-match-tournament'
 const designSubmissionFormatUrl
     = 'https://www.topcoder.com/thrive/articles/Formatting%20Your%20Submission%20for%20Design%20Challenges'
 const designScreeningLearningUrl
@@ -68,6 +70,7 @@ jest.mock('../utils/opportunity-learning.utils', () => ({
     DESIGN_SCREENING_LEARNING_URL: designScreeningLearningUrl,
     DESIGN_SUBMISSION_FORMAT_URL: designSubmissionFormatUrl,
     MARATHON_MATCH_LEARNING_URL: marathonMatchLearningUrl,
+    MARATHON_MATCH_TOURNAMENT_URL: marathonMatchTournamentUrl,
     USABLE_CODE_RULES_URL: usableCodeRulesUrl,
 }))
 
@@ -200,7 +203,9 @@ describe('ChallengeSidebar Review Style', () => {
         expect(screen.getByText('Join the battle of competitors in a series of challenging Marathon Matches.'))
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Explore the program' }))
-            .toHaveAttribute('href', marathonMatchLearningUrl)
+            .toHaveAttribute('href', marathonMatchTournamentUrl)
+        expect(screen.getByRole('link', { name: 'Explore the program' }))
+            .toHaveAttribute('target', '_blank')
         expect(screen.queryByRole('heading', { name: 'Join the AI Exponential league' }))
             .not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'How to Compete on Marathon Match' }))

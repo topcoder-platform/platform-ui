@@ -232,10 +232,14 @@ and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
 Review API submissions and Marathon Match review summations own provisional
-and final scores. Final Marathon Match values remain hidden while a submission
+and final scores. Active My Submissions pages periodically revalidate so an
+asynchronous AI decision score appears without requiring the member to reload
+the page; failed score requests do not enter an automatic retry loop. Final
+Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
-Figma keeps separate Provisional Score and Final Score columns and uses `-`
+member's own current AI decision score is the intentional active-challenge
+exception. The Figma keeps separate Provisional Score and Final Score columns and uses `-`
 when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
@@ -262,9 +266,14 @@ state. The declaration opens the public Topcoder Terms of Use in a new tab.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
 progress, and completed states. Virus-scan and quarantine failures are reported
-as Failed in the Provisional process; later review failures remain System
-failures. Design submissions can be deleted only while
-Submission or Checkpoint Submission is open.
+as Failed in the Provisional process with explicit 0% progress; later review
+failures remain System failures. Their actions include the clean submission,
+scorer artifacts, and submission history, while the single page-level button
+owns the Review App handoff.
+Submission history replaces the unreliable status field with Final Score and
+uses a responsive table that scrolls only on narrow viewports. Design
+submissions can be deleted only while Submission or Checkpoint Submission is
+open.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits,
@@ -309,5 +318,7 @@ adding the published AI Reviewers help and Usable Code rules to Educational
 Materials; the latter two submission sections remain Design-only. Learning
 arrows flow immediately after wrapped labels, and the AI Exponential promo
 keeps a distinct gap before its action. Marathon Match challenges replace the
-general AI Exponential promo with the Marathon Match Tournament heading, copy,
-and guide destination.
+general AI Exponential promo with the Marathon Match Tournament heading and
+copy. Its Explore the program link opens the environment's Marathon Match
+Tournament page in a new tab, while the Educational Materials link retains the
+published competition guide.

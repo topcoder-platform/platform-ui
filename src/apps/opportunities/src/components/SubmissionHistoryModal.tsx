@@ -51,23 +51,6 @@ function formatTimestamp(value?: string): string {
 }
 
 /**
- * Turns a Review API status enum into a compact member-facing label.
- *
- * @param value optional status token.
- * @returns title-cased label, or an em dash.
- * @throws Does not throw.
- */
-function formatStatus(value?: string): string {
-    if (!value) return '—'
-    return value.toLowerCase()
-        .split('_')
-        .filter(Boolean)
-        .map(part => `${part.charAt(0)
-            .toUpperCase()}${part.slice(1)}`)
-        .join(' ')
-}
-
-/**
  * Resolves the selected submission owner accepted by the Review API filter.
  *
  * @param submission selected latest submission.
@@ -151,10 +134,9 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                     <thead>
                         <tr>
                             <th>Submission ID</th>
-                            <th>Status</th>
                             <th>Submission Date</th>
                             {props.isMarathonMatch && <th>Provisional Score</th>}
-                            {props.isMarathonMatch && <th>Final Score</th>}
+                            <th>Final Score</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,19 +145,18 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                             return (
                                 <tr key={submission.id}>
                                     <td><span title={submission.id}>{submission.id}</span></td>
-                                    <td>{formatStatus(submission.status)}</td>
                                     <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
                                     {props.isMarathonMatch && (
                                         <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
                                     )}
-                                    {props.isMarathonMatch && (
-                                        <td>
-                                            {formatMarathonFinalScore(
+                                    <td>
+                                        {props.isMarathonMatch
+                                            ? formatMarathonFinalScore(
                                                 props.showFinalScores ? scores.finalScore : undefined,
                                                 '-',
-                                            )}
-                                        </td>
-                                    )}
+                                            )
+                                            : formatMarathonScore(scores.finalScore, 'N/A')}
+                                    </td>
                                 </tr>
                             )
                         })}

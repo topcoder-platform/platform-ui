@@ -10,6 +10,7 @@ import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetBlobAsync,
     xhrGlobalInstance,
     xhrPostAsync,
     xhrRequestAsync,
@@ -1391,6 +1392,69 @@ export async function getChallengeSubmissionDownloadUrl(submissionId: string): P
     )
     if (!response.url) throw new Error('Review API did not return a submission download URL.')
     return response.url
+}
+
+/**
+ * Normalizes the artifact-list response shapes supported by Review API.
+ *
+ * @param response bare artifact IDs or an API envelope.
+ * @returns non-empty artifact IDs in API order.
+ * @throws Does not throw.
+ */
+function normalizeSubmissionArtifacts(response: unknown): string[] {
+    let values: unknown[] = []
+    if (Array.isArray(response)) {
+        values = response
+    } else if (response && typeof response === 'object') {
+        const envelope = response as {
+            artifacts?: unknown
+            data?: { artifacts?: unknown; data?: unknown } | unknown
+        }
+        if (Array.isArray(envelope.artifacts)) {
+            values = envelope.artifacts
+        } else if (envelope.data && typeof envelope.data === 'object') {
+            const data = envelope.data as { artifacts?: unknown; data?: unknown }
+            if (Array.isArray(data.artifacts)) values = data.artifacts
+            else if (Array.isArray(data.data)) values = data.data
+        }
+    }
+
+    return values
+        .filter((artifact): artifact is string => typeof artifact === 'string')
+        .map(artifact => artifact.trim())
+        .filter(Boolean)
+}
+
+/**
+ * Loads the scorer-generated artifact identifiers attached to a submission.
+ *
+ * @param submissionId Review API submission identifier.
+ * @returns artifact identifiers in Review API order.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function getChallengeSubmissionArtifacts(submissionId: string): Promise<string[]> {
+    const response = await xhrGetAsync<unknown>(
+        `${V6_URL}/submissions/${encodeURIComponent(submissionId)}/artifacts`,
+    )
+    return normalizeSubmissionArtifacts(response)
+}
+
+/**
+ * Downloads one scorer-generated artifact through Review API.
+ *
+ * @param submissionId Review API submission identifier.
+ * @param artifactId artifact identifier returned by getChallengeSubmissionArtifacts.
+ * @returns artifact response body.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function downloadChallengeSubmissionArtifact(
+    submissionId: string,
+    artifactId: string,
+): Promise<Blob> {
+    return xhrGetBlobAsync<Blob>(
+        `${V6_URL}/submissions/${encodeURIComponent(submissionId)}`
+            + `/artifacts/${encodeURIComponent(artifactId)}/download`,
+    )
 }
 
 /**

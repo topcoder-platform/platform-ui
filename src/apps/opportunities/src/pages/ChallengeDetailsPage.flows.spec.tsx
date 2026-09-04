@@ -159,6 +159,12 @@ jest.mock('../components', () => ({
     MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
     OpportunityPagination: (): JSX.Element => <div>Pagination</div>,
     ReportIssueModal: (): JSX.Element => <></>,
+    SubmissionArtifactsModal: (props: {
+        open: boolean
+        submissionId?: string
+    }): JSX.Element => (
+        <div>{props.open ? `Artifacts modal ${props.submissionId}` : ''}</div>
+    ),
     SubmissionHistoryModal: (props: {
         open: boolean
         submission?: { id: string }
@@ -801,6 +807,7 @@ describe('ChallengeDetailsPage member flows', () => {
             status: 'ACTIVE',
             type: 'CONTEST_SUBMISSION',
         }]
+        mockChallenge = { ...mockChallenge, status: 'ACTIVE' }
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -828,6 +835,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'View history for submission submission-1' }))
             .toBeInTheDocument()
+        const submissionRequest = mockUseSWR.mock.calls.find(([key]) => (
+            Array.isArray(key)
+            && key[0] === 'opportunities:submissions'
+            && key[2] === '123'
+        ))
+        expect(submissionRequest?.[2])
+            .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
     })
 
     it('renders and deletes the compact Design My Submissions actions', async () => {
@@ -958,6 +972,23 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('98.5'))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open Review App' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', {
+            name: 'Open submission submission-1 in Review App',
+        }))
+            .not.toBeInTheDocument()
+        const artifactsButton = screen.getByRole('button', {
+            name: 'Download submission artifacts submission-1',
+        })
+        fireEvent.click(artifactsButton)
+        expect(screen.getByText('Artifacts modal submission-1'))
+            .toBeInTheDocument()
+        const scoreRequest = mockUseSWR.mock.calls.find(([key]) => (
+            Array.isArray(key) && key[0] === 'opportunities:mm-review-summations'
+        ))
+        expect(scoreRequest?.[2])
+            .toMatchObject({ shouldRetryOnError: false })
     })
 
     it('populates the released Marathon Match final score from Review Summations', () => {
@@ -1153,6 +1184,9 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(within(remainingWinners)
             .getByRole('columnheader', { name: 'Development Wins' }))
             .toBeInTheDocument()
+        expect(within(remainingWinners)
+            .getByRole('columnheader', { name: 'Rating' }))
+            .toBeInTheDocument()
         const fourthRow = within(remainingWinners)
             .getByRole('row', { name: /^4th fourth You/ })
         expect(fourthRow)
@@ -1161,6 +1195,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('$50')
         expect(fourthRow)
             .toHaveTextContent('4')
+        expect(fourthRow)
+            .toHaveTextContent('1300')
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()

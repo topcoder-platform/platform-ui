@@ -36,6 +36,7 @@ import {
     OpportunityPagination,
     OpportunityTabLoading,
     ReportIssueModal,
+    SubmissionArtifactsModal,
     SubmissionHistoryModal,
 } from '../components'
 import {
@@ -100,6 +101,7 @@ type ChallengeTab = 'requirements' | 'registrants' | 'submissions' | 'mine' | 'd
 
 const STALE_REGISTRATION_MESSAGE
     = 'Your registration is no longer active. Register again before submitting.'
+const ACTIVE_SUBMISSIONS_REFRESH_INTERVAL_MS = 30_000
 
 /**
  * Determines whether a Design submission can still be removed while an
@@ -1045,6 +1047,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+    const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [marathonView, setMarathonView] = useState<'dashboard' | 'list'>('list')
     const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | undefined>()
@@ -1079,7 +1082,13 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 !props.mine,
                 sortOrder,
             )),
-        { revalidateOnFocus: false },
+        {
+            refreshInterval: props.mine && props.challenge.status?.toUpperCase() === 'ACTIVE'
+                ? ACTIVE_SUBMISSIONS_REFRESH_INTERVAL_MS
+                : 0,
+            revalidateOnFocus: false,
+            shouldRetryOnError: false,
+        },
     )
     const previewResponse: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         privatePreviewGallery && !!props.viewerMemberId
@@ -1093,7 +1102,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             ? ['opportunities:mm-review-summations', props.challenge.id]
             : undefined,
         () => getChallengeReviewSummations(props.challenge.id),
-        { revalidateOnFocus: false },
+        { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const submissions = useMemo(() => {
         const previewById = new Map((previewResponse.data?.items ?? [])
@@ -1304,8 +1313,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                         <th>Current Test Process</th>
                                         <th>Test Status</th>
                                         <th>Test Progress</th>
-                                        <th>Final Score</th>
-                                        <th>Provision Score</th>
+                                        <th className={styles.scoreColumn}>Final Score</th>
+                                        <th className={styles.scoreColumn}>Provision Score</th>
                                     </>
                                 ) : !isDesign && !isQa && (
                                     <>
@@ -1351,8 +1360,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td>{formatMarathonScore(scores.finalScore, '-')}</td>
-                                                <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
+                                                <td className={styles.scoreColumn}>
+                                                    {formatMarathonScore(scores.finalScore, '-')}
+                                                </td>
+                                                <td className={styles.scoreColumn}>
+                                                    {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                                </td>
                                             </>
                                         ) : !isDesign && !isQa ? (
                                             <>
@@ -1382,6 +1395,16 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         <IconOutline.DownloadIcon aria-hidden='true' />
                                                     </button>
                                                 )}
+                                                {isMarathonMatch && (
+                                                    <button
+                                                        aria-label={`Download submission artifacts ${submission.id}`}
+                                                        onClick={() => setArtifactsSubmissionId(submission.id)}
+                                                        title='Download submission artifacts'
+                                                        type='button'
+                                                    >
+                                                        <IconOutline.FolderDownloadIcon aria-hidden='true' />
+                                                    </button>
+                                                )}
                                                 {isDesign && (
                                                     <button
                                                         aria-label={`Delete submission ${submission.id}`}
@@ -1396,15 +1419,20 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         <IconOutline.TrashIcon aria-hidden='true' />
                                                     </button>
                                                 )}
-                                                <a
-                                                    aria-label={`Open submission ${submission.id} in Review App`}
-                                                    href={reviewUrl}
-                                                    rel='noreferrer'
-                                                    target='_blank'
-                                                    title='Open Review App'
-                                                >
-                                                    <span aria-hidden='true' className={styles.reviewAppActionIcon} />
-                                                </a>
+                                                {!isMarathonMatch && (
+                                                    <a
+                                                        aria-label={`Open submission ${submission.id} in Review App`}
+                                                        href={reviewUrl}
+                                                        rel='noreferrer'
+                                                        target='_blank'
+                                                        title='Open Review App'
+                                                    >
+                                                        <span
+                                                            aria-hidden='true'
+                                                            className={styles.reviewAppActionIcon}
+                                                        />
+                                                    </a>
+                                                )}
                                                 {!isDesign && !isQa && (
                                                     <button
                                                         aria-label={`View history for submission ${submission.id}`}
@@ -1529,6 +1557,11 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             {!(isMarathonMatch && !props.mine && marathonView === 'dashboard') && (
                 <div className={styles.tablePagination}>{pagination}</div>
             )}
+            <SubmissionArtifactsModal
+                onClose={() => setArtifactsSubmissionId(undefined)}
+                open={!!artifactsSubmissionId}
+                submissionId={artifactsSubmissionId}
+            />
             <SubmissionHistoryModal
                 challengeId={props.challenge.id}
                 isMarathonMatch={isMarathonMatch}
@@ -1928,6 +1961,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                     <th>Place</th>
                                     <th>Handle</th>
                                     <th>{`${trackHeading} Wins`}</th>
+                                    <th>Rating</th>
                                     <th>
                                         <span className={styles.sortedHeader}>
                                             Final Score
@@ -1964,6 +1998,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                                     </div>
                                                 </td>
                                                 <td>{entry.wins ?? '—'}</td>
+                                                <td>{entry.rating ?? '—'}</td>
                                                 <td className={styles.winnerTableScore}>
                                                     {formatMarathonFinalScore(entry.finalScore, '-')}
                                                 </td>

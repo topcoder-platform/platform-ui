@@ -352,6 +352,7 @@ export interface ChallengeProjectResult {
 }
 
 export interface ChallengeSubmission {
+    aiDecisionScore?: number | string | null
     challengeId?: string
     createdAt?: string
     createdBy?: string

@@ -43,3 +43,7 @@ export const DESIGN_SUBMISSION_FORMAT_URL
 /** Published Marathon Match competition guide required by the challenge-details rail. */
 export const MARATHON_MATCH_LEARNING_URL
     = 'https://www.topcoder.com/thrive/articles/How%20To%20Compete%20in%20a%20Marathon%20Match'
+
+/** Marathon Match Tournament landing page on the current Topcoder environment. */
+export const MARATHON_MATCH_TOURNAMENT_URL
+    = `${EnvironmentConfig.TOPCODER_URL}/marathon-match-tournament`

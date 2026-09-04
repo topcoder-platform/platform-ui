@@ -88,6 +88,11 @@ describe('Marathon Match challenge detail utilities', () => {
             reviewSummation: [{ aggregateScore: 18.75, id: 'unmarked' }],
         }))
             .toEqual({ finalScore: undefined, provisionalScore: 18.75 })
+        expect(marathonSubmissionScores({
+            aiDecisionScore: '80',
+            id: 'active-ai-only',
+        }))
+            .toEqual({ finalScore: 80, provisionalScore: undefined })
     })
 
     it('matches community-app final-score release timing and completed non-MM gating', () => {
@@ -176,17 +181,25 @@ describe('Marathon Match challenge detail utilities', () => {
             status: 'ACTIVE',
             virusScan: false,
         }))
-            .toEqual({ process: 'Provisional', status: 'Failed' })
+            .toEqual({ process: 'Provisional', progress: 0, status: 'Failed' })
         expect(marathonSubmissionTestProgress({
             id: 'legacy-quarantine',
             url: 'https://s3.amazonaws.com/submissions-quarantine/member/file.zip',
         }))
-            .toEqual({ process: 'Provisional', status: 'Failed' })
+            .toEqual({ process: 'Provisional', progress: 0, status: 'Failed' })
         expect(marathonSubmissionTestProgress({
             id: 'failed-system-review',
             review: [{ status: 'FAILED' }],
         }))
-            .toEqual({ process: 'System', status: 'Failed' })
+            .toEqual({ process: 'System', progress: 0, status: 'Failed' })
+        expect(marathonSubmissionTestProgress({
+            id: 'failed-test-metadata',
+            reviewSummation: [{
+                id: 'failed-test',
+                metadata: { testStatus: 'FAILED' },
+            }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 0, status: 'Failed' })
         expect(marathonSubmissionTestProgress({
             id: 'active',
             status: 'ACTIVE',
