@@ -207,6 +207,13 @@ DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
 
+Registration and unregistration update the header count and invalidate the
+Registrants table immediately instead of waiting for a page reload. Once a
+registered member has submitted, Unregister stays disabled; a pending or failed
+submission-count check also fails closed so a transient read cannot expose a
+destructive action. Registrant and submission rating cells use the same public
+member rating bands as their handles.
+
 Design challenges with `submissionsViewable=true` use the private-submission
 gallery from the Figma flow. Authenticated members receive the protected
 submission metadata needed for locked cards, while the public-safe
@@ -263,6 +270,9 @@ Development, Marathon Match, and Quality Assurance direct members to their
 Requirements content. Successful uploads expose the created submission ID and
 refresh challenge and member submission counts without leaving the confirmation
 state. The declaration opens the public Topcoder Terms of Use in a new tab.
+While an upload is active, the detail tabs and every form action that would
+unmount the upload are disabled. The explicit upload-cancel control remains
+available, aborts its request, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
 progress, and completed states. Virus-scan and quarantine failures are reported
@@ -322,3 +332,10 @@ general AI Exponential promo with the Marathon Match Tournament heading and
 copy. Its Explore the program link opens the environment's Marathon Match
 Tournament page in a new tab, while the Educational Materials link retains the
 published competition guide.
+
+Opening a different challenge-detail route scrolls the page to the top. When no
+phase is active, the header keeps Challenge API's authored Draft, Cancelled, or
+other lifecycle status rather than calling the challenge completed; Draft,
+cancelled, and completed states retain the Register and Submit controls in their
+disabled presentation. The prize summary uses the light second- and third-place
+card illustrations, while Winners continues to use the dark podium medals.
