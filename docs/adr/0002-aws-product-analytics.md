@@ -202,11 +202,21 @@ non-cacheable.
 
 The Campaigns tab exposes the ordered landing, click, registration, and
 submission funnel with UTM, landing-page, and privacy-safe click-location
-breakdowns. The General tab exposes page views, visitors, and clicks in
+breakdowns. Click locations are ranked and paginated twenty rows at a time;
+the API combines viewport-position buckets for the same semantic item, and the
+table does not display position.
+The General tab exposes page views, visitors, and clicks in
 separate daily charts plus paginated page and traffic-source tables. Both
 report warehouse freshness and limit callers to 366 inclusive days. QuickSight
 remains the AWS native exploratory dashboard; the Platform UI app is the
 narrowly scoped daily operational interface.
+
+To avoid making a user wait for Redshift Serverless to resume after idle, an
+EventBridge rule starts the default Campaigns and filter-option statements at
+the beginning of each four-hour Data API idempotency window. Interactive
+requests reuse the completed statements by their query fingerprint. This adds
+only bounded scheduled queries and does not keep development RPUs continuously
+active.
 
 ## Configuration
 
@@ -260,6 +270,15 @@ and role-gated API returned an ordered 30 landing visitors, 22 clickers, 14
 registrations, and 8 submissions. Three landing paths and three semantic click
 placements provide non-empty table data. These aggregates are synthetic UI
 test data and must not be interpreted as member traffic.
+
+On 2026-09-04, the same standard pipeline loaded a second pseudonymous fixture,
+UTM ID `dev_fixture_multiday_20260904`, into the September 2 and 3 cohorts. The
+reporting views verified 38 landing visitors, 29 clickers, 19 registrations, and
+13 submissions across those dates, plus 29 distinct semantic clicked items.
+Combined with the original fixture, `aws_analytics` now spans three reporting
+dates and contains 68 landing visitors, 51 clickers, 33 registrations, and 21
+submissions. The expanded click set intentionally exercises the Campaigns
+table's twenty-row pagination. These aggregates are also synthetic UI test data.
 
 If the daily pipeline misses its freshness objective, first inspect failures and
 job duration. Increasing processing frequency is a cost-bearing design change,

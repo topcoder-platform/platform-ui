@@ -24,7 +24,10 @@ MAX_RESULT_ROWS = 2_000
 MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
 FILTER_CACHE_SECONDS = 300
-QUERY_TOKEN_WINDOW_SECONDS = 1_800
+# Redshift Data API retains idempotency tokens for eight hours. Four-hour
+# windows leave a complete prior window available for safe boundary-crossing
+# polls while allowing scheduled requests to prepare the default reports.
+QUERY_TOKEN_WINDOW_SECONDS = 14_400
 QUERY_POLL_DELAY_MILLISECONDS = 1_000
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
 QUERY_TOKEN_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -109,8 +112,6 @@ filtered_clicks AS (
         element_type,
         destination_host,
         destination_path,
-        CAST(FLOOR(click_x_percent / 10.0) * 10 AS integer) AS click_x_bucket,
-        CAST(FLOOR(click_y_percent / 10.0) * 10 AS integer) AS click_y_bucket,
         analytics_user_id
     FROM topcoder_web.product_analytics_events_v1
     WHERE event_name = 'ui_click'
@@ -174,8 +175,6 @@ click_rows AS (
         element_type,
         destination_host,
         destination_path,
-        click_x_bucket,
-        click_y_bucket,
         COUNT(*)::bigint AS click_count,
         COUNT(DISTINCT analytics_user_id)::bigint AS click_users
     FROM filtered_clicks
@@ -185,9 +184,7 @@ click_rows AS (
         element_id,
         element_type,
         destination_host,
-        destination_path,
-        click_x_bucket,
-        click_y_bucket
+        destination_path
     ORDER BY click_count DESC, page_path
     LIMIT 100
 )
@@ -249,8 +246,7 @@ SELECT
     element_type,
     destination_host,
     destination_path,
-    COALESCE(CAST(click_x_bucket AS varchar), '') || ':' ||
-        COALESCE(CAST(click_y_bucket AS varchar), ''),
+    NULL,
     click_count, click_users, NULL, NULL, NULL, NULL, NULL, NULL
 FROM click_rows
 ORDER BY row_type, date_value, metric_1 DESC
@@ -699,13 +695,12 @@ def _click_location(row: dict[str, Any]) -> dict[str, Any]:
         row: Query result row with safe, aggregate click dimensions.
 
     Returns:
-        Camel-cased click-location object with separate coarse coordinates.
+        Camel-cased click-location object grouped by semantic element fields.
 
     Raises:
-        Does not raise; malformed buckets become null coordinates.
+        Does not raise.
     """
 
-    bucket = str(row.get("dimension_7") or ":").split(":", 1)
     return {
         "pagePath": row.get("dimension_1") or "Unknown",
         "placement": row.get("dimension_2"),
@@ -713,8 +708,6 @@ def _click_location(row: dict[str, Any]) -> dict[str, Any]:
         "elementType": row.get("dimension_4"),
         "destinationHost": row.get("dimension_5"),
         "destinationPath": row.get("dimension_6"),
-        "xBucket": _optional_integer(bucket[0]),
-        "yBucket": _optional_integer(bucket[1] if len(bucket) > 1 else ""),
         "clicks": _integer(row.get("metric_1")),
         "clickers": _integer(row.get("metric_2")),
     }
@@ -977,10 +970,10 @@ def _query_client_token(
         sql: Server-owned SQL template.
         parameters: Validated named parameters.
         attempt: Provider retry index; failed statements receive a new token.
-        token_window: Optional explicit thirty-minute bucket used to validate a resume token.
+        token_window: Optional explicit four-hour bucket used to validate a resume token.
 
     Returns:
-        Sixty-four-character SHA-256 token stable within a thirty-minute window.
+        Sixty-four-character SHA-256 token stable within a four-hour window.
 
     Raises:
         Does not raise for validated handler inputs and configured environment values.
@@ -1268,27 +1261,6 @@ def _integer(value: Any) -> int:
         return max(0, int(float(value or 0)))
     except (TypeError, ValueError):
         return 0
-
-
-def _optional_integer(value: Any) -> int | None:
-    """Convert an optional coarse coordinate to an integer.
-
-    Args:
-        value: Data API string or number.
-
-    Returns:
-        Integer coordinate or null when absent/malformed.
-
-    Raises:
-        Does not raise.
-    """
-
-    if value in (None, ""):
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
 
 
 def _percentage(numerator: int, denominator: int) -> float:

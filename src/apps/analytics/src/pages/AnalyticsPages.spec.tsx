@@ -4,7 +4,11 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 import { useAnalyticsResource } from '../lib/hooks'
-import { AnalyticsFilterOptions, GeneralReport } from '../lib/models'
+import {
+    AnalyticsFilterOptions,
+    CampaignReport,
+    GeneralReport,
+} from '../lib/models'
 
 import { CampaignAnalyticsPage } from './CampaignAnalyticsPage'
 import { GeneralAnalyticsPage } from './GeneralAnalyticsPage'
@@ -105,6 +109,78 @@ describe('Analytics report pages', () => {
             .toBeEnabled()
         expect(screen.getByRole('button', { name: 'Apply' }))
             .toBeEnabled()
+    })
+
+    it('shows the top twenty click locations without position and paginates the remainder', () => {
+        const data: CampaignReport = {
+            campaigns: [],
+            clickLocations: Array.from({ length: 45 }, (_, index) => ({
+                clickers: 100 - index,
+                clicks: 200 - index,
+                elementId: `clicked-item-${String(index + 1)
+                    .padStart(2, '0')}`,
+                elementType: 'button',
+                pagePath: `/campaign-page-${String(index + 1)
+                    .padStart(2, '0')}`,
+                placement: 'main',
+            })),
+            dataThrough: '2026-09-03',
+            filters: {
+                campaign: '',
+                campaignId: '',
+                from: '2026-08-05',
+                medium: '',
+                source: '',
+                to: '2026-09-03',
+            },
+            generatedAt: '2026-09-04T00:00:00Z',
+            landingPages: [],
+            series: [],
+            totals: {
+                clickThroughPercent: 50,
+                clickToRegistrationPercent: 50,
+                landingClickers: 50,
+                landingToSubmissionPercent: 12,
+                landingUsers: 100,
+                registrations: 25,
+                registrationToSubmissionPercent: 48,
+                submissions: 12,
+            },
+        }
+        mockAnalyticsResources({ data, loading: false, refresh, refreshing: false })
+
+        render(<CampaignAnalyticsPage />)
+
+        const clicksPanel = screen.getByRole('heading', { name: 'Where people clicked' })
+            .closest('article') as HTMLElement
+        expect(within(clicksPanel)
+            .queryByRole('columnheader', { name: 'Position' }))
+            .not.toBeInTheDocument()
+        expect(within(clicksPanel)
+            .getByText('/campaign-page-01'))
+            .toBeInTheDocument()
+        expect(within(clicksPanel)
+            .getByText('/campaign-page-20'))
+            .toBeInTheDocument()
+        expect(within(clicksPanel)
+            .queryByText('/campaign-page-21'))
+            .not.toBeInTheDocument()
+        expect(within(clicksPanel)
+            .getByText('Showing 1–20 of 45 clicked items'))
+            .toBeInTheDocument()
+
+        fireEvent.click(within(clicksPanel)
+            .getByRole('button', { name: 'Next' }))
+
+        expect(within(clicksPanel)
+            .queryByText('/campaign-page-01'))
+            .not.toBeInTheDocument()
+        expect(within(clicksPanel)
+            .getByText('/campaign-page-21'))
+            .toBeInTheDocument()
+        expect(within(clicksPanel)
+            .getByText('Showing 21–40 of 45 clicked items'))
+            .toBeInTheDocument()
     })
 
     it('uses separate area charts, omits surfaces, and paginates visited pages twenty at a time', () => {

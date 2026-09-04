@@ -117,19 +117,6 @@ export function formatAnalyticsSurface(value: string): string {
 }
 
 /**
- * Formats one privacy-safe ten-percentage-point click bucket.
- *
- * @param x horizontal bucket start or undefined.
- * @param y vertical bucket start or undefined.
- * @returns readable coarse position.
- * @throws Does not throw.
- */
-export function formatClickBucket(x?: number, y?: number): string {
-    if (x === undefined || y === undefined) return 'Unknown'
-    return `x ${x}–${Math.min(100, x + 9)}%, y ${y}–${Math.min(100, y + 9)}%`
-}
-
-/**
  * Builds a stable request identity from applied report filters.
  *
  * @param prefix report type.

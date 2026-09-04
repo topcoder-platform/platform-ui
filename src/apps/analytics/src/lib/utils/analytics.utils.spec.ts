@@ -6,7 +6,6 @@ import {
     formatAnalyticsInteger,
     formatAnalyticsPercent,
     formatAnalyticsSurface,
-    formatClickBucket,
     validateAnalyticsDateRange,
 } from './analytics.utils'
 
@@ -53,10 +52,6 @@ describe('Analytics utilities', () => {
             .toBe('12.35%')
         expect(formatAnalyticsSurface('topcoder_website'))
             .toBe('Topcoder Website')
-        expect(formatClickBucket(20, 90))
-            .toBe('x 20–29%, y 90–99%')
-        expect(formatClickBucket(undefined, 90))
-            .toBe('Unknown')
         expect(formatAnalyticsFreshness('2026-08-30'))
             .toBe('Aug 30, 2026')
         expect(formatAnalyticsFreshness('not-a-date'))

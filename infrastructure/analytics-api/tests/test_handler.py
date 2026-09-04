@@ -297,12 +297,6 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertIn(":campaign = '*' OR", self.module.CAMPAIGN_SQL)
         self.assertIn(":surface = '*' OR", self.module.GENERAL_SQL)
 
-    def test_campaign_sql_uses_redshift_coordinate_concatenation(self) -> None:
-        """Click-coordinate buckets use Redshift-compatible two-operand concatenation."""
-
-        self.assertNotIn("CONCAT(", self.module.CAMPAIGN_SQL)
-        self.assertIn("|| ':' ||", self.module.CAMPAIGN_SQL)
-
     def test_retries_one_failed_redshift_statement(self) -> None:
         """A transient failed statement is retried once inside the request deadline."""
 
@@ -458,7 +452,6 @@ class AnalyticsHandlerTests(unittest.TestCase):
                 "dimension_4": "button",
                 "dimension_5": "www.topcoder-dev.com",
                 "dimension_6": "/challenges/123",
-                "dimension_7": "40:60",
                 "metric_1": 8,
                 "metric_2": 6,
             },
@@ -477,8 +470,14 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertEqual(200, response["statusCode"])
         self.assertEqual(40.0, body["totals"]["clickThroughPercent"])
         self.assertEqual(50.0, body["totals"]["registrationToSubmissionPercent"])
-        self.assertEqual(40, body["clickLocations"][0]["xBucket"])
-        self.assertEqual(60, body["clickLocations"][0]["yBucket"])
+        self.assertNotIn("xBucket", body["clickLocations"][0])
+        self.assertNotIn("yBucket", body["clickLocations"][0])
+
+    def test_campaign_query_groups_clicks_by_semantic_item(self) -> None:
+        """Campaign click rankings do not split one item by viewport position."""
+
+        self.assertNotIn("click_x_bucket", self.module.CAMPAIGN_SQL)
+        self.assertNotIn("click_y_bucket", self.module.CAMPAIGN_SQL)
 
     def test_shapes_general_report(self) -> None:
         """General rows retain page, source, and surface dimensions."""
