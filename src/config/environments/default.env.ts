@@ -269,9 +269,18 @@ export const SKILLS_EXTRACTION_WORKFLOW_ID = getReactEnv<string>(
     'skillExtractionWorkflow',
 )
 
+// Workflow ids default to each workflow's own `.id` (the value passed to
+// createWorkflow), not the object key it's registered under in tc-ai-api's
+// mastra instance. Mastra resolves either, but tc-ai-api's RBAC policies are
+// keyed on `.id` — see its ADR 0004.
 export const RAG_CHALLENGE_INGESTION_WORKFLOW_ID = getReactEnv<string>(
     'RAG_CHALLENGE_INGESTION_WORKFLOW_ID',
-    'challengeIngestionWorkflow',
+    'challenge-ingestion',
+)
+
+export const RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID = getReactEnv<string>(
+    'RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID',
+    'challenge-bulk-ingestion',
 )
 
 export const ADMIN = {

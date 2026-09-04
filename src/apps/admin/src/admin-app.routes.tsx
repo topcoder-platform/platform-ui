@@ -10,6 +10,7 @@ import {
     aiReviewTemplatesRouteId,
     aiReviewWorkflowsRouteId,
     aiRouteId,
+    aiTopScoutRagRouteId,
     billingAccountRouteId,
     defaultReviewersRouteId,
     gamificationAdminRouteId,
@@ -184,6 +185,11 @@ const AiReviewWorkflowsPage: LazyLoadedComponent = lazyLoad(
 const AiReviewTemplatesPage: LazyLoadedComponent = lazyLoad(
     () => import('./ai/review-templates/AiReviewTemplatesPage'),
     'AiReviewTemplatesPage',
+)
+
+const TopScoutRagPage: LazyLoadedComponent = lazyLoad(
+    () => import('./ai/topscout-rag/TopScoutRagPage'),
+    'TopScoutRagPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -443,6 +449,11 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <AiReviewTemplatesPage />,
                         id: 'ai-review-templates-page',
                         route: aiReviewTemplatesRouteId,
+                    },
+                    {
+                        element: <TopScoutRagPage />,
+                        id: 'ai-topscout-rag-page',
+                        route: aiTopScoutRagRouteId,
                     },
                 ],
                 element: <Ai />,
