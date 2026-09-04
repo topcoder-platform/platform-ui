@@ -91,6 +91,7 @@ jest.mock('~/libs/ui', () => {
 jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
+        busy: boolean
         hasSubmitted?: boolean
         isRegistered: boolean
         onRegister: () => void
@@ -105,13 +106,13 @@ jest.mock('../components', () => ({
             {props.isRegistered && (
                 <>
                     <button
-                        disabled={props.hasSubmitted}
+                        disabled={props.busy || props.hasSubmitted}
                         onClick={props.onUnregister}
                         type='button'
                     >
                         Unregister
                     </button>
-                    <button onClick={props.onSubmit} type='button'>Submit a solution</button>
+                    <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
                 </>
             )}
         </header>
@@ -706,6 +707,8 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Start mock upload' }))
 
         expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Unregister' }))
             .toBeDisabled()
         expect(screen.getByRole('tab', { name: 'My Submissions' }))
             .not.toBeDisabled()

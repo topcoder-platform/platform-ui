@@ -92,7 +92,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
      * @throws Does not throw; download failures are reported through a toast.
      */
     const downloadArtifact = async (artifactId: string): Promise<void> => {
-        if (!props.submissionId) return
+        if (!props.submissionId || downloadingArtifactId) return
         setDownloadingArtifactId(artifactId)
         try {
             const blob = await downloadChallengeSubmissionArtifact(props.submissionId, artifactId)
@@ -135,7 +135,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                                 <td>
                                     <button
                                         aria-label={`Download artifact ${artifactId}`}
-                                        disabled={downloadingArtifactId === artifactId}
+                                        disabled={!!downloadingArtifactId}
                                         onClick={() => downloadArtifact(artifactId)}
                                         title='Download artifact'
                                         type='button'

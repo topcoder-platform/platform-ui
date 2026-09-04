@@ -585,7 +585,7 @@ export const ChallengeDetailsPage: FC = () => {
     return (
         <main className={styles.page}>
             <ChallengeDetailHeader
-                busy={registrationBusy}
+                busy={registrationBusy || submissionUploadBusy}
                 challenge={challenge}
                 hasSubmitted={isRegistered && (
                     mySubmissionCountResponse.isValidating

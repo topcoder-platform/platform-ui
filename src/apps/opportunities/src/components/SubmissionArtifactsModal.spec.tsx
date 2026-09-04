@@ -92,4 +92,40 @@ describe('SubmissionArtifactsModal', () => {
         expect(toast.error)
             .not.toHaveBeenCalled()
     })
+
+    it('prevents overlapping artifact downloads', async () => {
+        let finishDownload!: (blob: Blob) => void
+        mockedGetArtifacts.mockResolvedValue(['first-results', 'second-results'])
+        mockedDownloadArtifact.mockImplementation(() => new Promise<Blob>(resolve => {
+            finishDownload = resolve
+        }))
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionArtifactsModal
+                    onClose={jest.fn()}
+                    open
+                    submissionId='submission-id'
+                />
+            </SWRConfig>,
+        )
+
+        const firstDownload = await screen.findByRole('button', {
+            name: 'Download artifact first-results',
+        })
+        const secondDownload = screen.getByRole('button', {
+            name: 'Download artifact second-results',
+        })
+        fireEvent.click(firstDownload)
+
+        await waitFor(() => expect(secondDownload)
+            .toBeDisabled())
+        fireEvent.click(secondDownload)
+        expect(mockedDownloadArtifact)
+            .toHaveBeenCalledTimes(1)
+
+        finishDownload(new Blob(['results'], { type: 'application/zip' }))
+        await waitFor(() => expect(secondDownload)
+            .not.toBeDisabled())
+    })
 })
