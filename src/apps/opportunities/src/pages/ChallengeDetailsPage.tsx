@@ -354,7 +354,7 @@ export const ChallengeDetailsPage: FC = () => {
      * @throws Does not throw.
      */
     const selectTab = (tab: ChallengeTab): void => {
-        if (submissionUploadBusy && tab !== 'mine') return
+        if (submissionUploadBusy) return
         setSubmissionFlowOpen(false)
         setActiveTab(tab)
     }

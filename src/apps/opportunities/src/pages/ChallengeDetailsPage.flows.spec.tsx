@@ -714,6 +714,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('tab', { name: 'My Submissions' }))
             .toHaveAttribute('aria-selected', 'true')
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getByText('Submission upload form'))
+            .toBeInTheDocument()
 
         fireEvent.click(screen.getByRole('button', { name: 'Finish mock upload' }))
 
