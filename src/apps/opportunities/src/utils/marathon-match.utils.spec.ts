@@ -176,10 +176,15 @@ describe('Marathon Match challenge detail utilities', () => {
             status: 'ACTIVE',
             virusScan: false,
         }))
-            .toEqual({ process: 'System', status: 'Failed' })
+            .toEqual({ process: 'Provisional', status: 'Failed' })
         expect(marathonSubmissionTestProgress({
             id: 'legacy-quarantine',
             url: 'https://s3.amazonaws.com/submissions-quarantine/member/file.zip',
+        }))
+            .toEqual({ process: 'Provisional', status: 'Failed' })
+        expect(marathonSubmissionTestProgress({
+            id: 'failed-system-review',
+            review: [{ status: 'FAILED' }],
         }))
             .toEqual({ process: 'System', status: 'Failed' })
         expect(marathonSubmissionTestProgress({

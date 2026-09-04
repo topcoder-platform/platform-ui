@@ -564,6 +564,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             <MemoryRouter>
                 <OpportunityListCard
                     item={{
+                        applicationStatus: 'SELECTED',
                         assignments: [{ status: 'OFFER_REJECTED' }],
                         id: 'declined-engagement',
                         status: 'CLOSED',

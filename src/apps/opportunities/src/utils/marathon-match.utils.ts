@@ -387,10 +387,12 @@ export function marathonSubmissionTestProgress(
         .filter((status): status is NonNullable<MarathonTestProgress['status']> => !!status)
     const quarantineUrl = submission.url?.toLowerCase()
         .includes('submissions-quarantine/') ?? false
+    if (submission.virusScan === false || quarantineUrl) {
+        return { process: 'Provisional', status: 'Failed' }
+    }
+
     if (
-        submission.virusScan === false
-        || quarantineUrl
-        || reviewStatuses.includes('Failed')
+        reviewStatuses.includes('Failed')
         || testStatusValue(submission.status) === 'Failed'
     ) {
         return { process: 'System', status: 'Failed' }

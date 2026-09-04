@@ -15,6 +15,7 @@ interface MockSWRResponse {
 }
 
 let mockSWRResponse: MockSWRResponse
+const mockBaseModal = jest.fn()
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -35,15 +36,17 @@ jest.mock('~/libs/ui', () => ({
     BaseModal: (props: PropsWithChildren<{
         open: boolean
         title: string
-    }>): JSX.Element => (
-        <>{props.open && <div aria-label={props.title} role='dialog'>{props.children}</div>}</>
-    ),
+    }>): JSX.Element => {
+        mockBaseModal(props)
+        return <>{props.open && <div aria-label={props.title} role='dialog'>{props.children}</div>}</>
+    },
     Button: (props: { label: string }): JSX.Element => <button type='button'>{props.label}</button>,
     LoadingSpinner: (): JSX.Element => <span>Loading</span>,
 }), { virtual: true })
 
 describe('ChallengeTermsModal', () => {
     beforeEach(() => {
+        mockBaseModal.mockClear()
         mockSWRResponse = {
             data: undefined,
             error: undefined,
@@ -74,6 +77,54 @@ describe('ChallengeTermsModal', () => {
 
         expect(screen.getByRole('dialog', { name: 'Important Reminder' }))
             .toBeInTheDocument()
+    })
+
+    it('waits for registration terms even before SWR reports validation in progress', () => {
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onAccept={jest.fn()}
+                onClose={jest.fn()}
+                open
+                terms={[{ id: 'standard-terms', title: 'Challenge Terms' }]}
+            />,
+        )
+
+        expect(mockBaseModal)
+            .not.toHaveBeenCalled()
+        expect(screen.queryByRole('dialog'))
+            .not.toBeInTheDocument()
+    })
+
+    it('unmounts resolved registration content immediately when closing', () => {
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [],
+            isValidating: false,
+        }
+        const props = {
+            mode: 'register' as const,
+            onAccept: jest.fn(),
+            onClose: jest.fn(),
+            terms: [{ id: 'standard-terms', title: 'Challenge Terms' }],
+        }
+        const view = render(<ChallengeTermsModal {...props} open />)
+
+        expect(screen.getByRole('dialog', { name: 'Important Reminder' }))
+            .toBeInTheDocument()
+        const openRenderCount = mockBaseModal.mock.calls.length
+
+        view.rerender(<ChallengeTermsModal {...props} open={false} />)
+
+        expect(mockBaseModal)
+            .toHaveBeenCalledTimes(openRenderCount)
+        expect(screen.queryByRole('dialog'))
+            .not.toBeInTheDocument()
     })
 
     it('does not flash stale hydrated terms while a new registration request is loading', () => {

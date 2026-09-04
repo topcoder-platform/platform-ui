@@ -40,6 +40,10 @@ export function opportunitySortOptions(): OpportunitySortOption[] {
  */
 function opportunityPrizeValue(item: OpportunityItem): number {
     const value = item as OpportunityItem & Record<string, any>
+    const paymentType = String(value.paymentType ?? '')
+        .trim()
+        .toLowerCase()
+    const customPayment = !paymentType || paymentType === 'other'
     const placementTotal = (value.prizeSets ?? [])
         .filter((prizeSet: { type?: string }) => prizeSet.type?.toUpperCase() === 'PLACEMENT')
         .flatMap((prizeSet: { prizes?: Array<{ value?: number }> }) => prizeSet.prizes ?? [])
@@ -47,7 +51,9 @@ function opportunityPrizeValue(item: OpportunityItem): number {
     const paymentValues = (value.payments ?? [])
         .map((payment: { payment?: number }) => Number(payment.payment))
         .filter(Number.isFinite)
-    const compensationValues = String(value.compensationRange ?? value.otherPaymentType ?? '')
+    const compensationValues = String(
+        value.compensationRange ?? (customPayment ? value.otherPaymentType : ''),
+    )
         .match(/[\d,.]+/g)
         ?.map((part: string) => Number(part.replace(/,/g, '')))
         .filter(Number.isFinite) ?? []

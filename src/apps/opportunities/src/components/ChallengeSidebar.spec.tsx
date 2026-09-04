@@ -21,8 +21,13 @@ const designScreeningLearningUrl
     = 'https://www.topcoder.com/blog/ultimate-guide-pass-screening-design-challenges'
 const designPolicyUrl
     = 'https://help.topcoder.com/hc/en-us/articles/217959447-Font-Policy-for-Design-Challenges'
+const aiReviewersHelpUrl
+    = 'https://www.topcoder.com/thrive/articles/ai-reviewers-member-help-guide'
+const usableCodeRulesUrl
+    = 'https://www.topcoder.com/thrive/articles/Usable%20Code%20in%20Dev%20Challenges'
 
 const mockUseSWR = jest.fn()
+const mockChallengeSidebarLinks = jest.fn()
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -48,10 +53,7 @@ jest.mock('../utils', () => ({
     challengeReviewAppUrl: (challengeId: string): string => (
         `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
     ),
-    challengeSidebarLinks: (): { attachments: []; challengeLinks: [] } => ({
-        attachments: [],
-        challengeLinks: [],
-    }),
+    challengeSidebarLinks: (...args: unknown[]) => mockChallengeSidebarLinks(...args),
     challengeSubmissionLimit: (): undefined => undefined,
     isMarathonMatchChallenge: (value: ChallengeOpportunity): boolean => value.type === 'Marathon Match',
 }))
@@ -59,12 +61,14 @@ jest.mock('../services', () => ({
     getChallengeTermsDetails: jest.fn(),
 }))
 jest.mock('../utils/opportunity-learning.utils', () => ({
+    AI_REVIEWERS_HELP_URL: aiReviewersHelpUrl,
     CHALLENGE_EXPLAINED_URL: challengeExplainedUrl,
     CHECKPOINT_FEEDBACK_LEARNING_URL: checkpointFeedbackLearningUrl,
     DESIGN_CHALLENGE_LEARNING_URL: designChallengeLearningUrl,
     DESIGN_SCREENING_LEARNING_URL: designScreeningLearningUrl,
     DESIGN_SUBMISSION_FORMAT_URL: designSubmissionFormatUrl,
     MARATHON_MATCH_LEARNING_URL: marathonMatchLearningUrl,
+    USABLE_CODE_RULES_URL: usableCodeRulesUrl,
 }))
 
 const challenge: ChallengeOpportunity = {
@@ -108,6 +112,10 @@ function renderSidebar(
 describe('ChallengeSidebar Review Style', () => {
     beforeEach(() => {
         mockUseSWR.mockReturnValue({ data: undefined })
+        mockChallengeSidebarLinks.mockReturnValue({
+            attachments: [],
+            challengeLinks: [],
+        })
     })
 
     it('shows manual review with the Figma explanation when no AI config exists', () => {
@@ -121,6 +129,11 @@ describe('ChallengeSidebar Review Style', () => {
             .toBeInTheDocument()
         expect(screen.queryByText(/Instant Review is/))
             .not.toBeInTheDocument()
+        const heading = screen.getByRole('heading', { name: 'Review Style' })
+        expect(heading.querySelector('img'))
+            .not.toBeNull()
+        expect(heading.querySelector('svg'))
+            .toBeNull()
     })
 
     it('shows AI-only review and the disabled Instant Review state', () => {
@@ -164,13 +177,19 @@ describe('ChallengeSidebar Review Style', () => {
     it('uses published challenge-learning article links for the educational materials rail', () => {
         renderSidebar()
 
+        expect(screen.getByText('Read educational material on Topcoder Thrive.'))
+            .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
             .toHaveAttribute(
                 'href',
                 challengeExplainedUrl,
             )
+        expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }).className)
+            .toContain('learningLink')
         expect(screen.getByText('The place to see your scores and feedback, and improve before the final review.'))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Explore the program' }).className)
+            .toContain('promoLink')
     })
 
     it('adds the authored Marathon Match guide and arrow indicators', () => {
@@ -203,20 +222,41 @@ describe('ChallengeSidebar Review Style', () => {
             .not.toBeInTheDocument()
     })
 
-    it('keeps design-only educational links and copy out of development challenges', () => {
+    it('shows development learning links and hides design-only submission guidance', () => {
         renderSidebar(undefined, developmentChallenge)
 
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'AI Reviewers - Member Help Guide' }))
+            .toHaveAttribute('href', aiReviewersHelpUrl)
+        expect(screen.getByRole('link', { name: 'Usable Code Rules' }))
+            .toHaveAttribute('href', usableCodeRulesUrl)
         expect(screen.queryByRole('link', { name: 'How to compete in design challenges' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'How to approach the checkpoint feedback' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Submission Format' }))
             .not.toBeInTheDocument()
-        expect(screen.getByText('You must include all source files requested in the Requirements content.'))
-            .toBeInTheDocument()
-        expect(screen.queryByText('You must include all source files with your submission.'))
+        expect(screen.queryByRole('heading', { name: 'Source files' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Submission limit' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('omits authored Challenge Links for development challenges', () => {
+        mockChallengeSidebarLinks.mockReturnValue({
+            attachments: [],
+            challengeLinks: [{
+                label: 'Development requirements',
+                url: 'https://example.com/requirements',
+            }],
+        })
+
+        renderSidebar(undefined, developmentChallenge)
+
+        expect(screen.queryByRole('heading', { name: 'Challenge Links' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Development requirements' }))
             .not.toBeInTheDocument()
     })
 
@@ -269,6 +309,12 @@ describe('ChallengeSidebar Review Style', () => {
                 'href',
                 checkpointFeedbackLearningUrl,
             )
+        expect(screen.getByRole('link', { name: 'How to approach the checkpoint feedback' }).className)
+            .toContain('learningLink')
+        expect(screen.getByRole('heading', { name: 'Source files' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Submission limit' }))
+            .toBeInTheDocument()
     })
 
     it('emphasizes required submission filenames in the design submission format list', () => {

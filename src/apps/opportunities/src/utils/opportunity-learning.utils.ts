@@ -12,6 +12,14 @@ export const COPILOT_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
 export const CHALLENGE_EXPLAINED_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/articles/all-about-topcoder-challenges-tasks-and-gig-work-opportunities'
 
+/** Published guide to AI review behavior for challenge participants. */
+export const AI_REVIEWERS_HELP_URL
+    = 'https://www.topcoder.com/thrive/articles/ai-reviewers-member-help-guide'
+
+/** Published source-code rules for development challenge submissions. */
+export const USABLE_CODE_RULES_URL
+    = 'https://www.topcoder.com/thrive/articles/Usable%20Code%20in%20Dev%20Challenges'
+
 /** Published design challenge guidance on the environment's main site. */
 export const DESIGN_CHALLENGE_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/articles/How%20To%20Compete%20in%20Design'

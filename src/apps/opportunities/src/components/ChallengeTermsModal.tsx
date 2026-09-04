@@ -95,7 +95,8 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         && terms.length === 0
     const hydratingRegistration = registrationMode
         && shouldLoad
-        && response.isValidating
+        && !response.error
+        && (response.isValidating || response.data === undefined)
     const fullTitle = terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
@@ -180,6 +181,11 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         />
     )
 
+    // react-responsive-modal keeps closing content mounted for its exit
+    // animation. Unmounting here prevents unresolved or fallback terms from
+    // replacing the resolved registration reminder during that interval.
+    if (!props.open || hydratingRegistration) return <></>
+
     return (
         <BaseModal
             buttons={buttons}
@@ -188,7 +194,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 modal: compactRegistration ? styles.compactModal : styles.termsModal,
             }}
             onClose={props.onClose}
-            open={props.open && !hydratingRegistration}
+            open
             size={compactRegistration ? 'md' : 'body'}
             spacer={false}
             title={compactRegistration ? 'Important Reminder' : fullTitle}

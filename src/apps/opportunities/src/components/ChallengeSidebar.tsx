@@ -20,12 +20,14 @@ import {
     isMarathonMatchChallenge,
 } from '../utils'
 import {
+    AI_REVIEWERS_HELP_URL,
     CHALLENGE_EXPLAINED_URL,
     CHECKPOINT_FEEDBACK_LEARNING_URL,
     DESIGN_CHALLENGE_LEARNING_URL,
     DESIGN_SCREENING_LEARNING_URL,
     DESIGN_SUBMISSION_FORMAT_URL,
     MARATHON_MATCH_LEARNING_URL,
+    USABLE_CODE_RULES_URL,
 } from '../utils/opportunity-learning.utils'
 import { getChallengeTermsDetails } from '../services'
 import programBanner from '../assets/ai-exponential-program.png'
@@ -136,7 +138,7 @@ const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
     return (
         <div className={styles.infoSection}>
             <h3>
-                <IconOutline.DocumentSearchIcon />
+                <img alt='' aria-hidden='true' src={sidebarReviewIcon} />
                 Review Style
             </h3>
             {props.loading
@@ -234,7 +236,6 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const marathonMatch = isMarathonMatchChallenge(props.challenge)
     const developmentChallenge = catalogName(props.challenge.track)
         .toLowerCase() === 'development'
-    const submissionGuidance = designChallenge || developmentChallenge
     const termsRequestKey = props.challenge.terms?.some(term => !!term.id && !term.title)
         ? ['opportunities:challenge-sidebar-terms', props.challenge.id]
         : undefined
@@ -288,7 +289,10 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             ? 'Join the battle of competitors in a series of challenging Marathon Matches.'
                             : 'Where elite AI builders compete to solve real-world challenges and grow fast.'}
                     </p>
-                    <Link to={marathonMatch ? MARATHON_MATCH_LEARNING_URL : '/thrive'}>
+                    <Link
+                        className={styles.promoLink}
+                        to={marathonMatch ? MARATHON_MATCH_LEARNING_URL : '/thrive'}
+                    >
                         Explore the program
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </Link>
@@ -306,24 +310,66 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </a>
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
-                <p>Read educational material in Topcoder Thrive.</p>
-                <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>
+                <p>Read educational material on Topcoder Thrive.</p>
+                <a
+                    className={styles.learningLink}
+                    href={CHALLENGE_EXPLAINED_URL}
+                    rel='noreferrer'
+                    target='_blank'
+                >
                     Topcoder Challenges Explained
                     <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                 </a>
                 {marathonMatch && (
-                    <a href={MARATHON_MATCH_LEARNING_URL} rel='noreferrer' target='_blank'>
+                    <a
+                        className={styles.learningLink}
+                        href={MARATHON_MATCH_LEARNING_URL}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
                         How to Compete on Marathon Match
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
+                {developmentChallenge && (
+                    <>
+                        <a
+                            className={styles.learningLink}
+                            href={AI_REVIEWERS_HELP_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
+                            AI Reviewers - Member Help Guide
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                        </a>
+                        <a
+                            className={styles.learningLink}
+                            href={USABLE_CODE_RULES_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
+                            Usable Code Rules
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                        </a>
+                    </>
+                )}
                 {designChallenge && (
                     <>
-                        <a href={DESIGN_CHALLENGE_LEARNING_URL} rel='noreferrer' target='_blank'>
+                        <a
+                            className={styles.learningLink}
+                            href={DESIGN_CHALLENGE_LEARNING_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
                             How to compete in design challenges
                             <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
-                        <a href={CHECKPOINT_FEEDBACK_LEARNING_URL} rel='noreferrer' target='_blank'>
+                        <a
+                            className={styles.learningLink}
+                            href={CHECKPOINT_FEEDBACK_LEARNING_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
                             How to approach the checkpoint feedback
                             <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
@@ -452,7 +498,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         ))
                         : <button onClick={showAllTerms} type='button'>Review challenge terms</button>}
                 </div>
-                {challengeLinks.length > 0 && (
+                {!developmentChallenge && challengeLinks.length > 0 && (
                     <div className={styles.infoSection}>
                         <h3>
                             <IconOutline.LinkIcon />
@@ -461,7 +507,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         {challengeLinks.map(externalLink)}
                     </div>
                 )}
-                {submissionGuidance && (
+                {designChallenge && (
                     <>
                         <div className={styles.infoSection}>
                             <h3>
@@ -470,12 +516,8 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             </h3>
                             {fileTypes.length > 0
                                 ? <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
-                                : designChallenge
-                                    ? <ul><li>Figma</li></ul>
-                                    : <p>You must include all source files requested in the Requirements content.</p>}
-                            {designChallenge && (
-                                <p>You must include all source files with your submission.</p>
-                            )}
+                                : <ul><li>Figma</li></ul>}
+                            <p>You must include all source files with your submission.</p>
                             {links.attachments.length > 0 && (
                                 <div className={styles.resourceLinks}>{links.attachments.map(externalLink)}</div>
                             )}

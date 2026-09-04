@@ -321,14 +321,6 @@ function normalizePage<T>(
     return { items, page, perPage, total, totalPages }
 }
 
-interface EngagementApplicationState {
-    createdAt?: string
-    engagementId: string
-    id?: string
-    status?: string
-    updatedAt?: string
-}
-
 /**
  * Loads every page of a member-scoped Engagement API collection within the
  * same defensive page cap used by challenge-detail expansion requests.
@@ -375,37 +367,26 @@ async function getEngagementMemberCollection<T>(pathname: string): Promise<T[]> 
 async function hydrateEngagementMemberState(
     page: OpportunityPage<EngagementOpportunity>,
 ): Promise<OpportunityPage<EngagementOpportunity>> {
-    const [applications, assignedEngagements] = await Promise.all([
-        getEngagementMemberCollection<EngagementApplicationState>('/engagements/applications'),
-        getEngagementMemberCollection<EngagementOpportunity>('/engagements/engagements/my-assignments'),
-    ])
-    const latestApplications = new Map<string, EngagementApplicationState>()
-    for (const application of applications) {
-        const existing = latestApplications.get(application.engagementId)
-        const existingTime = Date.parse(existing?.updatedAt ?? existing?.createdAt ?? '')
-        const applicationTime = Date.parse(application.updatedAt ?? application.createdAt ?? '')
-        if (!existing || (Number.isFinite(applicationTime) ? applicationTime : 0)
-            >= (Number.isFinite(existingTime) ? existingTime : 0)) {
-            latestApplications.set(application.engagementId, application)
-        }
-    }
-
-    const assignmentsByEngagement = new Map(
-        assignedEngagements.map(engagement => [engagement.id, engagement.assignments ?? []]),
+    const memberEngagements = await getEngagementMemberCollection<EngagementOpportunity>(
+        '/engagements/engagements?appliedByMe=true&includePrivate=true',
+    )
+    const memberStateByEngagement = new Map(
+        memberEngagements.map(engagement => [engagement.id, engagement]),
     )
 
     return {
         ...page,
         items: page.items.map(item => {
-            const application = latestApplications.get(item.id)
-            const assignments = assignmentsByEngagement.get(item.id)
+            const memberState = memberStateByEngagement.get(item.id)
             return {
                 ...item,
-                ...(application?.status ? {
-                    applicationStatus: application.status,
-                    myApplication: { status: application.status },
+                ...(memberState?.applicationStatus ? {
+                    applicationStatus: memberState.applicationStatus,
+                    myApplication: { status: memberState.applicationStatus },
                 } : {}),
-                ...(assignments?.length ? { assignments } : {}),
+                ...(memberState?.assignments?.length ? {
+                    assignments: memberState.assignments,
+                } : {}),
             }
         }),
     }

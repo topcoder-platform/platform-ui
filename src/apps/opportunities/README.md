@@ -64,6 +64,9 @@ Review API owns payment ordering. For Engagement and Copilot prize sorts, the
 client combines bounded owner pages before sorting and then restores the
 requested page, so ordering remains correct across page boundaries. Missing
 numeric compensation remains after priced opportunities in both directions.
+Copilot rows marked with the Standard payment type remain unpriced for sorting;
+an obsolete `otherPaymentType` value retained by Projects API must not move a
+Standard row among numeric custom payments.
 Selecting a different result page scrolls the browser back to the top so the
 new page begins at its heading rather than at the prior page's footer.
 
@@ -164,6 +167,9 @@ field is present for the caller.
   discoverable without weakening normal project search. The authored `My
   engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
   accepted or assigned private work remains visible to the current member.
+  Public engagement cards hydrate the caller's status from that same complete
+  member-scoped feed, retaining terminal rejected-offer assignments that the
+  narrower `my-assignments` collection intentionally excludes.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
   opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`). During
   rollout, a legacy list that rejects `applied` is filtered locally and its
@@ -190,10 +196,13 @@ resolves that same role and sends `memberId` plus
 filters, global sorting, counts, and pagination. The terms modal similarly
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
-agreement. Passive “Review challenge terms” mode never registers or agrees on
-a member's behalf. Terms API HTML retains its semantic structure and safe links,
-but document-authored inline styles are removed so modal-scoped Figtree headings,
-Nunito Sans body copy, and spacing remain authoritative.
+agreement. Registration content stays unmounted until that request resolves
+and unmounts immediately on close, so unresolved fallback terms cannot flash
+during the modal transition. Passive “Review challenge terms” mode never
+registers or agrees on a member's behalf. Terms API HTML retains its semantic
+structure and safe links, but document-authored inline styles are removed so
+modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
+authoritative.
 DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
@@ -252,7 +261,9 @@ refresh challenge and member submission counts without leaving the confirmation
 state. The declaration opens the public Topcoder Terms of Use in a new tab.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
-progress, and completed states. Design submissions can be deleted only while
+progress, and completed states. Virus-scan and quarantine failures are reported
+as Failed in the Provisional process; later review failures remain System
+failures. Design submissions can be deleted only while
 Submission or Checkpoint Submission is open.
 
 Challenge Discussion reads and writes use the authenticated
@@ -292,5 +303,11 @@ The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
 and attachments, and fails closed for unsafe or retired-host URLs. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
-handoff. Marathon Match challenges replace the general AI Exponential promo
-with the Marathon Match Tournament heading, copy, and guide destination.
+handoff. Review Style uses the authored document-search rail icon. Development
+challenges omit Challenge Links, Source files, and Submission limit while
+adding the published AI Reviewers help and Usable Code rules to Educational
+Materials; the latter two submission sections remain Design-only. Learning
+arrows flow immediately after wrapped labels, and the AI Exponential promo
+keeps a distinct gap before its action. Marathon Match challenges replace the
+general AI Exponential promo with the Marathon Match Tournament heading, copy,
+and guide destination.
