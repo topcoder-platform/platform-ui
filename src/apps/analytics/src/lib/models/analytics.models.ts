@@ -80,8 +80,6 @@ export interface ClickLocation {
     elementType?: string
     destinationHost?: string
     destinationPath?: string
-    xBucket?: number
-    yBucket?: number
     clicks: number
     clickers: number
 }

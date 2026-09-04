@@ -30,16 +30,22 @@ once within the same deadline. Clients can opt into resumable requests with
 returns `202`, `Retry-After`, and a server-generated query token. The browser
 polls with that token until the original statement completes instead of
 starting another warehouse query. Tokens are accepted only for the exact SQL,
-validated parameters, retry attempt, and current or previous thirty-minute
-window, which permits one boundary crossing without making tokens reusable for
-other reports. Browser polling is bounded. Concurrency and API throttles cap
-warehouse pressure, and successful responses use `Cache-Control: private,
-no-store`. Logs contain request IDs and service-owned error categories only.
+validated parameters, retry attempt, and current or previous four-hour window.
+The four-hour window remains below the Data API's eight-hour idempotency
+retention and permits one complete boundary-crossing window without making
+tokens reusable for other reports. An EventBridge schedule invokes the default
+Campaigns report and filter-option queries at each new window, allowing their
+statements to finish before an interactive request while preserving Redshift
+Serverless idle cost controls. Browser polling is bounded. Concurrency and API
+throttles cap warehouse pressure, and successful responses use `Cache-Control:
+private, no-store`. Logs contain request IDs and service-owned error categories
+only.
 
 ## Files
 
 - `template.yaml` registers protected analytics routes on the shared API and
-  provisions the JWT authorizer, Lambda, least-privilege query role, and logs.
+  provisions the JWT authorizer, Lambda, least-privilege query role, scheduled
+  default-report prewarm, and logs.
   The former dedicated API remains during the cutover observation window.
 - `src/handler.py` validates and shapes filter, campaign, and general reports.
 - `bootstrap.sql` creates the read-only Redshift database role and grants only

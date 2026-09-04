@@ -147,6 +147,30 @@ Resources:
         - Key: Environment
           Value: dev
 
+  AnalyticsPrewarmRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Prepares default analytics results once per four-hour Data API token window.
+      ScheduleExpression: cron(0 0/4 * * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AnalyticsFunction.Arn
+          Id: analytics-filter-options
+          Input: !Sub >-
+            {"routeKey":"GET /v1/analytics/filters","queryStringParameters":{"async":"true"},"requestContext":{"requestId":"scheduled-filter-prewarm","authorizer":{"jwt":{"claims":{"${HumanRoleClaim}":["analytics"]}}}}}
+        - Arn: !GetAtt AnalyticsFunction.Arn
+          Id: analytics-default-campaign
+          Input: !Sub >-
+            {"routeKey":"GET /v1/analytics/campaign","queryStringParameters":{"async":"true"},"requestContext":{"requestId":"scheduled-campaign-prewarm","authorizer":{"jwt":{"claims":{"${HumanRoleClaim}":["analytics"]}}}}}
+
+  AnalyticsPrewarmInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AnalyticsPrewarmRule.Arn
+
   AnalyticsApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain

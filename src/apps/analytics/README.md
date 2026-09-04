@@ -29,7 +29,9 @@ Campaign Analytics uses UTM attribution and an ordered cohort funnel. Its
 totals answer how many distinct landing visitors clicked, then registered for
 a challenge after clicking, then submitted after registering. It also shows
 campaign and landing-page breakdowns plus aggregate click locations by semantic
-element fields and ten-percentage-point viewport buckets.
+element fields. Click locations are ranked by clicks and paginated twenty rows
+at a time. The API combines coarse viewport-position buckets for the same
+semantic item before returning the ranking.
 
 General Analytics shows page views, distinct visitors, clicks, and distinct
 clickers. Page views, visitors, and clicks use separate daily area charts, and
@@ -43,18 +45,24 @@ ranges are inclusive and limited to 366 days. The UI displays the warehouse's
 Empty dates in a series are not inferred as provider outages.
 
 Development includes a clearly labeled synthetic campaign named
-`aws_analytics` with UTM ID `dev_fixture_20260902`. Its verified ordered funnel
-contains 30 landing visitors, 22 clickers, 14 registrations, and 8 submissions,
-plus multiple landing paths and click placements. Treat it as UI test data, not
-member traffic.
+`aws_analytics`. UTM ID `dev_fixture_20260902` supplies the September 1 cohort
+with 30 landing visitors, 22 clickers, 14 registrations, and 8 submissions.
+UTM ID `dev_fixture_multiday_20260904` supplies September 2–3 cohorts totaling
+38 landing visitors, 29 clickers, 19 registrations, and 13 submissions, with 29
+distinct semantic clicked items. Together they provide three dates and enough
+ranked clicks to exercise table pagination. Treat these fixtures as UI test
+data, not member traffic.
 
 Redshift Serverless can take longer than one HTTP request after an idle period.
 The UI opts into resumable queries and transparently polls `202` responses with
-the server-issued query token. The report spinner stays in a contained region
-below the filters, leaving filters and Analytics navigation usable. Polling is
-bounded to twelve requests (roughly five minutes at the API's maximum query
-wait); after that, or after a genuine failure, the explicit retry action is
-shown.
+the server-issued query token. A low-frequency EventBridge schedule prepares
+the default Campaigns report and filter options at the start of each four-hour
+Data API idempotency window, avoiding an interactive warehouse wake-up in the
+normal case without keeping development Redshift capacity running continuously.
+The report spinner stays in a contained region below the filters, leaving
+filters and Analytics navigation usable. Polling is bounded to twelve requests
+(roughly five minutes at the API's maximum query wait); after that, or after a
+genuine failure, the explicit retry action is shown.
 
 ## Privacy
 

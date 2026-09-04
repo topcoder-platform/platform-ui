@@ -36,12 +36,12 @@ import {
     formatAnalyticsFreshness,
     formatAnalyticsInteger,
     formatAnalyticsPercent,
-    formatClickBucket,
     validateAnalyticsDateRange,
 } from '../lib/utils'
 
 import styles from './AnalyticsPages.module.scss'
 
+const CLICK_LOCATION_PAGE_SIZE = 20
 const campaignSeries = [
     { color: '#2c95d7', key: 'landingUsers', label: 'Landing visitors' },
     { color: '#6f42c1', key: 'landingClickers', label: 'Clicked' },
@@ -118,6 +118,7 @@ export const CampaignAnalyticsPage: FC = () => {
     const [draftFilters, setDraftFilters] = useState<CampaignFilters>(initialFilters)
     const [appliedFilters, setAppliedFilters] = useState<CampaignFilters>(initialFilters)
     const [filterError, setFilterError] = useState<string>()
+    const [clickLocationsPage, setClickLocationsPage] = useState(1)
     const filterOptions = useAnalyticsResource<AnalyticsFilterOptions>('analytics-filters', getAnalyticsFilters)
     const reportKey = analyticsRequestKey('campaign', appliedFilters)
     const report = useAnalyticsResource<CampaignReport>(
@@ -134,18 +135,45 @@ export const CampaignAnalyticsPage: FC = () => {
         event.preventDefault()
         const error = validateAnalyticsDateRange(draftFilters)
         setFilterError(error)
-        if (!error) setAppliedFilters({ ...draftFilters })
+        if (!error) {
+            setAppliedFilters({ ...draftFilters })
+            setClickLocationsPage(1)
+        }
     }, [draftFilters])
 
     const resetFilters = useCallback(() => {
         const next = initialCampaignFilters()
         setDraftFilters(next)
         setAppliedFilters(next)
+        setClickLocationsPage(1)
         setFilterError(undefined)
     }, [])
 
     const data = report.data
     const reportPending = report.loading || report.refreshing
+    const clickLocationsTotal = data?.clickLocations.length ?? 0
+    const clickLocationsTotalPages = Math.max(
+        1,
+        Math.ceil(clickLocationsTotal / CLICK_LOCATION_PAGE_SIZE),
+    )
+    const activeClickLocationsPage = Math.min(clickLocationsPage, clickLocationsTotalPages)
+    const visibleClickLocations = data?.clickLocations.slice(
+        (activeClickLocationsPage - 1) * CLICK_LOCATION_PAGE_SIZE,
+        activeClickLocationsPage * CLICK_LOCATION_PAGE_SIZE,
+    ) ?? []
+    const showPreviousClickLocations = useCallback(() => {
+        setClickLocationsPage(current => Math.max(1, current - 1))
+    }, [])
+    const showNextClickLocations = useCallback(() => {
+        setClickLocationsPage(current => Math.min(clickLocationsTotalPages, current + 1))
+    }, [clickLocationsTotalPages])
+    const firstVisibleClickLocation = clickLocationsTotal === 0
+        ? 0
+        : ((activeClickLocationsPage - 1) * CLICK_LOCATION_PAGE_SIZE) + 1
+    const lastVisibleClickLocation = Math.min(
+        clickLocationsTotal,
+        activeClickLocationsPage * CLICK_LOCATION_PAGE_SIZE,
+    )
     return (
         <>
             <PageTitle>Campaign Analytics</PageTitle>
@@ -376,7 +404,7 @@ export const CampaignAnalyticsPage: FC = () => {
                                 <div className={styles.panelHeader}>
                                     <div>
                                         <h2>Where people clicked</h2>
-                                        <p>Safe element, placement, destination, and coarse viewport location.</p>
+                                        <p>Top clicked elements ranked by total clicks.</p>
                                     </div>
                                 </div>
                                 <div className={styles.tableScroll}>
@@ -384,13 +412,12 @@ export const CampaignAnalyticsPage: FC = () => {
                                         <thead>
                                             <tr>
                                                 <th scope='col'>Page / element</th>
-                                                <th scope='col'>Position</th>
                                                 <th scope='col'>Clicks</th>
                                                 <th scope='col'>People</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.clickLocations.map(row => (
+                                            {visibleClickLocations.map(row => (
                                                 <tr
                                                     key={[
                                                         row.pagePath,
@@ -399,8 +426,6 @@ export const CampaignAnalyticsPage: FC = () => {
                                                         row.elementType,
                                                         row.destinationHost,
                                                         row.destinationPath,
-                                                        row.xBucket,
-                                                        row.yBucket,
                                                     ].join('|')}
                                                 >
                                                     <th scope='row'>
@@ -411,15 +436,42 @@ export const CampaignAnalyticsPage: FC = () => {
                                                                 .join(' · ') || 'Unlabelled interactive element'}
                                                         </span>
                                                     </th>
-                                                    <td>{formatClickBucket(row.xBucket, row.yBucket)}</td>
                                                     <td>{formatAnalyticsInteger(row.clicks)}</td>
                                                     <td>{formatAnalyticsInteger(row.clickers)}</td>
                                                 </tr>
                                             ))}
-                                            {data.clickLocations.length === 0 && <EmptyTableRow columns={4} />}
+                                            {visibleClickLocations.length === 0 && <EmptyTableRow columns={3} />}
                                         </tbody>
                                     </table>
                                 </div>
+                                {clickLocationsTotal > 0 && (
+                                    <div className={styles.pagination}>
+                                        <span>
+                                            {`Showing ${firstVisibleClickLocation}–${lastVisibleClickLocation}`
+                                                + ` of ${clickLocationsTotal} clicked items`}
+                                        </span>
+                                        <nav aria-label='Click locations pagination'>
+                                            <button
+                                                disabled={activeClickLocationsPage <= 1}
+                                                onClick={showPreviousClickLocations}
+                                                type='button'
+                                            >
+                                                Previous
+                                            </button>
+                                            <span>
+                                                {`Page ${activeClickLocationsPage}`
+                                                    + ` of ${clickLocationsTotalPages}`}
+                                            </span>
+                                            <button
+                                                disabled={activeClickLocationsPage >= clickLocationsTotalPages}
+                                                onClick={showNextClickLocations}
+                                                type='button'
+                                            >
+                                                Next
+                                            </button>
+                                        </nav>
+                                    </div>
+                                )}
                             </article>
                         </section>
                     </>
