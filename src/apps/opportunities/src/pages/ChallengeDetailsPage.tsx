@@ -4,6 +4,7 @@ import {
     KeyboardEvent,
     ReactNode,
     SyntheticEvent,
+    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -248,7 +249,9 @@ export const ChallengeDetailsPage: FC = () => {
     const [termsMode, setTermsMode] = useState<'register' | 'view'>('view')
     const [issueOpen, setIssueOpen] = useState(false)
     const [registrationBusy, setRegistrationBusy] = useState(false)
+    const [registrantsRevision, setRegistrantsRevision] = useState(0)
     const [submissionFlowOpen, setSubmissionFlowOpen] = useState(false)
+    const [submissionUploadBusy, setSubmissionUploadBusy] = useState(false)
     const [unregisterConfirmOpen, setUnregisterConfirmOpen] = useState(false)
     const [visibleTerms, setVisibleTerms] = useState<ChallengeTerm[]>([])
     const challengeResponse: SWRResponse<ChallengeOpportunity, Error> = useSWR(
@@ -300,6 +303,11 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
+
+    useEffect(() => {
+        window.scrollTo({ left: 0, top: 0 })
+    }, [challengeId])
+
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
@@ -344,6 +352,7 @@ export const ChallengeDetailsPage: FC = () => {
      * @throws Does not throw.
      */
     const selectTab = (tab: ChallengeTab): void => {
+        if (submissionUploadBusy && tab !== 'mine') return
         setSubmissionFlowOpen(false)
         setActiveTab(tab)
     }
@@ -399,6 +408,7 @@ export const ChallengeDetailsPage: FC = () => {
      * @throws Does not throw.
      */
     const closeSubmission = (): void => {
+        if (submissionUploadBusy) return
         setActiveTab('mine')
         setSubmissionFlowOpen(false)
     }
@@ -448,6 +458,7 @@ export const ChallengeDetailsPage: FC = () => {
         const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
         if (!keys.includes(event.key)) return
         event.preventDefault()
+        if (submissionUploadBusy) return
         let nextIndex = index
         if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length
         if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
@@ -471,13 +482,22 @@ export const ChallengeDetailsPage: FC = () => {
         setRegistrationBusy(true)
         try {
             await agreeToChallengeTerms(terms)
-            await registerForChallenge(challenge.id, profile.handle)
+            const createdRegistration = await registerForChallenge(challenge.id, profile.handle)
             recordAnalyticsEvent('challenge_registered', {
                 challenge_id: challenge.id,
                 challenge_track: challengeCatalogKey(challenge.track),
                 member_id: profile.userId,
             }, true)
-            await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
+            await Promise.all([
+                registrationResponse.mutate(createdRegistration, { revalidate: false }),
+                challengeResponse.mutate(currentChallenge => (currentChallenge
+                    ? {
+                        ...currentChallenge,
+                        numOfRegistrants: (currentChallenge.numOfRegistrants ?? 0) + 1,
+                    }
+                    : currentChallenge), { revalidate: false }),
+            ])
+            setRegistrantsRevision(value => value + 1)
             toast.success('You are registered for this competition.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Registration failed.')
@@ -507,7 +527,16 @@ export const ChallengeDetailsPage: FC = () => {
             await unregisterFromChallenge(challengeId, profile.handle)
             setActiveTab('requirements')
             setSubmissionFlowOpen(false)
-            await Promise.all([registrationResponse.mutate(), challengeResponse.mutate()])
+            await Promise.all([
+                registrationResponse.mutate(undefined, { revalidate: false }),
+                challengeResponse.mutate(currentChallenge => (currentChallenge
+                    ? {
+                        ...currentChallenge,
+                        numOfRegistrants: Math.max(0, (currentChallenge.numOfRegistrants ?? 0) - 1),
+                    }
+                    : currentChallenge), { revalidate: false }),
+            ])
+            setRegistrantsRevision(value => value + 1)
             toast.success('You are no longer registered for this competition.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Unable to unregister.')
@@ -556,6 +585,11 @@ export const ChallengeDetailsPage: FC = () => {
             <ChallengeDetailHeader
                 busy={registrationBusy}
                 challenge={challenge}
+                hasSubmitted={isRegistered && (
+                    mySubmissionCountResponse.isValidating
+                    || !!mySubmissionCountResponse.error
+                    || (mySubmissionCountResponse.data ?? 0) > 0
+                )}
                 isRegistered={isRegistered}
                 onRegister={startRegistration}
                 onSubmit={startSubmission}
@@ -575,6 +609,7 @@ export const ChallengeDetailsPage: FC = () => {
                                 : undefined}
                             aria-selected={activeTab === tab.id}
                             className={activeTab === tab.id ? styles.activeTab : undefined}
+                            disabled={submissionUploadBusy && tab.id !== 'mine'}
                             id={`challenge-tab-${tab.id}`}
                             key={tab.id}
                             onClick={() => selectTab(tab.id)}
@@ -606,7 +641,9 @@ export const ChallengeDetailsPage: FC = () => {
                         onShowRequirements={showSubmissionRequirements}
                         onStartSubmission={startSubmission}
                         onSubmitted={recordSubmittedSolution}
+                        onUploadingChange={setSubmissionUploadBusy}
                         onValidateRegistration={validateSubmissionRegistration}
+                        registrantsRevision={registrantsRevision}
                         submissionFlowOpen={submissionFlowOpen}
                     />
                 </section>
@@ -661,7 +698,9 @@ interface ChallengeTabContentProps {
     onShowRequirements: () => void
     onStartSubmission: () => void
     onSubmitted: () => Promise<unknown> | unknown
+    onUploadingChange: (uploading: boolean) => void
     onValidateRegistration: () => Promise<boolean>
+    registrantsRevision: number
     submissionFlowOpen: boolean
 }
 
@@ -674,7 +713,10 @@ interface ChallengeTabContentProps {
  */
 const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'requirements') return <RequirementsTab challenge={props.challenge} />
-    if (props.activeTab === 'registrants') return <RegistrantsTab challenge={props.challenge} />
+    if (props.activeTab === 'registrants') {
+        return <RegistrantsTab challenge={props.challenge} revision={props.registrantsRevision} />
+    }
+
     if (props.activeTab === 'submissions') {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
@@ -694,6 +736,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
                     onContactSupport={props.onContactSupport}
                     onShowRequirements={props.onShowRequirements}
                     onSubmitted={props.onSubmitted}
+                    onUploadingChange={props.onUploadingChange}
                     onValidateRegistration={props.onValidateRegistration}
                 />
             )
@@ -878,16 +921,16 @@ function registrationTimestamp(resource: ChallengeResource): string {
 /**
  * Loads Submitter resources only after the Registrants tab is selected.
  *
- * @param props challenge used to load resources and select the track-specific table.
+ * @param props challenge and registration revision used to load the current track-specific table.
  * @returns paginated registrants table or loading/error/empty state.
  * @throws Does not throw; request failures render a retry action.
  */
-const RegistrantsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
+const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const response: SWRResponse<OpportunityPage<ChallengeResource>, Error> = useSWR(
-        ['opportunities:registrants', props.challenge.id, page, perPage, sortOrder],
+        ['opportunities:registrants', props.challenge.id, page, perPage, sortOrder, props.revision],
         () => getChallengeSubmitters(props.challenge.id, page, perPage, undefined, sortOrder),
         { revalidateOnFocus: false },
     )
@@ -958,7 +1001,7 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
                                             rating={rating}
                                         />
                                     </td>
-                                    {showRating && <td>{rating ?? '—'}</td>}
+                                    {showRating && <td className={ratingClass(rating)}>{rating ?? '—'}</td>}
                                     <td>{registrationTimestamp(resource)}</td>
                                 </tr>
                             )
@@ -1433,7 +1476,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 rating={rating}
                                             />
                                         </td>
-                                        {!isDesign && <td>{rating ?? '—'}</td>}
+                                        {!isDesign && <td className={ratingClass(rating)}>{rating ?? '—'}</td>}
                                         <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
                                         {isMarathonMatch && (
                                             <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>

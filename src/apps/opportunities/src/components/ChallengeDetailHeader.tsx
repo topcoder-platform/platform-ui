@@ -13,14 +13,14 @@ import first2FinishTypeIcon from '../assets/first2finish-type.svg'
 import marathonTypeIcon from '../assets/marathon-type.svg'
 import medal1 from '../assets/medal-1.svg'
 import medal10 from '../assets/medal-10.svg'
-import medal2 from '../assets/medal-2.svg'
-import medal3 from '../assets/medal-3.svg'
 import medal4 from '../assets/medal-4.svg'
 import medal5 from '../assets/medal-5.svg'
 import medal6 from '../assets/medal-6.svg'
 import medal7 from '../assets/medal-7.svg'
 import medal8 from '../assets/medal-8.svg'
 import medal9 from '../assets/medal-9.svg'
+import prizeMedal2 from '../assets/prize-medal-2.svg'
+import prizeMedal3 from '../assets/prize-medal-3.svg'
 import taskTypeIcon from '../assets/task-type.svg'
 import timelineAiScreeningIcon from '../assets/timeline-ai-screening.svg'
 import timelineAppealsIcon from '../assets/timeline-appeals.svg'
@@ -46,6 +46,7 @@ import styles from './ChallengeDetailHeader.module.scss'
 interface ChallengeDetailHeaderProps {
     busy: boolean
     challenge: ChallengeOpportunity
+    hasSubmitted?: boolean
     isRegistered: boolean
     onRegister: () => void
     onSubmit: () => void
@@ -123,11 +124,30 @@ function typeIcon(type: string): string {
  * Formats the active phase and remaining time for the masthead metric.
  *
  * @param phase current or next challenge phase.
+ * @param challengeStatus challenge lifecycle status used when no phase is active.
  * @returns phase, regular-weight qualifier, and optional remaining-time segments.
  * @throws Does not throw; absent and malformed dates use stable fallbacks.
  */
-function phaseSummary(phase: ChallengePhase | undefined): ChallengePhaseSummary {
-    if (!phase) return { phase: 'Challenge completed' }
+function phaseSummary(
+    phase: ChallengePhase | undefined,
+    challengeStatus?: string,
+): ChallengePhaseSummary {
+    if (!phase) {
+        const statusKey = challengeCatalogKey(challengeStatus)
+        if (statusKey === 'completed') return { phase: 'Challenge completed' }
+
+        const status = challengeStatus?.trim()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .toLowerCase()
+        return {
+            phase: status
+                ? `${status.charAt(0)
+                    .toUpperCase()}${status.slice(1)}`
+                : 'Schedule to be announced',
+        }
+    }
+
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
     const end = endValue ? new Date(endValue) : undefined
     if (!end || Number.isNaN(end.getTime())) {
@@ -407,18 +427,41 @@ function timelineTimezone(): string {
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
     const phase = challengeCurrentPhase(props.challenge)
-    const phaseCopy = phaseSummary(phase)
+    const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = catalogName(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
-    const completedChallenge = challengeCatalogKey(props.challenge.status) === 'completed'
+    const challengeStatusKey = challengeCatalogKey(props.challenge.status)
+    const showInactiveActions = [
+        'canceled',
+        'canceledclientrequest',
+        'cancelled',
+        'cancelledclientrequest',
+        'completed',
+        'draft',
+    ].includes(challengeStatusKey)
     const registrationUnavailable = props.registrationLoading || props.registrationError
-    const canUnregister = props.isRegistered && registrationOpen && !registrationUnavailable && !props.busy
+    const canUnregister = props.isRegistered
+        && !props.hasSubmitted
+        && registrationOpen
+        && !registrationUnavailable
+        && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
-    const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
+    const medalAssets = [
+        medal1,
+        prizeMedal2,
+        prizeMedal3,
+        medal4,
+        medal5,
+        medal6,
+        medal7,
+        medal8,
+        medal9,
+        medal10,
+    ]
     const featuredPrizes = challengePrizes.slice(0, 3)
     const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
     const featuredPrizeLabels = featuredPrizes.map(prize => formatPrize(prize))
@@ -553,7 +596,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </div>
                         </div>
                         <div className={styles.actions}>
-                            {props.isRegistered || completedChallenge ? (
+                            {props.isRegistered || showInactiveActions ? (
                                 <>
                                     <button
                                         className={styles.secondary}
