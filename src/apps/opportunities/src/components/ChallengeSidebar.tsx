@@ -339,7 +339,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         rel='noreferrer'
                         target='_blank'
                     >
-                        How to Compete on Marathon Match
+                        How to Compete in a Marathon Match
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
