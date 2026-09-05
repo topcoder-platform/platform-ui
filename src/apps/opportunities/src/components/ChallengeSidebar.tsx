@@ -306,14 +306,14 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </a>
             </SidebarCard>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
-                <p>Read educational material in Topcoder Thrive.</p>
+                <p>Read educational material on Topcoder Thrive.</p>
                 <a href={CHALLENGE_EXPLAINED_URL} rel='noreferrer' target='_blank'>
                     Topcoder Challenges Explained
                     <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                 </a>
                 {marathonMatch && (
                     <a href={MARATHON_MATCH_LEARNING_URL} rel='noreferrer' target='_blank'>
-                        How to Compete on Marathon Match
+                        How to Compete in a Marathon Match
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
