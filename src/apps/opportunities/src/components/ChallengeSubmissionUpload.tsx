@@ -33,6 +33,7 @@ interface ChallengeSubmissionUploadProps {
     onContactSupport: () => void
     onShowRequirements: () => void
     onSubmitted: (submission: ChallengeSubmission) => Promise<unknown> | unknown
+    onUploadingChange?: (uploading: boolean) => void
     onValidateRegistration: () => Promise<boolean>
 }
 
@@ -94,6 +95,7 @@ function formatFileSize(bytes: number): string {
  * @throws Does not throw; upload and clipboard failures are rendered or toasted in place.
  */
 export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = props => {
+    const onUploadingChange = props.onUploadingChange
     const [agreementAccepted, setAgreementAccepted] = useState(false)
     const [dragActive, setDragActive] = useState(false)
     const [error, setError] = useState<string | undefined>()
@@ -108,7 +110,22 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const designChallenge = trackKey === 'design'
     const pluralUpload = trackKey === 'qualityassurance' || typeKey === 'marathonmatch'
 
-    useEffect(() => () => abortController.current?.abort(), [])
+    useEffect(() => () => {
+        abortController.current?.abort()
+        onUploadingChange?.(false)
+    }, [onUploadingChange])
+
+    /**
+     * Keeps the local form and parent tab-navigation lock in sync.
+     *
+     * @param active whether a submission request is active.
+     * @returns void after notifying both owners.
+     * @throws Does not throw.
+     */
+    const setUploadActive = (active: boolean): void => {
+        setUploading(active)
+        onUploadingChange?.(active)
+    }
 
     /**
      * Clears a selected file and cancels its active multipart request when present.
@@ -124,7 +141,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         setError(undefined)
         setFile(undefined)
         setProgress(0)
-        setUploading(false)
+        setUploadActive(false)
     }
 
     /**
@@ -201,7 +218,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         abortController.current = controller
         setError(undefined)
         setProgress(0)
-        setUploading(true)
+        setUploadActive(true)
         try {
             const registrationIsCurrent = await props.onValidateRegistration()
             if (!registrationIsCurrent || controller.signal.aborted) return
@@ -229,7 +246,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                 : 'Unable to upload this submission.')
         } finally {
             if (abortController.current === controller) abortController.current = undefined
-            setUploading(false)
+            setUploadActive(false)
         }
     }
 
@@ -268,7 +285,12 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         <div className={styles.uploadFlow}>
             <header className={styles.header}>
                 <div>
-                    <button aria-label='Back to My Submissions' onClick={props.onBack} type='button'>
+                    <button
+                        aria-label='Back to My Submissions'
+                        disabled={uploading}
+                        onClick={props.onBack}
+                        type='button'
+                    >
                         <IconOutline.ArrowLeftIcon aria-hidden='true' />
                     </button>
                     <h2>Submit your solution</h2>
@@ -307,7 +329,12 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                 should contain and how it should be organized.
                             </p>
                         )}
-                        <button className={styles.textButton} onClick={props.onShowRequirements} type='button'>
+                        <button
+                            className={styles.textButton}
+                            disabled={uploading}
+                            onClick={props.onShowRequirements}
+                            type='button'
+                        >
                             Learn more
                             <IconOutline.ArrowRightIcon aria-hidden='true' />
                         </button>
@@ -489,7 +516,12 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             </label>
                             <div className={styles.divider} />
                             <div className={styles.actions}>
-                                <button className={styles.secondaryButton} onClick={props.onBack} type='button'>
+                                <button
+                                    className={styles.secondaryButton}
+                                    disabled={uploading}
+                                    onClick={props.onBack}
+                                    type='button'
+                                >
                                     Cancel
                                 </button>
                                 <button

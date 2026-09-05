@@ -279,6 +279,7 @@ export function marathonSubmissionScores(
         ?? averageReviewScore((submission.review ?? []).map(review => review.initialScore))
     const finalScore = latestSummationScore(submission, 'final')
         ?? finiteScore(submission.finalScore)
+        ?? finiteScore(submission.aiDecisionScore)
         ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
     return { finalScore, provisionalScore }
 }
@@ -377,7 +378,7 @@ export function marathonSubmissionTestProgress(
     if (current) {
         return {
             process: current.process,
-            progress: current.progress,
+            progress: current.progress ?? (current.status === 'Failed' ? 0 : undefined),
             status: current.status,
         }
     }
@@ -387,13 +388,15 @@ export function marathonSubmissionTestProgress(
         .filter((status): status is NonNullable<MarathonTestProgress['status']> => !!status)
     const quarantineUrl = submission.url?.toLowerCase()
         .includes('submissions-quarantine/') ?? false
+    if (submission.virusScan === false || quarantineUrl) {
+        return { process: 'Provisional', progress: 0, status: 'Failed' }
+    }
+
     if (
-        submission.virusScan === false
-        || quarantineUrl
-        || reviewStatuses.includes('Failed')
+        reviewStatuses.includes('Failed')
         || testStatusValue(submission.status) === 'Failed'
     ) {
-        return { process: 'System', status: 'Failed' }
+        return { process: 'System', progress: 0, status: 'Failed' }
     }
 
     const scores = marathonSubmissionScores(submission)

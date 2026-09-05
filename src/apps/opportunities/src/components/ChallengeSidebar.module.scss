@@ -112,6 +112,10 @@
     p {
         max-width: 280px;
     }
+
+    a.promoLink {
+        margin-top: 16px;
+    }
 }
 
 .promoArt {
@@ -126,6 +130,17 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.card a.learningLink {
+    display: block;
+    width: fit-content;
+
+    img {
+        display: inline-block;
+        margin-left: 4px;
+        vertical-align: -5px;
+    }
 }
 
 .infoSection {

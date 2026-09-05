@@ -141,7 +141,7 @@ export function formatForumDate(value?: string): string {
 }
 
 /**
- * Flattens a Forums API reply tree while retaining visual thread depth.
+ * Flattens a Forums API reply tree chronologically while retaining visual thread depth.
  *
  * @param posts nested visible posts.
  * @param depth current recursive nesting depth.
@@ -149,10 +149,17 @@ export function formatForumDate(value?: string): string {
  * @throws Does not throw.
  */
 export function flattenForumPosts(posts: ForumPost[], depth: number = 0): FlatForumPost[] {
-    return posts.flatMap(post => [
-        { depth, post },
-        ...flattenForumPosts(post.replies ?? [], depth + 1),
-    ])
+    return [...posts]
+        .sort((left, right) => {
+            const createdAtDelta = new Date(left.createdAt)
+                .getTime() - new Date(right.createdAt)
+                .getTime()
+            return createdAtDelta || left.id.localeCompare(right.id)
+        })
+        .flatMap(post => [
+            { depth, post },
+            ...flattenForumPosts(post.replies ?? [], depth + 1),
+        ])
 }
 
 /**
@@ -1130,6 +1137,7 @@ function quoteForumPost(post: ForumPost): string {
  * @throws Does not throw; mutation callbacks own API error handling.
  */
 const ForumPostCard: FC<{
+    canDelete: boolean
     detail: ForumTopicDetail
     item: FlatForumPost
     memberId: string
@@ -1155,6 +1163,12 @@ const ForumPostCard: FC<{
                         handle={post.authorHandle}
                         profile={props.profilesByMemberId.get(post.authorMemberId)}
                     />
+                    {post.authorIsCopilot && (
+                        <span className={styles.copilotBadge}>
+                            <IconOutline.StarIcon aria-hidden='true' />
+                            Copilot
+                        </span>
+                    )}
                     {post.authorMemberId === props.detail.topic.authorMemberId && (
                         <span className={styles.authorBadge}>
                             <IconOutline.PencilIcon aria-hidden='true' />
@@ -1230,16 +1244,16 @@ const ForumPostCard: FC<{
                         </>
                     )}
                     {owner && !props.detail.topic.locked && (
-                        <>
-                            <button onClick={() => props.onEdit(post)} type='button'>
-                                <IconOutline.PencilIcon aria-hidden='true' />
-                                Edit
-                            </button>
-                            <button onClick={() => props.onDelete(post)} type='button'>
-                                <IconOutline.TrashIcon aria-hidden='true' />
-                                Delete
-                            </button>
-                        </>
+                        <button onClick={() => props.onEdit(post)} type='button'>
+                            <IconOutline.PencilIcon aria-hidden='true' />
+                            Edit
+                        </button>
+                    )}
+                    {props.canDelete && !props.detail.topic.locked && (
+                        <button onClick={() => props.onDelete(post)} type='button'>
+                            <IconOutline.TrashIcon aria-hidden='true' />
+                            Delete
+                        </button>
                     )}
                 </footer>
             )}
@@ -1256,6 +1270,7 @@ const ForumPostCard: FC<{
  * @throws Does not throw; API failures render beside the affected workflow.
  */
 const ForumTopicView: FC<{
+    canDeletePosts: boolean
     detail: ForumTopicDetail
     memberId: string
     onBack: () => void
@@ -1321,10 +1336,10 @@ const ForumTopicView: FC<{
         await props.onChanged()
     }
 
-    /** Opens the in-app delete confirmation for an owned post. */
+    /** Opens the administrator delete confirmation for a post. */
     const removePost = (post: ForumPost): void => setPostToDelete(post)
 
-    /** Soft-deletes the selected owned post after in-app confirmation. */
+    /** Soft-deletes the selected post after administrator confirmation. */
     const confirmRemovePost = async (): Promise<void> => {
         if (!postToDelete) return
         setError(undefined)
@@ -1452,6 +1467,7 @@ const ForumTopicView: FC<{
                     {error && <p className={styles.actionError} role='alert'>{error}</p>}
                     {flatPosts.map(item => (
                         <ForumPostCard
+                            canDelete={props.canDeletePosts}
                             detail={props.detail}
                             item={item}
                             key={item.post.id}
@@ -1826,6 +1842,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
 
         return (
             <ForumTopicView
+                canDeletePosts={!!props.canDeleteTopics}
                 detail={detailResponse.data}
                 memberId={props.memberId}
                 onBack={() => setSelectedTopicId(undefined)}

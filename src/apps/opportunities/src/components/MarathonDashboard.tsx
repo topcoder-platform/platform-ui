@@ -53,7 +53,7 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
     const response: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
         ['opportunities:mm-review-summations', props.challenge.id],
         () => getChallengeReviewSummations(props.challenge.id),
-        { revalidateOnFocus: false },
+        { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const dashboard = useMemo(
         () => buildMarathonDashboardData(response.data ?? []),

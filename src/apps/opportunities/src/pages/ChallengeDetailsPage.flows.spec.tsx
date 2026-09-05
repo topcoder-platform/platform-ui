@@ -20,6 +20,9 @@ import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 const mockUseSWR = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
+const mockChallengeMutate = jest.fn()
+const mockMySubmissionCountMutate = jest.fn()
+const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
 let mockProfile: { handle: string; roles?: string[]; userId: number } | undefined
@@ -39,8 +42,11 @@ let mockWinnerStats: Record<string, unknown>[]
 jest.mock('../assets/medal-1.svg', () => 'medal-1')
 jest.mock('../assets/medal-2.svg', () => 'medal-2')
 jest.mock('../assets/medal-3.svg', () => 'medal-3')
-jest.mock('./ChallengeDetailsPage.module.scss', () => new Proxy({}, {
-    get: (_target, property: string): string => property,
+jest.mock('./ChallengeDetailsPage.module.scss', () => ({
+    __esModule: true,
+    default: new Proxy({}, {
+        get: (_target, property: string): string => property,
+    }),
 }))
 
 jest.mock('swr', () => ({
@@ -85,6 +91,8 @@ jest.mock('~/libs/ui', () => {
 jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
+        busy: boolean
+        hasSubmitted?: boolean
         isRegistered: boolean
         onRegister: () => void
         onSubmit: () => void
@@ -97,8 +105,14 @@ jest.mock('../components', () => ({
             )}
             {props.isRegistered && (
                 <>
-                    <button onClick={props.onUnregister} type='button'>Unregister</button>
-                    <button onClick={props.onSubmit} type='button'>Submit a solution</button>
+                    <button
+                        disabled={props.busy || props.hasSubmitted}
+                        onClick={props.onUnregister}
+                        type='button'
+                    >
+                        Unregister
+                    </button>
+                    <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
                 </>
             )}
         </header>
@@ -107,12 +121,28 @@ jest.mock('../components', () => ({
         <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
     ),
     ChallengeSidebar: (): JSX.Element => <aside />,
-    ChallengeSubmissionUpload: (props: { onBack: () => void }): JSX.Element => (
-        <div>
-            Submission upload form
-            <button onClick={props.onBack} type='button'>Back to submissions</button>
-        </div>
-    ),
+    ChallengeSubmissionUpload: (props: {
+        onBack: () => void
+        onSubmitted: () => void
+        onUploadingChange: (uploading: boolean) => void
+    }): JSX.Element => {
+        const startUpload = (): void => props.onUploadingChange(true)
+        const finishUpload = (): void => {
+            props.onUploadingChange(false)
+            props.onSubmitted()
+        }
+
+        return (
+            <div>
+                Submission upload form
+                <button onClick={props.onBack} type='button'>Back to submissions</button>
+                {/* eslint-disable-next-line react/jsx-no-bind */}
+                <button onClick={startUpload} type='button'>Start mock upload</button>
+                {/* eslint-disable-next-line react/jsx-no-bind */}
+                <button onClick={finishUpload} type='button'>Finish mock upload</button>
+            </div>
+        )
+    },
     ChallengeTermsModal: (props: {
         onAccept: () => Promise<void>
         onClose: () => void
@@ -130,6 +160,12 @@ jest.mock('../components', () => ({
     MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
     OpportunityPagination: (): JSX.Element => <div>Pagination</div>,
     ReportIssueModal: (): JSX.Element => <></>,
+    SubmissionArtifactsModal: (props: {
+        open: boolean
+        submissionId?: string
+    }): JSX.Element => (
+        <div>{props.open ? `Artifacts modal ${props.submissionId}` : ''}</div>
+    ),
     SubmissionHistoryModal: (props: {
         open: boolean
         submission?: { id: string }
@@ -165,7 +201,7 @@ jest.mock('../services', () => ({
     getChallengeSubmissions: jest.fn(),
     getChallengeSubmitters: jest.fn(),
     getMemberProfilesByUserIds: jest.fn(),
-    registerForChallenge: jest.fn(),
+    registerForChallenge: (...args: unknown[]) => mockRegister(...args),
     unregisterFromChallenge: (...args: unknown[]) => mockUnregister(...args),
 }))
 
@@ -298,6 +334,8 @@ describe('ChallengeDetailsPage member flows', () => {
     beforeEach(() => {
         jest.restoreAllMocks()
         jest.clearAllMocks()
+        jest.spyOn(window, 'scrollTo')
+            .mockImplementation(() => undefined)
         mockProfile = undefined
         mockRegistration = undefined
         mockRegistrationRemoved = false
@@ -321,14 +359,22 @@ describe('ChallengeDetailsPage member flows', () => {
             type: 'Challenge',
         }
         mockUnregister.mockResolvedValue(undefined)
+        mockRegister.mockResolvedValue({ id: 'new-resource-id', memberId: 123 })
         mockAgreeToTerms.mockResolvedValue(undefined)
         mockDeleteSubmission.mockResolvedValue(undefined)
+        mockChallengeMutate.mockImplementation(async update => (
+            typeof update === 'function' ? update(mockChallenge) : update
+        ))
+        mockMySubmissionCountMutate.mockResolvedValue(mockMySubmissionCount)
         mockRegistrationMutate.mockImplementation(async () => (
             mockRegistrationRemoved ? undefined : mockRegistration
         ))
         mockUseSWR.mockImplementation((key: unknown) => {
             if (typeof key === 'string' && key.startsWith('opportunities:challenge:')) {
-                return swrResponse(mockChallenge)
+                return {
+                    ...swrResponse(mockChallenge),
+                    mutate: mockChallengeMutate,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:registration') {
@@ -347,7 +393,10 @@ describe('ChallengeDetailsPage member flows', () => {
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:my-submission-count') {
-                return swrResponse(mockMySubmissionCount)
+                return {
+                    ...swrResponse(mockMySubmissionCount),
+                    mutate: mockMySubmissionCountMutate,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submission-previews') {
@@ -394,6 +443,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
+    it('resets the viewport when a challenge details route opens', () => {
+        renderPage()
+
+        expect(window.scrollTo)
+            .toHaveBeenCalledWith({ left: 0, top: 0 })
+    })
+
     it('closes challenge terms immediately while registration is pending', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockAgreeToTerms.mockReturnValue(new Promise<void>(() => {
@@ -409,6 +465,35 @@ describe('ChallengeDetailsPage member flows', () => {
 
         expect(screen.queryByRole('dialog', { name: 'Challenge terms' }))
             .not.toBeInTheDocument()
+    })
+
+    it('updates the count optimistically and refreshes registrants after registration', async () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Accept terms' }))
+
+        await waitFor(() => expect(mockRegister)
+            .toHaveBeenCalledWith('challenge-id', 'coder'))
+        expect(mockRegistrationMutate)
+            .toHaveBeenCalledWith(
+                { id: 'new-resource-id', memberId: 123 },
+                { revalidate: false },
+            )
+        const countUpdate = mockChallengeMutate.mock.calls[0][0] as (
+            challenge: Record<string, unknown>
+        ) => Record<string, unknown>
+        expect(countUpdate(mockChallenge).numOfRegistrants)
+            .toBe(9)
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+        expect(mockUseSWR)
+            .toHaveBeenCalledWith(
+                ['opportunities:registrants', 'challenge-id', 1, 10, 'desc', 1],
+                expect.any(Function),
+                { revalidateOnFocus: false },
+            )
     })
 
     it('gives an unregistered administrator member tabs without the submission flow', () => {
@@ -583,6 +668,17 @@ describe('ChallengeDetailsPage member flows', () => {
             ])
     })
 
+    it('disables unregister after the member has submitted', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockMySubmissionCount = 1
+
+        renderPage()
+
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeDisabled()
+    })
+
     it('opens the in-tab upload workflow from the revalidated registered header action', async () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
@@ -599,6 +695,43 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Back to submissions' }))
         expect(screen.getByText('You have no submissions yet'))
             .toBeInTheDocument()
+    })
+
+    it('keeps the upload mounted and challenge tabs locked until an active upload finishes', async () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
+        await screen.findByText('Submission upload form')
+        fireEvent.click(screen.getByRole('button', { name: 'Start mock upload' }))
+
+        expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeDisabled()
+        expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .not.toBeDisabled()
+        fireEvent.click(screen.getByRole('tab', { name: 'Requirements' }))
+        expect(screen.getByText('Submission upload form'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .toHaveAttribute('aria-selected', 'true')
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getByText('Submission upload form'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Finish mock upload' }))
+
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .not.toBeDisabled())
+        expect(mockChallengeMutate)
+            .toHaveBeenCalledWith(
+                expect.objectContaining({ numOfSubmissions: 6 }),
+                { revalidate: false },
+            )
+        expect(mockMySubmissionCountMutate)
+            .toHaveBeenCalledWith(expect.any(Function), { revalidate: false })
     })
 
     it('does not open the upload workflow when the cached registration was removed', async () => {
@@ -642,6 +775,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveAttribute('aria-selected', 'true'))
         expect(mockUnregister)
             .toHaveBeenCalledWith('challenge-id', 'coder')
+        expect(mockRegistrationMutate)
+            .toHaveBeenCalledWith(undefined, { revalidate: false })
+        const countUpdate = mockChallengeMutate.mock.calls[0][0] as (
+            challenge: Record<string, unknown>
+        ) => Record<string, unknown>
+        expect(countUpdate(mockChallenge).numOfRegistrants)
+            .toBe(7)
     })
 
     it('opens History in a modal instead of navigating to Review App', () => {
@@ -673,6 +813,7 @@ describe('ChallengeDetailsPage member flows', () => {
             status: 'ACTIVE',
             type: 'CONTEST_SUBMISSION',
         }]
+        mockChallenge = { ...mockChallenge, status: 'ACTIVE' }
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -700,6 +841,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'View history for submission submission-1' }))
             .toBeInTheDocument()
+        const submissionRequest = mockUseSWR.mock.calls.find(([key]) => (
+            Array.isArray(key)
+            && key[0] === 'opportunities:submissions'
+            && key[2] === '123'
+        ))
+        expect(submissionRequest?.[2])
+            .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
     })
 
     it('renders and deletes the compact Design My Submissions actions', async () => {
@@ -830,6 +978,23 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('98.5'))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open Review App' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', {
+            name: 'Open submission submission-1 in Review App',
+        }))
+            .not.toBeInTheDocument()
+        const artifactsButton = screen.getByRole('button', {
+            name: 'Download submission artifacts submission-1',
+        })
+        fireEvent.click(artifactsButton)
+        expect(screen.getByText('Artifacts modal submission-1'))
+            .toBeInTheDocument()
+        const scoreRequest = mockUseSWR.mock.calls.find(([key]) => (
+            Array.isArray(key) && key[0] === 'opportunities:mm-review-summations'
+        ))
+        expect(scoreRequest?.[2])
+            .toMatchObject({ shouldRetryOnError: false })
     })
 
     it('populates the released Marathon Match final score from Review Summations', () => {
@@ -943,14 +1108,14 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByRole('link', { name: 'enriched' }))
             .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/enriched')
         expect(screen.getByRole('cell', { name: '1800' }))
-            .toBeInTheDocument()
+            .toHaveClass('ratingYellow')
         expect(document.querySelector('img[src="https://images.example/enriched.png"]'))
             .toBeInTheDocument()
 
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
 
         expect(screen.getByRole('cell', { name: '1800' }))
-            .toBeInTheDocument()
+            .toHaveClass('ratingYellow')
         expect(screen.getByRole('link', { name: 'enriched' }))
             .toBeInTheDocument()
     })
@@ -1025,6 +1190,9 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(within(remainingWinners)
             .getByRole('columnheader', { name: 'Development Wins' }))
             .toBeInTheDocument()
+        expect(within(remainingWinners)
+            .getByRole('columnheader', { name: 'Rating' }))
+            .toBeInTheDocument()
         const fourthRow = within(remainingWinners)
             .getByRole('row', { name: /^4th fourth You/ })
         expect(fourthRow)
@@ -1033,6 +1201,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('$50')
         expect(fourthRow)
             .toHaveTextContent('4')
+        expect(fourthRow)
+            .toHaveTextContent('1300')
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()

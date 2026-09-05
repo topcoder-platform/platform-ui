@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import {
+    act,
     render,
     screen,
 } from '@testing-library/react'
@@ -63,5 +64,33 @@ describe('MarathonDashboard', () => {
             .toHaveBeenCalledWith('challenge')
         expect(screen.getByRole('table', { name: 'Marathon Match submission scores over time' }))
             .toBeInTheDocument()
+    })
+
+    it('shows one stable error state without automatically retrying a missing score feed', async () => {
+        mockedGetReviewSummations.mockRejectedValueOnce(new Error('Unauthorized'))
+
+        render(
+            <SWRConfig
+                value={{
+                    dedupingInterval: 0,
+                    errorRetryInterval: 1,
+                    provider: () => new Map(),
+                }}
+            >
+                <MarathonDashboard
+                    challenge={{ id: 'no-scores', name: 'MM', type: 'Marathon Match' }}
+                />
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Dashboard unavailable')
+        await act(async () => {
+            await new Promise(resolve => {
+                setTimeout(resolve, 20)
+            })
+        })
+        expect(mockedGetReviewSummations)
+            .toHaveBeenCalledTimes(1)
     })
 })

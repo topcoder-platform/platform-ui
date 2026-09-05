@@ -152,6 +152,7 @@ const discussion: ForumTopicSummary = {
 
 const starterPost: ForumPost = {
     authorHandle: 'DaraK',
+    authorIsCopilot: true,
     authorMemberId: '1',
     authorPostsCount: 123,
     content: 'Welcome **competitors**.',
@@ -162,6 +163,7 @@ const starterPost: ForumPost = {
     parentType: 'TOPIC',
     replies: [{
         authorHandle: 'Yoki',
+        authorIsCopilot: false,
         authorMemberId: '2',
         authorPostsCount: 12,
         content: 'Thanks for the clarification.',
@@ -304,6 +306,8 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(screen.getAllByText('Author'))
             .toHaveLength(2)
+        expect(screen.getByText('Copilot'))
+            .toBeInTheDocument()
         expect(screen.getAllByRole('button', { name: 'Reply' }))
             .toHaveLength(2)
         fireEvent.change(screen.getByPlaceholderText('Type here'), {
@@ -381,6 +385,34 @@ describe('ChallengeForum', () => {
 
         expect(mockDeleteForumTopic)
             .toHaveBeenCalledWith('topic-1')
+    })
+
+    it('allows only an administrator to delete a post while preserving author editing', async () => {
+        const ownerView = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />,
+        )
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .not.toBeInTheDocument()
+        ownerView.unmount()
+
+        render(
+            <ChallengeForum
+                canDeleteTopics
+                challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                memberId='10'
+            />,
+        )
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+        fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
+        expect(screen.getByRole('dialog', { name: 'Delete comment?' }))
+            .toBeInTheDocument()
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Delete comment' })))
+
+        expect(mockDeleteForumPost)
+            .toHaveBeenCalledWith('post-1')
     })
 
     it('lets an administrator create a challenge announcement', async () => {
@@ -540,6 +572,44 @@ describe('forum presentation helpers', () => {
         expect(flattenForumPosts([starterPost])
             .map(item => [item.post.id, item.depth]))
             .toEqual([['post-1', 0], ['post-2', 1]])
+    })
+
+    it('orders comments and replies from oldest to newest without mutating API data', () => {
+        const newest = {
+            ...starterPost,
+            createdAt: '2026-06-08T00:00:00.000Z',
+            id: 'post-newest',
+            replies: [
+                {
+                    ...starterPost.replies[0],
+                    createdAt: '2026-06-10T00:00:00.000Z',
+                    id: 'reply-newest',
+                },
+                {
+                    ...starterPost.replies[0],
+                    createdAt: '2026-06-09T00:00:00.000Z',
+                    id: 'reply-oldest',
+                },
+            ],
+        }
+        const oldest = {
+            ...starterPost,
+            createdAt: '2026-06-07T00:00:00.000Z',
+            id: 'post-oldest',
+            replies: [],
+        }
+        const apiPosts = [newest, oldest]
+
+        expect(flattenForumPosts(apiPosts)
+            .map(item => [item.post.id, item.depth]))
+            .toEqual([
+                ['post-oldest', 0],
+                ['post-newest', 0],
+                ['reply-oldest', 1],
+                ['reply-newest', 1],
+            ])
+        expect(apiPosts.map(post => post.id))
+            .toEqual(['post-newest', 'post-oldest'])
     })
 
     it('handles absent and invalid forum dates safely', () => {

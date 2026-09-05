@@ -1,6 +1,7 @@
 /* eslint-disable ordered-imports/ordered-imports */
 import {
     xhrDeleteAsync,
+    xhrGetBlobAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
@@ -11,11 +12,13 @@ import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
     deleteChallengeSubmission,
+    downloadChallengeSubmissionArtifact,
     getChallengeAiReviewConfig,
     getChallengeMemberResource,
     getChallengeProjectResults,
     getChallengeReviewSummations,
     getChallengeSubmissionHistory,
+    getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
     getChallengeSubmissionDownloadUrl,
     getChallengeSubmissions,
@@ -51,6 +54,7 @@ jest.mock('filestack-js', () => ({ init: jest.fn() }))
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
+    xhrGetBlobAsync: jest.fn(),
     xhrGlobalInstance: { get: jest.fn() },
     xhrPostAsync: jest.fn(),
     xhrRequestAsync: jest.fn(),
@@ -425,22 +429,17 @@ describe('opportunities service normalization', () => {
             })
             .mockResolvedValueOnce({
                 data: {
-                    data: [{
-                        engagementId: 'applied-engagement',
-                        status: 'SHORTLISTED',
-                        updatedAt: '2026-09-01T00:00:00.000Z',
-                    }],
-                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
-                },
-                headers: { get: () => undefined },
-            })
-            .mockResolvedValueOnce({
-                data: {
-                    data: [{
-                        assignments: [{ id: 'assignment', status: 'ASSIGNED' }],
-                        id: 'assigned-engagement',
-                    }],
-                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+                    data: [
+                        {
+                            applicationStatus: 'SHORTLISTED',
+                            id: 'applied-engagement',
+                        },
+                        {
+                            assignments: [{ id: 'assignment', status: 'ASSIGNED' }],
+                            id: 'assigned-engagement',
+                        },
+                    ],
+                    meta: { page: 1, perPage: 200, totalCount: 2, totalPages: 1 },
                 },
                 headers: { get: () => undefined },
             })
@@ -460,9 +459,51 @@ describe('opportunities service normalization', () => {
         expect(get.mock.calls.map(call => new URL(String(call[0])).pathname))
             .toEqual([
                 '/v6/engagements/engagements',
-                '/v6/engagements/applications',
-                '/v6/engagements/engagements/my-assignments',
+                '/v6/engagements/engagements',
             ])
+        const memberStateUrl = new URL(String(get.mock.calls[1][0]))
+        expect(memberStateUrl.searchParams.get('appliedByMe'))
+            .toBe('true')
+        expect(memberStateUrl.searchParams.get('includePrivate'))
+            .toBe('true')
+    })
+
+    it('hydrates declined offers from the complete member-scoped engagement feed', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ id: 'declined-engagement', status: 'OPEN', title: 'Declined' }],
+                    meta: { page: 1, perPage: 10, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{
+                        applicationStatus: 'SELECTED',
+                        assignments: [{ id: 'declined-assignment', status: 'OFFER_REJECTED' }],
+                        id: 'declined-engagement',
+                    }],
+                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    applicationStatus: 'SELECTED',
+                    assignments: [{ status: 'OFFER_REJECTED' }],
+                    id: 'declined-engagement',
+                }],
+            })
     })
 
     it('maps copilot track facets and skills to types and disables status grouping for honest sorting', () => {
@@ -493,25 +534,41 @@ describe('opportunities service normalization', () => {
             .toEqual(['React'])
     })
 
-    it('normalizes and sorts Copilot payment values before applying UI pagination', async () => {
+    it('sorts only active Copilot custom payments before applying UI pagination', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         get.mockReset()
         get.mockResolvedValueOnce({
             data: [
                 {
-                    data: { opportunityTitle: 'Higher', otherPaymentType: '$2,000' },
+                    data: {
+                        opportunityTitle: 'Higher',
+                        otherPaymentType: '$2,000',
+                        paymentType: 'other',
+                    },
                     id: 'higher',
                 },
                 {
-                    data: { opportunityTitle: 'Lower', otherPaymentType: '$100' },
+                    data: {
+                        opportunityTitle: 'Lower',
+                        otherPaymentType: '$100',
+                        paymentType: 'other',
+                    },
                     id: 'lower',
+                },
+                {
+                    data: {
+                        opportunityTitle: 'Standard',
+                        otherPaymentType: '$50',
+                        paymentType: 'standard',
+                    },
+                    id: 'standard',
                 },
             ],
             headers: {
                 get: (name: string) => ({
                     'x-page': '1',
                     'x-per-page': '1000',
-                    'x-total': '2',
+                    'x-total': '3',
                     'x-total-pages': '1',
                 } as Record<string, string>)[name],
             },
@@ -527,8 +584,8 @@ describe('opportunities service normalization', () => {
                     id: 'lower',
                     opportunityTitle: 'Lower',
                 })],
-                total: 2,
-                totalPages: 2,
+                total: 3,
+                totalPages: 3,
             })
     })
 
@@ -1032,6 +1089,27 @@ describe('opportunities service normalization', () => {
         expect(get)
             .toHaveBeenLastCalledWith(
                 'https://api.example/v6/submissions/submission%2Fid/download-url',
+            )
+    })
+
+    it('loads supported Review API artifact envelopes and downloads an encoded artifact', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const getBlob = xhrGetBlobAsync as jest.MockedFunction<typeof xhrGetBlobAsync>
+        const blob = new Blob(['artifact'], { type: 'application/zip' })
+        get.mockResolvedValueOnce({ data: { artifacts: [' scorer output ', '', 123] } })
+        getBlob.mockResolvedValueOnce(blob)
+
+        await expect(getChallengeSubmissionArtifacts('submission/id'))
+            .resolves.toEqual(['scorer output'])
+        expect(get)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts',
+            )
+        await expect(downloadChallengeSubmissionArtifact('submission/id', 'result/file.zip'))
+            .resolves.toBe(blob)
+        expect(getBlob)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts/result%2Ffile.zip/download',
             )
     })
 

@@ -62,22 +62,25 @@ function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): Challe
  *
  * @param challenge challenge fixture rendered by the form.
  * @param onValidateRegistration pre-upload registration result.
+ * @param onUploadingChange optional observer for the active upload state.
  * @returns Testing Library render result.
  * @throws Does not throw.
  */
 function renderUpload(
-    challenge: ChallengeOpportunity = challengeFixture(),
-    onValidateRegistration: () => Promise<boolean> = async () => true,
+    challenge?: ChallengeOpportunity,
+    onValidateRegistration?: () => Promise<boolean>,
+    onUploadingChange?: (uploading: boolean) => void,
 ): RenderResult {
     return render(
         <ChallengeSubmissionUpload
-            challenge={challenge}
+            challenge={challenge ?? challengeFixture()}
             memberId='123'
             onBack={jest.fn()}
             onContactSupport={jest.fn()}
             onShowRequirements={jest.fn()}
             onSubmitted={jest.fn()}
-            onValidateRegistration={onValidateRegistration}
+            onUploadingChange={onUploadingChange}
+            onValidateRegistration={onValidateRegistration ?? (async () => true)}
         />,
     )
 }
@@ -241,5 +244,34 @@ describe('ChallengeSubmissionUpload', () => {
 
         expect(mockedCreateSubmission)
             .not.toHaveBeenCalled()
+    })
+
+    it('locks navigation while an upload is active and reports when it is safe again', async () => {
+        const onUploadingChange = jest.fn()
+        mockedCreateSubmission.mockImplementation(() => new Promise(() => {
+            // Keep the upload pending until the member explicitly cancels it.
+        }))
+        renderUpload(challengeFixture(), async () => true, onUploadingChange)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(true))
+        expect(screen.getByRole('button', { name: 'Back to My Submissions' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Learn more' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeDisabled()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel upload' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(false))
     })
 })

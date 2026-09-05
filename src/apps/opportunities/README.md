@@ -64,6 +64,9 @@ Review API owns payment ordering. For Engagement and Copilot prize sorts, the
 client combines bounded owner pages before sorting and then restores the
 requested page, so ordering remains correct across page boundaries. Missing
 numeric compensation remains after priced opportunities in both directions.
+Copilot rows marked with the Standard payment type remain unpriced for sorting;
+an obsolete `otherPaymentType` value retained by Projects API must not move a
+Standard row among numeric custom payments.
 Selecting a different result page scrolls the browser back to the top so the
 new page begins at its heading rather than at the prior page's footer.
 
@@ -164,6 +167,9 @@ field is present for the caller.
   discoverable without weakening normal project search. The authored `My
   engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
   accepted or assigned private work remains visible to the current member.
+  Public engagement cards hydrate the caller's status from that same complete
+  member-scoped feed, retaining terminal rejected-offer assignments that the
+  narrower `my-assignments` collection intentionally excludes.
 - Copilot opportunities: Projects API, where the Figma track facet maps to the
   opportunity `type` enum (`dev`, `qa`, `design`, `ai`, `datascience`). During
   rollout, a legacy list that rejects `applied` is filtered locally and its
@@ -190,13 +196,23 @@ resolves that same role and sends `memberId` plus
 filters, global sorting, counts, and pagination. The terms modal similarly
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
-agreement. Passive “Review challenge terms” mode never registers or agrees on
-a member's behalf. Terms API HTML retains its semantic structure and safe links,
-but document-authored inline styles are removed so modal-scoped Figtree headings,
-Nunito Sans body copy, and spacing remain authoritative.
+agreement. Registration content stays unmounted until that request resolves
+and unmounts immediately on close, so unresolved fallback terms cannot flash
+during the modal transition. Passive “Review challenge terms” mode never
+registers or agrees on a member's behalf. Terms API HTML retains its semantic
+structure and safe links, but document-authored inline styles are removed so
+modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
+authoritative.
 DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
+
+Registration and unregistration update the header count and invalidate the
+Registrants table immediately instead of waiting for a page reload. Once a
+registered member has submitted, Unregister stays disabled; a pending or failed
+submission-count check also fails closed so a transient read cannot expose a
+destructive action. Registrant and submission rating cells use the same public
+member rating bands as their handles.
 
 Design challenges with `submissionsViewable=true` use the private-submission
 gallery from the Figma flow. Authenticated members receive the protected
@@ -223,10 +239,14 @@ and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
 Review API submissions and Marathon Match review summations own provisional
-and final scores. Final Marathon Match values remain hidden while a submission
+and final scores. Active My Submissions pages periodically revalidate so an
+asynchronous AI decision score appears without requiring the member to reload
+the page; failed score requests do not enter an automatic retry loop. Final
+Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
-Figma keeps separate Provisional Score and Final Score columns and uses `-`
+member's own current AI decision score is the intentional active-challenge
+exception. The Figma keeps separate Provisional Score and Final Score columns and uses `-`
 when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
@@ -250,10 +270,20 @@ Development, Marathon Match, and Quality Assurance direct members to their
 Requirements content. Successful uploads expose the created submission ID and
 refresh challenge and member submission counts without leaving the confirmation
 state. The declaration opens the public Topcoder Terms of Use in a new tab.
+While an upload is active, the detail tabs and every form action that would
+unmount the upload are disabled. The explicit upload-cancel control remains
+available, aborts its request, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
-progress, and completed states. Design submissions can be deleted only while
-Submission or Checkpoint Submission is open.
+progress, and completed states. Virus-scan and quarantine failures are reported
+as Failed in the Provisional process with explicit 0% progress; later review
+failures remain System failures. Their actions include the clean submission,
+scorer artifacts, and submission history, while the single page-level button
+owns the Review App handoff.
+Submission history replaces the unreliable status field with Final Score and
+uses a responsive table that scrolls only on narrow viewports. Design
+submissions can be deleted only while Submission or Checkpoint Submission is
+open.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits,
@@ -292,5 +322,20 @@ The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
 and attachments, and fails closed for unsafe or retired-host URLs. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
-handoff. Marathon Match challenges replace the general AI Exponential promo
-with the Marathon Match Tournament heading, copy, and guide destination.
+handoff. Review Style uses the authored document-search rail icon. Development
+challenges omit Challenge Links, Source files, and Submission limit while
+adding the published AI Reviewers help and Usable Code rules to Educational
+Materials; the latter two submission sections remain Design-only. Learning
+arrows flow immediately after wrapped labels, and the AI Exponential promo
+keeps a distinct gap before its action. Marathon Match challenges replace the
+general AI Exponential promo with the Marathon Match Tournament heading and
+copy. Its Explore the program link opens the environment's Marathon Match
+Tournament page in a new tab, while the Educational Materials link retains the
+published competition guide.
+
+Opening a different challenge-detail route scrolls the page to the top. When no
+phase is active, the header keeps Challenge API's authored Draft, Cancelled, or
+other lifecycle status rather than calling the challenge completed; Draft,
+cancelled, and completed states retain the Register and Submit controls in their
+disabled presentation. The prize summary uses the light second- and third-place
+card illustrations, while Winners continues to use the dark podium medals.

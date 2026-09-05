@@ -64,4 +64,31 @@ describe('opportunity listing sorting', () => {
             .map(item => item.id))
             .toEqual(['a', 'missing', 'b'])
     })
+
+    it('does not sort standard Copilot rates by a stale custom-payment value', () => {
+        const items = [
+            {
+                id: 'custom-600',
+                otherPaymentType: '$600',
+                paymentType: 'other',
+            },
+            {
+                id: 'standard-with-stale-600',
+                otherPaymentType: '$600',
+                paymentType: 'standard',
+            },
+            {
+                id: 'custom-400',
+                otherPaymentType: '$400',
+                paymentType: 'other',
+            },
+        ]
+
+        expect(sortOpportunityItems(items, 'prizeHighToLow')
+            .map(item => item.id))
+            .toEqual(['custom-600', 'custom-400', 'standard-with-stale-600'])
+        expect(sortOpportunityItems(items, 'prizeLowToHigh')
+            .map(item => item.id))
+            .toEqual(['custom-400', 'custom-600', 'standard-with-stale-600'])
+    })
 })

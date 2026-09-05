@@ -64,6 +64,8 @@ export type ForumPostReaction = 'THUMBS_DOWN' | 'THUMBS_UP'
 /** One post in the nested Forums API topic detail tree. */
 export interface ForumPost {
     authorHandle: string
+    /** Whether the author is assigned a Copilot resource role on the challenge. */
+    authorIsCopilot?: boolean
     authorMemberId: string
     authorPostsCount: number
     content: string | null
