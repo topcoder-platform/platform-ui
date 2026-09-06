@@ -6,6 +6,7 @@ import {
 
 import {
     bulkIngestChallengesInRag,
+    ingestChallengeInRag,
     WorkflowPollTimeoutError,
 } from './ai-workflows'
 
@@ -13,6 +14,7 @@ jest.mock('~/config', () => ({
     EnvironmentConfig: {
         API: { V6: 'https://example.com/v6' },
         RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID: 'challenge-bulk-ingestion',
+        RAG_CHALLENGE_INGESTION_WORKFLOW_ID: 'challenge-ingestion',
         TC_AI_API: 'https://example.com/v6/ai',
     },
 }), {
@@ -158,5 +160,60 @@ describe('bulkIngestChallengesInRag', () => {
 
         expect(mockedPost.mock.calls[0][0])
             .toContain('/workflows/challenge-bulk-ingestion/')
+    })
+})
+
+describe('ingestChallengeInRag', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockedPost.mockResolvedValue({ runId: 'run-1' })
+        mockedGet.mockResolvedValue({
+            result: { chunks: 4, dryRun: false, projectId: '17423', skipped: false },
+            status: 'success',
+        })
+    })
+
+    it('sends dryRun so a preview really skips the vector upsert', async () => {
+        // Regression: the panel exposed a dry-run toggle that the single-challenge
+        // path never forwarded, so it silently wrote to the index anyway.
+        await ingestChallengeInRag('c-1', { dryRun: true })
+
+        expect(mockedPost.mock.calls[1][1])
+            .toEqual({
+                inputData: { challengeId: 'c-1', dryRun: true },
+            })
+    })
+
+    it('defaults dryRun to false when no options are passed', async () => {
+        await ingestChallengeInRag('c-1')
+
+        expect(mockedPost.mock.calls[1][1])
+            .toEqual({
+                inputData: { challengeId: 'c-1', dryRun: false },
+            })
+    })
+
+    it('reports back the workflow\'s own dryRun flag, not the request', async () => {
+        mockedGet.mockResolvedValue({
+            result: { chunks: 4, dryRun: true, skipped: false },
+            status: 'success',
+        })
+
+        await expect(ingestChallengeInRag('c-1', { dryRun: true })).resolves.toMatchObject({
+            chunks: 4,
+            dryRun: true,
+        })
+    })
+
+    it('honours an explicit workflowId override', async () => {
+        await ingestChallengeInRag('c-1', { workflowId: 'custom-wf' })
+
+        expect(mockedPost.mock.calls[0][0])
+            .toContain('/workflows/custom-wf/create-run')
+    })
+
+    it('rejects an empty challenge id before starting a run', async () => {
+        await expect(ingestChallengeInRag('')).rejects.toThrow(/non-empty string/)
+        expect(mockedPost).not.toHaveBeenCalled()
     })
 })

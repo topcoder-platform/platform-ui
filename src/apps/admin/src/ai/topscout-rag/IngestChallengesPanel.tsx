@@ -104,7 +104,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
 
         try {
             if (hasSingle) {
-                const report = await ingestChallengeInRag(challengeId.trim())
+                const report = await ingestChallengeInRag(challengeId.trim(), { dryRun })
                 setLastRun({
                     finishedAt: new Date(),
                     result: {
@@ -118,7 +118,11 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                     },
                     status: 'completed',
                 })
-                toast.success('Challenge ingested successfully')
+                toast.success(
+                    report.dryRun
+                        ? `Dry run complete — ${report.chunks} chunk(s), index unchanged`
+                        : 'Challenge ingested successfully',
+                )
             } else {
                 const filters: BulkIngestionFilters = {
                     dryRun,
@@ -130,7 +134,11 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                 }
                 const report = await bulkIngestChallengesInRag(filters)
                 setLastRun({ finishedAt: new Date(), result: report, status: 'completed' })
-                toast.success(`Ingestion completed — ${report.succeeded} of ${report.processed} succeeded`)
+                toast.success(
+                    report.dryRun
+                        ? `Dry run complete — ${report.processed} challenge(s), index unchanged`
+                        : `Ingestion completed — ${report.succeeded} of ${report.processed} succeeded`,
+                )
             }
 
             props.onRunComplete()
@@ -161,8 +169,6 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
         runIngestion()
     }, [runIngestion])
 
-    // Dry-run only affects bulk: the single-challenge workflow is driven by its
-    // own dryRun input, which this panel doesn't expose.
     const singleDisabled = isRunning || hasBulk
     const bulkDisabled = isRunning || hasSingle
 
@@ -250,7 +256,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                         name='dryRun'
                         value={dryRun}
                         onChange={handleDryRunChange}
-                        disabled={bulkDisabled}
+                        disabled={isRunning}
                     />
                     <span className={styles.dryRunLabel}>
                         Dry run — chunk &amp; embed without writing to the index

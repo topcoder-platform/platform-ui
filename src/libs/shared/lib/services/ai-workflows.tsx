@@ -298,6 +298,16 @@ function normalizeChallengeIngestionResult(result: WorkflowRunResult): Challenge
     }
 }
 
+export interface ChallengeIngestionOptions {
+    /**
+     * Chunk and embed the challenge but skip the vector upsert, so the index is
+     * left untouched. Honoured by the challenge-ingestion workflow itself (its
+     * upsert-vectors step is skipped) and echoed back on the report.
+     */
+    dryRun?: boolean
+    workflowId?: string
+}
+
 /**
  * Ingest a single challenge into the RAG vector index using AI workflow
  *
@@ -305,19 +315,22 @@ function normalizeChallengeIngestionResult(result: WorkflowRunResult): Challenge
  * try {
  *   const report = await ingestChallengeInRag('a1b2c3d4-...')
  *   console.log('Ingested chunks:', report.chunks)
+ *
+ *   // Preview without writing to the index
+ *   const preview = await ingestChallengeInRag('a1b2c3d4-...', { dryRun: true })
  * } catch (error) {
  *   console.error('Challenge ingestion failed:', error.message)
  * }
  */
 export async function ingestChallengeInRag(
     challengeId: string,
-    workflowId?: string,
+    options: ChallengeIngestionOptions = {},
 ): Promise<ChallengeIngestionResult> {
     if (!challengeId || typeof challengeId !== 'string') {
         throw new Error('Challenge id must be a non-empty string')
     }
 
-    const workflowIdToUse = workflowId || EnvironmentConfig.RAG_CHALLENGE_INGESTION_WORKFLOW_ID
+    const workflowIdToUse = options.workflowId || EnvironmentConfig.RAG_CHALLENGE_INGESTION_WORKFLOW_ID
 
     if (!workflowIdToUse) {
         throw new Error('RAG Challenge Ingestion Workflow ID is not configured')
@@ -325,7 +338,10 @@ export async function ingestChallengeInRag(
 
     try {
         console.log(`Starting workflow run for: ${workflowIdToUse}`)
-        const runId = await startWorkflowRun(workflowIdToUse, { challengeId })
+        const runId = await startWorkflowRun(workflowIdToUse, {
+            challengeId,
+            dryRun: !!options.dryRun,
+        })
         console.log(`Workflow started with runId: ${runId}`)
 
         console.log('Polling for workflow completion...')
