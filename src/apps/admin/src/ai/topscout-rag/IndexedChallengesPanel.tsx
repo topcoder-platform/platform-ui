@@ -5,11 +5,12 @@
  * Filtering, searching and pagination are all server-side: the index can hold
  * far more than is reasonable to ship to the browser at once.
  */
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, MouseEventHandler, useCallback, useEffect, useMemo, useState } from 'react'
 import { debounce } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import {
     Button,
@@ -32,6 +33,8 @@ import {
 } from '../../lib/services/rag-index.service'
 
 import styles from './IndexedChallengesPanel.module.scss'
+
+const stopPropagation: MouseEventHandler = ev => ev.stopPropagation()
 
 const PER_PAGE = 10
 
@@ -59,6 +62,30 @@ interface Filters {
 }
 
 const EMPTY_FILTERS: Filters = { projectId: '', search: '', track: '', type: '' }
+
+/**
+ * Review app's challenge details page.
+ *
+ * `/review/challenges/:challengeId` is the app's own status-agnostic entry
+ * point — it `Rewrite`s to `/active-challenges/:challengeId/challenge-details`
+ * (see review-app.routes.tsx). Linking through it rather than hard-coding that
+ * target matters here because the index holds completed challenges as well as
+ * active ones, and the chunk metadata carries no status to choose between the
+ * review app's active/past modules.
+ */
+function buildChallengeDetailsUrl(challengeId: string): string {
+    return `${EnvironmentConfig.REVIEW_APP_URL}/challenges/${encodeURIComponent(challengeId)}`
+}
+
+/**
+ * Work Manager's project page. `/projects/:projectId` is the work app's own
+ * entry point for a project (it rewrites to the project's challenges tab), and
+ * WORK_MANAGER_URL is how the admin app already links into it elsewhere —
+ * see ChallengeList.tsx.
+ */
+function buildProjectDetailsUrl(projectId: string): string {
+    return `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${encodeURIComponent(projectId)}`
+}
 
 function formatIngestedAt(value: string | null): string {
     if (!value) {
@@ -197,7 +224,15 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
             propertyName: 'name',
             renderer: (data: IndexedChallenge) => (
                 <div className={styles.challengeCell} title={data.challengeId}>
-                    <span className={styles.challengeName}>{data.name || data.challengeId}</span>
+                    <a
+                        className={styles.challengeName}
+                        href={buildChallengeDetailsUrl(data.challengeId)}
+                        target='_blank'
+                        rel='noreferrer'
+                        onClick={stopPropagation}
+                    >
+                        {data.name || data.challengeId}
+                    </a>
                 </div>
             ),
             type: 'element',
@@ -233,7 +268,24 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
         {
             label: 'Project',
             propertyName: 'projectId',
-            renderer: (data: IndexedChallenge) => <span>{data.projectId || '—'}</span>,
+            renderer: (data: IndexedChallenge) => (
+                data.projectId
+                    ? (
+                        <a
+                            className={styles.projectLink}
+                            href={buildProjectDetailsUrl(data.projectId)}
+                            target='_blank'
+                            rel='noreferrer'
+                            onClick={stopPropagation}
+                        >
+                            {data.projectId}
+                        </a>
+                    )
+                    // projectId is nullable in the chunk metadata — an opaque
+                    // reference that ingestion carries through but never
+                    // requires (ADR 0001, D10).
+                    : <span>—</span>
+            ),
             type: 'element',
         },
         {

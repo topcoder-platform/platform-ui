@@ -95,6 +95,10 @@
 .challengeName {
     color: $link-blue;
     word-break: break-word;
+
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 .typeChip {
@@ -136,6 +140,14 @@
 
 .track-quality-assurance {
     background-color: $tc-qa-track-color;
+}
+
+.projectLink {
+    color: $link-blue;
+
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 .chunksCell {
