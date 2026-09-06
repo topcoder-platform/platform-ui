@@ -12,7 +12,7 @@ import {
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
-        TC_AI_API: 'https://example.com/v6/ai',
+        API: { V6: 'https://example.com/v6' },
     },
 }), {
     virtual: true,
@@ -92,7 +92,7 @@ describe('rag-index.service', () => {
                 .toHaveBeenCalledTimes(1)
             const [url] = mockedGet.mock.calls[0]
             expect(url)
-                .toContain('https://example.com/v6/ai/rag/challenges?')
+                .toContain('https://example.com/v6/ai-api/rag/challenges?')
             const params = new URLSearchParams(url.split('?')[1])
             expect(params.get('page'))
                 .toBe('3')
@@ -104,7 +104,7 @@ describe('rag-index.service', () => {
             await fetchIndexedChallenges()
 
             expect(mockedGet)
-                .toHaveBeenCalledWith('https://example.com/v6/ai/rag/challenges')
+                .toHaveBeenCalledWith('https://example.com/v6/ai-api/rag/challenges')
         })
 
         it('passes the paginated response through unchanged', async () => {
@@ -128,7 +128,7 @@ describe('rag-index.service', () => {
                 .resolves.toEqual({ challengeId: 'c-1', deletedChunks: 9 })
             expect(mockedDelete)
                 .toHaveBeenCalledWith(
-                    'https://example.com/v6/ai/rag/challenges/c-1',
+                    'https://example.com/v6/ai-api/rag/challenges/c-1',
                 )
         })
 
@@ -137,7 +137,7 @@ describe('rag-index.service', () => {
 
             expect(mockedDelete)
                 .toHaveBeenCalledWith(
-                    'https://example.com/v6/ai/rag/challenges/a%2Fb%3Fc',
+                    'https://example.com/v6/ai-api/rag/challenges/a%2Fb%3Fc',
                 )
         })
     })

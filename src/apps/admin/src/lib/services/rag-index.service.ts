@@ -2,15 +2,20 @@
  * TopScout RAG index administration — reads and prunes what tc-ai-api's
  * challenge_embeddings table currently holds.
  *
- * Backed by tc-ai-api's `/v6/ai/rag/challenges` routes, which are administrator
+ * Backed by tc-ai-api's `/v6/ai-api/rag/challenges` routes, which are administrator
  * only. They follow the platform pagination convention (bare array body,
  * X-Page/X-Per-Page/X-Total/X-Total-Pages headers), so xhrGetPaginatedAsync
  * reads them with no extra plumbing.
+ *
+ * Note the base path is `/v6/ai-api/rag`, a SIBLING of `/v6/ai` rather than a
+ * child of it: Mastra reserves its apiPrefix (`/v6/ai`) for built-in routes and
+ * refuses to start if a custom route is registered beneath it. The chat route
+ * (`/v6/ai-chat`) sits beside the prefix for the same reason.
  */
 import { EnvironmentConfig } from '~/config'
 import { PaginatedResponse, xhrDeleteAsync, xhrGetPaginatedAsync } from '~/libs/core'
 
-const RAG_INDEX_BASE_URL = `${EnvironmentConfig.TC_AI_API}/rag/challenges`
+const RAG_INDEX_BASE_URL = `${EnvironmentConfig.API.V6}/ai-api/rag/challenges`
 
 export interface IndexedChallenge {
     challengeId: string
