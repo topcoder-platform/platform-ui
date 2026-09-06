@@ -300,7 +300,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
     return (
         <section className={styles.panel}>
             <div className={styles.panelHeader}>
-                <h4 className={styles.panelTitle}>Indexed Challenges</h4>
+                <h4 className={classNames('details', styles.panelTitle)}>Indexed Challenges</h4>
                 <span className={styles.totalCount}>
                     {`${total} challenge${total === 1 ? '' : 's'} indexed`}
                 </span>
@@ -352,6 +352,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
                         size='md'
                         label='Clear filters'
                         onClick={handleClearFilters}
+                        className={styles.clearFilters}
                     />
                 )}
             </div>
@@ -366,7 +367,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
 
             {!isLoading && !loadError && challenges.length > 0 && (
                 <>
-                    <TableWrapper>
+                    <TableWrapper className={styles.tableWrapper}>
                         {isMobile ? (
                             <TableMobile
                                 columns={columnsMobile}

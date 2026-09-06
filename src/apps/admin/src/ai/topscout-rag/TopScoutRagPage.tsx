@@ -35,8 +35,10 @@ export const TopScoutRagPage: FC = () => {
                 </p>
             )}
         >
-            <IngestChallengesPanel onRunComplete={handleRunComplete} />
-            <IndexedChallengesPanel refreshToken={refreshToken} />
+            <div className={styles.panels}>
+                <IngestChallengesPanel onRunComplete={handleRunComplete} />
+                <IndexedChallengesPanel refreshToken={refreshToken} />
+            </div>
         </PageWrapper>
     )
 }

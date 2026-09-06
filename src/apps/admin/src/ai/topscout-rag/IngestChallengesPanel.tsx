@@ -5,6 +5,7 @@
  */
 import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
 import {
     bulkIngestChallengesInRag,
@@ -12,9 +13,10 @@ import {
     ingestChallengeInRag,
     WorkflowPollTimeoutError,
 } from '~/libs/shared'
-import { Button, InputSelect, InputSelectOption, InputText } from '~/libs/ui'
+import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
 import FormToggleSwitch from '~/libs/ui/lib/components/form/form-groups/form-toggle-switch'
 
+import { Field, TextField } from './FormFields'
 import { IngestionRun, IngestionRunSummary } from './IngestionRunSummary'
 import styles from './IngestChallengesPanel.module.scss'
 
@@ -166,7 +168,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
 
     return (
         <section className={styles.panel}>
-            <h4 className={styles.panelTitle}>Ingest Challenges</h4>
+            <h4 className={classNames('details', styles.panelTitle)}>Ingest Challenges</h4>
             <p className={styles.panelSubtitle}>
                 Ingest one challenge by id, or run a filtered bulk ingestion — choose exactly one.
             </p>
@@ -174,21 +176,14 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
             <div className={styles.formRow}>
                 <div className={styles.singleColumn}>
                     <span className={styles.groupLabel}>Single Challenge</span>
-                    <InputText
-                        type='text'
-                        name='challengeId'
+                    <TextField
                         label='Challenge ID'
                         placeholder='e.g. 9f1c2e4a-7b3d-4f10-9c2e-1a2b3c4d5e6f'
                         value={challengeId}
                         onChange={handleChallengeIdChange}
                         disabled={singleDisabled}
-                        forceUpdateValue
-                        tabIndex={0}
-                        dirty
+                        hint="Re-runs replace this challenge's existing chunks."
                     />
-                    <span className={styles.hint}>
-                        Re-runs replace this challenge&apos;s existing chunks.
-                    </span>
                 </div>
 
                 <div className={styles.divider}>
@@ -198,56 +193,52 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                 <div className={styles.bulkColumn}>
                     <span className={styles.groupLabel}>Bulk Ingestion (filtered)</span>
                     <div className={styles.bulkGrid}>
-                        <InputText
-                            type='text'
-                            name='projectId'
+                        <TextField
                             label='Project ID'
                             placeholder='e.g. 17423'
                             value={bulk.projectId}
                             onChange={handleBulkChange('projectId')}
                             disabled={bulkDisabled}
-                            forceUpdateValue
-                            tabIndex={0}
-                            dirty
                         />
-                        <InputSelect
-                            name='track'
-                            label='Track'
-                            options={TRACK_OPTIONS}
-                            value={bulk.track}
-                            onChange={handleBulkChange('track')}
-                            disabled={bulkDisabled}
-                            tabIndex={0}
-                        />
-                        <InputSelect
-                            name='type'
-                            label='Type'
-                            options={TYPE_OPTIONS}
-                            value={bulk.type}
-                            onChange={handleBulkChange('type')}
-                            disabled={bulkDisabled}
-                            tabIndex={0}
-                        />
-                        <InputSelect
-                            name='status'
-                            label='Status'
-                            options={STATUS_OPTIONS}
-                            value={bulk.status}
-                            onChange={handleBulkChange('status')}
-                            disabled={bulkDisabled}
-                            tabIndex={0}
-                        />
-                        <InputText
-                            type='text'
-                            name='updatedSince'
+                        <Field label='Track'>
+                            <InputSelect
+                                name='track'
+                                label=''
+                                options={TRACK_OPTIONS}
+                                value={bulk.track}
+                                onChange={handleBulkChange('track')}
+                                disabled={bulkDisabled}
+                                tabIndex={0}
+                            />
+                        </Field>
+                        <Field label='Type'>
+                            <InputSelect
+                                name='type'
+                                label=''
+                                options={TYPE_OPTIONS}
+                                value={bulk.type}
+                                onChange={handleBulkChange('type')}
+                                disabled={bulkDisabled}
+                                tabIndex={0}
+                            />
+                        </Field>
+                        <Field label='Status'>
+                            <InputSelect
+                                name='status'
+                                label=''
+                                options={STATUS_OPTIONS}
+                                value={bulk.status}
+                                onChange={handleBulkChange('status')}
+                                disabled={bulkDisabled}
+                                tabIndex={0}
+                            />
+                        </Field>
+                        <TextField
                             label='Updated Since'
                             placeholder='YYYY-MM-DD'
                             value={bulk.updatedSince}
                             onChange={handleBulkChange('updatedSince')}
                             disabled={bulkDisabled}
-                            forceUpdateValue
-                            tabIndex={0}
-                            dirty
                         />
                     </div>
                 </div>

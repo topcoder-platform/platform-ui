@@ -4,6 +4,7 @@
     padding-top: $sp-6;
 }
 
+
 .panelHeader {
     display: flex;
     align-items: baseline;
@@ -14,24 +15,34 @@
 
 .panelTitle {
     margin: 0;
+    font-size: 18px;
+    line-height: 22px;
+    font-weight: $font-weight-bold;
+    text-transform: none;
+    color: $black-100;
 }
 
 .totalCount {
     font-size: 13px;
-    color: $black-60;
+    color: $black-80;
 }
 
 .filters {
     display: flex;
     align-items: center;
     gap: $sp-4;
-    margin: $sp-4 0 $sp-5;
+    margin: $sp-4 0 $sp-2;
     flex-wrap: wrap;
 
     > * {
         flex: 0 1 180px;
         min-width: 0;
     }
+}
+
+.clearFilters {
+    flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .searchWrapper {
@@ -55,6 +66,12 @@
     border: none;
     outline: none;
     background: transparent;
+}
+
+// TableWrapper hard-codes `padding: $sp-8 $sp-8 0`, which insets the table
+// from the filter row above it and leaves a 32px gap under the filters.
+.tableWrapper {
+    padding: 0;
 }
 
 .table {
@@ -94,6 +111,9 @@
     display: inline-block;
     padding: 2px $sp-2;
     border-radius: 4px;
+    // Unknown tracks are free-form strings (tc-ai-api treats them as
+    // informational, not enums), so they fall back to neutral rather than
+    // borrowing another track's colour.
     background-color: $black-60;
     color: $tc-white;
     font-size: 10px;
@@ -103,19 +123,19 @@
 }
 
 .track-development {
-    background-color: $green-140;
+    background-color: $tc-dev-track-color;
 }
 
 .track-design {
-    background-color: $blue-140;
+    background-color: $tc-design-track-color;
 }
 
 .track-data-science {
-    background-color: $orange-140;
+    background-color: $tc-datascience-track-color;
 }
 
 .track-quality-assurance {
-    background-color: $blue-120;
+    background-color: $tc-qa-track-color;
 }
 
 .chunksCell {

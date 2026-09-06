@@ -5,24 +5,34 @@
     border-bottom: 1px solid $black-10;
 }
 
+// h1-h4 are Barlow Condensed by default in this design system; `details` is its
+// own modifier for switching a heading to regular Barlow.
 .panelTitle {
     margin: 0;
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: none;
+    &.panelTitle {
+        font-weight: $font-weight-bold;
+        color: $black-100;
+    }
 }
 
 .panelSubtitle {
     margin: $sp-1 0 $sp-5;
-    font-size: 13px;
-    color: $black-60;
+    font-size: 14px;
+    color: $black-80;
 }
 
 .groupLabel {
     display: block;
-    margin-bottom: $sp-2;
-    font-size: 10px;
-    font-weight: 600;
+    margin-bottom: $sp-3;
+    font-family: $font-barlow;
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: $black-60;
+    color: $black-80;
 }
 
 .formRow {
@@ -62,12 +72,6 @@
     }
 }
 
-.hint {
-    display: block;
-    margin-top: $sp-2;
-    font-size: 12px;
-    color: $black-60;
-}
 
 .divider {
     position: relative;

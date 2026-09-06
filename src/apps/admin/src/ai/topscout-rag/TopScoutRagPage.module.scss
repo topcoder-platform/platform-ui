@@ -3,6 +3,17 @@
 .subtitle {
     margin: $sp-2 0 0;
     max-width: 720px;
-    font-size: 13px;
-    color: $black-60;
+    font-size: 14px;
+    color: #575757;
+}
+
+// PageContent's white card ships with no padding of its own — sibling admin
+// pages inherit theirs from TableWrapper, which this page zeroes so the table
+// lines up with the headings and filters above it.
+.panels {
+    padding: $sp-6 $sp-8;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
 }
