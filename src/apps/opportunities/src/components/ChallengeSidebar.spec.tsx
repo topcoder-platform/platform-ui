@@ -27,8 +27,16 @@ const aiReviewersHelpUrl
     = 'https://www.topcoder.com/thrive/articles/ai-reviewers-member-help-guide'
 const usableCodeRulesUrl
     = 'https://www.topcoder.com/thrive/articles/Usable%20Code%20in%20Dev%20Challenges'
+const aiExponentialLeagueUrl
+    = 'https://www.topcoder.example/ai-hub/ai-exponential-league'
+const qaBugHuntLearningUrl
+    = 'https://www.topcoder.example/thrive/articles/How%20To%20Compete%20in%20a%20Bug%20Hunt%20Challenge'
+const qaCompetitionTypesUrl
+    = 'https://www.topcoder.example/thrive/articles/QA%20Competition%20Types'
 
 const mockUseSWR = jest.fn()
+const mockChallengeAllowsStockArt = jest.fn()
+const mockChallengeFileTypes = jest.fn()
 const mockChallengeSidebarLinks = jest.fn()
 
 jest.mock('swr', () => ({
@@ -50,7 +58,8 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../utils', () => ({
-    challengeFileTypes: (): string[] => [],
+    challengeAllowsStockArt: (...args: unknown[]) => mockChallengeAllowsStockArt(...args),
+    challengeFileTypes: (...args: unknown[]) => mockChallengeFileTypes(...args),
     challengeForumUrl: (): undefined => undefined,
     challengeReviewAppUrl: (challengeId: string): string => (
         `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
@@ -63,6 +72,7 @@ jest.mock('../services', () => ({
     getChallengeTermsDetails: jest.fn(),
 }))
 jest.mock('../utils/opportunity-learning.utils', () => ({
+    AI_EXPONENTIAL_LEAGUE_URL: aiExponentialLeagueUrl,
     AI_REVIEWERS_HELP_URL: aiReviewersHelpUrl,
     CHALLENGE_EXPLAINED_URL: challengeExplainedUrl,
     CHECKPOINT_FEEDBACK_LEARNING_URL: checkpointFeedbackLearningUrl,
@@ -71,6 +81,8 @@ jest.mock('../utils/opportunity-learning.utils', () => ({
     DESIGN_SUBMISSION_FORMAT_URL: designSubmissionFormatUrl,
     MARATHON_MATCH_LEARNING_URL: marathonMatchLearningUrl,
     MARATHON_MATCH_TOURNAMENT_URL: marathonMatchTournamentUrl,
+    QA_BUG_HUNT_LEARNING_URL: qaBugHuntLearningUrl,
+    QA_COMPETITION_TYPES_URL: qaCompetitionTypesUrl,
     USABLE_CODE_RULES_URL: usableCodeRulesUrl,
 }))
 
@@ -116,6 +128,8 @@ function renderSidebar(
 describe('ChallengeSidebar Review Style', () => {
     beforeEach(() => {
         mockUseSWR.mockReturnValue({ data: undefined })
+        mockChallengeAllowsStockArt.mockReturnValue(false)
+        mockChallengeFileTypes.mockReturnValue([])
         mockChallengeSidebarLinks.mockReturnValue({
             attachments: [],
             challengeLinks: [],
@@ -194,6 +208,12 @@ describe('ChallengeSidebar Review Style', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Explore the program' }).className)
             .toContain('promoLink')
+        expect(screen.getByRole('link', { name: 'Explore the program' }))
+            .toHaveAttribute('href', aiExponentialLeagueUrl)
+        expect(screen.getByRole('link', { name: 'How to Compete in a Bug Hunt Challenge' }))
+            .toHaveAttribute('href', qaBugHuntLearningUrl)
+        expect(screen.getByRole('link', { name: 'QA Competition Types' }))
+            .toHaveAttribute('href', qaCompetitionTypesUrl)
     })
 
     it('adds the authored Marathon Match guide and arrow indicators', () => {
@@ -324,6 +344,32 @@ describe('ChallengeSidebar Review Style', () => {
         expect(screen.getByRole('heading', { name: 'Source files' }))
             .toBeInTheDocument()
         expect(screen.getByRole('heading', { name: 'Submission limit' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Figma'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Stock photography is allowed in this challenge.'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows only authored source-file types for design challenges', () => {
+        mockChallengeFileTypes.mockReturnValue(['PSD', 'Sketch'])
+
+        renderSidebar(undefined, designChallenge)
+
+        expect(screen.getByText('PSD'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Sketch'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Figma'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows the stock-photography allowance only when explicitly configured', () => {
+        mockChallengeAllowsStockArt.mockReturnValue(true)
+
+        renderSidebar(undefined, designChallenge)
+
+        expect(screen.getByText('Stock photography is allowed in this challenge.'))
             .toBeInTheDocument()
     })
 

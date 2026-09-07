@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import { challengeTrackLabel } from '../utils/challenge-winner.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
 import challengeClockIcon from '../assets/challenge-clock.svg'
@@ -430,7 +431,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
-    const track = catalogName(props.challenge.track, 'Competition')
+    const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)

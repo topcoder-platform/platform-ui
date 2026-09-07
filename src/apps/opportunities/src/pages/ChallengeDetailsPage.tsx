@@ -1924,7 +1924,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
     })
         .sort((first, second) => first.placement - second.placement)
     const trackHeading = challengeTrackLabel(props.challenge.track)
-    const trackLabel = trackHeading.toLowerCase()
+    const trackLabel = trackHeading === 'QA' ? trackHeading : trackHeading.toLowerCase()
     const showWinnerFinalScores = !!props.memberId && shouldShowFinalSubmissionScores(
         props.challenge,
         [],
@@ -1968,7 +1968,11 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                 : second.finalScore - first.finalScore
             return scoreDifference || first.placement - second.placement
         })
-    const showWinnerRating = rankedWinners.length === 1 || rankedWinners.length > 3
+    const qualityAssuranceChallenge = ['qa', 'qualityassurance']
+        .includes(challengeCatalogKey(props.challenge.track))
+    const showWinnerRating = qualityAssuranceChallenge
+        || rankedWinners.length === 1
+        || rankedWinners.length > 3
     return (
         <section className={styles.winnersSection}>
             <h2>Winners</h2>

@@ -269,7 +269,9 @@ scores high-to-low, matching its downward sort indicator, and the accessible
 Final Score header toggles low-to-high; unavailable scores remain after scored
 rows in either direction and the three-card podium remains placement-ordered.
 Winner stats use the Members API top-level track totals; Development does not
-add the nested AI Engineering value a second time.
+add the nested AI Engineering value a second time. Quality Assurance winner
+cards use the compact `QA` label and always include member ratings, including
+the two- and three-winner podium layouts.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
@@ -340,20 +342,26 @@ S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 category, body, and any uploaded links into that description without inventing
 unsupported request fields.
 
-The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
-`environment`, and `codeRepo` metadata, shows safe Challenge API discussions
-and attachments, and fails closed for unsafe or retired-host URLs. Positive
+The challenge rail parses case-insensitive `fileTypes`, `allowStockArt`,
+`submissionLimit`, `environment`, and `codeRepo` metadata, shows safe Challenge
+API discussions and attachments, and fails closed for unsafe or retired-host
+URLs. Design source-file labels appear only when authored and never synthesize
+Figma; the stock-photography allowance appears only when Work Manager explicitly
+enables it. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
 handoff. Review Style uses the authored document-search rail icon. Development
 challenges omit Challenge Links, Source files, and Submission limit while
 adding the published AI Reviewers help and Usable Code rules to Educational
-Materials. Marathon Matches retain only their dedicated competition guide even
-when the challenge track is Development; the latter two submission sections
-remain Design-only. Learning
-arrows flow immediately after wrapped labels. The Design link reads “How to
+Materials. Quality Assurance challenges add the published Bug Hunt and QA
+competition-type guides. Marathon Matches retain only their dedicated
+competition guide even when the challenge track is Development; the latter two
+submission sections remain Design-only. Learning arrows flow immediately after
+wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
-wrapping. The AI Exponential promo keeps a distinct gap before its action.
+wrapping. The AI Exponential promo keeps a distinct gap before its action and
+routes through the configured Topcoder environment to the AI Exponential League
+hub.
 Marathon Match challenges replace the general AI Exponential promo with the
 Marathon Match Tournament heading and copy. Its Explore the program link opens
 the environment's Marathon Match

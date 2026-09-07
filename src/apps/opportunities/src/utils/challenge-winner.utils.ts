@@ -31,12 +31,19 @@ function finiteNumber(value: unknown): number | undefined {
  * Reads a catalog name from either Challenge API response shape.
  *
  * @param value string or expanded challenge catalog value.
- * @returns trimmed catalog label with a generic challenge fallback.
+ * @param fallback label used when the catalog value is unavailable.
+ * @returns trimmed member-facing catalog label, abbreviating Quality Assurance as QA.
  * @throws Does not throw.
  */
-export function challengeTrackLabel(value?: ChallengeCatalogValue): string {
-    const name = typeof value === 'string' ? value : value?.name ?? value?.track
-    return name?.trim() || 'challenge'
+export function challengeTrackLabel(
+    value?: ChallengeCatalogValue,
+    fallback: string = 'challenge',
+): string {
+    const name = typeof value === 'string' ? value : value?.name?.trim() || value?.track
+    const label = name?.trim()
+    const trackKey: string | undefined = label?.replace(/[^a-zA-Z0-9]/g, '')
+        .toLowerCase()
+    return trackKey === 'qualityassurance' ? 'QA' : label || fallback
 }
 
 /**

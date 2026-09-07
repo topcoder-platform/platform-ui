@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
 import { FC, ReactNode, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
@@ -11,6 +10,7 @@ import {
     ChallengeTerm,
 } from '../models'
 import {
+    challengeAllowsStockArt,
     challengeFileTypes,
     challengeForumUrl,
     challengeReviewAppUrl,
@@ -20,6 +20,7 @@ import {
     isMarathonMatchChallenge,
 } from '../utils'
 import {
+    AI_EXPONENTIAL_LEAGUE_URL,
     AI_REVIEWERS_HELP_URL,
     CHALLENGE_EXPLAINED_URL,
     CHECKPOINT_FEEDBACK_LEARNING_URL,
@@ -28,6 +29,8 @@ import {
     DESIGN_SUBMISSION_FORMAT_URL,
     MARATHON_MATCH_LEARNING_URL,
     MARATHON_MATCH_TOURNAMENT_URL,
+    QA_BUG_HUNT_LEARNING_URL,
+    QA_COMPETITION_TYPES_URL,
     USABLE_CODE_RULES_URL,
 } from '../utils/opportunity-learning.utils'
 import { getChallengeTermsDetails } from '../services'
@@ -43,6 +46,7 @@ import sidebarPolicyIcon from '../assets/sidebar-policy.svg'
 import sidebarReviewIcon from '../assets/sidebar-review.svg'
 import sidebarSearchIcon from '../assets/sidebar-search.svg'
 
+import { challengeCatalogKey } from './challenge-card.utils'
 import styles from './ChallengeSidebar.module.scss'
 
 const FILE_SUBMISSION_POLICY_URL
@@ -164,17 +168,6 @@ const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
 }
 
 /**
- * Returns a challenge catalog label from current or legacy API shapes.
- *
- * @param value string or expanded catalog record.
- * @returns normalized catalog label.
- * @throws Does not throw.
- */
-function catalogName(value: string | { name?: string } | undefined): string {
-    return typeof value === 'string' ? value : value?.name ?? ''
-}
-
-/**
  * Renders one reusable challenge right-rail card.
  *
  * @param props card icon, title, and body content.
@@ -232,11 +225,11 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const submissionLimit = challengeSubmissionLimit(props.challenge)
     const links = challengeSidebarLinks(props.challenge)
     const forumUrl = challengeForumUrl(props.challenge)
-    const designChallenge = catalogName(props.challenge.track)
-        .toLowerCase() === 'design'
+    const trackKey = challengeCatalogKey(props.challenge.track)
+    const designChallenge = trackKey === 'design'
     const marathonMatch = isMarathonMatchChallenge(props.challenge)
-    const developmentChallenge = catalogName(props.challenge.track)
-        .toLowerCase() === 'development'
+    const developmentChallenge = trackKey === 'development'
+    const qualityAssuranceChallenge = ['qa', 'qualityassurance'].includes(trackKey)
     const termsRequestKey = props.challenge.terms?.some(term => !!term.id && !term.title)
         ? ['opportunities:challenge-sidebar-terms', props.challenge.id]
         : undefined
@@ -303,10 +296,10 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             </a>
                         )
                         : (
-                            <Link className={styles.promoLink} to='/thrive'>
+                            <a className={styles.promoLink} href={AI_EXPONENTIAL_LEAGUE_URL}>
                                 Explore the program
                                 <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                            </Link>
+                            </a>
                         )}
                 </div>
             </section>
@@ -361,6 +354,28 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             target='_blank'
                         >
                             Usable Code Rules
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                        </a>
+                    </>
+                )}
+                {qualityAssuranceChallenge && (
+                    <>
+                        <a
+                            className={styles.learningLink}
+                            href={QA_BUG_HUNT_LEARNING_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
+                            How to Compete in a Bug Hunt Challenge
+                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                        </a>
+                        <a
+                            className={styles.learningLink}
+                            href={QA_COMPETITION_TYPES_URL}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
+                            QA Competition Types
                             <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
                     </>
@@ -465,6 +480,9 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 </a>
                                 .
                             </p>
+                            {challengeAllowsStockArt(props.challenge) && (
+                                <p>Stock photography is allowed in this challenge.</p>
+                            )}
                         </div>
                         <div className={styles.infoSection}>
                             <h3>
@@ -530,9 +548,9 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 <img alt='' aria-hidden='true' src={sidebarInventoryIcon} />
                                 Source files
                             </h3>
-                            {fileTypes.length > 0
-                                ? <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
-                                : <ul><li>Figma</li></ul>}
+                            {fileTypes.length > 0 && (
+                                <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
+                            )}
                             <p>You must include all source files with your submission.</p>
                             {links.attachments.length > 0 && (
                                 <div className={styles.resourceLinks}>{links.attachments.map(externalLink)}</div>

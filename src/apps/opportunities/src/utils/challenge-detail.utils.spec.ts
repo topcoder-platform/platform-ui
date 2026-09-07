@@ -1,5 +1,6 @@
 /* eslint-disable no-script-url, ordered-imports/ordered-imports */
 import {
+    challengeAllowsStockArt,
     challengeFileTypes,
     challengeForumUrl,
     challengeReviewAppUrl,
@@ -79,6 +80,24 @@ describe('challenge detail utilities', () => {
             name: 'Challenge',
         }))
             .toEqual(['Figma'])
+    })
+
+    it('requires an explicit stock-art allowance from challenge metadata', () => {
+        const challenge = {
+            id: 'challenge',
+            metadata: [{ name: 'ALLOWSTOCKART', value: ' true ' }],
+            name: 'Challenge',
+        }
+
+        expect(challengeAllowsStockArt(challenge))
+            .toBe(true)
+        expect(challengeAllowsStockArt({
+            ...challenge,
+            metadata: [{ name: 'allowStockArt', value: false }],
+        }))
+            .toBe(false)
+        expect(challengeAllowsStockArt({ ...challenge, metadata: [] }))
+            .toBe(false)
     })
 
     it('returns only safe authored challenge and attachment links', () => {

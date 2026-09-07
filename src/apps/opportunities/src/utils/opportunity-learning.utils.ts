@@ -12,6 +12,10 @@ export const COPILOT_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
 export const CHALLENGE_EXPLAINED_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/articles/all-about-topcoder-challenges-tasks-and-gig-work-opportunities'
 
+/** AI Exponential League landing page on the current Topcoder environment. */
+export const AI_EXPONENTIAL_LEAGUE_URL
+    = `${EnvironmentConfig.TOPCODER_URL}/ai-hub/ai-exponential-league`
+
 /** Published guide to AI review behavior for challenge participants. */
 export const AI_REVIEWERS_HELP_URL
     = 'https://www.topcoder.com/thrive/articles/ai-reviewers-member-help-guide'
@@ -39,6 +43,14 @@ export const DESIGN_SCREENING_LEARNING_URL
 /** Published Design submission-format FAQ required by the challenge-details rail. */
 export const DESIGN_SUBMISSION_FORMAT_URL
     = 'https://www.topcoder.com/thrive/articles/Formatting%20Your%20Submission%20for%20Design%20Challenges'
+
+/** Published Bug Hunt competition guide on the current Topcoder environment. */
+export const QA_BUG_HUNT_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
+    + '/thrive/articles/How%20To%20Compete%20in%20a%20Bug%20Hunt%20Challenge'
+
+/** Published Quality Assurance competition overview on the current Topcoder environment. */
+export const QA_COMPETITION_TYPES_URL = `${EnvironmentConfig.TOPCODER_URL}`
+    + '/thrive/articles/QA%20Competition%20Types'
 
 /** Published Marathon Match competition guide required by the challenge-details rail. */
 export const MARATHON_MATCH_LEARNING_URL
