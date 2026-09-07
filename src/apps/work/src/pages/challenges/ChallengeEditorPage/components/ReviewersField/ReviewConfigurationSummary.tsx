@@ -2,6 +2,7 @@ import {
     FC,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import classNames from 'classnames'
@@ -401,6 +402,12 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
     const [workflowError, setWorkflowError] = useState<string | undefined>()
     const [workflows, setWorkflows] = useState<Workflow[]>([])
+    /*
+     * Member ids whose handle lookup already ran. Retrying by "still missing a handle" instead would
+     * spin whenever the member API cannot supply one, because each lookup publishes a new handle map
+     * that reruns the effect while the member stays unresolved.
+     */
+    const requestedUserIdsRef = useRef<Set<string>>(new Set<string>())
 
     const reviewerRows = useMemo(
         () => (Array.isArray(props.reviewers)
@@ -556,7 +563,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                     const memberId = normalizeReviewerText(resource.memberId)
                     const memberHandle = normalizeReviewerText(resource.memberHandle)
 
-                    return memberId && !memberHandle && !memberHandlesByUserId[memberId.toLowerCase()]
+                    return memberId && !memberHandle && !requestedUserIdsRef.current.has(memberId.toLowerCase())
                         ? memberId
                         : ''
                 })),
@@ -565,7 +572,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                     const memberId = normalizeReviewerText(assignedMember.memberId)
                     const memberHandle = normalizeReviewerText(assignedMember.memberHandle)
 
-                    return memberId && !memberHandle && !memberHandlesByUserId[memberId.toLowerCase()]
+                    return memberId && !memberHandle && !requestedUserIdsRef.current.has(memberId.toLowerCase())
                         ? memberId
                         : ''
                 })),
@@ -577,6 +584,10 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                 mounted = false
             }
         }
+
+        unresolvedUserIds.forEach(userId => {
+            requestedUserIdsRef.current.add(userId.toLowerCase())
+        })
 
         searchProfilesByUserIds(unresolvedUserIds)
             .then(users => {
@@ -609,7 +620,6 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
     }, [
         assignedResourcesByReviewer,
         fallbackAssignedMembersByReviewer,
-        memberHandlesByUserId,
     ])
 
     useEffect(() => {
