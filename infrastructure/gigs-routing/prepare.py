@@ -67,11 +67,11 @@ def prepare(stack_name, platform_distribution, directory):
     proposed = module.add_gigs_routes(template, bucket)
     policy = json.loads(aws('s3api', 'get-bucket-policy', '--bucket', bucket)['Policy'])
     grant = {
-        'Sid': 'AllowWebsiteGigsShell',
+        'Sid': 'AllowWebsiteGigsPublishedShell',
         'Effect': 'Allow',
         'Principal': {'Service': 'cloudfront.amazonaws.com'},
         'Action': 's3:GetObject',
-        'Resource': f'arn:aws:s3:::{bucket}/index.html',
+        'Resource': f'arn:aws:s3:::{bucket}/gigs/index.html',
         'Condition': {'StringEquals': {'AWS:SourceArn': f'arn:aws:cloudfront::{identity["Account"]}:distribution/{website}'}},
     }
     next_policy = json.loads(json.dumps(policy))

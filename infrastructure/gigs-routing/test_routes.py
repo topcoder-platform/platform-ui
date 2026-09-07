@@ -28,6 +28,10 @@ class GigsRoutesTest(unittest.TestCase):
         self.assertEqual(result, module.add_gigs_routes(result, 'platform-ui.example.com'))
         self.assertEqual('', config['Origins'][-1]['S3OriginConfig']['OriginAccessIdentity'])
         self.assertIn('OriginAccessControlId', config['Origins'][-1])
+        self.assertEqual('/gigs', config['Origins'][-1]['OriginPath'])
+        initial = json.loads(json.dumps(result))
+        del initial['Resources']['WebsiteDistribution']['Properties']['DistributionConfig']['Origins'][-1]['OriginPath']
+        self.assertEqual(result, module.add_gigs_routes(initial, 'platform-ui.example.com'))
 
     def test_refuses_conflicting_route_ownership(self):
         """An existing incompatible /gigs behavior must be reviewed instead of overwritten."""

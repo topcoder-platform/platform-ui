@@ -79,13 +79,18 @@ def add_gigs_routes(template, bucket):
     origin = {
         'Id': 'GigsPlatformOrigin',
         'DomainName': {'Fn::Sub': bucket + '.s3.${AWS::Region}.${AWS::URLSuffix}'},
+        'OriginPath': '/gigs',
         'OriginAccessControlId': {'Fn::GetAtt': ['GigsOriginAccessControl', 'Id']},
         'S3OriginConfig': {'OriginAccessIdentity': ''},
     }
     origins = config['Origins']
     existing_origin = next((item for item in origins if item['Id'] == origin['Id']), None)
     if existing_origin and existing_origin != origin:
-        raise ValueError('Conflicting Gigs platform origin')
+        # Upgrade the initial root-shell route without altering any other origin settings.
+        initial_origin = {key: value for key, value in origin.items() if key != 'OriginPath'}
+        if existing_origin != initial_origin:
+            raise ValueError('Conflicting Gigs platform origin')
+        existing_origin['OriginPath'] = origin['OriginPath']
     if not existing_origin:
         origins.append(origin)
     behavior = {

@@ -4,8 +4,7 @@ The public routes `/gigs` and `/gigs/*` belong to platform-ui. Both apex and `ww
 website aliases use the same website CloudFront distribution. This additive
 CloudFormation change preserves the site's apex-to-www redirect, including encoded
 and repeated query parameters. On the canonical host, it serves the platform-ui
-S3 `index.html` with a signed origin
-request. The browser retains its path and query, so React handles listing,
+S3 `gigs/index.html` with a signed origin request. The browser retains its path and query, so React handles listing,
 details, and applications. Other routes, particularly `/api/recruit/*` and the
 Payload compatibility API, retain their existing origins. The website's existing
 `/static/*`, `/global.css`, and manifest handoffs serve the platform assets.
@@ -18,6 +17,12 @@ writes local before/after templates, policies and a manifest. `apply.py` checks
 for stale state and limits execution to the reviewed routing resources. Python 3,
 PyYAML, and AWS CLI are required. Use a session for the intended account. Never
 commit credentials or generated account snapshots.
+
+The deployment pipeline copies its built shell to `gigs/index.html` only after
+the normal asset deployment and platform invalidation finish. This keeps the
+uncached Gigs route on a complete release while the existing deployment script
+uploads the next release's assets. The website needs no shell invalidation for
+subsequent UI releases. Keep the dedicated shell when pruning old build files.
 
 ## Release sequence
 
@@ -45,7 +50,7 @@ commit credentials or generated account snapshots.
    the website distribution (no replacement), and its derived distribution-domain
    SSM parameter. Existing API functions, bucket policies, roles, and the original
    viewer functions must not change. The separate platform-bucket grant allows
-   the website distribution to read **only `index.html`**, preserving all existing
+   the website distribution to read **only `gigs/index.html`**, preserving all existing
    grants and the deny-insecure-transport statement.
 4. Execute the reviewed plan after the platform release is verified:
 
@@ -60,7 +65,8 @@ commit credentials or generated account snapshots.
 
 5. Wait for `UPDATE_COMPLETE`, CloudFront `Deployed`, and invalidation completion.
    Verify HTTPS apex and `www` `/gigs`, `/gigs/`, a real job, its `/apply` URL, and
-   a search query. Check that the shell and its referenced JS/CSS all return 200,
+   a search query. Check that the shell and its referenced JS/CSS all return 200
+   with the expected content types (an HTML fallback is not a valid JS response),
    browser routing works, a fulfilled gig is not applicable, and `/api/recruit/jobs`
    still returns JSON. Check an unrelated website page and `/opportunities`.
 
@@ -75,7 +81,7 @@ Create and inspect a CloudFormation change set using `template-before.json` and
 `parameters.json`, then execute it and wait for completion. Restore the platform
 bucket's `bucket-policy-before.json` only after comparing the current policy with
 the prepared after-policy; if other grants changed, remove only the matching
-`AllowWebsiteGigsShell` statement. Invalidate `/gigs` and `/gigs/*` again. This
+`AllowWebsiteGigsPublishedShell` statement. Invalidate `/gigs` and `/gigs/*` again. This
 restores the community-app handoff without removing platform assets or changing
 Recruit data. Preserve prior platform deployment artifacts for application-level
 rollback using the normal deployment process.
