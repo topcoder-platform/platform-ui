@@ -4,7 +4,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { EnvironmentConfig } from '~/config'
 import { tokenGetAsync } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, LoadingSpinner } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -15,11 +14,9 @@ import {
     checkExistingApplication,
     createApplication,
     getEngagementByNanoId,
-    getTermDetails,
     getUserDataForApplication,
     updateUserDataForApplication,
 } from '../../lib/services'
-import { extractTermId, resolveStandardTermsConfig } from '../../lib/utils'
 import { rootRoute } from '../../engagements.routes'
 
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
@@ -37,11 +34,6 @@ interface SubmitDisabledParams {
     isValid: boolean
 }
 
-type TermsStatusConfig = {
-    id: string
-    label: string
-}
-
 const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
     params.isFormDisabled
     || params.isLoading
@@ -49,22 +41,6 @@ const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
     || Boolean(params.applicationError)
     || (params.hasSubmitted && !params.isValid)
 )
-
-const STANDARD_TERMS = resolveStandardTermsConfig(
-    EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID,
-    EnvironmentConfig.TERMS_URL,
-)
-
-const TERMS_STATUS_CONFIG: TermsStatusConfig[] = [
-    {
-        id: STANDARD_TERMS.id ?? '',
-        label: 'Standard Topcoder Terms',
-    },
-    {
-        id: extractTermId(EnvironmentConfig.NDA_TERMS_URL) ?? '',
-        label: 'Topcoder NDA',
-    },
-].filter(term => term.id)
 
 const ApplicationFormPage: FC = () => {
     const params = useParams<{ nanoId: string }>()
@@ -80,9 +56,6 @@ const ApplicationFormPage: FC = () => {
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
     const [submitting, setSubmitting] = useState<boolean>(false)
-    const [termsStatus, setTermsStatus] = useState<Record<string, boolean>>({})
-    const [termsStatusLoading, setTermsStatusLoading] = useState<boolean>(true)
-    const [termsStatusError, setTermsStatusError] = useState<string | undefined>(undefined)
 
     const form = useForm<ApplicationFormData>({
         defaultValues: {
@@ -155,35 +128,6 @@ const ApplicationFormPage: FC = () => {
         }
     }, [])
 
-    const fetchTermsStatus = useCallback(async (): Promise<void> => {
-        if (TERMS_STATUS_CONFIG.length < 2) {
-            setTermsStatusError('Unable to load terms status. Please try again later.')
-            setTermsStatusLoading(false)
-            return
-        }
-
-        setTermsStatusLoading(true)
-        setTermsStatusError(undefined)
-
-        try {
-            const results = await Promise.all(
-                TERMS_STATUS_CONFIG.map(async term => ({
-                    details: await getTermDetails(term.id),
-                    term,
-                })),
-            )
-            const statusMap = results.reduce<Record<string, boolean>>((acc, entry) => {
-                acc[entry.term.id] = Boolean(entry.details?.agreed)
-                return acc
-            }, {})
-            setTermsStatus(statusMap)
-        } catch {
-            setTermsStatusError('Unable to load terms status. Please try again.')
-        } finally {
-            setTermsStatusLoading(false)
-        }
-    }, [])
-
     const checkApplication = useCallback(async (): Promise<void> => {
         if (!engagement?.id) {
             return
@@ -205,8 +149,7 @@ const ApplicationFormPage: FC = () => {
     useEffect(() => {
         fetchEngagement()
         fetchUserData()
-        fetchTermsStatus()
-    }, [fetchEngagement, fetchTermsStatus, fetchUserData])
+    }, [fetchEngagement, fetchUserData])
 
     useEffect(() => {
         if (!userData) {
@@ -275,10 +218,6 @@ const ApplicationFormPage: FC = () => {
     const handleRetryApplicationCheck = useCallback(() => {
         checkApplication()
     }, [checkApplication])
-
-    const handleRetryTermsStatus = useCallback(() => {
-        fetchTermsStatus()
-    }, [fetchTermsStatus])
 
     const handleCancel = useCallback(() => {
         handleBackToEngagement()
@@ -703,53 +642,6 @@ const ApplicationFormPage: FC = () => {
         )
     }
 
-    const renderTermsStatus = (): JSX.Element => (
-        <section className={styles.section}>
-            <div className={styles.sectionTitle}>Terms Status</div>
-            <div className={styles.termsStatusCard}>
-                {termsStatusLoading && (
-                    <div className={styles.termsStatusLoading}>
-                        <LoadingSpinner className={styles.inlineSpinner} />
-                        <span>Loading terms status...</span>
-                    </div>
-                )}
-                {!termsStatusLoading && termsStatusError && (
-                    <div className={styles.termsStatusError}>
-                        <span>{termsStatusError}</span>
-                        <Button label='Retry' onClick={handleRetryTermsStatus} secondary />
-                    </div>
-                )}
-                {!termsStatusLoading && !termsStatusError && (
-                    <div className={styles.termsStatusList}>
-                        {TERMS_STATUS_CONFIG.map(term => {
-                            const isAgreed = termsStatus[term.id]
-                            return (
-                                <div key={term.id} className={styles.termsStatusRow}>
-                                    <span
-                                        className={classNames(
-                                            styles.termsStatusIcon,
-                                            isAgreed ? styles.termsStatusIconSuccess : styles.termsStatusIconPending,
-                                        )}
-                                    >
-                                        {isAgreed
-                                            ? <IconOutline.CheckCircleIcon />
-                                            : <IconOutline.ClockIcon />}
-                                    </span>
-                                    <div className={styles.termsStatusText}>
-                                        <span className={styles.termsStatusLabel}>{term.label}</span>
-                                        <span className={styles.termsStatusValue}>
-                                            {isAgreed ? 'Received' : 'Not received'}
-                                        </span>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </div>
-        </section>
-    )
-
     const renderAddressField = (): JSX.Element => (
         <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor='applicant-address'>Address</label>
@@ -771,7 +663,6 @@ const ApplicationFormPage: FC = () => {
             {renderEngagementNotOpenBanner()}
 
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-                {renderTermsStatus()}
                 <section className={styles.section}>
                     <div className={styles.sectionTitle}>Your Information</div>
                     <div className={styles.readOnlyGrid}>

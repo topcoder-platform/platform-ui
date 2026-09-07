@@ -12,7 +12,6 @@ import { Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~
 
 import { sanitizeRichTextSource } from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Application, Engagement } from '../../lib/models'
-import { useTermsAgreementGate } from '../../lib'
 import { ApplicationStatus, EngagementStatus } from '../../lib/models'
 import {
     checkExistingApplication,
@@ -23,7 +22,7 @@ import {
     formatDuration,
     formatLocation,
 } from '../../lib/utils'
-import { StatusBadge, TermsAgreementModal } from '../../components'
+import { StatusBadge } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementDetailPage.module.scss'
@@ -248,15 +247,6 @@ const EngagementDetailPage: FC = () => {
         normalizedUserId,
     })
     const [profileGateError, setProfileGateError] = useState<string | undefined>()
-    const {
-        isCheckingTerms,
-        isFinalizingAgreement,
-        modalState: termsModalState,
-        startTermsAgreementFlow,
-        termsError,
-    }: ReturnType<typeof useTermsAgreementGate> = useTermsAgreementGate({
-        contextDescription: 'you are applying to an engagement',
-    })
 
     const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
@@ -350,8 +340,8 @@ const EngagementDetailPage: FC = () => {
             return
         }
 
-        startTermsAgreementFlow(navigateToApply)
-    }, [navigateToApply, profileCompleteness, startTermsAgreementFlow])
+        navigateToApply()
+    }, [navigateToApply, profileCompleteness])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -380,37 +370,6 @@ const EngagementDetailPage: FC = () => {
     })
 
     const applicationStatusLabel = getApplicationStatusLabel(application)
-
-    const renderTermsGate = (): JSX.Element | undefined => {
-        if (isCheckingTerms) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} inline />
-                    <span>Checking terms and NDA...</span>
-                </div>
-            )
-        }
-
-        if (isFinalizingAgreement) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} inline />
-                    <span>Finalizing your agreement...</span>
-                </div>
-            )
-        }
-
-        if (termsError && !termsModalState.open) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span className={styles.termsError}>{termsError}</span>
-                    <Button label='Try Again' onClick={handleApplyClick} primary />
-                </div>
-            )
-        }
-
-        return undefined
-    }
 
     const renderApplySection = (): JSX.Element => {
         if (!engagement) {
@@ -478,11 +437,6 @@ const EngagementDetailPage: FC = () => {
                     </a>
                 </div>
             )
-        }
-
-        const termsGate = renderTermsGate()
-        if (termsGate) {
-            return termsGate
         }
 
         if (profileGateError) {
@@ -713,7 +667,6 @@ const EngagementDetailPage: FC = () => {
             }}
         >
             {renderContent()}
-            <TermsAgreementModal {...termsModalState} />
         </ContentLayout>
     )
 }
