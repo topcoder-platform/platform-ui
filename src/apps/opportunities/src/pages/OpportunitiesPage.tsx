@@ -7,7 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -169,7 +169,8 @@ interface OpportunityListingProps {
 const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListingProps) => {
     const kind = props.kind
     const { profile }: ProfileContextData = useProfileContext()
-    const [search, setSearch] = useState('')
+    const [searchParams, setSearchParams] = useSearchParams()
+    const search = searchParams.get('search') ?? ''
     const deferredSearch = useDeferredValue(search.trim())
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
@@ -219,9 +220,11 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     )
     const isCopilot = hasRole(profile?.roles, 'copilot')
 
-    /** Resets active controls and their server page. */
+    /** Resets active controls, the shareable search query, and their server page. */
     const resetFilters = (): void => {
-        setSearch('')
+        const nextSearchParams = new URLSearchParams(searchParams)
+        nextSearchParams.delete('search')
+        setSearchParams(nextSearchParams, { replace: true })
         setApplied(false)
         setTracks([])
         setTypes([])
@@ -272,9 +275,12 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         setPage(1)
     }
 
-    /** Updates the search input and starts again at page one. */
+    /** Updates the search input, its shareable query parameter, and starts again at page one. */
     const updateSearch = (value: string): void => {
-        setSearch(value)
+        const nextSearchParams = new URLSearchParams(searchParams)
+        if (value) nextSearchParams.set('search', value)
+        else nextSearchParams.delete('search')
+        setSearchParams(nextSearchParams, { replace: true })
         setPage(1)
     }
 

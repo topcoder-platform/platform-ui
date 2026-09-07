@@ -51,6 +51,26 @@ describe('ChallengeDetailHeader actions and presentation', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
+    it('links each skill to the competition listing search convention', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Algorithms' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Algorithms')
+        expect(screen.getByRole('link', { name: 'Probability' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Probability')
+    })
+
     it('shows only Register for an unregistered open challenge', () => {
         render(
             <MemoryRouter>

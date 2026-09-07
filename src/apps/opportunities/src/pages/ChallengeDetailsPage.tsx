@@ -121,14 +121,14 @@ export function challengeAllowsDesignSubmissionDeletion(challenge: ChallengeOppo
     return openPhaseKeys.some(key => key === 'submission' || key === 'checkpointsubmission')
 }
 
-interface SortableDateHeaderProps {
+interface SortableColumnHeaderProps {
     label: string
     onToggle: () => void
     order: 'asc' | 'desc'
 }
 
-/** Renders an accessible date column that toggles server-backed ordering. */
-const SortableDateHeader: FC<SortableDateHeaderProps> = props => (
+/** Renders an accessible table column that toggles its owning ordering. */
+const SortableColumnHeader: FC<SortableColumnHeaderProps> = props => (
     <th
         aria-label={props.label}
         aria-sort={props.order === 'asc' ? 'ascending' : 'descending'}
@@ -997,7 +997,7 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
                         <tr>
                             <th>Handle</th>
                             {showRating && <th>Rating</th>}
-                            <SortableDateHeader
+                            <SortableColumnHeader
                                 label='Registration Date'
                                 onToggle={() => {
                                     setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
@@ -1324,7 +1324,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                             <tr>
                                 <th>Submission ID</th>
                                 {!isMarathonMatch && <th>Type</th>}
-                                <SortableDateHeader
+                                <SortableColumnHeader
                                     label='Submission Date'
                                     onToggle={() => {
                                         setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
@@ -1491,7 +1491,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                             <tr>
                                 <th>Handle</th>
                                 {!isDesign && <th>Rating</th>}
-                                <SortableDateHeader
+                                <SortableColumnHeader
                                     label='Submission Date'
                                     onToggle={() => {
                                         setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
@@ -1847,6 +1847,7 @@ const WinnerCard: FC<WinnerCardProps> = props => {
  */
 const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = props => {
     const winners = props.challenge.winners
+    const [scoreSortOrder, setScoreSortOrder] = useState<'asc' | 'desc'>('desc')
     const winnerMemberIds = useMemo(
         () => Array.from(new Set((winners ?? [])
             .map(winner => String(winner.userId ?? '')
@@ -1954,6 +1955,19 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
             wins: challengeTrackWins(stats, props.challenge.track),
         }
     })
+    const remainingWinners = [...rankedWinners.slice(3)]
+        .sort((first, second) => {
+            if (first.finalScore === undefined && second.finalScore === undefined) {
+                return first.placement - second.placement
+            }
+
+            if (first.finalScore === undefined) return 1
+            if (second.finalScore === undefined) return -1
+            const scoreDifference = scoreSortOrder === 'asc'
+                ? first.finalScore - second.finalScore
+                : second.finalScore - first.finalScore
+            return scoreDifference || first.placement - second.placement
+        })
     const showWinnerRating = rankedWinners.length === 1 || rankedWinners.length > 3
     return (
         <section className={styles.winnersSection}>
@@ -1986,17 +2000,18 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                     <th>Handle</th>
                                     <th>{`${trackHeading} Wins`}</th>
                                     <th>Rating</th>
-                                    <th>
-                                        <span className={styles.sortedHeader}>
-                                            Final Score
-                                            <IconOutline.ChevronDownIcon aria-hidden='true' />
-                                        </span>
-                                    </th>
+                                    <SortableColumnHeader
+                                        label='Final Score'
+                                        onToggle={() => {
+                                            setScoreSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
+                                        }}
+                                        order={scoreSortOrder}
+                                    />
                                     <th>Prize</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {rankedWinners.slice(3)
+                                {remainingWinners
                                     .map(entry => {
                                         const isViewer = String(entry.winner.userId ?? '') === props.memberId
                                         const rowKey = `${entry.placement}-`

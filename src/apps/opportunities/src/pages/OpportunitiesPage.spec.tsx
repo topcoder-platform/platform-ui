@@ -117,6 +117,35 @@ describe('OpportunitiesPage', () => {
             .toHaveBeenCalledTimes(1)
     })
 
+    it('hydrates the competition search from a linked skill query', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 1 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions?search=IBM%20Bluemix']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenCalledWith('competitions', expect.objectContaining({ search: 'IBM Bluemix' })))
+    })
+
     it('shows registration state on competition cards outside My competitions', async () => {
         mockedGetOpportunitySummary.mockResolvedValue({
             competitions: { count: 1 },
