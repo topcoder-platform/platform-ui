@@ -63,10 +63,31 @@ jest.mock('./AiReviewTab', () => ({
             hasSubmissions?: boolean
             onConfigRemoved?: () => Promise<void> | void
             onConfigPersisted?: (config: unknown) => void
+            onSelectedModeChange?: (mode: string | undefined) => void
         },
     ) {
         function handleRemoveClick(): void {
             props.onConfigRemoved?.()
+        }
+
+        function handleSelectAiOnlyClick(): void {
+            props.onSelectedModeChange?.('AI_ONLY')
+        }
+
+        function handleSelectAiGatingClick(): void {
+            props.onSelectedModeChange?.('AI_GATING')
+        }
+
+        function handlePersistAiOnlyClick(): void {
+            props.onConfigPersisted?.({
+                autoFinalize: false,
+                challengeId: 'challenge-1',
+                id: 'config-1',
+                minPassingThreshold: 75,
+                mode: 'AI_ONLY',
+                templateId: undefined,
+                workflows: [],
+            })
         }
 
         function handlePersistClick(): void {
@@ -97,6 +118,24 @@ jest.mock('./AiReviewTab', () => ({
                     type='button'
                 >
                     Persist AI config
+                </button>
+                <button
+                    onClick={handlePersistAiOnlyClick}
+                    type='button'
+                >
+                    Persist AI only config
+                </button>
+                <button
+                    onClick={handleSelectAiOnlyClick}
+                    type='button'
+                >
+                    Select AI only mode
+                </button>
+                <button
+                    onClick={handleSelectAiGatingClick}
+                    type='button'
+                >
+                    Select AI gating mode
                 </button>
                 AI review content
             </div>
@@ -395,6 +434,49 @@ describe('ReviewersField', () => {
 
         expect(screen.getByTestId('reviewers-form-error').textContent)
             .toBe('Manual review configuration is required.')
+    })
+
+    it('requires manual reviewer configuration again as soon as AI gating is reselected', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                reviewers={[]}
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI only config' }))
+
+        expect(screen.queryByTestId('reviewers-form-error'))
+            .toBeNull()
+
+        // The AI gating selection is not persisted yet, but the requirement must already apply.
+        await user.click(screen.getByRole('button', { name: 'Select AI gating mode' }))
+
+        expect(screen.getByTestId('reviewers-form-error').textContent)
+            .toBe('Manual review configuration is required.')
+    })
+
+    it('drops the manual reviewer requirement as soon as AI only is selected', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                reviewers={[]}
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(screen.getByTestId('reviewers-form-error').textContent)
+            .toBe('Manual review configuration is required.')
+
+        await user.click(screen.getByRole('button', { name: 'Select AI only mode' }))
+
+        expect(screen.queryByTestId('reviewers-form-error'))
+            .toBeNull()
     })
 
     it('does not require manual reviewer configuration in the simplified screener view', async () => {

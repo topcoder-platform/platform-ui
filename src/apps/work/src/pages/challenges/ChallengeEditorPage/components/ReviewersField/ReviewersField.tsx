@@ -63,6 +63,12 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
     const [isFullReviewExpanded, setIsFullReviewExpanded] = useState<boolean>(false)
     const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>()
+    /**
+     * Review mode currently selected in the AI review tab. It can differ from the persisted
+     * mode while the AI configuration autosave is still pending, so the manual-review
+     * requirement follows the selection instead of the last saved value.
+     */
+    const [selectedAiReviewMode, setSelectedAiReviewMode] = useState<AiReviewMode | undefined>()
     const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
     const [reviewContextRequirementCount, setReviewContextRequirementCount] = useState<number | undefined>(undefined)
     const humanTabRef = useRef<HTMLDivElement>(null)
@@ -169,11 +175,12 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
      */
     const showScreenerOnlyView = !!props.screenerOnly && !isFullReviewExpanded
     const showFullReviewToggle = !!props.screenerOnly && !!props.canConfigureFullReview
+    const effectiveAiReviewMode = selectedAiReviewMode ?? aiReviewMode
     const aiGatingManualReviewError = useMemo(
-        () => (!showScreenerOnlyView && aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+        () => (!showScreenerOnlyView && effectiveAiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
             : undefined),
-        [aiReviewMode, humanReviewersCount, showScreenerOnlyView],
+        [effectiveAiReviewMode, humanReviewersCount, showScreenerOnlyView],
     )
 
     useEffect(() => {
@@ -441,7 +448,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 id='reviewers-human-panel'
                                 role='tabpanel'
                             >
-                                {aiReviewMode === 'AI_ONLY' && (
+                                {effectiveAiReviewMode === 'AI_ONLY' && (
                                     <p className={styles.aiOnlyNotice}>
                                         No manual reviewers are needed in AI Only mode.
                                     </p>
@@ -466,6 +473,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                     onConfigPersisted={handleAiConfigPersisted}
                                     onConfigRemoved={handleAiConfigRemoved}
                                     onConfigSaveControllerReady={props.onConfigSaveControllerReady}
+                                    onSelectedModeChange={setSelectedAiReviewMode}
                                     reviewers={reviewerRows}
                                     trackId={trackId}
                                     typeId={typeId}
