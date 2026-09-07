@@ -273,6 +273,8 @@ function createDeferredPromise<T>(): DeferredPromise<T> {
 interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
     initialScorecardErrorMessage?: string
+    maxRenders?: number
+    onSave?: (values: ChallengeEditorFormData) => void
     restoreStaleAdditionalMemberIds?: boolean
     restoreStaleScorecardId?: boolean
     showAdditionalMemberIdsValue?: boolean
@@ -413,7 +415,20 @@ const StaleScorecardIdReporter = (): JSX.Element => {
     return <div data-testid='stale-scorecard-renders'>{renderCountRef.current}</div>
 }
 
+/**
+ * Renders the reviewer editor with optional saved-form resets and a bounded render guard.
+ *
+ * @param props initial form data, visible state markers, and optional save/render checks.
+ * @returns the editor and controls used by reviewer regression tests.
+ * @throws when the configured render limit detects an assignment feedback loop.
+ */
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
+    const renderCountRef = useRef<number>(0)
+    renderCountRef.current += 1
+    if (props.maxRenders && renderCountRef.current > props.maxRenders) {
+        throw new Error('Reviewer assignment hydration did not settle')
+    }
+
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
             ...baseDefaultValues,
@@ -423,6 +438,10 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const roleValueIndex = props.showRoleValueIndex ?? 0
     const scorecardValueIndex = props.showScorecardValueIndex ?? 0
     const memberValueIndex = props.showMemberValueIndex ?? 0
+    const saveAndReset = formMethods.handleSubmit(values => {
+        formMethods.reset(values)
+        props.onSave?.(values)
+    })
 
     useEffect(() => {
         if (!props.initialScorecardErrorMessage) {
@@ -441,6 +460,9 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     return (
         <FormProvider {...formMethods}>
             <HumanReviewTab screenerOnly={props.screenerOnly} />
+            {props.onSave
+                ? <button onClick={saveAndReset} type='button'>Update Challenge</button>
+                : undefined}
             {props.restoreStaleAdditionalMemberIds
                 ? <StaleAdditionalMemberIdsReporter />
                 : undefined}
@@ -1209,6 +1231,91 @@ describe('HumanReviewTab', () => {
                 ]))
         })
     })
+
+    it.each(['current.copilot', 'new.copilot', '12345', ''])(
+        'keeps simplified copilot assignments stable with persisted resources and copilot "%s"',
+        async copilot => {
+            const phaseNames = ['Checkpoint Screening', 'Checkpoint Review', 'Screening', 'Review', 'Approval']
+            const roleNames = ['Checkpoint Screener', 'Checkpoint Reviewer', 'Screener', 'Reviewer', 'Approver']
+            const phases = phaseNames.map((name, index) => ({ name, phaseId: `phase-${index}` }))
+            const reviewers = phases.map(phase => ({
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: phase.phaseId,
+                scorecardId: `scorecard-${phase.phaseId}`,
+                shouldOpenOpportunity: false,
+            }))
+            const onSave = jest.fn()
+
+            mockedUseFetchChallengeTracks.mockReturnValue({
+                tracks: [{ id: 'track-1', name: 'Design', track: 'DESIGN' }],
+            })
+            mockedUseFetchResourceRoles.mockReturnValue({
+                isLoading: false,
+                resourceRoles: roleNames.map((name, index) => ({ id: `role-${index}`, name })),
+            })
+            mockedUseFetchResources.mockReturnValue({
+                isLoading: false,
+                mutate: jest.fn()
+                    .mockResolvedValue(undefined),
+                resources: roleNames.map((name, index) => ({
+                    memberHandle: name.includes('Screener') ? 'saved.screener' : 'current.copilot',
+                    memberId: name.includes('Screener') ? '67890' : '12345',
+                    roleId: `role-${index}`,
+                })),
+            })
+            mockedFetchDefaultReviewers.mockResolvedValue(reviewers)
+            mockedFetchScorecards.mockResolvedValue(phases.map(phase => ({
+                id: `scorecard-${phase.phaseId}`,
+                name: `${phase.name} Scorecard`,
+                type: phase.name.toUpperCase()
+                    .replace(/ /g, '_'),
+            })))
+
+            render(
+                <TestHarness
+                    defaultValues={{ copilot, phases, reviewers }}
+                    maxRenders={30}
+                    onSave={onSave}
+                    screenerOnly
+                    showReviewersValue
+                />,
+            )
+
+            await waitFor(() => {
+                const rows = JSON.parse(screen.getByTestId('reviewers-value').textContent || '[]') as Reviewer[]
+                expect(rows.filter(row => ['phase-0', 'phase-2'].includes(row.phaseId || '')))
+                    .toEqual([
+                        expect.objectContaining({ memberId: '67890' }),
+                        expect.objectContaining({ memberId: '67890' }),
+                    ])
+                expect(rows.filter(row => ['phase-1', 'phase-3', 'phase-4'].includes(row.phaseId || '')))
+                    .toEqual([1, 3, 4].map(index => expect.objectContaining({
+                        memberReviewerCount: 1,
+                        phaseId: `phase-${index}`,
+                        shouldOpenOpportunity: false,
+                    })))
+                rows.filter(row => ['phase-1', 'phase-3', 'phase-4'].includes(row.phaseId || ''))
+                    .forEach(row => {
+                        expect(row.handle)
+                            .toBe(copilot && copilot !== '12345' ? copilot : undefined)
+                        expect(row.memberId)
+                            .toBe(copilot === '12345' ? copilot : undefined)
+                    })
+            })
+
+            // Manual saves reset the form to clean state, which re-enables resource hydration.
+            await act(async () => {
+                fireEvent.click(screen.getByRole('button', { name: 'Update Challenge' }))
+            })
+            await waitFor(() => {
+                expect(onSave)
+                    .toHaveBeenCalledTimes(1)
+                expect(JSON.parse(screen.getByTestId('reviewers-value').textContent || '[]'))
+                    .toEqual(JSON.parse(JSON.stringify(onSave.mock.calls[0][0].reviewers)))
+            })
+        },
+    )
 
     it('marks Screening and Checkpoint Screening member assignments optional', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
