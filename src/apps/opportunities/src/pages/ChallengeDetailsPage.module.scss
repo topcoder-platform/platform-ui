@@ -459,13 +459,22 @@
 
 .myMarathonTable {
     th:first-child { width: 138px; }
-    th:nth-child(2) { width: 160px; }
-    th:nth-child(3),
-    th:nth-child(4) { width: 168px; }
+    th:nth-child(2) { width: 208px; }
+    th:nth-child(3) { width: 168px; }
+    th:nth-child(4) { width: 120px; }
     th:nth-child(5) { width: 149px; }
     th:nth-child(6) { width: 120px; }
     th:nth-child(7) { width: 141px; }
     th:nth-child(8) { width: 108px; }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+        white-space: nowrap;
+    }
+
+    .sortedHeader svg {
+        flex-shrink: 0;
+    }
 
     .scoreColumn {
         text-align: right;
