@@ -280,6 +280,9 @@ as Failed in the Provisional process with explicit 0% progress; later review
 failures remain System failures. Their actions include the clean submission,
 scorer artifacts, and submission history, while the single page-level button
 owns the Review App handoff.
+The Marathon Match My Submissions table reserves enough width for the complete
+submission timestamp and keeps its date heading and sort icon on one line,
+aligned with the dates beneath it. Score columns remain right aligned.
 Submission history replaces the unreliable status field with Final Score and
 uses a responsive table that scrolls only on narrow viewports. Design
 submissions can be deleted only while Submission or Checkpoint Submission is
