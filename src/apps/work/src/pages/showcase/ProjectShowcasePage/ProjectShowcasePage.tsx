@@ -113,6 +113,14 @@ function resolveShowcaseMediaUrl(file: { key?: unknown; url?: unknown }): string
     return typeof file.url === 'string' ? file.url : ''
 }
 
+/**
+ * Strips the CloudFront signature from a media url so only the canonical
+ * object url is persisted; the API re-signs urls on every response.
+ */
+function toStoredMediaUrl(url: string | undefined): string {
+    return (url || '').replace(/\?.*$/, '')
+}
+
 function getStatusLabel(status: string): string {
     return status
         .toLowerCase()
@@ -664,6 +672,13 @@ export const ProjectShowcasePage: FC = () => {
     const [isOpeningMediaPicker, setIsOpeningMediaPicker] = useState<boolean>(false)
     const [isAutoSavingMedia, setIsAutoSavingMedia] = useState<boolean>(false)
     const [mediaLimitWarning, setMediaLimitWarning] = useState<string | undefined>(undefined)
+    const [unpreviewableMediaUrls, setUnpreviewableMediaUrls] = useState<{ [url: string]: boolean }>({})
+    // Object urls for media uploaded in this session, keyed by stored media
+    // url. The showcase distribution only serves signed urls, and media added
+    // before the post is saved has no signed url yet, so previews come
+    // straight from the local file.
+    const [localMediaPreviews, setLocalMediaPreviews] = useState<{ [url: string]: string }>({})
+    const localMediaPreviewsRef = useRef<{ [url: string]: string }>({})
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false)
     const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
     const [previewData, setPreviewData] = useState<ShowcasePostPreviewData | undefined>(undefined)
@@ -855,7 +870,13 @@ export const ProjectShowcasePage: FC = () => {
                 categoryOptions: categoryOptions.slice(1),
                 challengeOptions: selectedChallengeOptions,
                 editingPost: editingPostDetails,
-                formData,
+                formData: {
+                    ...formData,
+                    media: formData.media.map(item => ({
+                        ...item,
+                        url: localMediaPreviewsRef.current[item.url] || item.url,
+                    })),
+                },
                 industryOptions: industryOptions.slice(1),
                 manageMode,
                 projectId,
@@ -933,6 +954,17 @@ export const ProjectShowcasePage: FC = () => {
         [postsResult],
     )
 
+    const releaseLocalMediaPreviews = useCallback(() => {
+        const previewUrls = Object.values(localMediaPreviewsRef.current)
+        if (!previewUrls.length) {
+            return
+        }
+
+        previewUrls.forEach(previewUrl => URL.revokeObjectURL(previewUrl))
+        localMediaPreviewsRef.current = {}
+        setLocalMediaPreviews({})
+    }, [])
+
     const saveUploadedMedia = useCallback(
         async (updatedMedia: Array<{ type: string; url: string; alt?: string }>) => {
             if (!projectId || !selectedPostId) {
@@ -942,7 +974,10 @@ export const ProjectShowcasePage: FC = () => {
             setIsAutoSavingMedia(true)
             try {
                 const updatedPost = await updateProjectShowcasePost(projectId, selectedPostId, {
-                    media: updatedMedia,
+                    media: updatedMedia.map(item => ({
+                        ...item,
+                        url: toStoredMediaUrl(item.url),
+                    })),
                 })
                 await updatePostInCache(updatedPost)
                 setValue('media', (updatedPost.media ?? []).map(m => ({
@@ -950,16 +985,62 @@ export const ProjectShowcasePage: FC = () => {
                     type: m.type,
                     url: m.url,
                 })))
+                releaseLocalMediaPreviews()
             } catch (err) {
                 showErrorToast(err instanceof Error ? err.message : 'Unable to save uploaded media.')
             } finally {
                 setIsAutoSavingMedia(false)
             }
         },
-        [projectId, selectedPostId, updatePostInCache],
+        [projectId, releaseLocalMediaPreviews, selectedPostId, updatePostInCache],
     )
 
     const media = watch('media') || []
+
+    const applyUploadedMedia = useCallback(
+        (
+            uploadedMedia: Array<{ type: string; url: string; alt?: string }>,
+            uploadedPreviews: { [url: string]: string },
+        ) => {
+            const existingMedia = getValues('media') || []
+            const totalMediaCount = existingMedia.length + uploadedMedia.length
+            const newMedia = [
+                ...existingMedia,
+                ...uploadedMedia,
+            ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES)
+
+            setValue('media', newMedia)
+
+            const keptUrls = new Set(newMedia.map(item => item.url))
+            const keptPreviews: { [url: string]: string } = {}
+            Object.entries(uploadedPreviews)
+                .forEach(([url, previewUrl]) => {
+                    if (keptUrls.has(url)) {
+                        keptPreviews[url] = previewUrl
+                    } else {
+                        URL.revokeObjectURL(previewUrl)
+                    }
+                })
+
+            localMediaPreviewsRef.current = {
+                ...localMediaPreviewsRef.current,
+                ...keptPreviews,
+            }
+            setLocalMediaPreviews(localMediaPreviewsRef.current)
+
+            if (manageMode === 'edit' && selectedPostId) {
+                saveUploadedMedia(newMedia)
+            }
+
+            if (totalMediaCount > SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
+                setMediaLimitWarning(
+                    `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
+                    Extra files were not added.`,
+                )
+            }
+        },
+        [getValues, manageMode, saveUploadedMedia, selectedPostId, setValue],
+    )
 
     const handleOpenMediaPicker = useCallback(() => {
         if (!projectId) {
@@ -984,10 +1065,14 @@ export const ProjectShowcasePage: FC = () => {
         }
 
         const uploadedMedia: Array<{ type: string; url: string; alt?: string }> = []
+        const uploadedPreviews: { [url: string]: string } = {}
         const mediaStorePath = `project-showcase/${projectId}/`
 
         const pickerOptions: PickerOptions = {
             accept: SHOWCASE_MEDIA_FILE_PICKER_ACCEPT,
+            // Needed so `onFileUploadFinished` hands back the browser `File`
+            // rather than a plain metadata object.
+            exposeOriginalFile: true,
             fromSources: SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES,
             maxFiles: SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES,
             onClose: () => {
@@ -996,25 +1081,7 @@ export const ProjectShowcasePage: FC = () => {
                     return
                 }
 
-                const existingMedia = getValues('media') || []
-                const totalMediaCount = existingMedia.length + uploadedMedia.length
-                const newMedia = [
-                    ...existingMedia,
-                    ...uploadedMedia,
-                ].slice(0, SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES)
-
-                setValue('media', newMedia)
-
-                if (manageMode === 'edit' && selectedPostId) {
-                    saveUploadedMedia(newMedia)
-                }
-
-                if (totalMediaCount > SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES) {
-                    setMediaLimitWarning(
-                        `Maximum of ${SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES} media files reached.
-                        Extra files were not added.`,
-                    )
-                }
+                applyUploadedMedia(uploadedMedia, uploadedPreviews)
             },
             onFileUploadFinished: file => {
                 if (!file) {
@@ -1030,6 +1097,10 @@ export const ProjectShowcasePage: FC = () => {
                     = typeof file.alt === 'string' && file.alt.trim()
                         ? file.alt.trim()
                         : undefined
+
+                if (file.originalFile instanceof Blob) {
+                    uploadedPreviews[mediaUrl] = URL.createObjectURL(file.originalFile)
+                }
 
                 uploadedMedia.push({
                     type: String(file.mimetype || 'application/octet-stream'),
@@ -1064,10 +1135,28 @@ export const ProjectShowcasePage: FC = () => {
             setIsOpeningMediaPicker(false)
             showErrorToast(uploadError instanceof Error ? uploadError.message : 'Failed to open media picker.')
         }
-    }, [getValues, projectId, setValue, manageMode, selectedPostId, saveUploadedMedia])
+    }, [applyUploadedMedia, getValues, projectId])
+
+    // A signed url can still fail to load (expired or unsigned fallback); fall
+    // back to the file type placeholder rather than a broken image.
+    const handleMediaPreviewError = useCallback((url: string) => {
+        setUnpreviewableMediaUrls(current => (
+            current[url] ? current : { ...current, [url]: true }
+        ))
+    }, [])
 
     const handleRemoveMedia = useCallback((index: number) => {
         const currentMedia = getValues('media') || []
+        const removedUrl = currentMedia[index]?.url
+        const removedPreviewUrl = removedUrl ? localMediaPreviewsRef.current[removedUrl] : undefined
+        if (removedPreviewUrl) {
+            URL.revokeObjectURL(removedPreviewUrl)
+            const remaining: { [url: string]: string } = { ...localMediaPreviewsRef.current }
+            delete remaining[removedUrl]
+            localMediaPreviewsRef.current = remaining
+            setLocalMediaPreviews(remaining)
+        }
+
         setValue('media', currentMedia.filter((_, itemIndex) => itemIndex !== index))
         if (mediaLimitWarning) {
             setMediaLimitWarning(undefined)
@@ -1079,6 +1168,15 @@ export const ProjectShowcasePage: FC = () => {
             setMediaLimitWarning(undefined)
         }
     }, [media.length, mediaLimitWarning])
+
+    // Drop the object urls once the manage modal is done with them.
+    useEffect(() => {
+        if (!isManageModalOpen) {
+            releaseLocalMediaPreviews()
+        }
+    }, [isManageModalOpen, releaseLocalMediaPreviews])
+
+    useEffect(() => releaseLocalMediaPreviews, [releaseLocalMediaPreviews])
 
     const handleResetFilters = useCallback(() => {
         setFilters({
@@ -1516,7 +1614,10 @@ export const ProjectShowcasePage: FC = () => {
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
                                         industryIds: resolvedIndustryIds,
-                                        media: data.media,
+                                        media: data.media.map(m => ({
+                                            ...m,
+                                            url: toStoredMediaUrl(m.url),
+                                        })),
                                         title: data.title.trim(),
                                     })
                                     setIsManageModalOpen(false)
@@ -1534,7 +1635,7 @@ export const ProjectShowcasePage: FC = () => {
                                         industryIds: resolvedIndustryIds,
                                         media: data.media.map(m => ({
                                             ...m,
-                                            url: m.url?.replace(/\?.*$/, ''),
+                                            url: toStoredMediaUrl(m.url),
                                         })),
                                         title: data.title.trim(),
                                     })
@@ -1620,11 +1721,14 @@ export const ProjectShowcasePage: FC = () => {
                                     <div className={styles.mediaList}>
                                         {media.map((item, index) => (
                                             <div key={`${item.url}`} className={styles.mediaItem}>
-                                                {item.type.startsWith('image/') ? (
+                                                {item.type.startsWith('image/') && !unpreviewableMediaUrls[item.url] ? (
                                                     <img
-                                                        src={item.url}
+                                                        src={localMediaPreviews[item.url] || item.url}
                                                         alt={`Post media preview ${index + 1}`}
                                                         className={styles.mediaPreview}
+                                                        onError={function onError() {
+                                                            handleMediaPreviewError(item.url)
+                                                        }}
                                                     />
                                                 ) : (
                                                     <div className={styles.mediaPreviewPlaceholder}>
@@ -1636,7 +1740,7 @@ export const ProjectShowcasePage: FC = () => {
                                                 )}
                                                 <div className={styles.mediaDetails}>
                                                     <a
-                                                        href={item.url}
+                                                        href={localMediaPreviews[item.url] || item.url}
                                                         target='_blank'
                                                         rel='noreferrer noopener'
                                                         className={styles.mediaLink}
