@@ -47,6 +47,7 @@ export const TextField: FC<TextFieldProps> = props => (
                 onChange={props.onChange}
                 placeholder={props.placeholder}
                 disabled={props.disabled}
+                aria-label={props.label}
             />
         </InputWrapper>
     </Field>

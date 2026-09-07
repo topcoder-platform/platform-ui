@@ -158,6 +158,10 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
         setFilters(previous => ({ ...previous, search: value }))
     }, 400), [])
 
+    useEffect(() => () => {
+     debouncedSearch.cancel()
+ }, [debouncedSearch])
+
     const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const value: string = event.target.value
         setSearchInput(value)
@@ -369,6 +373,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
                                 value={searchInput}
                                 onChange={handleSearchChange}
                                 placeholder='Search by challenge name or id…'
+                                aria-label='Search challenges'
                             />
                         </div>
                     </InputWrapper>
