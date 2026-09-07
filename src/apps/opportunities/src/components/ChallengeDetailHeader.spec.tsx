@@ -309,7 +309,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
         )
 
         expect(screen.getByText('No individual prize - leaderboard scoring'))
-            .toBeInTheDocument()
+            .toHaveClass('funChallengePrize')
         expect(screen.queryByAltText('1 place'))
             .not.toBeInTheDocument()
         expect(screen.queryByText('Prize details coming soon'))

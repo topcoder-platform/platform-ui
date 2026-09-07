@@ -547,7 +547,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             <small>Prizes</small>
                             <div className={styles.prizes}>
                                 {props.challenge.funChallenge
-                                    ? <strong>{FUN_CHALLENGE_PRIZE_LABEL}</strong>
+                                    ? (
+                                        <strong className={styles.funChallengePrize}>
+                                            {FUN_CHALLENGE_PRIZE_LABEL}
+                                        </strong>
+                                    )
                                     : challengePrizes.length > 0
                                         ? (
                                             <>

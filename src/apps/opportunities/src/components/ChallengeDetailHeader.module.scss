@@ -314,6 +314,15 @@
             width: 20px;
         }
     }
+
+    strong.funChallengePrize {
+        justify-content: center;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        text-align: center;
+        white-space: normal;
+        width: 100%;
+    }
 }
 
 .featuredPrizes,

@@ -445,7 +445,8 @@ export function attachMarathonReviewSummations(
 }
 
 /**
- * Formats a Marathon Match score without hiding valid zero values.
+ * Formats positive Marathon Match scores to the two-decimal member-facing
+ * convention without hiding valid zero or negative sentinel values.
  *
  * @param score optional finite score.
  * @param fallback text used when no score exists.
@@ -453,9 +454,12 @@ export function attachMarathonReviewSummations(
  * @throws Does not throw.
  */
 export function formatMarathonScore(score: number | undefined, fallback: string): string {
-    return score === undefined
+    return score === undefined || !Number.isFinite(score)
         ? fallback
-        : new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 })
+        : new Intl.NumberFormat('en-US', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: score > 0 ? 2 : 0,
+        })
             .format(score)
 }
 

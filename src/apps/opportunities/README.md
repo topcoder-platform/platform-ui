@@ -246,8 +246,11 @@ Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
 member's own current AI decision score is the intentional active-challenge
-exception. The Figma keeps separate Provisional Score and Final Score columns and uses `-`
-when a final value is not yet available. Winners use Review API's canonical
+exception. Positive Marathon Match scores use the product-wide two-decimal
+display convention across Submissions, My Submissions, and Winners, while
+valid zero and negative scorer sentinels retain their established handling.
+The Figma keeps separate Provisional Score and Final Score columns and uses
+`-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
 scores are requested only for authenticated members. Marathon winner cards
@@ -333,7 +336,9 @@ legacy screening and review scorecard IDs link through the environment-specific
 handoff. Review Style uses the authored document-search rail icon. Development
 challenges omit Challenge Links, Source files, and Submission limit while
 adding the published AI Reviewers help and Usable Code rules to Educational
-Materials; the latter two submission sections remain Design-only. Learning
+Materials. Marathon Matches retain only their dedicated competition guide even
+when the challenge track is Development; the latter two submission sections
+remain Design-only. Learning
 arrows flow immediately after wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
 wrapping. The AI Exponential promo keeps a distinct gap before its action.
@@ -347,5 +352,7 @@ Opening a different challenge-detail route scrolls the page to the top. When no
 phase is active, the header keeps Challenge API's authored Draft, Cancelled, or
 other lifecycle status rather than calling the challenge completed; Draft,
 cancelled, and completed states retain the Register and Submit controls in their
-disabled presentation. The prize summary uses the light second- and third-place
-card illustrations, while Winners continues to use the dark podium medals.
+disabled presentation. Fun-challenge prize copy is centered and wraps inside
+the prize card at every supported width. The prize summary uses the light
+second- and third-place card illustrations, while Winners continues to use the
+dark podium medals.
