@@ -512,8 +512,14 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 [styles.designSkills]: trackKey === 'design',
                             })}
                             >
-                                {skills
-                                    .map(skill => <span key={skill.id ?? skill.name}>{skill.name}</span>)}
+                                {skills.map(skill => (
+                                    <Link
+                                        key={skill.id ?? skill.name}
+                                        to={`/opportunities/competitions?search=${encodeURIComponent(skill.name)}`}
+                                    >
+                                        {skill.name}
+                                    </Link>
+                                ))}
                             </div>
                         )}
                         <div className={styles.timeline}>
@@ -547,7 +553,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             <small>Prizes</small>
                             <div className={styles.prizes}>
                                 {props.challenge.funChallenge
-                                    ? <strong>{FUN_CHALLENGE_PRIZE_LABEL}</strong>
+                                    ? (
+                                        <strong className={styles.funChallengePrize}>
+                                            {FUN_CHALLENGE_PRIZE_LABEL}
+                                        </strong>
+                                    )
                                     : challengePrizes.length > 0
                                         ? (
                                             <>

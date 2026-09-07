@@ -1237,6 +1237,53 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toHaveTextContent('with a final score of 0')
     })
 
+    it('toggles the remaining Marathon winners by final score', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            type: 'Marathon Match',
+            winners: Array.from({ length: 6 }, (_value, index) => ({
+                handle: `winner-${index + 1}`,
+                placement: index + 1,
+                userId: String(index + 1),
+            })),
+        }
+        mockProjectResults = [
+            { finalScore: 100, placement: 1, userId: '1' },
+            { finalScore: 90, placement: 2, userId: '2' },
+            { finalScore: 80, placement: 3, userId: '3' },
+            { finalScore: 10, placement: 4, userId: '4' },
+            { finalScore: 70, placement: 5, userId: '5' },
+            { finalScore: 40, placement: 6, userId: '6' },
+        ]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        const table = screen.getByRole('table', { name: 'Remaining winners' })
+        const scoreHeader = within(table)
+            .getByRole('columnheader', { name: 'Final Score' })
+        const places = (): string[] => within(table)
+            .getAllByRole('row')
+            .slice(1)
+            .map(row => within(row)
+                .getAllByRole('cell')[0].textContent ?? '')
+
+        expect(scoreHeader)
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(places())
+            .toEqual(['5th', '6th', '4th'])
+
+        fireEvent.click(within(scoreHeader)
+            .getByRole('button', { name: 'Final Score' }))
+
+        expect(scoreHeader)
+            .toHaveAttribute('aria-sort', 'ascending')
+        expect(places())
+            .toEqual(['4th', '6th', '5th'])
+    })
+
     it('omits ratings from the exact three-winner podium state', () => {
         mockChallenge = {
             ...mockChallenge,
