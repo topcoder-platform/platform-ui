@@ -41,13 +41,34 @@ def add_gigs_routes(template, bucket):
                     'Comment': 'Serve the platform-ui shell for exact and nested Gigs pages',
                     'Runtime': 'cloudfront-js-2.0',
                 },
-                'FunctionCode': (
+                'FunctionCode': {'Fn::Sub': (
                     'function handler(event) {\n'
                     '  var request = event.request;\n'
+                    '  var host = request.headers.host ? request.headers.host.value.toLowerCase() : "";\n'
+                    '  if (host === "${ApexDomainName}") {\n'
+                    '    var query = [];\n'
+                    '    Object.keys(request.querystring).forEach(function (name) {\n'
+                    '      var item = request.querystring[name];\n'
+                    '      var values = item.multiValue && item.multiValue.length ? item.multiValue : [item];\n'
+                    '      values.forEach(function (entry) {\n'
+                    # CloudFront passes percent encoding through; do not encode it a second time.
+                    '        query.push(name + "=" + (entry.value || ""));\n'
+                    '      });\n'
+                    '    });\n'
+                    '    return {\n'
+                    '      statusCode: 301,\n'
+                    '      statusDescription: "Moved Permanently",\n'
+                    '      headers: {\n'
+                    '        location: { value: "https://${CanonicalDomainName}" + request.uri\n'
+                    '          + (query.length ? "?" + query.join("&") : "") },\n'
+                    '        "cache-control": { value: "public, max-age=300" }\n'
+                    '      }\n'
+                    '    };\n'
+                    '  }\n'
                     '  request.uri = "/index.html";\n'
                     '  return request;\n'
                     '}\n'
-                ),
+                )},
             },
         },
     }

@@ -2,7 +2,9 @@
 
 The public routes `/gigs` and `/gigs/*` belong to platform-ui. Both apex and `www`
 website aliases use the same website CloudFront distribution. This additive
-CloudFormation change serves the platform-ui S3 `index.html` with a signed origin
+CloudFormation change preserves the site's apex-to-www redirect, including encoded
+and repeated query parameters. On the canonical host, it serves the platform-ui
+S3 `index.html` with a signed origin
 request. The browser retains its path and query, so React handles listing,
 details, and applications. Other routes, particularly `/api/recruit/*` and the
 Payload compatibility API, retain their existing origins. The website's existing
@@ -81,10 +83,13 @@ rollback using the normal deployment process.
 ## Checks
 
 ```sh
+nvm use
 python3 -m unittest discover -s infrastructure/gigs-routing -p 'test_*.py'
 ```
 
 The transform tests prove route isolation, preservation of existing behaviors,
-idempotency, and rejection of conflicting route ownership. The change-set review
+idempotency, rejection of conflicting route ownership, and canonical redirects
+without losing or double-encoding query parameters. The request test uses Node
+from `.nvmrc` to execute the generated edge handler. The change-set review
 and live browser checks remain necessary because unit tests cannot prove an AWS
 account's actual deployment state.
