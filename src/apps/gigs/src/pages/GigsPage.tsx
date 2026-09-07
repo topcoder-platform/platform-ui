@@ -1,31 +1,24 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useContext } from 'react'
+import { FC } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, PageTitle } from '~/libs/ui'
 
 import { Gig } from '../models'
 import { GigCard, GigState } from '../components/GigShared'
-import { getApplicationCount, getGigs } from '../gigs.service'
-import { filterGigs, gigFlag, GIGS_PER_PAGE, isOpenGig, MY_GIGS_URL } from '../gigs.utils'
+import { getGigs } from '../gigs.service'
+import { filterGigs, gigFlag, GIGS_PER_PAGE, isOpenGig } from '../gigs.utils'
 
 /** Lists open Recruit gigs with URL-persisted filters, featured ordering, hotlist, and ten-row pagination. */
 const GigsPage: FC = () => {
-    const { profile }: ProfileContextData = useContext(profileContext)
     const [params, setParams] = useSearchParams()
     const {
         data: jobs,
         error,
         mutate,
     }: SWRResponse<Gig[]> = useSWR('gigs-list', getGigs, { shouldRetryOnError: false })
-    const { data: count }: SWRResponse<number> = useSWR(
-        profile?.userId ? ['gigs-count', profile.userId] : undefined,
-        getApplicationCount,
-        { shouldRetryOnError: false },
-    )
     const search = params.get('search') || ''
     const location = params.get('location') || ''
     const sort = params.get('sort') === 'updated_on' ? 'updated_on' : 'created_on'
@@ -74,18 +67,6 @@ const GigsPage: FC = () => {
                 </div>
             </header>
             <main className='gigs-container gigs-main'>
-                {profile && (
-                    <div className='gigs-notice'>
-                        <p>
-                            {count === undefined
-                                ? 'Keep track of your Gig Work applications.'
-                                : `You have ${count} ${
-                                    count === 1 ? 'gig application' : 'gig applications'
-                                } in the system.`}
-                        </p>
-                        <a href={MY_GIGS_URL}>Check application status</a>
-                    </div>
-                )}
                 <div className='gigs-list-layout'>
                     <aside className='gigs-filters' aria-label='Filter gigs'>
                         <h2>Find a gig</h2>

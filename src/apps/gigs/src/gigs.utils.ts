@@ -5,7 +5,6 @@ import { ApplicationErrors, ApplicationValues, Candidate, Gig } from './models'
 export const GIGS_PER_PAGE = 10
 export const MAX_RESUME_BYTES = 8000000
 export const GIGS_PATH = '/gigs'
-export const MY_GIGS_URL = `https://platform.${EnvironmentConfig.TC_DOMAIN}/earn/my-gigs`
 
 /** Reads a named Recruit field from a job; returns display text or the supplied fallback. Does not throw. */
 export function gigField(job: Gig, name: string, fallback: string = 'n/a'): string {

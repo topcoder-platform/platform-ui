@@ -60,8 +60,6 @@
     .gigs-pagination, .gigs-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-top: 24px; }
     .gigs-pagination { justify-content: center; }
     .gigs-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 20px 24px; border: 1px solid $tc-2026-border; border-left: 4px solid $tc-2026-teal; background: $tc-2026-surface; border-radius: 6px; margin-bottom: 24px; }
-    .gigs-notice p { margin: 0; }
-    .gigs-notice a { font-weight: 700; }
     .gigs-resources { margin-top: 40px; padding: 32px; border: 1px solid $tc-2026-border; border-radius: 10px; }
     .gigs-back { display: inline-block; margin-bottom: 24px; }
     .gigs-detail-header, .gigs-apply-header { margin-bottom: 24px; }

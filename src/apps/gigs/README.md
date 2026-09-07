@@ -42,12 +42,11 @@ Search, country, sort and page are URL parameters. Updating filters preserves
 unrelated parameters such as `ref`, and resets the result page. Missing salary
 metadata remains unspecified; zero is not mistaken for missing compensation.
 
-The original external My Gigs status page and its count API are retained. During
-migration verification on 2026-09-07, the development status page redirected to a
-misspelled host and both development/production status APIs returned 503. This is
-an existing upstream dependency, separate from Recruit applications; count failure
-does not block public discovery or applications and does not display a fabricated
-count. The legacy UI's Optimizely experiments and Chatlio script are not included;
+Members cannot track application status in this app. The listing and submission
+confirmation do not link to My Gigs, and the app does not request application
+counts or display application history. Submission confirmation directs members
+back to the gigs list and explains that suitable applicants will be contacted
+by email. The legacy UI's Optimizely experiments and Chatlio script are not included;
 platform analytics and navigation remain owned by the shared shell.
 
 ## Verification

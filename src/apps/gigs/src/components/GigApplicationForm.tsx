@@ -16,7 +16,6 @@ import {
     gigDuration,
     gigField,
     GIGS_PATH,
-    MY_GIGS_URL,
     validateApplication,
 } from '../gigs.utils'
 import { ApplicationErrors, ApplicationValues, Candidate, Gig } from '../models'
@@ -135,13 +134,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
             <GigState title='Application submitted'>
                 <p>We will contact you via email if it seems like a fit!</p>
                 <div className='gigs-actions'>
-                    <Link to={GIGS_PATH}>Go to gigs list</Link>
-                    <a
-                        className='gigs-button'
-                        href={`${MY_GIGS_URL}?externalId=${encodeURIComponent(props.slug)}`}
-                    >
-                        Check application status
-                    </a>
+                    <Link className='gigs-button' to={GIGS_PATH}>Go to gigs list</Link>
                 </div>
             </GigState>
         )
@@ -151,8 +144,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
         <form className='gigs-panel gigs-application' onSubmit={submit} noValidate>
             {props.candidate && (
                 <div className='gigs-notice'>
-                    You have applied to a gig previously. Review your Gig Work profile and update anything
-                    that has changed.
+                    Review your Gig Work profile and update anything that has changed.
                 </div>
             )}
             <fieldset disabled={submitting}>

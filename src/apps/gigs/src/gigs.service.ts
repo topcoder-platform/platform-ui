@@ -80,20 +80,6 @@ export async function applyToGig(slug: string, body: FormData): Promise<void> {
     if (!result.success) throw new RecruitError('Your application was not confirmed. Please try again.', 502)
 }
 
-/** Reads the member's total from the existing My Gigs API; rejects failures rather than inventing a count. */
-export async function getApplicationCount(): Promise<number> {
-    const auth = await tokenGetAsync()
-    if (!auth.token) throw new RecruitError('Sign in to view your applications.', 401)
-    const response = await fetch(
-        `https://platform.${EnvironmentConfig.TC_DOMAIN}/gigs-app/api/my-gigs/myJobApplications?page=1&perPage=1`,
-        { credentials: 'omit', headers: { Authorization: `Bearer ${auth.token}` } },
-    )
-    if (!response.ok) throw new RecruitError('We could not load your application count.', response.status)
-    const total = response.headers.get('x-total')
-    if (total === null || !/^\d+$/.test(total)) throw new RecruitError('Application count is unavailable.', 502)
-    return Number(total)
-}
-
 /** Loads an authored candidate policy from the Payload compatibility endpoint; returns its Markdown body. */
 export async function getGigPolicy(id: string): Promise<string> {
     const result = await recruitRequest<{ fields?: { content?: { fields?: { text?: string } } } }>(
