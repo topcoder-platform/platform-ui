@@ -13,7 +13,7 @@ import { CommonRequestBusAPI } from '../models'
  */
 export const reqToBusAPI = async (data: CommonRequestBusAPI): Promise<string> => {
     const resultData = await xhrPostAsync<CommonRequestBusAPI, string>(
-        `${EnvironmentConfig.API.V5}/bus/events`,
+        `${EnvironmentConfig.API.V6}/bus/events`,
         data,
     )
     return resultData
