@@ -189,7 +189,7 @@ export async function reprocessTopgearSubmission(
     const payload = createTopgearSubmissionReprocessPayload(input)
 
     return xhrPostAsync<TopgearSubmissionReprocessEvent, string>(
-        `${EnvironmentConfig.API.V5}/bus/events`,
+        `${EnvironmentConfig.API.V6}/bus/events`,
         createTopgearSubmissionReprocessEvent(payload),
     )
 }
