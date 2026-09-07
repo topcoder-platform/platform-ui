@@ -93,6 +93,7 @@ const developmentChallenge: ChallengeOpportunity = {
 
 const marathonChallenge: ChallengeOpportunity = {
     ...challenge,
+    track: 'Development',
     type: 'Marathon Match',
 }
 
@@ -210,6 +211,10 @@ describe('ChallengeSidebar Review Style', () => {
             .not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'How to Compete in a Marathon Match' }))
             .toHaveAttribute('href', marathonMatchLearningUrl)
+        expect(screen.queryByRole('link', { name: 'AI Reviewers - Member Help Guide' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Usable Code Rules' }))
+            .not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' })
             .querySelector('img'))
             .not.toBeNull()

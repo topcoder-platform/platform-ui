@@ -343,7 +343,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
-                {developmentChallenge && (
+                {developmentChallenge && !marathonMatch && (
                     <>
                         <a
                             className={styles.learningLink}

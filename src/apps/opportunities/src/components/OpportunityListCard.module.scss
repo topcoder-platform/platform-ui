@@ -386,17 +386,16 @@
 .medalIcon {
     align-items: center;
     display: inline-flex;
-    flex: 0 0 16px;
-    height: 16px;
+    flex: 0 0 14px;
+    height: 18px;
     justify-content: center;
-    overflow: hidden;
-    width: 16px;
+    width: 14px;
 
     svg {
         display: block;
         flex: none;
-        height: 90%;
-        width: 70%;
+        height: 18px;
+        width: 14px;
     }
 }
 

@@ -43,6 +43,14 @@ jest.mock('~/apps/copilots', () => ({
     absoluteRootRoute: 'https://platform.example/copilots',
 }), { virtual: true })
 
+jest.mock('../assets/prize-medal-2.svg', () => ({
+    ReactComponent: (): JSX.Element => <svg data-testid='placement-medal-2' />,
+}))
+
+jest.mock('../assets/prize-medal-3.svg', () => ({
+    ReactComponent: (): JSX.Element => <svg data-testid='placement-medal-3' />,
+}))
+
 /**
  * Creates a complete competition-card fixture with an open registration and submission phase.
  *
@@ -131,6 +139,12 @@ describe('OpportunityListCard competition presentation', () => {
         expect(firstMedal)
             .toHaveClass('medalIcon')
         expect(firstMedal?.querySelector('svg'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .getByTestId('placement-medal-2'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .getByTestId('placement-medal-3'))
             .toBeInTheDocument()
         expect(screen.queryByText('Prize:'))
             .not.toBeInTheDocument()

@@ -80,6 +80,19 @@ $tc-2026-apps:
             outline-offset: 2px;
         }
 
+        // `InputWrapper` draws the focus and error border on its own field box
+        // around a borderless native control, so the control must not paint a
+        // second ring inside it. Checkboxes and radios keep theirs: their field
+        // box border is transparent, so the outline is their only focus cue.
+        .input-wrapper {
+
+            input:not([type='checkbox'], [type='radio']):focus-visible,
+            select:focus-visible,
+            textarea:focus-visible {
+                outline: none;
+            }
+        }
+
         input:not([type='checkbox'], [type='radio']),
         select,
         textarea {

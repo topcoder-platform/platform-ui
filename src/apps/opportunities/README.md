@@ -32,9 +32,12 @@ or destinations change.
 
 The Competitions sidebar follows the authored Figma filter with one Search
 control and the helper text “Search skills, technologies, projects.” Its value
-is sent through the Challenge API `search` parameter; Competitions does not
-render a second skills/technologies field. Other opportunity domains retain
-their owner-specific skill facet where supported.
+is mirrored in the shareable `search` query parameter and sent through the
+Challenge API `search` parameter; Competitions does not render a second
+skills/technologies field. Challenge-detail skill tags link back to
+`/opportunities/competitions?search=<skill>` so the destination input and
+owner-backed results are filtered immediately. Other opportunity domains
+retain their owner-specific skill facet where supported.
 
 ## List and grid views
 
@@ -100,7 +103,10 @@ subtype icons and member-facing labels.
   state limited to actual Submitter resources.
 - The prize footer uses only the `PLACEMENT` prize set and preserves its API
   order as first, second, and third place. Checkpoint, copilot, and reviewer
-  payments are not mixed into competitor prizes.
+  payments are not mixed into competitor prizes. Its first three glyphs use
+  the authored yellow, light-blue, and peach placement assets at their native
+  14×18px size; the dark second- and third-place podium variants are reserved
+  for the Winners presentation.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
@@ -246,15 +252,22 @@ Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
 member's own current AI decision score is the intentional active-challenge
-exception. The Figma keeps separate Provisional Score and Final Score columns and uses `-`
-when a final value is not yet available. Winners use Review API's canonical
+exception. Positive Marathon Match scores use the product-wide two-decimal
+display convention across Submissions, My Submissions, and Winners, while
+valid zero and negative scorer sentinels retain their established handling.
+The Figma keeps separate Provisional Score and Final Score columns and uses
+`-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
 scores are requested only for authenticated members. Marathon winner cards
 prefer an exact-member final Review Summation when legacy project-result rows
 contain a zero placeholder. Their separators use the corresponding podium
-placement color. Winner stats use the Members API top-level track totals;
-Development does not add the nested AI Engineering value a second time.
+placement color. The remaining-winners table initially orders available final
+scores high-to-low, matching its downward sort indicator, and the accessible
+Final Score header toggles low-to-high; unavailable scores remain after scored
+rows in either direction and the three-card podium remains placement-ordered.
+Winner stats use the Members API top-level track totals; Development does not
+add the nested AI Engineering value a second time.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
@@ -333,7 +346,9 @@ legacy screening and review scorecard IDs link through the environment-specific
 handoff. Review Style uses the authored document-search rail icon. Development
 challenges omit Challenge Links, Source files, and Submission limit while
 adding the published AI Reviewers help and Usable Code rules to Educational
-Materials; the latter two submission sections remain Design-only. Learning
+Materials. Marathon Matches retain only their dedicated competition guide even
+when the challenge track is Development; the latter two submission sections
+remain Design-only. Learning
 arrows flow immediately after wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
 wrapping. The AI Exponential promo keeps a distinct gap before its action.
@@ -347,5 +362,7 @@ Opening a different challenge-detail route scrolls the page to the top. When no
 phase is active, the header keeps Challenge API's authored Draft, Cancelled, or
 other lifecycle status rather than calling the challenge completed; Draft,
 cancelled, and completed states retain the Register and Submit controls in their
-disabled presentation. The prize summary uses the light second- and third-place
-card illustrations, while Winners continues to use the dark podium medals.
+disabled presentation. Fun-challenge prize copy is centered and wraps inside
+the prize card at every supported width. The prize summary uses the light
+second- and third-place card illustrations, while Winners continues to use the
+dark podium medals.
