@@ -1,5 +1,6 @@
 /**
  * Tab content for submissions during the submission phase.
+ * Unlimited Design challenges show every submission without history actions.
  */
 import {
     FC,
@@ -38,6 +39,7 @@ import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissio
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import {
     challengeHasSubmissionLimit,
+    getChallengeSubmissionSelectionLimit,
     getSubmissionHistoryKey,
     hasIsLatestFlag,
     partitionSubmissionHistory,
@@ -173,9 +175,14 @@ export const TabContentSubmissions: FC<Props> = props => {
         [latestSubmissions, submissionMetaById],
     )
 
-    const restrictToLatest = useMemo(
-        () => challengeHasSubmissionLimit(challengeInfo),
+    const isUnlimitedDesignChallenge = useMemo(
+        () => getChallengeSubmissionSelectionLimit(challengeInfo) === undefined,
         [challengeInfo],
+    )
+
+    const restrictToLatest = useMemo(
+        () => !isUnlimitedDesignChallenge && challengeHasSubmissionLimit(challengeInfo),
+        [challengeInfo, isUnlimitedDesignChallenge],
     )
 
     const hasLatestFlag = useMemo(
@@ -184,8 +191,8 @@ export const TabContentSubmissions: FC<Props> = props => {
     )
 
     const shouldShowHistoryActions = useMemo(
-        () => historyByMember.size > 0,
-        [historyByMember],
+        () => !isUnlimitedDesignChallenge && historyByMember.size > 0,
+        [historyByMember, isUnlimitedDesignChallenge],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)

@@ -8,6 +8,9 @@ import {
     waitFor,
 } from '@testing-library/react'
 
+import { useWindowSize } from '~/libs/shared'
+import type { TableColumn } from '~/libs/ui'
+
 import type {
     BackendSubmission,
     ChallengeDetailContextModel,
@@ -61,7 +64,14 @@ jest.mock('~/apps/admin/src/lib', () => ({
 }), { virtual: true })
 
 jest.mock('~/apps/admin/src/lib/components/common/TableMobile', () => ({
-    TableMobile: () => <div>Mobile table</div>,
+    TableMobile: (props: {
+        columns: TableColumn<BackendSubmission>[][]
+        data: BackendSubmission[]
+    }) => {
+        const { Table }: typeof import('~/libs/ui') = jest.requireMock('~/libs/ui')
+
+        return <Table columns={props.columns.map(columns => columns[1])} data={props.data} />
+    },
 }), { virtual: true })
 
 jest.mock('~/apps/admin/src/lib/utils', () => ({
@@ -70,10 +80,7 @@ jest.mock('~/apps/admin/src/lib/utils', () => ({
 
 jest.mock('~/libs/shared', () => ({
     copyTextToClipboard: () => Promise.resolve(),
-    useWindowSize: () => ({
-        height: 800,
-        width: 1200,
-    }),
+    useWindowSize: jest.fn(),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => ({
@@ -181,6 +188,7 @@ jest.mock('../TableWrapper', () => ({
 }))
 
 const mockedReprocessTopgearSubmission = reprocessTopgearSubmission as jest.Mock
+const mockedUseWindowSize = useWindowSize as jest.Mock
 
 const submission = {
     challengeId: 'challenge-1',
@@ -241,15 +249,31 @@ const reviewAppContextValue = {
     },
 } as ReviewAppContextModel
 
-function renderSubmissions(): ReturnType<typeof render> {
+/**
+ * Render the submissions tab with optional challenge settings and submission history.
+ *
+ * @param challengeOverrides - Challenge fields to override for a visibility scenario.
+ * @param submissions - Backend rows supplied to the tab and challenge context.
+ * @returns Testing Library's render result for assertions and interactions.
+ * @throws Propagates rendering errors from the component under test.
+ */
+function renderSubmissions(
+    challengeOverrides: Partial<ChallengeInfo> = {},
+    submissions: BackendSubmission[] = [submission],
+): ReturnType<typeof render> {
     return render(
         <ReviewAppContext.Provider value={reviewAppContextValue}>
-            <ChallengeDetailContext.Provider value={challengeDetailContextValue}>
+            <ChallengeDetailContext.Provider value={{
+                ...challengeDetailContextValue,
+                challengeInfo: { ...challengeInfo, ...challengeOverrides },
+                challengeSubmissions: submissions,
+            }}
+            >
                 <TabContentSubmissions
                     downloadSubmission={jest.fn()}
                     isDownloading={{}}
                     isLoading={false}
-                    submissions={[submission]}
+                    submissions={submissions}
                 />
             </ChallengeDetailContext.Provider>
         </ReviewAppContext.Provider>,
@@ -260,6 +284,7 @@ describe('TabContentSubmissions', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockedReprocessTopgearSubmission.mockResolvedValue('ok')
+        mockedUseWindowSize.mockReturnValue({ height: 800, width: 1200 })
     })
 
     it('confirms before reprocessing a Topgear submission', async () => {
@@ -296,6 +321,61 @@ describe('TabContentSubmissions', () => {
                         id: 'submission-1',
                     }),
                 })
+        })
+    })
+
+    describe.each([1200, 768])('submission history at viewport width %i', width => {
+        const unlimited = JSON.stringify({ count: '', limit: 'false', unlimited: 'true' })
+        const limited = JSON.stringify({ count: '2', limit: 'true', unlimited: 'false' })
+        const submissionsWithHistory = [
+            {
+                ...submission,
+                isLatest: true,
+                type: 'CONTEST_SUBMISSION',
+            },
+            {
+                ...submission,
+                id: 'older-submission',
+                isLatest: false,
+                submittedDate: '2026-04-30T00:00:00.000Z',
+                type: 'CONTEST_SUBMISSION',
+            },
+        ]
+
+        beforeEach(() => {
+            mockedUseWindowSize.mockReturnValue({ height: 800, width })
+        })
+
+        it.each([unlimited, undefined])('shows all unlimited Design rows without history for %s', value => {
+            renderSubmissions({
+                metadata: value ? [{ name: 'submissionLimit', value }] : [],
+                track: { id: 'design-track', name: 'Design' },
+                type: { id: 'challenge-type', name: 'Challenge' },
+            }, submissionsWithHistory)
+
+            expect(screen.queryAllByRole('button', { name: 'View Submission History' }))
+                .toHaveLength(0)
+            for (const entry of submissionsWithHistory) {
+                expect(screen.getByText(entry.id))
+                    .toBeTruthy()
+            }
+        })
+
+        it.each([
+            ['Design', 'Challenge', limited],
+            ['Development', 'Challenge', unlimited],
+            ['Development', 'First2Finish', unlimited],
+            ['Data Science', 'Marathon Match', unlimited],
+            ['Quality Assurance', 'Challenge', unlimited],
+        ])('preserves history for %s / %s', (track, type, value) => {
+            renderSubmissions({
+                metadata: [{ name: 'submissionLimit', value }],
+                track: { id: 'track-1', name: track },
+                type: { id: 'type-1', name: type },
+            }, submissionsWithHistory)
+
+            expect(screen.getAllByRole('button', { name: 'View Submission History' }).length)
+                .toBeGreaterThan(0)
         })
     })
 })
