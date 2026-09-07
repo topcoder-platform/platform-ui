@@ -159,8 +159,8 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
     }, 400), [])
 
     useEffect(() => () => {
-     debouncedSearch.cancel()
- }, [debouncedSearch])
+        debouncedSearch.cancel()
+    }, [debouncedSearch])
 
     const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const value: string = event.target.value
