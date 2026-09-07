@@ -208,7 +208,7 @@ describe('ChallengeSidebar Review Style', () => {
             .toHaveAttribute('target', '_blank')
         expect(screen.queryByRole('heading', { name: 'Join the AI Exponential league' }))
             .not.toBeInTheDocument()
-        expect(screen.getByRole('link', { name: 'How to Compete on Marathon Match' }))
+        expect(screen.getByRole('link', { name: 'How to Compete in a Marathon Match' }))
             .toHaveAttribute('href', marathonMatchLearningUrl)
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' })
             .querySelector('img'))
@@ -238,7 +238,7 @@ describe('ChallengeSidebar Review Style', () => {
             .toHaveAttribute('href', usableCodeRulesUrl)
         expect(screen.queryByRole('link', { name: 'How to compete in design challenges' }))
             .not.toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'How to approach the checkpoint feedback' }))
+        expect(screen.queryByRole('link', { name: 'How to approach checkpoint feedback' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Submission Format' }))
             .not.toBeInTheDocument()
@@ -309,12 +309,12 @@ describe('ChallengeSidebar Review Style', () => {
                 'href',
                 designChallengeLearningUrl,
             )
-        expect(screen.getByRole('link', { name: 'How to approach the checkpoint feedback' }))
+        expect(screen.getByRole('link', { name: 'How to approach checkpoint feedback' }))
             .toHaveAttribute(
                 'href',
                 checkpointFeedbackLearningUrl,
             )
-        expect(screen.getByRole('link', { name: 'How to approach the checkpoint feedback' }).className)
+        expect(screen.getByRole('link', { name: 'How to approach checkpoint feedback' }).className)
             .toContain('learningLink')
         expect(screen.getByRole('heading', { name: 'Source files' }))
             .toBeInTheDocument()

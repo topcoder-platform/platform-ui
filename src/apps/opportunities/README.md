@@ -331,10 +331,12 @@ handoff. Review Style uses the authored document-search rail icon. Development
 challenges omit Challenge Links, Source files, and Submission limit while
 adding the published AI Reviewers help and Usable Code rules to Educational
 Materials; the latter two submission sections remain Design-only. Learning
-arrows flow immediately after wrapped labels, and the AI Exponential promo
-keeps a distinct gap before its action. Marathon Match challenges replace the
-general AI Exponential promo with the Marathon Match Tournament heading and
-copy. Its Explore the program link opens the environment's Marathon Match
+arrows flow immediately after wrapped labels. The Design link reads “How to
+approach checkpoint feedback” and keeps “feedback” and its arrow together when
+wrapping. The AI Exponential promo keeps a distinct gap before its action.
+Marathon Match challenges replace the general AI Exponential promo with the
+Marathon Match Tournament heading and copy. Its Explore the program link opens
+the environment's Marathon Match
 Tournament page in a new tab, while the Educational Materials link retains the
 published competition guide.
 

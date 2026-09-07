@@ -382,8 +382,12 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             rel='noreferrer'
                             target='_blank'
                         >
-                            How to approach the checkpoint feedback
-                            <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            How to approach checkpoint
+                            {' '}
+                            <span className={styles.learningLinkEnd}>
+                                feedback
+                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            </span>
                         </a>
                     </>
                 )}
