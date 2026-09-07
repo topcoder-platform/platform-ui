@@ -78,6 +78,7 @@ const GigDetailsPage: FC = () => {
                                 <li>
                                     Topcoder and Wipro employees are not eligible for Gig Work. Send questions
                                     to
+                                    {' '}
                                     <a href='mailto:talent.taas@wipro.com'>talent.taas@wipro.com</a>
                                     .
                                 </li>
@@ -128,6 +129,7 @@ const GigDetailsPage: FC = () => {
                             </ol>
                             <p>
                                 Need help?
+                                {' '}
                                 <a href='mailto:talent.taas@wipro.com'>Contact the Gig Work team</a>
                                 .
                             </p>

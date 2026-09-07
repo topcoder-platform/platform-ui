@@ -207,6 +207,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                 </div>
                 <p className='gigs-hint'>
                     To change your account name or email,
+                    {' '}
                     <a href={EnvironmentConfig.URLS.ACCOUNT_SETTINGS} target='_blank' rel='noreferrer'>
                         update your account settings
                     </a>
@@ -219,6 +220,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                     <legend>Topcoder information</legend>
                     <p>
                         Applying as
+                        {' '}
                         <strong>{props.profile.handle}</strong>
                     </p>
                     <a
@@ -256,6 +258,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                 {props.candidate?.resume && (
                     <p>
                         Current resume:
+                        {' '}
                         <a
                             href={
                                 /^https?:\/\//i.test(props.candidate.resume.file_link)
@@ -416,6 +419,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                     <p>{submitError}</p>
                     <p>
                         If the problem persists, email
+                        {' '}
                         <a href='mailto:talent.taas@wipro.com'>talent.taas@wipro.com</a>
                         {' '}
                         with the gig URL.
