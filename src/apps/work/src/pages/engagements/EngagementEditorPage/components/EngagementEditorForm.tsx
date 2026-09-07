@@ -41,6 +41,9 @@ import {
     Engagement,
     Skill,
 } from '../../../../lib/models'
+import type {
+    EngagementLeadPrefill,
+} from '../../../../lib/models/EngagementLead.model'
 import {
     engagementEditorSchema,
 } from '../../../../lib/schemas/engagement-editor.schema'
@@ -48,6 +51,7 @@ import {
     autowriteDescription,
     createEngagement,
     fetchProjectsList,
+    markEngagementLeadConverted,
     updateEngagement,
 } from '../../../../lib/services'
 import {
@@ -106,6 +110,8 @@ interface EngagementEditorFormProps {
     canEditParentProject?: boolean
     engagement?: Engagement
     isEditMode: boolean
+    leadId?: string
+    leadPrefill?: EngagementLeadPrefill
     projectId: number | string
     projectName?: string
 }
@@ -381,39 +387,66 @@ function getDefaultProjectId(
 function getDefaultValues(
     engagement: Engagement | undefined,
     projectId: number | string,
+    leadPrefill?: EngagementLeadPrefill,
 ): EngagementEditorFormData {
     const defaultEngagement = engagement
     const assignmentDefaults = getAssignmentDefaults(defaultEngagement)
+    const leadDefaults = leadPrefill
+        ? {
+            account: leadPrefill.account || '',
+            compensationRange: leadPrefill.compensationRange || '',
+            countries: leadPrefill.countries || [],
+            description: renderRichTextToHtml(leadPrefill.description || ''),
+            durationWeeks: leadPrefill.durationMonths
+                ? String(leadPrefill.durationMonths * 4)
+                : '',
+            receivedDateFromAccount: toEngagementDateInputValue(
+                leadPrefill.receivedDateFromAccount,
+            ),
+            requiredMemberCount: leadPrefill.requiredMemberCount
+                ? String(leadPrefill.requiredMemberCount)
+                : '',
+            roleLevel: leadPrefill.roleLevel || '',
+            smu: leadPrefill.smu || '',
+            spoc: leadPrefill.spoc || '',
+            timezones: leadPrefill.timeZones || [],
+            title: leadPrefill.title || '',
+        }
+        : {}
 
     return {
-        account: defaultEngagement?.account || '',
+        account: defaultEngagement?.account || leadDefaults.account || '',
         anticipatedStart: defaultEngagement?.anticipatedStart || ANTICIPATED_START_OPTIONS[0],
         assignedMemberHandles: assignmentDefaults.assignedMemberHandles,
         assignmentDetails: assignmentDefaults.assignmentDetails,
-        compensationRange: defaultEngagement?.compensationRange || '',
-        countries: defaultEngagement?.countries || [],
-        description: renderRichTextToHtml(defaultEngagement?.description || ''),
+        compensationRange: defaultEngagement?.compensationRange
+            || leadDefaults.compensationRange
+            || '',
+        countries: defaultEngagement?.countries || leadDefaults.countries || [],
+        description: defaultEngagement?.description
+            ? renderRichTextToHtml(defaultEngagement.description)
+            : (leadDefaults.description || ''),
         durationWeeks: defaultEngagement?.durationWeeks
             ? String(defaultEngagement.durationWeeks)
-            : '',
+            : (leadDefaults.durationWeeks || ''),
         isPrivate: defaultEngagement?.isPrivate === true,
         projectId: getDefaultProjectId(defaultEngagement, projectId),
         receivedDateFromAccount: toEngagementDateInputValue(
             defaultEngagement?.receivedDateFromAccount,
-        ),
+        ) || leadDefaults.receivedDateFromAccount || '',
         requiredMemberCount: defaultEngagement?.requiredMemberCount
             ? String(defaultEngagement.requiredMemberCount)
-            : '',
+            : (leadDefaults.requiredMemberCount || ''),
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
-        roleLevel: defaultEngagement?.roleLevel || '',
+        roleLevel: defaultEngagement?.roleLevel || leadDefaults.roleLevel || '',
         skills: defaultEngagement?.skills || [],
-        smu: defaultEngagement?.smu || '',
-        spoc: defaultEngagement?.spoc || '',
+        smu: defaultEngagement?.smu || leadDefaults.smu || '',
+        spoc: defaultEngagement?.spoc || leadDefaults.spoc || '',
         status: defaultEngagement?.status
             ? formatEngagementStatus(defaultEngagement.status)
             : 'Open',
-        timezones: defaultEngagement?.timezones || [],
-        title: defaultEngagement?.title || '',
+        timezones: defaultEngagement?.timezones || leadDefaults.timezones || [],
+        title: defaultEngagement?.title || leadDefaults.title || '',
         workload: defaultEngagement?.workload || ENGAGEMENT_WORKLOADS[0],
     }
 }
@@ -670,7 +703,11 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     )
 
     const formMethods = useForm<EngagementEditorFormData>({
-        defaultValues: getDefaultValues(props.engagement, props.projectId),
+        defaultValues: getDefaultValues(
+            props.engagement,
+            props.projectId,
+            props.leadPrefill,
+        ),
         mode: 'onChange',
         resolver: yupResolver(engagementEditorSchema) as any,
     })
@@ -716,9 +753,22 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 } else {
                     savedEngagement = await createEngagement(payload)
                     setCurrentEngagementId(String(savedEngagement.id))
+
+                    if (props.leadId && savedEngagement.id) {
+                        try {
+                            await markEngagementLeadConverted(
+                                props.leadId,
+                                String(savedEngagement.id),
+                            )
+                        } catch {
+                            showErrorToast(
+                                'Engagement created, but the lead could not be marked as converted.',
+                            )
+                        }
+                    }
                 }
 
-                reset(getDefaultValues(savedEngagement, props.projectId))
+                reset(getDefaultValues(savedEngagement, props.projectId, props.leadPrefill))
 
                 if (!options.isAutosave) {
                     showSuccessToast(
@@ -755,6 +805,8 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             lockedAssignmentDetails,
             navigate,
             props.isEditMode,
+            props.leadId,
+            props.leadPrefill,
             props.projectId,
             reset,
         ],
@@ -807,8 +859,8 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         setCurrentEngagementId(props.engagement?.id
             ? String(props.engagement.id)
             : undefined)
-        reset(getDefaultValues(props.engagement, props.projectId))
-    }, [props.engagement, props.projectId, reset])
+        reset(getDefaultValues(props.engagement, props.projectId, props.leadPrefill))
+    }, [props.engagement, props.leadPrefill, props.projectId, reset])
 
     const handleAIAutowrite = useCallback(async (): Promise<void> => {
         if (isGeneratingDescription) {
@@ -849,6 +901,15 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     return (
         <FormProvider {...formMethods}>
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                {props.leadPrefill?.requiredSkillNames?.length ? (
+                    <div className={styles.leadPrefillNotice}>
+                        <strong>Skills from intake form:</strong>
+                        {' '}
+                        {props.leadPrefill.requiredSkillNames.join(', ')}
+                        . Please map these to platform skills below.
+                    </div>
+                ) : undefined}
+
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Basic Information</h3>
 

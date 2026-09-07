@@ -11,6 +11,7 @@ import {
 import {
     budgetApprovalsRouteId,
     challengesRouteId,
+    engagementLeadsRouteId,
     engagementsRouteId,
     groupsRouteId,
     projectsRouteId,
@@ -39,10 +40,16 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     ]
 
     if (canViewEngagements) {
-        tabs.push({
-            id: engagementsRouteId,
-            title: 'Engagements',
-        })
+        tabs.push(
+            {
+                id: engagementsRouteId,
+                title: 'Engagements',
+            },
+            {
+                id: engagementLeadsRouteId,
+                title: 'Engagement Leads',
+            },
+        )
     }
 
     tabs.push(
