@@ -67,6 +67,8 @@ Review API owns payment ordering. For Engagement and Copilot prize sorts, the
 client combines bounded owner pages before sorting and then restores the
 requested page, so ordering remains correct across page boundaries. Missing
 numeric compensation remains after priced opportunities in both directions.
+Copilot aggregation requests at most 200 rows per Projects API page, matching
+that endpoint's validated page-size contract while retaining global ordering.
 Copilot rows marked with the Standard payment type remain unpriced for sorting;
 an obsolete `otherPaymentType` value retained by Projects API must not move a
 Standard row among numeric custom payments.
