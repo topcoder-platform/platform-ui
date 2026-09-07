@@ -567,6 +567,25 @@ export const ChallengeDetailsPage: FC = () => {
         ])
     }
 
+    /**
+     * Removes a successfully deleted submission from both page-level counters.
+     *
+     * @returns promise settled after updating the challenge and member SWR caches.
+     * @throws Propagates an unexpected SWR cache mutation failure to the deletion workflow.
+     */
+    const recordDeletedSolution = async (): Promise<void> => {
+        await Promise.all([
+            challengeResponse.mutate(current => (current ? {
+                ...current,
+                numOfSubmissions: Math.max(0, (current.numOfSubmissions ?? 0) - 1),
+            } : current), { revalidate: false }),
+            mySubmissionCountResponse.mutate(
+                current => Math.max(0, (current ?? 0) - 1),
+                { revalidate: false },
+            ),
+        ])
+    }
+
     if (challengeResponse.isValidating && !challenge) {
         return <div className={styles.loading}><LoadingSpinner /></div>
     }
@@ -640,6 +659,7 @@ export const ChallengeDetailsPage: FC = () => {
                         memberId={memberId}
                         onCloseSubmission={closeSubmission}
                         onContactSupport={() => setIssueOpen(true)}
+                        onDeleted={recordDeletedSolution}
                         onShowRequirements={showSubmissionRequirements}
                         onStartSubmission={startSubmission}
                         onSubmitted={recordSubmittedSolution}
@@ -697,6 +717,7 @@ interface ChallengeTabContentProps {
     memberId?: string
     onCloseSubmission: () => void
     onContactSupport: () => void
+    onDeleted: () => Promise<void>
     onShowRequirements: () => void
     onStartSubmission: () => void
     onSubmitted: () => Promise<unknown> | unknown
@@ -749,6 +770,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
                 challenge={props.challenge}
                 memberId={props.memberId}
                 mine
+                onDeleted={props.onDeleted}
                 onStartSubmission={props.onStartSubmission}
             />
         )
@@ -1032,6 +1054,7 @@ interface SubmissionsTabProps {
     challenge: ChallengeOpportunity
     memberId?: string
     mine?: boolean
+    onDeleted?: () => Promise<void>
     onStartSubmission?: () => void
     viewerMemberId?: string
 }
@@ -1039,7 +1062,7 @@ interface SubmissionsTabProps {
 /**
  * Loads and paginates submissions only after a submission tab is selected.
  *
- * @param props challenge, optional member scope, viewer identity, and My Submissions flag.
+ * @param props challenge, member scope, viewer identity, My Submissions flag, and submission callbacks.
  * @returns submission table/gallery, Marathon dashboard, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
@@ -1170,7 +1193,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
      * Deletes an owned Design submission after explicit member confirmation.
      *
      * @param submission selected authored submission.
-     * @returns void after refreshing the current submission page or reporting an error.
+     * @returns void after updating page-level counters and refreshing the submission list, or reporting an error.
      * @throws Does not throw; deletion failures are reported through a toast.
      */
     const removeSubmission = async (submission: ChallengeSubmission): Promise<void> => {
@@ -1179,6 +1202,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         setDeletingSubmissionId(submission.id)
         try {
             await deleteChallengeSubmission(submission.id)
+            await props.onDeleted?.()
             await response.mutate()
             toast.success('Submission deleted.')
         } catch (error) {

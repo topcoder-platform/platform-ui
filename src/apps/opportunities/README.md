@@ -283,7 +283,12 @@ owns the Review App handoff.
 Submission history replaces the unreliable status field with Final Score and
 uses a responsive table that scrolls only on narrow viewports. Design
 submissions can be deleted only while Submission or Checkpoint Submission is
-open.
+open. Successful deletion updates both the challenge and member submission
+counts as well as the current list. Replacing a Design submission without
+reloading therefore preserves accurate totals, and deleting the member's last
+submission clears the submission-based Unregister restriction. Failed or
+cancelled deletions leave the counts unchanged; Review API remains authoritative
+for submission limits.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits,
