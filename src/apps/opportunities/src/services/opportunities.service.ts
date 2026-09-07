@@ -435,6 +435,39 @@ async function hydrateReviewOpportunitySkills(
 }
 
 /**
+ * Hydrates a review detail whose Review API snapshot predates standardized
+ * challenge skills. The linked Challenge API record is authoritative and the
+ * detail remains usable when that optional compatibility request fails.
+ *
+ * @param opportunity Review API detail response.
+ * @returns opportunity with standardized challenge skills when available.
+ * @throws Does not throw; visibility and network failures retain the Review API response.
+ */
+async function hydrateReviewOpportunityDetailSkills(
+    opportunity: ReviewOpportunity,
+): Promise<ReviewOpportunity> {
+    if (Array.isArray(opportunity.challengeData?.skills) && opportunity.challengeData.skills.length) {
+        return opportunity
+    }
+
+    try {
+        const challenge = await xhrGetAsync<ChallengeOpportunity>(
+            `${V6_URL}/challenges/${encodeURIComponent(opportunity.challengeId)}`,
+        )
+        if (!challenge.skills?.length) return opportunity
+        return {
+            ...opportunity,
+            challengeData: {
+                ...(opportunity.challengeData ?? {}),
+                skills: challenge.skills,
+            },
+        }
+    } catch {
+        return opportunity
+    }
+}
+
+/**
  * Converts any supported aggregation response shape to the four-cell UI contract.
  *
  * @param payload aggregation service response.
@@ -1236,7 +1269,7 @@ export async function getReviewOpportunity(opportunityId: string): Promise<Revie
     const response = await xhrGetAsync<ReviewOpportunity | ApiEnvelope<ReviewOpportunity>>(
         `${V6_URL}/review-opportunities/${encodeURIComponent(opportunityId)}`,
     )
-    return unwrap(response)
+    return hydrateReviewOpportunityDetailSkills(unwrap(response))
 }
 
 /**

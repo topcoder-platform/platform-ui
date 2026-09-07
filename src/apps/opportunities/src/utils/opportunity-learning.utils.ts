@@ -4,6 +4,10 @@ import { EnvironmentConfig } from '~/config'
 export const REVIEWER_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/articles/Reviewer%20Qualification%20Requirements'
 
+/** Published overview of the challenge review process and its rules. */
+export const REVIEW_PROCESS_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
+    + '/thrive/articles/Topcoder%20Review%20Process'
+
 /** Published copilot role guidance on the environment's main site. */
 export const COPILOT_LEARNING_URL = `${EnvironmentConfig.TOPCODER_URL}`
     + '/thrive/articles/become-a-copilot-at-topcoder'

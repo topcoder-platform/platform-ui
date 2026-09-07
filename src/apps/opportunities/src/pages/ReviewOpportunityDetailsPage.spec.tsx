@@ -5,6 +5,7 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 import {
     MemoryRouter,
@@ -32,6 +33,10 @@ jest.mock('react-toastify', () => ({
 
 jest.mock('~/libs/core', () => ({
     authUrlLogin: (url: string): string => url,
+    getRatingColor: (rating?: number): string => {
+        if (rating === undefined) return '#2a2a2a'
+        return rating >= 2200 ? '#EF3A3A' : '#616BD5'
+    },
     useProfileContext: () => ({ profile: mockProfile }),
 }), { virtual: true })
 
@@ -62,6 +67,7 @@ jest.mock('../components', () => ({
 
 jest.mock('../services', () => ({
     applyToReviewOpportunity: jest.fn(),
+    getMemberProfilesByUserIds: jest.fn(),
     getReviewOpportunity: jest.fn(),
 }))
 
@@ -83,6 +89,7 @@ function reviewFixture(overrides: Partial<ReviewOpportunity> = {}): ReviewOpport
                 id: 'application-1',
                 role: 'REVIEWER',
                 status: 'PENDING',
+                userId: '101',
             },
             {
                 applicationDate: '2026-06-10T12:27:00',
@@ -90,12 +97,12 @@ function reviewFixture(overrides: Partial<ReviewOpportunity> = {}): ReviewOpport
                 id: 'application-2',
                 role: 'REVIEWER',
                 status: 'APPROVED',
+                userId: '102',
             },
             { handle: 'cancelled-member', id: 'cancelled', status: 'CANCELLED' },
         ],
         canApply: true,
         challengeData: {
-            createdAt: '2026-06-19T00:00:00',
             skills: ['TypeScript'],
             tags: ['Featured'],
             technologies: ['React.js', { name: 'TypeScript' }],
@@ -104,11 +111,12 @@ function reviewFixture(overrides: Partial<ReviewOpportunity> = {}): ReviewOpport
         },
         challengeId: 'challenge-id',
         challengeName: 'Admin Challenge Curation UI Prototype',
+        createdAt: '2026-06-19T00:00:00',
         duration: 172800,
         id: 'review-id',
-        incrementalPayment: 10,
+        incrementalPayment: 0.55,
         openPositions: 2,
-        payments: [{ payment: 20, role: 'REVIEWER', roleId: 1 }],
+        payments: [{ payment: 1.43, role: 'REVIEWER', roleId: 1 }],
         reviewRequirements: 'Challenge Summary',
         startDate: '2026-06-22T00:00:00',
         ...overrides,
@@ -133,7 +141,10 @@ function renderPage(): void {
 
 describe('ReviewOpportunityDetailsPage', () => {
     beforeEach(() => {
+        jest.restoreAllMocks()
         jest.clearAllMocks()
+        jest.spyOn(window, 'scrollTo')
+            .mockImplementation(() => undefined)
         mockedApplyToReviewOpportunity.mockResolvedValue({})
         mockProfile = { roles: ['Topcoder User'], userId: 12345 }
         mockUseSWR.mockReturnValue({
@@ -155,11 +166,11 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
         expect(screen.getAllByText('TypeScript'))
             .toHaveLength(1)
-        expect(screen.getByText('$20'))
+        expect(screen.getByText('$1.98'))
             .toBeInTheDocument()
-        expect(screen.getByText('$10'))
+        expect(screen.getByText('$0.55'))
             .toBeInTheDocument()
-        expect(screen.getByText('$20').parentElement?.parentElement)
+        expect(screen.getByText('$1.98').parentElement?.parentElement)
             .toHaveTextContent('Base payment')
         expect(screen.getByText(/19 June, 2026/))
             .toBeInTheDocument()
@@ -174,6 +185,27 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toHaveAttribute('target', '_blank')
         expect(screen.getByRole('link', { name: /learn more/i }))
             .toHaveAttribute('rel', 'noreferrer')
+        expect(screen.getByRole('link', { name: /Review Process and Rules/ }))
+            .toHaveAttribute(
+                'href',
+                'https://www.topcoder.example/thrive/articles/Topcoder%20Review%20Process',
+            )
+        expect(screen.getByRole('link', { name: /Topcoder Challenges Explained/ }))
+            .toHaveAttribute(
+                'href',
+                [
+                    'https://www.topcoder.example/thrive/articles/',
+                    'all-about-topcoder-challenges-tasks-and-gig-work-opportunities',
+                ].join(''),
+            )
+        expect(screen.getByRole('link', { name: /Review Process and Rules/ }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('heading', { name: 'Thrive Articles' })
+            .querySelector('img'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Posted:')
+            .closest('span')?.parentElement?.querySelector('img'))
+            .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Apply to be a reviewer' }))
             .toBeDisabled()
         expect(screen.getByText(/Please read the challenge specification carefully/))
@@ -197,6 +229,64 @@ describe('ReviewOpportunityDetailsPage', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText('1 - 2 of 2 items'))
             .toBeInTheDocument()
+    })
+
+    it('sorts applications in both directions from the application-date header', () => {
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /Applications/ }))
+
+        const header = screen.getByRole('columnheader', { name: 'Application Date' })
+        expect(header)
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(within(screen.getAllByRole('row')[1])
+            .getByText('DaraK'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Application Date' }))
+
+        expect(header)
+            .toHaveAttribute('aria-sort', 'ascending')
+        expect(within(screen.getAllByRole('row')[1])
+            .getByText('fajar.mln'))
+            .toBeInTheDocument()
+    })
+
+    it('uses member ratings to color application handles', () => {
+        const opportunityResponse = {
+            data: reviewFixture(),
+            error: undefined,
+            isValidating: false,
+            mutate: jest.fn(),
+        }
+        mockUseSWR.mockImplementation((key: unknown) => (
+            Array.isArray(key) && key[0] === 'opportunities:review-applicant-profiles'
+                ? {
+                    data: [
+                        { handle: 'DaraK', maxRating: 1450, userId: '101' },
+                        { handle: 'fajar.mln', maxRating: 2300, userId: '102' },
+                    ],
+                    error: undefined,
+                    isValidating: false,
+                }
+                : opportunityResponse
+        ))
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /Applications/ }))
+
+        expect(screen.getByRole('link', { name: 'DaraK' })
+            .querySelector('strong'))
+            .toHaveStyle({ color: '#616BD5' })
+        expect(screen.getByRole('link', { name: 'fajar.mln' })
+            .querySelector('strong'))
+            .toHaveStyle({ color: '#EF3A3A' })
+    })
+
+    it('resets the viewport when a review details route opens', () => {
+        renderPage()
+
+        expect(window.scrollTo)
+            .toHaveBeenCalledWith({ left: 0, top: 0 })
     })
 
     it('uses the centered per-submission compensation and applies for an eligible reviewer', async () => {
@@ -238,6 +328,7 @@ describe('ReviewOpportunityDetailsPage', () => {
                     track: 'Development',
                     type: 'Challenge',
                 },
+                createdAt: undefined,
             }),
             error: undefined,
             isValidating: false,

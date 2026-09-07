@@ -75,9 +75,12 @@ Standard row among numeric custom payments.
 Selecting a different result page scrolls the browser back to the top so the
 new page begins at its heading rather than at the prior page's footer.
 
-Review cards include the Review API's first role payment, falling back to its
-base payment. Missing amounts are labeled `TBD` rather than presented as free
-work.
+Review cards present the first-submission total: the first role's fixed
+`payments[].payment` (or legacy `basePayment`) plus one
+`incrementalPayment`. The detail compensation card applies that same formula
+to the selected reviewer role and keeps the incremental amount as the payment
+for each additional submission. Missing card amounts are labeled `TBD` rather
+than presented as free work.
 
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
@@ -188,6 +191,26 @@ field is present for the caller.
   Because AI is an exact-tag synthetic Challenge API facet rather than a
   persisted Review track, Review searches resolve AI challenge IDs through
   Challenge API and combine them with selected catalog tracks before paging.
+  Open listings rely on Review API to exclude opportunities whose challenge or
+  review window has ended; the client deliberately does not discard rows after
+  server pagination because that would make totals and pages incorrect.
+
+Review detail navigation resets the viewport for each opportunity ID. The
+header reads the persisted review-opportunity `createdAt` value as “Posted” and
+uses the start-date label only as a compatibility fallback for an older Review
+API response. Its date, open-position, and review-period metrics use the
+authored outline glyphs, while the Thrive card reuses the authored book asset.
+The two Thrive actions open the published Topcoder Review Process and Topcoder
+Challenges Explained articles rather than an unfiltered search page.
+
+Review challenge chips merge tags, legacy technologies, and standardized
+skills. List pages batch-hydrate missing skill names from Challenge API; a
+detail response missing `challengeData.skills` performs the equivalent single
+challenge compatibility lookup and remains usable if that optional request is
+unavailable. Application rows use an API-provided `maxRating` when present and
+otherwise batch public Members API profiles so handles follow Topcoder's rating
+palette. Application Date starts newest-first and its keyboard-accessible
+header toggles ascending/descending order while resetting local pagination.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style

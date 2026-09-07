@@ -54,7 +54,10 @@ import {
     formatChallengeTimeLeft,
     FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
-import { reviewOpportunityLabels } from '../utils/review-opportunity.utils'
+import {
+    reviewFirstSubmissionPayment,
+    reviewOpportunityLabels,
+} from '../utils/review-opportunity.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -543,7 +546,7 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
             {
                 icon: <PaymentMetricIcon />,
                 label: 'Payment',
-                value: formatReviewPayment(item.payments?.[0]?.payment ?? item.basePayment),
+                value: formatReviewPayment(reviewFirstSubmissionPayment(item)),
             },
             { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
             {
