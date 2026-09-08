@@ -1,4 +1,5 @@
 export * from './challenge-detail.utils'
+export * from './challenge-type.utils'
 export * from './challenge-winner.utils'
 export * from './marathon-match.utils'
 export * from './opportunity-filter.utils'

@@ -134,6 +134,10 @@ phases current. Ended phases and boundaries render complete, future milestones
 remain upcoming, and all timestamps use the browser's local time with its IANA
 timezone displayed below the rail. Phase names select the corresponding Figma
 glyph; unfamiliar phase names deliberately use the generic Review glyph.
+Task challenges omit an Iterative Review phase once its deadline has elapsed,
+matching the legacy participant timeline, and keep Registration ahead of the
+remaining chronological milestones. Task detection accepts the canonical
+catalog type and the legacy `task.isTask` and `legacy.pureV5Task` flags.
 
 ## Challenge Markdown table of contents
 

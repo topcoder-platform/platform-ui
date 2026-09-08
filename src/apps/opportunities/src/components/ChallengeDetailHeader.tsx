@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import { isTaskChallenge } from '../utils/challenge-type.utils'
 import { challengeTrackLabel } from '../utils/challenge-winner.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
@@ -300,7 +301,7 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
- * @returns Launch, authored phases, and terminal Winners timeline items in display order.
+ * @returns Launch, visible authored phases, and terminal Winners items in display order.
  * @throws Does not throw; absent dates are retained as announced-later labels.
  */
 function challengeTimelineItems(
@@ -311,9 +312,24 @@ function challengeTimelineItems(
     const startTimestamp = timelineTimestamp(challenge.startDate)
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
-    const phases = (challenge.phases ?? [])
+    const taskChallenge = isTaskChallenge(challenge)
+    const authoredPhases = (challenge.phases ?? []).filter(item => {
+        const phaseKey = challengeCatalogKey(item.name)
+        if (!taskChallenge || !phaseKey.includes('iterativereview')) return true
+        const phaseEnd = timelineTimestamp(item.actualEndDate ?? item.scheduledEndDate)
+        return phaseEnd !== undefined && phaseEnd > now
+    })
+    const phases = authoredPhases
         .map((item, index) => ({ index, item }))
         .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            if (taskChallenge) {
+                const leftKey = challengeCatalogKey(left.item.name)
+                const rightKey = challengeCatalogKey(right.item.name)
+                const leftIsRegistration = leftKey.includes('registration')
+                const rightIsRegistration = rightKey.includes('registration')
+                if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
+            }
+
             const leftStart = timelineTimestamp(
                 left.item.actualStartDate ?? left.item.scheduledStartDate,
             ) ?? Number.MAX_SAFE_INTEGER
@@ -473,10 +489,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     })
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
+    const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
         gridTemplateColumns: [
             '88px',
-            ...(props.challenge.phases ?? []).map(() => 'minmax(0, 1fr)'),
+            ...displayedTimelinePhases.map(() => 'minmax(0, 1fr)'),
             '88px',
         ].join(' '),
     }

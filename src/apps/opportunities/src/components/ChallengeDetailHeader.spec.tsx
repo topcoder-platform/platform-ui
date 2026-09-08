@@ -503,4 +503,94 @@ describe('ChallengeDetailHeader actions and presentation', () => {
         expect(itemLabels)
             .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Submission', 'Winners'])
     })
+
+    it('omits an ended Task review and keeps Registration before Submission', () => {
+        const { container }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        endDate: '2026-08-13T17:44:00.000Z',
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'iterative-review',
+                                name: 'Iterative Review',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                        ],
+                        startDate: '2026-08-13T17:44:00.000Z',
+                        status: 'COMPLETED',
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const itemLabels = within(timeline)
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Submission', 'Winners'])
+        expect(within(timeline)
+            .queryByText('Iterative Review'))
+            .not.toBeInTheDocument()
+        expect(timeline.querySelectorAll('img'))
+            .toHaveLength(4)
+        expect(container.querySelector('.timelineItems'))
+            .toHaveStyle({
+                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+            })
+    })
+
+    it('retains a future Iterative Review deadline in a Task timeline', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        endDate: '2999-08-21T17:44:00.000Z',
+                        phases: [{
+                            actualEndDate: '2999-08-21T17:44:00.000Z',
+                            actualStartDate: '2999-08-20T17:44:00.000Z',
+                            id: 'iterative-review',
+                            name: 'Iterative Review',
+                        }],
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        expect(within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getByText('Iterative Review'))
+            .toBeInTheDocument()
+    })
 })
