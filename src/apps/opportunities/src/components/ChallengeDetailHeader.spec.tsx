@@ -120,6 +120,35 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each([
+        ['Task catalog type', { type: { name: 'Task' } }, false],
+        ['nested task flag', { task: { isAssigned: true, isTask: true, memberId: '123' } }, true],
+        ['flattened task flag', { taskIsTask: true }, true],
+        ['legacy pure-v5 flag', { legacy: { pureV5Task: true } }, false],
+    ])('hides member actions for the %s while preserving prize details', (_label, overrides, isRegistered) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture(overrides)}
+                    isRegistered={isRegistered as boolean}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByAltText('1 place'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Register' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Unregister' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Submit a solution' }))
+            .not.toBeInTheDocument()
+    })
+
     it('shows enabled member actions only while their phases are open', () => {
         const onSubmit = jest.fn()
         const { rerender }: RenderResult = render(

@@ -435,10 +435,11 @@ function timelineTimezone(): string {
 }
 
 /**
- * Renders the Figma challenge title, phase context, prizes, and member actions.
+ * Renders the Figma challenge title, phase context, prizes, and competition
+ * member actions. Assignment-only Task challenges intentionally omit actions.
  *
  * @param props challenge and registration state.
- * @returns dark challenge detail masthead.
+ * @returns dark challenge detail masthead with Task-aware action visibility.
  * @throws Does not throw.
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
@@ -449,6 +450,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
+    const taskChallenge = isTaskChallenge(props.challenge)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const challengeStatusKey = challengeCatalogKey(props.challenge.status)
@@ -623,52 +625,54 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                         : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>
-                        <div className={styles.actions}>
-                            {props.isRegistered || showInactiveActions ? (
-                                <>
+                        {!taskChallenge && (
+                            <div className={styles.actions}>
+                                {props.isRegistered || showInactiveActions ? (
+                                    <>
+                                        <button
+                                            className={styles.secondary}
+                                            data-analytics-id={props.isRegistered
+                                                ? 'challenge-unregister'
+                                                : 'challenge-register'}
+                                            data-analytics-placement='challenge-header'
+                                            disabled={props.isRegistered
+                                                ? !canUnregister
+                                                : !registrationOpen || registrationUnavailable || props.busy}
+                                            onClick={props.isRegistered ? props.onUnregister : props.onRegister}
+                                            type='button'
+                                        >
+                                            {props.isRegistered ? 'Unregister' : 'Register'}
+                                        </button>
+                                        <button
+                                            className={styles.primary}
+                                            data-analytics-id='challenge-submit-start'
+                                            data-analytics-placement='challenge-header'
+                                            disabled={!canSubmit}
+                                            onClick={props.onSubmit}
+                                            type='button'
+                                        >
+                                            <img alt='' aria-hidden='true' src={challengeUploadIcon} />
+                                            Submit a solution
+                                        </button>
+                                    </>
+                                ) : (
                                     <button
                                         className={styles.secondary}
-                                        data-analytics-id={props.isRegistered
-                                            ? 'challenge-unregister'
-                                            : 'challenge-register'}
+                                        data-analytics-id='challenge-register'
                                         data-analytics-placement='challenge-header'
-                                        disabled={props.isRegistered
-                                            ? !canUnregister
-                                            : !registrationOpen || registrationUnavailable || props.busy}
-                                        onClick={props.isRegistered ? props.onUnregister : props.onRegister}
+                                        disabled={!registrationOpen || registrationUnavailable || props.busy}
+                                        onClick={props.onRegister}
                                         type='button'
                                     >
-                                        {props.isRegistered ? 'Unregister' : 'Register'}
+                                        {props.registrationLoading
+                                            ? 'Checking registration…'
+                                            : props.registrationError
+                                                ? 'Registration unavailable'
+                                                : registrationOpen ? 'Register' : 'Registration closed'}
                                     </button>
-                                    <button
-                                        className={styles.primary}
-                                        data-analytics-id='challenge-submit-start'
-                                        data-analytics-placement='challenge-header'
-                                        disabled={!canSubmit}
-                                        onClick={props.onSubmit}
-                                        type='button'
-                                    >
-                                        <img alt='' aria-hidden='true' src={challengeUploadIcon} />
-                                        Submit a solution
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    className={styles.secondary}
-                                    data-analytics-id='challenge-register'
-                                    data-analytics-placement='challenge-header'
-                                    disabled={!registrationOpen || registrationUnavailable || props.busy}
-                                    onClick={props.onRegister}
-                                    type='button'
-                                >
-                                    {props.registrationLoading
-                                        ? 'Checking registration…'
-                                        : props.registrationError
-                                            ? 'Registration unavailable'
-                                            : registrationOpen ? 'Register' : 'Registration closed'}
-                                </button>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
                     </aside>
                 </div>
                 {timelineOpen && (

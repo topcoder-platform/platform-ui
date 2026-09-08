@@ -242,6 +242,12 @@ DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
 
+Task challenges are assignment-only work. Their details preserve Requirements,
+Registrants, and Winners for visibility, but do not request or expose voluntary
+registration, member submission, dashboard, or in-app Forum workflows. Task
+detection accepts current nested flags, flattened Challenge API records, the
+Task catalog type, and the legacy pure-v5 marker.
+
 Registration and unregistration update the header count and invalidate the
 Registrants table immediately instead of waiting for a page reload. Once a
 registered member has submitted, Unregister stays disabled; a pending or failed

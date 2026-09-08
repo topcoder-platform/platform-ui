@@ -82,6 +82,7 @@ import {
     formatMarathonFinalScore,
     formatMarathonScore,
     isMarathonMatchChallenge,
+    isTaskChallenge,
     marathonDashboardIsEnabled,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
@@ -237,7 +238,8 @@ function formatTimestamp(value?: string): string {
 
 /**
  * Renders the replacement challenge details route with lazy tab data, Markdown
- * table of contents, Review App rail, registration terms, and Support reporting.
+ * table of contents, Review App rail, registration terms, Task-aware member
+ * workflows, and Support reporting.
  *
  * @returns challenge detail page for `/opportunities/challenge/:challengeId`.
  * @throws Does not throw; request failures render in-page recovery states.
@@ -262,6 +264,7 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false },
     )
     const challenge = challengeResponse.data
+    const taskChallenge = isTaskChallenge(challenge)
     const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
         challengeId && profile && challenge && !isMarathonMatchChallenge(challenge)
             ? ['opportunities:challenge-review-style', challengeId]
@@ -271,21 +274,25 @@ export const ChallengeDetailsPage: FC = () => {
     )
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
     const registrationResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
-        challengeId && memberId ? ['opportunities:registration', challengeId, memberId] : undefined,
+        challengeId && challenge && memberId && !taskChallenge
+            ? ['opportunities:registration', challengeId, memberId]
+            : undefined,
         () => getChallengeRegistration(challengeId, memberId as string),
         { revalidateOnFocus: false },
     )
     const memberResourceResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
-        challengeId && memberId ? ['opportunities:challenge-member-resource', challengeId, memberId] : undefined,
+        challengeId && challenge && memberId && !taskChallenge
+            ? ['opportunities:challenge-member-resource', challengeId, memberId]
+            : undefined,
         () => getChallengeMemberResource(challengeId, memberId as string),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const registration = registrationResponse.data
     const isAdministrator = profile?.roles?.some(role => role.trim()
         .toLowerCase() === 'administrator') ?? false
-    const isRegistered = !!registration
-    const hasMemberTabAccess = isRegistered || isAdministrator
-    const hasForumAccess = hasMemberTabAccess || !!memberResourceResponse.data
+    const isRegistered = !taskChallenge && !!registration
+    const hasMemberTabAccess = !taskChallenge && (isRegistered || isAdministrator)
+    const hasForumAccess = !taskChallenge && (hasMemberTabAccess || !!memberResourceResponse.data)
     const mySubmissionCountResponse: SWRResponse<number, Error> = useSWR(
         challengeId && memberId && isRegistered
             ? ['opportunities:my-submission-count', challengeId, memberId]
@@ -307,6 +314,15 @@ export const ChallengeDetailsPage: FC = () => {
     const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
 
     useEffect(() => {
+        setActiveTab('requirements')
+        setIssueOpen(false)
+        setRegistrationBusy(false)
+        setSubmissionFlowOpen(false)
+        setSubmissionUploadBusy(false)
+        setTermsMode('view')
+        setTermsOpen(false)
+        setUnregisterConfirmOpen(false)
+        setVisibleTerms([])
         window.scrollTo({ left: 0, top: 0 })
     }, [challengeId])
 
@@ -316,7 +332,7 @@ export const ChallengeDetailsPage: FC = () => {
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(memberId || designChallenge
+            ...(!taskChallenge && (memberId || designChallenge)
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
@@ -344,7 +360,11 @@ export const ChallengeDetailsPage: FC = () => {
         isRegistered,
         memberId,
         mySubmissionCountResponse.data,
+        taskChallenge,
     ])
+    const visibleActiveTab = tabs.some(tab => tab.id === activeTab)
+        ? activeTab
+        : 'requirements'
 
     /**
      * Selects a challenge tab and closes the transient in-tab submission form.
@@ -625,18 +645,18 @@ export const ChallengeDetailsPage: FC = () => {
                 <div role='tablist'>
                     {tabs.map((tab: TabConfig, index: number) => (
                         <button
-                            aria-controls={activeTab === tab.id
+                            aria-controls={visibleActiveTab === tab.id
                                 ? `challenge-panel-${tab.id}`
                                 : undefined}
-                            aria-selected={activeTab === tab.id}
-                            className={activeTab === tab.id ? styles.activeTab : undefined}
+                            aria-selected={visibleActiveTab === tab.id}
+                            className={visibleActiveTab === tab.id ? styles.activeTab : undefined}
                             disabled={submissionUploadBusy && tab.id !== 'mine'}
                             id={`challenge-tab-${tab.id}`}
                             key={tab.id}
                             onClick={() => selectTab(tab.id)}
                             onKeyDown={event => navigateTabs(event, index)}
                             role='tab'
-                            tabIndex={activeTab === tab.id ? 0 : -1}
+                            tabIndex={visibleActiveTab === tab.id ? 0 : -1}
                             type='button'
                         >
                             {tab.label}
@@ -645,15 +665,15 @@ export const ChallengeDetailsPage: FC = () => {
                     ))}
                 </div>
             </nav>
-            <div className={`${styles.content} ${activeTab === 'requirements' ? '' : styles.fullWidth}`}>
+            <div className={`${styles.content} ${visibleActiveTab === 'requirements' ? '' : styles.fullWidth}`}>
                 <section
-                    aria-labelledby={`challenge-tab-${activeTab}`}
+                    aria-labelledby={`challenge-tab-${visibleActiveTab}`}
                     className={styles.mainContent}
-                    id={`challenge-panel-${activeTab}`}
+                    id={`challenge-panel-${visibleActiveTab}`}
                     role='tabpanel'
                 >
                     <ChallengeTabContent
-                        activeTab={activeTab}
+                        activeTab={visibleActiveTab}
                         challenge={challenge}
                         isAdministrator={isAdministrator}
                         memberId={memberId}
@@ -669,7 +689,7 @@ export const ChallengeDetailsPage: FC = () => {
                         submissionFlowOpen={submissionFlowOpen}
                     />
                 </section>
-                {activeTab === 'requirements' && (
+                {visibleActiveTab === 'requirements' && (
                     <ChallengeSidebar
                         aiReviewConfig={aiReviewConfigResponse.data}
                         challenge={challenge}

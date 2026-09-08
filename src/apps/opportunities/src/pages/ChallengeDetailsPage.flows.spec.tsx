@@ -9,6 +9,7 @@ import {
     waitFor,
 } from '@testing-library/react'
 import {
+    Link,
     MemoryRouter,
     Route,
     Routes,
@@ -21,6 +22,7 @@ const mockUseSWR = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockChallengeMutate = jest.fn()
+const mockChallengeForumRender = jest.fn()
 const mockMySubmissionCountMutate = jest.fn()
 const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
@@ -92,34 +94,42 @@ jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
         busy: boolean
+        challenge: { task?: { isTask?: boolean }; type?: string | { name?: string } }
         hasSubmitted?: boolean
         isRegistered: boolean
         onRegister: () => void
         onSubmit: () => void
         onUnregister: () => Promise<void>
-    }): JSX.Element => (
-        <header>
-            Challenge header
-            {!props.isRegistered && (
-                <button onClick={props.onRegister} type='button'>Register</button>
-            )}
-            {props.isRegistered && (
-                <>
-                    <button
-                        disabled={props.busy || props.hasSubmitted}
-                        onClick={props.onUnregister}
-                        type='button'
-                    >
-                        Unregister
-                    </button>
-                    <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
-                </>
-            )}
-        </header>
-    ),
-    ChallengeForum: (props: { canCreateAnnouncements?: boolean }): JSX.Element => (
-        <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
-    ),
+    }): JSX.Element => {
+        const typeName = typeof props.challenge.type === 'string'
+            ? props.challenge.type
+            : props.challenge.type?.name
+        const taskChallenge = typeName === 'Task' || props.challenge.task?.isTask === true
+        return (
+            <header>
+                Challenge header
+                {!taskChallenge && !props.isRegistered && (
+                    <button onClick={props.onRegister} type='button'>Register</button>
+                )}
+                {!taskChallenge && props.isRegistered && (
+                    <>
+                        <button
+                            disabled={props.busy || props.hasSubmitted}
+                            onClick={props.onUnregister}
+                            type='button'
+                        >
+                            Unregister
+                        </button>
+                        <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
+                    </>
+                )}
+            </header>
+        )
+    },
+    ChallengeForum: (props: { canCreateAnnouncements?: boolean }): JSX.Element => {
+        mockChallengeForumRender()
+        return <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
+    },
     ChallengeSidebar: (): JSX.Element => <aside />,
     ChallengeSubmissionUpload: (props: {
         onBack: () => void
@@ -175,7 +185,9 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
-    challengeCatalogKey: (track?: string): string => (track ?? '')
+    challengeCatalogKey: (value?: string | { name?: string }): string => (
+        typeof value === 'string' ? value : value?.name ?? ''
+    )
         .toLowerCase()
         .replace(/[^a-z]/g, ''),
     challengePlacementPrizes: (challenge: {
@@ -235,6 +247,21 @@ jest.mock('../utils', () => ({
             : stats?.DEVELOP?.wins ?? stats?.wins
     ),
     isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
+    isTaskChallenge: (challenge?: {
+        legacy?: { pureV5Task?: boolean }
+        task?: { isTask?: boolean }
+        taskIsTask?: boolean
+        type?: string | { name?: string }
+    }): boolean => {
+        const typeName = typeof challenge?.type === 'string'
+            ? challenge.type
+            : challenge?.type?.name
+        return typeName?.trim()
+            .toLowerCase() === 'task'
+            || challenge?.task?.isTask === true
+            || challenge?.taskIsTask === true
+            || challenge?.legacy?.pureV5Task === true
+    },
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
         type?: string
@@ -444,6 +471,74 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: /^Submissions/ }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps assigned Task challenges read-only and does not expose forum or submission entry points', () => {
+        mockProfile = { handle: 'assigned-member', roles: ['Administrator'], userId: 123 }
+        mockRegistration = { id: 'assigned-submitter-resource' }
+        mockMemberResource = { id: 'assigned-member-resource' }
+        mockMySubmissionCount = 1
+        mockChallenge = {
+            ...mockChallenge,
+            task: { isAssigned: true, isTask: true, memberId: '123' },
+            type: { name: 'Task' },
+        }
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Winners'])
+        expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: /^Forum/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /Register|Unregister|Submit a solution/ }))
+            .not.toBeInTheDocument()
+        expect(mockUseSWR.mock.calls.some(([key]) => Array.isArray(key) && [
+            'opportunities:registration',
+            'opportunities:challenge-member-resource',
+            'opportunities:my-submission-count',
+            'opportunities:forum-topics',
+        ].includes(String(key[0]))))
+            .toBe(false)
+    })
+
+    it('resets a stale Forum panel when client-side navigation opens a Task challenge', async () => {
+        mockProfile = { handle: 'administrator', roles: ['Administrator'], userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        render(
+            <MemoryRouter initialEntries={['/opportunities/challenge/competition-id']}>
+                <Link to='/opportunities/challenge/task-id'>Open Task challenge</Link>
+                <Routes>
+                    <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        fireEvent.click(screen.getByRole('tab', { name: /^Forum/ }))
+        expect(screen.getByText('Administrator forum content'))
+            .toBeInTheDocument()
+        mockChallengeForumRender.mockClear()
+
+        mockChallenge = {
+            ...mockChallenge,
+            id: 'task-id',
+            task: { isAssigned: true, isTask: true, memberId: '123' },
+            type: { name: 'Task' },
+        }
+        fireEvent.click(screen.getByRole('link', { name: 'Open Task challenge' }))
+
+        expect(mockChallengeForumRender)
+            .not.toHaveBeenCalled()
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true'))
+        expect(screen.queryByText('Administrator forum content'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: /^Forum/ }))
             .not.toBeInTheDocument()
     })
 
