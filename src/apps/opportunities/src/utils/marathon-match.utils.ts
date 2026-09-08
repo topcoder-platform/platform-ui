@@ -445,20 +445,20 @@ export function attachMarathonReviewSummations(
 }
 
 /**
- * Formats positive Marathon Match scores to the two-decimal member-facing
- * convention without hiding valid zero or negative sentinel values.
+ * Formats scores across challenge detail views without rounding the available
+ * numeric precision, preserving grouping, zero, and negative sentinel values.
  *
  * @param score optional finite score.
  * @param fallback text used when no score exists.
- * @returns localized score or fallback.
+ * @returns full-precision localized score or fallback.
  * @throws Does not throw.
  */
 export function formatMarathonScore(score: number | undefined, fallback: string): string {
     return score === undefined || !Number.isFinite(score)
         ? fallback
         : new Intl.NumberFormat('en-US', {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: score > 0 ? 2 : 0,
+            // All significant digits of a JavaScript number, including tiny scores.
+            maximumSignificantDigits: 21,
         })
             .format(score)
 }

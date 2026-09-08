@@ -233,12 +233,8 @@ jest.mock('../utils', () => ({
             ? stats?.QA?.wins ?? stats?.wins
             : stats?.DEVELOP?.wins ?? stats?.wins
     ),
-    formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
-        score === undefined ? fallback : String(Math.max(0, score))
-    ),
-    formatMarathonScore: (score: number | undefined, fallback: string): string => (
-        score === undefined ? fallback : String(score)
-    ),
+    formatMarathonFinalScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonFinalScore,
+    formatMarathonScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonScore,
     isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
@@ -955,15 +951,15 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders Marathon Match testing progress and both score phases', () => {
+    it('renders Marathon Match testing progress and both score phases without rounding', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
-            finalScore: 99.5,
+            finalScore: 99.797812,
             id: 'submission-1',
-            provisionalScore: 98.5,
+            provisionalScore: 99.904666,
         }]
 
         renderPage()
@@ -983,9 +979,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
-        expect(screen.getByText('99.5'))
+        expect(screen.getByRole('cell', { name: '99.797812' }))
             .toBeInTheDocument()
-        expect(screen.getByText('98.5'))
+        expect(screen.getByRole('cell', { name: '99.904666' }))
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
@@ -1020,11 +1016,11 @@ describe('ChallengeDetailsPage member flows', () => {
         }
         mockSubmissions = [{
             id: 'submission-1',
-            provisionalScore: 98.5,
+            provisionalScore: 99.904666,
             submitterHandle: 'coder',
         }]
         mockReviewSummations = [{
-            aggregateScore: 99.5,
+            aggregateScore: 99.797812,
             isFinal: true,
             submissionId: 'submission-1',
         }]
@@ -1032,9 +1028,9 @@ describe('ChallengeDetailsPage member flows', () => {
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
 
-        expect(screen.getByRole('cell', { name: '98.5' }))
+        expect(screen.getByRole('cell', { name: '99.904666' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.5' }))
+        expect(screen.getByRole('cell', { name: '99.797812' }))
             .toBeInTheDocument()
     })
 
@@ -1259,18 +1255,26 @@ describe('ChallengeDetailsPage member flows', () => {
             })),
         }
         mockProjectResults = [
-            { finalScore: 100, placement: 1, userId: '1' },
+            { finalScore: 99.797812, placement: 1, userId: '1' },
             { finalScore: 90, placement: 2, userId: '2' },
             { finalScore: 80, placement: 3, userId: '3' },
             { finalScore: 10, placement: 4, userId: '4' },
-            { finalScore: 70, placement: 5, userId: '5' },
-            { finalScore: 40, placement: 6, userId: '6' },
+            { finalScore: 70.123456789, placement: 5, userId: '5' },
+            { finalScore: 70.123456788, placement: 6, userId: '6' },
         ]
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
 
+        expect(screen.getAllByRole('article')[0])
+            .toHaveTextContent('with a final score of 99.797812')
         const table = screen.getByRole('table', { name: 'Remaining winners' })
+        expect(within(table)
+            .getByRole('cell', { name: '70.123456789' }))
+            .toBeInTheDocument()
+        expect(within(table)
+            .getByRole('cell', { name: '70.123456788' }))
+            .toBeInTheDocument()
         const scoreHeader = within(table)
             .getByRole('columnheader', { name: 'Final Score' })
         const places = (): string[] => within(table)
