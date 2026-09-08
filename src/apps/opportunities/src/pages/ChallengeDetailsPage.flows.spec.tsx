@@ -206,6 +206,7 @@ jest.mock('../services', () => ({
 }))
 
 jest.mock('../utils', () => ({
+    ...(jest.requireActual('../utils/marathon-match.utils') as typeof import('../utils/marathon-match.utils')),
     attachMarathonReviewSummations: (
         submissions: Array<Record<string, unknown>>,
         summations: Array<Record<string, unknown>>,
@@ -232,12 +233,6 @@ jest.mock('../utils', () => ({
             .toLowerCase() === 'qualityassurance'
             ? stats?.QA?.wins ?? stats?.wins
             : stats?.DEVELOP?.wins ?? stats?.wins
-    ),
-    formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
-        score === undefined ? fallback : String(Math.max(0, score))
-    ),
-    formatMarathonScore: (score: number | undefined, fallback: string): string => (
-        score === undefined ? fallback : String(score)
     ),
     isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
     marathonDashboardIsEnabled: (challenge: {
@@ -955,15 +950,15 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders Marathon Match testing progress and both score phases', () => {
+    it('rounds both Marathon Match score phases in My Submissions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
-            finalScore: 99.5,
+            finalScore: 99.313994,
             id: 'submission-1',
-            provisionalScore: 98.5,
+            provisionalScore: 99.088381,
         }]
 
         renderPage()
@@ -983,9 +978,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
-        expect(screen.getByText('99.5'))
+        expect(screen.getByText('99.31'))
             .toBeInTheDocument()
-        expect(screen.getByText('98.5'))
+        expect(screen.getByText('99.09'))
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
@@ -1006,7 +1001,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
-    it('populates the released Marathon Match final score from Review Summations', () => {
+    it('rounds both Marathon Match score phases in Submissions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockChallenge = {
@@ -1020,11 +1015,11 @@ describe('ChallengeDetailsPage member flows', () => {
         }
         mockSubmissions = [{
             id: 'submission-1',
-            provisionalScore: 98.5,
+            provisionalScore: 99.088381,
             submitterHandle: 'coder',
         }]
         mockReviewSummations = [{
-            aggregateScore: 99.5,
+            aggregateScore: 99.313994,
             isFinal: true,
             submissionId: 'submission-1',
         }]
@@ -1032,9 +1027,9 @@ describe('ChallengeDetailsPage member flows', () => {
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
 
-        expect(screen.getByRole('cell', { name: '98.5' }))
+        expect(screen.getByRole('cell', { name: '99.09' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.5' }))
+        expect(screen.getByRole('cell', { name: '99.31' }))
             .toBeInTheDocument()
     })
 
@@ -1083,9 +1078,9 @@ describe('ChallengeDetailsPage member flows', () => {
         const headers = ['Handle', 'Rating', 'Submission Date', 'Initial Score', 'Final Score', 'Action']
         headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
             .toBeInTheDocument())
-        expect(screen.getByRole('cell', { name: '88.5' }))
+        expect(screen.getByRole('cell', { name: '88.50' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '91' }))
+        expect(screen.getByRole('cell', { name: '91.00' }))
             .toBeInTheDocument()
     })
 
@@ -1129,7 +1124,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
-    it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
+    it('renders and rounds every winner with profiles, stats, scores, and prizes', () => {
         mockProfile = { handle: 'fourth', userId: 4 }
         mockChallenge = {
             ...mockChallenge,
@@ -1168,8 +1163,9 @@ describe('ChallengeDetailsPage member flows', () => {
             { handle: 'fourth', stats: { DEVELOP: { wins: 4 }, wins: 6 } },
         ]
         mockProjectResults = [
-            { finalScore: 98.98, placement: 1, userId: '1' },
-            { finalScore: 98.88, placement: 2, userId: '2' },
+            { finalScore: 99.797812, placement: 1, userId: '1' },
+            { finalScore: 99.313994, placement: 2, userId: '2' },
+            { finalScore: 99.088381, placement: 4, userId: '4' },
         ]
 
         renderPage()
@@ -1180,9 +1176,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .getByText(/Place$/).textContent))
             .toEqual(['1st Place', '2nd Place', '3rd Place'])
         expect(cards[0])
-            .toHaveTextContent('with a final score of 98.98')
+            .toHaveTextContent('with a final score of 99.80')
         expect(cards[1])
-            .toHaveTextContent('with a final score of 98.88')
+            .toHaveTextContent('with a final score of 99.31')
         expect(cards[0])
             .toHaveTextContent('$400')
         expect(cards[0])
@@ -1212,6 +1208,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('4')
         expect(fourthRow)
             .toHaveTextContent('1300')
+        expect(fourthRow)
+            .toHaveTextContent('99.09')
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()
