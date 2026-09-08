@@ -1,13 +1,22 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import {
+    fireEvent,
+    render,
+    screen,
+    within,
+} from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+
+import { Gig } from '../models'
 
 import GigsPage from './GigsPage'
 
+const mockUseSWR = jest.fn()
+
 jest.mock('swr', () => ({
     __esModule: true,
-    default: (): Record<string, unknown> => ({ data: [], mutate: jest.fn() }),
+    default: (...args: unknown[]) => mockUseSWR(...args),
 }))
 
 jest.mock('~/config', () => ({
@@ -15,18 +24,63 @@ jest.mock('~/config', () => ({
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { children: JSX.Element | string }): JSX.Element => <button type='button'>{props.children}</button>,
-    PageTitle: (): undefined => undefined,
+    Button: (props: {
+        children: JSX.Element | string
+        disabled?: boolean
+        onClick?: () => void
+    }): JSX.Element => (
+        <button type='button' disabled={props.disabled} onClick={props.onClick}>{props.children}</button>
+    ),
+    PageTitle: (props: { children: string }): JSX.Element => <>{props.children}</>,
 }), { virtual: true })
 
 jest.mock('../components/GigShared', () => ({
-    GigCard: (): undefined => undefined,
+    GigCard: (props: { job: Gig }): JSX.Element => <article data-testid='gig-card'>{props.job.name}</article>,
     GigState: (props: { title: string }): JSX.Element => <div>{props.title}</div>,
 }))
 
 jest.mock('../gigs.service', () => ({ getGigs: jest.fn() }))
 
+const hotlistField = { field_id: 14, field_name: 'Show in Hotlist', value: true }
+const gigs: Gig[] = [
+    {
+        created_on: '2026-09-01T00:00:00Z',
+        custom_fields: [hotlistField],
+        enable_job_application_form: 1,
+        job_status: { id: 1 },
+        name: 'Recently updated',
+        slug: 'recently-updated',
+        updated_on: '2026-09-08T00:00:00Z',
+    },
+    {
+        created_on: '2026-09-07T00:00:00Z',
+        custom_fields: [hotlistField],
+        enable_job_application_form: 1,
+        job_status: { id: 1 },
+        name: 'Newly added',
+        slug: 'newly-added',
+        updated_on: '2026-09-07T00:00:00Z',
+    },
+]
+
+/**
+ * Returns the rendered hotlist card names in their visual order.
+ *
+ * @returns Ordered text content from the hotlist's rendered Gig cards.
+ * @throws Testing Library throws when the labelled hotlist or its cards are absent.
+ */
+function hotlistNames(): Array<string | null> {
+    return within(screen.getByRole('region', { name: 'Hotlist gigs' }))
+        .getAllByTestId('gig-card')
+        .map(card => card.textContent)
+}
+
 describe('GigsPage listing presentation', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockUseSWR.mockReturnValue({ data: [], error: undefined, mutate: jest.fn() })
+    })
+
     it('uses the scoped 2026 focus treatment on the gig search field', () => {
         render(
             <MemoryRouter>
@@ -51,5 +105,30 @@ describe('GigsPage listing presentation', () => {
             .toHaveAttribute('target', '_blank')
         expect(screen.getByRole('link', { name: 'Read our Gig Work resources' }))
             .toHaveAttribute('rel', 'noreferrer')
+    })
+})
+
+describe('GigsPage sorting', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockUseSWR.mockReturnValue({ data: gigs, error: undefined, mutate: jest.fn() })
+    })
+
+    it('applies the selected date ordering to the visible hotlist as well as the result list', () => {
+        render(
+            <MemoryRouter initialEntries={['/gigs']}>
+                <GigsPage />
+            </MemoryRouter>,
+        )
+
+        expect(hotlistNames())
+            .toEqual(['Newly added', 'Recently updated'])
+
+        fireEvent.change(screen.getByRole('combobox', { name: 'Sort by' }), {
+            target: { value: 'updated_on' },
+        })
+
+        expect(hotlistNames())
+            .toEqual(['Recently updated', 'Newly added'])
     })
 })

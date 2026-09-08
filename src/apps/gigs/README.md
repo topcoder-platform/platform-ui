@@ -47,8 +47,10 @@ Descriptions and policy bodies are sanitized before display. Styling, scripts,
 unsafe URLs and embedded form controls cannot affect the surrounding application.
 
 Search, country, sort and page are URL parameters. Updating filters preserves
-unrelated parameters such as `ref`, and resets the result page. Missing salary
-metadata remains unspecified; zero is not mistaken for missing compensation.
+unrelated parameters such as `ref`, and resets the result page. The selected
+latest-added or latest-updated order applies to both the hotlist and the main
+results. Missing salary metadata remains unspecified; zero is not mistaken for
+missing compensation.
 The detail sidebar's external profile and correctly spelled Gig Work forum links
 open in a separate tab with opener isolation. Same-app navigation and `mailto:`
 links retain their expected in-page and email-client behavior.
@@ -71,7 +73,9 @@ yarn build
 yarn test:no-watch --runInBand --watch=false --runTestsByPath \
   src/apps/gigs/src/gigs.utils.spec.ts \
   src/apps/gigs/src/gigs.service.spec.ts \
-  src/apps/gigs/src/components/GigApplicationForm.spec.tsx
+  src/apps/gigs/src/components/GigApplicationForm.spec.tsx \
+  src/apps/gigs/src/pages/GigDetailsPage.spec.tsx \
+  src/apps/gigs/src/pages/GigsPage.spec.tsx
 ```
 
 The tests cover discovery rules, salary fallbacks, required fields, consent and
