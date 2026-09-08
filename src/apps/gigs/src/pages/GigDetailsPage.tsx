@@ -15,7 +15,7 @@ import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
 /**
  * Shows job facts, required skills (or N/A when none are authored), description,
  * eligibility notes and the application handoff, including closed/error states.
- * External web resources open in an isolated tab; same-app and email links keep
+ * Advice resources open in an isolated tab; primary Gig and email links keep
  * their native navigation behavior.
  */
 const GigDetailsPage: FC = () => {
@@ -137,7 +137,13 @@ const GigDetailsPage: FC = () => {
                                     <p>
                                         Participate in Topcoder competitions to demonstrate what you can do.
                                     </p>
-                                    <Link to='/opportunities'>Browse opportunities</Link>
+                                    <Link
+                                        to='/opportunities'
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                    >
+                                        Browse opportunities
+                                    </Link>
                                 </li>
                             </ol>
                             <p>

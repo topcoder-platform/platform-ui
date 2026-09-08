@@ -82,7 +82,7 @@ describe('GigDetailsPage', () => {
             .toBeInTheDocument()
     })
 
-    it('opens external advice links safely without changing internal or email navigation', () => {
+    it('opens advice links safely without changing Gig or email navigation', () => {
         renderDetails(openGig)
 
         expect(screen.getByRole('link', { name: 'Update your profile' }))
@@ -103,7 +103,9 @@ describe('GigDetailsPage', () => {
             .toHaveAttribute('rel', 'noopener noreferrer')
 
         expect(screen.getByRole('link', { name: 'Browse opportunities' }))
-            .not.toHaveAttribute('target')
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: 'Browse opportunities' }))
+            .toHaveAttribute('rel', 'noopener noreferrer')
         screen.getAllByRole('link', { name: /Gig Work team|talent\.taas@wipro\.com/ })
             .forEach(link => expect(link)
                 .not.toHaveAttribute('target'))

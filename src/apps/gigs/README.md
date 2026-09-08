@@ -51,9 +51,9 @@ unrelated parameters such as `ref`, and resets the result page. The selected
 latest-added or latest-updated order applies to both the hotlist and the main
 results. Missing salary metadata remains unspecified; zero is not mistaken for
 missing compensation.
-The detail sidebar's external profile and correctly spelled Gig Work forum links
-open in a separate tab with opener isolation. Same-app navigation and `mailto:`
-links retain their expected in-page and email-client behavior.
+The detail sidebar's profile, correctly spelled Gig Work forum and opportunity
+links open in a separate tab with opener isolation. Primary Gig navigation and
+`mailto:` links retain their expected in-page and email-client behavior.
 
 Members cannot track application status in this app. The listing and submission
 confirmation do not link to My Gigs, and the app does not request application
