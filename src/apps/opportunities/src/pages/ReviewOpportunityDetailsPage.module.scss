@@ -881,6 +881,12 @@
 }
 
 @media (max-width: 760px) {
+    .rings {
+        bottom: -200px;
+        right: -168px;
+        top: auto;
+    }
+
     .breadcrumbsShell,
     .headerInner {
         padding-inline: 24px;
