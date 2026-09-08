@@ -383,7 +383,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').closest('article')?.className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('gridCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
@@ -418,7 +419,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').closest('article')?.className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('copilotCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute(
@@ -695,7 +697,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').closest('article')?.className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()

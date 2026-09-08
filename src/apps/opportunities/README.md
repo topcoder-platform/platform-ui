@@ -160,7 +160,9 @@ timezone displayed below the rail. Phase names select the corresponding Figma
 glyph; unfamiliar phase names deliberately use the generic Review glyph.
 At phone widths, the timezone moves above a vertical timeline: phase nodes and
 progress connectors occupy the left rail while each phase name and its dates
-remain in an aligned row to the right. Wider layouts retain the horizontal
+remain in an aligned, content-sized row to the right. Each mobile row owns its
+marker and connector, so wrapped dates and enlarged text grow the rail instead
+of overlapping the following milestone. Wider layouts retain the horizontal
 timeline and its overflow fallback for tablet-sized screens.
 
 ## Challenge Markdown table of contents

@@ -447,7 +447,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveAttribute('data-state', 'upcoming')
         expect(winners.querySelector('time'))
             .toHaveAttribute('datetime', challengeEnd)
-        expect(timeline.querySelectorAll('img'))
+        expect(timeline.querySelectorAll('.timelineRail img'))
             .toHaveLength(4)
         expect(timeline.querySelectorAll('[data-state="current"]'))
             .toHaveLength(6)
@@ -461,6 +461,10 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toBeInTheDocument()
         expect(timeline.querySelector('.timelineGraphic > .timelineItems'))
             .toBeInTheDocument()
+        expect(timeline.querySelectorAll('.mobileTimelineMarker'))
+            .toHaveLength(items.length)
+        expect(timeline.querySelectorAll('.mobileTimelineMarker img'))
+            .toHaveLength(items.length)
     })
 
     it('sorts expanded timeline phases chronologically and uses the short hide label', () => {

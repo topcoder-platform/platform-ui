@@ -24,7 +24,8 @@
     .gigs-filters h2 { margin: 0; }
     .gigs-filters label { font-weight: 700; margin-top: 8px; }
     input:not([type='checkbox'], [type='radio']), select { width: 100%; min-height: 44px; padding: 10px 12px; background: $tc-2026-surface; color: $tc-2026-body; border: 1px solid $tc-2026-border-strong; font-size: 14px; }
-    .gigs-filter-input:focus { border-color: $tc-2026-teal; box-shadow: 0 0 0 1px $tc-2026-teal; outline: 0; }
+    .gigs-filter-input:focus { border-color: $tc-2026-teal; box-shadow: 0 0 0 1px $tc-2026-teal; }
+    .gigs-filter-input:focus-visible { outline: 2px solid $tc-2026-teal; outline-offset: 2px; }
     input[readonly] { background: $tc-2026-canvas; }
     .gigs-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
     .gigs-toolbar h2 { margin: 0; font-size: 18px; }
@@ -121,5 +122,10 @@
         .gigs-toolbar { gap: 16px; }
         .gigs-resources { padding: 24px; }
         .gigs-button { width: 100%; }
+    }
+
+    @media (forced-colors: active) {
+        .gigs-filter-input:focus { border-color: Highlight; box-shadow: none; }
+        .gigs-filter-input:focus-visible { outline-color: Highlight; }
     }
 }
