@@ -38,6 +38,9 @@ skills/technologies field. Challenge-detail skill tags link back to
 `/opportunities/competitions?search=<skill>` so the destination input and
 owner-backed results are filtered immediately. Other opportunity domains
 retain their owner-specific skill facet where supported.
+On mobile, Search, ownership, and Status remain immediately visible while the
+Track, Type, or Role facets sit behind the accessible More filters control.
+Desktop keeps every available facet expanded.
 
 On narrow layouts, Browse keeps the member's decision flow in document order:
 the title is followed by filters, then the sort/view toolbar, and finally the

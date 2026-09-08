@@ -52,6 +52,15 @@ describe('OpportunityFiltersPanel', () => {
         expect(screen.getByText('AI'))
             .toBeInTheDocument()
 
+        const advancedFilters = screen.getByRole('button', { name: 'More filters' })
+        expect(advancedFilters)
+            .toHaveAttribute('aria-controls', 'competitions-advanced-filters')
+        expect(advancedFilters)
+            .toHaveAttribute('aria-expanded', 'false')
+        fireEvent.click(advancedFilters)
+        expect(screen.getByRole('button', { name: 'Less filters' }))
+            .toHaveAttribute('aria-expanded', 'true')
+
         fireEvent.change(search, { target: { value: 'React project' } })
         expect(onSearchChange)
             .toHaveBeenCalledWith('React project')
