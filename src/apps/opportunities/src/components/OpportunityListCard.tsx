@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/no-noninteractive-tabindex, ordered-imports/ordered-imports, react/jsx-no-bind */
+/* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     FC,
-    KeyboardEvent,
-    MouseEvent,
     ReactNode,
     SVGProps,
 } from 'react'
@@ -110,39 +108,29 @@ const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
 const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
 
 /**
- * Renders a card skill as a keyboard-accessible filter control when the list
- * supplies a selection callback, while preventing the containing card link.
+ * Renders a card skill as a native filter control when the list supplies a
+ * selection callback.
  *
  * @param props skill label, optional styling, and list-filter callback.
  * @returns interactive or presentational skill tag.
  * @throws Does not throw.
  */
 const SkillFilterTag: FC<SkillFilterTagProps> = props => {
-    /** Selects this skill without following the containing opportunity link. */
-    const select = (event: MouseEvent<HTMLSpanElement>): void => {
-        if (!props.onSelect) return
-        event.preventDefault()
-        event.stopPropagation()
-        props.onSelect(props.skill)
-    }
-
-    /** Gives the non-native filter tag standard Enter and Space activation. */
-    const selectByKeyboard = (event: KeyboardEvent<HTMLSpanElement>): void => {
-        if (!props.onSelect || (event.key !== 'Enter' && event.key !== ' ')) return
-        event.preventDefault()
-        event.stopPropagation()
-        props.onSelect(props.skill)
+    if (props.onSelect) {
+        return (
+            <button
+                aria-label={`Filter by ${props.skill}`}
+                className={classNames(props.className, styles.filterableSkill)}
+                onClick={() => props.onSelect?.(props.skill)}
+                type='button'
+            >
+                {props.skill}
+            </button>
+        )
     }
 
     return (
-        <span
-            aria-label={props.onSelect ? `Filter by ${props.skill}` : undefined}
-            className={classNames(props.className, { [styles.filterableSkill]: !!props.onSelect })}
-            onClick={select}
-            onKeyDown={selectByKeyboard}
-            role={props.onSelect ? 'button' : undefined}
-            tabIndex={props.onSelect ? 0 : undefined}
-        >
+        <span className={props.className}>
             {props.skill}
         </span>
     )
@@ -627,11 +615,10 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     ]
 
     return (
-        <Link
+        <article
             className={classNames(styles.card, styles.competitionCard, {
                 [styles.gridCard]: props.view === 'grid',
             })}
-            to={`/opportunities/challenge/${item.id}`}
         >
             <div className={styles.competitionMain}>
                 <div className={styles.competitionCopy}>
@@ -669,7 +656,14 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                         place='bottom'
                         strategy='fixed'
                     >
-                        <h3>{item.name}</h3>
+                        <h3>
+                            <Link
+                                className={styles.titleLink}
+                                to={`/opportunities/challenge/${item.id}`}
+                            >
+                                {item.name}
+                            </Link>
+                        </h3>
                     </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
@@ -737,7 +731,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }
 
@@ -785,11 +779,8 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     })
 
     return (
-        <Link
+        <article
             className={cardClassName}
-            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
-            target={props.kind === 'engagements' ? '_blank' : undefined}
-            to={card.href}
         >
             <div className={styles.main}>
                 <div className={styles.eyebrow}>
@@ -831,7 +822,14 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
                     })}
                     >
-                        {card.title}
+                        <Link
+                            className={styles.titleLink}
+                            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
+                            target={props.kind === 'engagements' ? '_blank' : undefined}
+                            to={card.href}
+                        >
+                            {card.title}
+                        </Link>
                     </h3>
                 </Tooltip>
                 {visibleSkills.length > 0 && (
@@ -871,6 +869,6 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }

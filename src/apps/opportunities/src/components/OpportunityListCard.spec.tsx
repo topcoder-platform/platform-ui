@@ -211,7 +211,7 @@ describe('OpportunityListCard competition presentation', () => {
         )
 
         const card = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
-        expect(card.className)
+        expect(card.closest('article')?.className)
             .toContain('gridCard')
         expect(screen.getAllByText('+1'))
             .toHaveLength(2)
@@ -251,6 +251,8 @@ describe('OpportunityListCard competition presentation', () => {
         fireEvent.click(skill)
         expect(onSkillClick)
             .toHaveBeenCalledWith('Figma')
+        expect(skill.closest('a'))
+            .toBeNull()
         expect(screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ }))
             .toHaveAttribute('href', '/opportunities/challenge/challenge-id')
     })
@@ -381,7 +383,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link').closest('article')?.className)
             .toEqual(expect.stringContaining('gridCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
@@ -416,7 +418,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link').closest('article')?.className)
             .toEqual(expect.stringContaining('copilotCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute(
@@ -693,7 +695,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link').closest('article')?.className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()

@@ -9,9 +9,9 @@
     column-gap: 24px;
     display: grid;
     grid-template-areas:
-        'title toolbar'
-        'sidebar results';
-    grid-template-columns: 282px minmax(0, 1fr);
+        'title title toolbar'
+        'sidebar results results';
+    grid-template-columns: 282px minmax(0, 1fr) auto;
     margin: 0 auto;
     max-width: 1248px;
     padding: 72px 24px 40px;
