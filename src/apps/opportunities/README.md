@@ -168,7 +168,8 @@ timeline and its overflow fallback for tablet-sized screens.
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
 server-backed sort and moves above the card so members do not need to pan a
-desktop-width table to find it.
+desktop-width table to find it. The visually clipped table heading remains a
+noninteractive semantic label, avoiding a duplicate hidden keyboard stop.
 
 All Submissions and My Submissions use the same responsive record-card
 contract. Every track-specific field and action receives a visible mobile key,
@@ -247,10 +248,10 @@ authored outline glyphs, while the Thrive card reuses the authored book asset.
 The two Thrive actions open the published Topcoder Review Process and Topcoder
 Challenges Explained articles rather than an unfiltered search page.
 
-The review-header ring decoration is anchored behind the compensation card.
-At phone and small-tablet widths it starts at that card's top edge and remains
-clipped by the dark header, keeping breadcrumbs, title, tags, and review
-metadata free of decorative overlap.
+The review-header ring decoration remains a dark-header background layer rather
+than a child of the compensation card. At phone and small-tablet widths it moves
+below and to the right of the content and remains clipped by the header, keeping
+breadcrumbs, title, tags, metadata, payment copy, and actions unobstructed.
 
 Review challenge chips merge tags, legacy technologies, and standardized
 skills. List pages batch-hydrate missing skill names from Challenge API; a
@@ -262,7 +263,9 @@ palette. Application Date starts newest-first and its keyboard-accessible
 header toggles ascending/descending order while resetting local pagination.
 On phone viewports, each application becomes a labeled Handle, Role, and
 Application Date record within the same semantic table; its date sort moves
-above the white card and retains the desktop ordering behavior.
+above the white card and retains the desktop ordering behavior. The clipped
+column header exposes its sort state without leaving its desktop button in the
+phone tab order.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style

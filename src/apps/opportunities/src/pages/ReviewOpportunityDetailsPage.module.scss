@@ -46,7 +46,7 @@
     height: 498px;
     pointer-events: none;
     position: absolute;
-    right: -190px;
+    right: -50px;
     top: -122px;
     width: 498px;
 
@@ -238,7 +238,6 @@
     gap: 24px;
     min-height: 256px;
     padding: 24px;
-    position: relative;
     width: 384px;
 
     > button {
@@ -909,8 +908,9 @@
     }
 
     .rings {
-        right: -250px;
-        top: 0;
+        bottom: -200px;
+        right: -168px;
+        top: auto;
     }
 
     .applicationPagination {
@@ -1022,6 +1022,10 @@
             position: absolute;
             white-space: nowrap;
             width: 1px;
+
+            button {
+                display: none;
+            }
         }
 
         tbody,

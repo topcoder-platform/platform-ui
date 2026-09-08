@@ -677,6 +677,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toEqual(['Handle', 'Rating', 'Registration Date'])
         expect(screen.getByRole('table'))
             .toHaveClass('mobileRecordTable')
+        expect(challengeDetailStyles)
+            .toMatch(/\.mobileRecordTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
     })
 
     it('renders public and authored submissions as labeled mobile records', () => {

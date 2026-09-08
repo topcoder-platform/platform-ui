@@ -275,6 +275,8 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toContain('applicationTable')
         expect(reviewDetailStyles)
             .toContain('.applicationTable {')
+        expect(reviewDetailStyles)
+            .toMatch(/\.applicationTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
     })
 
     it('uses member ratings to color application handles', () => {
@@ -315,18 +317,22 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toHaveBeenCalledWith({ left: 0, top: 0 })
     })
 
-    it('anchors the clipped header decoration to compensation on mobile', () => {
+    it('keeps the clipped header decoration behind, not inside, compensation', () => {
         renderPage()
 
         const decoration = screen.getByTestId('review-header-decoration')
         const compensation = screen.getByText('Compensation')
             .closest('aside')
         expect(compensation)
-            .toContainElement(decoration)
+            .not.toContainElement(decoration)
+        expect(decoration.parentElement?.tagName)
+            .toBe('HEADER')
         expect(reviewDetailStyles)
-            .toContain('right: -250px;')
+            .toContain('bottom: -200px;')
         expect(reviewDetailStyles)
-            .toContain('top: 0;')
+            .toContain('right: -168px;')
+        expect(reviewDetailStyles)
+            .toContain('top: auto;')
     })
 
     it('uses the centered per-submission compensation and applies for an eligible reviewer', async () => {

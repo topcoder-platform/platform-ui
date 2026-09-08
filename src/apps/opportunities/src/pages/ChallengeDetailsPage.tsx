@@ -153,8 +153,8 @@ const SortableColumnHeader: FC<SortableColumnHeaderProps> = props => (
 /**
  * Renders the compact sort action placed above Figma's mobile record cards.
  *
- * The desktop table header remains the semantic column sorter; responsive CSS
- * swaps this companion action into view when that header becomes visually hidden.
+ * The table header retains the semantic column and active sort state; responsive
+ * CSS hides its duplicate button when this companion action becomes visible.
  *
  * @param props sort label, active direction, and toggle callback.
  * @returns mobile-only sort button wired to the owning server-backed ordering.

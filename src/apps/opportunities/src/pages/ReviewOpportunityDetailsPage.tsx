@@ -339,6 +339,11 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     return (
         <main className={styles.page}>
             <header className={styles.header}>
+                <div
+                    aria-hidden='true'
+                    className={styles.rings}
+                    data-testid='review-header-decoration'
+                />
                 <div className={styles.breadcrumbsShell}>
                     <div className={styles.breadcrumbs}>
                         <Link to='/opportunities'>Opportunities</Link>
@@ -397,11 +402,6 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                             </div>
                         </div>
                         <aside className={styles.compensation}>
-                            <div
-                                aria-hidden='true'
-                                className={styles.rings}
-                                data-testid='review-header-decoration'
-                            />
                             <div className={styles.compensationDetails}>
                                 <small>Compensation</small>
                                 {hasIncrementalPayment ? (
@@ -643,7 +643,7 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                             <tr>
                                 <th>Handle</th>
                                 <th>Role</th>
-                                <th aria-sort={sortDirection}>
+                                <th aria-label='Application Date' aria-sort={sortDirection}>
                                     <button onClick={toggleApplicationDateSort} type='button'>
                                         Application Date
                                         <IconOutline.ChevronDownIcon
