@@ -1083,7 +1083,7 @@ interface SubmissionsTabProps {
  * Loads and paginates submissions only after a submission tab is selected.
  *
  * @param props challenge, member scope, viewer identity, My Submissions flag, and submission callbacks.
- * @returns submission table/gallery, Marathon dashboard, or request state.
+ * @returns submission table/gallery or request state.
  * @throws Does not throw; request failures render a retry action.
  */
 const SubmissionsTab: FC<SubmissionsTabProps> = props => {
@@ -1092,7 +1092,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
-    const [marathonView, setMarathonView] = useState<'dashboard' | 'list'>('list')
     const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | undefined>()
     const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | undefined>()
     const trackKey = challengeCatalogKey(props.challenge.track)
@@ -1297,32 +1296,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                         <IconOutline.ExternalLinkIcon aria-hidden='true' />
                     </a>
                 )}
-                {!props.mine && isMarathonMatch && (
-                    <div aria-label='Submission view' className={styles.submissionViewToggle} role='group'>
-                        <button
-                            aria-label='Table view'
-                            aria-pressed={marathonView === 'list'}
-                            className={marathonView === 'list' ? styles.activeView : undefined}
-                            onClick={() => setMarathonView('list')}
-                            type='button'
-                        >
-                            <IconOutline.ViewListIcon aria-hidden='true' />
-                        </button>
-                        <button
-                            aria-label='Dashboard view'
-                            aria-pressed={marathonView === 'dashboard'}
-                            className={marathonView === 'dashboard' ? styles.activeView : undefined}
-                            onClick={() => setMarathonView('dashboard')}
-                            type='button'
-                        >
-                            <IconOutline.ChartBarIcon aria-hidden='true' />
-                        </button>
-                    </div>
-                )}
             </div>
-            {isMarathonMatch && !props.mine && marathonView === 'dashboard' ? (
-                <MarathonDashboard challenge={props.challenge} />
-            ) : privatePreviewGallery ? (
+            {privatePreviewGallery ? (
                 <div className={styles.previewGrid}>
                     {submissions.map(submission => (
                         <SubmissionPreview
@@ -1598,9 +1573,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     Live scorer updates are unavailable; submission scores may be incomplete.
                 </p>
             )}
-            {!(isMarathonMatch && !props.mine && marathonView === 'dashboard') && (
-                <div className={styles.tablePagination}>{pagination}</div>
-            )}
+            <div className={styles.tablePagination}>{pagination}</div>
             <SubmissionArtifactsModal
                 onClose={() => setArtifactsSubmissionId(undefined)}
                 open={!!artifactsSubmissionId}

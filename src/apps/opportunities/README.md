@@ -279,6 +279,9 @@ authenticated-member gate; registration is required only for My Submissions
 and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
+Marathon Match Submissions always use the Figma table with provisional and
+final score columns. The score graph is rendered only in the separate Dashboard
+tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload

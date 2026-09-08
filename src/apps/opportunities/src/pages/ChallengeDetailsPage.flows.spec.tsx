@@ -742,7 +742,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBe(true)
     })
 
-    it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
+    it('keeps the Marathon graph only in the metadata-gated Dashboard tab', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockMySubmissionCount = 2
@@ -751,6 +751,12 @@ describe('ChallengeDetailsPage member flows', () => {
             metadata: [{ name: 'show_data_dashboard', value: true }],
             type: 'Marathon Match',
         }
+        mockSubmissions = [{
+            id: 'submission-1',
+            provisionalScore: 99.088381,
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'coder',
+        }]
 
         renderPage()
 
@@ -765,6 +771,17 @@ describe('ChallengeDetailsPage member flows', () => {
                 'Forum3',
                 'Winners',
             ])
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Dashboard view' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Challenge Activity'))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Dashboard' }))
+        expect(screen.getByText('Challenge Activity'))
+            .toBeInTheDocument()
     })
 
     it('disables unregister after the member has submitted', () => {
