@@ -72,6 +72,7 @@ const GigsPage: FC = () => {
                         <h2>Find a gig</h2>
                         <label htmlFor='gig-search'>Search</label>
                         <input
+                            className='gigs-filter-input'
                             id='gig-search'
                             type='search'
                             placeholder='Name, skills, location or duration'

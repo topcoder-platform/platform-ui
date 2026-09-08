@@ -20,6 +20,8 @@ cards follow the platform design system. The reference was the August 2026 Figma
 file `C2cA6508RhpjWJDp7MLKbO`, Color page `1:54`, with design context retrieved
 from `674:8828`. Layout retains the legacy listing/detail/form hierarchy while
 adapting to the platform components. Styles apply only inside `.gigs-app`.
+The listing search uses the same teal focused border and ring as the other 2026
+opportunity filters instead of inheriting the browser or legacy blue outline.
 
 ## Data and behavior
 
