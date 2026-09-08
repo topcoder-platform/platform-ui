@@ -8,7 +8,12 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import {
+    Link,
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router-dom'
 import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -89,6 +94,10 @@ import {
     shouldShowFinalSubmissionScores,
     winnerFinalScore,
 } from '../utils'
+import {
+    ChallengeDetailTab,
+    challengeDetailTabFromSearch,
+} from '../utils/challenge-detail-route.utils'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import medal1 from '../assets/medal-1.svg'
 import medal2 from '../assets/medal-2.svg'
@@ -98,7 +107,7 @@ import winnerThanksIcon from '../assets/winner-thanks.svg'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
-type ChallengeTab = 'requirements' | 'registrants' | 'submissions' | 'mine' | 'dashboard' | 'forum' | 'winners'
+type ChallengeTab = ChallengeDetailTab
 
 const STALE_REGISTRATION_MESSAGE
     = 'Your registration is no longer active. Register again before submitting.'
@@ -274,8 +283,13 @@ function formatTimestamp(value?: string): string {
 export const ChallengeDetailsPage: FC = () => {
     const routeParams: Readonly<{ challengeId?: string }> = useParams<{ challengeId: string }>()
     const challengeId = routeParams.challengeId ?? ''
-    const { profile }: ProfileContextData = useProfileContext()
-    const [activeTab, setActiveTab] = useState<ChallengeTab>('requirements')
+    const location = useLocation()
+    const navigate = useNavigate()
+    const {
+        initialized: profileInitialized,
+        profile,
+    }: ProfileContextData = useProfileContext()
+    const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
     const [termsOpen, setTermsOpen] = useState(false)
     const [termsMode, setTermsMode] = useState<'register' | 'view'>('view')
     const [issueOpen, setIssueOpen] = useState(false)
@@ -377,9 +391,48 @@ export const ChallengeDetailsPage: FC = () => {
         memberId,
         mySubmissionCountResponse.data,
     ])
+    const requestedTab = challengeDetailTabFromSearch(searchParams)
+    const requestedTabIsVisible = !!requestedTab && tabs.some(tab => tab.id === requestedTab)
+    const activeTab: ChallengeTab = requestedTabIsVisible && requestedTab
+        ? requestedTab
+        : 'requirements'
+    const registrationAccessIsLoading = !!memberId
+        && registrationResponse.isValidating
+        && registrationResponse.data === undefined
+        && !registrationResponse.error
+    const memberResourceAccessIsLoading = !!memberId
+        && memberResourceResponse.isValidating
+        && memberResourceResponse.data === undefined
+        && !memberResourceResponse.error
+    const tabAccessIsLoading = !profileInitialized
+        || registrationAccessIsLoading
+        || memberResourceAccessIsLoading
+
+    useEffect(() => {
+        if (!challenge || !searchParams.has('tab') || tabAccessIsLoading || requestedTabIsVisible) return
+
+        const nextSearchParams = new URLSearchParams(searchParams)
+        nextSearchParams.delete('tab')
+        const nextSearch = nextSearchParams.toString()
+        navigate({
+            hash: location.hash,
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : '',
+        }, { replace: true })
+    }, [
+        challenge,
+        location.hash,
+        location.pathname,
+        navigate,
+        requestedTabIsVisible,
+        searchParams,
+        tabAccessIsLoading,
+    ])
 
     /**
-     * Selects a challenge tab and closes the transient in-tab submission form.
+     * Selects a challenge tab in the URL and closes the transient submission form.
+     * Existing query parameters and the current hash are retained. Replacing the
+     * current history entry matches the legacy challenge-listing tab behavior.
      *
      * @param tab destination tab identifier.
      * @returns void after updating the visible panel.
@@ -388,7 +441,15 @@ export const ChallengeDetailsPage: FC = () => {
     const selectTab = (tab: ChallengeTab): void => {
         if (submissionUploadBusy) return
         setSubmissionFlowOpen(false)
-        setActiveTab(tab)
+        const nextSearchParams = new URLSearchParams(searchParams)
+        if (tab === 'requirements') nextSearchParams.delete('tab')
+        else nextSearchParams.set('tab', tab)
+        const nextSearch = nextSearchParams.toString()
+        navigate({
+            hash: location.hash,
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : '',
+        }, { replace: true })
     }
 
     /**
@@ -403,7 +464,7 @@ export const ChallengeDetailsPage: FC = () => {
         try {
             const currentRegistration = await registrationResponse.mutate()
             if (currentRegistration) return true
-            setActiveTab('requirements')
+            selectTab('requirements')
             setSubmissionFlowOpen(false)
             toast.error(STALE_REGISTRATION_MESSAGE)
             return false
@@ -431,7 +492,7 @@ export const ChallengeDetailsPage: FC = () => {
         }
 
         if (!await validateSubmissionRegistration()) return
-        setActiveTab('mine')
+        selectTab('mine')
         setSubmissionFlowOpen(true)
     }
 
@@ -443,7 +504,7 @@ export const ChallengeDetailsPage: FC = () => {
      */
     const closeSubmission = (): void => {
         if (submissionUploadBusy) return
-        setActiveTab('mine')
+        selectTab('mine')
         setSubmissionFlowOpen(false)
     }
 
@@ -498,7 +559,7 @@ export const ChallengeDetailsPage: FC = () => {
         if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
         if (event.key === 'Home') nextIndex = 0
         if (event.key === 'End') nextIndex = tabs.length - 1
-        setActiveTab(tabs[nextIndex].id)
+        selectTab(tabs[nextIndex].id)
         const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
         buttons?.[nextIndex]?.focus()
     }
@@ -559,7 +620,7 @@ export const ChallengeDetailsPage: FC = () => {
         try {
             setUnregisterConfirmOpen(false)
             await unregisterFromChallenge(challengeId, profile.handle)
-            setActiveTab('requirements')
+            selectTab('requirements')
             setSubmissionFlowOpen(false)
             await Promise.all([
                 registrationResponse.mutate(undefined, { revalidate: false }),

@@ -57,6 +57,10 @@ import {
     reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
 } from '../utils/review-opportunity.utils'
+import {
+    ChallengeDetailTab,
+    challengeDetailPath,
+} from '../utils/challenge-detail-route.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -96,6 +100,13 @@ interface CardViewModel {
 interface ChallengeTypePresentation {
     icon: FC<SVGProps<SVGSVGElement>>
     label: string
+}
+
+interface CompetitionMetric {
+    icon: ReactNode
+    label: string
+    tab: ChallengeDetailTab
+    value: string
 }
 
 const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
@@ -596,20 +607,23 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
-    const metrics = [
+    const metrics: CompetitionMetric[] = [
         {
             icon: <SubmissionsMetricIcon aria-hidden='true' />,
             label: 'Submissions',
+            tab: 'submissions',
             value: item.numOfSubmissions === undefined ? '—' : String(item.numOfSubmissions),
         },
         {
             icon: <RegistrantsMetricIcon aria-hidden='true' />,
             label: 'Registrants',
+            tab: 'registrants',
             value: item.numOfRegistrants === undefined ? '—' : String(item.numOfRegistrants),
         },
         {
             icon: <PostsMetricIcon aria-hidden='true' />,
             label: 'Posts',
+            tab: 'forum',
             value: item.numOfPosts === undefined ? '—' : String(item.numOfPosts),
         },
     ]
@@ -659,7 +673,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                         <h3>
                             <Link
                                 className={styles.titleLink}
-                                to={`/opportunities/challenge/${item.id}`}
+                                to={challengeDetailPath(item.id)}
                             >
                                 {item.name}
                             </Link>
@@ -724,10 +738,17 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
             </div>
             <dl className={classNames(styles.meta, styles.competitionMeta)}>
                 {metrics.map(row => (
-                    <div key={row.label}>
+                    <div className={styles.metricRow} key={row.label}>
                         {row.icon}
                         <dt>{`${row.label}:`}</dt>
-                        <dd>{row.value}</dd>
+                        <dd>
+                            {row.value}
+                            <Link
+                                aria-label={`View ${row.label}`}
+                                className={styles.metricLink}
+                                to={challengeDetailPath(item.id, row.tab)}
+                            />
+                        </dd>
                     </div>
                 ))}
             </dl>

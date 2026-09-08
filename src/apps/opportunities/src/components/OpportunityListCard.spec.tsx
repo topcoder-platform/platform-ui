@@ -219,6 +219,41 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('deep-links every active competition metric without nesting card links', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        numOfPosts: 5,
+                        numOfRegistrants: 2,
+                        numOfSubmissions: 0,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const titleLink = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
+        const metricLinks = [
+            ['View Submissions', '/opportunities/challenge/challenge-id?tab=submissions'],
+            ['View Registrants', '/opportunities/challenge/challenge-id?tab=registrants'],
+            ['View Posts', '/opportunities/challenge/challenge-id?tab=forum'],
+        ]
+        metricLinks.forEach(([name, href]) => {
+            const metricLink = screen.getByRole('link', { name })
+            expect(metricLink)
+                .toHaveAttribute('href', href)
+            expect(metricLink.className)
+                .toContain('metricLink')
+            expect(titleLink.contains(metricLink))
+                .toBe(false)
+            expect(metricLink.closest('article'))
+                .toBe(titleLink.closest('article'))
+        })
+        expect(screen.getByText('0'))
+            .toBeInTheDocument()
+    })
+
     it('shows Registered for the server-filtered My competitions result', () => {
         render(
             <MemoryRouter>

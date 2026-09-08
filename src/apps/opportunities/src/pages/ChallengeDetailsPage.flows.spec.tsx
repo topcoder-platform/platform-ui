@@ -13,6 +13,7 @@ import {
     MemoryRouter,
     Route,
     Routes,
+    useLocation,
 } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
@@ -27,7 +28,9 @@ const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
 let mockProfile: { handle: string; roles?: string[]; userId: number } | undefined
+let mockProfileInitialized: boolean
 let mockRegistration: { id: string } | undefined
+let mockTabAccessLoading: boolean
 let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
@@ -64,7 +67,11 @@ jest.mock('~/libs/core', () => ({
     authUrlLogin: (url: string): string => url,
     getMemberStatsAsync: jest.fn(),
     recordAnalyticsEvent: jest.fn(),
-    useProfileContext: () => ({ profile: mockProfile }),
+    useProfileContext: () => ({
+        initialized: mockProfileInitialized,
+        isLoggedIn: !!mockProfile,
+        profile: mockProfile,
+    }),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
@@ -323,11 +330,32 @@ function swrResponse(data: unknown): Record<string, unknown> {
     }
 }
 
-function renderPage(): void {
+/** Shows the full router location so tab-query preservation can be asserted. */
+const LocationProbe = (): JSX.Element => {
+    const location = useLocation()
+    return (
+        <output aria-label='Current route'>
+            {`${location.pathname}${location.search}${location.hash}`}
+        </output>
+    )
+}
+
+/** Renders challenge details at an optional deep-linked location. */
+function renderPage(
+    initialEntry: string = '/opportunities/challenge/challenge-id',
+): void {
     render(
-        <MemoryRouter initialEntries={['/opportunities/challenge/challenge-id']}>
+        <MemoryRouter initialEntries={[initialEntry]}>
             <Routes>
-                <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                <Route
+                    element={(
+                        <>
+                            <ChallengeDetailsPage />
+                            <LocationProbe />
+                        </>
+                    )}
+                    path='/opportunities/challenge/:challengeId'
+                />
             </Routes>
         </MemoryRouter>,
     )
@@ -350,8 +378,10 @@ describe('ChallengeDetailsPage member flows', () => {
         jest.spyOn(window, 'scrollTo')
             .mockImplementation(() => undefined)
         mockProfile = undefined
+        mockProfileInitialized = true
         mockRegistration = undefined
         mockRegistrationRemoved = false
+        mockTabAccessLoading = false
         mockMemberProfiles = []
         mockMemberResource = undefined
         mockMySubmissionCount = undefined
@@ -393,12 +423,16 @@ describe('ChallengeDetailsPage member flows', () => {
             if (Array.isArray(key) && key[0] === 'opportunities:registration') {
                 return {
                     ...swrResponse(mockRegistration),
+                    isValidating: mockTabAccessLoading,
                     mutate: mockRegistrationMutate,
                 }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:challenge-member-resource') {
-                return swrResponse(mockMemberResource)
+                return {
+                    ...swrResponse(mockMemberResource),
+                    isValidating: mockTabAccessLoading,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
@@ -461,6 +495,72 @@ describe('ChallengeDetailsPage member flows', () => {
 
         expect(window.scrollTo)
             .toHaveBeenCalledWith({ left: 0, top: 0 })
+    })
+
+    it.each<[string, boolean]>([
+        ['registrants', false],
+        ['submissions', true],
+        ['forum', true],
+        ['winners', false],
+    ])('opens the visible %s tab from a listing deep link', (tab, authenticated) => {
+        if (authenticated) {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockRegistration = { id: 'resource-id' }
+        }
+
+        renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`)
+
+        expect(screen.getByRole('tab', {
+            name: tab === 'forum'
+                ? /^Forum/
+                : new RegExp(`^${tab.charAt(0)
+                    .toUpperCase()}${tab.slice(1)}`),
+        }))
+            .toHaveAttribute('aria-selected', 'true')
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                `/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`,
+            )
+    })
+
+    it.each(['unknown', 'forum'])(
+        'normalizes an invalid or inaccessible %s tab while preserving route context',
+        async tab => {
+            renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`)
+
+            await waitFor(() => expect(screen.getByRole('status', { name: 'Current route' }))
+                .toHaveTextContent('/opportunities/challenge/challenge-id?source=listing#challenge'))
+            expect(screen.getByRole('tab', { name: 'Requirements' }))
+                .toHaveAttribute('aria-selected', 'true')
+        },
+    )
+
+    it('writes tab clicks into the route without losing other query or hash values', () => {
+        renderPage('/opportunities/challenge/challenge-id?source=listing#challenge')
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                '/opportunities/challenge/challenge-id?source=listing&tab=registrants#challenge',
+            )
+        expect(screen.getByRole('tab', { name: /^Registrants/ }))
+            .toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('retains a gated deep link while profile and resource access are resolving', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockProfileInitialized = false
+        mockTabAccessLoading = true
+
+        renderPage('/opportunities/challenge/challenge-id?source=listing&tab=forum#challenge')
+
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                '/opportunities/challenge/challenge-id?source=listing&tab=forum#challenge',
+            )
+        expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true')
     })
 
     it('closes challenge terms immediately while registration is pending', () => {
