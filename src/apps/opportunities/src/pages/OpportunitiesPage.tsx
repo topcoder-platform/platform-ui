@@ -304,56 +304,104 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
 
     return (
         <section className={styles.content}>
-            <div className={styles.titleRow}>
-                <h2>{`Browse ${KIND_LABELS[kind]}`}</h2>
-                <div className={styles.toolbar}>
-                    <div className={styles.sort}>
-                        <SortIcon aria-hidden='true' />
-                        <strong>Sort by</strong>
-                        <OpportunitySortSelect
-                            onChange={updateSort}
-                            options={opportunitySortOptions()}
-                            value={sort}
-                        />
-                    </div>
-                    <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
-                </div>
-            </div>
-            <div className={styles.body}>
-                <div className={styles.sidebar}>
-                    <OpportunityFiltersPanel
-                        applied={applied}
-                        isAuthenticated={!!profile}
-                        kind={kind}
-                        onAppliedChange={updateApplied}
-                        onReset={resetFilters}
-                        onRoleChange={updateRole}
-                        onSearchChange={updateSearch}
-                        onStatusChange={updateStatus}
-                        onTrackChange={updateTrack}
-                        onTypeChange={updateType}
-                        search={search}
-                        selectedRole={role}
-                        status={status}
-                        tracks={tracks}
-                        types={types}
+            <h2 className={styles.title}>{`Browse ${KIND_LABELS[kind]}`}</h2>
+            <div className={styles.sidebar}>
+                <OpportunityFiltersPanel
+                    applied={applied}
+                    isAuthenticated={!!profile}
+                    kind={kind}
+                    onAppliedChange={updateApplied}
+                    onReset={resetFilters}
+                    onRoleChange={updateRole}
+                    onSearchChange={updateSearch}
+                    onStatusChange={updateStatus}
+                    onTrackChange={updateTrack}
+                    onTypeChange={updateType}
+                    search={search}
+                    selectedRole={role}
+                    status={status}
+                    tracks={tracks}
+                    types={types}
+                />
+                {kind === 'reviews' && (
+                    <LearningCard
+                        body='Interested in evaluating submissions on Topcoder?'
+                        href={REVIEWER_LEARNING_URL}
+                        title='How to become a reviewer?'
                     />
-                    {kind === 'reviews' && (
-                        <LearningCard
-                            body='Interested in evaluating submissions on Topcoder?'
-                            href={REVIEWER_LEARNING_URL}
-                            title='How to become a reviewer?'
-                        />
-                    )}
-                    {kind === 'copilots' && !isCopilot && (
-                        <LearningCard
-                            body='Interested in managing challenges on Topcoder?'
-                            href={COPILOT_LEARNING_URL}
-                            title='How to become a copilot?'
-                        />
-                    )}
+                )}
+                {kind === 'copilots' && !isCopilot && (
+                    <LearningCard
+                        body='Interested in managing challenges on Topcoder?'
+                        href={COPILOT_LEARNING_URL}
+                        title='How to become a copilot?'
+                    />
+                )}
+            </div>
+            <div aria-label='Opportunity sorting and display' className={styles.toolbar}>
+                <div className={styles.sort}>
+                    <SortIcon aria-hidden='true' />
+                    <strong>Sort by</strong>
+                    <OpportunitySortSelect
+                        onChange={updateSort}
+                        options={opportunitySortOptions()}
+                        value={sort}
+                    />
                 </div>
-                <div className={styles.results} aria-live='polite'>
+                <OpportunityViewToggle onChange={props.onViewChange} value={props.view} />
+            </div>
+            <div className={styles.results} aria-live='polite'>
+                <OpportunityPagination
+                    onPageChange={updatePage}
+                    onPerPageChange={updatePerPage}
+                    page={data?.page ?? page}
+                    perPage={data?.perPage ?? perPage}
+                    total={data?.total ?? 0}
+                    totalPages={data?.totalPages ?? 0}
+                />
+                {pageResponse.isValidating && !data && <ResultsLoading view={props.view} />}
+                {pageResponse.error && (
+                    <div className={styles.message} role='alert'>
+                        <IconOutline.ExclamationCircleIcon />
+                        <h3>We couldn&apos;t load these opportunities.</h3>
+                        <p>Please try again. Your filters have been preserved.</p>
+                        <button onClick={() => pageResponse.mutate()} type='button'>Try again</button>
+                    </div>
+                )}
+                {!pageResponse.error && data?.items.length === 0 && (
+                    <div className={styles.empty}>
+                        <span className={styles.emptyIcon}>
+                            <EmptyInfoIcon aria-hidden='true' />
+                        </span>
+                        <h3>No results found</h3>
+                        <div className={styles.emptyCopy}>
+                            <p>There are no matching opportunities right now.</p>
+                            <p>Check back later for new opportunities</p>
+                        </div>
+                        <button onClick={resetFilters} type='button'>
+                            <ResetIcon aria-hidden='true' />
+                            Reset filter
+                        </button>
+                    </div>
+                )}
+                <div className={classNames(styles.list, {
+                    [styles.grid]: props.view === 'grid',
+                })}
+                >
+                    {displayedItems.map((item: OpportunityItem) => (
+                        <OpportunityListCard
+                            item={item}
+                            key={item.id}
+                            kind={kind}
+                            memberApplied={applied}
+                            onSkillClick={updateSearch}
+                            registered={kind === 'competitions'
+                                && registrationIds.has(item.id)}
+                            view={props.view}
+                        />
+                    ))}
+                </div>
+                {(data?.items.length ?? 0) > 0 && (
                     <OpportunityPagination
                         onPageChange={updatePage}
                         onPerPageChange={updatePerPage}
@@ -362,59 +410,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                         total={data?.total ?? 0}
                         totalPages={data?.totalPages ?? 0}
                     />
-                    {pageResponse.isValidating && !data && <ResultsLoading view={props.view} />}
-                    {pageResponse.error && (
-                        <div className={styles.message} role='alert'>
-                            <IconOutline.ExclamationCircleIcon />
-                            <h3>We couldn&apos;t load these opportunities.</h3>
-                            <p>Please try again. Your filters have been preserved.</p>
-                            <button onClick={() => pageResponse.mutate()} type='button'>Try again</button>
-                        </div>
-                    )}
-                    {!pageResponse.error && data?.items.length === 0 && (
-                        <div className={styles.empty}>
-                            <span className={styles.emptyIcon}>
-                                <EmptyInfoIcon aria-hidden='true' />
-                            </span>
-                            <h3>No results found</h3>
-                            <div className={styles.emptyCopy}>
-                                <p>There are no matching opportunities right now.</p>
-                                <p>Check back later for new opportunities</p>
-                            </div>
-                            <button onClick={resetFilters} type='button'>
-                                <ResetIcon aria-hidden='true' />
-                                Reset filter
-                            </button>
-                        </div>
-                    )}
-                    <div className={classNames(styles.list, {
-                        [styles.grid]: props.view === 'grid',
-                    })}
-                    >
-                        {displayedItems.map((item: OpportunityItem) => (
-                            <OpportunityListCard
-                                item={item}
-                                key={item.id}
-                                kind={kind}
-                                memberApplied={applied}
-                                onSkillClick={updateSearch}
-                                registered={kind === 'competitions'
-                                    && registrationIds.has(item.id)}
-                                view={props.view}
-                            />
-                        ))}
-                    </div>
-                    {(data?.items.length ?? 0) > 0 && (
-                        <OpportunityPagination
-                            onPageChange={updatePage}
-                            onPerPageChange={updatePerPage}
-                            page={data?.page ?? page}
-                            perPage={data?.perPage ?? perPage}
-                            total={data?.total ?? 0}
-                            totalPages={data?.totalPages ?? 0}
-                        />
-                    )}
-                </div>
+                )}
             </div>
         </section>
     )

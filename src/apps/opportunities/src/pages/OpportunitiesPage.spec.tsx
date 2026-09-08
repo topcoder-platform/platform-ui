@@ -47,7 +47,11 @@ jest.mock('~/libs/ui', () => {
 jest.mock('../components', () => ({
     OpportunityFiltersPanel: (props: { onAppliedChange: (checked: boolean) => void }) => {
         const selectMyCompetitions = (): void => props.onAppliedChange(true)
-        return <button onClick={selectMyCompetitions} type='button'>My competitions</button>
+        return (
+            <aside aria-label='Opportunity filters'>
+                <button onClick={selectMyCompetitions} type='button'>My competitions</button>
+            </aside>
+        )
     },
     OpportunityHero: (props: { summary?: { competitions?: { count?: number } } }) => (
         <output data-testid='competition-count'>
@@ -60,8 +64,8 @@ jest.mock('../components', () => ({
     OpportunityPagination: (props: { onPageChange: (page: number) => void }) => (
         <button aria-label='Go to page 2' onClick={() => props.onPageChange(2)} type='button' />
     ),
-    OpportunitySortSelect: () => undefined,
-    OpportunityViewToggle: () => undefined,
+    OpportunitySortSelect: () => <span>Sort choices</span>,
+    OpportunityViewToggle: () => <span>View choices</span>,
 }))
 
 jest.mock('../services', () => ({
@@ -115,6 +119,40 @@ describe('OpportunitiesPage', () => {
             .toHaveTextContent('1'))
         expect(mockedGetOpportunitySummary)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('places mobile sorting controls after the filters and before results', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        const filters = screen.getByRole('complementary', { name: 'Opportunity filters' })
+        const sort = screen.getByText('Sort choices')
+        const results = await screen.findByText('No results found')
+        expect(filters.compareDocumentPosition(sort))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(sort.compareDocumentPosition(results))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     })
 
     it('hydrates the competition search from a linked skill query', async () => {

@@ -39,6 +39,11 @@ skills/technologies field. Challenge-detail skill tags link back to
 owner-backed results are filtered immediately. Other opportunity domains
 retain their owner-specific skill facet where supported.
 
+On narrow layouts, Browse keeps the member's decision flow in document order:
+the title is followed by filters, then the sort/view toolbar, and finally the
+results. Desktop presents the same controls in the authored two-column grid,
+with the toolbar above the results and the filter panel beside them.
+
 ## List and grid views
 
 Every domain toolbar exposes the same accessible List/Grid selector from the
