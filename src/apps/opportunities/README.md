@@ -302,6 +302,9 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
+An empty Winners tab reflects the challenge lifecycle: cancelled challenges
+state that no winners were selected, drafts explain that judging has not run,
+and active challenges retain the ongoing-review guidance.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an

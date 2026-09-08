@@ -1838,6 +1838,41 @@ const WinnerCard: FC<WinnerCardProps> = props => {
     )
 }
 
+interface WinnerEmptyState {
+    text: string
+    title: string
+}
+
+/**
+ * Resolves winner copy from the challenge lifecycle so terminal or unpublished
+ * challenges are not described as ongoing.
+ *
+ * @param challenge Challenge API detail response without published winners.
+ * @returns lifecycle-specific winner empty-state title and explanation.
+ * @throws Does not throw; unknown active statuses retain the ongoing message.
+ */
+function winnerEmptyState(challenge: ChallengeOpportunity): WinnerEmptyState {
+    const status = challengeCatalogKey(challenge.status)
+    if (status.startsWith('cancelled') || status.startsWith('canceled')) {
+        return {
+            text: 'No winners were selected for this challenge.',
+            title: 'This challenge was cancelled',
+        }
+    }
+
+    if (status === 'draft') {
+        return {
+            text: 'Winners will be shown after the challenge runs and judging is complete.',
+            title: 'This challenge is still in draft',
+        }
+    }
+
+    return {
+        text: 'Once the review phase is over and the client selects the winners, you’ll see the results here.',
+        title: 'The challenge is still ongoing',
+    }
+}
+
 /**
  * Renders challenge winners once present in the Challenge API response.
  *
@@ -1901,10 +1936,11 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
     )
 
     if (!winners?.length) {
+        const emptyState = winnerEmptyState(props.challenge)
         return (
             <EmptyTab
-                title='The challenge is still ongoing'
-                text={'Once the review phase is over and the client selected the winners you\'ll see the results here.'}
+                text={emptyState.text}
+                title={emptyState.title}
             />
         )
     }

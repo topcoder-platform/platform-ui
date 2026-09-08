@@ -1125,6 +1125,35 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
+    it.each([
+        {
+            copy: 'No winners were selected for this challenge.',
+            status: 'CANCELLED_CLIENT_REQUEST',
+            title: 'This challenge was cancelled',
+        },
+        {
+            copy: 'Winners will be shown after the challenge runs and judging is complete.',
+            status: 'DRAFT',
+            title: 'This challenge is still in draft',
+        },
+    ])('describes an empty $status Winners tab without calling it ongoing', ({
+        copy,
+        status,
+        title,
+    }: { copy: string; status: string; title: string }) => {
+        mockChallenge = { ...mockChallenge, status }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByText(title))
+            .toBeInTheDocument()
+        expect(screen.getByText(copy))
+            .toBeInTheDocument()
+        expect(screen.queryByText('The challenge is still ongoing'))
+            .not.toBeInTheDocument()
+    })
+
     it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
         mockProfile = { handle: 'fourth', userId: 4 }
         mockChallenge = {
