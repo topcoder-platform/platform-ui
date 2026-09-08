@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
-import { FC, MouseEvent as ReactMouseEvent, useCallback, useContext, useMemo, useState } from 'react'
+import { FC, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
@@ -20,6 +20,8 @@ import {
     AiWorkflowRunsResponse,
     AiWorkflowRunStatusEnum,
     getAiWorkflowRunsCacheKey,
+    queueAiWorkflowRuns,
+    QueueAiWorkflowRunsResponse,
     retriggerAiWorkflowRun,
     useFetchAiWorkflowsRuns,
     useRolePermissions,
@@ -331,6 +333,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const { isAdmin, hasSubmitterRole, hasCopilotRole, isProjectManager }: UseRolePermissionsResult = rolePermissions
     const { mutate }: FullConfiguration = useSWRConfig()
     const [, setRerunningRunId] = useState<string | undefined>(undefined)
+    const [queueingRuns, setQueueingRuns] = useState<boolean>(false)
 
     /**
      * Only Copilot, Project Manager, and Admin can see WHO performed the action.
@@ -354,6 +357,66 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             setRerunningRunId(undefined)
         }
     }, [mutate, props.submission.id])
+
+    /**
+     * Queues the AI workflow runs that are configured for the submission but were
+     * never queued, e.g. because the virus scan / AI phase opened event was missed.
+     */
+    const handleQueueMissingRuns = useCallback(async (): Promise<void> => {
+        setQueueingRuns(true)
+        try {
+            const result: QueueAiWorkflowRunsResponse = await queueAiWorkflowRuns(props.submission.id)
+            await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
+
+            if (result.queued) {
+                toast.success(`Queued ${result.runs.length} AI review(s).`)
+            } else {
+                toast.info(result.message || 'There are no AI reviews to queue for this submission.')
+            }
+        } catch (error) {
+            handleError(error as Error)
+            toast.error('Failed to queue the AI review(s).')
+        } finally {
+            setQueueingRuns(false)
+        }
+    }, [mutate, props.submission.id])
+
+    /**
+     * Admin only action rendered next to the run result:
+     * - a workflow with no run at all can be queued manually
+     * - an existing (finished) run can be re-run
+     */
+    const buildRowAction = useCallback((row: AiReviewerRow): ReactNode => {
+        if (!isAdmin || row.run?.id === '-1') {
+            return undefined
+        }
+
+        if (!row.run) {
+            // The run was never queued for this workflow
+            return props.submission.virusScan === true && (
+                <Tooltip content='Queue missing AI reviews'>
+                    <IconOutline.PlayIcon
+                        className={classNames('icon-lg', styles.reRunIcon)}
+                        onClick={queueingRuns ? undefined : handleQueueMissingRuns}
+                    />
+                </Tooltip>
+            )
+        }
+
+        const runId = row.run.id
+        if (!runId || row.status === 'pending') {
+            return undefined
+        }
+
+        return (
+            <Tooltip content='Re-run the workflow'>
+                <IconOutline.RefreshIcon
+                    className={classNames('icon-lg', styles.reRunIcon)}
+                    onClick={function onClick() { handleRerun(runId) }}
+                />
+            </Tooltip>
+        )
+    }, [handleQueueMissingRuns, handleRerun, isAdmin, props.submission.virusScan, queueingRuns])
 
     const failedGatingReviewers = useMemo(
         () => reviewerRows
@@ -548,20 +611,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 <AiWorkflowRunStatus
                                     run={row.run}
                                     status={row.status}
-                                    action={
-                                        row.run?.id
-                                        && row.run?.id !== '-1'
-                                        && isAdmin
-                                        && row.status !== 'pending'
-                                        && (
-                                            <Tooltip content='Re-run the workflow'>
-                                                <IconOutline.RefreshIcon
-                                                    className={classNames('icon-lg', styles.reRunIcon)}
-                                                    onClick={function onClick() { handleRerun(row.run!.id) }}
-                                                />
-                                            </Tooltip>
-                                        )
-                                    }
+                                    action={buildRowAction(row)}
                                 />
                             </div>
                         </div>
@@ -682,20 +732,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 <AiWorkflowRunStatus
                                     status={row.status}
                                     run={row.run}
-                                    action={
-                                        row.run?.id
-                                        && row.run?.id !== '-1'
-                                        && isAdmin
-                                        && row.status !== 'pending'
-                                        && (
-                                            <Tooltip content='Re-run the workflow'>
-                                                <IconOutline.RefreshIcon
-                                                    className={classNames('icon-lg', styles.reRunIcon)}
-                                                    onClick={function onClick() { handleRerun(row.run!.id) }}
-                                                />
-                                            </Tooltip>
-                                        )
-                                    }
+                                    action={buildRowAction(row)}
                                 />
                             </td>
                             <td>
