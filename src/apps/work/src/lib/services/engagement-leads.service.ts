@@ -25,26 +25,35 @@ interface BackendLeadListResponse {
     }
 }
 
+function appendFilterParam(
+    params: URLSearchParams,
+    key: string,
+    value?: string | number,
+): void {
+    if (value === undefined || value === null || value === '') {
+        return
+    }
+
+    params.set(key, String(value))
+}
+
 export const fetchEngagementLeads = async (
     filters: EngagementLeadFilters = {},
 ): Promise<EngagementLeadListResponse> => {
     const params = new URLSearchParams()
 
-    if (filters.page) {
-        params.set('page', String(filters.page))
-    }
-
-    if (filters.perPage) {
-        params.set('perPage', String(filters.perPage))
-    }
-
-    if (filters.status) {
-        params.set('status', String(filters.status))
-    }
-
-    if (filters.priority) {
-        params.set('priority', String(filters.priority))
-    }
+    appendFilterParam(params, 'page', filters.page)
+    appendFilterParam(params, 'perPage', filters.perPage)
+    appendFilterParam(params, 'accountName', filters.accountName)
+    appendFilterParam(params, 'smu', filters.smu)
+    appendFilterParam(params, 'engagementModel', filters.engagementModel)
+    appendFilterParam(params, 'roleTitle', filters.roleTitle)
+    appendFilterParam(params, 'experienceLevel', filters.experienceLevel)
+    appendFilterParam(params, 'priority', filters.priority)
+    appendFilterParam(params, 'status', filters.status)
+    appendFilterParam(params, 'statusGroup', filters.statusGroup)
+    appendFilterParam(params, 'sortBy', filters.sortBy)
+    appendFilterParam(params, 'sortOrder', filters.sortOrder)
 
     const query = params.toString()
     const url = query ? `${LEADS_URL}?${query}` : LEADS_URL

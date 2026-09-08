@@ -73,10 +73,18 @@ export interface EngagementLeadPrefill {
 }
 
 export interface EngagementLeadFilters {
+    accountName?: string
+    engagementModel?: EngagementModel | string
+    experienceLevel?: ExperienceLevel | string
     page?: number
     perPage?: number
-    status?: EngagementLeadStatus | string
     priority?: LeadPriority | string
+    roleTitle?: string
+    smu?: string
+    sortBy?: 'createdAt' | 'preferredStartDate' | 'priority'
+    sortOrder?: 'asc' | 'desc'
+    status?: EngagementLeadStatus | string
+    statusGroup?: 'CONVERTED' | 'DECLINED' | 'NEW' | string
 }
 
 export interface EngagementLeadListResponse {

@@ -11,7 +11,7 @@ import {
 import {
     budgetApprovalsRouteId,
     challengesRouteId,
-    engagementLeadsRouteId,
+    // engagementLeadsRouteId, // Re-enable when Leads nav tab is restored
     engagementsRouteId,
     groupsRouteId,
     projectsRouteId,
@@ -45,10 +45,11 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
                 id: engagementsRouteId,
                 title: 'Engagements',
             },
-            {
-                id: engagementLeadsRouteId,
-                title: 'Engagement Leads',
-            },
+            // Re-enable Leads nav tab when ready:
+            // {
+            //     id: engagementLeadsRouteId,
+            //     title: 'Leads',
+            // },
         )
     }
 

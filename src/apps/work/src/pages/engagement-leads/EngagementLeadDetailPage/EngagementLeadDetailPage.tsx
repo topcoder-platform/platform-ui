@@ -32,6 +32,7 @@ import {
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
+import { fetchEngagement } from '../../../lib/services/engagements.service'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
 import styles from './EngagementLeadDetailPage.module.scss'
@@ -79,6 +80,9 @@ export const EngagementLeadDetailPage: FC = () => {
     const [error, setError] = useState<string | undefined>(undefined)
     const [updatingStatus, setUpdatingStatus] = useState<boolean>(false)
     const [projectId, setProjectId] = useState<string>('')
+    const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
+
+    const leadsBackUrl = `${rootRoute}/${engagementLeadsRouteId}`
 
     const loadLead = useCallback(async (): Promise<void> => {
         if (!leadId) {
@@ -139,6 +143,33 @@ export const EngagementLeadDetailPage: FC = () => {
         navigate(createUrl)
     }, [leadId, navigate, projectId])
 
+    const handleViewEngagement = useCallback(async (): Promise<void> => {
+        if (!lead?.convertedEngagementId || viewingEngagement) {
+            return
+        }
+
+        setViewingEngagement(true)
+
+        try {
+            const engagement = await fetchEngagement(lead.convertedEngagementId)
+            const engagementProjectId = String(engagement.projectId || engagement.project?.id || '')
+                .trim()
+
+            if (!engagementProjectId) {
+                showErrorToast('Unable to locate the project for this engagement.')
+                return
+            }
+
+            navigate(
+                `${rootRoute}/projects/${engagementProjectId}/engagements/${lead.convertedEngagementId}/view`,
+            )
+        } catch (err: unknown) {
+            showErrorToast(extractErrorMessage(err, 'Unable to open engagement.'))
+        } finally {
+            setViewingEngagement(false)
+        }
+    }, [lead?.convertedEngagementId, navigate, viewingEngagement])
+
     const canUpdateStatus = lead
         && lead.status !== EngagementLeadStatus.CONVERTED
         && lead.status !== EngagementLeadStatus.REJECTED
@@ -150,7 +181,7 @@ export const EngagementLeadDetailPage: FC = () => {
 
     return (
         <PageWrapper
-            backUrl={`${rootRoute}/${engagementLeadsRouteId}`}
+            backUrl={leadsBackUrl}
             breadCrumb={[]}
             pageTitle={lead?.roleTitle || 'Engagement Lead'}
         >
@@ -200,6 +231,19 @@ export const EngagementLeadDetailPage: FC = () => {
                                 </>
                             )}
                         </div>
+
+                        {lead.convertedEngagementId && (
+                            <Button
+                                disabled={viewingEngagement}
+                                primary
+                                onClick={() => {
+                                    handleViewEngagement()
+                                        .catch(() => undefined)
+                                }}
+                            >
+                                View Engagement
+                            </Button>
+                        )}
 
                         {canCreateEngagement && (
                             <div className={styles.createEngagementRow}>

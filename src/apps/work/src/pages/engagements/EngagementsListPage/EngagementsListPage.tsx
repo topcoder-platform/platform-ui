@@ -881,7 +881,9 @@ export const EngagementsListPage: FC = () => {
                                                     {column.label}
                                                     {filters.sortBy === column.fieldName
                                                         ? getSortIndicator(
-                                                            filters.sortBy as EngagementSortField | undefined,
+                                                            filters.sortBy as (
+                                                                EngagementSortField | undefined
+                                                            ),
                                                             (filters.sortOrder || 'asc') as SortOrder,
                                                         )
                                                         : ''}
@@ -940,7 +942,8 @@ export const EngagementsListPage: FC = () => {
                                     : 'Delete'
                             }
                             message={
-                                `Are you sure you want to delete "${engagementToDelete.title || 'this engagement'}"? `
+                                'Are you sure you want to delete '
+                                + `"${engagementToDelete.title || 'this engagement'}"? `
                                 + 'This action cannot be undone.'
                             }
                             onCancel={handleDeleteCancel}
