@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useContext } from 'react'
+import { FC, useContext, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -16,7 +16,8 @@ import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
  * Shows job facts, required skills (or N/A when none are authored), description,
  * eligibility notes and the application handoff, including closed/error states.
  * Advice resources open in an isolated tab; primary Gig and email links keep
- * their native navigation behavior.
+ * their native navigation behavior. Opening a new Gig resets the window scroll
+ * position so list-page scrolling cannot hide the detail header.
  */
 const GigDetailsPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
@@ -30,6 +31,11 @@ const GigDetailsPage: FC = () => {
     })
     const missing = error instanceof RecruitError && [400, 404].includes(error.status)
     const skills = job ? gigSkills(job) : []
+
+    useEffect(() => {
+        window.scrollTo({ left: 0, top: 0 })
+    }, [slug])
+
     return (
         <main className='gigs-container gigs-main'>
             <PageTitle>{`${job?.name || 'Gig details'} | Gigs | Topcoder`}</PageTitle>

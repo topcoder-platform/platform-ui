@@ -6,7 +6,8 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
   featured-first created/updated ordering, hotlist and ten jobs per result page.
 - `/gigs/:slug`: compensation, location, duration, weekly hours, timezone,
   required skills (displayed as `N/A` when Recruit has none), description,
-  eligibility notes and application handoff.
+  eligibility notes and application handoff. Entering a Gig detail route resets
+  inherited list-page scroll so its header is always visible.
 - `/gigs/:slug/apply`: sign-in with the full return URL, candidate prefill,
   resume upload, skill autocomplete/custom skills, weekly pay expectation,
   referral source, availability confirmations, policy dialogs and application
@@ -78,7 +79,7 @@ yarn test:no-watch --runInBand --watch=false --runTestsByPath \
   src/apps/gigs/src/pages/GigsPage.spec.tsx
 ```
 
-The tests cover discovery rules, salary fallbacks, required fields, consent and
+The tests cover discovery rules, detail-route scroll restoration, salary fallbacks, required fields, consent and
 availability, upload limits, legacy payload mapping, HTTP-200 error envelopes,
 expired authentication, prefill, submission retry and already-placed candidates.
 Also verify the listing, detail and anonymous apply route against real Recruit

@@ -70,7 +70,17 @@ function renderDetails(job: Gig): void {
 
 describe('GigDetailsPage', () => {
     beforeEach(() => {
+        jest.restoreAllMocks()
         jest.clearAllMocks()
+        jest.spyOn(window, 'scrollTo')
+            .mockImplementation(() => undefined)
+    })
+
+    it('resets inherited listing scroll when the detail route opens', () => {
+        renderDetails(openGig)
+
+        expect(window.scrollTo)
+            .toHaveBeenCalledWith({ left: 0, top: 0 })
     })
 
     it('renders N/A when Recruit does not provide any required skills', () => {
