@@ -187,7 +187,11 @@ const GigsPage: FC = () => {
                         Learn about the application process, read a quick guide for interviewing, and prepare
                         for your next opportunity.
                     </p>
-                    <a href={`${EnvironmentConfig.TOPCODER_URL}/community/gig-resources`}>
+                    <a
+                        href={`${EnvironmentConfig.TOPCODER_URL}/community/gig-resources`}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
                         Read our Gig Work resources
                     </a>
                 </aside>
