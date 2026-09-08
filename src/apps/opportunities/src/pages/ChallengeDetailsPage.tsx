@@ -1352,6 +1352,18 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     </div>
                 )}
             </div>
+            {!(isMarathonMatch && !props.mine && marathonView === 'dashboard')
+                && !privatePreviewGallery
+                && (
+                    <MobileTableSort
+                        label='Submission Date'
+                        onToggle={() => {
+                            setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
+                            setPage(1)
+                        }}
+                        order={sortOrder}
+                    />
+                )}
             {isMarathonMatch && !props.mine && marathonView === 'dashboard' ? (
                 <MarathonDashboard challenge={props.challenge} />
             ) : privatePreviewGallery ? (
@@ -1365,12 +1377,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     ))}
                 </div>
             ) : props.mine ? (
-                <div className={styles.tableCard}>
-                    <table className={isMarathonMatch
+                <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
+                    <table className={`${isMarathonMatch
                         ? styles.myMarathonTable
                         : isDesign || isQa
                             ? styles.myCompactSubmissionTable
-                            : styles.mySubmissionTable}
+                            : styles.mySubmissionTable} ${styles.mobileRecordTable}`}
                     >
                         <thead>
                             <tr>
@@ -1390,7 +1402,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                         <th>Test Status</th>
                                         <th>Test Progress</th>
                                         <th className={styles.scoreColumn}>Final Score</th>
-                                        <th className={styles.scoreColumn}>Provision Score</th>
+                                        <th className={styles.scoreColumn}>Provisional Score</th>
                                     </>
                                 ) : !isDesign && !isQa && (
                                     <>
@@ -1411,20 +1423,30 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     : ''
                                 return (
                                     <tr key={submission.id}>
-                                        <td><span className={styles.submissionId}>{submission.id}</span></td>
-                                        {!isMarathonMatch && <td>{submissionTypeLabel(submission.type)}</td>}
-                                        <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
+                                        <td data-mobile-label='Submission ID'>
+                                            <span className={styles.submissionId}>{submission.id}</span>
+                                        </td>
+                                        {!isMarathonMatch && (
+                                            <td data-mobile-label='Type'>
+                                                {submissionTypeLabel(submission.type)}
+                                            </td>
+                                        )}
+                                        <td data-mobile-label='Submission Date'>
+                                            {formatTimestamp(submission.submittedDate ?? submission.createdAt)}
+                                        </td>
                                         {isMarathonMatch ? (
                                             <>
-                                                <td>{progress.process ?? '—'}</td>
-                                                <td>
+                                                <td data-mobile-label='Current Test Process'>
+                                                    {progress.process ?? '—'}
+                                                </td>
+                                                <td data-mobile-label='Test Status'>
                                                     <span
                                                         className={`${styles.testStatus} ${statusClass}`}
                                                     >
                                                         {progress.status ?? '—'}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td data-mobile-label='Test Progress'>
                                                     <div className={styles.testProgress}>
                                                         <span className={styles.progressTrack}>
                                                             <span style={{ width: `${progress.progress ?? 0}%` }} />
@@ -1436,21 +1458,27 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className={styles.scoreColumn}>
+                                                <td
+                                                    className={styles.scoreColumn}
+                                                    data-mobile-label='Final Score'
+                                                >
                                                     {formatMarathonScore(scores.finalScore, '-')}
                                                 </td>
-                                                <td className={styles.scoreColumn}>
+                                                <td
+                                                    className={styles.scoreColumn}
+                                                    data-mobile-label='Provisional Score'
+                                                >
                                                     {formatMarathonScore(scores.provisionalScore, 'N/A')}
                                                 </td>
                                             </>
                                         ) : !isDesign && !isQa ? (
                                             <>
-                                                <td>
+                                                <td data-mobile-label='Current Status'>
                                                     <span className={styles.currentStatus}>
                                                         {submissionStatusLabel(submission.status)}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td data-mobile-label='Score'>
                                                     {formatMarathonScore(
                                                         scores.finalScore ?? scores.provisionalScore,
                                                         '-',
@@ -1458,7 +1486,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 </td>
                                             </>
                                         ) : undefined}
-                                        <td>
+                                        <td data-mobile-label='Actions'>
                                             <div className={styles.submissionActions}>
                                                 {(isDesign || isQa || isMarathonMatch) && (
                                                     <button
@@ -1473,7 +1501,9 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 )}
                                                 {isMarathonMatch && (
                                                     <button
-                                                        aria-label={`Download submission artifacts ${submission.id}`}
+                                                        aria-label={
+                                                            `Download submission artifacts ${submission.id}`
+                                                        }
                                                         onClick={() => setArtifactsSubmissionId(submission.id)}
                                                         title='Download submission artifacts'
                                                         type='button'
@@ -1497,7 +1527,9 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 )}
                                                 {!isMarathonMatch && (
                                                     <a
-                                                        aria-label={`Open submission ${submission.id} in Review App`}
+                                                        aria-label={
+                                                            `Open submission ${submission.id} in Review App`
+                                                        }
                                                         href={reviewUrl}
                                                         rel='noreferrer'
                                                         target='_blank'
@@ -1530,14 +1562,14 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     </table>
                 </div>
             ) : (
-                <div className={styles.tableCard}>
-                    <table className={isMarathonMatch
+                <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
+                    <table className={`${isMarathonMatch
                         ? styles.marathonTable
                         : isQa
                             ? styles.qaSubmissionTable
                             : isDesign
                                 ? styles.designSubmissionTable
-                                : styles.developmentSubmissionTable}
+                                : styles.developmentSubmissionTable} ${styles.mobileRecordTable}`}
                     >
                         <thead>
                             <tr>
@@ -1568,7 +1600,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     ?? undefined
                                 return (
                                     <tr key={submission.id}>
-                                        <td>
+                                        <td data-mobile-label='Handle'>
                                             <MemberHandle
                                                 handle={submissionHandle(submission)}
                                                 link={!!profile?.handle
@@ -1580,13 +1612,24 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 rating={rating}
                                             />
                                         </td>
-                                        {!isDesign && <td className={ratingClass(rating)}>{rating ?? '—'}</td>}
-                                        <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
+                                        {!isDesign && (
+                                            <td
+                                                className={ratingClass(rating)}
+                                                data-mobile-label='Rating'
+                                            >
+                                                {rating ?? '—'}
+                                            </td>
+                                        )}
+                                        <td data-mobile-label='Submission Date'>
+                                            {formatTimestamp(submission.submittedDate ?? submission.createdAt)}
+                                        </td>
                                         {isMarathonMatch && (
-                                            <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
+                                            <td data-mobile-label='Provisional Score'>
+                                                {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                            </td>
                                         )}
                                         {isMarathonMatch && (
-                                            <td>
+                                            <td data-mobile-label='Final Score'>
                                                 {formatMarathonFinalScore(
                                                     showAllSubmissionFinalScores
                                                         ? scores.finalScore
@@ -1596,10 +1639,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             </td>
                                         )}
                                         {isQa && (
-                                            <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
+                                            <td data-mobile-label='Initial Score'>
+                                                {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                            </td>
                                         )}
                                         {isQa && (
-                                            <td>
+                                            <td data-mobile-label='Final Score'>
                                                 {formatMarathonScore(
                                                     showAllSubmissionFinalScores
                                                         ? scores.finalScore
@@ -1608,7 +1653,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                 )}
                                             </td>
                                         )}
-                                        <td>
+                                        <td data-mobile-label='Action'>
                                             <button
                                                 className={styles.historyLink}
                                                 onClick={() => setHistorySubmission(submission)}

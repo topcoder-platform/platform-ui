@@ -677,6 +677,44 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveClass('mobileRecordTable')
     })
 
+    it('renders public and authored submissions as labeled mobile records', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            rating: 1450,
+            status: 'ACTIVE',
+            submitterHandle: 'coder',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Submission Date' }))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual(['Handle', 'Rating', 'Submission Date', 'Action'])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual([
+                'Submission ID',
+                'Type',
+                'Submission Date',
+                'Current Status',
+                'Score',
+                'Actions',
+            ])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+    })
+
     it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
@@ -998,7 +1036,7 @@ describe('ChallengeDetailsPage member flows', () => {
             'Test Status',
             'Test Progress',
             'Final Score',
-            'Provision Score',
+            'Provisional Score',
         ]
         headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
             .toBeInTheDocument())
@@ -1012,6 +1050,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('cell', { name: '99.904666' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '99.904666' }))
+            .toHaveAttribute('data-mobile-label', 'Provisional Score')
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
         expect(screen.queryByRole('link', {

@@ -170,6 +170,11 @@ each API row as the Figma key/value card. Registration Date remains a
 server-backed sort and moves above the card so members do not need to pan a
 desktop-width table to find it.
 
+All Submissions and My Submissions use the same responsive record-card
+contract. Every track-specific field and action receives a visible mobile key,
+while Submission Date sorting stays above the card and continues to request
+owner-sorted pages.
+
 ## Challenge Markdown table of contents
 
 Challenge descriptions are safe Markdown. Authors create the generated table
