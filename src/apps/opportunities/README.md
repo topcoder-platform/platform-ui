@@ -294,7 +294,9 @@ exception. Scores retain the full numeric precision available from the API
 without display rounding across Submissions, My Submissions, Winners,
 submission history, and Marathon Match dashboard tooltips and accessible data.
 Thousands separators, valid zero, and negative scorer sentinels retain their
-established handling.
+established handling. The wide My Submissions scorer table scrolls within its
+card so those full-precision values cannot overlap adjacent score or action
+columns.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a

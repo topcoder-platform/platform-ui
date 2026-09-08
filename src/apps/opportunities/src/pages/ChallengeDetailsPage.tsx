@@ -1308,7 +1308,11 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     ))}
                 </div>
             ) : props.mine ? (
-                <div className={styles.tableCard}>
+                <div
+                    className={`${styles.tableCard} ${isMarathonMatch
+                        ? styles.myMarathonTableCard
+                        : ''}`}
+                >
                     <table className={isMarathonMatch
                         ? styles.myMarathonTable
                         : isDesign || isQa

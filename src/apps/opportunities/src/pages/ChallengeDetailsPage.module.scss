@@ -430,9 +430,9 @@
     th:nth-child(3) { width: 168px; }
     th:nth-child(4) { width: 120px; }
     th:nth-child(5) { width: 149px; }
-    th:nth-child(6) { width: 120px; }
-    th:nth-child(7) { width: 141px; }
-    th:nth-child(8) { width: 108px; }
+    th:nth-child(6),
+    th:nth-child(7) { width: 170px; }
+    th:nth-child(8) { width: 144px; }
 
     th:nth-child(2),
     td:nth-child(2) {
@@ -444,7 +444,17 @@
     }
 
     .scoreColumn {
+        overflow-wrap: anywhere;
+        padding-inline: 8px;
         text-align: right;
+    }
+}
+
+.myMarathonTableCard {
+    overflow-x: auto;
+
+    .myMarathonTable {
+        min-width: 1280px;
     }
 }
 

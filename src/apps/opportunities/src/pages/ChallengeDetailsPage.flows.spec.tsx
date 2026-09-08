@@ -1068,9 +1068,9 @@ describe('ChallengeDetailsPage member flows', () => {
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
-            finalScore: 99.797812,
+            finalScore: 99.31399426811394,
             id: 'submission-1',
-            provisionalScore: 99.904666,
+            provisionalScore: 99.08838088531581,
         }]
 
         renderPage()
@@ -1090,10 +1090,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.797812' }))
+        const finalScore = screen.getByRole('cell', { name: '99.31399426811394' })
+        expect(finalScore)
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.904666' }))
+        expect(screen.getByRole('cell', { name: '99.08838088531581' }))
             .toBeInTheDocument()
+        expect(finalScore.closest('.tableCard'))
+            .toHaveClass('myMarathonTableCard')
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
         expect(screen.queryByRole('link', {
