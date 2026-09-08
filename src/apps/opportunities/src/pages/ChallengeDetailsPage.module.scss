@@ -1171,6 +1171,20 @@
         margin-bottom: 8px;
     }
 
+    .mySubmissionHeading {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+
+        .reviewAppButton {
+            align-self: stretch;
+            box-sizing: border-box;
+            justify-content: center;
+            width: 100%;
+        }
+    }
+
     .mobileTableSort {
         align-items: center;
         appearance: none;

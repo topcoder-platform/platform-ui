@@ -1313,7 +1313,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     )
     return (
         <div className={styles.tableSection}>
-            <div className={styles.submissionHeading}>
+            <div className={`${styles.submissionHeading} ${props.mine ? styles.mySubmissionHeading : ''}`}>
                 <div>
                     <h2>{props.mine ? 'My Submissions' : 'All Submissions'}</h2>
                     {props.mine && <p>Manage your submissions or upload new.</p>}
@@ -2209,7 +2209,7 @@ const MySubmissionsEmpty: FC<{
     reviewUrl: string
 }> = props => (
     <section className={styles.mySubmissionsEmpty}>
-        <div className={styles.submissionHeading}>
+        <div className={`${styles.submissionHeading} ${styles.mySubmissionHeading}`}>
             <div>
                 <h2>My Submissions</h2>
                 <p>Manage your submissions or upload new.</p>

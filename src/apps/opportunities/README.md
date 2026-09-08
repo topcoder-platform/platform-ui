@@ -175,6 +175,10 @@ contract. Every track-specific field and action receives a visible mobile key,
 while Submission Date sorting stays above the card and continues to request
 owner-sorted pages.
 
+The My Submissions heading keeps its Review App handoff, but phone layouts
+stack that action below the heading copy at full content width so neither the
+title nor its description is compressed or overlaid.
+
 ## Challenge Markdown table of contents
 
 Challenge descriptions are safe Markdown. Authors create the generated table

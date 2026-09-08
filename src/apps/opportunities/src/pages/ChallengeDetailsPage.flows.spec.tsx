@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { PropsWithChildren } from 'react'
+import { readFileSync } from 'fs'
 import '@testing-library/jest-dom'
 import {
     fireEvent,
@@ -38,6 +39,7 @@ let mockRegistrants: Record<string, unknown>[]
 let mockReviewSummations: Record<string, unknown>[]
 let mockSubmissions: Record<string, unknown>[]
 let mockWinnerStats: Record<string, unknown>[]
+const challengeDetailStyles = readFileSync(`${__dirname}/ChallengeDetailsPage.module.scss`, 'utf8')
 
 jest.mock('../assets/medal-1.svg', () => 'medal-1')
 jest.mock('../assets/medal-2.svg', () => 'medal-2')
@@ -713,6 +715,25 @@ describe('ChallengeDetailsPage member flows', () => {
             ])
         expect(screen.getByRole('table'))
             .toHaveClass('mobileRecordTable')
+    })
+
+    it('stacks the My Submissions action below its copy on phone viewports', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const heading = screen.getByRole('heading', { name: 'My Submissions' })
+        expect(heading.parentElement?.parentElement)
+            .toHaveClass('mySubmissionHeading')
+        expect(within(heading.parentElement?.parentElement as HTMLElement)
+            .getByRole('link', { name: 'Open Review App' }))
+            .toBeInTheDocument()
+        expect(challengeDetailStyles)
+            .toContain('.mySubmissionHeading {')
+        expect(challengeDetailStyles)
+            .toContain('flex-direction: column;')
     })
 
     it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
