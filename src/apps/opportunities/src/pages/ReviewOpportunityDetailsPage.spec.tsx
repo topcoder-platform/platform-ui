@@ -255,6 +255,28 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
     })
 
+    it('renders all application fields as labeled mobile records', () => {
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /Applications/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Application Date' }))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual([
+                'Handle',
+                'Role',
+                'Application Date',
+                'Handle',
+                'Role',
+                'Application Date',
+            ])
+        expect(screen.getByRole('table').className)
+            .toContain('applicationTable')
+        expect(reviewDetailStyles)
+            .toContain('.applicationTable {')
+    })
+
     it('uses member ratings to color application handles', () => {
         const opportunityResponse = {
             data: reviewFixture(),

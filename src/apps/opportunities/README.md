@@ -260,6 +260,9 @@ unavailable. Application rows use an API-provided `maxRating` when present and
 otherwise batch public Members API profiles so handles follow Topcoder's rating
 palette. Application Date starts newest-first and its keyboard-accessible
 header toggles ascending/descending order while resetting local pagination.
+On phone viewports, each application becomes a labeled Handle, Role, and
+Application Date record within the same semantic table; its date sort moves
+above the white card and retains the desktop ordering behavior.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style

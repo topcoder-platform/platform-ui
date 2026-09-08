@@ -17,6 +17,7 @@ import {
 } from '~/libs/core'
 import { DefaultMemberIcon, IconOutline, LoadingSpinner } from '~/libs/ui'
 
+import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
 import reviewOpenPositionsIcon from '../assets/review-open-positions.svg'
 import reviewPeriodIcon from '../assets/review-period.svg'
@@ -177,6 +178,36 @@ function formatPayment(value?: number): string {
     })
         .format(value ?? 0)
 }
+
+interface MobileApplicationSortProps {
+    direction: ApplicationDateSort
+    onToggle: () => void
+}
+
+/**
+ * Renders the Application Date sorter above the Figma mobile application card.
+ *
+ * @param props active direction and the same toggle used by the desktop header.
+ * @returns mobile-only, keyboard-accessible application sort action.
+ * @throws Does not throw.
+ */
+const MobileApplicationSort: FC<MobileApplicationSortProps> = props => (
+    <button
+        aria-label='Sort by Application Date'
+        className={styles.mobileApplicationSort}
+        onClick={props.onToggle}
+        title={`Sort application date ${props.direction === 'ascending' ? 'descending' : 'ascending'}`}
+        type='button'
+    >
+        <SortIcon aria-hidden='true' />
+        <strong>Sort by</strong>
+        <span>Application Date</span>
+        <IconOutline.ChevronDownIcon
+            aria-hidden='true'
+            className={props.direction === 'ascending' ? styles.sortAscending : undefined}
+        />
+    </button>
+)
 
 /**
  * Renders a public review opportunity with API-authoritative reviewer gating.
@@ -601,9 +632,13 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
             role='tabpanel'
         >
             <h2>Applications</h2>
+            <MobileApplicationSort
+                direction={sortDirection}
+                onToggle={toggleApplicationDateSort}
+            />
             <div className={styles.applications}>
                 <div className={styles.tableScroll}>
-                    <table>
+                    <table className={styles.applicationTable}>
                         <thead>
                             <tr>
                                 <th>Handle</th>
@@ -641,7 +676,7 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                             ?? `${application.userId}-${application.role}-${application.applicationDate
                                                 ?? application.createdAt}`}
                                     >
-                                        <td>
+                                        <td data-mobile-label='Handle'>
                                             <span className={styles.member}>
                                                 <i>
                                                     {photoURL
@@ -661,8 +696,10 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                                 )}
                                             </span>
                                         </td>
-                                        <td>{reviewRoleLabel(application.role)}</td>
-                                        <td>
+                                        <td data-mobile-label='Role'>
+                                            {reviewRoleLabel(application.role)}
+                                        </td>
+                                        <td data-mobile-label='Application Date'>
                                             {formatApplicationDate(
                                                 application.applicationDate ?? application.createdAt,
                                             )}
