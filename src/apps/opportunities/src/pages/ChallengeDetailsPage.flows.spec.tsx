@@ -30,7 +30,7 @@ let mockRegistration: { id: string } | undefined
 let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
-let mockMemberResource: { id: string } | undefined
+let mockMemberResource: { id: string; roleName?: string } | undefined
 let mockMySubmissionCount: number | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
@@ -117,8 +117,14 @@ jest.mock('../components', () => ({
             )}
         </header>
     ),
-    ChallengeForum: (props: { canCreateAnnouncements?: boolean }): JSX.Element => (
-        <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
+    ChallengeForum: (props: {
+        canCreateAnnouncements?: boolean
+        canDeleteTopics?: boolean
+    }): JSX.Element => (
+        <div>
+            {props.canCreateAnnouncements ? 'Announcement forum content' : 'Forum content'}
+            {props.canDeleteTopics ? ' with topic deletion' : ''}
+        </div>
     ),
     ChallengeSidebar: (): JSX.Element => <aside />,
     ChallengeSubmissionUpload: (props: {
@@ -527,7 +533,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
 
         fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
-        expect(screen.getByText('Administrator forum content'))
+        expect(screen.getByText('Announcement forum content with topic deletion'))
             .toBeInTheDocument()
     })
 
@@ -546,7 +552,7 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('shows the member forum to a copilot resource without treating it as registration', () => {
         mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
-        mockMemberResource = { id: 'copilot-resource' }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
 
         renderPage()
 
@@ -555,8 +561,10 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: 'My Submissions' }))
             .not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
-        expect(screen.getByText('Forum content'))
+        expect(screen.getByText('Announcement forum content'))
             .toBeInTheDocument()
+        expect(screen.queryByText(/topic deletion/))
+            .not.toBeInTheDocument()
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {

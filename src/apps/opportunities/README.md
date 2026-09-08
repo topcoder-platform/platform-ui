@@ -384,10 +384,10 @@ complete API result, including topics created by the current member.
 Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
-actions remain registration-only. Administrators may create ordinary topics or
-official announcements, delete topics, and reply throughout every challenge
-forum. Topic authors may edit their own unlocked topics, but deletion remains
-administrator-only to match the legacy forum.
+actions remain registration-only. Administrators and assigned challenge
+copilots may create ordinary topics or official announcements and reply
+throughout every challenge forum. Topic authors may edit their own unlocked
+topics, but deletion remains administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
 1000-character description while keeping attachments optional. Files upload

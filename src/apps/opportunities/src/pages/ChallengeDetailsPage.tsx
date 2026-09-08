@@ -283,6 +283,9 @@ export const ChallengeDetailsPage: FC = () => {
     const registration = registrationResponse.data
     const isAdministrator = profile?.roles?.some(role => role.trim()
         .toLowerCase() === 'administrator') ?? false
+    const isChallengeCopilot = memberResourceResponse.data?.roleName?.trim()
+        .toLowerCase()
+        .includes('copilot') ?? false
     const isRegistered = !!registration
     const hasMemberTabAccess = isRegistered || isAdministrator
     const hasForumAccess = hasMemberTabAccess || !!memberResourceResponse.data
@@ -654,8 +657,9 @@ export const ChallengeDetailsPage: FC = () => {
                 >
                     <ChallengeTabContent
                         activeTab={activeTab}
+                        canCreateForumAnnouncements={isAdministrator || isChallengeCopilot}
+                        canDeleteForumTopics={isAdministrator}
                         challenge={challenge}
-                        isAdministrator={isAdministrator}
                         memberId={memberId}
                         onCloseSubmission={closeSubmission}
                         onContactSupport={() => setIssueOpen(true)}
@@ -712,8 +716,9 @@ export const ChallengeDetailsPage: FC = () => {
 
 interface ChallengeTabContentProps {
     activeTab: ChallengeTab
+    canCreateForumAnnouncements: boolean
+    canDeleteForumTopics: boolean
     challenge: ChallengeOpportunity
-    isAdministrator: boolean
     memberId?: string
     onCloseSubmission: () => void
     onContactSupport: () => void
@@ -785,7 +790,8 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'forum') {
         return (
             <ForumTab
-                canCreateAnnouncements={props.isAdministrator}
+                canCreateAnnouncements={props.canCreateForumAnnouncements}
+                canDeleteTopics={props.canDeleteForumTopics}
                 challenge={props.challenge}
                 memberId={props.memberId}
             />
@@ -1688,18 +1694,19 @@ const SubmissionPreview: FC<{
 /**
  * Renders the authenticated in-page Challenge Discussion workflow.
  *
- * @param props challenge context, administrator announcement access, and optional authenticated member ID.
+ * @param props challenge context, forum announcement/delete access, and optional authenticated member ID.
  * @returns topic list, creation, threaded detail, and mutation workflows.
  * @throws Does not throw.
  */
 const ForumTab: FC<{
     canCreateAnnouncements: boolean
+    canDeleteTopics: boolean
     challenge: ChallengeOpportunity
     memberId?: string
 }> = props => (
     <ChallengeForum
         canCreateAnnouncements={props.canCreateAnnouncements}
-        canDeleteTopics={props.canCreateAnnouncements}
+        canDeleteTopics={props.canDeleteTopics}
         challenge={props.challenge}
         memberId={props.memberId}
     />
