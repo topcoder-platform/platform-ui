@@ -96,6 +96,14 @@ to the selected reviewer role and keeps the incremental amount as the payment
 for each additional submission. Missing card amounts are labeled `TBD` rather
 than presented as free work.
 
+Approved applications, rather than pending applications, consume reviewer
+capacity. When `remainingPositions` reaches zero, eligible reviewers can still
+use the detail CTA to join the waitlist; the page explains that outcome before
+submission and confirms it afterward. Review API persists these applications as
+`PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
+while capacity remains full, then naturally return to `Applied` if a position
+reopens or to `Approved` when the reviewer is selected.
+
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The

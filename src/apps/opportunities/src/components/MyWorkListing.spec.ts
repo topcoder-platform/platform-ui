@@ -206,6 +206,13 @@ describe('My Work normalization', () => {
             myApplications: [{ status: 'REJECTED' }],
         } as ReviewOpportunity)))
             .toBe('Rejected')
+        expect(myWorkState(workItem('reviews', {
+            challengeId: 'waitlisted-challenge',
+            id: 'waitlisted-review',
+            myApplications: [{ status: 'PENDING' }],
+            remainingPositions: 0,
+        } as ReviewOpportunity)))
+            .toBe('Waitlisted')
     })
 
     it('places engagement rows into active and past buckets by effective member status', () => {

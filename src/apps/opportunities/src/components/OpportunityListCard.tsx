@@ -56,6 +56,7 @@ import {
 } from './challenge-card.utils'
 import {
     reviewFirstSubmissionPayment,
+    reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
 } from '../utils/review-opportunity.utils'
 import styles from './OpportunityListCard.module.scss'
@@ -262,10 +263,11 @@ function applicationState(applied: boolean, open: boolean): string {
  *
  * @param item Review API opportunity containing caller-scoped applications.
  * @param open whether the review opportunity still accepts applications.
- * @returns Approved, Rejected, Cancelled, Applied, or the public availability state.
+ * @returns Approved, Rejected, Cancelled, Waitlisted, Applied, or the public availability state.
  * @throws Does not throw.
  */
 function reviewApplicationState(item: ReviewOpportunity, open: boolean): string {
+    if (reviewOpportunityIsWaitlisted(item)) return 'Waitlisted'
     const statusKey = challengeCatalogKey(item.myApplications?.[0]?.status)
     const terminalLabels: Record<string, string> = {
         approved: 'Approved',
@@ -767,7 +769,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
     const stateKey = challengeCatalogKey(card.state)
     const stateIsAccepted = ['accepted', 'approved', 'assigned', 'completed', 'selected'].includes(stateKey)
-    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview'].includes(stateKey)
+    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview', 'waitlisted'].includes(stateKey)
     const stateIsClosed = [
         'applicationclosed',
         'cancelled',

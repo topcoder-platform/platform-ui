@@ -37,6 +37,8 @@ import {
     CHALLENGE_EXPLAINED_URL,
     memberProfileUrl,
     reviewFirstSubmissionPayment,
+    reviewOpportunityIsFull,
+    reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
     REVIEW_PROCESS_LEARNING_URL,
     REVIEWER_LEARNING_URL,
@@ -211,7 +213,12 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             || 'REVIEWER')
     }, [opportunity])
 
-    /** Applies through the Review API and refreshes server-authoritative state. */
+    /**
+     * Applies through Review API, confirms any waitlist placement, and refreshes authoritative state.
+     *
+     * @returns resolves after the application request and detail refresh finish.
+     * @throws Does not throw; request errors are presented through a toast.
+     */
     const apply = async (): Promise<void> => {
         if (!profile) {
             window.location.assign(authUrlLogin(window.location.href))
@@ -223,11 +230,14 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             || opportunity.defaultApplicationRole
             || opportunity.applicationRoles?.[0]
             || 'REVIEWER'
+        const joinsWaitlist = reviewOpportunityIsFull(opportunity)
         setBusy(true)
         try {
             await applyToReviewOpportunity(opportunity.id, role)
             await response.mutate()
-            toast.success('Your reviewer application was submitted.')
+            toast.success(joinsWaitlist
+                ? "You've joined the reviewer waitlist."
+                : 'Your reviewer application was submitted.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Application failed.')
         } finally {
@@ -261,9 +271,13 @@ export const ReviewOpportunityDetailsPage: FC = () => {
         )
     const applications = opportunity.applications?.filter(application => application.status !== 'CANCELLED') ?? []
     const applicationTotal = applications.length
+    const isWaitlisted = reviewOpportunityIsWaitlisted(opportunity)
+    const willJoinWaitlist = opportunity.canApply && reviewOpportunityIsFull(opportunity)
     const disabledLabel = !isReviewer
         ? 'Apply to be a reviewer'
-        : REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
+        : isWaitlisted
+            ? 'Waitlisted'
+            : REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
     const disabledReason = !profile
         ? REASON_LABELS.NOT_AUTHENTICATED
         : !isReviewer
@@ -402,6 +416,12 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                     </select>
                                 </label>
                             )}
+                            {willJoinWaitlist && (
+                                <p className={styles.waitlistNotice}>
+                                    All reviewer positions are currently filled. You can still apply and join the
+                                    waitlist.
+                                </p>
+                            )}
                             <button
                                 disabled={!opportunity.canApply || busy || !isReviewer}
                                 onClick={apply}
@@ -412,7 +432,9 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                 {busy
                                     ? 'Applying…'
                                     : opportunity.canApply && isReviewer
-                                        ? 'Apply to be a reviewer'
+                                        ? willJoinWaitlist
+                                            ? 'Join reviewer waitlist'
+                                            : 'Apply to be a reviewer'
                                         : disabledLabel}
                             </button>
                         </aside>

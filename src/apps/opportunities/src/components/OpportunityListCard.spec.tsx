@@ -820,4 +820,27 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByText('Rejected').className)
             .toContain('stateClosed')
     })
+
+    it('shows a pending reviewer as waitlisted after approved capacity is filled', () => {
+        const item: ReviewOpportunity = {
+            canApply: false,
+            challengeId: 'waitlist-challenge',
+            challengeName: 'Full review opportunity',
+            id: 'waitlist-review',
+            myApplications: [{ status: 'PENDING' }],
+            openPositions: 1,
+            remainingPositions: 0,
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Waitlisted').className)
+            .toContain('stateApplied')
+        expect(screen.queryByText('Applied'))
+            .not.toBeInTheDocument()
+    })
 })

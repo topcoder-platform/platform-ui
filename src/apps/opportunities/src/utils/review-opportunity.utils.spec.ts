@@ -2,6 +2,8 @@ import { ReviewOpportunity } from '../models'
 
 import {
     reviewFirstSubmissionPayment,
+    reviewOpportunityIsFull,
+    reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
 } from './review-opportunity.utils'
 
@@ -59,5 +61,40 @@ describe('reviewFirstSubmissionPayment', () => {
             .toBe(0.23)
         expect(reviewFirstSubmissionPayment({ challengeId: 'challenge-id', id: 'review-id' }))
             .toBeUndefined()
+    })
+})
+
+describe('review opportunity waitlist state', () => {
+    it('treats an explicit zero remainder as filled capacity', () => {
+        expect(reviewOpportunityIsFull({
+            approvedApplicationCount: 2,
+            challengeId: 'challenge-id',
+            id: 'review-id',
+            openPositions: 2,
+            remainingPositions: 0,
+        }))
+            .toBe(true)
+    })
+
+    it('labels only a pending caller application as waitlisted while capacity is full', () => {
+        const opportunity: ReviewOpportunity = {
+            challengeId: 'challenge-id',
+            id: 'review-id',
+            myApplications: [{ status: 'PENDING' }],
+            remainingPositions: 0,
+        }
+
+        expect(reviewOpportunityIsWaitlisted(opportunity))
+            .toBe(true)
+        expect(reviewOpportunityIsWaitlisted({
+            ...opportunity,
+            myApplications: [{ status: 'APPROVED' }],
+        }))
+            .toBe(false)
+        expect(reviewOpportunityIsWaitlisted({
+            ...opportunity,
+            remainingPositions: 1,
+        }))
+            .toBe(false)
     })
 })

@@ -12,6 +12,7 @@ import {
     Route,
     Routes,
 } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import { ReviewOpportunity } from '../models'
 import { applyToReviewOpportunity } from '../services'
@@ -20,6 +21,7 @@ import { ReviewOpportunityDetailsPage } from './ReviewOpportunityDetailsPage'
 
 const mockUseSWR = jest.fn()
 const mockedApplyToReviewOpportunity = applyToReviewOpportunity as jest.Mock
+const mockedToastSuccess = toast.success as jest.Mock
 let mockProfile: { roles: string[]; userId: number } | undefined
 
 jest.mock('swr', () => ({
@@ -318,6 +320,60 @@ describe('ReviewOpportunityDetailsPage', () => {
             expect(mutate)
                 .toHaveBeenCalled()
         })
+    })
+
+    it('keeps a full opportunity open and confirms reviewer waitlist placement', async () => {
+        const mutate = jest.fn()
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                approvedApplicationCount: 2,
+                canApply: true,
+                openPositions: 2,
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate,
+        })
+
+        renderPage()
+
+        expect(screen.getByText(/All reviewer positions are currently filled/))
+            .toBeInTheDocument()
+        const waitlistButton = screen.getByRole('button', { name: 'Join reviewer waitlist' })
+        expect(waitlistButton)
+            .toBeEnabled()
+        fireEvent.click(waitlistButton)
+
+        await waitFor(() => {
+            expect(mockedApplyToReviewOpportunity)
+                .toHaveBeenCalledWith('review-id', 'REVIEWER')
+            expect(mutate)
+                .toHaveBeenCalled()
+            expect(mockedToastSuccess)
+                .toHaveBeenCalledWith("You've joined the reviewer waitlist.")
+        })
+    })
+
+    it('shows the caller waitlisted state after a full-opportunity application', () => {
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                canApply: false,
+                canApplyReason: 'ALREADY_APPLIED',
+                myApplications: [{ status: 'PENDING' }],
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('button', { name: 'Waitlisted' }))
+            .toBeDisabled()
     })
 
     it('labels the review start truthfully when the API has no posted timestamp', () => {
