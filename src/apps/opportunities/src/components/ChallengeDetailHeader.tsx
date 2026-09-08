@@ -660,6 +660,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         className={styles.expandedTimeline}
                         id='challenge-timeline'
                     >
+                        <small className={styles.timelineTimezone}>
+                            {`Time zone: ${timelineTimezone()}`}
+                        </small>
                         <div className={styles.timelineGraphic}>
                             <div aria-hidden='true' className={styles.timelineRail}>
                                 {expandedTimeline.map((item, index) => (
@@ -704,9 +707,6 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 ))}
                             </ol>
                         </div>
-                        <small className={styles.timelineTimezone}>
-                            {`Time zone: ${timelineTimezone()}`}
-                        </small>
                     </section>
                 )}
             </div>
