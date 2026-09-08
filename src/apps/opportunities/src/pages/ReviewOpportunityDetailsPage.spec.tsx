@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
+import { readFileSync } from 'fs'
 import {
     fireEvent,
     render,
@@ -23,6 +24,7 @@ const mockUseSWR = jest.fn()
 const mockedApplyToReviewOpportunity = applyToReviewOpportunity as jest.Mock
 const mockedToastSuccess = toast.success as jest.Mock
 let mockProfile: { roles: string[]; userId: number } | undefined
+const reviewDetailStyles = readFileSync(`${__dirname}/ReviewOpportunityDetailsPage.module.scss`, 'utf8')
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -289,6 +291,20 @@ describe('ReviewOpportunityDetailsPage', () => {
 
         expect(window.scrollTo)
             .toHaveBeenCalledWith({ left: 0, top: 0 })
+    })
+
+    it('anchors the clipped header decoration to compensation on mobile', () => {
+        renderPage()
+
+        const decoration = screen.getByTestId('review-header-decoration')
+        const compensation = screen.getByText('Compensation')
+            .closest('aside')
+        expect(compensation)
+            .toContainElement(decoration)
+        expect(reviewDetailStyles)
+            .toContain('right: -250px;')
+        expect(reviewDetailStyles)
+            .toContain('top: 0;')
     })
 
     it('uses the centered per-submission compensation and applies for an eligible reviewer', async () => {

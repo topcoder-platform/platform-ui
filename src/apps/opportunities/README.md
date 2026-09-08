@@ -247,6 +247,11 @@ authored outline glyphs, while the Thrive card reuses the authored book asset.
 The two Thrive actions open the published Topcoder Review Process and Topcoder
 Challenges Explained articles rather than an unfiltered search page.
 
+The review-header ring decoration is anchored behind the compensation card.
+At phone and small-tablet widths it starts at that card's top edge and remains
+clipped by the dark header, keeping breadcrumbs, title, tags, and review
+metadata free of decorative overlap.
+
 Review challenge chips merge tags, legacy technologies, and standardized
 skills. List pages batch-hydrate missing skill names from Challenge API; a
 detail response missing `challengeData.skills` performs the equivalent single
