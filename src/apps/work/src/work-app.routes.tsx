@@ -24,6 +24,8 @@ import {
     engagementEditRouteId,
     engagementExperienceRouteId,
     engagementFeedbackRouteId,
+    engagementLeadDetailRouteId,
+    engagementLeadsRouteId,
     engagementsRouteId,
     groupsEditRouteId,
     groupsRouteId,
@@ -110,6 +112,14 @@ const EngagementFeedbackPage: LazyLoadedComponent = lazyLoad(
 
 const EngagementExperiencePage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementExperiencePage'),
+)
+
+const EngagementLeadsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagement-leads/EngagementLeadsListPage'),
+)
+
+const EngagementLeadDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagement-leads/EngagementLeadDetailPage'),
 )
 
 const TaasListPage: LazyLoadedComponent = lazyLoad(
@@ -312,6 +322,28 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: engagementsRouteId,
                 route: engagementsRouteId,
                 title: 'Engagements',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementLeadsListPage />
+                    </EngagementsRouteGuard>
+                ),
+                id: engagementLeadsRouteId,
+                route: engagementLeadsRouteId,
+                title: 'Engagement Leads',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementLeadDetailPage />
+                    </EngagementsRouteGuard>
+                ),
+                id: engagementLeadDetailRouteId,
+                route: `${engagementLeadsRouteId}/:leadId`,
+                title: 'Engagement Lead Detail',
             },
             {
                 authRequired: true,
