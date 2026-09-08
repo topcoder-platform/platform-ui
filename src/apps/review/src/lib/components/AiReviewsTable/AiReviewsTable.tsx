@@ -394,7 +394,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         if (!row.run) {
             // The run was never queued for this workflow
             return props.submission.virusScan === true && (
-                <Tooltip content='Queue this AI review'>
+                <Tooltip content='Queue missing AI reviews'>
                     <IconOutline.PlayIcon
                         className={classNames('icon-lg', styles.reRunIcon)}
                         onClick={queueingRuns ? undefined : handleQueueMissingRuns}
