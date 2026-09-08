@@ -40,7 +40,7 @@ import {
 import { sortOpportunityItems } from '../utils/opportunity-listing.utils'
 
 const V6_URL = EnvironmentConfig.API.V6
-const LEGACY_COPILOT_PAGE_SIZE = 1000
+const COPILOT_MAX_PAGE_SIZE = 200
 const MAX_LEGACY_COPILOT_PAGES = 20
 const LEGACY_COPILOT_APPLICATION_PAGE_SIZE = 200
 const LEGACY_COPILOT_APPLICATION_BATCH_SIZE = 12
@@ -435,6 +435,39 @@ async function hydrateReviewOpportunitySkills(
 }
 
 /**
+ * Hydrates a review detail whose Review API snapshot predates standardized
+ * challenge skills. The linked Challenge API record is authoritative and the
+ * detail remains usable when that optional compatibility request fails.
+ *
+ * @param opportunity Review API detail response.
+ * @returns opportunity with standardized challenge skills when available.
+ * @throws Does not throw; visibility and network failures retain the Review API response.
+ */
+async function hydrateReviewOpportunityDetailSkills(
+    opportunity: ReviewOpportunity,
+): Promise<ReviewOpportunity> {
+    if (Array.isArray(opportunity.challengeData?.skills) && opportunity.challengeData.skills.length) {
+        return opportunity
+    }
+
+    try {
+        const challenge = await xhrGetAsync<ChallengeOpportunity>(
+            `${V6_URL}/challenges/${encodeURIComponent(opportunity.challengeId)}`,
+        )
+        if (!challenge.skills?.length) return opportunity
+        return {
+            ...opportunity,
+            challengeData: {
+                ...(opportunity.challengeData ?? {}),
+                skills: challenge.skills,
+            },
+        }
+    } catch {
+        return opportunity
+    }
+}
+
+/**
  * Converts any supported aggregation response shape to the four-cell UI contract.
  *
  * @param payload aggregation service response.
@@ -712,7 +745,7 @@ function isLegacyCopilotQueryError(error: unknown): boolean {
 function buildLegacyCopilotPageUrl(page: number): string {
     const url = new URL(`${V6_URL}/projects/copilots/opportunities`)
     url.searchParams.set('page', String(page))
-    url.searchParams.set('pageSize', String(LEGACY_COPILOT_PAGE_SIZE))
+    url.searchParams.set('pageSize', String(COPILOT_MAX_PAGE_SIZE))
     // The pre-discovery deployment rejects startDate; fetch with its supported
     // creation-date sort and apply the selected semantic sort after aggregation.
     url.searchParams.set('sort', 'createdAt desc')
@@ -770,16 +803,17 @@ async function loadClientSortItems(
     kind: 'copilots' | 'engagements',
     filters: OpportunityFilters,
 ): Promise<any[]> {
+    const ownerPageSize = kind === 'copilots' ? COPILOT_MAX_PAGE_SIZE : CLIENT_SORT_PAGE_SIZE
     const ownerFilters: OpportunityFilters = {
         ...filters,
         page: 1,
-        perPage: CLIENT_SORT_PAGE_SIZE,
+        perPage: ownerPageSize,
         sort: 'newest',
     }
     const firstResponse = await xhrGlobalInstance.get(
         buildOpportunityPageUrl(kind, ownerFilters),
     ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
-    const firstPage = normalizePage(firstResponse, 1, CLIENT_SORT_PAGE_SIZE)
+    const firstPage = normalizePage(firstResponse, 1, ownerPageSize)
     const totalPages = Math.min(MAX_CLIENT_SORT_PAGES, Math.max(1, firstPage.totalPages))
     const remainingResponses = totalPages > 1
         ? await loadPagesInBatches(
@@ -795,7 +829,7 @@ async function loadClientSortItems(
         ...remainingResponses.flatMap((response, index) => normalizePage(
             response,
             index + 2,
-            CLIENT_SORT_PAGE_SIZE,
+            ownerPageSize,
         ).items),
     ]
 }
@@ -978,7 +1012,7 @@ async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<Opport
     const firstResponse = await xhrGlobalInstance.get(
         buildLegacyCopilotPageUrl(1),
     ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
-    const firstPage = normalizePage(firstResponse, 1, LEGACY_COPILOT_PAGE_SIZE)
+    const firstPage = normalizePage(firstResponse, 1, COPILOT_MAX_PAGE_SIZE)
     const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
     const remainingResponses = totalPages > 1
         ? await loadPagesInBatches(
@@ -991,7 +1025,7 @@ async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<Opport
         ...remainingResponses.flatMap((response, index) => normalizePage(
             response,
             index + 2,
-            LEGACY_COPILOT_PAGE_SIZE,
+            COPILOT_MAX_PAGE_SIZE,
         ).items),
     ].map(normalizeCopilotOpportunity)
     const facetFiltered = filterLegacyCopilotOpportunities(allItems, {
@@ -1235,7 +1269,7 @@ export async function getReviewOpportunity(opportunityId: string): Promise<Revie
     const response = await xhrGetAsync<ReviewOpportunity | ApiEnvelope<ReviewOpportunity>>(
         `${V6_URL}/review-opportunities/${encodeURIComponent(opportunityId)}`,
     )
-    return unwrap(response)
+    return hydrateReviewOpportunityDetailSkills(unwrap(response))
 }
 
 /**

@@ -230,7 +230,9 @@ export interface ReviewApplicationSummary {
     handle?: string
     id?: string
     latestCompletedReviews?: number
+    maxRating?: number
     openReviews?: number
+    photoURL?: string
     role?: string
     status?: string
     userHandle?: string
@@ -254,6 +256,7 @@ export interface ReviewOpportunity {
     challengeData?: Record<string, any>
     challengeId: string
     challengeName?: string
+    createdAt?: string
     duration?: number
     defaultApplicationRole?: string
     id: string

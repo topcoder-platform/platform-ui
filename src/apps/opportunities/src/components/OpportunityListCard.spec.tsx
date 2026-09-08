@@ -678,7 +678,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             challengeId: 'challenge-id',
             challengeName: 'Review this challenge',
             id: 'review-id',
-            payments: [{ payment: 100, role: 'Reviewer', roleId: 1 }],
+            incrementalPayment: 0.55,
+            payments: [{ payment: 1.43, role: 'Reviewer', roleId: 1 }],
             startDate: '2026-06-22T00:00:00.000Z',
             status: 'OPEN',
         }
@@ -694,7 +695,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Payment:'))
             .toBeInTheDocument()
-        expect(screen.getByText('$100'))
+        expect(screen.getByText('$1.98'))
             .toBeInTheDocument()
         expect(screen.getByText('Applications:'))
             .toBeInTheDocument()

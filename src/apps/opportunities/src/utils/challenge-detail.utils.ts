@@ -100,6 +100,19 @@ export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
 }
 
 /**
+ * Reads the legacy design-challenge stock-photography allowance.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns true only when Work Manager explicitly enables stock art.
+ * @throws Does not throw.
+ */
+export function challengeAllowsStockArt(challenge: ChallengeOpportunity): boolean {
+    return String(challengeMetadataValue(challenge.metadata, 'allowStockArt'))
+        .trim()
+        .toLowerCase() === 'true'
+}
+
+/**
  * Converts an arbitrary value to a positive integer.
  *
  * @param value candidate numeric value.

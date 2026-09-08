@@ -219,11 +219,20 @@ jest.mock('../utils', () => ({
     challengeReviewAppUrl: (challengeId: string): string => (
         `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
     ),
-    challengeTrackLabel: (track?: string): string => track ?? 'challenge',
+    challengeTrackLabel: (track?: string): string => (
+        track?.replace(/[^a-z]/gi, '')
+            .toLowerCase() === 'qualityassurance' ? 'QA' : track ?? 'challenge'
+    ),
     challengeTrackWins: (stats?: {
         DEVELOP?: { wins?: number }
+        QA?: { wins?: number }
         wins?: number
-    }): number | undefined => stats?.DEVELOP?.wins ?? stats?.wins,
+    }, track?: string): number | undefined => (
+        track?.replace(/[^a-z]/gi, '')
+            .toLowerCase() === 'qualityassurance'
+            ? stats?.QA?.wins ?? stats?.wins
+            : stats?.DEVELOP?.wins ?? stats?.wins
+    ),
     formatMarathonFinalScore: (score: number | undefined, fallback: string): string => (
         score === undefined ? fallback : String(Math.max(0, score))
     ),
@@ -1312,6 +1321,40 @@ describe('ChallengeDetailsPage member flows', () => {
                 .not.toHaveTextContent('rating'))
         expect(screen.queryByRole('table', { name: 'Remaining winners' }))
             .not.toBeInTheDocument()
+    })
+
+    it('shows ratings and QA win labels in a two-winner Quality Assurance podium', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            track: 'Quality Assurance',
+            winners: [
+                { handle: 'first', placement: 1, userId: '1' },
+                { handle: 'second', placement: 2, userId: '2' },
+            ],
+        }
+        mockMemberProfiles = [
+            { handle: 'first', maxRating: 1600, userId: '1' },
+            { handle: 'second', maxRating: 1500, userId: '2' },
+        ]
+        mockWinnerStats = [
+            { handle: 'first', stats: { QA: { wins: 17 } } },
+            { handle: 'second', stats: { QA: { wins: 8 } } },
+        ]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        const cards = screen.getAllByRole('article')
+        expect(cards)
+            .toHaveLength(2)
+        expect(cards[0])
+            .toHaveTextContent('17 QA wins')
+        expect(cards[0])
+            .toHaveTextContent('1600 rating')
+        expect(cards[1])
+            .toHaveTextContent('1500 rating')
+        expect(cards[0])
+            .not.toHaveTextContent('Quality Assurance wins')
     })
 
     it('shows the rating in the exact one-winner podium state', () => {

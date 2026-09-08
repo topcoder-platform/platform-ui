@@ -358,6 +358,7 @@
     span {
         font-size: 12px;
         line-height: 16px;
+        white-space: nowrap;
     }
 }
 
@@ -605,6 +606,7 @@
         line-height: 30px;
         text-transform: none;
 
+        img,
         svg {
             color: #161616;
             height: 20px;
@@ -703,13 +705,25 @@
         border-bottom: 1px solid #a8a8a8;
         font-weight: 700;
 
-        > span {
+        > button {
             align-items: center;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            cursor: pointer;
             display: inline-flex;
+            font: inherit;
             gap: 8px;
+            padding: 0;
+
+            &:focus-visible {
+                outline: 2px solid #0f62fe;
+                outline-offset: 3px;
+            }
 
             svg {
                 height: 14px;
+                transition: transform .15s ease;
                 width: 14px;
             }
         }
@@ -738,9 +752,11 @@
         height: 32px;
         overflow: hidden;
 
+        img,
         svg {
             display: block;
             height: 32px;
+            object-fit: cover;
             width: 32px;
         }
     }
@@ -752,6 +768,10 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+}
+
+.sortAscending {
+    transform: rotate(180deg);
 }
 
 .emptyApplications {

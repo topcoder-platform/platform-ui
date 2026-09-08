@@ -1,6 +1,31 @@
 import { ReviewOpportunity } from '../models'
 
 /**
+ * Normalizes Review API enum and display role names for payment matching.
+ *
+ * @param value role enum or display label.
+ * @returns lowercase alphanumeric role key.
+ * @throws Does not throw.
+ */
+function reviewRoleKey(value?: string): string {
+    return (value ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * Converts a Review API payment value to a finite number.
+ *
+ * @param value numeric API field.
+ * @returns finite payment or undefined.
+ * @throws Does not throw.
+ */
+function finitePayment(value?: number): number | undefined {
+    const payment = Number(value)
+    return Number.isFinite(payment) ? payment : undefined
+}
+
+/**
  * Normalizes one review challenge tag or skill value into a non-empty label.
  *
  * @param value challenge tag, technology, or skill entry from the Review API snapshot.
@@ -35,4 +60,28 @@ export function reviewOpportunityLabels(opportunity: ReviewOpportunity): string[
         ...technologies.map(reviewOpportunityLabel),
         ...skills.map(reviewOpportunityLabel),
     ].filter(Boolean)))
+}
+
+/**
+ * Calculates compensation for the first reviewed submission. Review API's
+ * role payment is the fixed reviewer component and `incrementalPayment` is
+ * earned for every reviewed submission, including the first one.
+ *
+ * @param opportunity Review API opportunity payment contract.
+ * @param role optional selected application role.
+ * @returns first-submission compensation, or undefined when no base value exists.
+ * @throws Does not throw.
+ */
+export function reviewFirstSubmissionPayment(
+    opportunity: ReviewOpportunity,
+    role?: string,
+): number | undefined {
+    const selectedRolePayment = role
+        ? opportunity.payments?.find(payment => reviewRoleKey(payment.role) === reviewRoleKey(role))
+        : opportunity.payments?.[0]
+    const basePayment = finitePayment(selectedRolePayment?.payment ?? opportunity.basePayment)
+    if (basePayment === undefined) return undefined
+
+    const incrementalPayment = finitePayment(opportunity.incrementalPayment)
+    return basePayment + (incrementalPayment ?? 0)
 }

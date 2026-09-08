@@ -31,6 +31,7 @@ import {
     getMemberChallengeRegistrationIds,
     getOpportunityPage,
     getOpportunitySummary,
+    getReviewOpportunity,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
 } from './opportunities.service'
@@ -537,42 +538,53 @@ describe('opportunities service normalization', () => {
     it('sorts only active Copilot custom payments before applying UI pagination', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         get.mockReset()
-        get.mockResolvedValueOnce({
-            data: [
-                {
+        get
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        data: {
+                            opportunityTitle: 'Lower',
+                            otherPaymentType: '$100',
+                            paymentType: 'other',
+                        },
+                        id: 'lower',
+                    },
+                    {
+                        data: {
+                            opportunityTitle: 'Standard',
+                            otherPaymentType: '$50',
+                            paymentType: 'standard',
+                        },
+                        id: 'standard',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '3',
+                        'x-total-pages': '2',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
                     data: {
                         opportunityTitle: 'Higher',
                         otherPaymentType: '$2,000',
                         paymentType: 'other',
                     },
                     id: 'higher',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '2',
+                        'x-per-page': '200',
+                        'x-total': '3',
+                        'x-total-pages': '2',
+                    } as Record<string, string>)[name],
                 },
-                {
-                    data: {
-                        opportunityTitle: 'Lower',
-                        otherPaymentType: '$100',
-                        paymentType: 'other',
-                    },
-                    id: 'lower',
-                },
-                {
-                    data: {
-                        opportunityTitle: 'Standard',
-                        otherPaymentType: '$50',
-                        paymentType: 'standard',
-                    },
-                    id: 'standard',
-                },
-            ],
-            headers: {
-                get: (name: string) => ({
-                    'x-page': '1',
-                    'x-per-page': '1000',
-                    'x-total': '3',
-                    'x-total-pages': '1',
-                } as Record<string, string>)[name],
-            },
-        })
+            })
 
         await expect(getOpportunityPage('copilots', {
             page: 1,
@@ -587,6 +599,12 @@ describe('opportunities service normalization', () => {
                 total: 3,
                 totalPages: 3,
             })
+
+        expect(get.mock.calls.map(call => {
+            const url = new URL(String(call[0]))
+            return [url.searchParams.get('page'), url.searchParams.get('pageSize')]
+        }))
+            .toEqual([['1', '200'], ['2', '200']])
     })
 
     it('falls back to locally filtered legacy Copilot results during API rollout', async () => {
@@ -626,7 +644,7 @@ describe('opportunities service normalization', () => {
                 headers: {
                     get: (name: string) => ({
                         'x-page': '1',
-                        'x-per-page': '1000',
+                        'x-per-page': '200',
                         'x-total': '3',
                         'x-total-pages': '1',
                     } as Record<string, string>)[name],
@@ -651,7 +669,7 @@ describe('opportunities service normalization', () => {
 
         const legacyUrl = new URL(String(globalGet.mock.calls.at(-1)?.[0]))
         expect(legacyUrl.searchParams.get('pageSize'))
-            .toBe('1000')
+            .toBe('200')
         expect(legacyUrl.searchParams.get('noGrouping'))
             .toBe('true')
         expect(legacyUrl.searchParams.has('search'))
@@ -679,7 +697,7 @@ describe('opportunities service normalization', () => {
                 headers: {
                     get: (name: string) => ({
                         'x-page': '1',
-                        'x-per-page': '1000',
+                        'x-per-page': '200',
                         'x-total': '3',
                         'x-total-pages': '1',
                     } as Record<string, string>)[name],
@@ -725,7 +743,7 @@ describe('opportunities service normalization', () => {
                 headers: {
                     get: (name: string) => ({
                         'x-page': '1',
-                        'x-per-page': '1000',
+                        'x-per-page': '200',
                         'x-total': '3',
                         'x-total-pages': '1',
                     } as Record<string, string>)[name],
@@ -933,6 +951,55 @@ describe('opportunities service normalization', () => {
             .toBe('/v6/challenges')
         expect(challengeUrl.searchParams.getAll('ids[]'))
             .toEqual(['challenge-id'])
+    })
+
+    it('hydrates missing Review detail skills from its authoritative challenge', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                result: {
+                    content: {
+                        challengeData: { technologies: [] },
+                        challengeId: 'challenge/id',
+                        id: 'review-id',
+                    },
+                },
+            })
+            .mockResolvedValueOnce({
+                id: 'challenge/id',
+                name: 'Challenge',
+                skills: [{ id: 'skill-id', name: 'TypeScript' }],
+            })
+
+        await expect(getReviewOpportunity('review/id'))
+            .resolves.toMatchObject({
+                challengeData: { skills: [{ id: 'skill-id', name: 'TypeScript' }] },
+                id: 'review-id',
+            })
+        expect(get.mock.calls.map(call => call[0]))
+            .toEqual([
+                'https://api.example/v6/review-opportunities/review%2Fid',
+                'https://api.example/v6/challenges/challenge%2Fid',
+            ])
+    })
+
+    it('keeps Review details usable when optional skill hydration is unavailable', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                challengeData: { technologies: ['React'] },
+                challengeId: 'challenge-id',
+                id: 'review-id',
+            })
+            .mockRejectedValueOnce(new Error('Challenge unavailable'))
+
+        await expect(getReviewOpportunity('review-id'))
+            .resolves.toMatchObject({
+                challengeData: { technologies: ['React'] },
+                id: 'review-id',
+            })
     })
 
     it('loads the challenge AI review configuration used by Review Style', async () => {

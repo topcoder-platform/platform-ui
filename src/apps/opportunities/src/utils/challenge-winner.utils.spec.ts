@@ -21,6 +21,12 @@ describe('challenge winner utilities', () => {
             .toBeUndefined()
         expect(challengeTrackLabel({ track: 'DATA_SCIENCE' }))
             .toBe('DATA_SCIENCE')
+        expect(challengeTrackLabel('Quality Assurance'))
+            .toBe('QA')
+        expect(challengeTrackLabel({ track: 'QUALITY_ASSURANCE' }))
+            .toBe('QA')
+        expect(challengeTrackLabel(undefined, 'Competition'))
+            .toBe('Competition')
     })
 
     it('matches the Members API top-level Development win count', () => {

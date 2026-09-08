@@ -67,15 +67,20 @@ Review API owns payment ordering. For Engagement and Copilot prize sorts, the
 client combines bounded owner pages before sorting and then restores the
 requested page, so ordering remains correct across page boundaries. Missing
 numeric compensation remains after priced opportunities in both directions.
+Copilot aggregation requests at most 200 rows per Projects API page, matching
+that endpoint's validated page-size contract while retaining global ordering.
 Copilot rows marked with the Standard payment type remain unpriced for sorting;
 an obsolete `otherPaymentType` value retained by Projects API must not move a
 Standard row among numeric custom payments.
 Selecting a different result page scrolls the browser back to the top so the
 new page begins at its heading rather than at the prior page's footer.
 
-Review cards include the Review API's first role payment, falling back to its
-base payment. Missing amounts are labeled `TBD` rather than presented as free
-work.
+Review cards present the first-submission total: the first role's fixed
+`payments[].payment` (or legacy `basePayment`) plus one
+`incrementalPayment`. The detail compensation card applies that same formula
+to the selected reviewer role and keeps the incremental amount as the payment
+for each additional submission. Missing card amounts are labeled `TBD` rather
+than presented as free work.
 
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
@@ -186,6 +191,26 @@ field is present for the caller.
   Because AI is an exact-tag synthetic Challenge API facet rather than a
   persisted Review track, Review searches resolve AI challenge IDs through
   Challenge API and combine them with selected catalog tracks before paging.
+  Open listings rely on Review API to exclude opportunities whose challenge or
+  review window has ended; the client deliberately does not discard rows after
+  server pagination because that would make totals and pages incorrect.
+
+Review detail navigation resets the viewport for each opportunity ID. The
+header reads the persisted review-opportunity `createdAt` value as “Posted” and
+uses the start-date label only as a compatibility fallback for an older Review
+API response. Its date, open-position, and review-period metrics use the
+authored outline glyphs, while the Thrive card reuses the authored book asset.
+The two Thrive actions open the published Topcoder Review Process and Topcoder
+Challenges Explained articles rather than an unfiltered search page.
+
+Review challenge chips merge tags, legacy technologies, and standardized
+skills. List pages batch-hydrate missing skill names from Challenge API; a
+detail response missing `challengeData.skills` performs the equivalent single
+challenge compatibility lookup and remains usable if that optional request is
+unavailable. Application rows use an API-provided `maxRating` when present and
+otherwise batch public Members API profiles so handles follow Topcoder's rating
+palette. Application Date starts newest-first and its keyboard-accessible
+header toggles ascending/descending order while resetting local pagination.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
@@ -267,7 +292,9 @@ scores high-to-low, matching its downward sort indicator, and the accessible
 Final Score header toggles low-to-high; unavailable scores remain after scored
 rows in either direction and the three-card podium remains placement-ordered.
 Winner stats use the Members API top-level track totals; Development does not
-add the nested AI Engineering value a second time.
+add the nested AI Engineering value a second time. Quality Assurance winner
+cards use the compact `QA` label and always include member ratings, including
+the two- and three-winner podium layouts.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
@@ -338,20 +365,26 @@ S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 category, body, and any uploaded links into that description without inventing
 unsupported request fields.
 
-The challenge rail parses case-insensitive `fileTypes`, `submissionLimit`,
-`environment`, and `codeRepo` metadata, shows safe Challenge API discussions
-and attachments, and fails closed for unsafe or retired-host URLs. Positive
+The challenge rail parses case-insensitive `fileTypes`, `allowStockArt`,
+`submissionLimit`, `environment`, and `codeRepo` metadata, shows safe Challenge
+API discussions and attachments, and fails closed for unsafe or retired-host
+URLs. Design source-file labels appear only when authored and never synthesize
+Figma; the stock-photography allowance appears only when Work Manager explicitly
+enables it. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
 handoff. Review Style uses the authored document-search rail icon. Development
 challenges omit Challenge Links, Source files, and Submission limit while
 adding the published AI Reviewers help and Usable Code rules to Educational
-Materials. Marathon Matches retain only their dedicated competition guide even
-when the challenge track is Development; the latter two submission sections
-remain Design-only. Learning
-arrows flow immediately after wrapped labels. The Design link reads “How to
+Materials. Quality Assurance challenges add the published Bug Hunt and QA
+competition-type guides. Marathon Matches retain only their dedicated
+competition guide even when the challenge track is Development; the latter two
+submission sections remain Design-only. Learning arrows flow immediately after
+wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
-wrapping. The AI Exponential promo keeps a distinct gap before its action.
+wrapping. The AI Exponential promo keeps a distinct gap before its action and
+routes through the configured Topcoder environment to the AI Exponential League
+hub.
 Marathon Match challenges replace the general AI Exponential promo with the
 Marathon Match Tournament heading and copy. Its Explore the program link opens
 the environment's Marathon Match

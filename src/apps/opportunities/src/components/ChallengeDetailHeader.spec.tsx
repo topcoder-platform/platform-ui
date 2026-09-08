@@ -71,6 +71,28 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveAttribute('href', '/opportunities/competitions?search=Probability')
     })
 
+    it('uses the compact QA label for Quality Assurance challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        track: { name: 'Quality Assurance', track: 'QUALITY_ASSURANCE' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('QA'))
+            .toHaveClass('qaTrack')
+        expect(screen.queryByText('Quality Assurance'))
+            .not.toBeInTheDocument()
+    })
+
     it('shows only Register for an unregistered open challenge', () => {
         render(
             <MemoryRouter>
