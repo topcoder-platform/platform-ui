@@ -60,14 +60,18 @@ export async function getGig(slug: string): Promise<Gig> {
     return recruitRequest<Gig>(`${RECRUIT_URL}/jobs/${encodeURIComponent(slug)}`)
 }
 
-/** Looks up the signed-in member's existing candidate profile; no match returns undefined, failures reject. */
+/**
+ * Looks up the signed-in member's existing candidate profile through Recruit's public search endpoint.
+ * Normalizes both its current direct-array response and the older `{ data }` envelope; no match returns
+ * undefined, while malformed responses and request failures reject.
+ */
 export async function getCandidate(email: string): Promise<Candidate | undefined> {
-    const result = await recruitRequest<{ data: Candidate[] }>(
+    const result = await recruitRequest<Candidate[] | { data?: Candidate[] }>(
         `${RECRUIT_URL}/candidates/search?email=${encodeURIComponent(email)}`,
-        true,
     )
-    if (!Array.isArray(result.data)) throw new RecruitError('We could not load your Gig Work profile.', 502)
-    return result.data[0]
+    const candidates = Array.isArray(result) ? result : result.data
+    if (!Array.isArray(candidates)) throw new RecruitError('We could not load your Gig Work profile.', 502)
+    return candidates[0]
 }
 
 /** Posts a multipart application with the refreshed member token; resolves only on confirmed success. */

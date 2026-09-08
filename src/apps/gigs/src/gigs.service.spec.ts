@@ -13,6 +13,7 @@ const originalFetch = global.fetch
 
 beforeEach(() => {
     global.fetch = fetchMock
+    jest.clearAllMocks()
     fetchMock.mockReset();
     (tokenGetAsync as jest.Mock).mockResolvedValue({ token: 'member-token' })
 })
@@ -46,11 +47,25 @@ describe('Recruit API integration', () => {
         fetchMock.mockResolvedValue(response(closed))
         await expect(getGig('fulfilled')).resolves.toEqual(closed)
     })
-    it('encodes member email and distinguishes no prior profile from a failed lookup', async () => {
-        fetchMock.mockResolvedValue(response({ data: [] }))
+    it('loads the current direct-array candidate contract without unnecessary authentication', async () => {
+        const candidate = { slug: 'candidate-slug' }
+        fetchMock.mockResolvedValue(response([candidate]))
+        await expect(getCandidate('member+tag@example.com')).resolves.toEqual(candidate)
+        expect(fetchMock)
+            .toHaveBeenCalledWith(
+                'https://www.topcoder-dev.com/api/recruit/candidates/search?email=member%2Btag%40example.com',
+                expect.objectContaining({ headers: {} }),
+            )
+        expect(tokenGetAsync).not.toHaveBeenCalled()
+    })
+    it('supports the legacy candidate envelope and distinguishes no profile from malformed data', async () => {
+        const candidate = { slug: 'candidate-slug' }
+        fetchMock.mockResolvedValue(response({ data: [candidate] }))
+        await expect(getCandidate('member@example.com')).resolves.toEqual(candidate)
+        fetchMock.mockResolvedValue(response([]))
         await expect(getCandidate('member+tag@example.com')).resolves.toBeUndefined()
-        expect(fetchMock.mock.calls[0][0])
-            .toContain('email=member%2Btag%40example.com')
+        fetchMock.mockResolvedValue(response({ candidates: [] }))
+        await expect(getCandidate('member@example.com')).rejects.toThrow('Gig Work profile')
         fetchMock.mockResolvedValue(response({ error: true }, 503))
         await expect(getCandidate('member@example.com')).rejects.toThrow()
     })

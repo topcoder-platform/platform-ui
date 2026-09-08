@@ -31,9 +31,10 @@ with the opener relationship removed.
 ## Data and behavior
 
 `gigs.service.ts` uses the environment's community-app `/api/recruit` endpoints.
-Public listings/details need no member token. Candidate lookup and applications
-use the refreshed platform token. Applications preserve the existing multipart
-`form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. A saved
+Public listings, details and candidate lookup need no member token; candidate
+lookup accepts both Recruit's current direct array and its legacy `{ data }`
+envelope. Applications use the refreshed platform token and preserve the existing
+multipart `form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. A saved
 resume may be reused; otherwise PDF/DOCX up to **8,000,000 bytes** is required to
 match the server's multer limit. No success state appears without an explicit
 `success: true` response. HTTP errors and Recruit error envelopes returned with
