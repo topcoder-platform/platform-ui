@@ -204,6 +204,9 @@ header reads the persisted review-opportunity `createdAt` value as “Posted” 
 uses the start-date label only as a compatibility fallback for an older Review
 API response. Its date, open-position, and review-period metrics use the
 authored outline glyphs, while the Thrive card reuses the authored book asset.
+At widths up to 760px, the decorative header rings sit at the bottom right by
+the compensation card, keeping the title, skills, and review metrics clear as
+the content wraps. Desktop ring positioning is unchanged.
 The two Thrive actions open the published Topcoder Review Process and Topcoder
 Challenges Explained articles rather than an unfiltered search page.
 
