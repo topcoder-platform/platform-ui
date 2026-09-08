@@ -32,7 +32,7 @@ describe('MarathonDashboard', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockedGetReviewSummations.mockResolvedValue([{
-            aggregateScore: 35.12,
+            aggregateScore: 35.123456789,
             createdAt: '2026-06-03T10:00:00.000Z',
             id: 'summation',
             isPassing: true,
@@ -57,12 +57,16 @@ describe('MarathonDashboard', () => {
             .toBeInTheDocument()
         const chart = screen.getByTestId('marathon-chart')
         expect(chart)
-            .toHaveAttribute('data-options', expect.stringContaining('35.12'))
+            .toHaveAttribute('data-options', expect.stringContaining('"scoreLabel":"35.123456789"'))
+        expect(chart)
+            .toHaveAttribute('data-options', expect.stringContaining('Score: <b>{point.custom.scoreLabel}</b>'))
         expect(chart)
             .toHaveAttribute('data-options', expect.stringContaining('coder'))
         expect(mockedGetReviewSummations)
             .toHaveBeenCalledWith('challenge')
         expect(screen.getByRole('table', { name: 'Marathon Match submission scores over time' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '35.123456789' }))
             .toBeInTheDocument()
     })
 

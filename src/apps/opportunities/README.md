@@ -290,9 +290,11 @@ Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
 member's own current AI decision score is the intentional active-challenge
-exception. Positive Marathon Match scores use the product-wide two-decimal
-display convention across Submissions, My Submissions, and Winners, while
-valid zero and negative scorer sentinels retain their established handling.
+exception. Scores retain the full numeric precision available from the API
+without display rounding across Submissions, My Submissions, Winners,
+submission history, and Marathon Match dashboard tooltips and accessible data.
+Thousands separators, valid zero, and negative scorer sentinels retain their
+established handling.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a

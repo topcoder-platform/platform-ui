@@ -69,7 +69,7 @@ describe('SubmissionHistoryModal', () => {
                     onClose={onClose}
                     open
                     reviewSummations={[{
-                        aggregateScore: 31.25,
+                        aggregateScore: 31.25123456789,
                         id: 'summation',
                         isProvisional: true,
                         submissionId: 'submission-two',
@@ -95,7 +95,7 @@ describe('SubmissionHistoryModal', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('columnheader', { name: 'Status' }))
             .not.toBeInTheDocument()
-        expect(screen.getByText('31.25'))
+        expect(screen.getByText('31.25123456789'))
             .toBeInTheDocument()
         expect(screen.getByText('50'))
             .toBeInTheDocument()

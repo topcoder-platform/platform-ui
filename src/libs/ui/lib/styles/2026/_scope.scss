@@ -15,7 +15,8 @@ $tc-2026-apps:
     'body.reports-app',
     // Keep Opportunities isolated from universal navigation while allowing
     // CSS-module component colors to override these low-specificity defaults.
-    ':where(.opportunities-app)';
+    ':where(.opportunities-app)',
+    ':where(.gigs-app)';
 
 @each $app in $tc-2026-apps {
     #{$app} {
