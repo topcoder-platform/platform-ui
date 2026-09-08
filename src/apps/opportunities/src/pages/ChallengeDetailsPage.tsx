@@ -89,6 +89,7 @@ import {
     shouldShowFinalSubmissionScores,
     winnerFinalScore,
 } from '../utils'
+import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import medal1 from '../assets/medal-1.svg'
 import medal2 from '../assets/medal-2.svg'
 import medal3 from '../assets/medal-3.svg'
@@ -147,6 +148,34 @@ const SortableColumnHeader: FC<SortableColumnHeaderProps> = props => (
             />
         </button>
     </th>
+)
+
+/**
+ * Renders the compact sort action placed above Figma's mobile record cards.
+ *
+ * The desktop table header remains the semantic column sorter; responsive CSS
+ * swaps this companion action into view when that header becomes visually hidden.
+ *
+ * @param props sort label, active direction, and toggle callback.
+ * @returns mobile-only sort button wired to the owning server-backed ordering.
+ * @throws Does not throw.
+ */
+const MobileTableSort: FC<SortableColumnHeaderProps> = props => (
+    <button
+        aria-label={`Sort by ${props.label}`}
+        className={styles.mobileTableSort}
+        onClick={props.onToggle}
+        title={`Sort ${props.label.toLowerCase()} ${props.order === 'asc' ? 'descending' : 'ascending'}`}
+        type='button'
+    >
+        <SortIcon aria-hidden='true' />
+        <strong>Sort by</strong>
+        <span>{props.label}</span>
+        <IconOutline.ChevronDownIcon
+            aria-hidden='true'
+            className={props.order === 'asc' ? styles.sortAscending : undefined}
+        />
+    </button>
 )
 
 /**
@@ -994,10 +1023,18 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
     return (
         <div className={styles.tableSection}>
             <h2>Registrants</h2>
-            <div className={styles.tableCard}>
-                <table className={!showRating
+            <MobileTableSort
+                label='Registration Date'
+                onToggle={() => {
+                    setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
+                    setPage(1)
+                }}
+                order={sortOrder}
+            />
+            <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
+                <table className={`${!showRating
                     ? styles.designRegistrantTable
-                    : styles.ratedRegistrantTable}
+                    : styles.ratedRegistrantTable} ${styles.mobileRecordTable}`}
                 >
                     <thead>
                         <tr>
@@ -1023,7 +1060,7 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
                             const rating = profile?.maxRating ?? resource.rating
                             return (
                                 <tr key={resource.id}>
-                                    <td>
+                                    <td data-mobile-label='Handle'>
                                         <MemberHandle
                                             handle={handle}
                                             link={!!profile?.handle || !!resource.memberHandle}
@@ -1031,8 +1068,17 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
                                             rating={rating}
                                         />
                                     </td>
-                                    {showRating && <td className={ratingClass(rating)}>{rating ?? '—'}</td>}
-                                    <td>{registrationTimestamp(resource)}</td>
+                                    {showRating && (
+                                        <td
+                                            className={ratingClass(rating)}
+                                            data-mobile-label='Rating'
+                                        >
+                                            {rating ?? '—'}
+                                        </td>
+                                    )}
+                                    <td data-mobile-label='Registration Date'>
+                                        {registrationTimestamp(resource)}
+                                    </td>
                                 </tr>
                             )
                         })}

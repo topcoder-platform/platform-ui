@@ -165,6 +165,11 @@ marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. Wider layouts retain the horizontal
 timeline and its overflow fallback for tablet-sized screens.
 
+On phone viewports, Registrants preserves its semantic table while presenting
+each API row as the Figma key/value card. Registration Date remains a
+server-backed sort and moves above the card so members do not need to pan a
+desktop-width table to find it.
+
 ## Challenge Markdown table of contents
 
 Challenge descriptions are safe Markdown. Authors create the generated table

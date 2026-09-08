@@ -656,6 +656,27 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBe(true)
     })
 
+    it('renders registrants as labeled records for the mobile Figma card', () => {
+        mockRegistrants = [{
+            created: '2026-06-03T09:30:00.000Z',
+            id: 'resource-1',
+            memberHandle: 'registrant',
+            memberId: '456',
+            rating: 1450,
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Registration Date' }))
+            .toBeInTheDocument()
+        const cells = screen.getAllByRole('cell')
+        expect(cells.map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual(['Handle', 'Rating', 'Registration Date'])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+    })
+
     it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
