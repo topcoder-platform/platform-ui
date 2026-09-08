@@ -10,6 +10,7 @@ import {
     waitFor,
 } from '@testing-library/react'
 import {
+    Link,
     MemoryRouter,
     Route,
     Routes,
@@ -23,6 +24,7 @@ const mockUseSWR = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockChallengeMutate = jest.fn()
+const mockChallengeForumRender = jest.fn()
 const mockMySubmissionCountMutate = jest.fn()
 const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
@@ -101,40 +103,50 @@ jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
         busy: boolean
+        challenge: { task?: { isTask?: boolean }; type?: string | { name?: string } }
         hasSubmitted?: boolean
         isRegistered: boolean
         onRegister: () => void
         onSubmit: () => void
         onUnregister: () => Promise<void>
-    }): JSX.Element => (
-        <header>
-            Challenge header
-            {!props.isRegistered && (
-                <button onClick={props.onRegister} type='button'>Register</button>
-            )}
-            {props.isRegistered && (
-                <>
-                    <button
-                        disabled={props.busy || props.hasSubmitted}
-                        onClick={props.onUnregister}
-                        type='button'
-                    >
-                        Unregister
-                    </button>
-                    <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
-                </>
-            )}
-        </header>
-    ),
+    }): JSX.Element => {
+        const typeName = typeof props.challenge.type === 'string'
+            ? props.challenge.type
+            : props.challenge.type?.name
+        const taskChallenge = typeName === 'Task' || props.challenge.task?.isTask === true
+        return (
+            <header>
+                Challenge header
+                {!taskChallenge && !props.isRegistered && (
+                    <button onClick={props.onRegister} type='button'>Register</button>
+                )}
+                {!taskChallenge && props.isRegistered && (
+                    <>
+                        <button
+                            disabled={props.busy || props.hasSubmitted}
+                            onClick={props.onUnregister}
+                            type='button'
+                        >
+                            Unregister
+                        </button>
+                        <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
+                    </>
+                )}
+            </header>
+        )
+    },
     ChallengeForum: (props: {
         canCreateAnnouncements?: boolean
         canDeleteTopics?: boolean
-    }): JSX.Element => (
-        <div>
-            {props.canCreateAnnouncements ? 'Announcement forum content' : 'Forum content'}
-            {props.canDeleteTopics ? ' with topic deletion' : ''}
-        </div>
-    ),
+    }): JSX.Element => {
+        mockChallengeForumRender()
+        return (
+            <div>
+                {props.canCreateAnnouncements ? 'Announcement forum content' : 'Forum content'}
+                {props.canDeleteTopics ? ' with topic deletion' : ''}
+            </div>
+        )
+    },
     ChallengeSidebar: (): JSX.Element => <aside />,
     ChallengeSubmissionUpload: (props: {
         onBack: () => void
@@ -190,7 +202,9 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
-    challengeCatalogKey: (track?: string): string => (track ?? '')
+    challengeCatalogKey: (value?: string | { name?: string }): string => (
+        typeof value === 'string' ? value : value?.name ?? ''
+    )
         .toLowerCase()
         .replace(/[^a-z]/g, ''),
     challengePlacementPrizes: (challenge: {
@@ -221,6 +235,7 @@ jest.mock('../services', () => ({
 }))
 
 jest.mock('../utils', () => ({
+    ...(jest.requireActual('../utils/marathon-match.utils') as typeof import('../utils/marathon-match.utils')),
     attachMarathonReviewSummations: (
         submissions: Array<Record<string, unknown>>,
         summations: Array<Record<string, unknown>>,
@@ -248,9 +263,22 @@ jest.mock('../utils', () => ({
             ? stats?.QA?.wins ?? stats?.wins
             : stats?.DEVELOP?.wins ?? stats?.wins
     ),
-    formatMarathonFinalScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonFinalScore,
-    formatMarathonScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonScore,
     isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
+    isTaskChallenge: (challenge?: {
+        legacy?: { pureV5Task?: boolean }
+        task?: { isTask?: boolean }
+        taskIsTask?: boolean
+        type?: string | { name?: string }
+    }): boolean => {
+        const typeName = typeof challenge?.type === 'string'
+            ? challenge.type
+            : challenge?.type?.name
+        return typeName?.trim()
+            .toLowerCase() === 'task'
+            || challenge?.task?.isTask === true
+            || challenge?.taskIsTask === true
+            || challenge?.legacy?.pureV5Task === true
+    },
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
         type?: string
@@ -487,6 +515,82 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: /^Submissions/ }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it.each(['', 'submissions', 'mine', 'forum', 'dashboard'])(
+        'keeps assigned Task challenges read-only with the requested tab "%s"',
+        async requestedTab => {
+            mockProfile = { handle: 'assigned-member', roles: ['Administrator'], userId: 123 }
+            mockRegistration = { id: 'assigned-submitter-resource' }
+            mockMemberResource = { id: 'assigned-member-resource' }
+            mockMySubmissionCount = 1
+            mockChallenge = {
+                ...mockChallenge,
+                task: { isAssigned: true, isTask: true, memberId: '123' },
+                type: { name: 'Task' },
+            }
+
+            renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${requestedTab}#challenge`)
+
+            await waitFor(() => expect(screen.getByRole('status', { name: 'Current route' }))
+                .toHaveTextContent('/opportunities/challenge/challenge-id?source=listing#challenge'))
+            expect(screen.getByRole('tab', { name: 'Requirements' }))
+                .toHaveAttribute('aria-selected', 'true')
+
+            expect(screen.getAllByRole('tab')
+                .map(tab => tab.textContent))
+                .toEqual(['Requirements', 'Registrants8', 'Winners'])
+            expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('tab', { name: /^Forum/ }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: /Register|Unregister|Submit a solution/ }))
+                .not.toBeInTheDocument()
+            expect(mockUseSWR.mock.calls.some(([key]) => Array.isArray(key) && [
+                'opportunities:registration',
+                'opportunities:challenge-member-resource',
+                'opportunities:my-submission-count',
+                'opportunities:forum-topics',
+            ].includes(String(key[0]))))
+                .toBe(false)
+        },
+    )
+
+    it('resets a stale Forum panel when client-side navigation opens a Task challenge', async () => {
+        mockProfile = { handle: 'administrator', roles: ['Administrator'], userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        render(
+            <MemoryRouter initialEntries={['/opportunities/challenge/competition-id']}>
+                <Link to='/opportunities/challenge/task-id?tab=forum'>Open Task challenge</Link>
+                <Routes>
+                    <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        fireEvent.click(screen.getByRole('tab', { name: /^Forum/ }))
+        expect(screen.getByText('Announcement forum content with topic deletion'))
+            .toBeInTheDocument()
+        mockChallengeForumRender.mockClear()
+
+        mockChallenge = {
+            ...mockChallenge,
+            id: 'task-id',
+            task: { isAssigned: true, isTask: true, memberId: '123' },
+            type: { name: 'Task' },
+        }
+        fireEvent.click(screen.getByRole('link', { name: 'Open Task challenge' }))
+
+        expect(mockChallengeForumRender)
+            .not.toHaveBeenCalled()
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true'))
+        expect(screen.queryByText('Announcement forum content with topic deletion'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: /^Forum/ }))
             .not.toBeInTheDocument()
     })
 
@@ -838,7 +942,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toContain('flex-direction: column;')
     })
 
-    it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
+    it('keeps the Marathon graph only in the metadata-gated Dashboard tab', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockMySubmissionCount = 2
@@ -847,6 +951,12 @@ describe('ChallengeDetailsPage member flows', () => {
             metadata: [{ name: 'show_data_dashboard', value: true }],
             type: 'Marathon Match',
         }
+        mockSubmissions = [{
+            id: 'submission-1',
+            provisionalScore: 99.088381,
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'coder',
+        }]
 
         renderPage()
 
@@ -861,6 +971,17 @@ describe('ChallengeDetailsPage member flows', () => {
                 'Forum3',
                 'Winners',
             ])
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Dashboard view' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Challenge Activity'))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Dashboard' }))
+        expect(screen.getByText('Challenge Activity'))
+            .toBeInTheDocument()
     })
 
     it('disables unregister after the member has submitted', () => {
@@ -1147,9 +1268,9 @@ describe('ChallengeDetailsPage member flows', () => {
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
-            finalScore: 99.797812,
+            finalScore: 99.31399426811394,
             id: 'submission-1',
-            provisionalScore: 99.904666,
+            provisionalScore: 99.08838088531581,
         }]
 
         renderPage()
@@ -1169,12 +1290,15 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.797812' }))
+        const finalScore = screen.getByRole('cell', { name: '99.31399426811394' })
+        expect(finalScore)
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.904666' }))
+        expect(screen.getByRole('cell', { name: '99.08838088531581' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.904666' }))
+        expect(screen.getByRole('cell', { name: '99.08838088531581' }))
             .toHaveAttribute('data-mobile-label', 'Provisional Score')
+        expect(finalScore.closest('.tableCard'))
+            .toHaveClass('myMarathonTableCard')
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
         expect(screen.queryByRole('link', {
@@ -1194,7 +1318,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
-    it('populates the released Marathon Match final score from Review Summations', () => {
+    it('preserves full precision for both Marathon Match score phases in Submissions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockChallenge = {
@@ -1346,7 +1470,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
+    it('renders every winner with profiles, stats, full-precision scores, and prizes', () => {
         mockProfile = { handle: 'fourth', userId: 4 }
         mockChallenge = {
             ...mockChallenge,
@@ -1385,8 +1509,9 @@ describe('ChallengeDetailsPage member flows', () => {
             { handle: 'fourth', stats: { DEVELOP: { wins: 4 }, wins: 6 } },
         ]
         mockProjectResults = [
-            { finalScore: 98.98, placement: 1, userId: '1' },
-            { finalScore: 98.88, placement: 2, userId: '2' },
+            { finalScore: 99.797812, placement: 1, userId: '1' },
+            { finalScore: 99.313994, placement: 2, userId: '2' },
+            { finalScore: 99.088381, placement: 4, userId: '4' },
         ]
 
         renderPage()
@@ -1397,9 +1522,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .getByText(/Place$/).textContent))
             .toEqual(['1st Place', '2nd Place', '3rd Place'])
         expect(cards[0])
-            .toHaveTextContent('with a final score of 98.98')
+            .toHaveTextContent('with a final score of 99.797812')
         expect(cards[1])
-            .toHaveTextContent('with a final score of 98.88')
+            .toHaveTextContent('with a final score of 99.313994')
         expect(cards[0])
             .toHaveTextContent('$400')
         expect(cards[0])
@@ -1429,6 +1554,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('4')
         expect(fourthRow)
             .toHaveTextContent('1300')
+        expect(fourthRow)
+            .toHaveTextContent('99.088381')
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()

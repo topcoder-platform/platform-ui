@@ -86,8 +86,16 @@ export interface ChallengeDiscussion {
 
 export interface ChallengeLegacy {
     forumId?: number
+    pureV5Task?: boolean
     reviewScorecardId?: number
     screeningScorecardId?: number
+}
+
+/** Legacy-compatible task metadata returned by Challenge API. */
+export interface ChallengeTask {
+    isAssigned?: boolean
+    isTask?: boolean
+    memberId?: number | string
 }
 
 export interface ChallengeMetadata {
@@ -135,6 +143,8 @@ export interface ChallengeOpportunity {
     startDate?: string
     status?: string
     tags?: string[]
+    task?: ChallengeTask
+    taskIsTask?: boolean
     terms?: ChallengeTerm[]
     track?: ChallengeCatalogValue
     type?: ChallengeCatalogValue

@@ -1,0 +1,139 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: grid;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.description {
+    margin: 0;
+    color: $black-60;
+    font-size: 14px;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.table {
+    width: 100%;
+    min-width: 1280px;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid $black-10;
+    vertical-align: middle;
+}
+
+.table th {
+    background: #f7f8fa;
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sortButton {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+
+.link {
+    color: #2a62d5;
+    text-decoration: none;
+    word-break: break-all;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.statusPill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.statusNew {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.statusConverted {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.statusDeclined {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.priorityCritical {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.priorityHigh {
+    color: #c2410c;
+    font-weight: 600;
+}
+
+.ageCell {
+    display: grid;
+    gap: 2px;
+}
+
+.createdDate {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.actionLink {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: #2a62d5;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.actionMuted {
+    color: $black-40;
+}
+
+.emptyState {
+    padding: 32px;
+    text-align: center;
+    color: $black-60;
+}
