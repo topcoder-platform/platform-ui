@@ -81,4 +81,31 @@ describe('GigDetailsPage', () => {
         expect(screen.getByText('N/A'))
             .toBeInTheDocument()
     })
+
+    it('opens external advice links safely without changing internal or email navigation', () => {
+        renderDetails(openGig)
+
+        expect(screen.getByRole('link', { name: 'Update your profile' }))
+            .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/qa%20member')
+        expect(screen.getByRole('link', { name: 'Update your profile' }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: 'Update your profile' }))
+            .toHaveAttribute('rel', 'noopener noreferrer')
+
+        expect(screen.getByRole('link', { name: 'Visit the Gig Work forum' }))
+            .toHaveAttribute(
+                'href',
+                'https://vanilla.topcoder-dev.com/categories/gig-work-discussions',
+            )
+        expect(screen.getByRole('link', { name: 'Visit the Gig Work forum' }))
+            .toHaveAttribute('target', '_blank')
+        expect(screen.getByRole('link', { name: 'Visit the Gig Work forum' }))
+            .toHaveAttribute('rel', 'noopener noreferrer')
+
+        expect(screen.getByRole('link', { name: 'Browse opportunities' }))
+            .not.toHaveAttribute('target')
+        screen.getAllByRole('link', { name: /Gig Work team|talent\.taas@wipro\.com/ })
+            .forEach(link => expect(link)
+                .not.toHaveAttribute('target'))
+    })
 })

@@ -49,6 +49,9 @@ unsafe URLs and embedded form controls cannot affect the surrounding application
 Search, country, sort and page are URL parameters. Updating filters preserves
 unrelated parameters such as `ref`, and resets the result page. Missing salary
 metadata remains unspecified; zero is not mistaken for missing compensation.
+The detail sidebar's external profile and correctly spelled Gig Work forum links
+open in a separate tab with opener isolation. Same-app navigation and `mailto:`
+links retain their expected in-page and email-client behavior.
 
 Members cannot track application status in this app. The listing and submission
 confirmation do not link to My Gigs, and the app does not request application

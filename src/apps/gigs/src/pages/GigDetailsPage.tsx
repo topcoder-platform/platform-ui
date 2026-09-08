@@ -15,6 +15,8 @@ import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
 /**
  * Shows job facts, required skills (or N/A when none are authored), description,
  * eligibility notes and the application handoff, including closed/error states.
+ * External web resources open in an isolated tab; same-app and email links keep
+ * their native navigation behavior.
  */
 const GigDetailsPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
@@ -112,6 +114,8 @@ const GigDetailsPage: FC = () => {
                                                 )}`
                                                 : EnvironmentConfig.URLS.ACCOUNT_SETTINGS
                                         }
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Update your profile
                                     </a>
@@ -121,7 +125,9 @@ const GigDetailsPage: FC = () => {
                                     <p>Introduce yourself and tell the Gig team what you’re looking for.</p>
                                     <a
                                         href={`https://vanilla.${EnvironmentConfig.TC_DOMAIN}`
-                                            + '/categories/gig-work-discusssions'}
+                                            + '/categories/gig-work-discussions'}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Visit the Gig Work forum
                                     </a>
