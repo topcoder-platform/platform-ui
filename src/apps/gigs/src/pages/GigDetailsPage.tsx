@@ -12,7 +12,10 @@ import { GigContent, GigFacts, GigState } from '../components/GigShared'
 import { getGig, RecruitError } from '../gigs.service'
 import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
 
-/** Shows job facts, description, eligibility notes and the application handoff, including closed/error states. */
+/**
+ * Shows job facts, description, eligibility notes and the application handoff, including closed/error states.
+ * Opens profile, forum and opportunity advice links in new tabs so members can keep the gig details open.
+ */
 const GigDetailsPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
     const { profile }: ProfileContextData = useContext(profileContext)
@@ -105,6 +108,8 @@ const GigDetailsPage: FC = () => {
                                                 )}`
                                                 : EnvironmentConfig.URLS.ACCOUNT_SETTINGS
                                         }
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Update your profile
                                     </a>
@@ -115,6 +120,8 @@ const GigDetailsPage: FC = () => {
                                     <a
                                         href={`https://vanilla.${EnvironmentConfig.TC_DOMAIN}`
                                             + '/categories/gig-work-discusssions'}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Visit the Gig Work forum
                                     </a>
@@ -124,7 +131,9 @@ const GigDetailsPage: FC = () => {
                                     <p>
                                         Participate in Topcoder competitions to demonstrate what you can do.
                                     </p>
-                                    <Link to='/opportunities'>Browse opportunities</Link>
+                                    <Link to='/opportunities' target='_blank' rel='noopener noreferrer'>
+                                        Browse opportunities
+                                    </Link>
                                 </li>
                             </ol>
                             <p>

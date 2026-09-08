@@ -6,6 +6,8 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
   featured-first created/updated ordering, hotlist and ten jobs per result page.
 - `/gigs/:slug`: compensation, location, duration, weekly hours, timezone,
   required skills, description, eligibility notes and application handoff.
+  Profile, forum and opportunity advice links open in new tabs, preserving the
+  gig details page. Gig navigation and email links keep their existing behavior.
 - `/gigs/:slug/apply`: sign-in with the full return URL, candidate prefill,
   resume upload, skill autocomplete/custom skills, weekly pay expectation,
   referral source, availability confirmations, policy dialogs and application
@@ -60,12 +62,15 @@ yarn build
 yarn test:no-watch --runInBand --watch=false --runTestsByPath \
   src/apps/gigs/src/gigs.utils.spec.ts \
   src/apps/gigs/src/gigs.service.spec.ts \
+  src/apps/gigs/src/pages/GigDetailsPage.spec.tsx \
   src/apps/gigs/src/components/GigApplicationForm.spec.tsx
 ```
 
 The tests cover discovery rules, salary fallbacks, required fields, consent and
 availability, upload limits, legacy payload mapping, HTTP-200 error envelopes,
 expired authentication, prefill, submission retry and already-placed candidates.
+Gig detail link tests cover new-tab advice links for signed-in and anonymous
+visitors, plus existing gig navigation and email destinations.
 Also verify the listing, detail and anonymous apply route against real Recruit
 reads in a browser at desktop and mobile widths. Authenticated submission tests
 use mocks so verification does not create real candidates or send recruiter
