@@ -12,7 +12,10 @@ import { GigContent, GigFacts, GigState } from '../components/GigShared'
 import { getGig, RecruitError } from '../gigs.service'
 import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
 
-/** Shows job facts, description, eligibility notes and the application handoff, including closed/error states. */
+/**
+ * Shows job facts, required skills (or N/A when none are authored), description,
+ * eligibility notes and the application handoff, including closed/error states.
+ */
 const GigDetailsPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
     const { profile }: ProfileContextData = useContext(profileContext)
@@ -24,6 +27,7 @@ const GigDetailsPage: FC = () => {
         shouldRetryOnError: false,
     })
     const missing = error instanceof RecruitError && [400, 404].includes(error.status)
+    const skills = job ? gigSkills(job) : []
     return (
         <main className='gigs-container gigs-main'>
             <PageTitle>{`${job?.name || 'Gig details'} | Gigs | Topcoder`}</PageTitle>
@@ -57,10 +61,13 @@ const GigDetailsPage: FC = () => {
                         <article className='gigs-panel'>
                             <h2>Required skills</h2>
                             <div className='gigs-skills'>
-                                {gigSkills(job)
-                                    .map(skill => (
+                                {skills.length ? (
+                                    skills.map(skill => (
                                         <span key={skill}>{skill}</span>
-                                    ))}
+                                    ))
+                                ) : (
+                                    <span>N/A</span>
+                                )}
                             </div>
                             <h2>Description</h2>
                             <GigContent

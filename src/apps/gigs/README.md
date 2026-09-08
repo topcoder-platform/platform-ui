@@ -5,7 +5,8 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
 - `/gigs`: open jobs, search by name/skills/country/duration, country filter,
   featured-first created/updated ordering, hotlist and ten jobs per result page.
 - `/gigs/:slug`: compensation, location, duration, weekly hours, timezone,
-  required skills, description, eligibility notes and application handoff.
+  required skills (displayed as `N/A` when Recruit has none), description,
+  eligibility notes and application handoff.
 - `/gigs/:slug/apply`: sign-in with the full return URL, candidate prefill,
   resume upload, skill autocomplete/custom skills, weekly pay expectation,
   referral source, availability confirmations, policy dialogs and application
