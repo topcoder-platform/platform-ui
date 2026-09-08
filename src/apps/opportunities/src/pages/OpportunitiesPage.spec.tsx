@@ -184,6 +184,35 @@ describe('OpportunitiesPage', () => {
             .toHaveBeenCalledWith('competitions', expect.objectContaining({ search: 'IBM Bluemix' })))
     })
 
+    it('hydrates review search from a clicked tag or skill query', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 1 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/reviews?search=UICollectionView']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenCalledWith('reviews', expect.objectContaining({ search: 'UICollectionView' })))
+    })
+
     it('shows registration state on competition cards outside My competitions', async () => {
         mockedGetOpportunitySummary.mockResolvedValue({
             competitions: { count: 1 },

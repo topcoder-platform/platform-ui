@@ -47,6 +47,12 @@ the title is followed by filters, then the sort/view toolbar, and finally the
 results. Desktop presents the same controls in the authored two-column grid,
 with the toolbar above the results and the filter panel beside them.
 
+Review opportunity tags and standardized skill chips use the same accessible
+card control and shareable `search` parameter. Review API resolves that value
+against challenge names, authored tags, and standardized skills before its
+server-side pagination, so selecting a chip returns every matching review
+opportunity rather than filtering only the currently loaded page.
+
 ## List and grid views
 
 Every domain toolbar exposes the same accessible List/Grid selector from the

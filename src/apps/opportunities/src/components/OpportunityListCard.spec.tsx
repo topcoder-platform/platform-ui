@@ -738,6 +738,38 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toHaveLength(1)
     })
 
+    it('filters review opportunities from either a tag or standardized skill chip', () => {
+        const onSkillClick = jest.fn()
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'UICollectionView' }],
+                technologies: ['Tag'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Review post check',
+            id: 'review-search-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={item}
+                    kind='reviews'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by Tag' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by UICollectionView' }))
+
+        expect(onSkillClick.mock.calls)
+            .toEqual([['Tag'], ['UICollectionView']])
+        expect(screen.getByRole('link', { name: /Review post check/ }))
+            .toHaveAttribute('href', '/opportunities/review/review-search-skills')
+    })
+
     it('positions review title tooltips outside the card clipping context', () => {
         const item: ReviewOpportunity = {
             challengeId: 'challenge-id',
