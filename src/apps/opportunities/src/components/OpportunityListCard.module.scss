@@ -36,6 +36,27 @@
     }
 }
 
+.titleLink {
+    color: inherit;
+    text-decoration: none;
+
+    &:link,
+    &:visited {
+        color: inherit;
+    }
+
+    &::after {
+        content: '';
+        inset: 0;
+        position: absolute;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+}
+
 .cardTooltip {
     background: #001e2e !important;
     border-radius: 4px !important;
@@ -152,8 +173,15 @@
     flex-wrap: wrap;
     gap: 8px;
 
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    button,
     span {
         background: #e9ecef;
+        border: 0;
         border-radius: 2px;
         color: #161616;
         font-family: 'Nunito Sans', sans-serif;
@@ -497,6 +525,24 @@
     }
 }
 
+.metricRow {
+    position: relative;
+}
+
+.metricLink {
+    border-radius: 4px;
+    cursor: pointer;
+    inset: -4px;
+    position: absolute;
+    z-index: 2;
+
+    &:focus-visible {
+        box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
+        outline: 2px solid #0f62fe;
+        outline-offset: 1px;
+    }
+}
+
 .gridCard {
     grid-template-columns: minmax(0, 1fr);
     height: 100%;
@@ -707,8 +753,4 @@
         padding: 16px;
     }
 
-    .phaseHeading {
-        align-items: flex-start;
-        flex-direction: column;
-    }
 }

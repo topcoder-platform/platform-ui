@@ -1351,10 +1351,20 @@ describe('opportunities service normalization', () => {
     })
 
     it('accepts any exact caller-owned challenge resource for member forum access', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce([
+            { id: 'reviewer-role', name: 'Reviewer' },
+            { id: 'copilot-role', name: 'Copilot' },
+        ])
         globalGet
             .mockResolvedValueOnce({
                 data: [{
+                    challengeId: 'challenge',
+                    id: 'reviewer-resource',
+                    memberId: '123',
+                    roleId: 'reviewer-role',
+                }, {
                     challengeId: 'challenge',
                     id: 'copilot-resource',
                     memberId: '123',
@@ -1373,13 +1383,42 @@ describe('opportunities service normalization', () => {
             })
 
         await expect(getChallengeMemberResource('challenge', '123'))
-            .resolves.toMatchObject({ id: 'copilot-resource', roleId: 'copilot-role' })
+            .resolves.toMatchObject({
+                id: 'copilot-resource',
+                roleId: 'copilot-role',
+                roleName: 'Copilot',
+            })
+        expect(get)
+            .toHaveBeenCalledWith('https://api.example/v6/resource-roles')
         await expect(getChallengeMemberResource('challenge', '123'))
             .resolves.toBeUndefined()
         expect(globalGet)
             .toHaveBeenLastCalledWith(
-                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=1&memberId=123',
+                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=100&memberId=123',
             )
+    })
+
+    it('preserves ordinary forum membership when legacy role enrichment fails', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                challengeId: 'challenge',
+                id: 'member-resource',
+                memberId: '123',
+                roleId: 'reviewer-role',
+            }],
+            headers: { get: () => undefined },
+        })
+        get.mockRejectedValueOnce(new Error('Resource Roles unavailable'))
+
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toEqual({
+                challengeId: 'challenge',
+                id: 'member-resource',
+                memberId: '123',
+                roleId: 'reviewer-role',
+            })
     })
 
     it('loads all Submitter challenge IDs used by public competition cards', async () => {

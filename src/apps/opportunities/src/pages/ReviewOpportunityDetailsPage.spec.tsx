@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
+import { readFileSync } from 'fs'
 import {
     fireEvent,
     render,
@@ -12,6 +13,7 @@ import {
     Route,
     Routes,
 } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import { ReviewOpportunity } from '../models'
 import { applyToReviewOpportunity } from '../services'
@@ -20,7 +22,9 @@ import { ReviewOpportunityDetailsPage } from './ReviewOpportunityDetailsPage'
 
 const mockUseSWR = jest.fn()
 const mockedApplyToReviewOpportunity = applyToReviewOpportunity as jest.Mock
+const mockedToastSuccess = toast.success as jest.Mock
 let mockProfile: { roles: string[]; userId: number } | undefined
+const reviewDetailStyles = readFileSync(`${__dirname}/ReviewOpportunityDetailsPage.module.scss`, 'utf8')
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -251,6 +255,30 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
     })
 
+    it('renders all application fields as labeled mobile records', () => {
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /Applications/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Application Date' }))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual([
+                'Handle',
+                'Role',
+                'Application Date',
+                'Handle',
+                'Role',
+                'Application Date',
+            ])
+        expect(screen.getByRole('table').className)
+            .toContain('applicationTable')
+        expect(reviewDetailStyles)
+            .toContain('.applicationTable {')
+        expect(reviewDetailStyles)
+            .toMatch(/\.applicationTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
+    })
+
     it('uses member ratings to color application handles', () => {
         const opportunityResponse = {
             data: reviewFixture(),
@@ -289,6 +317,24 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toHaveBeenCalledWith({ left: 0, top: 0 })
     })
 
+    it('keeps the clipped header decoration behind, not inside, compensation', () => {
+        renderPage()
+
+        const decoration = screen.getByTestId('review-header-decoration')
+        const compensation = screen.getByText('Compensation')
+            .closest('aside')
+        expect(compensation)
+            .not.toContainElement(decoration)
+        expect(decoration.parentElement?.tagName)
+            .toBe('HEADER')
+        expect(reviewDetailStyles)
+            .toContain('bottom: -200px;')
+        expect(reviewDetailStyles)
+            .toContain('right: -168px;')
+        expect(reviewDetailStyles)
+            .toContain('top: auto;')
+    })
+
     it('uses the centered per-submission compensation and applies for an eligible reviewer', async () => {
         const mutate = jest.fn()
         mockProfile = { roles: ['Reviewer'], userId: 12345 }
@@ -318,6 +364,60 @@ describe('ReviewOpportunityDetailsPage', () => {
             expect(mutate)
                 .toHaveBeenCalled()
         })
+    })
+
+    it('keeps a full opportunity open and confirms reviewer waitlist placement', async () => {
+        const mutate = jest.fn()
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                approvedApplicationCount: 2,
+                canApply: true,
+                openPositions: 2,
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate,
+        })
+
+        renderPage()
+
+        expect(screen.getByText(/All reviewer positions are currently filled/))
+            .toBeInTheDocument()
+        const waitlistButton = screen.getByRole('button', { name: 'Join reviewer waitlist' })
+        expect(waitlistButton)
+            .toBeEnabled()
+        fireEvent.click(waitlistButton)
+
+        await waitFor(() => {
+            expect(mockedApplyToReviewOpportunity)
+                .toHaveBeenCalledWith('review-id', 'REVIEWER')
+            expect(mutate)
+                .toHaveBeenCalled()
+            expect(mockedToastSuccess)
+                .toHaveBeenCalledWith("You've joined the reviewer waitlist.")
+        })
+    })
+
+    it('shows the caller waitlisted state after a full-opportunity application', () => {
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                canApply: false,
+                canApplyReason: 'ALREADY_APPLIED',
+                myApplications: [{ status: 'PENDING' }],
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('button', { name: 'Waitlisted' }))
+            .toBeDisabled()
     })
 
     it('labels the review start truthfully when the API has no posted timestamp', () => {

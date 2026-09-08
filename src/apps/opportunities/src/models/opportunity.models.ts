@@ -164,6 +164,7 @@ export interface ChallengeResource {
     memberId?: number | string
     rating?: number
     roleId?: string
+    roleName?: string
 }
 
 export interface ChallengeResourceRole {

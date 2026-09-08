@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useContext } from 'react'
+import { FC, useContext, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -12,7 +12,13 @@ import { GigContent, GigFacts, GigState } from '../components/GigShared'
 import { getGig, RecruitError } from '../gigs.service'
 import { gigSkills, GIGS_PATH, isOpenGig } from '../gigs.utils'
 
-/** Shows job facts, description, eligibility notes and the application handoff, including closed/error states. */
+/**
+ * Shows job facts, required skills (or N/A when none are authored), description,
+ * eligibility notes and the application handoff, including closed/error states.
+ * Advice resources open in an isolated tab; primary Gig and email links keep
+ * their native navigation behavior. Opening a new Gig resets the window scroll
+ * position so list-page scrolling cannot hide the detail header.
+ */
 const GigDetailsPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
     const { profile }: ProfileContextData = useContext(profileContext)
@@ -24,6 +30,12 @@ const GigDetailsPage: FC = () => {
         shouldRetryOnError: false,
     })
     const missing = error instanceof RecruitError && [400, 404].includes(error.status)
+    const skills = job ? gigSkills(job) : []
+
+    useEffect(() => {
+        window.scrollTo({ left: 0, top: 0 })
+    }, [slug])
+
     return (
         <main className='gigs-container gigs-main'>
             <PageTitle>{`${job?.name || 'Gig details'} | Gigs | Topcoder`}</PageTitle>
@@ -57,10 +69,13 @@ const GigDetailsPage: FC = () => {
                         <article className='gigs-panel'>
                             <h2>Required skills</h2>
                             <div className='gigs-skills'>
-                                {gigSkills(job)
-                                    .map(skill => (
+                                {skills.length ? (
+                                    skills.map(skill => (
                                         <span key={skill}>{skill}</span>
-                                    ))}
+                                    ))
+                                ) : (
+                                    <span>N/A</span>
+                                )}
                             </div>
                             <h2>Description</h2>
                             <GigContent
@@ -105,6 +120,8 @@ const GigDetailsPage: FC = () => {
                                                 )}`
                                                 : EnvironmentConfig.URLS.ACCOUNT_SETTINGS
                                         }
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Update your profile
                                     </a>
@@ -114,7 +131,9 @@ const GigDetailsPage: FC = () => {
                                     <p>Introduce yourself and tell the Gig team what you’re looking for.</p>
                                     <a
                                         href={`https://vanilla.${EnvironmentConfig.TC_DOMAIN}`
-                                            + '/categories/gig-work-discusssions'}
+                                            + '/categories/gig-work-discussions'}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
                                     >
                                         Visit the Gig Work forum
                                     </a>
@@ -124,7 +143,13 @@ const GigDetailsPage: FC = () => {
                                     <p>
                                         Participate in Topcoder competitions to demonstrate what you can do.
                                     </p>
-                                    <Link to='/opportunities'>Browse opportunities</Link>
+                                    <Link
+                                        to='/opportunities'
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                    >
+                                        Browse opportunities
+                                    </Link>
                                 </li>
                             </ol>
                             <p>

@@ -11,7 +11,10 @@ import { GigCard, GigState } from '../components/GigShared'
 import { getGigs } from '../gigs.service'
 import { filterGigs, gigFlag, GIGS_PER_PAGE, isOpenGig } from '../gigs.utils'
 
-/** Lists open Recruit gigs with URL-persisted filters, featured ordering, hotlist, and ten-row pagination. */
+/**
+ * Lists open Recruit gigs with URL-persisted filters, consistent selected ordering
+ * across the hotlist and results, featured priority, and ten-row pagination.
+ */
 const GigsPage: FC = () => {
     const [params, setParams] = useSearchParams()
     const {
@@ -36,7 +39,7 @@ const GigsPage: FC = () => {
         .sort((a, b) => a.localeCompare(b))
     const hotlist = (jobs || [])
         .filter(job => isOpenGig(job) && gigFlag(job, 'Show in Hotlist'))
-        .sort((a, b) => (Date.parse(b.updated_on || '') || 0) - (Date.parse(a.updated_on || '') || 0))
+        .sort((a, b) => (Date.parse(b[sort] || '') || 0) - (Date.parse(a[sort] || '') || 0))
         .slice(0, 4)
 
     /** Updates one URL filter without dropping attribution parameters and resets the current result page. */
@@ -72,6 +75,7 @@ const GigsPage: FC = () => {
                         <h2>Find a gig</h2>
                         <label htmlFor='gig-search'>Search</label>
                         <input
+                            className='gigs-filter-input'
                             id='gig-search'
                             type='search'
                             placeholder='Name, skills, location or duration'
@@ -186,7 +190,11 @@ const GigsPage: FC = () => {
                         Learn about the application process, read a quick guide for interviewing, and prepare
                         for your next opportunity.
                     </p>
-                    <a href={`${EnvironmentConfig.TOPCODER_URL}/community/gig-resources`}>
+                    <a
+                        href={`${EnvironmentConfig.TOPCODER_URL}/community/gig-resources`}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
                         Read our Gig Work resources
                     </a>
                 </aside>

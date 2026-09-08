@@ -101,14 +101,17 @@ describe('Gig application candidate loading', () => {
         expect(fetchMock)
             .toHaveBeenCalledWith(
                 'https://www.topcoder-dev.com/api/recruit/candidates/search?email=jane%40example.com',
-                expect.objectContaining({ headers: { Authorization: 'Bearer member-token' } }),
+                expect.objectContaining({ headers: {} }),
             )
     })
-    it('prefills the application form from an existing candidate search envelope', async () => {
+    it.each([
+        ['envelope', { data: [{ salary_expectation: 500 }] }],
+        ['direct array', [{ salary_expectation: 500 }]],
+    ])('prefills the application form from an existing candidate search %s', async (_label, response) => {
         fetchMock.mockResolvedValueOnce({
             ok: true,
             status: 200,
-            json: async () => ({ data: [{ salary_expectation: 500 }] }),
+            json: async () => response,
         })
         renderApplyPage()
 

@@ -393,6 +393,14 @@
     }
 }
 
+.waitlistNotice {
+    color: rgba(255, 255, 255, .8);
+    font-size: 12px;
+    line-height: 16px;
+    margin: -8px 0 0;
+    text-align: center;
+}
+
 .detailSection {
     align-items: center;
     background: #f5f7fa;
@@ -677,6 +685,10 @@
     padding: 24px;
 }
 
+.mobileApplicationSort {
+    display: none;
+}
+
 .tableScroll {
     overflow-x: auto;
     width: 100%;
@@ -881,12 +893,6 @@
 }
 
 @media (max-width: 760px) {
-    .rings {
-        bottom: -200px;
-        right: -168px;
-        top: auto;
-    }
-
     .breadcrumbsShell,
     .headerInner {
         padding-inline: 24px;
@@ -899,6 +905,12 @@
 
     .detailSection {
         padding-inline: 24px;
+    }
+
+    .rings {
+        bottom: -200px;
+        right: -168px;
+        top: auto;
     }
 
     .applicationPagination {
@@ -952,6 +964,108 @@
     .card,
     .learning {
         padding: 16px;
+    }
+
+    .applicationsSection > h2 {
+        margin-bottom: 8px;
+    }
+
+    .mobileApplicationSort {
+        align-items: center;
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        cursor: pointer;
+        display: flex;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        height: 36px;
+        line-height: 20px;
+        margin: 0 0 12px;
+        padding: 0;
+
+        > svg {
+            flex: 0 0 20px;
+            height: 20px;
+            width: 20px;
+
+            &:last-child {
+                flex-basis: 16px;
+                height: 16px;
+                width: 16px;
+            }
+        }
+
+        strong {
+            font-weight: 700;
+        }
+    }
+
+    .tableScroll {
+        overflow: visible;
+    }
+
+    .applicationTable {
+        display: block;
+        min-width: 0;
+
+        thead {
+            border: 0;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+
+            button {
+                display: none;
+            }
+        }
+
+        tbody,
+        tr {
+            display: block;
+        }
+
+        tr:not(:last-child) {
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+        }
+
+        td {
+            align-items: center;
+            border: 0;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(112px, 42%) minmax(0, 1fr);
+            height: auto;
+            min-height: 30px;
+            overflow-wrap: anywhere;
+            padding: 4px 6px;
+            width: auto;
+
+            &::before {
+                color: #161616;
+                content: attr(data-mobile-label);
+                font-weight: 700;
+            }
+        }
+
+        .emptyApplications {
+            display: block;
+            padding-block: 16px;
+
+            &::before {
+                content: none;
+            }
+        }
     }
 
     .applicationPagination {

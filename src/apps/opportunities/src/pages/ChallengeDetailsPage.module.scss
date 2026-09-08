@@ -355,6 +355,10 @@
     }
 }
 
+.mobileTableSort {
+    display: none;
+}
+
 .sortAscending {
     transform: rotate(180deg);
 }
@@ -1140,6 +1144,112 @@
         overflow-x: auto;
     }
 
+    .tableSection > h2 {
+        margin-bottom: 8px;
+    }
+
+    .mySubmissionHeading {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+
+        .reviewAppButton {
+            align-self: stretch;
+            box-sizing: border-box;
+            justify-content: center;
+            width: 100%;
+        }
+    }
+
+    .mobileTableSort {
+        align-items: center;
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        cursor: pointer;
+        display: flex;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        height: 36px;
+        line-height: 20px;
+        margin: 0 0 12px;
+        padding: 0;
+
+        > svg {
+            flex: 0 0 20px;
+            height: 20px;
+            width: 20px;
+
+            &:last-child {
+                flex-basis: 16px;
+                height: 16px;
+                width: 16px;
+            }
+        }
+
+        strong {
+            font-weight: 700;
+        }
+    }
+
+    .mobileRecordCard {
+        overflow: hidden;
+    }
+
+    .mobileRecordTable {
+        display: block;
+        min-width: 0;
+
+        thead {
+            border: 0;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+
+            button {
+                display: none;
+            }
+        }
+
+        tbody,
+        tr {
+            display: block;
+        }
+
+        tr:not(:last-child) {
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+        }
+
+        td {
+            align-items: center;
+            border: 0;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(112px, 42%) minmax(0, 1fr);
+            height: auto;
+            min-height: 30px;
+            padding: 4px 6px;
+            overflow-wrap: anywhere;
+
+            &::before {
+                color: #161616;
+                content: attr(data-mobile-label);
+                font-weight: 700;
+            }
+        }
+    }
+
     .ratedRegistrantTable,
     .designRegistrantTable,
     .developmentSubmissionTable,
@@ -1150,6 +1260,10 @@
     .mySubmissionTable,
     .myMarathonTable {
         min-width: 720px;
+    }
+
+    .mobileRecordCard .mobileRecordTable {
+        min-width: 0;
     }
 
     .previewCard {

@@ -38,6 +38,20 @@ skills/technologies field. Challenge-detail skill tags link back to
 `/opportunities/competitions?search=<skill>` so the destination input and
 owner-backed results are filtered immediately. Other opportunity domains
 retain their owner-specific skill facet where supported.
+On mobile, Search, ownership, and Status remain immediately visible while the
+Track, Type, or Role facets sit behind the accessible More filters control.
+Desktop keeps every available facet expanded.
+
+On narrow layouts, Browse keeps the member's decision flow in document order:
+the title is followed by filters, then the sort/view toolbar, and finally the
+results. Desktop presents the same controls in the authored two-column grid,
+with the toolbar above the results and the filter panel beside them.
+
+Review opportunity tags and standardized skill chips use the same accessible
+card control and shareable `search` parameter. Review API resolves that value
+against challenge names, authored tags, and standardized skills before its
+server-side pagination, so selecting a chip returns every matching review
+opportunity rather than filtering only the currently loaded page.
 
 ## List and grid views
 
@@ -82,6 +96,14 @@ to the selected reviewer role and keeps the incremental amount as the payment
 for each additional submission. Missing card amounts are labeled `TBD` rather
 than presented as free work.
 
+Approved applications, rather than pending applications, consume reviewer
+capacity. When `remainingPositions` reaches zero, eligible reviewers can still
+use the detail CTA to join the waitlist; the page explains that outcome before
+submission and confirms it afterward. Review API persists these applications as
+`PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
+while capacity remains full, then naturally return to `Applied` if a position
+reopens or to `Approved` when the reviewer is selected.
+
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
@@ -116,7 +138,9 @@ subtype icons and member-facing labels.
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
   Competition pages revalidate once a minute and when focus returns; cards
-  with no open phase omit the phase display instead of inventing one.
+  with no open phase omit the phase display instead of inventing one. The
+  compact mobile card keeps the remaining-time value on the same heading row
+  as the current phase, matching the authored design above its progress rail.
 - The right rail shows submissions and registrants from Challenge API. It also
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
@@ -134,6 +158,30 @@ phases current. Ended phases and boundaries render complete, future milestones
 remain upcoming, and all timestamps use the browser's local time with its IANA
 timezone displayed below the rail. Phase names select the corresponding Figma
 glyph; unfamiliar phase names deliberately use the generic Review glyph.
+At phone widths, the timezone moves above a vertical timeline: phase nodes and
+progress connectors occupy the left rail while each phase name and its dates
+remain in an aligned, content-sized row to the right. Each mobile row owns its
+marker and connector, so wrapped dates and enlarged text grow the rail instead
+of overlapping the following milestone. Wider layouts retain the horizontal
+timeline and its overflow fallback for tablet-sized screens.
+
+On phone viewports, Registrants preserves its semantic table while presenting
+each API row as the Figma key/value card. Registration Date remains a
+server-backed sort and moves above the card so members do not need to pan a
+desktop-width table to find it. The visually clipped table heading remains a
+noninteractive semantic label, avoiding a duplicate hidden keyboard stop.
+
+All Submissions and My Submissions use the same responsive record-card
+contract. Every track-specific field and action receives a visible mobile key,
+while Submission Date sorting stays above the card and continues to request
+owner-sorted pages.
+Marathon My Submissions retains its wider score columns and horizontal overflow
+on larger screens, while phone record cards fit the available content width.
+
+The My Submissions heading keeps its Review App handoff, but phone layouts
+stack that action below the heading copy at full content width so neither the
+title nor its description is compressed or overlaid.
+
 Task challenges omit an Iterative Review phase once its deadline has elapsed,
 matching the legacy participant timeline, and keep Registration ahead of the
 remaining chronological milestones. Task detection accepts the canonical
@@ -204,11 +252,13 @@ header reads the persisted review-opportunity `createdAt` value as “Posted” 
 uses the start-date label only as a compatibility fallback for an older Review
 API response. Its date, open-position, and review-period metrics use the
 authored outline glyphs, while the Thrive card reuses the authored book asset.
-At widths up to 760px, the decorative header rings sit at the bottom right by
-the compensation card, keeping the title, skills, and review metrics clear as
-the content wraps. Desktop ring positioning is unchanged.
 The two Thrive actions open the published Topcoder Review Process and Topcoder
 Challenges Explained articles rather than an unfiltered search page.
+
+The review-header ring decoration remains a dark-header background layer rather
+than a child of the compensation card. At phone and small-tablet widths it moves
+below and to the right of the content and remains clipped by the header, keeping
+breadcrumbs, title, tags, metadata, payment copy, and actions unobstructed.
 
 Review challenge chips merge tags, legacy technologies, and standardized
 skills. List pages batch-hydrate missing skill names from Challenge API; a
@@ -218,6 +268,11 @@ unavailable. Application rows use an API-provided `maxRating` when present and
 otherwise batch public Members API profiles so handles follow Topcoder's rating
 palette. Application Date starts newest-first and its keyboard-accessible
 header toggles ascending/descending order while resetting local pagination.
+On phone viewports, each application becomes a labeled Handle, Role, and
+Application Date record within the same semantic table; its date sort moves
+above the white card and retains the desktop ordering behavior. The clipped
+column header exposes its sort state without leaving its desktop button in the
+phone tab order.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
@@ -315,6 +370,9 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
+An empty Winners tab reflects the challenge lifecycle: cancelled challenges
+state that no winners were selected, drafts explain that judging has not run,
+and active challenges retain the ongoing-review guidance.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
@@ -371,10 +429,10 @@ complete API result, including topics created by the current member.
 Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
-actions remain registration-only. Administrators may create ordinary topics or
-official announcements, delete topics, and reply throughout every challenge
-forum. Topic authors may edit their own unlocked topics, but deletion remains
-administrator-only to match the legacy forum.
+actions remain registration-only. Administrators and assigned challenge
+copilots may create ordinary topics or official announcements and reply
+throughout every challenge forum. Topic authors may edit their own unlocked
+topics, but deletion remains administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
 1000-character description while keeping attachments optional. Files upload

@@ -63,6 +63,47 @@ export function reviewOpportunityLabels(opportunity: ReviewOpportunity): string[
 }
 
 /**
+ * Determines whether approved reviewers currently fill every advertised spot.
+ * The explicit Review API remainder wins; aggregate and legacy reason fields
+ * keep the UI compatible while the waitlist contract rolls out.
+ *
+ * @param opportunity review opportunity capacity and eligibility response.
+ * @returns true when no approved reviewer position remains.
+ * @throws Does not throw.
+ */
+export function reviewOpportunityIsFull(opportunity: ReviewOpportunity): boolean {
+    if (opportunity.remainingPositions !== undefined) {
+        const remaining = Number(opportunity.remainingPositions)
+        if (Number.isFinite(remaining)) return remaining <= 0
+    }
+
+    const positions = Number(opportunity.openPositions)
+    const approved = Number(opportunity.approvedApplicationCount)
+    if (Number.isFinite(positions) && Number.isFinite(approved)) {
+        return approved >= positions
+    }
+
+    return opportunity.canApplyReason === 'NO_OPEN_POSITIONS'
+}
+
+/**
+ * Resolves whether the caller's pending review application is currently on the
+ * waitlist. A future explicit WAITLISTED API status is also accepted without
+ * changing today's persisted PENDING workflow.
+ *
+ * @param opportunity caller-scoped review opportunity response.
+ * @returns true when the current application should read Waitlisted.
+ * @throws Does not throw.
+ */
+export function reviewOpportunityIsWaitlisted(opportunity: ReviewOpportunity): boolean {
+    const status = String(opportunity.myApplications?.[0]?.status ?? '')
+        .trim()
+        .toLowerCase()
+    return status === 'waitlisted'
+        || (status === 'pending' && reviewOpportunityIsFull(opportunity))
+}
+
+/**
  * Calculates compensation for the first reviewed submission. Review API's
  * role payment is the fixed reviewer component and `incrementalPayment` is
  * earned for every reviewed submission, including the first one.

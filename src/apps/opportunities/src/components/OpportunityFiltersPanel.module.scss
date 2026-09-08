@@ -71,6 +71,41 @@
     }
 }
 
+.advancedFilters {
+    display: contents;
+}
+
+.moreFilters {
+    align-items: center;
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    color: #007d79;
+    cursor: pointer;
+    display: none;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    gap: 6px;
+    line-height: 22px;
+    padding: 0;
+
+    svg {
+        height: 16px;
+        transition: transform .15s ease;
+        width: 16px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #161616;
+        outline-offset: 3px;
+    }
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
 .searchGroup {
     display: flex;
     flex-direction: column;
@@ -269,5 +304,17 @@
     .panel {
         min-height: 0;
         position: static;
+    }
+
+    .advancedFilters {
+        display: none;
+    }
+
+    .advancedFiltersOpen {
+        display: contents;
+    }
+
+    .moreFilters {
+        display: inline-flex;
     }
 }

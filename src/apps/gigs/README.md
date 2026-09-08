@@ -5,7 +5,9 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
 - `/gigs`: open jobs, search by name/skills/country/duration, country filter,
   featured-first created/updated ordering, hotlist and ten jobs per result page.
 - `/gigs/:slug`: compensation, location, duration, weekly hours, timezone,
-  required skills, description, eligibility notes and application handoff.
+  required skills (displayed as `N/A` when Recruit has none), description,
+  eligibility notes and application handoff. Entering a Gig detail route resets
+  inherited list-page scroll so its header is always visible.
 - `/gigs/:slug/apply`: sign-in with the full return URL, candidate prefill,
   resume upload, skill autocomplete/custom skills, weekly pay expectation,
   referral source, availability confirmations, policy dialogs and application
@@ -20,18 +22,25 @@ cards follow the platform design system. The reference was the August 2026 Figma
 file `C2cA6508RhpjWJDp7MLKbO`, Color page `1:54`, with design context retrieved
 from `674:8828`. Layout retains the legacy listing/detail/form hierarchy while
 adapting to the platform components. Styles apply only inside `.gigs-app`.
+The listing search uses the same teal focused border and ring as the other 2026
+opportunity filters instead of inheriting the legacy blue outline. Keyboard
+focus retains a real teal outline, with a system Highlight fallback in forced
+color modes.
+The Gig Work resources callout opens its external community guide in a new tab
+with the opener relationship removed.
 
 ## Data and behavior
 
 `gigs.service.ts` uses the environment's community-app `/api/recruit` endpoints.
-Public listings/details need no member token. Candidate lookup and applications
-use the refreshed platform token. Applications preserve the existing multipart
-`form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. A saved
+Public listings, details and candidate lookup need no member token; candidate
+lookup accepts both Recruit's current direct array and its legacy `{ data }`
+envelope. Applications use the refreshed platform token and preserve the existing
+multipart `form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. A saved
 resume may be reused; otherwise PDF/DOCX up to **8,000,000 bytes** is required to
 match the server's multer limit. No success state appears without an explicit
 `success: true` response. HTTP errors and Recruit error envelopes returned with
-HTTP 200 both reject. Candidate searches return an existing profile from the
-`data` envelope. A bare `[]` or `{ data: [] }` means no existing candidate and
+HTTP 200 both reject. Candidate searches return an existing profile from either
+response shape. A bare `[]` or `{ data: [] }` means no existing candidate and
 opens the application form with the member's Topcoder profile. Candidate lookup
 failures still block prefill/submission and expose a retry.
 
@@ -41,8 +50,13 @@ Descriptions and policy bodies are sanitized before display. Styling, scripts,
 unsafe URLs and embedded form controls cannot affect the surrounding application.
 
 Search, country, sort and page are URL parameters. Updating filters preserves
-unrelated parameters such as `ref`, and resets the result page. Missing salary
-metadata remains unspecified; zero is not mistaken for missing compensation.
+unrelated parameters such as `ref`, and resets the result page. The selected
+latest-added or latest-updated order applies to both the hotlist and the main
+results. Missing salary metadata remains unspecified; zero is not mistaken for
+missing compensation.
+The detail sidebar's profile, correctly spelled Gig Work forum and opportunity
+links open in a separate tab with opener isolation. Primary Gig navigation and
+`mailto:` links retain their expected in-page and email-client behavior.
 
 Members cannot track application status in this app. The listing and submission
 confirmation do not link to My Gigs, and the app does not request application
@@ -63,10 +77,12 @@ yarn test:no-watch --runInBand --watch=false --runTestsByPath \
   src/apps/gigs/src/gigs.utils.spec.ts \
   src/apps/gigs/src/gigs.service.spec.ts \
   src/apps/gigs/src/components/GigApplicationForm.spec.tsx \
+  src/apps/gigs/src/pages/GigDetailsPage.spec.tsx \
+  src/apps/gigs/src/pages/GigsPage.spec.tsx \
   src/apps/gigs/src/pages/GigApplyPage.spec.tsx
 ```
 
-The tests cover discovery rules, salary fallbacks, required fields, consent and
+The tests cover discovery rules, detail-route scroll restoration, salary fallbacks, required fields, consent and
 availability, upload limits, legacy payload mapping, HTTP-200 error envelopes,
 expired authentication, empty candidate search responses, candidate lookup retry,
 prefill, submission retry and already-placed candidates.

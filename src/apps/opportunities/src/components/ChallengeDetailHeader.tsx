@@ -681,6 +681,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         className={styles.expandedTimeline}
                         id='challenge-timeline'
                     >
+                        <small className={styles.timelineTimezone}>
+                            {`Time zone: ${timelineTimezone()}`}
+                        </small>
                         <div className={styles.timelineGraphic}>
                             <div aria-hidden='true' className={styles.timelineRail}>
                                 {expandedTimeline.map((item, index) => (
@@ -710,8 +713,24 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 ))}
                             </div>
                             <ol className={styles.timelineItems} style={timelineGridStyle}>
-                                {expandedTimeline.map(item => (
+                                {expandedTimeline.map((item, index) => (
                                     <li className={styles[item.state]} data-state={item.state} key={item.key}>
+                                        <span aria-hidden='true' className={styles.mobileTimelineMarker}>
+                                            <span className={classNames(styles.timelineNode, styles[item.state])}>
+                                                <img alt='' src={item.icon} />
+                                            </span>
+                                            {index < expandedTimeline.length - 1 && (
+                                                <span
+                                                    className={classNames(
+                                                        styles.timelineConnector,
+                                                        styles[timelineConnectorState(
+                                                            item.state,
+                                                            expandedTimeline[index + 1].state,
+                                                        )],
+                                                    )}
+                                                />
+                                            )}
+                                        </span>
                                         <strong>{item.name}</strong>
                                         <span className={styles.timelineDates}>
                                             {item.startDate ? (
@@ -725,9 +744,6 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 ))}
                             </ol>
                         </div>
-                        <small className={styles.timelineTimezone}>
-                            {`Time zone: ${timelineTimezone()}`}
-                        </small>
                     </section>
                 )}
             </div>

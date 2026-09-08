@@ -32,6 +32,7 @@ import {
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
 import { myEngagementBucket, myEngagementState } from '../utils/engagement-status.utils'
+import { reviewOpportunityIsWaitlisted } from '../utils/review-opportunity.utils'
 
 import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
@@ -225,7 +226,9 @@ export function myWorkState(result: MyWorkItem): string {
     if (result.kind === 'copilots') {
         value = (result.item as CopilotOpportunity).currentUserApplication?.status
     } else {
-        value = (result.item as ReviewOpportunity).myApplications?.[0]?.status
+        const reviewOpportunity = result.item as ReviewOpportunity
+        if (reviewOpportunityIsWaitlisted(reviewOpportunity)) return 'Waitlisted'
+        value = reviewOpportunity.myApplications?.[0]?.status
         const reviewLabels: Record<string, string> = {
             approved: 'Approved',
             cancelled: 'Cancelled',
