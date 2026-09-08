@@ -95,7 +95,8 @@ export function buildReportIssueDescription(
  * Renders both authored Report an Issue states while adapting their richer
  * fields to support-api-v6's challenge-id plus Markdown-description contract.
  * Attachments are optional and upload through the authenticated Support API
- * before submission.
+ * before submission. Failed attachments must be removed before submission so
+ * files the member intended to include are never silently omitted.
  *
  * @param props optional challenge context and modal state.
  * @returns subject, category, description, attachment, and success states.
@@ -113,6 +114,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     const attachmentId = useRef(0)
     const fileInput = useRef<HTMLInputElement>(null)
     const uploading = attachments.some(attachment => attachment.status === 'uploading')
+    const uploadFailed = attachments.some(attachment => attachment.status === 'error')
     const uploaded = attachments
         .filter((attachment): attachment is IssueAttachment & { result: SupportAttachmentUploadResult } => (
             attachment.status === 'uploaded' && !!attachment.result
@@ -121,6 +123,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         && !!category
         && !!description.trim()
         && !uploading
+        && !uploadFailed
         && !busy
 
     /**
@@ -224,7 +227,8 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
     }
 
     /**
-     * Removes one uploaded, pending, or failed attachment from the report.
+     * Removes one uploaded, pending, or failed attachment from the report and
+     * clears the form error so the member can retry or submit without the file.
      *
      * @param id local attachment identifier.
      * @returns void.
@@ -232,6 +236,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
      */
     const removeAttachment = (id: number): void => {
         setAttachments(current => current.filter(attachment => attachment.id !== id))
+        setError(undefined)
     }
 
     /**
@@ -439,6 +444,9 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                         </div>
                     )}
                     {error && <p className={styles.error} role='alert'>{error}</p>}
+                    {uploadFailed && (
+                        <p>Remove the failed file to try again or send your report without it.</p>
+                    )}
                 </div>
             )}
         </BaseModal>

@@ -39,8 +39,10 @@ multipart `form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14.
 resume may be reused; otherwise PDF/DOCX up to **8,000,000 bytes** is required to
 match the server's multer limit. No success state appears without an explicit
 `success: true` response. HTTP errors and Recruit error envelopes returned with
-HTTP 200 both reject. Candidate lookup failures block prefill/submission and
-expose a retry instead of being interpreted as new candidates.
+HTTP 200 both reject. Candidate searches return an existing profile from either
+response shape. A bare `[]` or `{ data: [] }` means no existing candidate and
+opens the application form with the member's Topcoder profile. Candidate lookup
+failures still block prefill/submission and expose a retry.
 
 Candidate Terms and the Equal Employment Opportunity Policy load on demand
 from the existing Payload compatibility endpoint using the original modal IDs.
@@ -76,12 +78,14 @@ yarn test:no-watch --runInBand --watch=false --runTestsByPath \
   src/apps/gigs/src/gigs.service.spec.ts \
   src/apps/gigs/src/components/GigApplicationForm.spec.tsx \
   src/apps/gigs/src/pages/GigDetailsPage.spec.tsx \
-  src/apps/gigs/src/pages/GigsPage.spec.tsx
+  src/apps/gigs/src/pages/GigsPage.spec.tsx \
+  src/apps/gigs/src/pages/GigApplyPage.spec.tsx
 ```
 
 The tests cover discovery rules, detail-route scroll restoration, salary fallbacks, required fields, consent and
 availability, upload limits, legacy payload mapping, HTTP-200 error envelopes,
-expired authentication, prefill, submission retry and already-placed candidates.
+expired authentication, empty candidate search responses, candidate lookup retry,
+prefill, submission retry and already-placed candidates.
 Also verify the listing, detail and anonymous apply route against real Recruit
 reads in a browser at desktop and mobile widths. Authenticated submission tests
 use mocks so verification does not create real candidates or send recruiter

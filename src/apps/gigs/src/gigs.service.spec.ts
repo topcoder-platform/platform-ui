@@ -1,4 +1,4 @@
-/* eslint-disable sort-keys */
+/* eslint-disable sort-keys, unicorn/no-null */
 import { tokenGetAsync } from '~/libs/core'
 
 import { applyToGig, getCandidate, getGig, getGigs } from './gigs.service'
@@ -64,11 +64,29 @@ describe('Recruit API integration', () => {
         await expect(getCandidate('member@example.com')).resolves.toEqual(candidate)
         fetchMock.mockResolvedValue(response([]))
         await expect(getCandidate('member+tag@example.com')).resolves.toBeUndefined()
+        fetchMock.mockResolvedValue(response({ data: [] }))
+        await expect(getCandidate('member@example.com')).resolves.toBeUndefined()
         fetchMock.mockResolvedValue(response({ candidates: [] }))
         await expect(getCandidate('member@example.com')).rejects.toThrow('Gig Work profile')
         fetchMock.mockResolvedValue(response({ error: true }, 503))
         await expect(getCandidate('member@example.com')).rejects.toThrow()
     })
+    it('accepts Recruit\'s bare empty array for a member without a candidate profile', async () => {
+        fetchMock.mockResolvedValue(response([]))
+        await expect(getCandidate('member@example.com')).resolves.toBeUndefined()
+    })
+    it('returns the existing candidate from a populated search envelope', async () => {
+        const candidate = { slug: 'existing-candidate', salary_expectation: 500, skill: 'Java' }
+        fetchMock.mockResolvedValue(response({ data: [candidate] }))
+        await expect(getCandidate('member@example.com')).resolves.toEqual(candidate)
+    })
+    it.each([{}, { data: 'unexpected' }, { data: null }])(
+        'rejects malformed candidate search responses: %j',
+        async data => {
+            fetchMock.mockResolvedValue(response(data))
+            await expect(getCandidate('member@example.com')).rejects.toMatchObject({ status: 502 })
+        },
+    )
     it('uses a refreshed token for multipart submission without a manual content-type boundary', async () => {
         const body = new FormData()
         fetchMock.mockResolvedValue(response({ success: true }))

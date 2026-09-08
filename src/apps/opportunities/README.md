@@ -443,6 +443,11 @@ S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 category, body, and any uploaded links into that description without inventing
 unsupported request fields.
 
+Attachment gateway, network, and timeout failures display a readable error and
+preserve the report fields. A failed attachment blocks sending until the member
+removes it; the member can then drop or select it again to retry, or send the
+report without it. Successful uploads remain attached throughout this recovery.
+
 The challenge rail parses case-insensitive `fileTypes`, `allowStockArt`,
 `submissionLimit`, `environment`, and `codeRepo` metadata, shows safe Challenge
 API discussions and attachments, and fails closed for unsafe or retired-host
