@@ -60,12 +60,17 @@ export async function getGig(slug: string): Promise<Gig> {
     return recruitRequest<Gig>(`${RECRUIT_URL}/jobs/${encodeURIComponent(slug)}`)
 }
 
-/** Looks up the signed-in member's existing candidate profile; no match returns undefined, failures reject. */
+/**
+ * Looks up the signed-in member's candidate by email for application prefill.
+ * Returns the first candidate, or undefined for Recruit's bare empty array or empty data envelope.
+ * Rejects with RecruitError on authentication, API or malformed-response failures; network errors propagate.
+ */
 export async function getCandidate(email: string): Promise<Candidate | undefined> {
     const result = await recruitRequest<{ data: Candidate[] }>(
         `${RECRUIT_URL}/candidates/search?email=${encodeURIComponent(email)}`,
         true,
     )
+    if (Array.isArray(result) && result.length === 0) return undefined
     if (!Array.isArray(result.data)) throw new RecruitError('We could not load your Gig Work profile.', 502)
     return result.data[0]
 }
