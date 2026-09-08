@@ -134,6 +134,10 @@ phases current. Ended phases and boundaries render complete, future milestones
 remain upcoming, and all timestamps use the browser's local time with its IANA
 timezone displayed below the rail. Phase names select the corresponding Figma
 glyph; unfamiliar phase names deliberately use the generic Review glyph.
+Task challenges omit an Iterative Review phase once its deadline has elapsed,
+matching the legacy participant timeline, and keep Registration ahead of the
+remaining chronological milestones. Task detection accepts the canonical
+catalog type and the legacy `task.isTask` and `legacy.pureV5Task` flags.
 
 ## Challenge Markdown table of contents
 
@@ -238,6 +242,12 @@ DocuSign-template terms expose the Terms API recipient flow and return to the
 challenge route after signing; registration remains blocked until the service
 reports that every external agreement is complete.
 
+Task challenges are assignment-only work. Their details preserve Requirements,
+Registrants, and Winners for visibility, but do not request or expose voluntary
+registration, member submission, dashboard, or in-app Forum workflows. Task
+detection accepts current nested flags, flattened Challenge API records, the
+Task catalog type, and the legacy pure-v5 marker.
+
 Registration and unregistration update the header count and invalidate the
 Registrants table immediately instead of waiting for a page reload. Once a
 registered member has submitted, Unregister stays disabled; a pending or failed
@@ -269,6 +279,9 @@ authenticated-member gate; registration is required only for My Submissions
 and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
+Marathon Match Submissions always use the Figma table with provisional and
+final score columns. The score graph is rendered only in the separate Dashboard
+tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload
@@ -281,7 +294,9 @@ exception. Scores retain the full numeric precision available from the API
 without display rounding across Submissions, My Submissions, Winners,
 submission history, and Marathon Match dashboard tooltips and accessible data.
 Thousands separators, valid zero, and negative scorer sentinels retain their
-established handling.
+established handling. The wide My Submissions scorer table scrolls within its
+card so those full-precision values cannot overlap adjacent score or action
+columns.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
