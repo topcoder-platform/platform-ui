@@ -33,7 +33,10 @@ one `file` field as authenticated multipart form data to
 `POST /v6/support/attachments`; support-api-v6 then uses the standard hosted
 upload flow and returns the canonical HTTPS URL inserted into Markdown. The
 browser never connects directly to the configured storage bucket. Both the UI
-and API enforce a 2 MiB limit. The Support editor and API share the exact
+and API enforce a 2 MiB limit. Upload requests have a 30-second client timeout;
+gateway errors (502/503/504), network failures, and timeouts show a readable
+temporary-unavailability message without displaying the gateway HTML. The client
+does not automatically retry uploads. The Support editor and API share the exact
 extension/MIME allowlist: `.7z`, `.bmp`, `.csv`, `.doc`, `.docx`, `.gif`, `.gz`,
 `.jpeg`, `.jpg`, `.json`, `.log`, `.pdf`, `.png`, `.ppt`, `.pptx`, `.rar`,
 `.tar`, `.tgz`, `.tif`, `.tiff`, `.txt`, `.webp`, `.xls`, `.xlsx`, `.xml`, and

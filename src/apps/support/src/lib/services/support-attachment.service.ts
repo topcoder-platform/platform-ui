@@ -1,4 +1,6 @@
 /** Authenticated attachment uploader for support-api-v6. */
+import { isAxiosError } from 'axios'
+
 import { xhrPostAsync } from '~/libs/core'
 
 import { SUPPORT_API_BASE } from './support.service'
@@ -72,7 +74,9 @@ export interface SupportAttachmentUploadResult {
  * @returns canonical hosted-file metadata for Markdown insertion.
  * @throws Error when no file is supplied, the file is empty, larger than 2 MiB,
  * does not match the Support API extension/MIME allowlist, or support-api-v6
- * rejects or cannot complete the upload.
+ * rejects or cannot complete the upload. Gateway, network, and timeout failures
+ * use a readable temporary-unavailability message. Requests time out after 30
+ * seconds, allowing the API's 20-second provider deadline to respond first.
  */
 export async function uploadSupportAttachment(
     file: File,
@@ -123,6 +127,17 @@ export async function uploadSupportAttachment(
                         : 0
                 options.onProgress(Math.max(0, Math.min(100, Math.round(ratio * 100))))
             },
+            timeout: 30_000,
         },
     )
+        .catch((error: unknown) => {
+            if (isAxiosError(error) && (
+                [502, 503, 504].includes(error.response?.status ?? 0)
+                || ['ERR_NETWORK', 'ECONNABORTED', 'ETIMEDOUT'].includes(error.code ?? '')
+            )) {
+                throw new Error('Attachment uploads are temporarily unavailable. Please try again.')
+            }
+
+            throw error
+        })
 }
