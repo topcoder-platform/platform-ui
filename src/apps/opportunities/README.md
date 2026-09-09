@@ -106,10 +106,8 @@ than presented as free work.
 Approved applications, rather than pending applications, consume reviewer
 capacity. When `remainingPositions` reaches zero, eligible reviewers can still
 use the “Apply to be a reviewer (waitlist)” detail CTA; the page explains that
-outcome before submission and confirms that Support may contact the applicant
-if another reviewer cannot complete the review. The compatibility UI also
-accepts the older capacity-only `NO_OPEN_POSITIONS` response while preserving
-all other API rejection reasons. Review API persists these applications as
+outcome before submission and confirms that Support will contact the applicant
+if another reviewer cannot complete the review. Review API persists these applications as
 `PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
 while capacity remains full, then naturally return to `Applied` if a position
 reopens or to `Approved` when the reviewer is selected.

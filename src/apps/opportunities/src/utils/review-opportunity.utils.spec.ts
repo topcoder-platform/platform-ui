@@ -2,7 +2,6 @@ import { ReviewOpportunity } from '../models'
 
 import {
     reviewFirstSubmissionPayment,
-    reviewOpportunityCanApply,
     reviewOpportunityIsFull,
     reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
@@ -75,29 +74,6 @@ describe('review opportunity waitlist state', () => {
             remainingPositions: 0,
         }))
             .toBe(true)
-    })
-
-    it('allows only capacity-rejected legacy responses to join the waitlist', () => {
-        const fullOpportunity: ReviewOpportunity = {
-            canApply: false,
-            canApplyReason: 'NO_OPEN_POSITIONS',
-            challengeId: 'challenge-id',
-            id: 'review-id',
-            remainingPositions: 0,
-        }
-
-        expect(reviewOpportunityCanApply(fullOpportunity))
-            .toBe(true)
-        expect(reviewOpportunityCanApply({
-            ...fullOpportunity,
-            canApplyReason: 'OPPORTUNITY_CLOSED',
-        }))
-            .toBe(false)
-        expect(reviewOpportunityCanApply({
-            ...fullOpportunity,
-            canApplyReason: 'ALREADY_APPLIED',
-        }))
-            .toBe(false)
     })
 
     it('labels only a pending caller application as waitlisted while capacity is full', () => {

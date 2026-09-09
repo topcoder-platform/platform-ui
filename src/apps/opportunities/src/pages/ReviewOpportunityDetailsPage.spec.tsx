@@ -401,42 +401,9 @@ describe('ReviewOpportunityDetailsPage', () => {
                 .toHaveBeenCalled()
             expect(mockedToastSuccess)
                 .toHaveBeenCalledWith(
-                    'You are waitlisted. Support may contact you if another reviewer cannot complete the review and '
+                    'You are waitlisted. Support will contact you if another reviewer cannot complete the review and '
                     + 'you are needed.',
                 )
-        })
-    })
-
-    it('accepts a waitlist application from the legacy capacity-only eligibility response', async () => {
-        const mutate = jest.fn()
-        mockProfile = { roles: ['Reviewer'], userId: 12345 }
-        mockUseSWR.mockReturnValue({
-            data: reviewFixture({
-                approvedApplicationCount: 2,
-                canApply: false,
-                canApplyReason: 'NO_OPEN_POSITIONS',
-                openPositions: 2,
-                remainingPositions: 0,
-            }),
-            error: undefined,
-            isValidating: false,
-            mutate,
-        })
-
-        renderPage()
-
-        const waitlistButton = screen.getByRole('button', {
-            name: 'Apply to be a reviewer (waitlist)',
-        })
-        expect(waitlistButton)
-            .toBeEnabled()
-        fireEvent.click(waitlistButton)
-
-        await waitFor(() => {
-            expect(mockedApplyToReviewOpportunity)
-                .toHaveBeenCalledWith('review-id', 'REVIEWER')
-            expect(mutate)
-                .toHaveBeenCalled()
         })
     })
 

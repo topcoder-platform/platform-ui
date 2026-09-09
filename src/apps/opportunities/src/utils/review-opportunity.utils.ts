@@ -87,25 +87,6 @@ export function reviewOpportunityIsFull(opportunity: ReviewOpportunity): boolean
 }
 
 /**
- * Resolves whether the current reviewer may submit an application, including
- * the temporary pre-waitlist Review API response used by older deployments.
- * A full opportunity is compatible only when the API's sole rejection reason
- * is capacity; lifecycle, role, authentication, and duplicate rejections stay
- * authoritative.
- *
- * @param opportunity review opportunity eligibility and capacity response.
- * @returns true when a normal or waitlist application may be submitted.
- * @throws Does not throw.
- */
-export function reviewOpportunityCanApply(opportunity: ReviewOpportunity): boolean {
-    return opportunity.canApply === true
-        || (
-            opportunity.canApplyReason === 'NO_OPEN_POSITIONS'
-            && reviewOpportunityIsFull(opportunity)
-        )
-}
-
-/**
  * Resolves whether the caller's pending review application is currently on the
  * waitlist. A future explicit WAITLISTED API status is also accepted without
  * changing today's persisted PENDING workflow.

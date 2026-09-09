@@ -430,7 +430,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                             : 'VAeo0vZ5tQFjPZlIcdt0m'
                         : undefined
                 }
-                title={policy === 'terms' ? 'Candidate Terms' : 'Equal Employment Opportunity Policy'}
+                title={policy === 'terms' ? 'CANDIDATE TERMS' : 'Equal Employment Opportunity Policy'}
                 close={() => setPolicy(undefined)}
             />
         </form>

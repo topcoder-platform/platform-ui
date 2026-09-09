@@ -177,7 +177,7 @@ describe('Gig application form', () => {
         expect(applyToGig).not.toHaveBeenCalled()
     })
     it.each([
-        ['Read Candidate Terms', 'Candidate Terms'],
+        ['Read Candidate Terms', 'CANDIDATE TERMS'],
         ['View our Equal Employment Opportunity Policy', 'Equal Employment Opportunity Policy'],
     ])('opens %s in a compact modal with a visible close action', (trigger, title) => {
         render(

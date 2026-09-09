@@ -38,7 +38,6 @@ import {
     CHALLENGE_EXPLAINED_URL,
     memberProfileUrl,
     reviewFirstSubmissionPayment,
-    reviewOpportunityCanApply,
     reviewOpportunityIsFull,
     reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
@@ -257,7 +256,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             return
         }
 
-        if (!opportunity || !reviewOpportunityCanApply(opportunity)) return
+        if (!opportunity?.canApply) return
         const role = applicationRole
             || opportunity.defaultApplicationRole
             || opportunity.applicationRoles?.[0]
@@ -268,7 +267,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             await applyToReviewOpportunity(opportunity.id, role)
             await response.mutate()
             toast.success(joinsWaitlist
-                ? 'You are waitlisted. Support may contact you if another reviewer cannot complete the review and '
+                ? 'You are waitlisted. Support will contact you if another reviewer cannot complete the review and '
                     + 'you are needed.'
                 : 'Your reviewer application was submitted.')
         } catch (error) {
@@ -304,7 +303,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
         )
     const applications = opportunity.applications?.filter(application => application.status !== 'CANCELLED') ?? []
     const applicationTotal = applications.length
-    const canApply = reviewOpportunityCanApply(opportunity)
+    const canApply = opportunity.canApply === true
     const isWaitlisted = reviewOpportunityIsWaitlisted(opportunity)
     const willJoinWaitlist = canApply && reviewOpportunityIsFull(opportunity)
     const disabledLabel = !isReviewer
