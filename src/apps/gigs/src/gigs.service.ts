@@ -5,12 +5,22 @@ import { Candidate, Gig } from './models'
 
 const RECRUIT_URL = `${EnvironmentConfig.COMMUNITY_APP_URL}/api/recruit`
 
-/** Returns whether Recruit supplied one of its documented successful application response shapes. */
-function isConfirmedApplication(result: unknown): boolean {
+/**
+ * Returns whether Recruit supplied an explicit success or an assignment for the requested Gig.
+ *
+ * @param result Recruit's parsed application response.
+ * @param slug The requested Gig slug, which must match a returned assignment resource.
+ * @returns Whether the response confirms the application.
+ */
+function isConfirmedApplication(result: unknown, slug: string): boolean {
     if (!result || typeof result !== 'object' || Array.isArray(result)) return false
     const response = result as Record<string, unknown>
     return response.success === true
-        || (response.success === undefined && Object.keys(response).length > 0)
+        || (
+            typeof response.candidate_slug === 'string'
+            && response.candidate_slug.trim().length > 0
+            && response.job_slug === slug
+        )
 }
 
 /** An API failure with an HTTP-equivalent status, including Recruit errors returned with HTTP 200. */
@@ -92,7 +102,7 @@ export async function applyToGig(slug: string, body: FormData): Promise<void> {
         true,
         body,
     )
-    if (!isConfirmedApplication(result)) {
+    if (!isConfirmedApplication(result, slug)) {
         throw new RecruitError('Your application was not confirmed. Please try again.', 502)
     }
 }

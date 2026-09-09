@@ -110,6 +110,14 @@ describe('Recruit API integration', () => {
         await expect(applyToGig('gig-slug', new FormData()))
             .resolves.toBeUndefined()
     })
+    it.each([
+        { message: 'Assignment failed' },
+        { candidate_slug: 'candidate-slug' },
+        { candidate_slug: 'candidate-slug', job_slug: 'another-gig' },
+    ])('rejects a nonempty response that does not confirm the requested assignment: %j', async data => {
+        fetchMock.mockResolvedValue(response(data))
+        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed')
+    })
     it('never treats an error, an empty result, or an expired session as a successful application', async () => {
         fetchMock.mockResolvedValue(response({ error: true, errorObj: { notAllowed: true } }))
         await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('already placed')

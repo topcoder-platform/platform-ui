@@ -146,3 +146,7 @@
     justify-content: center;
     width: 100%;
 }
+
+@media (max-width: 464px) {
+    .react-responsive-modal-modal.gigs-policy-modal { height: auto; }
+}
