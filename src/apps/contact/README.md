@@ -77,11 +77,18 @@ exclude recipients with no recorded email engagement within a selected period.
 
 Subscription categories can be created, activated, or deactivated. A member
 lookup shows explicit category preferences and delivery suppression. Changes
-require audit provenance. Existing preferences can be imported in JSON batches
-of at most 500 rows shaped as `{memberId, subscriptionTypeId, subscribed}`.
+require audit provenance. Bulk updates of current preferences accept JSON batches
+of at most 500 rows shaped as `{memberId, subscriptionTypeId, subscribed}`. These
+updates take effect now and replace each listed member/category's current choice.
 All rows are validated before writes. Writes proceed sequentially and stop on
-first failure, reporting the exact completed count for review/retry. This imports
-existing member preferences only and never infers consent or creates contacts.
+first failure, reporting the exact completed count for review/retry. The confirmation
+explicitly authorizes applying the current choices now. Updates never infer consent
+or create contacts.
+
+Historical HubSpot records must use the reviewed process documented in
+`contact-api-v6/docs/subscription-migration.md`, which preserves original timestamps
+and opt-outs. The bulk UI performs
+current-time updates and does not preserve historical timestamps.
 
 ## Onboarding sequences
 

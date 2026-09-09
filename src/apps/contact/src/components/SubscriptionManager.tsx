@@ -13,7 +13,7 @@ interface Props {
 /**
  * Manages subscription categories and explicit preferences for existing Topcoder members.
  * @param props current categories and a refresh callback after changes.
- * @returns category controls plus individual and audited bulk preference migration forms.
+ * @returns category controls plus individual and audited bulk current preference update forms.
  * @throws API and JSON validation failures are caught and displayed without silently skipping rows.
  */
 export const SubscriptionManager: FC<Props> = props => {
@@ -96,18 +96,19 @@ export const SubscriptionManager: FC<Props> = props => {
     }
 
     /**
-     * Imports up to 500 explicit existing-member preferences sequentially with an audit source.
-     * @returns after all rows save; reports the completed count if an API failure stops the import.
+     * Applies up to 500 current member preferences sequentially with an audit source, effective now.
+     * Replaces each listed member/category choice; historical timestamps require the reviewed migration process.
+     * @returns after all rows save; reports the completed count if an API failure stops the updates.
      * @throws Validation failures before writes, or an annotated API error at the first failed row.
      */
-    async function importPreferences(): Promise<void> {
+    async function updateCurrentPreferences(): Promise<void> {
         if (!source.trim() || !bulkConfirmed) {
-            throw new Error('Provide a source and confirm these are recorded preferences.')
+            throw new Error('Provide a source and confirm these preference updates take effect now.')
         }
 
         const rows: unknown = JSON.parse(bulk)
         if (!Array.isArray(rows) || !rows.length || rows.length > 500) {
-            throw new Error('Provide a JSON array containing 1–500 preference records.')
+            throw new Error('Provide a JSON array containing 1–500 current preference updates.')
         }
 
         for (const row of rows) {
@@ -137,7 +138,7 @@ export const SubscriptionManager: FC<Props> = props => {
                     subscriptionTypeId: row.subscriptionTypeId,
                 })
                 completed += 1
-                setMessage(`Imported ${completed} of ${rows.length} preference records.`)
+                setMessage(`Updated ${completed} of ${rows.length} current preferences, effective now.`)
             } catch (failure) {
                 throw new Error(
                     `Stopped after ${completed} saved rows. Row ${completed + 1}: ${contactError(
@@ -248,7 +249,7 @@ export const SubscriptionManager: FC<Props> = props => {
                     <input
                         value={source}
                         onChange={event => setSource(event.target.value)}
-                        placeholder='HubSpot export 2026-09-09 / member request ticket ID'
+                        placeholder='Member request ticket ID / current consent evidence'
                     />
                 </label>
                 {member && (
@@ -305,14 +306,17 @@ export const SubscriptionManager: FC<Props> = props => {
                 )}
             </fieldset>
             <fieldset className='contact-fields' disabled={busy}>
-                <legend>Import existing member preferences</legend>
+                <legend>Bulk update current preferences</legend>
                 <p>
-                    Use a verified export of existing subscription preferences. This imports preferences only;
-                    it does not create contacts or infer consent. Set the source above. Maximum 500 records
-                    per batch.
+                    Updates take effect now and replace each listed member&apos;s current choice for that
+                    category. Set the preference source above. Maximum 500 updates per batch.
+                </p>
+                <p>
+                    For historical HubSpot records, use the reviewed migration process to preserve original
+                    timestamps and opt-outs. This form does not preserve historical timestamps.
                 </p>
                 <label>
-                    Preference records (JSON)
+                    Current preference updates (JSON)
                     <textarea
                         rows={8}
                         value={bulk}
@@ -329,10 +333,11 @@ export const SubscriptionManager: FC<Props> = props => {
                         checked={bulkConfirmed}
                         onChange={event => setBulkConfirmed(event.target.checked)}
                     />
-                    These records reflect existing explicit subscription preferences, including opt-outs.
+                    I confirm these are authorized current preference updates, effective now,
+                    replacing the listed current choices.
                 </label>
-                <button type='button' disabled={!bulkConfirmed} onClick={() => run(importPreferences)}>
-                    Import recorded preferences
+                <button type='button' disabled={!bulkConfirmed} onClick={() => run(updateCurrentPreferences)}>
+                    Apply current preferences now
                 </button>
             </fieldset>
         </section>
