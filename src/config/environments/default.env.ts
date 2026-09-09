@@ -161,6 +161,7 @@ export const API = {
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
+export const CONTACT_API = getReactEnv<string>('CONTACT_API_URL', `${API.V6}/contact`)
 export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 export const REPORTS_API = `${API.V6}/reports`
 export const PROCUREMENT_API = `${API.V6}/procurement`

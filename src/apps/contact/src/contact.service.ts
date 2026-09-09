@@ -1,0 +1,53 @@
+/** Authenticated transport for the Contact API. All authorization and send checks also run server-side. */
+import { EnvironmentConfig } from '~/config'
+import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+
+export const CONTACT_API_BASE = EnvironmentConfig.CONTACT_API.replace(/\/$/, '')
+
+/**
+ * Reads an admin resource from the configured Contact API using the shared authenticated client.
+ * @param path relative API path, with encoded identifiers and optional query parameters.
+ * @returns the typed response document.
+ * @throws Rejects on network, authentication, authorization, or API validation errors.
+ */
+export function contactGet<T>(path: string): Promise<T> {
+    return xhrGetAsync<T>(`${CONTACT_API_BASE}/${path}`)
+}
+
+/**
+ * Creates a Contact resource or invokes an action using the signed-in administrator's token.
+ * @param path relative action/resource path.
+ * @param body action input validated again by the API.
+ * @returns the typed API response.
+ * @throws Rejects on network, authorization, validation, or concurrency failures.
+ */
+export function contactPost<T>(path: string, body: unknown): Promise<T> {
+    return xhrPostAsync<unknown, T>(`${CONTACT_API_BASE}/${path}`, body)
+}
+
+/**
+ * Updates a Contact resource through the authenticated API.
+ * @param path relative resource path with encoded identifiers.
+ * @param body changed resource fields.
+ * @returns the persisted resource document.
+ * @throws Rejects on network, authorization, validation, or concurrency failures.
+ */
+export function contactPatch<T>(path: string, body: unknown): Promise<T> {
+    return xhrPatchAsync<unknown, T>(`${CONTACT_API_BASE}/${path}`, body)
+}
+
+/**
+ * Extracts a readable API error for action status messages.
+ * @param error unknown thrown request failure.
+ * @returns server validation text or a general request failure message.
+ * @throws Does not throw.
+ */
+export function contactError(error: unknown): string {
+    const candidate = error as { message?: string; response?: { data?: { message?: string | string[] } } }
+    const message = candidate?.response?.data?.message
+    return (
+        (Array.isArray(message) ? message.join('; ') : message)
+        || candidate?.message
+        || 'The request failed. Please try again.'
+    )
+}

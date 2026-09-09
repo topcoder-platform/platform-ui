@@ -22,6 +22,7 @@ import { supportRoutes } from '~/apps/support'
 import { thriveRoutes } from '~/apps/thrive'
 import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
 import { analyticsRoutes } from '~/apps/analytics'
+import { contactRoutes } from '~/apps/contact'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
@@ -73,6 +74,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...engagementsRoutes,
     ...procurementRoutes,
     ...analyticsRoutes,
+    ...contactRoutes,
     ...statusRoutes,
     ...supportRoutes,
     ...thriveRoutes,
