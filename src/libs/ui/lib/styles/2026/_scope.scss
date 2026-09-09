@@ -63,6 +63,16 @@ $tc-2026-apps:
             }
         }
 
+        // Universal nav footer sits on a dark surface; keep nav links white.
+        #footer-nav-el a:not([class*='cta']) {
+            color: #ffffff;
+
+            &:hover,
+            &:focus-visible {
+                color: #ffffff;
+            }
+        }
+
         button,
         input,
         select,
@@ -75,8 +85,7 @@ $tc-2026-apps:
         select:focus-visible,
         textarea:focus-visible,
         [tabindex]:focus-visible {
-            outline: 3px solid rgba($tc-2026-focus, .35);
-            outline-offset: 2px;
+            outline: 1px solid $tc-2026-teal;
         }
 
         input:not([type='checkbox'], [type='radio']),
