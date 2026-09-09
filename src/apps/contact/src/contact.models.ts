@@ -23,6 +23,18 @@ export interface Segment {
     id: string
     name: string
     filter: SegmentFilter
+    createdAt: string
+    createdBy: string
+    createdByHandle: string
+    memberCount: number
+}
+
+/** Canonical members matching saved criteria before email consent and delivery eligibility checks. */
+export interface SegmentMemberPage {
+    members: Array<{ memberId: string; handle: string; email: string }>
+    total: number
+    limit: number
+    offset: number
 }
 
 export interface ContactConfig {

@@ -171,44 +171,46 @@ export const SubscriptionManager: FC<Props> = props => {
             )}
             <fieldset className='contact-fields' disabled={busy}>
                 <legend>Subscription categories</legend>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name / ID</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {props.types.map(type => (
-                            <tr key={type.id}>
-                                <td>
-                                    {type.name}
-                                    <br />
-                                    <small>{type.id}</small>
-                                </td>
-                                <td>{type.description}</td>
-                                <td>{type.active ? 'Active' : 'Inactive'}</td>
-                                <td>
-                                    <button
-                                        type='button'
-                                        onClick={() => run(async () => {
-                                            await contactPatch(`subscription-types/${type.id}`, {
-                                                active: !type.active,
-                                                description: type.description,
-                                                name: type.name,
-                                            })
-                                            await props.onRefresh()
-                                        })}
-                                    >
-                                        {type.active ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                </td>
+                <div className='contact-table-scroll'>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name / ID</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {props.types.map(type => (
+                                <tr key={type.id}>
+                                    <td>
+                                        {type.name}
+                                        <br />
+                                        <small>{type.id}</small>
+                                    </td>
+                                    <td>{type.description}</td>
+                                    <td>{type.active ? 'Active' : 'Inactive'}</td>
+                                    <td>
+                                        <button
+                                            type='button'
+                                            onClick={() => run(async () => {
+                                                await contactPatch(`subscription-types/${type.id}`, {
+                                                    active: !type.active,
+                                                    description: type.description,
+                                                    name: type.name,
+                                                })
+                                                await props.onRefresh()
+                                            })}
+                                        >
+                                            {type.active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 <div className='contact-grid'>
                     <label>
                         New category name
@@ -229,7 +231,7 @@ export const SubscriptionManager: FC<Props> = props => {
             </fieldset>
             <fieldset className='contact-fields' disabled={busy}>
                 <legend>Member preferences</legend>
-                <div className='contact-toolbar'>
+                <div className='contact-toolbar contact-control-row'>
                     <label>
                         Existing member ID
                         <input
@@ -264,44 +266,46 @@ export const SubscriptionManager: FC<Props> = props => {
                                 suppression.
                             </p>
                         )}
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Preference</th>
-                                    <th>Source</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {props.types.map(type => {
-                                    const preference = member.subscriptions.find(
-                                        item => item.subscriptionTypeId === type.id,
-                                    )
-                                    return (
-                                        <tr key={type.id}>
-                                            <td>{type.name}</td>
-                                            <td>
-                                                {preference?.subscribed ? 'Subscribed' : 'Not subscribed'}
-                                            </td>
-                                            <td>{preference?.source || 'No recorded preference'}</td>
-                                            <td>
-                                                <button
-                                                    type='button'
-                                                    onClick={() => run(
-                                                        () => updatePreference(type.id, !preference?.subscribed),
-                                                    )}
-                                                >
-                                                    {preference?.subscribed
-                                                        ? 'Record opt-out'
-                                                        : 'Record explicit opt-in'}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
+                        <div className='contact-table-scroll'>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Preference</th>
+                                        <th>Source</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {props.types.map(type => {
+                                        const preference = member.subscriptions.find(
+                                            item => item.subscriptionTypeId === type.id,
+                                        )
+                                        return (
+                                            <tr key={type.id}>
+                                                <td>{type.name}</td>
+                                                <td>
+                                                    {preference?.subscribed ? 'Subscribed' : 'Not subscribed'}
+                                                </td>
+                                                <td>{preference?.source || 'No recorded preference'}</td>
+                                                <td>
+                                                    <button
+                                                        type='button'
+                                                        onClick={() => run(
+                                                            () => updatePreference(type.id, !preference?.subscribed),
+                                                        )}
+                                                    >
+                                                        {preference?.subscribed
+                                                            ? 'Record opt-out'
+                                                            : 'Record explicit opt-in'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </>
                 )}
             </fieldset>

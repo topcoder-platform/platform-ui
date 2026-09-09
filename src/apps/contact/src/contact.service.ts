@@ -1,6 +1,6 @@
 /** Authenticated transport for the Contact API. All authorization and send checks also run server-side. */
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 
 export const CONTACT_API_BASE = EnvironmentConfig.CONTACT_API.replace(/\/$/, '')
 
@@ -34,6 +34,16 @@ export function contactPost<T>(path: string, body: unknown): Promise<T> {
  */
 export function contactPatch<T>(path: string, body: unknown): Promise<T> {
     return xhrPatchAsync<unknown, T>(`${CONTACT_API_BASE}/${path}`, body)
+}
+
+/**
+ * Deletes a Contact resource using the signed-in administrator's token.
+ * @param path relative resource path with encoded identifiers.
+ * @returns completion after the API confirms deletion, including an empty 204 response.
+ * @throws Rejects on network, authorization, missing-resource, or API validation failures.
+ */
+export function contactDelete(path: string): Promise<void> {
+    return xhrDeleteAsync<void>(`${CONTACT_API_BASE}/${path}`)
 }
 
 /**

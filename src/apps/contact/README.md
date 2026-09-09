@@ -72,8 +72,38 @@ group, and language values match any selection.
 Upper date inputs include the entire selected UTC calendar day and serialize as
 the next midnight because the API upper bound is exclusive. Reloaded filters
 convert that exclusive instant back to the selected date.
-Reusable segments can be copied and saved under a new name. A campaign may also
-exclude recipients with no recorded email engagement within a selected period.
+The segment table lists name, UTC creation date, creator handle and matching member
+count. Add and Edit open a focused criteria modal; cancel discards the local draft.
+Delete requires confirmation and removes only the saved definition, leaving member
+records and filters already copied into campaigns intact. View members opens a
+paginated handle/email table backed by `GET /segments/:id/members?limit=25&offset=0`.
+All dialogs use the shared accessible modal with focus trapping, Escape/close and
+focus restoration; writes prevent dismissal until their outcome is known. Failed
+requests preserve edits or expose retry, and late member-page responses are ignored.
+
+`SegmentManager` refreshes metadata after confirmed writes; a failed refresh can be
+retried without repeating a successful create/update/delete. Segment actions remain
+disabled during refresh and after a refresh error until a successful retry, preventing
+stale criteria from reopening and overwriting a saved update. Confirmed saves and
+deletions immediately reconcile the parent inventory, so tab switches retain the
+authoritative result even after a refresh failure. A request generation guard prevents
+older list responses from restoring superseded criteria or deleted definitions. `SegmentEditorModal`
+sends only `{name, filter}` to POST/PATCH. `SegmentDeleteModal` uses the authenticated
+`contactDelete` helper and accepts an empty 204 response. `SegmentMembersModal`
+requests one page at a time and displays server totals, loading, empty and error states.
+Function inputs, return values and failure behavior are documented in source.
+
+Segment counts represent all matching active/nondeleted canonical member IDs, before
+marketing consent, email deduplication or delivery suppression. They are not an exact
+send audience; that is calculated for the saved campaign and subscription type before
+sending. A campaign may also exclude recipients with no recorded email engagement
+within a selected period.
+
+Contact tabs use the Reviews app's underline style with keyboard navigation. Every
+panel uses the same workspace width. Toolbar rows align labeled inputs/selects and
+action buttons at the bottom, then stack on mobile screens. Tables and the email
+editor scroll within the workspace on narrow screens. Reserved scrollbar space
+prevents short and tall panels from shifting the workspace horizontally.
 
 Subscription categories can be created, activated, or deactivated. A member
 lookup shows explicit category preferences and delivery suppression. Changes

@@ -1,6 +1,6 @@
 /* Form callbacks capture the current field and draft state. */
 /* eslint react/jsx-no-bind: ["error", { "allowArrowFunctions": true, "allowFunctions": true }] */
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react'
 
 import { AutomationManager } from './components/AutomationManager'
 import { CampaignComposer } from './components/CampaignComposer'
@@ -12,6 +12,7 @@ import { contactError, contactGet, contactPost } from './contact.service'
 import './contact.scss'
 
 type Tab = 'campaigns' | 'segments' | 'subscriptions' | 'automations'
+const CONTACT_TABS: Tab[] = ['campaigns', 'segments', 'subscriptions', 'automations']
 
 /**
  * Renders the administrator-only Contact application with live API campaigns, segments, and subscriptions.
@@ -23,6 +24,7 @@ const ContactApp: FC = () => {
     const [config, setConfig] = useState<ContactConfig>()
     const [campaigns, setCampaigns] = useState<Campaign[]>([])
     const [segments, setSegments] = useState<Segment[]>([])
+    const segmentGeneration = useRef(0)
     const [templates, setTemplates] = useState<EmailTemplate[]>([])
     const [editing, setEditing] = useState<Campaign | 'new'>()
     const [report, setReport] = useState<Campaign>()
@@ -32,11 +34,13 @@ const ContactApp: FC = () => {
     const [busy, setBusy] = useState(false)
 
     /**
-     * Loads the Contact workspace resources atomically; caller handles transport errors.
-     * @returns resolves after config, campaigns, and segments replace workspace state.
+     * Loads Contact resources together and ignores segment results superseded by a reload or confirmed mutation.
+     * @returns resolves after workspace resources update; newer authoritative segment state is preserved.
      * @throws Rejects on API, network, or authorization failures.
      */
     const reload = useCallback(async (): Promise<void> => {
+        segmentGeneration.current += 1
+        const generation = segmentGeneration.current
         const [nextConfig, nextCampaigns, nextSegments, nextTemplates] = await Promise.all([
             contactGet<ContactConfig>('config'),
             contactGet<Campaign[]>('campaigns'),
@@ -45,9 +49,33 @@ const ContactApp: FC = () => {
         ])
         setConfig(nextConfig)
         setCampaigns(nextCampaigns)
-        setSegments(nextSegments)
+        if (generation === segmentGeneration.current) setSegments(nextSegments)
         setTemplates(nextTemplates)
     }, [])
+
+    /**
+     * Updates parent inventory from the saved API response and invalidates older segment list requests.
+     * @param segment authoritative POST/PATCH response, retained across tab switches and refresh failures.
+     * @returns void after replacing the existing segment or prepending the newly created definition.
+     * @throws Does not throw.
+     */
+    function segmentSaved(segment: Segment): void {
+        segmentGeneration.current += 1
+        setSegments(previous => (previous.some(item => item.id === segment.id)
+            ? previous.map(item => (item.id === segment.id ? segment : item))
+            : [segment, ...previous]))
+    }
+
+    /**
+     * Removes a confirmed deletion from parent inventory and invalidates older segment list requests.
+     * @param id exact deleted segment ID; all other definitions are preserved.
+     * @returns void after removing the definition, including when the Segments tab subsequently unmounts.
+     * @throws Does not throw.
+     */
+    function segmentDeleted(id: string): void {
+        segmentGeneration.current += 1
+        setSegments(previous => previous.filter(item => item.id !== id))
+    }
 
     useEffect(() => {
         reload()
@@ -109,6 +137,30 @@ const ContactApp: FC = () => {
         setCancelling(undefined)
     }
 
+    /**
+     * Selects and focuses the adjacent tab for arrow keys, or the first/last tab for Home/End.
+     * @param event keyboard event from the Contact tab currently holding focus.
+     * @returns void after updating tab selection and focus; unrelated keys retain browser behavior.
+     * @throws Does not throw; a missing tab element simply skips the focus update.
+     */
+    function navigateTabs(event: KeyboardEvent<HTMLButtonElement>): void {
+        const current = CONTACT_TABS.indexOf(tab)
+        const indices: Partial<Record<string, number>> = {
+            ArrowLeft: (current + CONTACT_TABS.length - 1) % CONTACT_TABS.length,
+            ArrowRight: (current + 1) % CONTACT_TABS.length,
+            End: CONTACT_TABS.length - 1,
+            Home: 0,
+        }
+        const nextIndex = indices[event.key]
+        if (nextIndex === undefined) return
+        event.preventDefault()
+        const next = CONTACT_TABS[nextIndex]
+        setTab(next)
+        event.currentTarget.parentElement
+            ?.querySelector<HTMLButtonElement>(`#contact-tab-${next}`)
+            ?.focus()
+    }
+
     return (
         <main className='contact-app'>
             <header className='contact-header'>
@@ -120,21 +172,26 @@ const ContactApp: FC = () => {
                 <span className='contact-service'>Delivered with Amazon SES</span>
             </header>
             {!editing && !report && (
-                <nav aria-label='Contact navigation' className='contact-tabs'>
-                    {(['campaigns', 'segments', 'subscriptions', 'automations'] as const).map(
+                <div role='tablist' aria-label='Contact sections' className='contact-tabs'>
+                    {CONTACT_TABS.map(
                         value => (
                             <button
                                 type='button'
                                 key={value}
-                                aria-current={tab === value ? 'page' : undefined}
+                                role='tab'
+                                id={`contact-tab-${value}`}
+                                aria-selected={tab === value}
+                                aria-controls={tab === value ? `contact-panel-${value}` : undefined}
+                                tabIndex={tab === value ? 0 : -1}
                                 onClick={() => setTab(value)}
+                                onKeyDown={navigateTabs}
                             >
                                 {value.charAt(0)
                                     .toUpperCase() + value.slice(1)}
                             </button>
                         ),
                     )}
-                </nav>
+                </div>
             )}
             {error && (
                 <div role='alert' className='contact-error'>
@@ -160,7 +217,12 @@ const ContactApp: FC = () => {
             )}
             {report && <CampaignResults campaign={report} onClose={() => setReport(undefined)} />}
             {config && !editing && !report && (
-                <>
+                <div
+                    role='tabpanel'
+                    id={`contact-panel-${tab}`}
+                    aria-labelledby={`contact-tab-${tab}`}
+                    className='contact-tab-panel'
+                >
                     {tab === 'campaigns' && (
                         <section>
                             <div className='contact-toolbar'>
@@ -315,12 +377,17 @@ const ContactApp: FC = () => {
                         <AutomationManager campaigns={campaigns} config={config} />
                     )}
                     {tab === 'segments' && (
-                        <SegmentManager segments={segments} onRefresh={reload} />
+                        <SegmentManager
+                            segments={segments}
+                            onSaved={segmentSaved}
+                            onDeleted={segmentDeleted}
+                            onRefresh={reload}
+                        />
                     )}
                     {tab === 'subscriptions' && (
                         <SubscriptionManager types={config.subscriptionTypes} onRefresh={reload} />
                     )}
-                </>
+                </div>
             )}
         </main>
     )

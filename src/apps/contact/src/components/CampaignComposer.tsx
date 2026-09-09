@@ -462,7 +462,7 @@ export const CampaignComposer: FC<Props> = props => {
                     . The service adds the address, browser link, unsubscribe link, and
                     preferences footer.
                 </p>
-                <div className='contact-toolbar'>
+                <div className='contact-toolbar contact-control-row'>
                     <label>
                         Saved email template
                         <select
@@ -492,7 +492,7 @@ export const CampaignComposer: FC<Props> = props => {
                     </label>
                     <button type='button' onClick={() => run(saveTemplate)}>Save content as template</button>
                 </div>
-                <div className={busy ? 'contact-editor-busy' : ''}>
+                <div className={busy ? 'contact-editor contact-editor-busy' : 'contact-editor'}>
                     <EmailEditor
                         key={editorRevision}
                         html={draft.html}
@@ -648,7 +648,7 @@ export const CampaignComposer: FC<Props> = props => {
             </fieldset>
             <fieldset disabled={busy} className='contact-fields'>
                 <legend>3. Preview and test</legend>
-                <div className='contact-toolbar'>
+                <div className='contact-toolbar contact-control-row'>
                     <label>
                         Preview member ID (optional)
                         <input

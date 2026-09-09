@@ -375,7 +375,7 @@ export const AutomationManager: FC<Props> = props => {
                 <SegmentFields value={segment} onChange={setSegment} />
                 <h3>Email steps</h3>
                 {steps.map((step, index) => (
-                    <div className='contact-toolbar' key={step.id}>
+                    <div className='contact-toolbar contact-control-row' key={step.id}>
                         <label>
                             Step
                             {' '}

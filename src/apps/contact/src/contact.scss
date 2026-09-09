@@ -1,7 +1,12 @@
+// Reserve classic scrollbar space as Contact tabs switch between short and tall content.
+html:has(.contact-app) { scrollbar-gutter: stable; }
+
 .contact-app {
     --contact-ink: #182d36;
     --contact-green: #087653;
+    width: 100%;
     max-width: 1500px;
+    min-width: 0;
     margin: 0 auto;
     padding: 40px 32px 80px;
     color: var(--contact-ink);
@@ -139,16 +144,37 @@
     }
     .contact-tabs {
         display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        border-bottom: 1px solid #d7e2dc;
-        padding-bottom: 16px;
+        overflow-x: auto;
+        border-bottom: 1px solid #a8a8a8;
         margin-bottom: 28px;
+        button {
+            flex: 0 0 auto;
+            border: 0;
+            border-bottom: 4px solid transparent;
+            border-radius: 0;
+            background: transparent;
+            padding: 8px 24px;
+            font-family: 'Nunito Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 22px;
+            white-space: nowrap;
+            &[aria-selected='true'] {
+                color: #00797a;
+                border-bottom-color: #00797a;
+                font-weight: 700;
+            }
+            &:hover {
+                color: #00797a;
+            }
+            &:focus-visible {
+                outline-offset: -3px;
+            }
+        }
     }
-    .contact-tabs [aria-current='page'] {
-        background: #e0f0e7;
-        border-color: var(--contact-green);
-        color: var(--contact-green);
+    .contact-tab-panel {
+        width: 100%;
+        min-width: 0;
     }
     .contact-toolbar {
         display: flex;
@@ -158,6 +184,23 @@
         margin: 18px 0;
         h2 {
             margin: 0 auto 0 0;
+        }
+    }
+    .contact-control-row {
+        align-items: flex-end;
+        > label {
+            flex: 1 1 220px;
+            min-width: 0;
+            margin: 0;
+        }
+        > button,
+        input,
+        select {
+            min-height: 44px;
+        }
+        > button {
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
     }
     .contact-fields {
@@ -235,6 +278,11 @@
             background: white;
         }
     }
+    .contact-editor {
+        position: relative;
+        overflow: auto;
+        > div { min-width: 760px; }
+    }
     .contact-editor-busy {
         pointer-events: none;
         opacity: 0.7;
@@ -306,6 +354,10 @@
         }
         .contact-service {
             display: none;
+        }
+        .contact-control-row > label,
+        .contact-control-row > button {
+            flex: 1 1 100%;
         }
     }
 }
