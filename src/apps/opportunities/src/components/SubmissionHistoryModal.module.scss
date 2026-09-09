@@ -51,6 +51,18 @@
     min-height: 180px;
 }
 
+.latestSubmission {
+    display: none;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 0 0 16px;
+    min-width: 0;
+
+    strong {
+        overflow-wrap: anywhere;
+    }
+}
+
 .message {
     flex-direction: column;
     gap: 12px;
@@ -116,21 +128,128 @@
     }
 }
 
+.mobileFooter {
+    display: none;
+}
+
 @media (max-width: 620px) {
     .modal {
         padding: 16px;
     }
 
     .modalHeading h2 {
-        font-size: 20px;
-        line-height: 28px;
+        font-size: 18px;
+        line-height: 24px;
+        text-transform: uppercase;
+    }
+
+    .handleSuffix {
+        display: none;
+    }
+
+    .latestSubmission {
+        display: block;
     }
 
     .tableWrap {
-        overflow-x: auto;
+        overflow: visible;
 
         table {
-            min-width: 620px;
+            display: block;
+            min-width: 0;
+            width: 100%;
+        }
+
+        thead {
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            overflow: hidden;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+        }
+
+        tbody,
+        td {
+            display: block;
+            width: 100%;
+        }
+
+        tr {
+            border-bottom: 1px solid #e0e0e0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0 16px;
+        }
+
+        td,
+        td:first-child,
+        td:last-child {
+            align-items: flex-start;
+            border: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            height: auto;
+            min-height: 0;
+            overflow-wrap: anywhere;
+            padding: 8px 0;
+            white-space: normal;
+
+            &::before {
+                color: #6f6f6f;
+                content: attr(data-mobile-label);
+                font-size: 10px;
+                font-weight: 400;
+                line-height: 14px;
+                text-transform: uppercase;
+            }
+        }
+
+        td[data-mobile-order='1'] {
+            order: 1;
+        }
+
+        td[data-mobile-order='2'] {
+            order: 2;
+        }
+
+        td[data-mobile-order='3'] {
+            order: 3;
+        }
+
+        td[data-mobile-order='4'] {
+            order: 4;
+        }
+
+        td:first-child span {
+            max-width: none;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+    }
+
+    .mobileFooter {
+        display: flex;
+        justify-content: center;
+        padding-top: 24px;
+
+        button {
+            background: #007d79;
+            border: 1px solid #007d79;
+            border-radius: 999px;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 20px;
+            min-width: 90px;
+            padding: 8px 24px;
+            text-transform: uppercase;
         }
     }
 }

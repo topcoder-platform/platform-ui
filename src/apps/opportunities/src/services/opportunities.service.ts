@@ -39,6 +39,8 @@ import {
 } from '../models'
 import { sortOpportunityItems } from '../utils/opportunity-listing.utils'
 
+import { getMemberProfilesByUserIds } from './member-profile.service'
+
 const V6_URL = EnvironmentConfig.API.V6
 const COPILOT_MAX_PAGE_SIZE = 200
 const MAX_LEGACY_COPILOT_PAGES = 20
@@ -320,6 +322,62 @@ function normalizePage<T>(
     const totalPages = readNumericHeader(headers, ['x-total-pages'])
         ?? toNumber(metadata.totalPages, perPage > 0 ? Math.ceil(total / perPage) : 0)
     return { items, page, perPage, total, totalPages }
+}
+
+/**
+ * Identifies completed Challenge API records without depending on enum casing.
+ *
+ * @param item normalized competition listing record.
+ * @returns true only for the completed lifecycle state.
+ * @throws Does not throw.
+ */
+function challengeIsCompleted(item: ChallengeOpportunity): boolean {
+    return String(item.status ?? '')
+        .trim()
+        .toUpperCase() === 'COMPLETED'
+}
+
+/**
+ * Enriches completed competition winners with the public member photos used by
+ * the Figma past-card treatment. Challenge API remains authoritative for the
+ * winner identity and placement; Members API only supplies profile display
+ * fields and failures leave the original winner data intact.
+ *
+ * @param page normalized Challenge API result page.
+ * @returns page with member handles and photos merged into matching winners.
+ * @throws Does not throw because the shared member loader absorbs batch failures.
+ */
+async function hydrateCompetitionWinnerProfiles(
+    page: OpportunityPage<ChallengeOpportunity>,
+): Promise<OpportunityPage<ChallengeOpportunity>> {
+    const memberIds = Array.from(new Set(page.items
+        .filter(challengeIsCompleted)
+        .flatMap(item => item.winners ?? [])
+        .map(winner => String(winner.userId ?? '')
+            .trim())
+        .filter(Boolean)))
+    if (!memberIds.length) return page
+
+    const profiles = await getMemberProfilesByUserIds(memberIds)
+    const profilesById = new Map(profiles.map(profile => [profile.userId, profile]))
+    return {
+        ...page,
+        items: page.items.map(item => (challengeIsCompleted(item)
+            ? {
+                ...item,
+                winners: item.winners?.map(winner => {
+                    const profile = profilesById.get(String(winner.userId ?? ''))
+                    return profile
+                        ? {
+                            ...winner,
+                            handle: profile.handle || winner.handle,
+                            photoURL: profile.photoURL ?? winner.photoURL,
+                        }
+                        : winner
+                }),
+            }
+            : item)),
+    }
 }
 
 /**
@@ -1237,9 +1295,15 @@ export async function getOpportunityPage(
                 .catch(() => normalized)
         }
 
-        return kind === 'copilots'
-            ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
-            : normalized
+        if (kind === 'copilots') {
+            return { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
+        }
+
+        if (kind === 'competitions') {
+            return hydrateCompetitionWinnerProfiles(normalized)
+        }
+
+        return normalized
     } catch (error) {
         if (kind !== 'copilots' || !isLegacyCopilotQueryError(error)) throw error
         return getLegacyCopilotPage(filters)
@@ -1523,11 +1587,9 @@ export async function deleteChallengeSubmission(submissionId: string): Promise<v
 }
 
 /**
- * Loads every submission attempt for one challenge member for the History
- * dialog. The latest-only and server-side member filters are deliberately
- * omitted: Review API authorizes challenge-wide reads but rejects another
- * member's ID filter for ordinary challenge participants. Matching member rows
- * are retained locally after the authorized challenge page is loaded.
+ * Loads the server-authorized submission history for one challenge member.
+ * Review API returns full history to the owner and authorized challenge staff,
+ * and restricts ordinary viewers to the selected member's latest submission.
  *
  * @param challengeId challenge UUID.
  * @param memberId submitter member ID from the selected latest submission.
@@ -1544,11 +1606,12 @@ export async function getChallengeSubmissionHistory(
      * Builds one non-latest submission-history request.
      *
      * @param page one-based Review API page.
-     * @returns absolute submissions URL for the selected challenge and type.
+     * @returns absolute submissions URL for the selected challenge member and type.
      */
     const makeUrl = (page: number): string => {
         const url = new URL(`${V6_URL}/submissions`)
         url.searchParams.set('challengeId', challengeId)
+        url.searchParams.set('memberId', memberId)
         url.searchParams.set('page', String(page))
         url.searchParams.set('perPage', String(SUBMISSION_HISTORY_PAGE_SIZE))
         url.searchParams.set('sortBy', 'submittedDate')
@@ -1570,9 +1633,6 @@ export async function getChallengeSubmissionHistory(
         )
         : []
     return [...firstPage.items, ...additionalPages.flat()]
-        .filter(submission => String(
-            submission.memberId ?? submission.registrant?.userId ?? '',
-        ) === memberId)
         .sort((first, second) => {
             const firstDate = Date.parse(first.submittedDate ?? first.createdAt ?? '')
             const secondDate = Date.parse(second.submittedDate ?? second.createdAt ?? '')

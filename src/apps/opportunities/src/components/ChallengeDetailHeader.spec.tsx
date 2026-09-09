@@ -93,6 +93,27 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each(['Design', 'Development', 'Data Science', 'Quality Assurance', 'AI'])(
+        'uses the centered Prizes title treatment for the %s track',
+        track => {
+            render(
+                <MemoryRouter>
+                    <ChallengeDetailHeader
+                        busy={false}
+                        challenge={challengeFixture({ track })}
+                        isRegistered={false}
+                        onRegister={jest.fn()}
+                        onSubmit={jest.fn()}
+                        onUnregister={jest.fn()}
+                    />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByText('Prizes'))
+                .toHaveClass('prizeTitle')
+        },
+    )
+
     it('shows only Register for an unregistered open challenge', () => {
         render(
             <MemoryRouter>
@@ -453,6 +474,12 @@ describe('ChallengeDetailHeader actions and presentation', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
         const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const prizeCard = screen.getByText('Prizes')
+            .closest('aside')
+        expect(prizeCard)
+            .toHaveClass('actionCard')
+        expect(timeline.parentElement)
+            .toBe(prizeCard?.parentElement)
         const items = within(timeline)
             .getAllByRole('listitem')
         expect(items)

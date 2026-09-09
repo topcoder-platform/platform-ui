@@ -77,8 +77,9 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
 }
 
 /**
- * Shows every submission attempt for the selected member without navigating
- * away from Opportunities to Review App.
+ * Shows the selected member's server-authorized submission history without
+ * navigating away from Opportunities to Review App. Review API may limit an
+ * ordinary viewer to the latest attempt.
  *
  * @param props selected submission, challenge context, visibility, and close callback.
  * @returns modal with history rows or a loading, error, or empty state.
@@ -129,40 +130,53 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
         content = <p className={styles.message}>No submission history is available.</p>
     } else {
         content = (
-            <div className={styles.tableWrap}>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Submission ID</th>
-                            <th>Submission Date</th>
-                            {props.isMarathonMatch && <th>Provisional Score</th>}
-                            <th>Final Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {submissions.map(submission => {
-                            const scores = marathonSubmissionScores(submission)
-                            return (
-                                <tr key={submission.id}>
-                                    <td><span title={submission.id}>{submission.id}</span></td>
-                                    <td>{formatTimestamp(submission.submittedDate ?? submission.createdAt)}</td>
-                                    {props.isMarathonMatch && (
-                                        <td>{formatMarathonScore(scores.provisionalScore, 'N/A')}</td>
-                                    )}
-                                    <td>
-                                        {props.isMarathonMatch
-                                            ? formatMarathonFinalScore(
-                                                props.showFinalScores ? scores.finalScore : undefined,
-                                                '-',
-                                            )
-                                            : formatMarathonScore(scores.finalScore, 'N/A')}
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            <>
+                <p className={styles.latestSubmission}>
+                    <span>Latest Submission:</span>
+                    {' '}
+                    <strong title={submissions[0].id}>{submissions[0].id}</strong>
+                </p>
+                <div className={styles.tableWrap}>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Submission ID</th>
+                                <th>Submission Date</th>
+                                {props.isMarathonMatch && <th>Provisional Score</th>}
+                                <th>Final Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {submissions.map(submission => {
+                                const scores = marathonSubmissionScores(submission)
+                                return (
+                                    <tr key={submission.id}>
+                                        <td data-mobile-label='Submission' data-mobile-order='1'>
+                                            <span title={submission.id}>{submission.id}</span>
+                                        </td>
+                                        <td data-mobile-label='Time' data-mobile-order='4'>
+                                            {formatTimestamp(submission.submittedDate ?? submission.createdAt)}
+                                        </td>
+                                        {props.isMarathonMatch && (
+                                            <td data-mobile-label='Provisional Score' data-mobile-order='3'>
+                                                {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                            </td>
+                                        )}
+                                        <td data-mobile-label='Final Score' data-mobile-order='2'>
+                                            {props.isMarathonMatch
+                                                ? formatMarathonFinalScore(
+                                                    props.showFinalScores ? scores.finalScore : undefined,
+                                                    '-',
+                                                )
+                                                : formatMarathonScore(scores.finalScore, 'N/A')}
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </>
         )
     }
 
@@ -180,7 +194,8 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
             title={(
                 <div className={styles.modalHeading}>
                     <h2 id='submission-history-title'>
-                        {handle ? `Submission History for ${handle}` : 'Submission History'}
+                        Submission History
+                        {handle && <span className={styles.handleSuffix}>{` for ${handle}`}</span>}
                     </h2>
                     <button
                         aria-label='Close submission history'
@@ -193,6 +208,9 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
             )}
         >
             {content}
+            <div className={styles.mobileFooter}>
+                <button onClick={props.onClose} type='button'>Close</button>
+            </div>
         </BaseModal>
     )
 }

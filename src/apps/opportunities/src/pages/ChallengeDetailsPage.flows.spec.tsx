@@ -285,6 +285,7 @@ jest.mock('../utils', () => ({
     }): boolean => challenge.type === 'Marathon Match'
         && challenge.metadata?.some(item => item.name === 'show_data_dashboard' && item.value === true) === true,
     marathonSubmissionScores: (submission: {
+        aiDecisionScore?: number
         finalScore?: number
         provisionalScore?: number
         reviewSummation?: Array<{
@@ -294,7 +295,8 @@ jest.mock('../utils', () => ({
         }>
     }): { finalScore?: number; provisionalScore?: number } => ({
         finalScore: submission.reviewSummation?.find(item => item.isFinal)?.aggregateScore
-            ?? submission.finalScore,
+            ?? submission.finalScore
+            ?? submission.aiDecisionScore,
         provisionalScore: submission.reviewSummation?.find(item => item.isProvisional)?.aggregateScore
             ?? submission.provisionalScore,
     }),
@@ -1164,6 +1166,27 @@ describe('ChallengeDetailsPage member flows', () => {
         ))
         expect(submissionRequest?.[2])
             .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
+    })
+
+    it('displays a completed AI workflow score in active My Submissions', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, status: 'ACTIVE', tags: ['AI'] }
+        mockSubmissions = [{
+            aiDecisionScore: 87.625,
+            createdAt: '2026-09-09T04:30:00.000Z',
+            id: 'ai-reviewed-submission',
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('columnheader', { name: 'Score' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '87.625' }))
+            .toHaveAttribute('data-mobile-label', 'Score')
     })
 
     it('renders and deletes the compact Design My Submissions actions', async () => {

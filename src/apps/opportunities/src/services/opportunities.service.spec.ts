@@ -1258,14 +1258,31 @@ describe('opportunities service normalization', () => {
             ])
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&page=1&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=1&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&page=2&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=2&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
+    })
+
+    it('preserves a latest-only member history response for an ordinary viewer', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            data: [{ id: 'latest-visible', memberId: '456', submittedDate: '2026-06-03T00:00:00.000Z' }],
+            meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+        })
+
+        await expect(getChallengeSubmissionHistory('challenge', '456', 'CONTEST_SUBMISSION'))
+            .resolves.toEqual([{
+                id: 'latest-visible',
+                memberId: '456',
+                submittedDate: '2026-06-03T00:00:00.000Z',
+            }])
+        expect(get)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('loads every Marathon Match review-summation page for table scores and dashboard', async () => {
@@ -1563,6 +1580,71 @@ describe('opportunities service normalization', () => {
             .toBe('desc')
         expect(globalGet)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('hydrates completed-card winners with real Members API handles and photos', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'completed-challenge',
+                name: 'Completed challenge',
+                status: 'COMPLETED',
+                winners: [
+                    { handle: 'legacy-first', placement: 1, userId: '101' },
+                    { handle: 'second', placement: 2, userId: '202' },
+                ],
+            }],
+            headers: { get: () => undefined },
+        })
+        get.mockResolvedValueOnce([{
+            handle: 'current-first',
+            photoURL: 'https://images.example/101.png',
+            userId: '101',
+        }])
+
+        const page = await getOpportunityPage('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['COMPLETED'],
+        })
+
+        expect(page.items[0].winners)
+            .toEqual([
+                {
+                    handle: 'current-first',
+                    photoURL: 'https://images.example/101.png',
+                    placement: 1,
+                    userId: '101',
+                },
+                { handle: 'second', placement: 2, userId: '202' },
+            ])
+        const memberUrl = new URL(String(get.mock.calls.at(-1)?.[0]))
+        expect(memberUrl.pathname)
+            .toBe('/v6/members')
+        expect(memberUrl.searchParams.getAll('userIds[]'))
+            .toEqual(['101', '202'])
+    })
+
+    it('does not request winner profiles for a non-completed competition page', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'active-challenge',
+                name: 'Active challenge',
+                status: 'ACTIVE',
+                winners: [{ handle: 'provisional-entry', placement: 1, userId: '101' }],
+            }],
+            headers: { get: () => undefined },
+        })
+
+        await expect(getOpportunityPage('competitions', { page: 1, perPage: 10 }))
+            .resolves.toMatchObject({
+                items: [{ id: 'active-challenge' }],
+            })
+        expect(get)
+            .not.toHaveBeenCalled()
     })
 
     it('resolves legacy challenge term references from v5 details', async () => {

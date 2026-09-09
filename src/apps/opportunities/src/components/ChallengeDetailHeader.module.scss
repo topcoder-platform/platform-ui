@@ -292,14 +292,16 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
 
-    small {
-        align-self: flex-start;
-        color: rgba(255, 255, 255, .6);
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 16px;
-    }
+.prizeTitle {
+    align-self: center;
+    color: rgba(255, 255, 255, .6);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    width: 100%;
 }
 
 .prizes {
@@ -417,10 +419,12 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    margin: 24px auto 0;
-    max-width: 1200px;
+    grid-column: 1 / -1;
+    margin: 0;
+    max-width: none;
     padding-top: 24px;
     position: relative;
+    width: 100%;
     z-index: 1;
 }
 
@@ -610,6 +614,14 @@
     .copy h1 {
         font-size: 34px;
         line-height: 40px;
+    }
+
+    .expandedTimeline {
+        order: 2;
+    }
+
+    .actionCard {
+        order: 3;
     }
 
     .timeline {
