@@ -3,6 +3,7 @@
 import {
     FC,
     MouseEvent,
+    ReactNode,
     useCallback,
     useEffect,
     useMemo,
@@ -12,7 +13,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { copyTextToClipboard } from '~/libs/shared'
-import { Button } from '~/libs/ui'
+import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
 import {
     engagementLeadsRouteId,
@@ -64,6 +65,7 @@ import styles from './EngagementLeadsTab.module.scss'
 type LeadSortField = 'createdAt' | 'preferredStartDate' | 'priority'
 
 interface LeadColumnDefinition {
+    compact?: boolean
     fieldName?: LeadSortField
     label: string
     sortable?: boolean
@@ -76,13 +78,13 @@ const columns: LeadColumnDefinition[] = [
     { label: 'SMU' },
     { label: 'Role Title' },
     { label: 'Experience Level' },
-    { label: 'No. of Resources' },
+    { compact: true, label: 'No. of Resources' },
     {
         fieldName: 'preferredStartDate',
         label: 'Expected Start Date',
         sortable: true,
     },
-    { label: 'Expected Duration' },
+    { compact: true, label: 'Expected Duration' },
     {
         fieldName: 'priority',
         label: 'Priority',
@@ -96,6 +98,30 @@ const columns: LeadColumnDefinition[] = [
     },
     { label: 'Actions' },
 ]
+
+function getColumnHeaderContent(column: LeadColumnDefinition): ReactNode {
+    if (column.label === 'No. of Resources') {
+        return (
+            <>
+                No. of
+                <br />
+                Resources
+            </>
+        )
+    }
+
+    if (column.label === 'Expected Duration') {
+        return (
+            <>
+                Expected
+                <br />
+                Duration
+            </>
+        )
+    }
+
+    return column.label
+}
 
 function getSortIndicator(
     currentSortBy: LeadSortField | undefined,
@@ -348,7 +374,10 @@ export const EngagementLeadsTab: FC = () => {
                             <thead>
                                 <tr>
                                     {columns.map(column => (
-                                        <th key={column.label}>
+                                        <th
+                                            key={column.label}
+                                            className={column.compact ? styles.compactColumn : undefined}
+                                        >
                                             {column.sortable && column.fieldName
                                                 ? (
                                                     <button
@@ -357,7 +386,7 @@ export const EngagementLeadsTab: FC = () => {
                                                         type='button'
                                                         onClick={handleSortButtonClick}
                                                     >
-                                                        {column.label}
+                                                        {getColumnHeaderContent(column)}
                                                         {getSortIndicator(
                                                             filters.sortBy,
                                                             filters.sortOrder,
@@ -365,7 +394,9 @@ export const EngagementLeadsTab: FC = () => {
                                                         )}
                                                     </button>
                                                 )
-                                                : <span>{column.label}</span>}
+                                                : (
+                                                    <span>{getColumnHeaderContent(column)}</span>
+                                                )}
                                         </th>
                                     ))}
                                 </tr>
@@ -386,9 +417,9 @@ export const EngagementLeadsTab: FC = () => {
                                         <td>{lead.smu}</td>
                                         <td>{lead.roleTitle}</td>
                                         <td>{formatLeadLabel(String(lead.experienceLevel))}</td>
-                                        <td>{lead.resourcesRequired}</td>
+                                        <td className={styles.compactCell}>{lead.resourcesRequired}</td>
                                         <td>{formatLeadDate(lead.preferredStartDate)}</td>
-                                        <td>{lead.engagementDuration}</td>
+                                        <td className={styles.compactCell}>{lead.engagementDuration}</td>
                                         <td className={getPriorityClassName(String(lead.priority))}>
                                             {formatLeadLabel(String(lead.priority))}
                                         </td>
@@ -436,15 +467,24 @@ export const EngagementLeadsTab: FC = () => {
                                                     )
                                                     : canCreateEngagementFromLead(String(lead.status))
                                                         ? (
-                                                            <button
-                                                                className={styles.actionLink}
-                                                                type='button'
-                                                                onClick={() => {
-                                                                    handleCreateEngagementOpen(lead)
-                                                                }}
+                                                            <Tooltip
+                                                                content='Create Engagement'
+                                                                triggerOn='click-hover'
                                                             >
-                                                                Create Engagement
-                                                            </button>
+                                                                <button
+                                                                    aria-label='Create Engagement'
+                                                                    className={styles.actionIconButton}
+                                                                    type='button'
+                                                                    onClick={() => {
+                                                                        handleCreateEngagementOpen(lead)
+                                                                    }}
+                                                                >
+                                                                    <IconOutline.PlusIcon
+                                                                        aria-hidden
+                                                                        className={styles.actionIcon}
+                                                                    />
+                                                                </button>
+                                                            </Tooltip>
                                                         )
                                                         : (
                                                             <span className={styles.actionMuted}>
