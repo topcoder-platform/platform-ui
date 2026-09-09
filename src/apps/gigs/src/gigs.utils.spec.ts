@@ -130,6 +130,20 @@ describe('Gigs discovery and application contracts', () => {
                 'The maximum file size is 8 MB.',
             )
     })
+    it('matches the legacy required, minimum and maximum copy for phone and city', () => {
+        expect(validateApplication({ ...valid, city: '', phone: '' }))
+            .toEqual(expect.objectContaining({ city: 'Required field', phone: 'Required field' }))
+        expect(validateApplication({ ...valid, city: 'H', phone: '1' }))
+            .toEqual(expect.objectContaining({
+                city: 'Must be at least 2 characters',
+                phone: 'Must be at least 2 characters',
+            }))
+        expect(validateApplication({ ...valid, city: 'c'.repeat(51), phone: '1'.repeat(51) }))
+            .toEqual(expect.objectContaining({
+                city: 'Must be max 50 characters',
+                phone: 'Must be max 50 characters',
+            }))
+    })
     it('reuses a saved resume but requires one if the existing candidate has no resume', () => {
         expect(
             validateApplication(

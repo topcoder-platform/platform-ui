@@ -74,17 +74,24 @@ export function filterGigs(jobs: Gig[], search: string, location: string, sort: 
         })
 }
 
-/** Validates application values against the legacy contract and the server's 8,000,000-byte upload limit. */
+/**
+ * Validates application values against the legacy contract, including its field-specific validation copy,
+ * and the server's 8,000,000-byte upload limit.
+ */
 export function validateApplication(values: ApplicationValues, candidate?: Candidate): ApplicationErrors {
     const errors: ApplicationErrors = {}
     const fields = ['firstName', 'lastName', 'email', 'city', 'phone'] as const
     fields.forEach(field => {
         const value = values[field].trim()
         const max = ['city', 'phone'].includes(field) ? 50 : 40
-        if (value.length < 2) errors[field] = 'Enter at least 2 characters.'
-        else if (value.length > max) errors[field] = `Enter no more than ${max} characters.`
+        if (!value) errors[field] = 'Required field'
+        else if (value.length < 2) errors[field] = 'Must be at least 2 characters'
+        else if (value.length > max) errors[field] = `Must be max ${max} characters`
     })
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = 'Enter a valid email address.'
+    if (values.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+        errors.email = 'Enter a valid email address.'
+    }
+
     if (!values.country) errors.country = 'Select your country.'
     if (!/^\d+$/.test(values.pay.trim())) {
         errors.pay = 'Enter your weekly pay expectation as a whole dollar amount.'

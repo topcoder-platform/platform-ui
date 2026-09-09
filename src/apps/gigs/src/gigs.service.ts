@@ -5,6 +5,14 @@ import { Candidate, Gig } from './models'
 
 const RECRUIT_URL = `${EnvironmentConfig.COMMUNITY_APP_URL}/api/recruit`
 
+/** Returns whether Recruit supplied one of its documented successful application response shapes. */
+function isConfirmedApplication(result: unknown): boolean {
+    if (!result || typeof result !== 'object' || Array.isArray(result)) return false
+    const response = result as Record<string, unknown>
+    return response.success === true
+        || (response.success === undefined && Object.keys(response).length > 0)
+}
+
 /** An API failure with an HTTP-equivalent status, including Recruit errors returned with HTTP 200. */
 export class RecruitError extends Error {
     status: number
@@ -74,14 +82,19 @@ export async function getCandidate(email: string): Promise<Candidate | undefined
     return candidates[0]
 }
 
-/** Posts a multipart application with the refreshed member token; resolves only on confirmed success. */
+/**
+ * Posts a multipart application with the refreshed member token. Recruit confirms a new assignment with its
+ * populated assignment resource, while an already-existing assignment uses the older `{ success: true }` shape.
+ */
 export async function applyToGig(slug: string, body: FormData): Promise<void> {
-    const result = await recruitRequest<{ success?: boolean }>(
+    const result = await recruitRequest<unknown>(
         `${RECRUIT_URL}/jobs/${encodeURIComponent(slug)}/apply`,
         true,
         body,
     )
-    if (!result.success) throw new RecruitError('Your application was not confirmed. Please try again.', 502)
+    if (!isConfirmedApplication(result)) {
+        throw new RecruitError('Your application was not confirmed. Please try again.', 502)
+    }
 }
 
 /** Loads an authored candidate policy from the Payload compatibility endpoint; returns its Markdown body. */

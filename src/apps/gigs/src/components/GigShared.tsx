@@ -123,8 +123,20 @@ export const GigPolicy: FC<{ id?: string; title: string; close: () => void }> = 
         { shouldRetryOnError: false },
     )
     return (
-        <BaseModal open={!!props.id} onClose={props.close} title={props.title} size='lg'>
-            <div className='gigs-app'>
+        <BaseModal
+            bodyClassName='gigs-policy-modal-body'
+            buttons={(
+                <div className='gigs-policy-actions'>
+                    <Button primary onClick={props.close}>Close</Button>
+                </div>
+            )}
+            classNames={{ modal: 'gigs-policy-modal' }}
+            open={!!props.id}
+            onClose={props.close}
+            title={props.title}
+            size='lg'
+        >
+            <div className='gigs-app gigs-policy'>
                 {error ? (
                     <GigState
                         title='Unable to load this policy'
