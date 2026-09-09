@@ -53,6 +53,13 @@ against challenge names, authored tags, and standardized skills before its
 server-side pagination, so selecting a chip returns every matching review
 opportunity rather than filtering only the currently loaded page.
 
+Copilot card skills retain that same shareable `search` route and visible
+sidebar value. While the deployed Projects API rejects its JSON-backed
+`search` and `skills` queries with an HTTP 500, the client uses the existing
+bounded compatibility loader and filters the complete supported result window
+locally. This avoids issuing the known-broken filtered request and keeps skill
+selection functional until that owner query is repaired.
+
 ## List and grid views
 
 Every domain toolbar exposes the same accessible List/Grid selector from the
@@ -98,8 +105,11 @@ than presented as free work.
 
 Approved applications, rather than pending applications, consume reviewer
 capacity. When `remainingPositions` reaches zero, eligible reviewers can still
-use the detail CTA to join the waitlist; the page explains that outcome before
-submission and confirms it afterward. Review API persists these applications as
+use the “Apply to be a reviewer (waitlist)” detail CTA; the page explains that
+outcome before submission and confirms that Support may contact the applicant
+if another reviewer cannot complete the review. The compatibility UI also
+accepts the older capacity-only `NO_OPEN_POSITIONS` response while preserving
+all other API rejection reasons. Review API persists these applications as
 `PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
 while capacity remains full, then naturally return to `Applied` if a position
 reopens or to `Approved` when the reviewer is selected.

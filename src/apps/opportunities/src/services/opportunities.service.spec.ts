@@ -607,7 +607,7 @@ describe('opportunities service normalization', () => {
             .toEqual([['1', '200'], ['2', '200']])
     })
 
-    it('falls back to locally filtered legacy Copilot results during API rollout', async () => {
+    it('falls back to locally filtered legacy Copilot facets during API rollout', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         globalGet
             .mockRejectedValueOnce({
@@ -638,7 +638,7 @@ describe('opportunities service normalization', () => {
                         opportunityTitle: 'Backend migration',
                         skills: [{ id: 'java', name: 'Java' }],
                         status: 'active',
-                        type: 'dev',
+                        type: 'design',
                     },
                 ],
                 headers: {
@@ -654,7 +654,6 @@ describe('opportunities service normalization', () => {
         await expect(getOpportunityPage('copilots', {
             page: 1,
             perPage: 10,
-            search: 'typescript',
             sort: 'newest',
             statuses: ['active'],
             tracks: ['dev'],
@@ -677,6 +676,56 @@ describe('opportunities service normalization', () => {
         expect(legacyUrl.searchParams.has('status'))
             .toBe(false)
         expect(legacyUrl.searchParams.has('type'))
+            .toBe(false)
+    })
+
+    it('uses bounded local Copilot discovery before a broken server-side skill search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [
+                {
+                    id: 'matching',
+                    opportunityTitle: 'Matching copilot role',
+                    skills: [{ id: 'cadence-skill', name: 'Cadence SKILL' }],
+                    status: 'active',
+                },
+                {
+                    id: 'different',
+                    opportunityTitle: 'Different copilot role',
+                    skills: [{ id: 'react', name: 'React' }],
+                    status: 'active',
+                },
+            ],
+            headers: {
+                get: (name: string) => ({
+                    'x-page': '1',
+                    'x-per-page': '200',
+                    'x-total': '2',
+                    'x-total-pages': '1',
+                } as Record<string, string>)[name],
+            },
+        })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'matching' })],
+                total: 1,
+            })
+
+        expect(globalGet)
+            .toHaveBeenCalledTimes(1)
+        const requestUrl = new URL(String(globalGet.mock.calls[0][0]))
+        expect(requestUrl.searchParams.get('pageSize'))
+            .toBe('200')
+        expect(requestUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(requestUrl.searchParams.has('skills'))
             .toBe(false)
     })
 

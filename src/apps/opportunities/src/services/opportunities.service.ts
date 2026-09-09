@@ -778,6 +778,21 @@ function sortLegacyCopilotOpportunities(
 }
 
 /**
+ * Determines whether Copilot discovery must use the bounded compatibility
+ * loader. The deployed Projects API currently returns HTTP 500 when either
+ * free-text or exact-skill discovery reaches its JSON skill query; retrieving
+ * its supported unfiltered pages first avoids a failed browser request while
+ * retaining the same shareable search behavior.
+ *
+ * @param filters active Copilot search and facet values.
+ * @returns true when text or skill matching must be applied locally.
+ * @throws Does not throw.
+ */
+function requiresLegacyCopilotDiscovery(filters: OpportunityFilters): boolean {
+    return !!filters.search?.trim() || !!filters.skills?.length
+}
+
+/**
  * Identifies semantic sorts that an owner API cannot apply to the complete result set.
  *
  * @param kind active opportunity owner.
@@ -1177,6 +1192,10 @@ export async function getOpportunityPage(
 ): Promise<OpportunityPage<any>> {
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
+    if (kind === 'copilots' && requiresLegacyCopilotDiscovery(filters)) {
+        return getLegacyCopilotPage(filters)
+    }
+
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
         const reviewPage = await getReviewPageWithAiTrack(filters)
         return hydrateReviewOpportunitySkills(reviewPage)
