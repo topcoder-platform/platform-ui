@@ -407,6 +407,29 @@ describe('ReviewOpportunityDetailsPage', () => {
         })
     })
 
+    it('keeps a legacy capacity rejection disabled because that API cannot persist a waitlist application', () => {
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                approvedApplicationCount: 2,
+                canApply: false,
+                canApplyReason: 'NO_OPEN_POSITIONS',
+                openPositions: 2,
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('button', { name: 'All reviewer positions are filled' }))
+            .toBeDisabled()
+        expect(mockedApplyToReviewOpportunity)
+            .not.toHaveBeenCalled()
+    })
+
     it('shows the caller waitlisted state after a full-opportunity application', () => {
         mockProfile = { roles: ['Reviewer'], userId: 12345 }
         mockUseSWR.mockReturnValue({
