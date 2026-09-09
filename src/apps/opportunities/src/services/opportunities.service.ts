@@ -794,6 +794,29 @@ function isLegacyCopilotQueryError(error: unknown): boolean {
 }
 
 /**
+ * Identifies only the legacy validation response for the supplementary
+ * project-name predicate. Other 4xx responses and all server/network failures
+ * remain actionable and are propagated to the listing.
+ *
+ * @param error rejected Projects API project-name request.
+ * @returns true only when the API does not recognize `projectName`.
+ * @throws Does not throw.
+ */
+function isLegacyCopilotProjectNameQueryError(error: unknown): boolean {
+    const failure = error as {
+        data?: { message?: unknown }
+        message?: unknown
+        response?: { data?: { message?: unknown }; status?: number }
+        status?: number
+    }
+    const status = failure.status ?? failure.response?.status
+    const values = [failure.message, failure.data?.message, failure.response?.data?.message]
+        .flatMap(value => (Array.isArray(value) ? value : [value]))
+        .filter((value): value is string => typeof value === 'string')
+    return status === 400 && values.some(value => /property projectName should not exist/i.test(value))
+}
+
+/**
  * Builds the limited list query understood by the legacy Projects API.
  *
  * @param page one-based legacy API page.
@@ -808,6 +831,25 @@ function buildLegacyCopilotPageUrl(page: number): string {
     // creation-date sort and apply the selected semantic sort after aggregation.
     url.searchParams.set('sort', 'createdAt desc')
     url.searchParams.set('noGrouping', 'true')
+    return url.toString()
+}
+
+/**
+ * Builds the safe owner query used to recover project-name matches while the
+ * Projects API's combined `search` / `skills` predicate is unavailable.
+ * Status and opportunity type remain owner-filtered so this supplementary
+ * result set cannot widen active facets.
+ *
+ * @param page one-based Projects API page.
+ * @param filters active Copilot discovery filters containing free text.
+ * @returns absolute Copilot opportunity URL using only supported predicates.
+ * @throws Does not throw.
+ */
+function buildCopilotProjectNamePageUrl(page: number, filters: OpportunityFilters): string {
+    const url = new URL(buildLegacyCopilotPageUrl(page))
+    url.searchParams.set('projectName', filters.search?.trim() ?? '')
+    appendValues(url, 'status', filters.statuses)
+    appendValues(url, 'type', [...(filters.tracks ?? []), ...(filters.types ?? [])])
     return url.toString()
 }
 
@@ -978,7 +1020,7 @@ function filterLegacyCopilotOpportunities(
         .toLowerCase()
 
     return items.filter(item => {
-        const itemType = String(item.projectType ?? item.type ?? '')
+        const itemType = String(item.type ?? item.projectType ?? '')
             .toLowerCase()
         const itemSkills = (item.skills ?? []).map(skill => `${skill.id ?? ''} ${skill.name}`.toLowerCase())
         const itemStatus = String(item.status ?? '')
@@ -1074,6 +1116,60 @@ async function filterLegacyCopilotApplications(
 }
 
 /**
+ * Loads and normalizes every bounded page for one Copilot compatibility URL.
+ *
+ * @param buildPageUrl owner-specific URL builder for a one-based page.
+ * @returns normalized Copilot rows in owner order.
+ * @throws Propagates Projects API and network failures.
+ */
+async function loadCopilotCompatibilityRows(
+    buildPageUrl: (page: number) => string,
+): Promise<CopilotOpportunity[]> {
+    const firstResponse = await xhrGlobalInstance.get(
+        buildPageUrl(1),
+    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+    const firstPage = normalizePage(firstResponse, 1, COPILOT_MAX_PAGE_SIZE)
+    const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildPageUrl(page)),
+        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
+        : []
+    return [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            COPILOT_MAX_PAGE_SIZE,
+        ).items),
+    ].map(normalizeCopilotOpportunity)
+}
+
+/**
+ * Loads rows whose private project name matches the active free text. Public
+ * list rows intentionally omit that name, so the safe owner-side predicate is
+ * required to preserve the documented project-search behavior.
+ *
+ * @param filters active Copilot discovery filters.
+ * @returns bounded project-name matches, or none on the legacy unsupported-property response.
+ * @throws Propagates every failure except the exact legacy `projectName` validation error.
+ */
+async function getCopilotProjectNameMatches(
+    filters: OpportunityFilters,
+): Promise<CopilotOpportunity[]> {
+    if (!filters.search?.trim()) return []
+    try {
+        return await loadCopilotCompatibilityRows(
+            page => buildCopilotProjectNamePageUrl(page, filters),
+        )
+    } catch (error) {
+        if (!isLegacyCopilotProjectNameQueryError(error)) throw error
+        return []
+    }
+}
+
+/**
  * Keeps Copilot Opportunities usable while an older Projects API deployment
  * is rolling forward to the server-side discovery contract.
  *
@@ -1082,29 +1178,24 @@ async function filterLegacyCopilotApplications(
  * @throws Propagates Projects API and network errors.
  */
 async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<OpportunityPage<CopilotOpportunity>> {
-    const firstResponse = await xhrGlobalInstance.get(
-        buildLegacyCopilotPageUrl(1),
-    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
-    const firstPage = normalizePage(firstResponse, 1, COPILOT_MAX_PAGE_SIZE)
-    const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
-    const remainingResponses = totalPages > 1
-        ? await loadPagesInBatches(
-            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
-            page => xhrGlobalInstance.get(buildLegacyCopilotPageUrl(page)),
-        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
-        : []
-    const allItems = [
-        ...firstPage.items,
-        ...remainingResponses.flatMap((response, index) => normalizePage(
-            response,
-            index + 2,
-            COPILOT_MAX_PAGE_SIZE,
-        ).items),
-    ].map(normalizeCopilotOpportunity)
-    const facetFiltered = filterLegacyCopilotOpportunities(allItems, {
+    const [allItems, projectNameItems] = await Promise.all([
+        loadCopilotCompatibilityRows(buildLegacyCopilotPageUrl),
+        getCopilotProjectNameMatches(filters),
+    ])
+    const facetFilters = {
         ...filters,
         applied: false,
+    }
+    const localMatches = filterLegacyCopilotOpportunities(allItems, facetFilters)
+    const projectNameMatches = filterLegacyCopilotOpportunities(projectNameItems, {
+        ...facetFilters,
+        search: undefined,
     })
+    const facetFiltered = Array.from(new Map([
+        ...localMatches,
+        ...projectNameMatches,
+    ].map(item => [item.id, item] as const))
+        .values())
     const memberFiltered = filters.applied
         ? filters.memberId
             ? await filterLegacyCopilotApplications(facetFiltered, filters.memberId)

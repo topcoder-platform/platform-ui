@@ -681,30 +681,35 @@ describe('opportunities service normalization', () => {
 
     it('uses bounded local Copilot discovery before a broken server-side skill search', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        globalGet.mockResolvedValueOnce({
-            data: [
-                {
-                    id: 'matching',
-                    opportunityTitle: 'Matching copilot role',
-                    skills: [{ id: 'cadence-skill', name: 'Cadence SKILL' }],
-                    status: 'active',
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'matching',
+                        opportunityTitle: 'Matching copilot role',
+                        skills: [{ id: 'cadence-skill', name: 'Cadence SKILL' }],
+                        status: 'active',
+                    },
+                    {
+                        id: 'different',
+                        opportunityTitle: 'Different copilot role',
+                        skills: [{ id: 'react', name: 'React' }],
+                        status: 'active',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
                 },
-                {
-                    id: 'different',
-                    opportunityTitle: 'Different copilot role',
-                    skills: [{ id: 'react', name: 'React' }],
-                    status: 'active',
-                },
-            ],
-            headers: {
-                get: (name: string) => ({
-                    'x-page': '1',
-                    'x-per-page': '200',
-                    'x-total': '2',
-                    'x-total-pages': '1',
-                } as Record<string, string>)[name],
-            },
-        })
+            })
+            .mockRejectedValueOnce({
+                data: { message: ['property projectName should not exist'] },
+                status: 400,
+            })
 
         await expect(getOpportunityPage('copilots', {
             page: 1,
@@ -719,7 +724,7 @@ describe('opportunities service normalization', () => {
             })
 
         expect(globalGet)
-            .toHaveBeenCalledTimes(1)
+            .toHaveBeenCalledTimes(2)
         const requestUrl = new URL(String(globalGet.mock.calls[0][0]))
         expect(requestUrl.searchParams.get('pageSize'))
             .toBe('200')
@@ -727,6 +732,162 @@ describe('opportunities service normalization', () => {
             .toBe(false)
         expect(requestUrl.searchParams.has('skills'))
             .toBe(false)
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Cadence SKILL')
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('unions safe owner project-name matches that public list rows cannot expose', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'different',
+                    opportunityTitle: 'Unrelated role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'project-name-match',
+                    opportunityTitle: 'Generic Copilot role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Apollo migration',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'project-name-match' })],
+                total: 1,
+            })
+
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Apollo migration')
+        expect(projectNameUrl.searchParams.getAll('status'))
+            .toEqual(['active'])
+        expect(projectNameUrl.searchParams.getAll('type'))
+            .toEqual(['dev'])
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('uses canonical opportunity type rather than conflicting project type during local search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'canonical-match',
+                        projectType: 'design',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'dev',
+                    },
+                    {
+                        id: 'project-type-only',
+                        projectType: 'dev',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'design',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'canonical-match' })],
+                total: 1,
+            })
+    })
+
+    it('propagates project-name failures other than the exact legacy unsupported-property response', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const projectNameError = {
+            data: { message: ['property search should not exist'] },
+            status: 400,
+        }
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockRejectedValueOnce(projectNameError)
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+        }))
+            .rejects.toEqual(projectNameError)
     })
 
     it('sorts legacy Copilot results by start date without sending an unsupported sort', async () => {

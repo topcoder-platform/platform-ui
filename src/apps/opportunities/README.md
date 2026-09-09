@@ -57,8 +57,11 @@ Copilot card skills retain that same shareable `search` route and visible
 sidebar value. While the deployed Projects API rejects its JSON-backed
 `search` and `skills` queries with an HTTP 500, the client uses the existing
 bounded compatibility loader and filters the complete supported result window
-locally. This avoids issuing the known-broken filtered request and keeps skill
-selection functional until that owner query is repaired.
+locally. A safe owner-side `projectName` query is unioned with those public rows
+because public list payloads omit project names; status and canonical
+opportunity-type facets remain intact across both result sets. This avoids
+issuing the known-broken filtered request and keeps skill and project selection
+functional until that owner query is repaired.
 
 ## List and grid views
 
