@@ -62,7 +62,6 @@ import {
     OpportunityPage,
 } from '../models'
 import {
-    agreeToChallengeTerms,
     deleteChallengeSubmission,
     getChallengeAiReviewConfig,
     getChallengeForumTopics,
@@ -581,18 +580,16 @@ export const ChallengeDetailsPage: FC = () => {
     }
 
     /**
-     * Closes registration terms, records agreement, and creates the Submitter resource.
+     * Closes the completed prerequisite flow and creates the Submitter resource.
      *
-     * @param terms challenge terms accepted by the member.
      * @returns promise settled after registration caches and user feedback are updated.
-     * @throws Does not throw; agreement and registration errors are shown as toasts.
+     * @throws Does not throw; registration errors are shown as toasts.
      */
-    const completeRegistration = async (terms: ChallengeTerm[]): Promise<void> => {
+    const completeRegistration = async (): Promise<void> => {
         if (!challenge || !profile) return
         setTermsOpen(false)
         setRegistrationBusy(true)
         try {
-            await agreeToChallengeTerms(terms)
             const createdRegistration = await registerForChallenge(challenge.id, profile.handle)
             recordAnalyticsEvent('challenge_registered', {
                 challenge_id: challenge.id,
@@ -794,9 +791,10 @@ export const ChallengeDetailsPage: FC = () => {
             </div>
             <ChallengeTermsModal
                 busy={registrationBusy}
+                memberId={memberId}
                 mode={termsMode}
-                onAccept={completeRegistration}
                 onClose={() => setTermsOpen(false)}
+                onComplete={completeRegistration}
                 open={termsOpen}
                 terms={visibleTerms}
             />

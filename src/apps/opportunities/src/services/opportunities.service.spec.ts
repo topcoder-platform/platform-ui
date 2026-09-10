@@ -9,6 +9,7 @@ import {
 } from '~/libs/core'
 import { init } from 'filestack-js'
 import {
+    agreeToChallengeTerms,
     buildOpportunityPageUrl,
     createChallengeSubmission,
     createChallengeUrlSubmission,
@@ -1860,18 +1861,42 @@ describe('opportunities service normalization', () => {
 
     it('resolves legacy challenge term references from v5 details', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
-        get.mockResolvedValueOnce({
-            result: [{ agreeabilityType: 'Electronically-agreeable', id: 'term-uuid', text: '<p>Rules</p>' }],
-        })
+        get
+            .mockResolvedValueOnce({
+                result: [{ agreeabilityType: 'Electronically-agreeable', id: 'term-uuid', title: 'Rules' }],
+            })
+            .mockResolvedValueOnce({
+                agreed: true,
+                id: 'term-uuid',
+                text: '<p>Rules</p>',
+            })
 
         await expect(getChallengeTermDetails({ agreed: false, id: '123456', title: 'Rules' }))
             .resolves.toEqual({
                 agreeabilityType: 'Electronically-agreeable',
-                agreed: false,
+                agreed: true,
                 id: 'term-uuid',
                 text: '<p>Rules</p>',
                 title: 'Rules',
             })
+        expect(get)
+            .toHaveBeenNthCalledWith(1, 'https://api.example/v5/terms?legacyId=123456')
+        expect(get)
+            .toHaveBeenNthCalledWith(2, 'https://api.example/v5/terms/term-uuid')
+    })
+
+    it('persists separate electronic agreement requests in caller order', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockClear()
+        post.mockResolvedValue(undefined)
+
+        await agreeToChallengeTerms([{ id: 'standard-terms' }])
+        await agreeToChallengeTerms([{ id: 'nda' }])
+
+        expect(post)
+            .toHaveBeenNthCalledWith(1, 'https://api.example/v5/terms/standard-terms/agree', {})
+        expect(post)
+            .toHaveBeenNthCalledWith(2, 'https://api.example/v5/terms/nda/agree', {})
     })
 
     it('loads only outstanding terms assigned to the canonical Submitter resource role', async () => {

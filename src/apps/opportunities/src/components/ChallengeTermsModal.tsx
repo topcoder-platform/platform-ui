@@ -3,10 +3,15 @@ import {
     FC,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
+import type { FullConfiguration } from 'swr/dist/types'
 import DOMPurify from 'dompurify'
-import useSWR, { SWRResponse } from 'swr'
+import useSWR, {
+    SWRResponse,
+    useSWRConfig,
+} from 'swr'
 
 import { getSafeCmsLink } from '~/libs/cms'
 import {
@@ -18,6 +23,7 @@ import {
 
 import { ChallengeTerm } from '../models'
 import {
+    agreeToChallengeTerms,
     getChallengeSubmitterTermsDetails,
     getChallengeTermDocuSignUrl,
     getChallengeTermsDetails,
@@ -29,9 +35,10 @@ export type ChallengeTermsMode = 'register' | 'view'
 
 interface ChallengeTermsModalProps {
     busy?: boolean
+    memberId?: number | string
     mode: ChallengeTermsMode
-    onAccept: (terms: ChallengeTerm[]) => void
     onClose: () => void
+    onComplete: () => Promise<void> | void
     open: boolean
     terms: ChallengeTerm[]
 }
@@ -54,7 +61,8 @@ export function requiresExternalAgreement(term: ChallengeTerm): boolean {
 /**
  * Renders full Terms API content for either passive review or challenge
  * registration. View mode never exposes an agreement or registration action;
- * registration mode requires acknowledgement and blocks external agreements.
+ * registration mode persists one explicit agreement at a time and does not
+ * complete registration until the final outstanding term has been accepted.
  *
  * @param props term references, modal mode, submit state, and callbacks.
  * @returns Figma-aligned terms dialog with retryable detail loading.
@@ -62,14 +70,28 @@ export function requiresExternalAgreement(term: ChallengeTerm): boolean {
  */
 export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const [accepted, setAccepted] = useState(false)
+    const [completedTermIds, setCompletedTermIds] = useState<string[]>([])
+    const [agreementBusy, setAgreementBusy] = useState(false)
+    const [agreementError, setAgreementError] = useState('')
     const [externalBusy, setExternalBusy] = useState(false)
     const [externalError, setExternalError] = useState('')
+    const agreementRequestRef = useRef(0)
+    const activeAgreementRequestRef = useRef<number>()
+    const interactionRef = useRef(0)
+    const { mutate: mutateTermsCache }: FullConfiguration = useSWRConfig()
+    const memberScope = props.memberId === undefined ? 'anonymous' : String(props.memberId)
     const termKey = useMemo(
-        () => props.terms.map(term => term.id ?? term.url ?? term.title ?? 'term')
+        () => props.terms.map(term => `${term.id ?? term.url ?? term.title ?? 'term'}:${term.roleId ?? ''}`)
             .join('|'),
         [props.terms],
     )
     const shouldLoad = props.open && props.terms.some(term => !!term.id)
+    const termsCacheKey = shouldLoad ? [
+        'opportunities:challenge-terms',
+        props.mode,
+        memberScope,
+        termKey,
+    ] : undefined
     /**
      * Loads the terms appropriate to the active modal mode.
      *
@@ -82,13 +104,22 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         ? getChallengeSubmitterTermsDetails(props.terms)
         : getChallengeTermsDetails(props.terms))
     const response: SWRResponse<ChallengeTerm[], Error> = useSWR(
-        shouldLoad ? ['opportunities:challenge-terms', props.mode, termKey] : undefined,
+        termsCacheKey,
         loadTerms,
         { revalidateOnFocus: false },
     )
     const terms = response.data ?? (shouldLoad ? [] : props.terms)
-    const externalAgreement = terms.some(requiresExternalAgreement)
     const registrationMode = props.mode === 'register'
+    const pendingTerms = registrationMode
+        ? terms.filter(term => !term.id || !completedTermIds.includes(term.id))
+        : []
+    const activeTerm = pendingTerms[0]
+    const displayedTerms = registrationMode
+        ? activeTerm ? [activeTerm] : []
+        : terms
+    const activePosition = completedTermIds.length
+    const agreementTotal = completedTermIds.length + pendingTerms.length
+    const activeExternalAgreement = !!activeTerm && requiresExternalAgreement(activeTerm)
     const compactRegistration = registrationMode
         && !response.error
         && !response.isValidating
@@ -97,14 +128,18 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         && shouldLoad
         && !response.error
         && (response.isValidating || response.data === undefined)
-    const fullTitle = terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
+    const fullTitle = activeTerm?.title || terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
+        interactionRef.current += 1
         if (props.open) {
             setAccepted(false)
+            setCompletedTermIds([])
+            setAgreementError('')
+            setExternalBusy(false)
             setExternalError('')
         }
-    }, [props.open, props.mode])
+    }, [props.open, props.mode, memberScope, termKey])
 
     /**
      * Sanitizes Terms API HTML while removing document-authored inline CSS.
@@ -121,47 +156,142 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         FORBID_ATTR: ['style'],
     }))
 
-    /** Submits the exact resolved term records displayed to the member. */
-    const accept = (): void => props.onAccept(terms)
+    /**
+     * Persists the active electronic agreement before advancing to the next
+     * Submitter term. Registration begins only after the final agreement has
+     * succeeded, matching the legacy challenge prerequisite flow. An ambiguous
+     * POST failure is reconciled once against authenticated outstanding terms.
+     *
+     * @returns promise settled after agreement, advancement, or registration completion.
+     * @throws Does not throw; Terms API failures remain visible on the active term.
+     */
+    const acceptActiveTerm = async (): Promise<void> => {
+        if (!activeTerm || activeExternalAgreement || activeAgreementRequestRef.current !== undefined) return
+        const termId = activeTerm.id
+        if (!termId || !termsCacheKey) {
+            setAgreementError('We couldn\u2019t record this agreement because it is missing an identifier.')
+            return
+        }
+
+        const interaction = interactionRef.current
+        const agreementRequest = agreementRequestRef.current + 1
+        agreementRequestRef.current = agreementRequest
+        activeAgreementRequestRef.current = agreementRequest
+        const finalTerm = pendingTerms.length === 1
+        setAgreementBusy(true)
+        setAgreementError('')
+        try {
+            try {
+                await agreeToChallengeTerms([activeTerm])
+            } catch (agreementFailure) {
+                if (interaction !== interactionRef.current) return
+                let refreshedTerms: ChallengeTerm[] | undefined
+                try {
+                    refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms)
+                } catch {
+                    throw agreementFailure
+                }
+
+                if (interaction !== interactionRef.current) return
+                await mutateTermsCache(termsCacheKey, refreshedTerms, { revalidate: false })
+                if (!refreshedTerms || refreshedTerms.some(term => term.id === termId)) {
+                    throw agreementFailure
+                }
+            }
+
+            await mutateTermsCache(
+                termsCacheKey,
+                (currentTerms: ChallengeTerm[] | undefined) => (currentTerms ?? terms)
+                    .filter(term => term.id !== termId),
+                { revalidate: false },
+            )
+            if (interaction !== interactionRef.current) return
+            if (!finalTerm) {
+                setCompletedTermIds(current => [...current, termId])
+            } else {
+                await props.onComplete()
+            }
+        } catch (error) {
+            if (interaction !== interactionRef.current) return
+            setAgreementError(error instanceof Error && error.message.trim()
+                ? error.message
+                : 'We couldn\u2019t record your agreement. Please try again.')
+        } finally {
+            if (activeAgreementRequestRef.current === agreementRequest) {
+                activeAgreementRequestRef.current = undefined
+                setAgreementBusy(false)
+            }
+        }
+    }
+
+    /** Registers directly only when no outstanding Submitter terms remain. */
+    const accept = (): void => {
+        if (compactRegistration) {
+            props.onComplete()
+            return
+        }
+
+        acceptActiveTerm()
+    }
+
+    /**
+     * Invalidates pending agreement callbacks before asking the owner to close
+     * the dialog, preventing a just-finished request from registering after cancellation.
+     *
+     * @returns void after invalidating the active interaction and closing.
+     * @throws Does not throw.
+     */
+    const close = (): void => {
+        interactionRef.current += 1
+        props.onClose()
+    }
 
     /** Opens the Terms API's authenticated DocuSign recipient flow. */
     const startDocuSign = async (term: ChallengeTerm): Promise<void> => {
-        if (!term.docusignTemplateId) return
+        if (!term.docusignTemplateId || externalBusy) return
+        const interaction = interactionRef.current
         setExternalBusy(true)
         setExternalError('')
         try {
             const url = await getChallengeTermDocuSignUrl(term.docusignTemplateId, window.location.href)
+            if (interaction !== interactionRef.current) return
             window.location.assign(url)
         } catch (error) {
+            if (interaction !== interactionRef.current) return
             setExternalError(error instanceof Error
                 ? error.message
                 : 'The external agreement could not be opened.')
-            setExternalBusy(false)
+        } finally {
+            if (interaction === interactionRef.current) setExternalBusy(false)
         }
     }
 
     const buttons = registrationMode ? (
         <>
             <Button
-                disabled={props.busy}
+                disabled={props.busy || agreementBusy || externalBusy}
                 className={styles.modalAction}
                 customRadius
                 label={compactRegistration ? 'Cancel' : 'I disagree'}
                 noCaps
-                onClick={props.onClose}
+                onClick={close}
                 secondary
                 size='lg'
             />
             <Button
                 disabled={(compactRegistration && !accepted)
                     || props.busy
+                    || agreementBusy
+                    || externalBusy
                     || response.isValidating
                     || !!response.error
-                    || externalAgreement}
+                    || (!compactRegistration && (!activeTerm || activeExternalAgreement))}
                 className={styles.modalAction}
                 customRadius
-                label={props.busy ? 'Registering…' : compactRegistration ? 'Register' : 'I agree'}
-                loading={props.busy}
+                label={props.busy
+                    ? 'Registering…'
+                    : agreementBusy ? 'Agreeing…' : compactRegistration ? 'Register' : 'I agree'}
+                loading={props.busy || agreementBusy}
                 noCaps
                 onClick={accept}
                 primary
@@ -175,7 +305,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             disabled={props.busy}
             label='Close'
             noCaps
-            onClick={props.onClose}
+            onClick={close}
             primary
             size='lg'
         />
@@ -193,7 +323,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             classNames={{
                 modal: compactRegistration ? styles.compactModal : styles.termsModal,
             }}
-            onClose={props.onClose}
+            onClose={close}
             open
             size={compactRegistration ? 'md' : 'body'}
             spacer={false}
@@ -219,6 +349,11 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                             : 'These terms govern participation in this competition.'}
                     </p>
                 )}
+                {registrationMode && activeTerm && agreementTotal > 1 && (
+                    <p aria-live='polite' className={styles.progress}>
+                        {`Agreement ${activePosition + 1} of ${agreementTotal}`}
+                    </p>
+                )}
                 {!compactRegistration && response.isValidating && !response.data && (
                     <div className={styles.loading} role='status'>
                         <LoadingSpinner />
@@ -234,14 +369,17 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 {!compactRegistration && !response.error && !response.isValidating && terms.length === 0 && (
                     <p>No additional challenge-specific terms are listed.</p>
                 )}
-                {!compactRegistration && terms.length > 0 && (
-                    <div className={styles.terms}>
-                        {terms.map((term: ChallengeTerm, index: number) => (
+                {!compactRegistration && displayedTerms.length > 0 && (
+                    <div
+                        className={styles.terms}
+                        key={registrationMode ? activeTerm?.id : 'view'}
+                    >
+                        {displayedTerms.map((term: ChallengeTerm, index: number) => (
                             <article
                                 className={styles.term}
                                 key={term.id ?? term.url ?? term.title ?? `term-${index}`}
                             >
-                                {(terms.length > 1 || index > 0) && (
+                                {!registrationMode && (terms.length > 1 || index > 0) && (
                                     <h3>{term.title || `Challenge term ${index + 1}`}</h3>
                                 )}
                                 {term.text && (
@@ -268,10 +406,13 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                         ))}
                     </div>
                 )}
-                {!compactRegistration && registrationMode && externalAgreement && (
+                {!compactRegistration && registrationMode && activeExternalAgreement && (
                     <div className={styles.error} role='alert'>
-                        Complete each external agreement before registering.
+                        Complete this external agreement before registering.
                     </div>
+                )}
+                {!compactRegistration && agreementError && (
+                    <div className={styles.error} role='alert'>{agreementError}</div>
                 )}
                 {!compactRegistration && externalError && (
                     <div className={styles.error} role='alert'>{externalError}</div>
