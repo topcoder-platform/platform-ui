@@ -256,6 +256,15 @@ Resources:
       RouteKey: GET /v1/analytics/general
       Target: !Sub 'integrations/${AnalyticsIntegration}'
 
+  RouteDetailRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AnalyticsHttpApi
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/route
+      Target: !Sub 'integrations/${AnalyticsIntegration}'
+
   DefaultStage:
     Type: AWS::ApiGatewayV2::Stage
     DependsOn: AnalyticsApiAccessLogGroup
@@ -331,6 +340,15 @@ Resources:
       AuthorizationType: JWT
       AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
       RouteKey: GET /v1/analytics/general
+      Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
+
+  SharedRouteDetailRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SharedApiId
+      AuthorizationType: JWT
+      AuthorizerId: !Ref SharedAnalyticsJwtAuthorizer
+      RouteKey: GET /v1/analytics/route
       Target: !Sub 'integrations/${SharedAnalyticsIntegration}'
 
   SharedPreflightRoute:

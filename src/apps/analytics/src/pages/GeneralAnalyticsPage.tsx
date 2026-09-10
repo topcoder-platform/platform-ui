@@ -3,6 +3,7 @@ import {
     ChangeEvent,
     FC,
     FormEvent,
+    MouseEvent,
     useCallback,
     useMemo,
     useState,
@@ -25,10 +26,13 @@ import {
     AnalyticsFilterOptions,
     GeneralFilters,
     GeneralReport,
+    RouteFilters,
+    RouteReport,
 } from '../lib/models'
 import {
     getAnalyticsFilters,
     getGeneralReport,
+    getRouteReport,
 } from '../lib/services'
 import {
     analyticsRequestKey,
@@ -36,9 +40,11 @@ import {
     formatAnalyticsFreshness,
     formatAnalyticsInteger,
     formatAnalyticsSurface,
+    normalizeAnalyticsPagePath,
     validateAnalyticsDateRange,
 } from '../lib/utils'
 
+import { RouteAnalyticsReport } from './RouteAnalyticsReport'
 import styles from './AnalyticsPages.module.scss'
 
 const MOST_VISITED_PAGE_SIZE = 20
@@ -127,11 +133,25 @@ export const GeneralAnalyticsPage: FC = () => {
     const [appliedFilters, setAppliedFilters] = useState<GeneralFilters>(initialFilters)
     const [filterError, setFilterError] = useState<string>()
     const [visitedPagesPage, setVisitedPagesPage] = useState(1)
+    const [routeDraft, setRouteDraft] = useState('')
+    const [routePath, setRoutePath] = useState<string>()
+    const [routeError, setRouteError] = useState<string>()
     const filterOptions = useAnalyticsResource<AnalyticsFilterOptions>('analytics-filters', getAnalyticsFilters)
     const reportKey = analyticsRequestKey('general', appliedFilters)
     const report = useAnalyticsResource<GeneralReport>(
         reportKey,
         useCallback(() => getGeneralReport(appliedFilters), [appliedFilters]),
+    )
+    const routeFilters = useMemo<RouteFilters | undefined>(
+        () => (routePath ? { ...appliedFilters, path: routePath } : undefined),
+        [appliedFilters, routePath],
+    )
+    const routeReport = useAnalyticsResource<RouteReport>(
+        routeFilters ? analyticsRequestKey('route', routeFilters) : undefined,
+        useCallback(
+            () => getRouteReport(routeFilters as RouteFilters),
+            [routeFilters],
+        ),
     )
 
     const updateFilter = useCallback((event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -154,6 +174,37 @@ export const GeneralAnalyticsPage: FC = () => {
         setVisitedPagesPage(1)
         setFilterError(undefined)
     }, [])
+    /** Normalizes and applies a manually entered route without retaining URL queries. */
+    const lookupRoute = useCallback((event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const normalizedPath = normalizeAnalyticsPagePath(routeDraft)
+        if (!normalizedPath) {
+            setRouteError('Enter an absolute route or a complete HTTP(S) page URL.')
+            return
+        }
+
+        setRouteDraft(normalizedPath)
+        setRoutePath(normalizedPath)
+        setRouteError(undefined)
+    }, [routeDraft])
+    /** Opens route detail for one page selected from the ranked-page table. */
+    const analyzePage = useCallback((path: string) => {
+        setRouteDraft(path)
+        setRoutePath(path)
+        setRouteError(undefined)
+        window.requestAnimationFrame(() => {
+            document.getElementById('route-analytics-details')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+    }, [])
+    /** Mirrors route input changes without starting a warehouse request. */
+    const updateRouteDraft = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setRouteDraft(event.target.value)
+    }, [])
+    /** Reads a ranked page path from a table action and opens its detail report. */
+    const analyzePageFromButton = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+        analyzePage(event.currentTarget.value)
+    }, [analyzePage])
 
     const data = report.data
     const reportPending = report.loading || report.refreshing
@@ -240,6 +291,47 @@ export const GeneralAnalyticsPage: FC = () => {
                         <p className={styles.filterError} role='alert'>{filterError}</p>
                     )}
                 </form>
+
+                <section className={styles.routeLookup}>
+                    <div>
+                        <p className={styles.eyebrow}>Page detail</p>
+                        <h2>Route / page URL lookup</h2>
+                        <p>
+                            Enter a query-free route or paste a complete page URL. Date and site-surface
+                            filters above apply to the lookup.
+                        </p>
+                    </div>
+                    <form onSubmit={lookupRoute}>
+                        <label htmlFor='analytics-route-path'>Route or page URL</label>
+                        <div>
+                            <input
+                                id='analytics-route-path'
+                                list='analytics-route-suggestions'
+                                onChange={updateRouteDraft}
+                                placeholder='/opportunities/challenge/...'
+                                required
+                                type='text'
+                                value={routeDraft}
+                            />
+                            <Button primary type='submit'>Look up</Button>
+                        </div>
+                        <datalist id='analytics-route-suggestions'>
+                            {(report.data?.pages ?? []).map(page => (
+                                <option key={`${page.surface}-${page.path}`} value={page.path}>{page.path}</option>
+                            ))}
+                        </datalist>
+                        {routeError && <p className={styles.filterError} role='alert'>{routeError}</p>}
+                    </form>
+                </section>
+
+                {routePath && (
+                    <RouteAnalyticsReport
+                        path={routePath}
+                        period={`${formatAnalyticsFreshness(appliedFilters.from)} – ${
+                            formatAnalyticsFreshness(appliedFilters.to)}`}
+                        resource={routeReport}
+                    />
+                )}
 
                 {reportPending && (
                     <AnalyticsLoadingState message='Loading general analytics…' />
@@ -338,6 +430,7 @@ export const GeneralAnalyticsPage: FC = () => {
                                             <th scope='col'>Page path</th>
                                             <th scope='col'>Page views</th>
                                             <th scope='col'>Visitors</th>
+                                            <th aria-label='Actions' scope='col' />
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -347,9 +440,19 @@ export const GeneralAnalyticsPage: FC = () => {
                                                 <th scope='row'>{row.path}</th>
                                                 <td>{formatAnalyticsInteger(row.pageViews)}</td>
                                                 <td>{formatAnalyticsInteger(row.visitors)}</td>
+                                                <td>
+                                                    <button
+                                                        className={styles.tableAction}
+                                                        onClick={analyzePageFromButton}
+                                                        type='button'
+                                                        value={row.path}
+                                                    >
+                                                        Analyze
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
-                                        {visibleVisitedPages.length === 0 && <EmptyTableRow columns={4} />}
+                                        {visibleVisitedPages.length === 0 && <EmptyTableRow columns={5} />}
                                     </tbody>
                                 </table>
                             </div>

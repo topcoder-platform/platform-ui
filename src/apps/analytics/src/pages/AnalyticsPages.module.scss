@@ -102,6 +102,99 @@
     margin: 0;
 }
 
+.routeLookup {
+    align-items: center;
+    background: linear-gradient(135deg, #eef8f5 0%, #f7fbff 100%);
+    border: 1px solid #b9dcd1;
+    border-radius: 10px;
+    display: grid;
+    gap: $sp-6;
+    grid-template-columns: minmax(240px, 0.8fr) minmax(360px, 1.2fr);
+    padding: $sp-5;
+
+    h2 {
+        font-size: 22px;
+        margin: 2px 0 $sp-2;
+    }
+
+    p:not(.eyebrow) {
+        color: #5a6f78;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    form,
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    label {
+        color: #455b65;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    form > div {
+        display: grid;
+        gap: $sp-3;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    input {
+        background: #ffffff;
+        border: 1px solid #8fa5ae;
+        border-radius: 6px;
+        color: #0d3445;
+        font: inherit;
+        height: 42px;
+        min-width: 0;
+        padding: 0 11px;
+
+        &:focus {
+            border-color: #137d60;
+            box-shadow: 0 0 0 2px rgba(19, 125, 96, 0.2);
+            outline: none;
+        }
+    }
+
+    .filterError {
+        margin-top: $sp-2;
+    }
+}
+
+.routeReport {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    scroll-margin-top: $sp-5;
+}
+
+.routeReportHeading {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+
+    h2 {
+        font-size: 25px;
+        margin: 2px 0 $sp-1;
+        overflow-wrap: anywhere;
+    }
+
+    p:not(.eyebrow),
+    > span {
+        color: #617681;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    > span {
+        white-space: nowrap;
+    }
+}
+
 .freshness {
     color: #617681;
     font-size: 13px;
@@ -160,6 +253,63 @@
     display: grid;
     gap: $sp-5;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.funnelGrid {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.visitorTypeGrid {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    > div {
+        background: #f2f6f8;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-2;
+        padding: $sp-5;
+    }
+
+    span {
+        color: #617681;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    strong {
+        font-size: 28px;
+    }
+}
+
+.definitionNote,
+.emptyPanel {
+    color: #617681;
+    font-size: 13px;
+    margin: $sp-4 0 0;
+}
+
+.emptyPanel {
+    background: #f7f9fa;
+    border-radius: 8px;
+    padding: $sp-5;
+    text-align: center;
+}
+
+.abandonmentSection {
+    border-top: 1px solid #e4eaee;
+    margin-top: $sp-5;
+    padding-top: $sp-5;
+
+    h3 {
+        font-size: 16px;
+        margin: 0 0 $sp-3;
+    }
 }
 
 .tableScroll {
@@ -250,6 +400,28 @@
     display: block;
 }
 
+.pathCell {
+    max-width: 360px;
+    overflow-wrap: anywhere;
+}
+
+.tableAction {
+    background: transparent;
+    border: 0;
+    color: #086c50;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:focus-visible {
+        outline: 2px solid #137d60;
+        outline-offset: 3px;
+    }
+}
+
 .secondaryCell {
     color: #71838b;
     font-size: 11px;
@@ -281,12 +453,23 @@
     .twoColumnGrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .funnelGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @include ltesm {
     .filters,
     .metricGrid,
-    .twoColumnGrid {
+    .twoColumnGrid,
+    .funnelGrid,
+    .routeLookup,
+    .visitorTypeGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .routeLookup form > div {
         grid-template-columns: 1fr;
     }
 
@@ -296,6 +479,14 @@
 
     .panelHeader {
         flex-direction: column;
+    }
+
+    .routeReportHeading {
+        flex-direction: column;
+
+        > span {
+            white-space: normal;
+        }
     }
 
     .freshness {

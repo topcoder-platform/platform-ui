@@ -2,10 +2,12 @@
 import {
     analyticsRequestKey,
     defaultAnalyticsDateRange,
+    formatAnalyticsDuration,
     formatAnalyticsFreshness,
     formatAnalyticsInteger,
     formatAnalyticsPercent,
     formatAnalyticsSurface,
+    normalizeAnalyticsPagePath,
     validateAnalyticsDateRange,
 } from './analytics.utils'
 
@@ -50,12 +52,25 @@ describe('Analytics utilities', () => {
             .toBe('12,345')
         expect(formatAnalyticsPercent(12.345))
             .toBe('12.35%')
+        expect(formatAnalyticsDuration(125.6))
+            .toBe('2m 6s')
         expect(formatAnalyticsSurface('topcoder_website'))
             .toBe('Topcoder Website')
         expect(formatAnalyticsFreshness('2026-08-30'))
             .toBe('Aug 30, 2026')
         expect(formatAnalyticsFreshness('not-a-date'))
             .toBe('not-a-date')
+    })
+
+    it('normalizes a route or full page URL without retaining queries or fragments', () => {
+        expect(normalizeAnalyticsPagePath('/challenges/example?utm_source=email#details'))
+            .toBe('/challenges/example')
+        expect(normalizeAnalyticsPagePath('https://www.topcoder.com/enterprise/page?q=private'))
+            .toBe('/enterprise/page')
+        expect(normalizeAnalyticsPagePath('challenges/example'))
+            .toBeUndefined()
+        expect(normalizeAnalyticsPagePath('mailto:analytics@example.com'))
+            .toBeUndefined()
     })
 
     it('creates a stable key regardless of filter property insertion order', () => {

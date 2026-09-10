@@ -83,6 +83,41 @@ export function formatAnalyticsPercent(value: number): string {
 }
 
 /**
+ * Formats an average engagement duration as compact minutes and seconds.
+ *
+ * @param value finite duration in seconds.
+ * @returns human-readable duration with seconds rounded to the nearest whole number.
+ * @throws Does not throw.
+ */
+export function formatAnalyticsDuration(value: number): string {
+    const seconds = Math.max(0, Math.round(Number.isFinite(value) ? value : 0))
+    if (seconds < 60) return `${seconds}s`
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes}m ${seconds % 60}s`
+}
+
+/**
+ * Converts either an absolute HTTP(S) page URL or an absolute route into a query-free path.
+ *
+ * @param value route or page URL entered by an analytics user.
+ * @returns encoded pathname of at most 500 characters, or undefined for unsupported input.
+ * @throws Does not throw for malformed URLs.
+ */
+export function normalizeAnalyticsPagePath(value: string): string | undefined {
+    const candidate = value.trim()
+    if (!candidate) return undefined
+    try {
+        const parsed = candidate.startsWith('/')
+            ? new URL(candidate, 'https://analytics.local')
+            : new URL(candidate)
+        if (!['http:', 'https:'].includes(parsed.protocol)) return undefined
+        return parsed.pathname.length <= 500 ? parsed.pathname : undefined
+    } catch {
+        return undefined
+    }
+}
+
+/**
  * Formats API freshness metadata in the viewer's local timezone.
  *
  * @param value ISO timestamp, YYYY-MM-DD, or absent value.

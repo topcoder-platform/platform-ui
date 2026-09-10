@@ -8,6 +8,7 @@ import {
     AnalyticsFilterOptions,
     CampaignReport,
     GeneralReport,
+    RouteReport,
 } from '../lib/models'
 
 import { CampaignAnalyticsPage } from './CampaignAnalyticsPage'
@@ -54,6 +55,7 @@ jest.mock('../lib/services', () => ({
     getAnalyticsFilters: jest.fn(),
     getCampaignReport: jest.fn(),
     getGeneralReport: jest.fn(),
+    getRouteReport: jest.fn(),
 }))
 
 const mockedUseAnalyticsResource = useAnalyticsResource as unknown as jest.Mock
@@ -68,20 +70,23 @@ const filterOptions: AnalyticsFilterOptions = {
 }
 
 let reportResource: object
+let routeReportResource: object
 
 /**
  * Configures the generic analytics resource mock for one page render.
  *
- * @param resource report lifecycle state returned for the non-filter request.
+ * @param resource report lifecycle state returned for the main non-filter request.
+ * @param routeResource optional lifecycle state returned for a selected route lookup.
  * @returns void after installing stable filter and report responses.
  * @throws Does not throw.
  */
-function mockAnalyticsResources(resource: object): void {
+function mockAnalyticsResources(resource: object, routeResource: object = resource): void {
     reportResource = resource
+    routeReportResource = routeResource
     mockedUseAnalyticsResource.mockImplementation((key: string) => (
         key === 'analytics-filters'
             ? { data: filterOptions, loading: false, refresh, refreshing: false }
-            : reportResource
+            : key?.startsWith('route:') ? routeReportResource : reportResource
     ))
 }
 
@@ -263,5 +268,123 @@ describe('Analytics report pages', () => {
             .toHaveAttribute('data-overlay', 'false')
         expect(screen.getByRole('button', { name: 'Apply' }))
             .toBeEnabled()
+    })
+
+    it('looks up a full page URL and renders route behavior, forms, and funnel definitions', () => {
+        const general: GeneralReport = {
+            dataThrough: '2026-09-10',
+            filters: { from: '2026-08-13', surface: '', to: '2026-09-11' },
+            generatedAt: '2026-09-11T00:00:00Z',
+            pages: [],
+            series: [],
+            sources: [],
+            surfaces: [],
+            totals: { clickers: 0, clicks: 0, pageViews: 0, visitors: 0 },
+        }
+        const route: RouteReport = {
+            clickLocations: [{
+                clickers: 20,
+                clicks: 25,
+                clickThroughPercent: 20,
+                destinationHost: 'platform-ui.topcoder-dev.com',
+                destinationPath: '/opportunities/challenge/example',
+                elementId: 'view-challenge',
+                elementType: 'a',
+                placement: 'hero',
+            }],
+            dataThrough: '2026-09-10',
+            filters: {
+                from: '2026-08-13',
+                path: '/landing',
+                surface: '',
+                to: '2026-09-11',
+            },
+            formAbandonments: [{
+                abandonments: 4,
+                fieldId: 'company',
+                formId: 'contact-us',
+                visitors: 4,
+            }],
+            forms: [{
+                abandoners: 4,
+                abandonmentRatePercent: 33.33,
+                abandonments: 4,
+                completers: 8,
+                completionRatePercent: 66.67,
+                completions: 8,
+                formId: 'contact-us',
+                starters: 11,
+                starts: 12,
+                viewers: 45,
+                views: 50,
+            }],
+            funnel: {
+                challengeCtaClickers: 30,
+                clickThroughPercent: 30,
+                clickToRegistrationPercent: 40,
+                pageVisitors: 100,
+                registrations: 12,
+                registrationToSubmissionPercent: 50,
+                submissions: 6,
+                // eslint-disable-next-line unicorn/no-null
+                wins: null,
+                winTrackingAvailable: false,
+            },
+            generatedAt: '2026-09-11T00:00:00Z',
+            totals: {
+                averageEngagementSeconds: 126,
+                bounceRatePercent: 25,
+                bounces: 20,
+                clickers: 40,
+                clicks: 60,
+                clickThroughPercent: 40,
+                conversionRatePercent: 15,
+                conversions: 15,
+                entrances: 80,
+                formAbandonments: 4,
+                formCompletions: 8,
+                formStarts: 12,
+                newVisitors: 35,
+                pageViews: 150,
+                returningVisitors: 60,
+                unknownVisitorType: 5,
+                visitors: 100,
+            },
+            visitorSources: [
+                { percent: 30, source: 'organic', visitors: 30 },
+                { percent: 20, source: 'paid', visitors: 20 },
+                { percent: 10, source: 'social', visitors: 10 },
+                { percent: 5, source: 'email', visitors: 5 },
+                { percent: 35, source: 'other', visitors: 35 },
+            ],
+        }
+        mockAnalyticsResources(
+            { data: general, loading: false, refresh, refreshing: false },
+            { data: route, loading: false, refresh, refreshing: false },
+        )
+        render(<GeneralAnalyticsPage />)
+
+        fireEvent.change(screen.getByLabelText('Route or page URL'), {
+            target: { value: 'https://www.topcoder.com/landing?utm_source=email#form' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Look up' }))
+
+        const detail = screen.getByRole('heading', { name: '/landing' })
+            .closest('section') as HTMLElement
+        expect(within(detail)
+            .getByText('2m 6s'))
+            .toBeInTheDocument()
+        expect(within(detail)
+            .getByRole('heading', { name: 'Visitors by source' }))
+            .toBeInTheDocument()
+        expect(within(detail)
+            .getByText('view-challenge'))
+            .toBeInTheDocument()
+        expect(within(detail)
+            .getAllByText('contact-us'))
+            .toHaveLength(2)
+        expect(within(detail)
+            .getByText('Not tracked'))
+            .toBeInTheDocument()
     })
 })

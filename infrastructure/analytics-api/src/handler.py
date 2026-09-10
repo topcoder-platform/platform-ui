@@ -364,6 +364,293 @@ ORDER BY row_type, date_value, metric_1 DESC
 """
 
 
+ROUTE_SQL = """
+WITH date_events AS (
+    SELECT *
+    FROM topcoder_web.route_analytics_events_v1
+    WHERE event_timestamp >= CAST(:from_date AS timestamp)
+      AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
+      AND event_name IN (
+          '_page_view',
+          '_user_engagement',
+          'ui_click',
+          'form_viewed',
+          'form_started',
+          'form_completed',
+          'form_abandoned',
+          'challenge_registered',
+          'challenge_submitted'
+      )
+),
+route_events AS (
+    SELECT *
+    FROM date_events
+    WHERE page_path = :path
+      AND (:surface = '*' OR surface = :surface)
+),
+route_page_views AS (
+    SELECT *
+    FROM route_events
+    WHERE event_name = '_page_view'
+),
+ranked_first_views AS (
+    SELECT
+        analytics_user_id,
+        event_timestamp,
+        session_number,
+        source_group,
+        ROW_NUMBER() OVER (
+            PARTITION BY analytics_user_id
+            ORDER BY event_timestamp
+        ) AS view_rank
+    FROM route_page_views
+),
+first_views AS (
+    SELECT analytics_user_id, event_timestamp, session_number, source_group
+    FROM ranked_first_views
+    WHERE view_rank = 1
+),
+route_visitors AS (
+    SELECT analytics_user_id, event_timestamp AS viewed_at
+    FROM first_views
+),
+session_page_counts AS (
+    SELECT analytics_user_id, session_id, COUNT(*)::bigint AS page_views
+    FROM date_events
+    WHERE event_name = '_page_view' AND session_id IS NOT NULL
+    GROUP BY analytics_user_id, session_id
+),
+entry_sessions AS (
+    SELECT DISTINCT analytics_user_id, session_id
+    FROM route_page_views
+    WHERE page_view_entrances IS TRUE AND session_id IS NOT NULL
+),
+bounce_sessions AS (
+    SELECT entry.analytics_user_id, entry.session_id
+    FROM entry_sessions entry
+    JOIN session_page_counts session
+      ON session.analytics_user_id = entry.analytics_user_id
+     AND session.session_id = entry.session_id
+    WHERE session.page_views = 1
+),
+route_engagement AS (
+    SELECT user_engagement_time_msec
+    FROM route_events
+    WHERE event_name = '_user_engagement'
+),
+route_clicks AS (
+    SELECT *
+    FROM route_events
+    WHERE event_name = 'ui_click'
+),
+challenge_click_candidates AS (
+    SELECT
+        visitor.analytics_user_id,
+        click.event_timestamp,
+        CASE
+            WHEN click.destination_path LIKE '/opportunities/challenge/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 4), '')
+            WHEN click.destination_path LIKE '/challenges/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 3), '')
+            WHEN click.destination_path LIKE '/earn/challenges/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 4), '')
+            ELSE NULL
+        END AS challenge_id
+    FROM route_visitors visitor
+    JOIN route_clicks click
+      ON click.analytics_user_id = visitor.analytics_user_id
+     AND click.event_timestamp >= visitor.viewed_at
+    WHERE click.destination_path LIKE '/opportunities/challenge/%'
+       OR click.destination_path LIKE '/challenges/%'
+       OR click.destination_path LIKE '/earn/challenges/%'
+),
+challenge_cta_clicks AS (
+    SELECT analytics_user_id, challenge_id, MIN(event_timestamp) AS clicked_at
+    FROM challenge_click_candidates
+    WHERE challenge_id IS NOT NULL
+    GROUP BY analytics_user_id, challenge_id
+),
+registrations AS (
+    SELECT
+        click.analytics_user_id,
+        click.challenge_id,
+        MIN(event.event_timestamp) AS registered_at
+    FROM challenge_cta_clicks click
+    JOIN date_events event
+      ON event.analytics_user_id = click.analytics_user_id
+     AND event.event_name = 'challenge_registered'
+     AND event.challenge_id = click.challenge_id
+     AND event.event_timestamp >= click.clicked_at
+    GROUP BY click.analytics_user_id, click.challenge_id
+),
+submissions AS (
+    SELECT
+        registration.analytics_user_id,
+        registration.challenge_id,
+        MIN(event.event_timestamp) AS submitted_at
+    FROM registrations registration
+    JOIN date_events event
+      ON event.analytics_user_id = registration.analytics_user_id
+     AND event.event_name = 'challenge_submitted'
+     AND event.challenge_id = registration.challenge_id
+     AND event.event_timestamp >= registration.registered_at
+    GROUP BY registration.analytics_user_id, registration.challenge_id
+),
+route_form_events AS (
+    SELECT *
+    FROM route_events
+    WHERE event_name IN ('form_viewed', 'form_started', 'form_completed', 'form_abandoned')
+      AND form_id IS NOT NULL
+),
+conversion_users AS (
+    SELECT DISTINCT event.analytics_user_id
+    FROM route_form_events event
+    JOIN route_visitors visitor
+      ON visitor.analytics_user_id = event.analytics_user_id
+     AND event.event_timestamp >= visitor.viewed_at
+    WHERE event.event_name = 'form_completed'
+    UNION
+    SELECT analytics_user_id
+    FROM registrations
+),
+summary_row AS (
+    SELECT
+        CAST(MAX(event_date) AS varchar(10)) AS data_through,
+        COUNT(*)::bigint AS page_views,
+        COUNT(DISTINCT analytics_user_id)::bigint AS visitors,
+        (SELECT COUNT(*) FROM route_clicks)::bigint AS clicks,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM route_clicks)::bigint AS clickers,
+        (SELECT COUNT(*) FROM first_views WHERE session_number = 1)::bigint AS new_visitors,
+        (SELECT COUNT(*) FROM first_views WHERE session_number > 1)::bigint AS returning_visitors,
+        ROUND(
+            COALESCE((SELECT SUM(user_engagement_time_msec) FROM route_engagement), 0)::decimal(20, 2)
+            / NULLIF(COUNT(*), 0)
+            / 1000,
+            2
+        )::double precision AS avg_engagement_seconds,
+        (SELECT COUNT(*) FROM entry_sessions)::bigint AS entrances,
+        (SELECT COUNT(*) FROM bounce_sessions)::bigint AS bounces,
+        (SELECT COUNT(*) FROM conversion_users)::bigint AS conversions,
+        (SELECT COUNT(*) FROM route_form_events WHERE event_name = 'form_started')::bigint AS form_starts,
+        (SELECT COUNT(*) FROM route_form_events WHERE event_name = 'form_completed')::bigint AS form_completions,
+        (SELECT COUNT(*) FROM route_form_events WHERE event_name = 'form_abandoned')::bigint AS form_abandonments
+    FROM route_page_views
+),
+source_rows AS (
+    SELECT source_group, COUNT(*)::bigint AS visitors
+    FROM first_views
+    GROUP BY source_group
+),
+click_rows AS (
+    SELECT
+        placement,
+        element_id,
+        element_type,
+        destination_host,
+        destination_path,
+        COUNT(*)::bigint AS clicks,
+        COUNT(DISTINCT analytics_user_id)::bigint AS clickers
+    FROM route_clicks
+    GROUP BY placement, element_id, element_type, destination_host, destination_path
+    ORDER BY clicks DESC, element_id, destination_path
+    LIMIT 100
+),
+form_rows AS (
+    SELECT
+        form_id,
+        COUNT(CASE WHEN event_name = 'form_viewed' THEN 1 END)::bigint AS form_views,
+        COUNT(DISTINCT CASE WHEN event_name = 'form_viewed' THEN analytics_user_id END)::bigint AS form_viewers,
+        COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS form_starts,
+        COUNT(DISTINCT CASE WHEN event_name = 'form_started' THEN analytics_user_id END)::bigint AS form_starters,
+        COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS form_completions,
+        COUNT(DISTINCT CASE WHEN event_name = 'form_completed' THEN analytics_user_id END)::bigint AS form_completers,
+        COUNT(CASE WHEN event_name = 'form_abandoned' THEN 1 END)::bigint AS form_abandonments,
+        COUNT(DISTINCT CASE WHEN event_name = 'form_abandoned' THEN analytics_user_id END)::bigint AS form_abandoners
+    FROM route_form_events
+    GROUP BY form_id
+    ORDER BY form_views DESC, form_id
+    LIMIT 50
+),
+abandonment_rows AS (
+    SELECT
+        form_id,
+        COALESCE(field_id, 'Unknown field') AS field_id,
+        COUNT(*)::bigint AS abandonments,
+        COUNT(DISTINCT analytics_user_id)::bigint AS visitors
+    FROM route_form_events
+    WHERE event_name = 'form_abandoned'
+    GROUP BY form_id, COALESCE(field_id, 'Unknown field')
+    ORDER BY abandonments DESC, form_id, field_id
+    LIMIT 100
+),
+funnel_row AS (
+    SELECT
+        (SELECT COUNT(*) FROM route_visitors)::bigint AS page_visitors,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM challenge_cta_clicks)::bigint AS challenge_cta_clickers,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM registrations)::bigint AS registrations,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM submissions)::bigint AS submissions
+)
+SELECT
+    'summary'::varchar AS row_type,
+    NULL::varchar AS dimension_1,
+    NULL::varchar AS dimension_2,
+    NULL::varchar AS dimension_3,
+    NULL::varchar AS dimension_4,
+    NULL::varchar AS dimension_5,
+    data_through::varchar AS dimension_6,
+    page_views::double precision AS metric_1,
+    visitors::double precision AS metric_2,
+    clicks::double precision AS metric_3,
+    clickers::double precision AS metric_4,
+    new_visitors::double precision AS metric_5,
+    returning_visitors::double precision AS metric_6,
+    avg_engagement_seconds::double precision AS metric_7,
+    entrances::double precision AS metric_8,
+    bounces::double precision AS metric_9,
+    conversions::double precision AS metric_10,
+    form_starts::double precision AS metric_11,
+    form_completions::double precision AS metric_12,
+    form_abandonments::double precision AS metric_13
+FROM summary_row
+UNION ALL
+SELECT
+    'source', source_group, NULL, NULL, NULL, NULL, NULL,
+    visitors,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL
+FROM source_rows
+UNION ALL
+SELECT
+    'click_location', placement, element_id, element_type, destination_host, destination_path, NULL,
+    clicks, clickers,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL
+FROM click_rows
+UNION ALL
+SELECT
+    'form', form_id, NULL, NULL, NULL, NULL, NULL,
+    form_views, form_viewers, form_starts, form_starters, form_completions, form_completers,
+    form_abandonments, form_abandoners,
+    NULL, NULL, NULL, NULL, NULL
+FROM form_rows
+UNION ALL
+SELECT
+    'form_abandonment', form_id, field_id, NULL, NULL, NULL, NULL,
+    abandonments, visitors,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL
+FROM abandonment_rows
+UNION ALL
+SELECT
+    'funnel', NULL, NULL, NULL, NULL, NULL, NULL,
+    page_visitors, challenge_cta_clickers, registrations, submissions,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL
+FROM funnel_row
+ORDER BY row_type, metric_1 DESC, dimension_1
+"""
+
+
 class QueryFailure(RuntimeError):
     """Raised when Redshift rejects or aborts a reporting query."""
 
@@ -427,6 +714,16 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 cache_key,
                 REPORT_CACHE_SECONDS,
                 lambda: _general_report(filters, context, query_token),
+                context,
+            )
+            return _response(200, report)
+        if route_key == "GET /v1/analytics/route":
+            filters = _route_filters(query)
+            cache_key = f"route:{json.dumps(filters, sort_keys=True)}"
+            report = _cached_report(
+                cache_key,
+                REPORT_CACHE_SECONDS,
+                lambda: _route_report(filters, context, query_token),
                 context,
             )
             return _response(200, report)
@@ -688,6 +985,173 @@ def _general_report(
     }
 
 
+def _route_report(
+    filters: dict[str, str],
+    context: Any,
+    query_token: str | None = None,
+) -> dict[str, Any]:
+    """Load and shape detailed engagement analytics for one exact page path.
+
+    Args:
+        filters: Validated date, surface, and query-free path filters.
+        context: Lambda context used to respect the remaining deadline.
+        query_token: Optional server-issued token that resumes a pending statement.
+
+    Returns:
+        Route totals, visitor-source groups, click locations, form activity, and
+        the ordered challenge funnel. No visitor identifiers are returned.
+
+    Raises:
+        QueryFailure or QueryTimeout when Redshift cannot return data.
+    """
+
+    rows = _execute_query(ROUTE_SQL, _sql_parameters(filters), context, query_token)
+    summary = next((row for row in rows if row.get("row_type") == "summary"), {})
+    funnel_row = next((row for row in rows if row.get("row_type") == "funnel"), {})
+    visitors = _integer(summary.get("metric_2"))
+    clickers = _integer(summary.get("metric_4"))
+    entrances = _integer(summary.get("metric_8"))
+    bounces = _integer(summary.get("metric_9"))
+    conversions = _integer(summary.get("metric_10"))
+    new_visitors = _integer(summary.get("metric_5"))
+    returning_visitors = _integer(summary.get("metric_6"))
+    visitor_sources = {
+        "organic": 0,
+        "paid": 0,
+        "social": 0,
+        "email": 0,
+        "other": 0,
+    }
+    for row in rows:
+        source_group = row.get("dimension_1")
+        if row.get("row_type") == "source" and source_group in visitor_sources:
+            visitor_sources[source_group] = _integer(row.get("metric_1"))
+
+    page_visitors = _integer(funnel_row.get("metric_1"))
+    challenge_cta_clickers = _integer(funnel_row.get("metric_2"))
+    registrations = _integer(funnel_row.get("metric_3"))
+    submissions = _integer(funnel_row.get("metric_4"))
+
+    return {
+        "generatedAt": _now_iso(),
+        "dataThrough": summary.get("dimension_6"),
+        "filters": filters,
+        "totals": {
+            "pageViews": _integer(summary.get("metric_1")),
+            "visitors": visitors,
+            "clicks": _integer(summary.get("metric_3")),
+            "clickers": clickers,
+            "clickThroughPercent": _percentage(clickers, visitors),
+            "newVisitors": new_visitors,
+            "returningVisitors": returning_visitors,
+            "unknownVisitorType": max(0, visitors - new_visitors - returning_visitors),
+            "averageEngagementSeconds": _number(summary.get("metric_7")),
+            "entrances": entrances,
+            "bounces": bounces,
+            "bounceRatePercent": _percentage(bounces, entrances),
+            "conversions": conversions,
+            "conversionRatePercent": _percentage(conversions, visitors),
+            "formStarts": _integer(summary.get("metric_11")),
+            "formCompletions": _integer(summary.get("metric_12")),
+            "formAbandonments": _integer(summary.get("metric_13")),
+        },
+        "visitorSources": [
+            {
+                "source": source,
+                "visitors": source_visitors,
+                "percent": _percentage(source_visitors, visitors),
+            }
+            for source, source_visitors in visitor_sources.items()
+        ],
+        "clickLocations": [
+            _route_click_location(row, visitors)
+            for row in rows if row.get("row_type") == "click_location"
+        ],
+        "forms": [
+            _route_form(row)
+            for row in rows if row.get("row_type") == "form"
+        ],
+        "formAbandonments": [
+            {
+                "formId": row.get("dimension_1") or "Unknown form",
+                "fieldId": row.get("dimension_2") or "Unknown field",
+                "abandonments": _integer(row.get("metric_1")),
+                "visitors": _integer(row.get("metric_2")),
+            }
+            for row in rows if row.get("row_type") == "form_abandonment"
+        ],
+        "funnel": {
+            "pageVisitors": page_visitors,
+            "challengeCtaClickers": challenge_cta_clickers,
+            "registrations": registrations,
+            "submissions": submissions,
+            "wins": None,
+            "clickThroughPercent": _percentage(challenge_cta_clickers, page_visitors),
+            "clickToRegistrationPercent": _percentage(registrations, challenge_cta_clickers),
+            "registrationToSubmissionPercent": _percentage(submissions, registrations),
+            "winTrackingAvailable": False,
+        },
+    }
+
+
+def _route_click_location(row: dict[str, Any], visitors: int) -> dict[str, Any]:
+    """Convert one route click aggregate to its privacy-safe wire shape.
+
+    Args:
+        row: Query row containing semantic element and destination dimensions.
+        visitors: Unique route visitors used as the location CTR denominator.
+
+    Returns:
+        Aggregate click-location object with no raw coordinates or rendered text.
+
+    Raises:
+        Does not raise.
+    """
+
+    clickers = _integer(row.get("metric_2"))
+    return {
+        "placement": row.get("dimension_1"),
+        "elementId": row.get("dimension_2"),
+        "elementType": row.get("dimension_3"),
+        "destinationHost": row.get("dimension_4"),
+        "destinationPath": row.get("dimension_5"),
+        "clicks": _integer(row.get("metric_1")),
+        "clickers": clickers,
+        "clickThroughPercent": _percentage(clickers, visitors),
+    }
+
+
+def _route_form(row: dict[str, Any]) -> dict[str, Any]:
+    """Convert one route form aggregate to completion and abandonment metrics.
+
+    Args:
+        row: Query row containing a safe form ID and lifecycle counts.
+
+    Returns:
+        Aggregate form activity with rates based on form starts.
+
+    Raises:
+        Does not raise.
+    """
+
+    starts = _integer(row.get("metric_3"))
+    completions = _integer(row.get("metric_5"))
+    abandonments = _integer(row.get("metric_7"))
+    return {
+        "formId": row.get("dimension_1") or "Unknown form",
+        "views": _integer(row.get("metric_1")),
+        "viewers": _integer(row.get("metric_2")),
+        "starts": starts,
+        "starters": _integer(row.get("metric_4")),
+        "completions": completions,
+        "completers": _integer(row.get("metric_6")),
+        "abandonments": abandonments,
+        "abandoners": _integer(row.get("metric_8")),
+        "completionRatePercent": _percentage(completions, starts),
+        "abandonmentRatePercent": _percentage(abandonments, starts),
+    }
+
+
 def _click_location(row: dict[str, Any]) -> dict[str, Any]:
     """Convert one normalized Redshift click-location row to the wire contract.
 
@@ -752,6 +1216,26 @@ def _general_filters(query: dict[str, Any]) -> dict[str, str]:
     return {
         **_date_filters(query),
         "surface": _safe_filter(query.get("surface"), "surface"),
+    }
+
+
+def _route_filters(query: dict[str, Any]) -> dict[str, str]:
+    """Validate the date, surface, and exact page path for a route report.
+
+    Args:
+        query: Untrusted API Gateway query string values.
+
+    Returns:
+        Complete normalized route filter dictionary.
+
+    Raises:
+        ValueError for malformed dates, unsafe surfaces, or invalid paths.
+    """
+
+    return {
+        **_date_filters(query),
+        "surface": _safe_filter(query.get("surface"), "surface"),
+        "path": _safe_path(query.get("path")),
     }
 
 
@@ -868,6 +1352,31 @@ def _safe_filter(value: Any, label: str) -> str:
     return value
 
 
+def _safe_path(value: Any) -> str:
+    """Validate one exact, query-free URL path used by the route lookup.
+
+    Args:
+        value: Untrusted query value after API Gateway URL decoding.
+
+    Returns:
+        Unchanged absolute path suitable for a named Data API parameter.
+
+    Raises:
+        ValueError when the path is missing, relative, unbounded, contains a
+        query/fragment, or includes control characters.
+    """
+
+    if not isinstance(value, str) or not value:
+        raise ValueError("The page path is required")
+    if len(value) > 500:
+        raise ValueError("The page path cannot exceed 500 characters")
+    if not value.startswith("/") or "?" in value or "#" in value:
+        raise ValueError("The page path must be an absolute query-free path")
+    if any(ord(character) < 32 or ord(character) == 127 for character in value):
+        raise ValueError("The page path contains unsupported characters")
+    return value
+
+
 def _sql_parameters(filters: dict[str, str]) -> list[dict[str, str]]:
     """Map wire filters to Redshift Data API named parameters.
 
@@ -890,6 +1399,7 @@ def _sql_parameters(filters: dict[str, str]) -> list[dict[str, str]]:
         "source": "source",
         "medium": "medium",
         "surface": "surface",
+        "path": "path",
     }
     return [
         {"name": names[key], "value": value or NO_FILTER_PARAMETER}
@@ -1261,6 +1771,25 @@ def _integer(value: Any) -> int:
         return max(0, int(float(value or 0)))
     except (TypeError, ValueError):
         return 0
+
+
+def _number(value: Any) -> float:
+    """Convert a numeric aggregate to a non-negative two-decimal number.
+
+    Args:
+        value: Data API numeric field.
+
+    Returns:
+        Non-negative float rounded to two decimals, defaulting to zero.
+
+    Raises:
+        Does not raise for malformed provider values.
+    """
+
+    try:
+        return round(max(0.0, float(value or 0)), 2)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _percentage(numerator: int, denominator: int) -> float:
