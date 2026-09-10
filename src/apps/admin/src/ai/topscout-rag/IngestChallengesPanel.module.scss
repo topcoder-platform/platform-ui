@@ -111,6 +111,12 @@
     flex-wrap: wrap;
 }
 
+.actions {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+}
+
 .dryRun {
     display: flex;
     align-items: center;

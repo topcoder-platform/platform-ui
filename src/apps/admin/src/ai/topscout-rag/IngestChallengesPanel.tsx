@@ -82,7 +82,8 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
             .some(value => !!value.trim()),
         [bulk],
     )
-    const canRun = (hasSingle || hasBulk) && !isRunning
+    const hasAnyInput = hasSingle || hasBulk
+    const canRun = hasAnyInput && !isRunning
 
     const handleChallengeIdChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setChallengeId(event.target.value)
@@ -96,6 +97,16 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
 
     const handleDryRunChange = useCallback(() => {
         setDryRun(previous => !previous)
+    }, [])
+
+    /**
+     * Clears both sections at once. Filling either one disables the other, so
+     * without this an operator who started down the wrong path has to empty
+     * every field by hand before they can switch.
+     */
+    const handleReset = useCallback(() => {
+        setChallengeId('')
+        setBulk(EMPTY_BULK)
     }, [])
 
     const runIngestion = useCallback(async () => {
@@ -262,13 +273,22 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                         Dry run — chunk &amp; embed without writing to the index
                     </span>
                 </div>
-                <Button
-                    primary
-                    size='lg'
-                    label={isRunning ? 'Running…' : 'Run Ingestion'}
-                    onClick={handleRunClick}
-                    disabled={!canRun}
-                />
+                <div className={styles.actions}>
+                    <Button
+                        secondary
+                        size='lg'
+                        label='Reset'
+                        onClick={handleReset}
+                        disabled={isRunning || !hasAnyInput}
+                    />
+                    <Button
+                        primary
+                        size='lg'
+                        label={isRunning ? 'Running…' : 'Run Ingestion'}
+                        onClick={handleRunClick}
+                        disabled={!canRun}
+                    />
+                </div>
             </div>
 
             {lastRun && <IngestionRunSummary run={lastRun} />}
