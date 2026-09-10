@@ -6,8 +6,10 @@ import { EnvironmentConfig } from '~/config'
 
 import { ForumIcon, SettingSection } from '../../../lib'
 
+import MarketingPreferences from './MarketingPreferences'
 import styles from './PreferencesTab.module.scss'
 
+/** Renders member email choices and the existing forum preferences link; has no inputs and handles no API errors directly. */
 const PreferencesTab: FC<any> = () => {
     function handleGoToForumPreferences(): void {
         window.open(
@@ -23,6 +25,7 @@ const PreferencesTab: FC<any> = () => {
             <h3>PLATFORM PREFERENCES</h3>
 
             <div className={styles.content}>
+                <MarketingPreferences />
                 <SettingSection
                     leftElement={(
                         <div className={styles.imageWrap}>

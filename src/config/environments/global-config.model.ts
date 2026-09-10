@@ -39,6 +39,7 @@ export interface GlobalConfig {
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
+    CONTACT_API: string,
     MARATHON_MATCH_API?: string,
     REPORTS_API: string,
     PROCUREMENT_API: string,
