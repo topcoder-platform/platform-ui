@@ -47,15 +47,15 @@ const DEFAULT_VALUES: LeadIntakeFormData = {
     accountName: '',
     additionalRequirements: '',
     billRateAmount: '',
-    billRateCurrency: 'USD',
+    billRateCurrency: '',
     engagementDuration: '',
-    engagementModel: 'TIME_AND_MATERIAL',
-    experienceLevel: 'MID',
+    engagementModel: '',
+    experienceLevel: '',
     industryDomain: '',
     jobDescription: '',
     minYearsExperience: 0,
     preferredStartDate: '',
-    priority: 'MEDIUM',
+    priority: '',
     remoteWorkAccepted: 'yes',
     requiredSkills: [],
     resourcesRequired: 1,
@@ -305,6 +305,7 @@ const LeadIntakeTextareaField: FC<TextareaFieldProps> = (props: TextareaFieldPro
 interface SelectFieldProps extends BaseFieldComponentProps {
     name: keyof LeadIntakeFormData
     options: Array<{ label: string; value: string }>
+    placeholder: string
 }
 
 const LeadIntakeSelectField: FC<SelectFieldProps> = (props: SelectFieldProps) => {
@@ -320,22 +321,28 @@ const LeadIntakeSelectField: FC<SelectFieldProps> = (props: SelectFieldProps) =>
     )
 
     const renderSelect = useCallback(
-        (renderProps: { field: ControllerRenderProps<LeadIntakeFormData, typeof name> }): JSX.Element => (
-            <InputSelect
-                classNameWrapper={classNames(
-                    styles.selectInputWrapper,
-                    props.errors[name] && styles.selectInputError,
-                )}
-                disabled={props.disabled}
-                hideInlineErrors
-                label=''
-                name={String(name)}
-                options={props.options}
-                value={String(renderProps.field.value ?? '')}
-                onChange={handleChange(renderProps.field)}
-            />
-        ),
-        [handleChange, name, props.disabled, props.errors, props.options],
+        (renderProps: { field: ControllerRenderProps<LeadIntakeFormData, typeof name> }): JSX.Element => {
+            const selectedValue = String(renderProps.field.value ?? '')
+
+            return (
+                <InputSelect
+                    classNameWrapper={classNames(
+                        styles.selectInputWrapper,
+                        props.errors[name] && styles.selectInputError,
+                        !selectedValue && styles.selectInputPlaceholder,
+                    )}
+                    disabled={props.disabled}
+                    hideInlineErrors
+                    label=''
+                    name={String(name)}
+                    options={props.options}
+                    placeholder={props.placeholder}
+                    value={selectedValue}
+                    onChange={handleChange(renderProps.field)}
+                />
+            )
+        },
+        [handleChange, name, props.disabled, props.errors, props.options, props.placeholder],
     )
 
     return (
@@ -565,7 +572,7 @@ const LeadIntakePage: FC = () => {
     return (
         <ContentLayout innerClass={styles.pageInner} outerClass={styles.pageOuter}>
             <header className={styles.pageHeader}>
-                <h3 className={styles.pageHeaderTitle}>Engagement Lead Intake</h3>
+                <h2 className={styles.pageHeaderTitle}>Engagement Lead Intake</h2>
             </header>
 
             <div className={styles.formContainer}>
@@ -671,6 +678,7 @@ const LeadIntakePage: FC = () => {
                                         { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
                                         { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
                                     ]}
+                                    placeholder='Select model'
                                 />
                                 <LeadIntakeTextField
                                     control={control}
@@ -721,6 +729,7 @@ const LeadIntakePage: FC = () => {
                                         { label: 'Senior', value: 'SENIOR' },
                                         { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
                                     ]}
+                                    placeholder='Select level'
                                 />
                                 <LeadIntakeNumberField
                                     control={control}
@@ -851,6 +860,7 @@ const LeadIntakePage: FC = () => {
                                         { label: 'INR', value: 'INR' },
                                         { label: 'Other', value: 'OTHER' },
                                     ]}
+                                    placeholder='Select currency'
                                 />
                                 <LeadIntakeTextField
                                     control={control}
@@ -879,6 +889,7 @@ const LeadIntakePage: FC = () => {
                                         { label: 'Medium', value: 'MEDIUM' },
                                         { label: 'Low', value: 'LOW' },
                                     ]}
+                                    placeholder='Select priority'
                                 />
                                 <LeadIntakeTextareaField
                                     control={control}

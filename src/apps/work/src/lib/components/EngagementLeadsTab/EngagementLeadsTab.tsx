@@ -448,22 +448,31 @@ export const EngagementLeadsTab: FC = () => {
                                             <div className={styles.actions}>
                                                 {lead.convertedEngagementId
                                                     ? (
-                                                        <button
-                                                            className={styles.actionLink}
-                                                            disabled={
-                                                                viewingEngagementId
-                                                                    === lead.convertedEngagementId
-                                                            }
-                                                            type='button'
-                                                            onClick={() => {
-                                                                handleViewEngagement(
-                                                                    lead.convertedEngagementId as string,
-                                                                )
-                                                                    .catch(() => undefined)
-                                                            }}
+                                                        <Tooltip
+                                                            content='View Engagement'
+                                                            triggerOn='click-hover'
                                                         >
-                                                            View Engagement
-                                                        </button>
+                                                            <button
+                                                                aria-label='View Engagement'
+                                                                className={styles.actionIconButton}
+                                                                disabled={
+                                                                    viewingEngagementId
+                                                                        === lead.convertedEngagementId
+                                                                }
+                                                                type='button'
+                                                                onClick={() => {
+                                                                    handleViewEngagement(
+                                                                        lead.convertedEngagementId as string,
+                                                                    )
+                                                                        .catch(() => undefined)
+                                                                }}
+                                                            >
+                                                                <IconOutline.EyeIcon
+                                                                    aria-hidden
+                                                                    className={styles.actionIcon}
+                                                                />
+                                                            </button>
+                                                        </Tooltip>
                                                     )
                                                     : canCreateEngagementFromLead(String(lead.status))
                                                         ? (

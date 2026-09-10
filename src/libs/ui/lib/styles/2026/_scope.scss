@@ -54,6 +54,36 @@ $tc-2026-apps:
             text-transform: none;
         }
 
+        h1 {
+            font-size: $tc-2026-h1-size;
+            line-height: $tc-2026-h1-line-height;
+        }
+
+        h2 {
+            font-size: $tc-2026-h2-size;
+            line-height: $tc-2026-h2-line-height;
+        }
+
+        h3 {
+            font-size: $tc-2026-h3-size;
+            line-height: $tc-2026-h3-line-height;
+        }
+
+        h4 {
+            font-size: $tc-2026-h4-size;
+            line-height: $tc-2026-h4-line-height;
+        }
+
+        h5 {
+            font-size: $tc-2026-h5-size;
+            line-height: $tc-2026-h5-line-height;
+        }
+
+        h6 {
+            font-size: $tc-2026-h6-size;
+            line-height: $tc-2026-h6-line-height;
+        }
+
         a {
             color: $tc-2026-link;
 
