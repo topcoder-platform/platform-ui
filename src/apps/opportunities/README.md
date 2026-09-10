@@ -71,6 +71,12 @@ to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
 
+Track tags share the same foreground and background palettes across Browse
+and My Work cards in both views: blue for Design, green for Development,
+orange for Data Science, purple for AI, and pink for QA. Unknown tracks use
+the neutral gray palette. Short `DEV` and `QA` API values use the same colors
+as their full track names.
+
 Opportunity cards preserve same-tab navigation. External role-learning links
 open in a separate tab and include `rel="noreferrer"`.
 
@@ -101,8 +107,10 @@ capacity. When `remainingPositions` reaches zero, eligible reviewers can still
 use the detail CTA to join the waitlist; the page explains that outcome before
 submission and confirms it afterward. Review API persists these applications as
 `PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
-while capacity remains full, then naturally return to `Applied` if a position
-reopens or to `Approved` when the reviewer is selected.
+with the Figma clock icon and a green outline in both list and grid views.
+That state remains while capacity is full, then naturally returns to `Applied`
+if a position reopens or to `Approved` when the reviewer is selected. An explicit
+`WAITLISTED` application status uses the same badge.
 
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
