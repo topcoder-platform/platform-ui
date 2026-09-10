@@ -400,21 +400,28 @@ and active challenges retain the ongoing-review guidance.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
-upload. The flow accepts one `.zip` archive up to 500MB, requires the authored
-declaration, and reports live upload progress. The browser uploads to
-Filestack's S3 endpoint using the environment's canonical submissions DMZ
-bucket, then sends the resulting storage URL to `POST /v6/submissions`. The
-active phase selects `CONTEST_SUBMISSION`,
+upload. Work Manager's case-insensitive `submission_type=url` challenge
+metadata selects the URL experience; every other value, including missing or
+malformed metadata, retains the standard ZIP experience. URL submissions
+require a confirmed absolute HTTP(S) link and send that link directly to
+`POST /v6/submissions` without invoking Filestack. ZIP submissions accept one
+`.zip` archive up to 500MB and report live upload progress. The browser uploads
+the archive to Filestack's S3 endpoint using the environment's canonical
+submissions DMZ bucket, then sends the resulting storage URL to the same Review
+API endpoint. Both modes require the authored declaration and revalidate the
+member's registration before submission. The active phase selects `CONTEST_SUBMISSION`,
 `CHECKPOINT_SUBMISSION`, or `STUDIO_FINAL_FIX_SUBMISSION`; Review API remains
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
-Requirements content. Successful uploads expose the created submission ID and
-refresh challenge and member submission counts without leaving the confirmation
-state. The declaration opens the public Topcoder Terms of Use in a new tab.
-While an upload is active, the detail tabs and every form action that would
-unmount the upload are disabled. The explicit upload-cancel control remains
-available, aborts its request, and then unlocks normal navigation.
+Requirements content in ZIP mode; URL mode replaces file-specific guidance
+with link accessibility reminders. Successful submissions expose the created
+submission ID and refresh challenge and member submission counts without
+leaving the confirmation state. The declaration opens the public Topcoder
+Terms of Use in a new tab. While either request is active, the detail tabs and
+every form action that would unmount the submission are disabled. The explicit
+cancel control remains available, aborts its request, clears the selected file
+or URL, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
 progress, and completed states. Virus-scan and quarantine failures are reported

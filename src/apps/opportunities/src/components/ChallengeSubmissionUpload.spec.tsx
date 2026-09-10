@@ -10,18 +10,25 @@ import {
 } from '@testing-library/react'
 
 import { ChallengeOpportunity, ChallengeSubmission } from '../models'
-import { createChallengeSubmission } from '../services'
+import {
+    createChallengeSubmission,
+    createChallengeUrlSubmission,
+} from '../services'
 
 import {
     ChallengeSubmissionUpload,
     challengeSubmissionType,
     validateChallengeSubmissionFile,
+    validateChallengeSubmissionUrl,
 } from './ChallengeSubmissionUpload'
 
 const mockRecordAnalyticsEvent = jest.fn()
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: { URLS: { TERMS_OF_USE: 'https://www.example.com/terms' } },
+}), { virtual: true })
+jest.mock('~/libs/cms', () => ({
+    getSafeCmsLink: jest.fn(),
 }), { virtual: true })
 jest.mock('~/libs/core', () => ({
     recordAnalyticsEvent: (...args: unknown[]) => mockRecordAnalyticsEvent(...args),
@@ -39,9 +46,12 @@ jest.mock('react-toastify', () => ({
 }))
 jest.mock('../services', () => ({
     createChallengeSubmission: jest.fn(),
+    createChallengeUrlSubmission: jest.fn(),
 }))
 
 const mockedCreateSubmission = createChallengeSubmission as jest.MockedFunction<typeof createChallengeSubmission>
+const mockedCreateUrlSubmission
+    = createChallengeUrlSubmission as jest.MockedFunction<typeof createChallengeUrlSubmission>
 
 /** Creates the minimum challenge data needed by the upload workflow. */
 function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): ChallengeOpportunity {
@@ -132,6 +142,191 @@ describe('ChallengeSubmissionUpload', () => {
         Object.defineProperty(oversized, 'size', { value: (500 * 1024 * 1024) + 1 })
         expect(validateChallengeSubmissionFile(oversized))
             .toBe('The ZIP file must be 500MB or smaller.')
+    })
+
+    it('accepts only trimmed absolute HTTP or HTTPS submission URLs', () => {
+        expect(validateChallengeSubmissionUrl(''))
+            .toBe('Enter the URL to your submission.')
+        expect(validateChallengeSubmissionUrl('deliverables.example.com/result'))
+            .toBe('Enter a valid submission URL.')
+        expect(validateChallengeSubmissionUrl('ftp://deliverables.example.com/result'))
+            .toBe('Enter a URL beginning with http:// or https://.')
+        expect(validateChallengeSubmissionUrl('  https://deliverables.example.com/result  '))
+            .toBeUndefined()
+    })
+
+    it('renders metadata-selected URL guidance without the ZIP picker', () => {
+        renderUpload(challengeFixture({
+            metadata: [{ name: ' SUBMISSION_TYPE ', value: ' URL ' }],
+        }))
+
+        expect(screen.getByText('Submit the URL to your solution as described in the requirements.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Required Link' }))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveAttribute('type', 'url')
+        expect(screen.getByRole('button', { name: 'Set URL' }))
+            .toBeInTheDocument()
+        expect(screen.queryByLabelText(/Upload File/))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Drop your file(s) here or'))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Link directly to your challenge deliverable'))
+            .toBeInTheDocument()
+    })
+
+    it('validates and reconfirms an edited URL before enabling its declaration', () => {
+        renderUpload(challengeFixture({
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }))
+        const urlInput = screen.getByLabelText(/Submission URL/)
+        const agreement = screen.getByRole('checkbox', { name: 'I understand and agree' })
+
+        fireEvent.change(urlInput, { target: { value: 'ftp://files.example.com/result' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Enter a URL beginning with http:// or https://.')
+        expect(urlInput)
+            .toHaveAttribute('aria-invalid', 'true')
+        expect(agreement)
+            .toBeDisabled()
+
+        fireEvent.change(urlInput, { target: { value: '  https://files.example.com/result  ' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByText('Ready to submit'))
+            .toBeInTheDocument()
+        expect(screen.getByText('https://files.example.com/result'))
+            .toBeInTheDocument()
+        expect(urlInput)
+            .toHaveValue('https://files.example.com/result')
+        expect(agreement)
+            .not.toBeDisabled()
+
+        fireEvent.click(agreement)
+        fireEvent.change(urlInput, { target: { value: 'https://files.example.com/revised' } })
+        expect(screen.queryByText('Ready to submit'))
+            .not.toBeInTheDocument()
+        expect(agreement)
+            .toBeDisabled()
+        expect(agreement)
+            .not.toBeChecked()
+    })
+
+    it('posts a confirmed URL directly and resets URL state for another solution', async () => {
+        mockedCreateUrlSubmission.mockResolvedValue({ id: 'url-submission-id' })
+        renderUpload(challengeFixture({
+            currentPhaseNames: ['Submission'],
+            metadata: [{ name: 'submission_type', value: 'url' }],
+            phases: [{ isOpen: true, name: 'Submission' }],
+        }))
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: '  https://files.example.com/result  ' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(mockedCreateUrlSubmission)
+            .toHaveBeenCalledWith(
+                'challenge-id',
+                '123',
+                'CONTEST_SUBMISSION',
+                'https://files.example.com/result',
+                expect.any(AbortSignal),
+            ))
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
+        expect(await screen.findByText('url-submission-id'))
+            .toBeInTheDocument()
+        expect(mockRecordAnalyticsEvent)
+            .toHaveBeenCalledWith('challenge_submitted', {
+                challenge_id: 'challenge-id',
+                challenge_track: 'design',
+                member_id: '123',
+                submission_type: 'CONTEST_SUBMISSION',
+            }, true)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit another solution' }))
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveValue('')
+        expect(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+            .toBeDisabled()
+    })
+
+    it('keeps a confirmed URL semantically valid when submission fails', async () => {
+        mockedCreateUrlSubmission.mockRejectedValue(new Error('Review API unavailable.'))
+        renderUpload(challengeFixture({
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }))
+
+        const urlInput = screen.getByLabelText(/Submission URL/)
+        fireEvent.change(urlInput, {
+            target: { value: 'https://files.example.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Review API unavailable.')
+        expect(urlInput)
+            .toHaveAttribute('aria-invalid', 'false')
+        expect(urlInput)
+            .toHaveAttribute('aria-describedby', 'challenge-submission-url-help challenge-submission-url-error')
+    })
+
+    it('revalidates registration before creating a URL submission', async () => {
+        const validateRegistration = jest.fn()
+            .mockResolvedValue(false)
+        renderUpload(
+            challengeFixture({ metadata: [{ name: 'submission_type', value: 'url' }] }),
+            validateRegistration,
+        )
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: 'https://files.example.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
+            .not.toBeDisabled())
+        expect(validateRegistration)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedCreateUrlSubmission)
+            .not.toHaveBeenCalled()
+    })
+
+    it('cancels a pending URL submission and unlocks parent navigation', async () => {
+        const onUploadingChange = jest.fn()
+        mockedCreateUrlSubmission.mockImplementation((...args) => new Promise((_resolve, reject) => {
+            args[4]?.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')))
+        }))
+        renderUpload(
+            challengeFixture({ metadata: [{ name: 'submission_type', value: 'url' }] }),
+            async () => true,
+            onUploadingChange,
+        )
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: 'https://files.example.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(true))
+        expect(screen.getByRole('button', { name: 'Back to My Submissions' }))
+            .toBeDisabled()
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel submission' }))
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(false))
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveValue('')
     })
 
     it('derives final-fix, checkpoint, and contest Review API types', () => {

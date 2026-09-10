@@ -6,6 +6,7 @@ import {
     challengeReviewAppUrl,
     challengeScorecardUrl,
     challengeSidebarLinks,
+    challengeSubmissionMode,
     challengeSubmissionLimit,
     memberProfileUrl,
 } from './challenge-detail.utils'
@@ -98,6 +99,32 @@ describe('challenge detail utilities', () => {
             .toBe(false)
         expect(challengeAllowsStockArt({ ...challenge, metadata: [] }))
             .toBe(false)
+    })
+
+    it('enables URL submissions only for the exact normalized metadata value', () => {
+        expect(challengeSubmissionMode({
+            id: 'url-challenge',
+            metadata: [{ name: ' SUBMISSION_TYPE ', value: ' URL ' }],
+            name: 'URL challenge',
+        }))
+            .toBe('url')
+        expect(challengeSubmissionMode({
+            id: 'zip-challenge',
+            metadata: [{ name: 'submission_type', value: 'zip' }],
+            name: 'ZIP challenge',
+        }))
+            .toBe('zip')
+        expect(challengeSubmissionMode({
+            id: 'unsupported-challenge',
+            metadata: [{ name: 'submission_type', value: 'external-url' }],
+            name: 'Unsupported challenge',
+        }))
+            .toBe('zip')
+        expect(challengeSubmissionMode({
+            id: 'default-challenge',
+            name: 'Default challenge',
+        }))
+            .toBe('zip')
     })
 
     it('returns only safe authored challenge and attachment links', () => {

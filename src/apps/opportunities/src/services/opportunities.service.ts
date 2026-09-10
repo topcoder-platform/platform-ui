@@ -157,6 +157,46 @@ export async function createChallengeSubmission(
 }
 
 /**
+ * Creates a challenge submission whose deliverable is an authored external URL.
+ *
+ * URL submissions bypass Filestack and storage because Review API persists the
+ * member-provided link as a non-file submission. Registration and open-phase
+ * authorization remain owned by Review API.
+ *
+ * @param challengeId Challenge API UUID receiving the submission.
+ * @param memberId authenticated submitter's numeric member identifier serialized as text.
+ * @param type Review API submission category derived from the active challenge phase.
+ * @param url validated absolute HTTP(S) URL supplied by the member.
+ * @param signal optional abort signal used by the form's cancel action.
+ * @returns the newly created Review API submission.
+ * @throws request, authorization, registration, phase, validation, or abort errors.
+ */
+export async function createChallengeUrlSubmission(
+    challengeId: string,
+    memberId: string,
+    type: ChallengeSubmissionType,
+    url: string,
+    signal?: AbortSignal,
+): Promise<ChallengeSubmission> {
+    if (signal?.aborted) throw new DOMException('Submission cancelled.', 'AbortError')
+    return xhrPostAsync<{
+        challengeId: string
+        memberId: string
+        type: ChallengeSubmissionType
+        url: string
+    }, ChallengeSubmission>(
+        `${V6_URL}/submissions`,
+        {
+            challengeId,
+            memberId,
+            type,
+            url: url.trim(),
+        },
+        { signal },
+    )
+}
+
+/**
  * Converts a value into a finite non-negative number.
  *
  * @param value API value that may be numeric or a serialized number.
