@@ -281,8 +281,11 @@ describe('OpportunityListCard competition presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Completed'))
+        const completedState = screen.getByText('Completed')
+        expect(completedState)
             .toBeInTheDocument()
+        expect(completedState.querySelector('svg'))
+            .toHaveTextContent('check-double.svg')
         expect(screen.queryByText('Registration closed'))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('progressbar'))
