@@ -455,7 +455,10 @@ rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
 challenge detail page. The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
-posts. Each visible post shows shared
+posts. Rendered Markdown also canonicalizes exact first-party legacy
+`/challenges/:challengeId` links to the active Opportunities detail route while
+preserving query parameters and fragments; stored forum content and unrelated
+links remain unchanged. Each visible post shows shared
 reaction counts and the current member's selected state; clicking the selected
 thumb again removes it, while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique

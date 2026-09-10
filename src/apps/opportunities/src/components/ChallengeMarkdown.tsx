@@ -7,16 +7,26 @@ import {
     useMemo,
 } from 'react'
 import DOMPurify from 'dompurify'
-import ReactMarkdown, { Components, Options as ReactMarkdownOptions } from 'react-markdown'
+import ReactMarkdown, {
+    Components,
+    Options as ReactMarkdownOptions,
+    uriTransformer,
+} from 'react-markdown'
 import type { HeadingProps } from 'react-markdown/lib/ast-to-react'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 
+import { AppSubdomain, EnvironmentConfig } from '~/config'
+
 import styles from './ChallengeMarkdown.module.scss'
 
 const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
+const ABSOLUTE_HTTP_LINK_PATTERN = /^https?:\/\//i
+const LEGACY_CHALLENGE_PATH_PATTERN = /^\/challenges\/([^/]+)\/?$/
+const PROTOCOL_RELATIVE_LINK_PATTERN = /^\/\//
+const ROOT_RELATIVE_LINK_PATTERN = /^\/(?!\/)/
 
 export interface ChallengeTocItem {
     id: string
@@ -112,6 +122,69 @@ export function markdownHeadingText(children: ReactNode): string {
 }
 
 /**
+ * Canonicalizes a first-party legacy challenge-detail link without depending on
+ * application route modules. Callers supply the active Topcoder domain and the
+ * route prefix used by their host so this helper remains deterministic and
+ * reusable in tests.
+ *
+ * @param href safe candidate link from rendered Markdown.
+ * @param currentDomain active environment domain, such as `topcoder-dev.com`.
+ * @param routePrefix Opportunities route prefix, either `/opportunities` or an empty string.
+ * @returns canonical internal challenge link, or the original value when it is not an exact legacy detail URL.
+ * @throws Does not throw for malformed links.
+ */
+export function canonicalizeLegacyChallengeLink(
+    href: string,
+    currentDomain: string,
+    routePrefix: string,
+): string {
+    const candidate = href.trim()
+    const protocolRelative = PROTOCOL_RELATIVE_LINK_PATTERN.test(candidate)
+    const rootRelative = ROOT_RELATIVE_LINK_PATTERN.test(candidate)
+    const absoluteHttp = ABSOLUTE_HTTP_LINK_PATTERN.test(candidate)
+
+    if (!candidate || (!absoluteHttp && !protocolRelative && !rootRelative)) return href
+
+    const normalizedDomain = currentDomain.trim()
+        .toLowerCase()
+    if (!normalizedDomain) return href
+
+    try {
+        const url = new URL(
+            protocolRelative ? `https:${candidate}` : candidate,
+            `https://${normalizedDomain}`,
+        )
+        const trustedHost = url.hostname === normalizedDomain
+            || url.hostname === `www.${normalizedDomain}`
+        if (!rootRelative && (!['http:', 'https:'].includes(url.protocol) || !trustedHost)) return href
+
+        const pathMatch = LEGACY_CHALLENGE_PATH_PATTERN.exec(url.pathname)
+        if (!pathMatch) return href
+
+        const normalizedRoutePrefix = routePrefix.replace(/\/+$/, '')
+        return `${normalizedRoutePrefix}/challenge/${pathMatch[1]}${url.search}${url.hash}`
+    } catch (error) {
+        return href
+    }
+}
+
+/**
+ * Applies React Markdown's URI safety policy before canonicalizing legacy
+ * first-party challenge links for the active application host.
+ *
+ * @param href authored Markdown link.
+ * @returns safe link, with exact legacy challenge-detail URLs made canonical.
+ * @throws Does not throw for malformed links.
+ */
+export function transformChallengeMarkdownLink(href: string): string {
+    const safeHref = uriTransformer(href)
+    const routePrefix = EnvironmentConfig.SUBDOMAIN === AppSubdomain.opportunities
+        ? ''
+        : `/${AppSubdomain.opportunities}`
+    return canonicalizeLegacyChallengeLink(safeHref, EnvironmentConfig.TC_DOMAIN, routePrefix)
+}
+
+/**
  * Renders a Markdown heading whose stable fragment matches the generated TOC.
  *
  * @param props heading level, source location, and rendered children from React Markdown.
@@ -164,6 +237,7 @@ export const ChallengeMarkdown: FC<ChallengeMarkdownProps> = props => {
                     [remarkGfm, { singleTilde: false }],
                     remarkBreaks,
                 ]}
+                transformLinkUri={transformChallengeMarkdownLink}
             >
                 {props.markdown}
             </Markdown>
