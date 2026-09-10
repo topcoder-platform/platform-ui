@@ -59,8 +59,8 @@ initial General report small. Its definitions are:
   instrumented form there or registers after clicking a specific challenge
   link there; and
 - the challenge funnel sequences route visitor, challenge-link click,
-  registration, and submission by the same pseudonymous visitor within the
-  selected period. A trusted winner event is not currently available, so the
+  registration, and submission for the same challenge ID and pseudonymous
+  visitor within the selected period. A trusted winner event is not currently available, so the
   final stage is explicitly shown as **Not tracked** rather than inferred.
 
 Form reporting begins when `form_viewed`, `form_started`, `form_completed`, and

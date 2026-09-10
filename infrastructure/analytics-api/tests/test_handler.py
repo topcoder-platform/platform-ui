@@ -504,6 +504,12 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertNotIn("click_x_bucket", self.module.CAMPAIGN_SQL)
         self.assertNotIn("click_y_bucket", self.module.CAMPAIGN_SQL)
 
+    def test_route_funnel_matches_the_exact_clicked_challenge(self) -> None:
+        """Route registrations and submissions retain the clicked challenge ID."""
+
+        self.assertIn("event.challenge_id = click.challenge_id", self.module.ROUTE_SQL)
+        self.assertIn("event.challenge_id = registration.challenge_id", self.module.ROUTE_SQL)
+
     def test_shapes_general_report(self) -> None:
         """General rows retain page, source, and surface dimensions."""
 

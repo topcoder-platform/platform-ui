@@ -47,7 +47,8 @@ SELECT
     NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'destination_host', true), '') AS destination_host,
     NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'destination_path', true), '') AS destination_path,
     NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'form_id', true), '') AS form_id,
-    NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'field_id', true), '') AS field_id
+    NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'field_id', true), '') AS field_id,
+    NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'challenge_id', true), '') AS challenge_id
 FROM topcoder_web.event_v2;
 
 GRANT USAGE ON SCHEMA topcoder_web TO ROLE analytics_api_reader;

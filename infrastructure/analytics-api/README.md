@@ -51,7 +51,8 @@ only.
 - `bootstrap.sql` creates the read-only Redshift database role and grants only
   the reporting objects required by the handler. Its route event view projects
   only timestamp, pseudonymous join key, session, source group, semantic click,
-  and form lifecycle fields; the Lambda role cannot select the raw event table.
+  challenge join key, and form lifecycle fields; the Lambda role cannot select
+  the raw event table.
 - `collector-host-migration.yaml` creates `events.<domain>` on the existing
   ingestion ALB so `analytics.<domain>` can become the reporting UI host.
 - `tests/test_handler.py` verifies authorization, validation, parameterization,
@@ -122,7 +123,9 @@ route totals, mutually exclusive visitor-source buckets, new/returning counts,
 semantic click locations, form lifecycle totals, abandonment field IDs, and an
 ordered challenge funnel. Bounce is defined as a one-page entrance session,
 average time is focused engagement per page view, and conversion is a unique
-form completer or post-CTA challenge registrant divided by route visitors.
+form completer or a visitor who registers for the exact challenge clicked from
+the route, divided by route visitors. Submission likewise requires the same
+challenge ID and follows that registration.
 Winner attribution is intentionally null until a trusted challenge-results
 event is added upstream.
 

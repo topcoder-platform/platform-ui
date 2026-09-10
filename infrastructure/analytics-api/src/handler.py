@@ -443,10 +443,19 @@ route_clicks AS (
     FROM route_events
     WHERE event_name = 'ui_click'
 ),
-challenge_cta_clicks AS (
+challenge_click_candidates AS (
     SELECT
         visitor.analytics_user_id,
-        MIN(click.event_timestamp) AS clicked_at
+        click.event_timestamp,
+        CASE
+            WHEN click.destination_path LIKE '/opportunities/challenge/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 4), '')
+            WHEN click.destination_path LIKE '/challenges/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 3), '')
+            WHEN click.destination_path LIKE '/earn/challenges/%'
+                THEN NULLIF(SPLIT_PART(click.destination_path, '/', 4), '')
+            ELSE NULL
+        END AS challenge_id
     FROM route_visitors visitor
     JOIN route_clicks click
       ON click.analytics_user_id = visitor.analytics_user_id
@@ -454,29 +463,38 @@ challenge_cta_clicks AS (
     WHERE click.destination_path LIKE '/opportunities/challenge/%'
        OR click.destination_path LIKE '/challenges/%'
        OR click.destination_path LIKE '/earn/challenges/%'
-    GROUP BY visitor.analytics_user_id
+),
+challenge_cta_clicks AS (
+    SELECT analytics_user_id, challenge_id, MIN(event_timestamp) AS clicked_at
+    FROM challenge_click_candidates
+    WHERE challenge_id IS NOT NULL
+    GROUP BY analytics_user_id, challenge_id
 ),
 registrations AS (
     SELECT
         click.analytics_user_id,
+        click.challenge_id,
         MIN(event.event_timestamp) AS registered_at
     FROM challenge_cta_clicks click
     JOIN date_events event
       ON event.analytics_user_id = click.analytics_user_id
      AND event.event_name = 'challenge_registered'
+     AND event.challenge_id = click.challenge_id
      AND event.event_timestamp >= click.clicked_at
-    GROUP BY click.analytics_user_id
+    GROUP BY click.analytics_user_id, click.challenge_id
 ),
 submissions AS (
     SELECT
         registration.analytics_user_id,
+        registration.challenge_id,
         MIN(event.event_timestamp) AS submitted_at
     FROM registrations registration
     JOIN date_events event
       ON event.analytics_user_id = registration.analytics_user_id
      AND event.event_name = 'challenge_submitted'
+     AND event.challenge_id = registration.challenge_id
      AND event.event_timestamp >= registration.registered_at
-    GROUP BY registration.analytics_user_id
+    GROUP BY registration.analytics_user_id, registration.challenge_id
 ),
 route_form_events AS (
     SELECT *
@@ -568,9 +586,9 @@ abandonment_rows AS (
 funnel_row AS (
     SELECT
         (SELECT COUNT(*) FROM route_visitors)::bigint AS page_visitors,
-        (SELECT COUNT(*) FROM challenge_cta_clicks)::bigint AS challenge_cta_clickers,
-        (SELECT COUNT(*) FROM registrations)::bigint AS registrations,
-        (SELECT COUNT(*) FROM submissions)::bigint AS submissions
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM challenge_cta_clicks)::bigint AS challenge_cta_clickers,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM registrations)::bigint AS registrations,
+        (SELECT COUNT(DISTINCT analytics_user_id) FROM submissions)::bigint AS submissions
 )
 SELECT
     'summary'::varchar AS row_type,
