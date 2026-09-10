@@ -374,6 +374,8 @@ export interface ChallengeSubmission {
     finalScore?: number | string | null
     id: string
     initialScore?: number | string | null
+    /** Review API discriminator; false when the submission is an authored external URL. */
+    isFileSubmission?: boolean
     isLatest?: boolean
     memberHandle?: string
     memberId?: string

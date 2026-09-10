@@ -400,7 +400,13 @@ and active challenges retain the ongoing-review guidance.
 
 Registered members submit without leaving challenge details. My Submissions
 also exposes the environment-specific Review App handoff before and after an
-upload. Work Manager's case-insensitive `submission_type=url` challenge
+upload. File-backed rows expose the authorized download action for every
+challenge track, while authored external-URL rows omit that file action. The
+browser requests a short-lived URL from
+`GET /v6/submissions/:submissionId/download-url` instead of using submission
+list URLs; Review API remains authoritative for access and signs only clean
+storage, so pending DMZ and quarantined files cannot be downloaded. Work
+Manager's case-insensitive `submission_type=url` challenge
 metadata selects the URL experience; every other value, including missing or
 malformed metadata, retains the standard ZIP experience. URL submissions
 require a confirmed absolute HTTP(S) link and send that link directly to
