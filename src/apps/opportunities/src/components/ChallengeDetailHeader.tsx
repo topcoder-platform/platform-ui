@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import { isTaskChallenge } from '../utils/challenge-type.utils'
 import { challengeTrackLabel } from '../utils/challenge-winner.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
@@ -300,7 +301,7 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
- * @returns Launch, authored phases, and terminal Winners timeline items in display order.
+ * @returns Launch, visible authored phases, and terminal Winners items in display order.
  * @throws Does not throw; absent dates are retained as announced-later labels.
  */
 function challengeTimelineItems(
@@ -311,9 +312,24 @@ function challengeTimelineItems(
     const startTimestamp = timelineTimestamp(challenge.startDate)
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
-    const phases = (challenge.phases ?? [])
+    const taskChallenge = isTaskChallenge(challenge)
+    const authoredPhases = (challenge.phases ?? []).filter(item => {
+        const phaseKey = challengeCatalogKey(item.name)
+        if (!taskChallenge || !phaseKey.includes('iterativereview')) return true
+        const phaseEnd = timelineTimestamp(item.actualEndDate ?? item.scheduledEndDate)
+        return phaseEnd !== undefined && phaseEnd > now
+    })
+    const phases = authoredPhases
         .map((item, index) => ({ index, item }))
         .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            if (taskChallenge) {
+                const leftKey = challengeCatalogKey(left.item.name)
+                const rightKey = challengeCatalogKey(right.item.name)
+                const leftIsRegistration = leftKey.includes('registration')
+                const rightIsRegistration = rightKey.includes('registration')
+                if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
+            }
+
             const leftStart = timelineTimestamp(
                 left.item.actualStartDate ?? left.item.scheduledStartDate,
             ) ?? Number.MAX_SAFE_INTEGER
@@ -419,10 +435,11 @@ function timelineTimezone(): string {
 }
 
 /**
- * Renders the Figma challenge title, phase context, prizes, and member actions.
+ * Renders the Figma challenge title, phase context, prizes, and competition
+ * member actions. Assignment-only Task challenges intentionally omit actions.
  *
  * @param props challenge and registration state.
- * @returns dark challenge detail masthead.
+ * @returns dark challenge detail masthead with Task-aware action visibility.
  * @throws Does not throw.
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
@@ -433,6 +450,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
+    const taskChallenge = isTaskChallenge(props.challenge)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const challengeStatusKey = challengeCatalogKey(props.challenge.status)
@@ -473,10 +491,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     })
     const skills = props.challenge.skills ?? []
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
+    const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
         gridTemplateColumns: [
             '88px',
-            ...(props.challenge.phases ?? []).map(() => 'minmax(0, 1fr)'),
+            ...displayedTimelinePhases.map(() => 'minmax(0, 1fr)'),
             '88px',
         ].join(' '),
     }
@@ -606,52 +625,54 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                         : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>
-                        <div className={styles.actions}>
-                            {props.isRegistered || showInactiveActions ? (
-                                <>
+                        {!taskChallenge && (
+                            <div className={styles.actions}>
+                                {props.isRegistered || showInactiveActions ? (
+                                    <>
+                                        <button
+                                            className={styles.secondary}
+                                            data-analytics-id={props.isRegistered
+                                                ? 'challenge-unregister'
+                                                : 'challenge-register'}
+                                            data-analytics-placement='challenge-header'
+                                            disabled={props.isRegistered
+                                                ? !canUnregister
+                                                : !registrationOpen || registrationUnavailable || props.busy}
+                                            onClick={props.isRegistered ? props.onUnregister : props.onRegister}
+                                            type='button'
+                                        >
+                                            {props.isRegistered ? 'Unregister' : 'Register'}
+                                        </button>
+                                        <button
+                                            className={styles.primary}
+                                            data-analytics-id='challenge-submit-start'
+                                            data-analytics-placement='challenge-header'
+                                            disabled={!canSubmit}
+                                            onClick={props.onSubmit}
+                                            type='button'
+                                        >
+                                            <img alt='' aria-hidden='true' src={challengeUploadIcon} />
+                                            Submit a solution
+                                        </button>
+                                    </>
+                                ) : (
                                     <button
                                         className={styles.secondary}
-                                        data-analytics-id={props.isRegistered
-                                            ? 'challenge-unregister'
-                                            : 'challenge-register'}
+                                        data-analytics-id='challenge-register'
                                         data-analytics-placement='challenge-header'
-                                        disabled={props.isRegistered
-                                            ? !canUnregister
-                                            : !registrationOpen || registrationUnavailable || props.busy}
-                                        onClick={props.isRegistered ? props.onUnregister : props.onRegister}
+                                        disabled={!registrationOpen || registrationUnavailable || props.busy}
+                                        onClick={props.onRegister}
                                         type='button'
                                     >
-                                        {props.isRegistered ? 'Unregister' : 'Register'}
+                                        {props.registrationLoading
+                                            ? 'Checking registration…'
+                                            : props.registrationError
+                                                ? 'Registration unavailable'
+                                                : registrationOpen ? 'Register' : 'Registration closed'}
                                     </button>
-                                    <button
-                                        className={styles.primary}
-                                        data-analytics-id='challenge-submit-start'
-                                        data-analytics-placement='challenge-header'
-                                        disabled={!canSubmit}
-                                        onClick={props.onSubmit}
-                                        type='button'
-                                    >
-                                        <img alt='' aria-hidden='true' src={challengeUploadIcon} />
-                                        Submit a solution
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    className={styles.secondary}
-                                    data-analytics-id='challenge-register'
-                                    data-analytics-placement='challenge-header'
-                                    disabled={!registrationOpen || registrationUnavailable || props.busy}
-                                    onClick={props.onRegister}
-                                    type='button'
-                                >
-                                    {props.registrationLoading
-                                        ? 'Checking registration…'
-                                        : props.registrationError
-                                            ? 'Registration unavailable'
-                                            : registrationOpen ? 'Register' : 'Registration closed'}
-                                </button>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
                     </aside>
                 </div>
                 {timelineOpen && (
@@ -660,6 +681,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         className={styles.expandedTimeline}
                         id='challenge-timeline'
                     >
+                        <small className={styles.timelineTimezone}>
+                            {`Time zone: ${timelineTimezone()}`}
+                        </small>
                         <div className={styles.timelineGraphic}>
                             <div aria-hidden='true' className={styles.timelineRail}>
                                 {expandedTimeline.map((item, index) => (
@@ -689,8 +713,24 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 ))}
                             </div>
                             <ol className={styles.timelineItems} style={timelineGridStyle}>
-                                {expandedTimeline.map(item => (
+                                {expandedTimeline.map((item, index) => (
                                     <li className={styles[item.state]} data-state={item.state} key={item.key}>
+                                        <span aria-hidden='true' className={styles.mobileTimelineMarker}>
+                                            <span className={classNames(styles.timelineNode, styles[item.state])}>
+                                                <img alt='' src={item.icon} />
+                                            </span>
+                                            {index < expandedTimeline.length - 1 && (
+                                                <span
+                                                    className={classNames(
+                                                        styles.timelineConnector,
+                                                        styles[timelineConnectorState(
+                                                            item.state,
+                                                            expandedTimeline[index + 1].state,
+                                                        )],
+                                                    )}
+                                                />
+                                            )}
+                                        </span>
                                         <strong>{item.name}</strong>
                                         <span className={styles.timelineDates}>
                                             {item.startDate ? (
@@ -704,9 +744,6 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 ))}
                             </ol>
                         </div>
-                        <small className={styles.timelineTimezone}>
-                            {`Time zone: ${timelineTimezone()}`}
-                        </small>
                     </section>
                 )}
             </div>

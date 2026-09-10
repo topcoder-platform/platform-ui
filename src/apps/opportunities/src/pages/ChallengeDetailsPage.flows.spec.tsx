@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { PropsWithChildren } from 'react'
+import { readFileSync } from 'fs'
 import '@testing-library/jest-dom'
 import {
     fireEvent,
@@ -9,9 +10,11 @@ import {
     waitFor,
 } from '@testing-library/react'
 import {
+    Link,
     MemoryRouter,
     Route,
     Routes,
+    useLocation,
 } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
@@ -21,16 +24,19 @@ const mockUseSWR = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockChallengeMutate = jest.fn()
+const mockChallengeForumRender = jest.fn()
 const mockMySubmissionCountMutate = jest.fn()
 const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
 let mockProfile: { handle: string; roles?: string[]; userId: number } | undefined
+let mockProfileInitialized: boolean
 let mockRegistration: { id: string } | undefined
+let mockTabAccessLoading: boolean
 let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
 let mockMemberProfiles: Record<string, unknown>[]
-let mockMemberResource: { id: string } | undefined
+let mockMemberResource: { id: string; roleName?: string } | undefined
 let mockMySubmissionCount: number | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
@@ -38,6 +44,7 @@ let mockRegistrants: Record<string, unknown>[]
 let mockReviewSummations: Record<string, unknown>[]
 let mockSubmissions: Record<string, unknown>[]
 let mockWinnerStats: Record<string, unknown>[]
+const challengeDetailStyles = readFileSync(`${__dirname}/ChallengeDetailsPage.module.scss`, 'utf8')
 
 jest.mock('../assets/medal-1.svg', () => 'medal-1')
 jest.mock('../assets/medal-2.svg', () => 'medal-2')
@@ -62,7 +69,11 @@ jest.mock('~/libs/core', () => ({
     authUrlLogin: (url: string): string => url,
     getMemberStatsAsync: jest.fn(),
     recordAnalyticsEvent: jest.fn(),
-    useProfileContext: () => ({ profile: mockProfile }),
+    useProfileContext: () => ({
+        initialized: mockProfileInitialized,
+        isLoggedIn: !!mockProfile,
+        profile: mockProfile,
+    }),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
@@ -92,34 +103,50 @@ jest.mock('../components', () => ({
     ChallengeDescription: (): JSX.Element => <div>Requirements content</div>,
     ChallengeDetailHeader: (props: {
         busy: boolean
+        challenge: { task?: { isTask?: boolean }; type?: string | { name?: string } }
         hasSubmitted?: boolean
         isRegistered: boolean
         onRegister: () => void
         onSubmit: () => void
         onUnregister: () => Promise<void>
-    }): JSX.Element => (
-        <header>
-            Challenge header
-            {!props.isRegistered && (
-                <button onClick={props.onRegister} type='button'>Register</button>
-            )}
-            {props.isRegistered && (
-                <>
-                    <button
-                        disabled={props.busy || props.hasSubmitted}
-                        onClick={props.onUnregister}
-                        type='button'
-                    >
-                        Unregister
-                    </button>
-                    <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
-                </>
-            )}
-        </header>
-    ),
-    ChallengeForum: (props: { canCreateAnnouncements?: boolean }): JSX.Element => (
-        <div>{props.canCreateAnnouncements ? 'Administrator forum content' : 'Forum content'}</div>
-    ),
+    }): JSX.Element => {
+        const typeName = typeof props.challenge.type === 'string'
+            ? props.challenge.type
+            : props.challenge.type?.name
+        const taskChallenge = typeName === 'Task' || props.challenge.task?.isTask === true
+        return (
+            <header>
+                Challenge header
+                {!taskChallenge && !props.isRegistered && (
+                    <button onClick={props.onRegister} type='button'>Register</button>
+                )}
+                {!taskChallenge && props.isRegistered && (
+                    <>
+                        <button
+                            disabled={props.busy || props.hasSubmitted}
+                            onClick={props.onUnregister}
+                            type='button'
+                        >
+                            Unregister
+                        </button>
+                        <button disabled={props.busy} onClick={props.onSubmit} type='button'>Submit a solution</button>
+                    </>
+                )}
+            </header>
+        )
+    },
+    ChallengeForum: (props: {
+        canCreateAnnouncements?: boolean
+        canDeleteTopics?: boolean
+    }): JSX.Element => {
+        mockChallengeForumRender()
+        return (
+            <div>
+                {props.canCreateAnnouncements ? 'Announcement forum content' : 'Forum content'}
+                {props.canDeleteTopics ? ' with topic deletion' : ''}
+            </div>
+        )
+    },
     ChallengeSidebar: (): JSX.Element => <aside />,
     ChallengeSubmissionUpload: (props: {
         onBack: () => void
@@ -175,7 +202,9 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
-    challengeCatalogKey: (track?: string): string => (track ?? '')
+    challengeCatalogKey: (value?: string | { name?: string }): string => (
+        typeof value === 'string' ? value : value?.name ?? ''
+    )
         .toLowerCase()
         .replace(/[^a-z]/g, ''),
     challengePlacementPrizes: (challenge: {
@@ -206,6 +235,7 @@ jest.mock('../services', () => ({
 }))
 
 jest.mock('../utils', () => ({
+    ...(jest.requireActual('../utils/marathon-match.utils') as typeof import('../utils/marathon-match.utils')),
     attachMarathonReviewSummations: (
         submissions: Array<Record<string, unknown>>,
         summations: Array<Record<string, unknown>>,
@@ -233,9 +263,22 @@ jest.mock('../utils', () => ({
             ? stats?.QA?.wins ?? stats?.wins
             : stats?.DEVELOP?.wins ?? stats?.wins
     ),
-    formatMarathonFinalScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonFinalScore,
-    formatMarathonScore: jest.requireActual('../utils/marathon-match.utils').formatMarathonScore,
     isMarathonMatchChallenge: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
+    isTaskChallenge: (challenge?: {
+        legacy?: { pureV5Task?: boolean }
+        task?: { isTask?: boolean }
+        taskIsTask?: boolean
+        type?: string | { name?: string }
+    }): boolean => {
+        const typeName = typeof challenge?.type === 'string'
+            ? challenge.type
+            : challenge?.type?.name
+        return typeName?.trim()
+            .toLowerCase() === 'task'
+            || challenge?.task?.isTask === true
+            || challenge?.taskIsTask === true
+            || challenge?.legacy?.pureV5Task === true
+    },
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
         type?: string
@@ -315,11 +358,32 @@ function swrResponse(data: unknown): Record<string, unknown> {
     }
 }
 
-function renderPage(): void {
+/** Shows the full router location so tab-query preservation can be asserted. */
+const LocationProbe = (): JSX.Element => {
+    const location = useLocation()
+    return (
+        <output aria-label='Current route'>
+            {`${location.pathname}${location.search}${location.hash}`}
+        </output>
+    )
+}
+
+/** Renders challenge details at an optional deep-linked location. */
+function renderPage(
+    initialEntry: string = '/opportunities/challenge/challenge-id',
+): void {
     render(
-        <MemoryRouter initialEntries={['/opportunities/challenge/challenge-id']}>
+        <MemoryRouter initialEntries={[initialEntry]}>
             <Routes>
-                <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                <Route
+                    element={(
+                        <>
+                            <ChallengeDetailsPage />
+                            <LocationProbe />
+                        </>
+                    )}
+                    path='/opportunities/challenge/:challengeId'
+                />
             </Routes>
         </MemoryRouter>,
     )
@@ -342,8 +406,10 @@ describe('ChallengeDetailsPage member flows', () => {
         jest.spyOn(window, 'scrollTo')
             .mockImplementation(() => undefined)
         mockProfile = undefined
+        mockProfileInitialized = true
         mockRegistration = undefined
         mockRegistrationRemoved = false
+        mockTabAccessLoading = false
         mockMemberProfiles = []
         mockMemberResource = undefined
         mockMySubmissionCount = undefined
@@ -385,12 +451,16 @@ describe('ChallengeDetailsPage member flows', () => {
             if (Array.isArray(key) && key[0] === 'opportunities:registration') {
                 return {
                     ...swrResponse(mockRegistration),
+                    isValidating: mockTabAccessLoading,
                     mutate: mockRegistrationMutate,
                 }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:challenge-member-resource') {
-                return swrResponse(mockMemberResource)
+                return {
+                    ...swrResponse(mockMemberResource),
+                    isValidating: mockTabAccessLoading,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
@@ -448,11 +518,153 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each(['', 'submissions', 'mine', 'forum', 'dashboard'])(
+        'keeps assigned Task challenges read-only with the requested tab "%s"',
+        async requestedTab => {
+            mockProfile = { handle: 'assigned-member', roles: ['Administrator'], userId: 123 }
+            mockRegistration = { id: 'assigned-submitter-resource' }
+            mockMemberResource = { id: 'assigned-member-resource' }
+            mockMySubmissionCount = 1
+            mockChallenge = {
+                ...mockChallenge,
+                task: { isAssigned: true, isTask: true, memberId: '123' },
+                type: { name: 'Task' },
+            }
+
+            renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${requestedTab}#challenge`)
+
+            await waitFor(() => expect(screen.getByRole('status', { name: 'Current route' }))
+                .toHaveTextContent('/opportunities/challenge/challenge-id?source=listing#challenge'))
+            expect(screen.getByRole('tab', { name: 'Requirements' }))
+                .toHaveAttribute('aria-selected', 'true')
+
+            expect(screen.getAllByRole('tab')
+                .map(tab => tab.textContent))
+                .toEqual(['Requirements', 'Registrants8', 'Winners'])
+            expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('tab', { name: 'My Submissions' }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('tab', { name: /^Forum/ }))
+                .not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: /Register|Unregister|Submit a solution/ }))
+                .not.toBeInTheDocument()
+            expect(mockUseSWR.mock.calls.some(([key]) => Array.isArray(key) && [
+                'opportunities:registration',
+                'opportunities:challenge-member-resource',
+                'opportunities:my-submission-count',
+                'opportunities:forum-topics',
+            ].includes(String(key[0]))))
+                .toBe(false)
+        },
+    )
+
+    it('resets a stale Forum panel when client-side navigation opens a Task challenge', async () => {
+        mockProfile = { handle: 'administrator', roles: ['Administrator'], userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        render(
+            <MemoryRouter initialEntries={['/opportunities/challenge/competition-id']}>
+                <Link to='/opportunities/challenge/task-id?tab=forum'>Open Task challenge</Link>
+                <Routes>
+                    <Route path='/opportunities/challenge/:challengeId' element={<ChallengeDetailsPage />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        fireEvent.click(screen.getByRole('tab', { name: /^Forum/ }))
+        expect(screen.getByText('Announcement forum content with topic deletion'))
+            .toBeInTheDocument()
+        mockChallengeForumRender.mockClear()
+
+        mockChallenge = {
+            ...mockChallenge,
+            id: 'task-id',
+            task: { isAssigned: true, isTask: true, memberId: '123' },
+            type: { name: 'Task' },
+        }
+        fireEvent.click(screen.getByRole('link', { name: 'Open Task challenge' }))
+
+        expect(mockChallengeForumRender)
+            .not.toHaveBeenCalled()
+        await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true'))
+        expect(screen.queryByText('Announcement forum content with topic deletion'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: /^Forum/ }))
+            .not.toBeInTheDocument()
+    })
+
     it('resets the viewport when a challenge details route opens', () => {
         renderPage()
 
         expect(window.scrollTo)
             .toHaveBeenCalledWith({ left: 0, top: 0 })
+    })
+
+    it.each<[string, boolean]>([
+        ['registrants', false],
+        ['submissions', true],
+        ['forum', true],
+        ['winners', false],
+    ])('opens the visible %s tab from a listing deep link', (tab, authenticated) => {
+        if (authenticated) {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockRegistration = { id: 'resource-id' }
+        }
+
+        renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`)
+
+        expect(screen.getByRole('tab', {
+            name: tab === 'forum'
+                ? /^Forum/
+                : new RegExp(`^${tab.charAt(0)
+                    .toUpperCase()}${tab.slice(1)}`),
+        }))
+            .toHaveAttribute('aria-selected', 'true')
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                `/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`,
+            )
+    })
+
+    it.each(['unknown', 'forum'])(
+        'normalizes an invalid or inaccessible %s tab while preserving route context',
+        async tab => {
+            renderPage(`/opportunities/challenge/challenge-id?source=listing&tab=${tab}#challenge`)
+
+            await waitFor(() => expect(screen.getByRole('status', { name: 'Current route' }))
+                .toHaveTextContent('/opportunities/challenge/challenge-id?source=listing#challenge'))
+            expect(screen.getByRole('tab', { name: 'Requirements' }))
+                .toHaveAttribute('aria-selected', 'true')
+        },
+    )
+
+    it('writes tab clicks into the route without losing other query or hash values', () => {
+        renderPage('/opportunities/challenge/challenge-id?source=listing#challenge')
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                '/opportunities/challenge/challenge-id?source=listing&tab=registrants#challenge',
+            )
+        expect(screen.getByRole('tab', { name: /^Registrants/ }))
+            .toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('retains a gated deep link while profile and resource access are resolving', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockProfileInitialized = false
+        mockTabAccessLoading = true
+
+        renderPage('/opportunities/challenge/challenge-id?source=listing&tab=forum#challenge')
+
+        expect(screen.getByRole('status', { name: 'Current route' }))
+            .toHaveTextContent(
+                '/opportunities/challenge/challenge-id?source=listing&tab=forum#challenge',
+            )
+        expect(screen.getByRole('tab', { name: 'Requirements' }))
+            .toHaveAttribute('aria-selected', 'true')
     })
 
     it('closes challenge terms immediately while registration is pending', () => {
@@ -527,7 +739,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
 
         fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
-        expect(screen.getByText('Administrator forum content'))
+        expect(screen.getByText('Announcement forum content with topic deletion'))
             .toBeInTheDocument()
     })
 
@@ -546,7 +758,7 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('shows the member forum to a copilot resource without treating it as registration', () => {
         mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
-        mockMemberResource = { id: 'copilot-resource' }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
 
         renderPage()
 
@@ -555,8 +767,10 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: 'My Submissions' }))
             .not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('tab', { name: 'Forum 3' }))
-        expect(screen.getByText('Forum content'))
+        expect(screen.getByText('Announcement forum content'))
             .toBeInTheDocument()
+        expect(screen.queryByText(/topic deletion/))
+            .not.toBeInTheDocument()
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {
@@ -648,7 +862,87 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBe(true)
     })
 
-    it('shows registered tabs and the metadata-gated Marathon Match Dashboard', () => {
+    it('renders registrants as labeled records for the mobile Figma card', () => {
+        mockRegistrants = [{
+            created: '2026-06-03T09:30:00.000Z',
+            id: 'resource-1',
+            memberHandle: 'registrant',
+            memberId: '456',
+            rating: 1450,
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Registration Date' }))
+            .toBeInTheDocument()
+        const cells = screen.getAllByRole('cell')
+        expect(cells.map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual(['Handle', 'Rating', 'Registration Date'])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+        expect(challengeDetailStyles)
+            .toMatch(/\.mobileRecordTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
+    })
+
+    it('renders public and authored submissions as labeled mobile records', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            rating: 1450,
+            status: 'ACTIVE',
+            submitterHandle: 'coder',
+            type: 'CONTEST_SUBMISSION',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        expect(screen.getByRole('button', { name: 'Sort by Submission Date' }))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual(['Handle', 'Rating', 'Submission Date', 'Action'])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getAllByRole('cell')
+            .map(cell => cell.getAttribute('data-mobile-label')))
+            .toEqual([
+                'Submission ID',
+                'Type',
+                'Submission Date',
+                'Current Status',
+                'Score',
+                'Actions',
+            ])
+        expect(screen.getByRole('table'))
+            .toHaveClass('mobileRecordTable')
+    })
+
+    it('stacks the My Submissions action below its copy on phone viewports', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const heading = screen.getByRole('heading', { name: 'My Submissions' })
+        expect(heading.parentElement?.parentElement)
+            .toHaveClass('mySubmissionHeading')
+        expect(within(heading.parentElement?.parentElement as HTMLElement)
+            .getByRole('link', { name: 'Open Review App' }))
+            .toBeInTheDocument()
+        expect(challengeDetailStyles)
+            .toContain('.mySubmissionHeading {')
+        expect(challengeDetailStyles)
+            .toContain('flex-direction: column;')
+    })
+
+    it('keeps the Marathon graph only in the metadata-gated Dashboard tab', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockMySubmissionCount = 2
@@ -657,6 +951,12 @@ describe('ChallengeDetailsPage member flows', () => {
             metadata: [{ name: 'show_data_dashboard', value: true }],
             type: 'Marathon Match',
         }
+        mockSubmissions = [{
+            id: 'submission-1',
+            provisionalScore: 99.088381,
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'coder',
+        }]
 
         renderPage()
 
@@ -671,6 +971,17 @@ describe('ChallengeDetailsPage member flows', () => {
                 'Forum3',
                 'Winners',
             ])
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Dashboard view' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Challenge Activity'))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Dashboard' }))
+        expect(screen.getByText('Challenge Activity'))
+            .toBeInTheDocument()
     })
 
     it('disables unregister after the member has submitted', () => {
@@ -957,9 +1268,9 @@ describe('ChallengeDetailsPage member flows', () => {
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
-            finalScore: 99.797812,
+            finalScore: 99.31399426811394,
             id: 'submission-1',
-            provisionalScore: 99.904666,
+            provisionalScore: 99.08838088531581,
         }]
 
         renderPage()
@@ -969,7 +1280,7 @@ describe('ChallengeDetailsPage member flows', () => {
             'Test Status',
             'Test Progress',
             'Final Score',
-            'Provision Score',
+            'Provisional Score',
         ]
         headers.forEach(header => expect(screen.getByRole('columnheader', { name: header }))
             .toBeInTheDocument())
@@ -979,10 +1290,15 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.797812' }))
+        const finalScore = screen.getByRole('cell', { name: '99.31399426811394' })
+        expect(finalScore)
             .toBeInTheDocument()
-        expect(screen.getByRole('cell', { name: '99.904666' }))
+        expect(screen.getByRole('cell', { name: '99.08838088531581' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '99.08838088531581' }))
+            .toHaveAttribute('data-mobile-label', 'Provisional Score')
+        expect(finalScore.closest('.tableCard'))
+            .toHaveClass('myMarathonTableCard')
         expect(screen.getByRole('link', { name: 'Open Review App' }))
             .toBeInTheDocument()
         expect(screen.queryByRole('link', {
@@ -1002,7 +1318,7 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
-    it('populates the released Marathon Match final score from Review Summations', () => {
+    it('preserves full precision for both Marathon Match score phases in Submissions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockChallenge = {
@@ -1125,7 +1441,36 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
-    it('renders every winner in ascending order with profiles, stats, scores, and prizes', () => {
+    it.each([
+        {
+            copy: 'No winners were selected for this challenge.',
+            status: 'CANCELLED_CLIENT_REQUEST',
+            title: 'This challenge was cancelled',
+        },
+        {
+            copy: 'Winners will be shown after the challenge runs and judging is complete.',
+            status: 'DRAFT',
+            title: 'This challenge is still in draft',
+        },
+    ])('describes an empty $status Winners tab without calling it ongoing', ({
+        copy,
+        status,
+        title,
+    }: { copy: string; status: string; title: string }) => {
+        mockChallenge = { ...mockChallenge, status }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByText(title))
+            .toBeInTheDocument()
+        expect(screen.getByText(copy))
+            .toBeInTheDocument()
+        expect(screen.queryByText('The challenge is still ongoing'))
+            .not.toBeInTheDocument()
+    })
+
+    it('renders every winner with profiles, stats, full-precision scores, and prizes', () => {
         mockProfile = { handle: 'fourth', userId: 4 }
         mockChallenge = {
             ...mockChallenge,
@@ -1164,8 +1509,9 @@ describe('ChallengeDetailsPage member flows', () => {
             { handle: 'fourth', stats: { DEVELOP: { wins: 4 }, wins: 6 } },
         ]
         mockProjectResults = [
-            { finalScore: 98.98, placement: 1, userId: '1' },
-            { finalScore: 98.88, placement: 2, userId: '2' },
+            { finalScore: 99.797812, placement: 1, userId: '1' },
+            { finalScore: 99.313994, placement: 2, userId: '2' },
+            { finalScore: 99.088381, placement: 4, userId: '4' },
         ]
 
         renderPage()
@@ -1176,9 +1522,9 @@ describe('ChallengeDetailsPage member flows', () => {
             .getByText(/Place$/).textContent))
             .toEqual(['1st Place', '2nd Place', '3rd Place'])
         expect(cards[0])
-            .toHaveTextContent('with a final score of 98.98')
+            .toHaveTextContent('with a final score of 99.797812')
         expect(cards[1])
-            .toHaveTextContent('with a final score of 98.88')
+            .toHaveTextContent('with a final score of 99.313994')
         expect(cards[0])
             .toHaveTextContent('$400')
         expect(cards[0])
@@ -1208,6 +1554,8 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('4')
         expect(fourthRow)
             .toHaveTextContent('1300')
+        expect(fourthRow)
+            .toHaveTextContent('99.088381')
         expect(within(fourthRow as HTMLElement)
             .getByText('You'))
             .toBeInTheDocument()

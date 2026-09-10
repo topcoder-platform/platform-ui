@@ -36,6 +36,27 @@
     }
 }
 
+.titleLink {
+    color: inherit;
+    text-decoration: none;
+
+    &:link,
+    &:visited {
+        color: inherit;
+    }
+
+    &::after {
+        content: '';
+        inset: 0;
+        position: absolute;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+}
+
 .cardTooltip {
     background: #001e2e !important;
     border-radius: 4px !important;
@@ -105,9 +126,9 @@
 }
 
 .badge {
-    background: #a7f0ba;
+    background: #e9ecef;
     border-radius: 2px;
-    color: #044317;
+    color: #161616;
     line-height: 12px;
     padding: 4px;
 }
@@ -126,6 +147,7 @@
     white-space: nowrap;
 
     svg {
+        flex: 0 0 16px;
         height: 16px;
         width: 16px;
     }
@@ -152,8 +174,15 @@
     flex-wrap: wrap;
     gap: 8px;
 
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    button,
     span {
         background: #e9ecef;
+        border: 0;
         border-radius: 2px;
         color: #161616;
         font-family: 'Nunito Sans', sans-serif;
@@ -280,28 +309,32 @@
 }
 
 .trackBadge {
-    background: #d0e2ff;
     box-sizing: border-box;
     height: 20px;
 }
 
 .designBadge {
+    background: #d0e2ff;
     color: #002d9c;
 }
 
 .developmentBadge {
+    background: #a7f0ba;
     color: #044317;
 }
 
 .dataScienceBadge {
+    background: #ffd9be;
     color: #5e2900;
 }
 
 .artificialIntelligenceBadge {
+    background: #e8daff;
     color: #491d8b;
 }
 
 .qualityAssuranceBadge {
+    background: #ffd6e8;
     color: #740937;
 }
 
@@ -494,6 +527,24 @@
     svg {
         height: 20px;
         width: 20px;
+    }
+}
+
+.metricRow {
+    position: relative;
+}
+
+.metricLink {
+    border-radius: 4px;
+    cursor: pointer;
+    inset: -4px;
+    position: absolute;
+    z-index: 2;
+
+    &:focus-visible {
+        box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
+        outline: 2px solid #0f62fe;
+        outline-offset: 1px;
     }
 }
 
@@ -707,8 +758,4 @@
         padding: 16px;
     }
 
-    .phaseHeading {
-        align-items: flex-start;
-        flex-direction: column;
-    }
 }

@@ -46,6 +46,7 @@ describe('Support attachment service', () => {
                         'Content-Type': 'multipart/form-data',
                     },
                     onUploadProgress: expect.any(Function),
+                    timeout: 30_000,
                 }),
             )
         const formData = mockedPost.mock.calls[0][1] as FormData
@@ -72,6 +73,37 @@ describe('Support attachment service', () => {
 
         expect(onProgress.mock.calls)
             .toEqual([[13], [100]])
+    })
+
+    it.each([502, 503, 504])('normalizes HTTP %s, including HTML gateway responses', async status => {
+        mockedPost.mockRejectedValue({
+            isAxiosError: true,
+            message: 'Request failed',
+            response: { data: '<html><h1>Bad Gateway</h1></html>', status },
+        })
+
+        await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
+            .rejects.toThrow('Attachment uploads are temporarily unavailable. Please try again.')
+        expect(mockedPost)
+            .toHaveBeenCalledTimes(1)
+    })
+
+    it.each(['ERR_NETWORK', 'ECONNABORTED', 'ETIMEDOUT'])('normalizes %s failures', async code => {
+        mockedPost.mockRejectedValue({ code, isAxiosError: true })
+
+        await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
+            .rejects.toThrow('Attachment uploads are temporarily unavailable. Please try again.')
+    })
+
+    it('preserves API validation failures', async () => {
+        const error = Object.assign(new Error('The file name is invalid.'), {
+            isAxiosError: true,
+            response: { status: 400 },
+        })
+        mockedPost.mockRejectedValue(error)
+
+        await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
+            .rejects.toBe(error)
     })
 
     it('exports the API extension and MIME allowlist for upload controls', () => {

@@ -15,6 +15,10 @@ const AnonymousFeedbackPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/anonymous-feedback'),
     'AnonymousFeedbackPage',
 )
+const LeadIntakePage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/lead-intake'),
+    'LeadIntakePage',
+)
 const ApplicationFormPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/application-form'),
     'ApplicationFormPage',
@@ -44,6 +48,12 @@ export const engagementsRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <EngagementListPage />,
                 id: 'Engagement List',
                 route: '',
+            },
+            {
+                children: [],
+                element: <LeadIntakePage />,
+                id: 'Engagement Lead Intake',
+                route: 'intake',
             },
             {
                 children: [],

@@ -17,6 +17,7 @@ import {
 } from '~/libs/core'
 import { DefaultMemberIcon, IconOutline, LoadingSpinner } from '~/libs/ui'
 
+import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
 import reviewOpenPositionsIcon from '../assets/review-open-positions.svg'
 import reviewPeriodIcon from '../assets/review-period.svg'
@@ -37,6 +38,8 @@ import {
     CHALLENGE_EXPLAINED_URL,
     memberProfileUrl,
     reviewFirstSubmissionPayment,
+    reviewOpportunityIsFull,
+    reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
     REVIEW_PROCESS_LEARNING_URL,
     REVIEWER_LEARNING_URL,
@@ -176,6 +179,36 @@ function formatPayment(value?: number): string {
         .format(value ?? 0)
 }
 
+interface MobileApplicationSortProps {
+    direction: ApplicationDateSort
+    onToggle: () => void
+}
+
+/**
+ * Renders the Application Date sorter above the Figma mobile application card.
+ *
+ * @param props active direction and the same toggle used by the desktop header.
+ * @returns mobile-only, keyboard-accessible application sort action.
+ * @throws Does not throw.
+ */
+const MobileApplicationSort: FC<MobileApplicationSortProps> = props => (
+    <button
+        aria-label='Sort by Application Date'
+        className={styles.mobileApplicationSort}
+        onClick={props.onToggle}
+        title={`Sort application date ${props.direction === 'ascending' ? 'descending' : 'ascending'}`}
+        type='button'
+    >
+        <SortIcon aria-hidden='true' />
+        <strong>Sort by</strong>
+        <span>Application Date</span>
+        <IconOutline.ChevronDownIcon
+            aria-hidden='true'
+            className={props.direction === 'ascending' ? styles.sortAscending : undefined}
+        />
+    </button>
+)
+
 /**
  * Renders a public review opportunity with API-authoritative reviewer gating.
  * Non-reviewers receive the education card and an inactive CTA; reviewers do
@@ -211,7 +244,12 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             || 'REVIEWER')
     }, [opportunity])
 
-    /** Applies through the Review API and refreshes server-authoritative state. */
+    /**
+     * Applies through Review API, confirms any waitlist placement, and refreshes authoritative state.
+     *
+     * @returns resolves after the application request and detail refresh finish.
+     * @throws Does not throw; request errors are presented through a toast.
+     */
     const apply = async (): Promise<void> => {
         if (!profile) {
             window.location.assign(authUrlLogin(window.location.href))
@@ -223,11 +261,14 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             || opportunity.defaultApplicationRole
             || opportunity.applicationRoles?.[0]
             || 'REVIEWER'
+        const joinsWaitlist = reviewOpportunityIsFull(opportunity)
         setBusy(true)
         try {
             await applyToReviewOpportunity(opportunity.id, role)
             await response.mutate()
-            toast.success('Your reviewer application was submitted.')
+            toast.success(joinsWaitlist
+                ? "You've joined the reviewer waitlist."
+                : 'Your reviewer application was submitted.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Application failed.')
         } finally {
@@ -261,9 +302,13 @@ export const ReviewOpportunityDetailsPage: FC = () => {
         )
     const applications = opportunity.applications?.filter(application => application.status !== 'CANCELLED') ?? []
     const applicationTotal = applications.length
+    const isWaitlisted = reviewOpportunityIsWaitlisted(opportunity)
+    const willJoinWaitlist = opportunity.canApply && reviewOpportunityIsFull(opportunity)
     const disabledLabel = !isReviewer
         ? 'Apply to be a reviewer'
-        : REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
+        : isWaitlisted
+            ? 'Waitlisted'
+            : REASON_LABELS[opportunity.canApplyReason ?? ''] ?? 'Apply to be a reviewer'
     const disabledReason = !profile
         ? REASON_LABELS.NOT_AUTHENTICATED
         : !isReviewer
@@ -294,7 +339,11 @@ export const ReviewOpportunityDetailsPage: FC = () => {
     return (
         <main className={styles.page}>
             <header className={styles.header}>
-                <div className={styles.rings} aria-hidden='true' />
+                <div
+                    aria-hidden='true'
+                    className={styles.rings}
+                    data-testid='review-header-decoration'
+                />
                 <div className={styles.breadcrumbsShell}>
                     <div className={styles.breadcrumbs}>
                         <Link to='/opportunities'>Opportunities</Link>
@@ -402,6 +451,12 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                     </select>
                                 </label>
                             )}
+                            {willJoinWaitlist && (
+                                <p className={styles.waitlistNotice}>
+                                    All reviewer positions are currently filled. You can still apply and join the
+                                    waitlist.
+                                </p>
+                            )}
                             <button
                                 disabled={!opportunity.canApply || busy || !isReviewer}
                                 onClick={apply}
@@ -412,7 +467,9 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                 {busy
                                     ? 'Applying…'
                                     : opportunity.canApply && isReviewer
-                                        ? 'Apply to be a reviewer'
+                                        ? willJoinWaitlist
+                                            ? 'Join reviewer waitlist'
+                                            : 'Apply to be a reviewer'
                                         : disabledLabel}
                             </button>
                         </aside>
@@ -575,14 +632,18 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
             role='tabpanel'
         >
             <h2>Applications</h2>
+            <MobileApplicationSort
+                direction={sortDirection}
+                onToggle={toggleApplicationDateSort}
+            />
             <div className={styles.applications}>
                 <div className={styles.tableScroll}>
-                    <table>
+                    <table className={styles.applicationTable}>
                         <thead>
                             <tr>
                                 <th>Handle</th>
                                 <th>Role</th>
-                                <th aria-sort={sortDirection}>
+                                <th aria-label='Application Date' aria-sort={sortDirection}>
                                     <button onClick={toggleApplicationDateSort} type='button'>
                                         Application Date
                                         <IconOutline.ChevronDownIcon
@@ -615,7 +676,7 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                             ?? `${application.userId}-${application.role}-${application.applicationDate
                                                 ?? application.createdAt}`}
                                     >
-                                        <td>
+                                        <td data-mobile-label='Handle'>
                                             <span className={styles.member}>
                                                 <i>
                                                     {photoURL
@@ -635,8 +696,10 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                                 )}
                                             </span>
                                         </td>
-                                        <td>{reviewRoleLabel(application.role)}</td>
-                                        <td>
+                                        <td data-mobile-label='Role'>
+                                            {reviewRoleLabel(application.role)}
+                                        </td>
+                                        <td data-mobile-label='Application Date'>
                                             {formatApplicationDate(
                                                 application.applicationDate ?? application.createdAt,
                                             )}

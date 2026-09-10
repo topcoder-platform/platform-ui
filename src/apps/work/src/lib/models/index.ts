@@ -1,6 +1,7 @@
 export * from './Attachment.model'
 export * from './AiReview.model'
 export * from './Engagement.model'
+export * from './EngagementLead.model'
 export * from './ChallengeEditor.model'
 export * from './Challenge.model'
 export * from './ChallengeReviewContext.model'

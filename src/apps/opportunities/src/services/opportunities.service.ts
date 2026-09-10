@@ -1791,26 +1791,58 @@ export async function getChallengeRegistration(
 }
 
 /**
- * Resolves any challenge resource belonging to the authenticated member.
+ * Resolves a challenge resource belonging to the authenticated member.
  *
  * This membership check intentionally does not restrict the resource role so
  * copilots, managers, reviewers, and submitters can reach member-only forum
- * communication. The response is rechecked defensively because a broad or
- * stale Resource API page must not grant access for another member/challenge.
+ * communication. Copilot assignments are preferred when a member holds more
+ * than one role so the forum can faithfully expose copilot-only announcement
+ * controls. Current Resource API rows include `roleName`; older deployments are
+ * enriched against the canonical Resource Roles collection by `roleId`. The
+ * response is rechecked defensively because a broad or stale Resource API page
+ * must not grant access for another member/challenge.
  *
  * @param challengeId challenge UUID.
  * @param memberId authenticated member ID.
  * @returns caller-owned challenge resource, or undefined when absent/mismatched.
- * @throws Propagates authorization, Resource API, and network errors.
+ * @throws Propagates member-resource authorization, Resource API, and network
+ * errors. A failed optional Resource Roles lookup preserves ordinary forum
+ * membership but fails closed for copilot-only controls.
  */
 export async function getChallengeMemberResource(
     challengeId: string,
     memberId: string,
 ): Promise<ChallengeResource | undefined> {
-    const resources = await getChallengeResources(challengeId, 1, 1, memberId)
-    return resources.items.find(resource => (
+    const resources = await getChallengeResources(challengeId, 1, 100, memberId)
+    const callerResources = resources.items.filter(resource => (
         resource.challengeId === challengeId && String(resource.memberId) === memberId
     ))
+    const namedCopilot = callerResources.find(resource => resource.roleName?.trim()
+        .toLowerCase()
+        .includes('copilot'))
+    if (namedCopilot || !callerResources.length) return namedCopilot ?? callerResources[0]
+
+    try {
+        const response = await xhrGetAsync<
+            ChallengeResourceRole[] | ApiEnvelope<ChallengeResourceRole[]>
+        >(`${V6_URL}/resource-roles`)
+        const rolesById = new Map(unwrap(response)
+            .map(role => [role.id, role.name]))
+        const copilot = callerResources.find(resource => rolesById.get(resource.roleId ?? '')
+            ?.trim()
+            .toLowerCase()
+            .includes('copilot'))
+        if (copilot) {
+            return {
+                ...copilot,
+                roleName: rolesById.get(copilot.roleId ?? ''),
+            }
+        }
+    } catch {
+        // Membership remains usable; the UI fails closed for copilot-only actions.
+    }
+
+    return callerResources[0]
 }
 
 /**

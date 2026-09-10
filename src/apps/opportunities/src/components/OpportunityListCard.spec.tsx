@@ -153,6 +153,10 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('30m left'))
             .toBeInTheDocument()
+        expect(screen.getByText('Submission').parentElement)
+            .toBe(screen.getByText('30m left').parentElement)
+        expect(screen.getByText('30m left').parentElement)
+            .toHaveClass('phaseHeading')
         expect(screen.getByRole('progressbar', { name: 'Submission phase progress' }))
             .toHaveAttribute('aria-valuenow', '50')
         expect(screen.getByText('Submissions:'))
@@ -207,11 +211,46 @@ describe('OpportunityListCard competition presentation', () => {
         )
 
         const card = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
-        expect(card.className)
+        expect(card.closest('article')?.className)
             .toContain('gridCard')
         expect(screen.getAllByText('+1'))
             .toHaveLength(2)
         expect(screen.getByText('Submissions:'))
+            .toBeInTheDocument()
+    })
+
+    it('deep-links every active competition metric without nesting card links', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        numOfPosts: 5,
+                        numOfRegistrants: 2,
+                        numOfSubmissions: 0,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const titleLink = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
+        const metricLinks = [
+            ['View Submissions', '/opportunities/challenge/challenge-id?tab=submissions'],
+            ['View Registrants', '/opportunities/challenge/challenge-id?tab=registrants'],
+            ['View Posts', '/opportunities/challenge/challenge-id?tab=forum'],
+        ]
+        metricLinks.forEach(([name, href]) => {
+            const metricLink = screen.getByRole('link', { name })
+            expect(metricLink)
+                .toHaveAttribute('href', href)
+            expect(metricLink.className)
+                .toContain('metricLink')
+            expect(titleLink.contains(metricLink))
+                .toBe(false)
+            expect(metricLink.closest('article'))
+                .toBe(titleLink.closest('article'))
+        })
+        expect(screen.getByText('0'))
             .toBeInTheDocument()
     })
 
@@ -247,6 +286,8 @@ describe('OpportunityListCard competition presentation', () => {
         fireEvent.click(skill)
         expect(onSkillClick)
             .toHaveBeenCalledWith('Figma')
+        expect(skill.closest('a'))
+            .toBeNull()
         expect(screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ }))
             .toHaveAttribute('href', '/opportunities/challenge/challenge-id')
     })
@@ -377,7 +418,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('gridCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
@@ -412,7 +454,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('copilotCard'))
         expect(screen.getByRole('link'))
             .toHaveAttribute(
@@ -689,7 +732,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()
@@ -732,6 +776,38 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getAllByText('Test'))
             .toHaveLength(1)
+    })
+
+    it('filters review opportunities from either a tag or standardized skill chip', () => {
+        const onSkillClick = jest.fn()
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'UICollectionView' }],
+                technologies: ['Tag'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Review post check',
+            id: 'review-search-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={item}
+                    kind='reviews'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by Tag' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by UICollectionView' }))
+
+        expect(onSkillClick.mock.calls)
+            .toEqual([['Tag'], ['UICollectionView']])
+        expect(screen.getByRole('link', { name: /Review post check/ }))
+            .toHaveAttribute('href', '/opportunities/review/review-search-skills')
     })
 
     it('positions review title tooltips outside the card clipping context', () => {
@@ -783,5 +859,28 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         )
         expect(screen.getByText('Rejected').className)
             .toContain('stateClosed')
+    })
+
+    it('shows a pending reviewer as waitlisted after approved capacity is filled', () => {
+        const item: ReviewOpportunity = {
+            canApply: false,
+            challengeId: 'waitlist-challenge',
+            challengeName: 'Full review opportunity',
+            id: 'waitlist-review',
+            myApplications: [{ status: 'PENDING' }],
+            openPositions: 1,
+            remainingPositions: 0,
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Waitlisted').className)
+            .toContain('stateApplied')
+        expect(screen.queryByText('Applied'))
+            .not.toBeInTheDocument()
     })
 })

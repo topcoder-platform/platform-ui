@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/no-noninteractive-tabindex, ordered-imports/ordered-imports, react/jsx-no-bind */
+/* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     FC,
-    KeyboardEvent,
-    MouseEvent,
     ReactNode,
     SVGProps,
 } from 'react'
@@ -24,6 +22,7 @@ import {
 } from '../models'
 import { engagementOpportunityState } from '../utils/engagement-status.utils'
 
+import { ReactComponent as ApplicationWaitlistedIcon } from '../assets/application-waitlisted.svg'
 import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
 import { ReactComponent as First2FinishTypeIcon } from '../assets/first2finish-type.svg'
 import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
@@ -56,8 +55,13 @@ import {
 } from './challenge-card.utils'
 import {
     reviewFirstSubmissionPayment,
+    reviewOpportunityIsWaitlisted,
     reviewOpportunityLabels,
 } from '../utils/review-opportunity.utils'
+import {
+    ChallengeDetailTab,
+    challengeDetailPath,
+} from '../utils/challenge-detail-route.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -99,6 +103,13 @@ interface ChallengeTypePresentation {
     label: string
 }
 
+interface CompetitionMetric {
+    icon: ReactNode
+    label: string
+    tab: ChallengeDetailTab
+    value: string
+}
+
 const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
     challenge: { icon: ChallengeTypeIcon, label: 'Challenge' },
     first2finish: { icon: First2FinishTypeIcon, label: 'First 2 Finish' },
@@ -109,39 +120,29 @@ const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
 const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
 
 /**
- * Renders a card skill as a keyboard-accessible filter control when the list
- * supplies a selection callback, while preventing the containing card link.
+ * Renders a card skill as a native filter control when the list supplies a
+ * selection callback.
  *
  * @param props skill label, optional styling, and list-filter callback.
  * @returns interactive or presentational skill tag.
  * @throws Does not throw.
  */
 const SkillFilterTag: FC<SkillFilterTagProps> = props => {
-    /** Selects this skill without following the containing opportunity link. */
-    const select = (event: MouseEvent<HTMLSpanElement>): void => {
-        if (!props.onSelect) return
-        event.preventDefault()
-        event.stopPropagation()
-        props.onSelect(props.skill)
-    }
-
-    /** Gives the non-native filter tag standard Enter and Space activation. */
-    const selectByKeyboard = (event: KeyboardEvent<HTMLSpanElement>): void => {
-        if (!props.onSelect || (event.key !== 'Enter' && event.key !== ' ')) return
-        event.preventDefault()
-        event.stopPropagation()
-        props.onSelect(props.skill)
+    if (props.onSelect) {
+        return (
+            <button
+                aria-label={`Filter by ${props.skill}`}
+                className={classNames(props.className, styles.filterableSkill)}
+                onClick={() => props.onSelect?.(props.skill)}
+                type='button'
+            >
+                {props.skill}
+            </button>
+        )
     }
 
     return (
-        <span
-            aria-label={props.onSelect ? `Filter by ${props.skill}` : undefined}
-            className={classNames(props.className, { [styles.filterableSkill]: !!props.onSelect })}
-            onClick={select}
-            onKeyDown={selectByKeyboard}
-            role={props.onSelect ? 'button' : undefined}
-            tabIndex={props.onSelect ? 0 : undefined}
-        >
+        <span className={props.className}>
             {props.skill}
         </span>
     )
@@ -262,10 +263,11 @@ function applicationState(applied: boolean, open: boolean): string {
  *
  * @param item Review API opportunity containing caller-scoped applications.
  * @param open whether the review opportunity still accepts applications.
- * @returns Approved, Rejected, Cancelled, Applied, or the public availability state.
+ * @returns Approved, Rejected, Cancelled, Waitlisted, Applied, or the public availability state.
  * @throws Does not throw.
  */
 function reviewApplicationState(item: ReviewOpportunity, open: boolean): string {
+    if (reviewOpportunityIsWaitlisted(item)) return 'Waitlisted'
     const statusKey = challengeCatalogKey(item.myApplications?.[0]?.status)
     const terminalLabels: Record<string, string> = {
         approved: 'Approved',
@@ -399,9 +401,9 @@ function challengeSkillLabels(item: ChallengeOpportunity): string[] {
 }
 
 /**
- * Returns the scoped CSS class for a Challenge API track pill.
+ * Returns the shared Figma foreground and background palette for an opportunity track pill.
  *
- * @param trackKey normalized catalog track key.
+ * @param trackKey normalized owning-API track key, including DEV and QA aliases.
  * @returns matching Figma track color class or the neutral fallback class.
  * @throws Does not throw.
  */
@@ -411,7 +413,9 @@ function challengeTrackClass(trackKey: string): string {
         artificialintelligence: styles.artificialIntelligenceBadge,
         datascience: styles.dataScienceBadge,
         design: styles.designBadge,
+        dev: styles.developmentBadge,
         development: styles.developmentBadge,
+        qa: styles.qualityAssuranceBadge,
         qualityassurance: styles.qualityAssuranceBadge,
     }
     return trackClasses[trackKey] ?? styles.competitionBadge
@@ -606,30 +610,32 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
-    const metrics = [
+    const metrics: CompetitionMetric[] = [
         {
             icon: <SubmissionsMetricIcon aria-hidden='true' />,
             label: 'Submissions',
+            tab: 'submissions',
             value: item.numOfSubmissions === undefined ? '—' : String(item.numOfSubmissions),
         },
         {
             icon: <RegistrantsMetricIcon aria-hidden='true' />,
             label: 'Registrants',
+            tab: 'registrants',
             value: item.numOfRegistrants === undefined ? '—' : String(item.numOfRegistrants),
         },
         {
             icon: <PostsMetricIcon aria-hidden='true' />,
             label: 'Posts',
+            tab: 'forum',
             value: item.numOfPosts === undefined ? '—' : String(item.numOfPosts),
         },
     ]
 
     return (
-        <Link
+        <article
             className={classNames(styles.card, styles.competitionCard, {
                 [styles.gridCard]: props.view === 'grid',
             })}
-            to={`/opportunities/challenge/${item.id}`}
         >
             <div className={styles.competitionMain}>
                 <div className={styles.competitionCopy}>
@@ -667,7 +673,14 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                         place='bottom'
                         strategy='fixed'
                     >
-                        <h3>{item.name}</h3>
+                        <h3>
+                            <Link
+                                className={styles.titleLink}
+                                to={challengeDetailPath(item.id)}
+                            >
+                                {item.name}
+                            </Link>
+                        </h3>
                     </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
@@ -728,14 +741,21 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
             </div>
             <dl className={classNames(styles.meta, styles.competitionMeta)}>
                 {metrics.map(row => (
-                    <div key={row.label}>
+                    <div className={styles.metricRow} key={row.label}>
                         {row.icon}
                         <dt>{`${row.label}:`}</dt>
-                        <dd>{row.value}</dd>
+                        <dd>
+                            {row.value}
+                            <Link
+                                aria-label={`View ${row.label}`}
+                                className={styles.metricLink}
+                                to={challengeDetailPath(item.id, row.tab)}
+                            />
+                        </dd>
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }
 
@@ -767,7 +787,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
     const stateKey = challengeCatalogKey(card.state)
     const stateIsAccepted = ['accepted', 'approved', 'assigned', 'completed', 'selected'].includes(stateKey)
-    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview'].includes(stateKey)
+    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview', 'waitlisted'].includes(stateKey)
     const stateIsClosed = [
         'applicationclosed',
         'cancelled',
@@ -783,11 +803,8 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     })
 
     return (
-        <Link
+        <article
             className={cardClassName}
-            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
-            target={props.kind === 'engagements' ? '_blank' : undefined}
-            to={card.href}
         >
             <div className={styles.main}>
                 <div className={styles.eyebrow}>
@@ -813,6 +830,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         >
                             {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
                             {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateKey === 'waitlisted' && <ApplicationWaitlistedIcon aria-hidden='true' />}
                             {stateIsAccepted && <IconOutline.CheckIcon aria-hidden='true' />}
                             {stateIsClosed && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}
@@ -829,7 +847,14 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
                     })}
                     >
-                        {card.title}
+                        <Link
+                            className={styles.titleLink}
+                            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
+                            target={props.kind === 'engagements' ? '_blank' : undefined}
+                            to={card.href}
+                        >
+                            {card.title}
+                        </Link>
                     </h3>
                 </Tooltip>
                 {visibleSkills.length > 0 && (
@@ -869,6 +894,6 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }

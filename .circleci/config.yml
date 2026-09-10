@@ -108,6 +108,9 @@ deploy_steps: &deploy_steps
               ./psvar-processor.sh -t appenv -p /config/${APPNAME}/deployvar
               source deployvar_env
               ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
+              # Switch the uncached Gigs shell only after all referenced assets are deployed.
+              aws s3 cp "${AWS_S3_SOURCE_SYNC_PATH%/}/index.html" "s3://${AWS_S3_BUCKET%/}/gigs/index.html" \
+                --content-type text/html --cache-control 'no-cache,no-store,max-age=0'
 
 jobs:
     lint-dev:

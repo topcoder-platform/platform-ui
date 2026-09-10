@@ -120,6 +120,35 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each([
+        ['Task catalog type', { type: { name: 'Task' } }, false],
+        ['nested task flag', { task: { isAssigned: true, isTask: true, memberId: '123' } }, true],
+        ['flattened task flag', { taskIsTask: true }, true],
+        ['legacy pure-v5 flag', { legacy: { pureV5Task: true } }, false],
+    ])('hides member actions for the %s while preserving prize details', (_label, overrides, isRegistered) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture(overrides)}
+                    isRegistered={isRegistered as boolean}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByAltText('1 place'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Register' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Unregister' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Submit a solution' }))
+            .not.toBeInTheDocument()
+    })
+
     it('shows enabled member actions only while their phases are open', () => {
         const onSubmit = jest.fn()
         const { rerender }: RenderResult = render(
@@ -447,13 +476,24 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveAttribute('data-state', 'upcoming')
         expect(winners.querySelector('time'))
             .toHaveAttribute('datetime', challengeEnd)
-        expect(timeline.querySelectorAll('img'))
+        expect(timeline.querySelectorAll('.timelineRail img'))
             .toHaveLength(4)
         expect(timeline.querySelectorAll('[data-state="current"]'))
             .toHaveLength(6)
-        expect(within(timeline)
-            .getByText(/^Time zone:/))
+        const timezone = within(timeline)
+            .getByText(/^Time zone:/)
+        expect(timezone)
             .toBeInTheDocument()
+        expect(timezone.compareDocumentPosition(items[0]))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(timeline.querySelector('.timelineGraphic > .timelineRail'))
+            .toBeInTheDocument()
+        expect(timeline.querySelector('.timelineGraphic > .timelineItems'))
+            .toBeInTheDocument()
+        expect(timeline.querySelectorAll('.mobileTimelineMarker'))
+            .toHaveLength(items.length)
+        expect(timeline.querySelectorAll('.mobileTimelineMarker img'))
+            .toHaveLength(items.length)
     })
 
     it('sorts expanded timeline phases chronologically and uses the short hide label', () => {
@@ -502,5 +542,97 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .map(item => item.querySelector('strong')?.textContent)
         expect(itemLabels)
             .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Submission', 'Winners'])
+    })
+
+    it('omits an ended Task review and keeps Registration before Submission', () => {
+        const { container }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        endDate: '2026-08-13T17:44:00.000Z',
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'iterative-review',
+                                name: 'Iterative Review',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                        ],
+                        startDate: '2026-08-13T17:44:00.000Z',
+                        status: 'COMPLETED',
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const itemLabels = within(timeline)
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Submission', 'Winners'])
+        expect(within(timeline)
+            .queryByText('Iterative Review'))
+            .not.toBeInTheDocument()
+        expect(timeline.querySelectorAll('.timelineRail img'))
+            .toHaveLength(4)
+        expect(timeline.querySelectorAll('.mobileTimelineMarker img'))
+            .toHaveLength(4)
+        expect(container.querySelector('.timelineItems'))
+            .toHaveStyle({
+                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+            })
+    })
+
+    it('retains a future Iterative Review deadline in a Task timeline', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        endDate: '2999-08-21T17:44:00.000Z',
+                        phases: [{
+                            actualEndDate: '2999-08-21T17:44:00.000Z',
+                            actualStartDate: '2999-08-20T17:44:00.000Z',
+                            id: 'iterative-review',
+                            name: 'Iterative Review',
+                        }],
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        expect(within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getByText('Iterative Review'))
+            .toBeInTheDocument()
     })
 })

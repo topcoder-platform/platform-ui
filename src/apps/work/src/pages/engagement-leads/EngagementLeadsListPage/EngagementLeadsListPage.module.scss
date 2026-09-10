@@ -1,0 +1,109 @@
+.container {
+    display: grid;
+    gap: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filterSelect {
+    min-width: 180px;
+    border: 1px solid var(--black-20, #ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--black-10, #eee);
+}
+
+.table th {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.rowLink {
+    color: inherit;
+    text-decoration: none;
+}
+
+.rowLink:hover {
+    text-decoration: underline;
+}
+
+.statusPill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.statusSubmitted {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.statusUnderReview {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.statusQualified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.statusConverted {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.statusRejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.priorityCritical {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.priorityHigh {
+    color: #c2410c;
+    font-weight: 600;
+}
+
+.emptyState {
+    padding: 32px;
+    text-align: center;
+    color: var(--black-60, #666);
+}
+
+.intakeLink {
+    font-size: 0.9rem;
+}

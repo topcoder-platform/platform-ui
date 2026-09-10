@@ -108,6 +108,8 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
                     action={props.action}
                 />
             )}
+            {/* No status to render, but the caller still has an action to offer (e.g. queue a missing run) */}
+            {!displayStatus && props.action}
         </>
     )
 }
