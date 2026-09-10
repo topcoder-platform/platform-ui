@@ -239,15 +239,14 @@ describe('engagement agreement timing', () => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
-    it('preserves the profile completeness requirement when applying', async () => {
+    it('allows applying when profile is not 100% complete', async () => {
         mockUseProfileCompleteness.mockReturnValue({ isLoading: false, percent: 80 })
         const user = userEvent.setup()
         await act(async () => { render(<EngagementDetailPage />) })
         await user.click(await screen.findByRole('button', { name: 'Apply Now' }))
 
-        expect(screen.getByText('Your profile must be 100% complete before applying.'))
-            .toBeInTheDocument()
-        expect(mockNavigate).not.toHaveBeenCalled()
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/engagements/eng-nano/apply')
         expect(mockGetTermDetails).not.toHaveBeenCalled()
     })
 
