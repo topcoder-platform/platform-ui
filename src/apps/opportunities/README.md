@@ -153,10 +153,10 @@ to their authored subtype icons and member-facing labels.
   14×18px size; the dark second- and third-place podium variants are reserved
   for the Winners presentation.
 - Completed cards replace registration and stale phase-progress states with the
-  explicit Completed state. Up to three actual winner photos appear beside the
-  placement prizes with the existing podium medals; missing or failed photos
-  retain a handle-initial fallback. The complete avatar-and-medal affordance
-  opens that challenge's Winners tab.
+  explicit Completed state and the design-system double-check icon. Up to three
+  actual winner photos appear beside the placement prizes with the existing
+  podium medals; missing or failed photos retain a handle-initial fallback. The
+  complete avatar-and-medal affordance opens that challenge's Winners tab.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.

@@ -25,6 +25,7 @@ import { engagementOpportunityState } from '../utils/engagement-status.utils'
 
 import { ReactComponent as ApplicationWaitlistedIcon } from '../assets/application-waitlisted.svg'
 import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
+import { ReactComponent as CompletedIcon } from '../assets/check-double.svg'
 import { ReactComponent as First2FinishTypeIcon } from '../assets/first2finish-type.svg'
 import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
 import { ReactComponent as MedalFirstIcon } from '../assets/medal-1.svg'
@@ -627,7 +628,8 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
  * Renders the Figma competition card using Challenge API placement and phase data.
  *
  * @param item Challenge API list item.
- * @returns linked competition card with catalog tags, placement prizes, phase progress, and metrics.
+ * @returns linked competition card with catalog tags, a distinct completed-state icon,
+ * placement prizes, phase progress, and metrics.
  * @throws Does not throw; absent API fields use explicit pending placeholders.
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
@@ -708,7 +710,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                         })}
                         >
                             {completed
-                                ? <IconOutline.CheckIcon aria-hidden='true' />
+                                ? <CompletedIcon aria-hidden='true' />
                                 : props.registered
                                     ? <IconOutline.CheckIcon aria-hidden='true' />
                                     : registrationOpen
