@@ -607,7 +607,7 @@ describe('opportunities service normalization', () => {
             .toEqual([['1', '200'], ['2', '200']])
     })
 
-    it('falls back to locally filtered legacy Copilot results during API rollout', async () => {
+    it('falls back to locally filtered legacy Copilot facets during API rollout', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         globalGet
             .mockRejectedValueOnce({
@@ -638,7 +638,7 @@ describe('opportunities service normalization', () => {
                         opportunityTitle: 'Backend migration',
                         skills: [{ id: 'java', name: 'Java' }],
                         status: 'active',
-                        type: 'dev',
+                        type: 'design',
                     },
                 ],
                 headers: {
@@ -654,7 +654,6 @@ describe('opportunities service normalization', () => {
         await expect(getOpportunityPage('copilots', {
             page: 1,
             perPage: 10,
-            search: 'typescript',
             sort: 'newest',
             statuses: ['active'],
             tracks: ['dev'],
@@ -678,6 +677,217 @@ describe('opportunities service normalization', () => {
             .toBe(false)
         expect(legacyUrl.searchParams.has('type'))
             .toBe(false)
+    })
+
+    it('uses bounded local Copilot discovery before a broken server-side skill search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'matching',
+                        opportunityTitle: 'Matching copilot role',
+                        skills: [{ id: 'cadence-skill', name: 'Cadence SKILL' }],
+                        status: 'active',
+                    },
+                    {
+                        id: 'different',
+                        opportunityTitle: 'Different copilot role',
+                        skills: [{ id: 'react', name: 'React' }],
+                        status: 'active',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockRejectedValueOnce({
+                data: { message: ['property projectName should not exist'] },
+                status: 400,
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'matching' })],
+                total: 1,
+            })
+
+        expect(globalGet)
+            .toHaveBeenCalledTimes(2)
+        const requestUrl = new URL(String(globalGet.mock.calls[0][0]))
+        expect(requestUrl.searchParams.get('pageSize'))
+            .toBe('200')
+        expect(requestUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(requestUrl.searchParams.has('skills'))
+            .toBe(false)
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Cadence SKILL')
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('unions safe owner project-name matches that public list rows cannot expose', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'different',
+                    opportunityTitle: 'Unrelated role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'project-name-match',
+                    opportunityTitle: 'Generic Copilot role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Apollo migration',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'project-name-match' })],
+                total: 1,
+            })
+
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Apollo migration')
+        expect(projectNameUrl.searchParams.getAll('status'))
+            .toEqual(['active'])
+        expect(projectNameUrl.searchParams.getAll('type'))
+            .toEqual(['dev'])
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('uses canonical opportunity type rather than conflicting project type during local search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'canonical-match',
+                        projectType: 'design',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'dev',
+                    },
+                    {
+                        id: 'project-type-only',
+                        projectType: 'dev',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'design',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'canonical-match' })],
+                total: 1,
+            })
+    })
+
+    it('propagates project-name failures other than the exact legacy unsupported-property response', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const projectNameError = {
+            data: { message: ['property search should not exist'] },
+            status: 400,
+        }
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockRejectedValueOnce(projectNameError)
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+        }))
+            .rejects.toEqual(projectNameError)
     })
 
     it('sorts legacy Copilot results by start date without sending an unsupported sort', async () => {
@@ -1209,14 +1419,31 @@ describe('opportunities service normalization', () => {
             ])
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&page=1&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=1&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
         expect(get)
             .toHaveBeenCalledWith(
-                'https://api.example/v6/submissions?challengeId=challenge&page=2&perPage=200'
+                'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=2&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
+    })
+
+    it('preserves a latest-only member history response for an ordinary viewer', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            data: [{ id: 'latest-visible', memberId: '456', submittedDate: '2026-06-03T00:00:00.000Z' }],
+            meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+        })
+
+        await expect(getChallengeSubmissionHistory('challenge', '456', 'CONTEST_SUBMISSION'))
+            .resolves.toEqual([{
+                id: 'latest-visible',
+                memberId: '456',
+                submittedDate: '2026-06-03T00:00:00.000Z',
+            }])
+        expect(get)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('loads every Marathon Match review-summation page for table scores and dashboard', async () => {
@@ -1514,6 +1741,71 @@ describe('opportunities service normalization', () => {
             .toBe('desc')
         expect(globalGet)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('hydrates completed-card winners with real Members API handles and photos', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'completed-challenge',
+                name: 'Completed challenge',
+                status: 'COMPLETED',
+                winners: [
+                    { handle: 'legacy-first', placement: 1, userId: '101' },
+                    { handle: 'second', placement: 2, userId: '202' },
+                ],
+            }],
+            headers: { get: () => undefined },
+        })
+        get.mockResolvedValueOnce([{
+            handle: 'current-first',
+            photoURL: 'https://images.example/101.png',
+            userId: '101',
+        }])
+
+        const page = await getOpportunityPage('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['COMPLETED'],
+        })
+
+        expect(page.items[0].winners)
+            .toEqual([
+                {
+                    handle: 'current-first',
+                    photoURL: 'https://images.example/101.png',
+                    placement: 1,
+                    userId: '101',
+                },
+                { handle: 'second', placement: 2, userId: '202' },
+            ])
+        const memberUrl = new URL(String(get.mock.calls.at(-1)?.[0]))
+        expect(memberUrl.pathname)
+            .toBe('/v6/members')
+        expect(memberUrl.searchParams.getAll('userIds[]'))
+            .toEqual(['101', '202'])
+    })
+
+    it('does not request winner profiles for a non-completed competition page', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'active-challenge',
+                name: 'Active challenge',
+                status: 'ACTIVE',
+                winners: [{ handle: 'provisional-entry', placement: 1, userId: '101' }],
+            }],
+            headers: { get: () => undefined },
+        })
+
+        await expect(getOpportunityPage('competitions', { page: 1, perPage: 10 }))
+            .resolves.toMatchObject({
+                items: [{ id: 'active-challenge' }],
+            })
+        expect(get)
+            .not.toHaveBeenCalled()
     })
 
     it('resolves legacy challenge term references from v5 details', async () => {

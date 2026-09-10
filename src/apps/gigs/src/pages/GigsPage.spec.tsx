@@ -81,7 +81,7 @@ describe('GigsPage listing presentation', () => {
         mockUseSWR.mockReturnValue({ data: [], error: undefined, mutate: jest.fn() })
     })
 
-    it('uses the scoped 2026 focus treatment on the gig search field', () => {
+    it('uses the scoped 2026 focus treatment on every Gig listing filter control', () => {
         render(
             <MemoryRouter>
                 <GigsPage />
@@ -89,7 +89,11 @@ describe('GigsPage listing presentation', () => {
         )
 
         expect(screen.getByRole('searchbox', { name: 'Search' }))
-            .toHaveClass('gigs-filter-input')
+            .toHaveClass('gigs-filter-control')
+        expect(screen.getByRole('combobox', { name: 'Location' }))
+            .toHaveClass('gigs-filter-control')
+        expect(screen.getByRole('combobox', { name: 'Sort by' }))
+            .toHaveClass('gigs-filter-control')
     })
 
     it('opens the Gig Work resources in a separate tab without an opener', () => {

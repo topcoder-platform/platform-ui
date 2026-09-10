@@ -39,6 +39,8 @@ import {
 } from '../models'
 import { sortOpportunityItems } from '../utils/opportunity-listing.utils'
 
+import { getMemberProfilesByUserIds } from './member-profile.service'
+
 const V6_URL = EnvironmentConfig.API.V6
 const COPILOT_MAX_PAGE_SIZE = 200
 const MAX_LEGACY_COPILOT_PAGES = 20
@@ -320,6 +322,62 @@ function normalizePage<T>(
     const totalPages = readNumericHeader(headers, ['x-total-pages'])
         ?? toNumber(metadata.totalPages, perPage > 0 ? Math.ceil(total / perPage) : 0)
     return { items, page, perPage, total, totalPages }
+}
+
+/**
+ * Identifies completed Challenge API records without depending on enum casing.
+ *
+ * @param item normalized competition listing record.
+ * @returns true only for the completed lifecycle state.
+ * @throws Does not throw.
+ */
+function challengeIsCompleted(item: ChallengeOpportunity): boolean {
+    return String(item.status ?? '')
+        .trim()
+        .toUpperCase() === 'COMPLETED'
+}
+
+/**
+ * Enriches completed competition winners with the public member photos used by
+ * the Figma past-card treatment. Challenge API remains authoritative for the
+ * winner identity and placement; Members API only supplies profile display
+ * fields and failures leave the original winner data intact.
+ *
+ * @param page normalized Challenge API result page.
+ * @returns page with member handles and photos merged into matching winners.
+ * @throws Does not throw because the shared member loader absorbs batch failures.
+ */
+async function hydrateCompetitionWinnerProfiles(
+    page: OpportunityPage<ChallengeOpportunity>,
+): Promise<OpportunityPage<ChallengeOpportunity>> {
+    const memberIds = Array.from(new Set(page.items
+        .filter(challengeIsCompleted)
+        .flatMap(item => item.winners ?? [])
+        .map(winner => String(winner.userId ?? '')
+            .trim())
+        .filter(Boolean)))
+    if (!memberIds.length) return page
+
+    const profiles = await getMemberProfilesByUserIds(memberIds)
+    const profilesById = new Map(profiles.map(profile => [profile.userId, profile]))
+    return {
+        ...page,
+        items: page.items.map(item => (challengeIsCompleted(item)
+            ? {
+                ...item,
+                winners: item.winners?.map(winner => {
+                    const profile = profilesById.get(String(winner.userId ?? ''))
+                    return profile
+                        ? {
+                            ...winner,
+                            handle: profile.handle || winner.handle,
+                            photoURL: profile.photoURL ?? winner.photoURL,
+                        }
+                        : winner
+                }),
+            }
+            : item)),
+    }
 }
 
 /**
@@ -736,6 +794,29 @@ function isLegacyCopilotQueryError(error: unknown): boolean {
 }
 
 /**
+ * Identifies only the legacy validation response for the supplementary
+ * project-name predicate. Other 4xx responses and all server/network failures
+ * remain actionable and are propagated to the listing.
+ *
+ * @param error rejected Projects API project-name request.
+ * @returns true only when the API does not recognize `projectName`.
+ * @throws Does not throw.
+ */
+function isLegacyCopilotProjectNameQueryError(error: unknown): boolean {
+    const failure = error as {
+        data?: { message?: unknown }
+        message?: unknown
+        response?: { data?: { message?: unknown }; status?: number }
+        status?: number
+    }
+    const status = failure.status ?? failure.response?.status
+    const values = [failure.message, failure.data?.message, failure.response?.data?.message]
+        .flatMap(value => (Array.isArray(value) ? value : [value]))
+        .filter((value): value is string => typeof value === 'string')
+    return status === 400 && values.some(value => /property projectName should not exist/i.test(value))
+}
+
+/**
  * Builds the limited list query understood by the legacy Projects API.
  *
  * @param page one-based legacy API page.
@@ -750,6 +831,25 @@ function buildLegacyCopilotPageUrl(page: number): string {
     // creation-date sort and apply the selected semantic sort after aggregation.
     url.searchParams.set('sort', 'createdAt desc')
     url.searchParams.set('noGrouping', 'true')
+    return url.toString()
+}
+
+/**
+ * Builds the safe owner query used to recover project-name matches while the
+ * Projects API's combined `search` / `skills` predicate is unavailable.
+ * Status and opportunity type remain owner-filtered so this supplementary
+ * result set cannot widen active facets.
+ *
+ * @param page one-based Projects API page.
+ * @param filters active Copilot discovery filters containing free text.
+ * @returns absolute Copilot opportunity URL using only supported predicates.
+ * @throws Does not throw.
+ */
+function buildCopilotProjectNamePageUrl(page: number, filters: OpportunityFilters): string {
+    const url = new URL(buildLegacyCopilotPageUrl(page))
+    url.searchParams.set('projectName', filters.search?.trim() ?? '')
+    appendValues(url, 'status', filters.statuses)
+    appendValues(url, 'type', [...(filters.tracks ?? []), ...(filters.types ?? [])])
     return url.toString()
 }
 
@@ -775,6 +875,21 @@ function sortLegacyCopilotOpportunities(
             || String(first.id)
                 .localeCompare(String(second.id))
     })
+}
+
+/**
+ * Determines whether Copilot discovery must use the bounded compatibility
+ * loader. The deployed Projects API currently returns HTTP 500 when either
+ * free-text or exact-skill discovery reaches its JSON skill query; retrieving
+ * its supported unfiltered pages first avoids a failed browser request while
+ * retaining the same shareable search behavior.
+ *
+ * @param filters active Copilot search and facet values.
+ * @returns true when text or skill matching must be applied locally.
+ * @throws Does not throw.
+ */
+function requiresLegacyCopilotDiscovery(filters: OpportunityFilters): boolean {
+    return !!filters.search?.trim() || !!filters.skills?.length
 }
 
 /**
@@ -905,7 +1020,7 @@ function filterLegacyCopilotOpportunities(
         .toLowerCase()
 
     return items.filter(item => {
-        const itemType = String(item.projectType ?? item.type ?? '')
+        const itemType = String(item.type ?? item.projectType ?? '')
             .toLowerCase()
         const itemSkills = (item.skills ?? []).map(skill => `${skill.id ?? ''} ${skill.name}`.toLowerCase())
         const itemStatus = String(item.status ?? '')
@@ -1001,6 +1116,60 @@ async function filterLegacyCopilotApplications(
 }
 
 /**
+ * Loads and normalizes every bounded page for one Copilot compatibility URL.
+ *
+ * @param buildPageUrl owner-specific URL builder for a one-based page.
+ * @returns normalized Copilot rows in owner order.
+ * @throws Propagates Projects API and network failures.
+ */
+async function loadCopilotCompatibilityRows(
+    buildPageUrl: (page: number) => string,
+): Promise<CopilotOpportunity[]> {
+    const firstResponse = await xhrGlobalInstance.get(
+        buildPageUrl(1),
+    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
+    const firstPage = normalizePage(firstResponse, 1, COPILOT_MAX_PAGE_SIZE)
+    const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
+    const remainingResponses = totalPages > 1
+        ? await loadPagesInBatches(
+            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
+            page => xhrGlobalInstance.get(buildPageUrl(page)),
+        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
+        : []
+    return [
+        ...firstPage.items,
+        ...remainingResponses.flatMap((response, index) => normalizePage(
+            response,
+            index + 2,
+            COPILOT_MAX_PAGE_SIZE,
+        ).items),
+    ].map(normalizeCopilotOpportunity)
+}
+
+/**
+ * Loads rows whose private project name matches the active free text. Public
+ * list rows intentionally omit that name, so the safe owner-side predicate is
+ * required to preserve the documented project-search behavior.
+ *
+ * @param filters active Copilot discovery filters.
+ * @returns bounded project-name matches, or none on the legacy unsupported-property response.
+ * @throws Propagates every failure except the exact legacy `projectName` validation error.
+ */
+async function getCopilotProjectNameMatches(
+    filters: OpportunityFilters,
+): Promise<CopilotOpportunity[]> {
+    if (!filters.search?.trim()) return []
+    try {
+        return await loadCopilotCompatibilityRows(
+            page => buildCopilotProjectNamePageUrl(page, filters),
+        )
+    } catch (error) {
+        if (!isLegacyCopilotProjectNameQueryError(error)) throw error
+        return []
+    }
+}
+
+/**
  * Keeps Copilot Opportunities usable while an older Projects API deployment
  * is rolling forward to the server-side discovery contract.
  *
@@ -1009,29 +1178,24 @@ async function filterLegacyCopilotApplications(
  * @throws Propagates Projects API and network errors.
  */
 async function getLegacyCopilotPage(filters: OpportunityFilters): Promise<OpportunityPage<CopilotOpportunity>> {
-    const firstResponse = await xhrGlobalInstance.get(
-        buildLegacyCopilotPageUrl(1),
-    ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>
-    const firstPage = normalizePage(firstResponse, 1, COPILOT_MAX_PAGE_SIZE)
-    const totalPages = Math.min(MAX_LEGACY_COPILOT_PAGES, Math.max(1, firstPage.totalPages))
-    const remainingResponses = totalPages > 1
-        ? await loadPagesInBatches(
-            Array.from({ length: totalPages - 1 }, (_value, index) => index + 2),
-            page => xhrGlobalInstance.get(buildLegacyCopilotPageUrl(page)),
-        ) as AxiosResponse<any[] | ApiEnvelope<any[]> | ApiListResponse<any>>[]
-        : []
-    const allItems = [
-        ...firstPage.items,
-        ...remainingResponses.flatMap((response, index) => normalizePage(
-            response,
-            index + 2,
-            COPILOT_MAX_PAGE_SIZE,
-        ).items),
-    ].map(normalizeCopilotOpportunity)
-    const facetFiltered = filterLegacyCopilotOpportunities(allItems, {
+    const [allItems, projectNameItems] = await Promise.all([
+        loadCopilotCompatibilityRows(buildLegacyCopilotPageUrl),
+        getCopilotProjectNameMatches(filters),
+    ])
+    const facetFilters = {
         ...filters,
         applied: false,
+    }
+    const localMatches = filterLegacyCopilotOpportunities(allItems, facetFilters)
+    const projectNameMatches = filterLegacyCopilotOpportunities(projectNameItems, {
+        ...facetFilters,
+        search: undefined,
     })
+    const facetFiltered = Array.from(new Map([
+        ...localMatches,
+        ...projectNameMatches,
+    ].map(item => [item.id, item] as const))
+        .values())
     const memberFiltered = filters.applied
         ? filters.memberId
             ? await filterLegacyCopilotApplications(facetFiltered, filters.memberId)
@@ -1177,6 +1341,10 @@ export async function getOpportunityPage(
 ): Promise<OpportunityPage<any>> {
     const page = Math.max(1, filters.page)
     const perPage = Math.max(1, filters.perPage)
+    if (kind === 'copilots' && requiresLegacyCopilotDiscovery(filters)) {
+        return getLegacyCopilotPage(filters)
+    }
+
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
         const reviewPage = await getReviewPageWithAiTrack(filters)
         return hydrateReviewOpportunitySkills(reviewPage)
@@ -1218,9 +1386,15 @@ export async function getOpportunityPage(
                 .catch(() => normalized)
         }
 
-        return kind === 'copilots'
-            ? { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
-            : normalized
+        if (kind === 'copilots') {
+            return { ...normalized, items: normalized.items.map(normalizeCopilotOpportunity) }
+        }
+
+        if (kind === 'competitions') {
+            return hydrateCompetitionWinnerProfiles(normalized)
+        }
+
+        return normalized
     } catch (error) {
         if (kind !== 'copilots' || !isLegacyCopilotQueryError(error)) throw error
         return getLegacyCopilotPage(filters)
@@ -1504,11 +1678,9 @@ export async function deleteChallengeSubmission(submissionId: string): Promise<v
 }
 
 /**
- * Loads every submission attempt for one challenge member for the History
- * dialog. The latest-only and server-side member filters are deliberately
- * omitted: Review API authorizes challenge-wide reads but rejects another
- * member's ID filter for ordinary challenge participants. Matching member rows
- * are retained locally after the authorized challenge page is loaded.
+ * Loads the server-authorized submission history for one challenge member.
+ * Review API returns full history to the owner and authorized challenge staff,
+ * and restricts ordinary viewers to the selected member's latest submission.
  *
  * @param challengeId challenge UUID.
  * @param memberId submitter member ID from the selected latest submission.
@@ -1525,11 +1697,12 @@ export async function getChallengeSubmissionHistory(
      * Builds one non-latest submission-history request.
      *
      * @param page one-based Review API page.
-     * @returns absolute submissions URL for the selected challenge and type.
+     * @returns absolute submissions URL for the selected challenge member and type.
      */
     const makeUrl = (page: number): string => {
         const url = new URL(`${V6_URL}/submissions`)
         url.searchParams.set('challengeId', challengeId)
+        url.searchParams.set('memberId', memberId)
         url.searchParams.set('page', String(page))
         url.searchParams.set('perPage', String(SUBMISSION_HISTORY_PAGE_SIZE))
         url.searchParams.set('sortBy', 'submittedDate')
@@ -1551,9 +1724,6 @@ export async function getChallengeSubmissionHistory(
         )
         : []
     return [...firstPage.items, ...additionalPages.flat()]
-        .filter(submission => String(
-            submission.memberId ?? submission.registrant?.userId ?? '',
-        ) === memberId)
         .sort((first, second) => {
             const firstDate = Date.parse(first.submittedDate ?? first.createdAt ?? '')
             const secondDate = Date.parse(second.submittedDate ?? second.createdAt ?? '')

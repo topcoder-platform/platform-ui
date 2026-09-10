@@ -3,6 +3,7 @@ import {
     FC,
     ReactNode,
     SVGProps,
+    useState,
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
@@ -110,6 +111,13 @@ interface CompetitionMetric {
     value: string
 }
 
+type ChallengeWinner = NonNullable<ChallengeOpportunity['winners']>[number]
+
+interface CompetitionWinnerAvatarProps {
+    placement: number
+    winner: ChallengeWinner
+}
+
 const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
     challenge: { icon: ChallengeTypeIcon, label: 'Challenge' },
     first2finish: { icon: First2FinishTypeIcon, label: 'First 2 Finish' },
@@ -118,6 +126,37 @@ const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
 }
 
 const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
+
+/**
+ * Renders one API-backed winner photo with its existing placement medal. A
+ * failed or unavailable member photo falls back to the winner's real handle
+ * initial without inventing identity artwork.
+ *
+ * @param props Challenge API winner, enriched Members API photo, and placement.
+ * @returns compact winner avatar used by completed competition cards.
+ * @throws Does not throw; image failures switch to an initial fallback.
+ */
+const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
+    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
+    const handle = props.winner.handle?.trim() || String(props.winner.userId ?? 'Winner')
+    const photoURL = props.winner.photoURL
+    const showPhoto = !!photoURL && photoURL !== failedPhotoURL
+    const MedalIcon = medalIcons[props.placement - 1] ?? MedalThirdIcon
+
+    return (
+        <span className={styles.winnerAvatar} title={handle}>
+            <span aria-hidden='true' className={styles.winnerPhoto}>
+                {showPhoto
+                    ? <img alt='' onError={() => setFailedPhotoURL(photoURL)} src={photoURL} />
+                    : handle.charAt(0)
+                        .toUpperCase()}
+            </span>
+            <span aria-hidden='true' className={styles.winnerMedal}>
+                <MedalIcon />
+            </span>
+        </span>
+    )
+}
 
 /**
  * Renders a card skill as a native filter control when the list supplies a
@@ -610,6 +649,17 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
+    const completed = challengeCatalogKey(item.status) === 'completed'
+    const visibleWinners = completed
+        ? (item.winners ?? [])
+            .map((winner, index) => ({
+                placement: winner.placement ?? index + 1,
+                winner,
+            }))
+            .filter(entry => entry.placement >= 1 && entry.placement <= 3)
+            .sort((first, second) => first.placement - second.placement)
+            .slice(0, 3)
+        : []
     const metrics: CompetitionMetric[] = [
         {
             icon: <SubmissionsMetricIcon aria-hidden='true' />,
@@ -653,18 +703,22 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             {type.label}
                         </span>
                         <span className={classNames(styles.registrationState, {
-                            [styles.registrationClosed]: !props.registered && !registrationOpen,
-                            [styles.registrationRegistered]: props.registered,
+                            [styles.registrationClosed]: !completed && !props.registered && !registrationOpen,
+                            [styles.registrationRegistered]: !completed && props.registered,
                         })}
                         >
-                            {props.registered
+                            {completed
                                 ? <IconOutline.CheckIcon aria-hidden='true' />
-                                : registrationOpen
-                                    ? <RegistrationOpenIcon aria-hidden='true' />
-                                    : <RegistrationClosedIcon aria-hidden='true' />}
-                            {props.registered
-                                ? 'Registered'
-                                : registrationOpen ? 'Open for registration' : 'Registration closed'}
+                                : props.registered
+                                    ? <IconOutline.CheckIcon aria-hidden='true' />
+                                    : registrationOpen
+                                        ? <RegistrationOpenIcon aria-hidden='true' />
+                                        : <RegistrationClosedIcon aria-hidden='true' />}
+                            {completed
+                                ? 'Completed'
+                                : props.registered
+                                    ? 'Registered'
+                                    : registrationOpen ? 'Open for registration' : 'Registration closed'}
                         </span>
                     </div>
                     <Tooltip
@@ -716,7 +770,22 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     <div aria-label='Placement prizes' className={styles.prizes}>
                         {renderChallengePrizes(placementPrizes, item.funChallenge === true)}
                     </div>
-                    {phase && (
+                    {visibleWinners.length > 0 && (
+                        <Link
+                            aria-label='View winners'
+                            className={styles.winnersLink}
+                            to={challengeDetailPath(item.id, 'winners')}
+                        >
+                            {visibleWinners.map(entry => (
+                                <CompetitionWinnerAvatar
+                                    key={`${entry.placement}-${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`}
+                                    placement={entry.placement}
+                                    winner={entry.winner}
+                                />
+                            ))}
+                        </Link>
+                    )}
+                    {!completed && phase && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
                                 <span className={styles.phaseLabel}>

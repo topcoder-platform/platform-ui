@@ -267,7 +267,8 @@ export const ReviewOpportunityDetailsPage: FC = () => {
             await applyToReviewOpportunity(opportunity.id, role)
             await response.mutate()
             toast.success(joinsWaitlist
-                ? "You've joined the reviewer waitlist."
+                ? 'You are waitlisted. Support will contact you if another reviewer cannot complete the review and '
+                    + 'you are needed.'
                 : 'Your reviewer application was submitted.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Application failed.')
@@ -302,8 +303,9 @@ export const ReviewOpportunityDetailsPage: FC = () => {
         )
     const applications = opportunity.applications?.filter(application => application.status !== 'CANCELLED') ?? []
     const applicationTotal = applications.length
+    const canApply = opportunity.canApply === true
     const isWaitlisted = reviewOpportunityIsWaitlisted(opportunity)
-    const willJoinWaitlist = opportunity.canApply && reviewOpportunityIsFull(opportunity)
+    const willJoinWaitlist = canApply && reviewOpportunityIsFull(opportunity)
     const disabledLabel = !isReviewer
         ? 'Apply to be a reviewer'
         : isWaitlisted
@@ -458,17 +460,17 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                                 </p>
                             )}
                             <button
-                                disabled={!opportunity.canApply || busy || !isReviewer}
+                                disabled={!canApply || busy || !isReviewer}
                                 onClick={apply}
-                                title={!opportunity.canApply || !isReviewer ? disabledReason : undefined}
+                                title={!canApply || !isReviewer ? disabledReason : undefined}
                                 type='button'
                             >
                                 <IconOutline.UploadIcon />
                                 {busy
                                     ? 'Applying…'
-                                    : opportunity.canApply && isReviewer
+                                    : canApply && isReviewer
                                         ? willJoinWaitlist
-                                            ? 'Join reviewer waitlist'
+                                            ? 'Apply to be a reviewer (waitlist)'
                                             : 'Apply to be a reviewer'
                                         : disabledLabel}
                             </button>

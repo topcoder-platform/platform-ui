@@ -89,7 +89,11 @@ describe('Recruit API integration', () => {
     )
     it('uses a refreshed token for multipart submission without a manual content-type boundary', async () => {
         const body = new FormData()
-        fetchMock.mockResolvedValue(response({ success: true }))
+        fetchMock.mockResolvedValue(response({
+            candidate_slug: 'candidate-slug',
+            id: 123,
+            job_slug: 'gig-slug',
+        }))
         await applyToGig('gig-slug', body)
         expect(fetchMock)
             .toHaveBeenCalledWith(
@@ -101,12 +105,30 @@ describe('Recruit API integration', () => {
                 }),
             )
     })
+    it('also accepts Recruit\'s idempotent already-assigned success response', async () => {
+        fetchMock.mockResolvedValue(response({ success: true }))
+        await expect(applyToGig('gig-slug', new FormData()))
+            .resolves.toBeUndefined()
+    })
+    it.each([
+        { message: 'Assignment failed' },
+        { candidate_slug: 'candidate-slug' },
+        { candidate_slug: 'candidate-slug', job_slug: 'another-gig' },
+    ])('rejects a nonempty response that does not confirm the requested assignment: %j', async data => {
+        fetchMock.mockResolvedValue(response(data))
+        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed')
+    })
     it('never treats an error, an empty result, or an expired session as a successful application', async () => {
         fetchMock.mockResolvedValue(response({ error: true, errorObj: { notAllowed: true } }))
         await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('already placed')
         fetchMock.mockResolvedValue(response({}))
-        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed');
-        (tokenGetAsync as jest.Mock).mockResolvedValue({})
+        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed')
+        fetchMock.mockResolvedValue(response({ success: false }))
+        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed')
+        fetchMock.mockResolvedValue(response(['unexpected']))
+        await expect(applyToGig('gig-slug', new FormData())).rejects.toThrow('not confirmed')
+        const tokenGetMock = tokenGetAsync as jest.Mock
+        tokenGetMock.mockResolvedValue({})
         fetchMock.mockClear()
         await expect(applyToGig('gig-slug', new FormData())).rejects.toMatchObject({ status: 401 })
         expect(fetchMock).not.toHaveBeenCalled()

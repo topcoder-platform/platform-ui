@@ -75,7 +75,7 @@ const GigsPage: FC = () => {
                         <h2>Find a gig</h2>
                         <label htmlFor='gig-search'>Search</label>
                         <input
-                            className='gigs-filter-input'
+                            className='gigs-filter-control'
                             id='gig-search'
                             type='search'
                             placeholder='Name, skills, location or duration'
@@ -84,6 +84,7 @@ const GigsPage: FC = () => {
                         />
                         <label htmlFor='gig-location'>Location</label>
                         <select
+                            className='gigs-filter-control'
                             id='gig-location'
                             value={location}
                             onChange={event => updateFilter('location', event.target.value)}
@@ -119,6 +120,7 @@ const GigsPage: FC = () => {
                             <label htmlFor='gig-sort'>
                                 Sort by
                                 <select
+                                    className='gigs-filter-control'
                                     id='gig-sort'
                                     value={sort}
                                     onChange={event => updateFilter('sort', event.target.value)}

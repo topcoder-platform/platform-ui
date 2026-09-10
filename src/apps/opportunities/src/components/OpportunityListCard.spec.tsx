@@ -254,6 +254,56 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('renders the Figma completed state with an API-backed winners affordance', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status: 'COMPLETED',
+                        winners: [
+                            { handle: 'second', placement: 2, userId: '2' },
+                            {
+                                handle: 'first',
+                                photoURL: 'https://images.example/first.png',
+                                placement: 1,
+                                userId: '1',
+                            },
+                            { handle: 'third', placement: 3, userId: '3' },
+                            { handle: 'duplicate-third', placement: 3, userId: 'duplicate-3' },
+                            { handle: 'fourth', placement: 4, userId: '4' },
+                        ],
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Registration closed'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
+
+        const winners = screen.getByRole('link', { name: 'View winners' })
+        expect(winners)
+            .toHaveAttribute('href', '/opportunities/challenge/challenge-id?tab=winners')
+        expect(winners.querySelectorAll('.winnerAvatar'))
+            .toHaveLength(3)
+        expect(winners.querySelector('img'))
+            .toHaveAttribute('src', 'https://images.example/first.png')
+        expect(winners.querySelectorAll('svg'))
+            .toHaveLength(3)
+        expect(within(winners)
+            .queryByText('$1000'))
+            .not.toBeInTheDocument()
+        expect(screen.getByLabelText('Placement prizes'))
+            .toHaveTextContent('$1000')
+    })
+
     it('shows Registered for the server-filtered My competitions result', () => {
         render(
             <MemoryRouter>

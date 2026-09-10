@@ -276,7 +276,11 @@ describe('ReviewOpportunityDetailsPage', () => {
         expect(reviewDetailStyles)
             .toContain('.applicationTable {')
         expect(reviewDetailStyles)
-            .toMatch(/\.applicationTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
+            .toMatch(/\.tableScroll \.applicationTable\s*\{[\s\S]*?min-width: 0;[\s\S]*?width: 100%;/)
+        expect(reviewDetailStyles)
+            .toMatch(/\.tableScroll \.applicationTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
+        expect(reviewDetailStyles)
+            .toMatch(/\.member\s*\{[\s\S]*?min-width: 0;[\s\S]*?overflow: hidden;[\s\S]*?width: 100%;/)
     })
 
     it('uses member ratings to color application handles', () => {
@@ -385,7 +389,7 @@ describe('ReviewOpportunityDetailsPage', () => {
 
         expect(screen.getByText(/All reviewer positions are currently filled/))
             .toBeInTheDocument()
-        const waitlistButton = screen.getByRole('button', { name: 'Join reviewer waitlist' })
+        const waitlistButton = screen.getByRole('button', { name: 'Apply to be a reviewer (waitlist)' })
         expect(waitlistButton)
             .toBeEnabled()
         fireEvent.click(waitlistButton)
@@ -396,8 +400,34 @@ describe('ReviewOpportunityDetailsPage', () => {
             expect(mutate)
                 .toHaveBeenCalled()
             expect(mockedToastSuccess)
-                .toHaveBeenCalledWith("You've joined the reviewer waitlist.")
+                .toHaveBeenCalledWith(
+                    'You are waitlisted. Support will contact you if another reviewer cannot complete the review and '
+                    + 'you are needed.',
+                )
         })
+    })
+
+    it('keeps a legacy capacity rejection disabled because that API cannot persist a waitlist application', () => {
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                approvedApplicationCount: 2,
+                canApply: false,
+                canApplyReason: 'NO_OPEN_POSITIONS',
+                openPositions: 2,
+                remainingPositions: 0,
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('button', { name: 'All reviewer positions are filled' }))
+            .toBeDisabled()
+        expect(mockedApplyToReviewOpportunity)
+            .not.toHaveBeenCalled()
     })
 
     it('shows the caller waitlisted state after a full-opportunity application', () => {

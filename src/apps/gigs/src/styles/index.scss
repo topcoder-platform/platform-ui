@@ -24,8 +24,8 @@
     .gigs-filters h2 { margin: 0; }
     .gigs-filters label { font-weight: 700; margin-top: 8px; }
     input:not([type='checkbox'], [type='radio']), select { width: 100%; min-height: 44px; padding: 10px 12px; background: $tc-2026-surface; color: $tc-2026-body; border: 1px solid $tc-2026-border-strong; font-size: 14px; }
-    .gigs-filter-input:focus { border-color: $tc-2026-teal; box-shadow: 0 0 0 1px $tc-2026-teal; }
-    .gigs-filter-input:focus-visible { outline: 2px solid $tc-2026-teal; outline-offset: 2px; }
+    .gigs-filter-control:focus { border-color: $tc-2026-teal; box-shadow: 0 0 0 1px $tc-2026-teal; }
+    .gigs-filter-control:focus-visible { outline: 2px solid $tc-2026-teal; outline-offset: 2px; }
     input[readonly] { background: $tc-2026-canvas; }
     .gigs-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
     .gigs-toolbar h2 { margin: 0; font-size: 18px; }
@@ -102,6 +102,8 @@
     .gigs-select__control--is-focused { border-color: $tc-2026-teal; box-shadow: 0 0 0 1px $tc-2026-teal; }
     .gigs-select__multi-value { background: $tc-2026-canvas; }
     .gigs-select__option--is-focused { background: $tc-2026-canvas; }
+    &.gigs-policy { min-height: 0; padding-bottom: 0; }
+    &.gigs-policy .gigs-content { margin-bottom: 0; }
 
     @media (max-width: 960px) {
         .gigs-container { width: calc(100% - 40px); }
@@ -125,7 +127,26 @@
     }
 
     @media (forced-colors: active) {
-        .gigs-filter-input:focus { border-color: Highlight; box-shadow: none; }
-        .gigs-filter-input:focus-visible { outline-color: Highlight; }
+        .gigs-filter-control:focus { border-color: Highlight; box-shadow: none; }
+        .gigs-filter-control:focus-visible { outline-color: Highlight; }
     }
+}
+
+.gigs-policy-modal h3 {
+    padding: 0 48px;
+    text-align: center;
+}
+
+.gigs-policy-modal-body {
+    flex: 0 1 auto;
+}
+
+.gigs-policy-actions {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+@media (max-width: 464px) {
+    .react-responsive-modal-modal.gigs-policy-modal { height: auto; }
 }

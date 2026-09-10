@@ -151,6 +151,7 @@ export interface ChallengeOpportunity {
     winners?: Array<{
         handle?: string
         placement?: number
+        photoURL?: string
         prize?: number
         userId?: string
     }>

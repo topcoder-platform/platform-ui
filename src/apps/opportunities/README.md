@@ -53,6 +53,16 @@ against challenge names, authored tags, and standardized skills before its
 server-side pagination, so selecting a chip returns every matching review
 opportunity rather than filtering only the currently loaded page.
 
+Copilot card skills retain that same shareable `search` route and visible
+sidebar value. While the deployed Projects API rejects its JSON-backed
+`search` and `skills` queries with an HTTP 500, the client uses the existing
+bounded compatibility loader and filters the complete supported result window
+locally. A safe owner-side `projectName` query is unioned with those public rows
+because public list payloads omit project names; status and canonical
+opportunity-type facets remain intact across both result sets. This avoids
+issuing the known-broken filtered request and keeps skill and project selection
+functional until that owner query is repaired.
+
 ## List and grid views
 
 Every domain toolbar exposes the same accessible List/Grid selector from the
@@ -104,13 +114,12 @@ than presented as free work.
 
 Approved applications, rather than pending applications, consume reviewer
 capacity. When `remainingPositions` reaches zero, eligible reviewers can still
-use the detail CTA to join the waitlist; the page explains that outcome before
-submission and confirms it afterward. Review API persists these applications as
-`PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
-with the Figma clock icon and a green outline in both list and grid views.
-That state remains while capacity is full, then naturally returns to `Applied`
-if a position reopens or to `Approved` when the reviewer is selected. An explicit
-`WAITLISTED` application status uses the same badge.
+use the “Apply to be a reviewer (waitlist)” detail CTA; the page explains that
+outcome before submission and confirms that Support will contact the applicant
+if another reviewer cannot complete the review. Review API persists these
+applications as `PENDING`. Browse and My Work cards render that caller state as `Waitlisted`
+while capacity remains full, then naturally return to `Applied` if a position
+reopens or to `Approved` when the reviewer is selected.
 
 Long card titles expose their complete value in the authored dark tooltip.
 When a card has more skills than fit in its visible skill row, its `+n` control
@@ -121,11 +130,12 @@ Scientist, and Data Engineer enum values.
 
 ## Competition card contract
 
-Competition list cards consume the Challenge API v6 list response directly;
-they do not make per-card follow-up requests. Track catalog values drive the
-Figma Design, Development, Data Science, AI, and QA pill palettes. Challenge,
-First2Finish, Marathon Match, and Task catalog values map to their authored
-subtype icons and member-facing labels.
+Competition list cards consume the Challenge API v6 list response directly.
+Completed pages make one batched Members API projection request for the winner
+IDs in that page; they do not make per-card follow-up requests. Track catalog
+values drive the Figma Design, Development, Data Science, AI, and QA pill
+palettes. Challenge, First2Finish, Marathon Match, and Task catalog values map
+to their authored subtype icons and member-facing labels.
 
 - “Open for registration” requires an `ACTIVE` challenge and an open
   `Registration` phase (or legacy combined `Open` phase). `ACTIVE` by itself
@@ -142,6 +152,11 @@ subtype icons and member-facing labels.
   the authored yellow, light-blue, and peach placement assets at their native
   14×18px size; the dark second- and third-place podium variants are reserved
   for the Winners presentation.
+- Completed cards replace registration and stale phase-progress states with the
+  explicit Completed state. Up to three actual winner photos appear beside the
+  placement prizes with the existing podium medals; missing or failed photos
+  retain a handle-initial fallback. The complete avatar-and-medal affordance
+  opens that challenge's Winners tab.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
@@ -170,8 +185,9 @@ At phone widths, the timezone moves above a vertical timeline: phase nodes and
 progress connectors occupy the left rail while each phase name and its dates
 remain in an aligned, content-sized row to the right. Each mobile row owns its
 marker and connector, so wrapped dates and enlarged text grow the rail instead
-of overlapping the following milestone. Wider layouts retain the horizontal
-timeline and its overflow fallback for tablet-sized screens.
+of overlapping the following milestone. The mobile prize/action card follows
+the expanded timeline instead of interrupting it. Wider layouts retain the
+horizontal timeline and its overflow fallback for tablet-sized screens.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
@@ -409,15 +425,21 @@ owns the Review App handoff.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
-Submission history replaces the unreliable status field with Final Score and
-uses a responsive table that scrolls only on narrow viewports. Design
-submissions can be deleted only while Submission or Checkpoint Submission is
-open. Successful deletion updates both the challenge and member submission
-counts as well as the current list. Replacing a Design submission without
-reloading therefore preserves accurate totals, and deleting the member's last
-submission clears the submission-based Unregister restriction. Failed or
-cancelled deletions leave the counts unchanged; Review API remains authoritative
-for submission limits.
+Submission history replaces the unreliable status field with Final Score. At
+phone widths, each attempt becomes a compact stacked label/value card in the
+legacy Submission, Final Score, Provisional Score, and Time order, avoiding
+horizontal clipping. The dialog also exposes the latest-submission summary and
+compact close action only at that breakpoint. History requests include the
+selected member ID;
+Review API returns every attempt to that member and authorized challenge staff,
+while ordinary viewers receive only the selected entrant's latest attempt.
+Design submissions can be deleted only while Submission or Checkpoint
+Submission is open. Successful deletion updates both the challenge and member
+submission counts as well as the current list. Replacing a Design submission
+without reloading therefore preserves accurate totals, and deleting the
+member's last submission clears the submission-based Unregister restriction.
+Failed or cancelled deletions leave the counts unchanged; Review API remains
+authoritative for submission limits.
 
 Challenge Discussion reads and writes use the authenticated
 `/v6/forums` API. Topic creation, comments and nested replies, owner edits,

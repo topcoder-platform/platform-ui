@@ -570,7 +570,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                     </div>
                     <aside className={styles.actionCard}>
                         <div className={styles.prizeFrame}>
-                            <small>Prizes</small>
+                            <small className={styles.prizeTitle}>Prizes</small>
                             <div className={styles.prizes}>
                                 {props.challenge.funChallenge
                                     ? (
@@ -674,78 +674,85 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </div>
                         )}
                     </aside>
-                </div>
-                {timelineOpen && (
-                    <section
-                        aria-label='Challenge timeline'
-                        className={styles.expandedTimeline}
-                        id='challenge-timeline'
-                    >
-                        <small className={styles.timelineTimezone}>
-                            {`Time zone: ${timelineTimezone()}`}
-                        </small>
-                        <div className={styles.timelineGraphic}>
-                            <div aria-hidden='true' className={styles.timelineRail}>
-                                {expandedTimeline.map((item, index) => (
-                                    <Fragment key={item.key}>
-                                        {index > 0 && (
-                                            <span
-                                                className={classNames(
-                                                    styles.timelineConnector,
-                                                    styles[timelineConnectorState(
-                                                        expandedTimeline[index - 1].state,
-                                                        item.state,
-                                                    )],
-                                                )}
-                                                data-state={timelineConnectorState(
-                                                    expandedTimeline[index - 1].state,
-                                                    item.state,
-                                                )}
-                                            />
-                                        )}
-                                        <span
-                                            className={classNames(styles.timelineNode, styles[item.state])}
-                                            data-state={item.state}
-                                        >
-                                            <img alt='' src={item.icon} />
-                                        </span>
-                                    </Fragment>
-                                ))}
-                            </div>
-                            <ol className={styles.timelineItems} style={timelineGridStyle}>
-                                {expandedTimeline.map((item, index) => (
-                                    <li className={styles[item.state]} data-state={item.state} key={item.key}>
-                                        <span aria-hidden='true' className={styles.mobileTimelineMarker}>
-                                            <span className={classNames(styles.timelineNode, styles[item.state])}>
-                                                <img alt='' src={item.icon} />
-                                            </span>
-                                            {index < expandedTimeline.length - 1 && (
+                    {timelineOpen && (
+                        <section
+                            aria-label='Challenge timeline'
+                            className={styles.expandedTimeline}
+                            id='challenge-timeline'
+                        >
+                            <small className={styles.timelineTimezone}>
+                                {`Time zone: ${timelineTimezone()}`}
+                            </small>
+                            <div className={styles.timelineGraphic}>
+                                <div aria-hidden='true' className={styles.timelineRail}>
+                                    {expandedTimeline.map((item, index) => (
+                                        <Fragment key={item.key}>
+                                            {index > 0 && (
                                                 <span
                                                     className={classNames(
                                                         styles.timelineConnector,
                                                         styles[timelineConnectorState(
+                                                            expandedTimeline[index - 1].state,
                                                             item.state,
-                                                            expandedTimeline[index + 1].state,
                                                         )],
+                                                    )}
+                                                    data-state={timelineConnectorState(
+                                                        expandedTimeline[index - 1].state,
+                                                        item.state,
                                                     )}
                                                 />
                                             )}
-                                        </span>
-                                        <strong>{item.name}</strong>
-                                        <span className={styles.timelineDates}>
-                                            {item.startDate ? (
-                                                <time dateTime={item.startDate}>{timelineDate(item.startDate)}</time>
-                                            ) : <span>{timelineDate()}</span>}
-                                            {item.range && (item.endDate ? (
-                                                <time dateTime={item.endDate}>{timelineDate(item.endDate)}</time>
-                                            ) : <span>{timelineDate()}</span>)}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
-                    </section>
-                )}
+                                            <span
+                                                className={classNames(
+                                                    styles.timelineNode,
+                                                    styles[item.state],
+                                                )}
+                                                data-state={item.state}
+                                            >
+                                                <img alt='' src={item.icon} />
+                                            </span>
+                                        </Fragment>
+                                    ))}
+                                </div>
+                                <ol className={styles.timelineItems} style={timelineGridStyle}>
+                                    {expandedTimeline.map((item, index) => (
+                                        <li className={styles[item.state]} data-state={item.state} key={item.key}>
+                                            <span aria-hidden='true' className={styles.mobileTimelineMarker}>
+                                                <span
+                                                    className={classNames(styles.timelineNode, styles[item.state])}
+                                                >
+                                                    <img alt='' src={item.icon} />
+                                                </span>
+                                                {index < expandedTimeline.length - 1 && (
+                                                    <span
+                                                        className={classNames(
+                                                            styles.timelineConnector,
+                                                            styles[timelineConnectorState(
+                                                                item.state,
+                                                                expandedTimeline[index + 1].state,
+                                                            )],
+                                                        )}
+                                                    />
+                                                )}
+                                            </span>
+                                            <strong>{item.name}</strong>
+                                            <span className={styles.timelineDates}>
+                                                {item.startDate ? (
+                                                    <time dateTime={item.startDate}>
+                                                        {timelineDate(item.startDate)}
+                                                    </time>
+                                                ) : <span>{timelineDate()}</span>}
+                                                {item.range && (item.endDate ? (
+                                                    <time dateTime={item.endDate}>{timelineDate(item.endDate)}</time>
+                                                ) : <span>{timelineDate()}</span>)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        </section>
+                    )}
+                </div>
             </div>
         </header>
     )

@@ -42,7 +42,13 @@ jest.mock(
                 {props.children}
             </button>
         ),
-        BaseModal: (props: any) => (props.open ? <div role='dialog'>{props.children}</div> : undefined),
+        BaseModal: (props: any) => (props.open ? (
+            <div className={props.classNames?.modal} role='dialog'>
+                <header>{props.title}</header>
+                <div className={props.bodyClassName}>{props.children}</div>
+                {props.buttons}
+            </div>
+        ) : undefined),
         LoadingSpinner: () => <span>Loading</span>,
     }),
     { virtual: true },
@@ -169,5 +175,34 @@ describe('Gig application form', () => {
         expect(screen.queryByRole('button', { name: 'Apply to this job' }))
             .toBeNull()
         expect(applyToGig).not.toHaveBeenCalled()
+    })
+    it.each([
+        ['Read Candidate Terms', 'CANDIDATE TERMS'],
+        ['View our Equal Employment Opportunity Policy', 'Equal Employment Opportunity Policy'],
+    ])('opens %s in a compact modal with a visible close action', (trigger, title) => {
+        render(
+            <MemoryRouter>
+                <GigApplicationForm
+                    job={job}
+                    slug='example-gig'
+                    profile={profile}
+                    candidate={candidate}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: trigger }))
+        const dialog = screen.getByRole('dialog')
+        expect(dialog.classList.contains('gigs-policy-modal'))
+            .toBe(true)
+        expect(within(dialog)
+            .getByText(title))
+            .toBeTruthy()
+        expect(dialog.querySelector('.gigs-policy'))
+            .toBeTruthy()
+        fireEvent.click(within(dialog)
+            .getByRole('button', { name: 'Close' }))
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
