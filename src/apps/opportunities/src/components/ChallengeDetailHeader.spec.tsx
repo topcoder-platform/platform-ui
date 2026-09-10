@@ -571,6 +571,46 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Submission', 'Winners'])
     })
 
+    it('places Registration before a concurrent Checkpoint Submission phase', () => {
+        const sharedStart = '2026-09-10T07:40:29.840Z'
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: '2026-09-28T15:34:09.020Z',
+                        phases: [
+                            {
+                                actualStartDate: sharedStart,
+                                id: 'checkpoint-submission',
+                                name: 'Checkpoint Submission',
+                                scheduledEndDate: '2026-09-13T07:34:09.020Z',
+                            },
+                            {
+                                actualStartDate: sharedStart,
+                                id: 'registration',
+                                name: 'Registration',
+                                scheduledEndDate: '2026-09-16T07:34:09.020Z',
+                            },
+                        ],
+                        startDate: sharedStart,
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const itemLabels = within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Winners'])
+    })
+
     it('omits an ended Task review and keeps Registration before Submission', () => {
         const { container }: RenderResult = render(
             <MemoryRouter>

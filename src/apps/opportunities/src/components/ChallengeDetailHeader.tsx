@@ -298,6 +298,7 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
 
 /**
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
+ * Authored phases stay chronological, with Registration first when valid starts match.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
@@ -322,21 +323,26 @@ function challengeTimelineItems(
     const phases = authoredPhases
         .map((item, index) => ({ index, item }))
         .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            const leftKey = challengeCatalogKey(left.item.name)
+            const rightKey = challengeCatalogKey(right.item.name)
+            const leftIsRegistration = leftKey.includes('registration')
+            const rightIsRegistration = rightKey.includes('registration')
             if (taskChallenge) {
-                const leftKey = challengeCatalogKey(left.item.name)
-                const rightKey = challengeCatalogKey(right.item.name)
-                const leftIsRegistration = leftKey.includes('registration')
-                const rightIsRegistration = rightKey.includes('registration')
                 if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
             }
 
-            const leftStart = timelineTimestamp(
+            const leftStartTimestamp = timelineTimestamp(
                 left.item.actualStartDate ?? left.item.scheduledStartDate,
-            ) ?? Number.MAX_SAFE_INTEGER
-            const rightStart = timelineTimestamp(
+            )
+            const rightStartTimestamp = timelineTimestamp(
                 right.item.actualStartDate ?? right.item.scheduledStartDate,
-            ) ?? Number.MAX_SAFE_INTEGER
+            )
+            const leftStart = leftStartTimestamp ?? Number.MAX_SAFE_INTEGER
+            const rightStart = rightStartTimestamp ?? Number.MAX_SAFE_INTEGER
             if (leftStart !== rightStart) return leftStart - rightStart
+            if (leftStartTimestamp !== undefined && leftIsRegistration !== rightIsRegistration) {
+                return leftIsRegistration ? -1 : 1
+            }
 
             const leftEnd = timelineTimestamp(
                 left.item.actualEndDate ?? left.item.scheduledEndDate,
