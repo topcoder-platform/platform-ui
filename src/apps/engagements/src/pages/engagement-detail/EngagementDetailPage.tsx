@@ -6,8 +6,7 @@ import remarkBreaks from 'remark-breaks'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
-import { EnvironmentConfig } from '~/config'
-import { authUrlLogin, useProfileCompleteness, useProfileContext } from '~/libs/core'
+import { authUrlLogin, useProfileContext } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
 
 import { sanitizeRichTextSource } from '../../../../../libs/shared/lib/utils/rich-text'
@@ -221,9 +220,6 @@ const EngagementDetailPage: FC = () => {
     const isProfileReady = profileContext.initialized
     const isLoggedIn = profileContext.isLoggedIn
     const userId = profileContext.profile?.userId
-    const profileHandle = profileContext.profile?.handle
-    const profileCompleteness = useProfileCompleteness(profileHandle)
-
     const [engagement, setEngagement] = useState<Engagement | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
@@ -246,8 +242,6 @@ const EngagementDetailPage: FC = () => {
         normalizedUserEmail,
         normalizedUserId,
     })
-    const [profileGateError, setProfileGateError] = useState<string | undefined>()
-
     const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
@@ -323,25 +317,8 @@ const EngagementDetailPage: FC = () => {
     }, [nanoId, navigate])
 
     const handleApplyClick = useCallback(() => {
-        setProfileGateError(undefined)
-
-        if (profileCompleteness?.isLoading) {
-            return
-        }
-
-        if (
-            profileCompleteness
-    && typeof profileCompleteness.percent === 'number'
-    && profileCompleteness.percent < 100
-        ) {
-            setProfileGateError(
-                'Your profile must be 100% complete before applying.',
-            )
-            return
-        }
-
         navigateToApply()
-    }, [navigateToApply, profileCompleteness])
+    }, [navigateToApply])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -434,22 +411,6 @@ const EngagementDetailPage: FC = () => {
                     <span>Sign in to apply for this engagement.</span>
                     <a className={styles.signInLink} href={authUrlLogin()}>
                         Sign in
-                    </a>
-                </div>
-            )
-        }
-
-        if (profileGateError) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span className={styles.termsError}>
-                        {profileGateError}
-                    </span>
-                    <a
-                        className={styles.signInLink}
-                        href={`${EnvironmentConfig.URLS.USER_PROFILE}/${profileHandle}`}
-                    >
-                        Please update your profile here.
                     </a>
                 </div>
             )
