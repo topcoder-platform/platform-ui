@@ -6,6 +6,7 @@ import {
     aiReviewTemplatesRouteId,
     aiReviewWorkflowsRouteId,
     aiRouteId,
+    aiTopScoutRagRouteId,
     billingAccountRouteId,
     defaultReviewersRouteId,
     gamificationAdminRouteId,
@@ -95,6 +96,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
             {
                 id: `${aiRouteId}/${aiReviewTemplatesRouteId}`,
                 title: 'AI Review Templates',
+            },
+            {
+                id: `${aiRouteId}/${aiTopScoutRagRouteId}`,
+                title: 'TopScout RAG',
             },
         ],
         id: aiRouteId,

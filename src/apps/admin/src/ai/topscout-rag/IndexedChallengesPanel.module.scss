@@ -1,0 +1,196 @@
+@import '@libs/ui/styles/includes';
+
+.panel {
+    padding-top: $sp-6;
+}
+
+
+.panelHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $sp-4;
+    flex-wrap: wrap;
+}
+
+.panelTitle {
+    margin: 0;
+    font-size: 18px;
+    line-height: 22px;
+    font-weight: $font-weight-bold;
+    text-transform: none;
+    color: $black-100;
+}
+
+.totalCount {
+    font-size: 13px;
+    color: $black-80;
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    margin: $sp-4 0 $sp-2;
+    flex-wrap: wrap;
+
+    > * {
+        flex: 0 1 180px;
+        min-width: 0;
+    }
+}
+
+.clearFilters {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.searchWrapper {
+    flex: 1 1 260px;
+}
+
+.searchInner {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    width: 100%;
+
+    svg {
+        flex: 0 0 auto;
+        color: $black-60;
+    }
+}
+
+.searchInput {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+}
+
+// TableWrapper hard-codes `padding: $sp-8 $sp-8 0`, which insets the table
+// from the filter row above it and leaves a 32px gap under the filters.
+.tableWrapper {
+    padding: 0;
+}
+
+.table {
+    margin-bottom: $sp-4;
+
+    tbody tr:nth-child(odd) {
+        background-color: $black-5;
+    }
+}
+
+.mobileTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: $sp-4;
+}
+
+.challengeCell {
+    min-width: 0;
+}
+
+.challengeName {
+    color: $link-blue;
+    word-break: break-word;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.typeChip {
+    display: inline-block;
+    padding: 2px $sp-2;
+    border-radius: 4px;
+    background-color: $black-5;
+    font-size: 11px;
+    color: $black-80;
+    white-space: nowrap;
+}
+
+.trackChip {
+    display: inline-block;
+    padding: 2px $sp-2;
+    border-radius: 4px;
+    // Unknown tracks are free-form strings (tc-ai-api treats them as
+    // informational, not enums), so they fall back to neutral rather than
+    // borrowing another track's colour.
+    background-color: $black-60;
+    color: $tc-white;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.track-development {
+    background-color: $tc-dev-track-color;
+}
+
+.track-design {
+    background-color: $tc-design-track-color;
+}
+
+.track-data-science {
+    background-color: $tc-datascience-track-color;
+}
+
+.track-quality-assurance {
+    background-color: $tc-qa-track-color;
+}
+
+.projectLink {
+    color: $link-blue;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.chunksCell {
+    font-weight: 600;
+}
+
+.deleteButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $red-120;
+
+    &:hover {
+        color: $red-140;
+    }
+}
+
+.error {
+    padding: $sp-4 0;
+    font-size: 13px;
+    color: $red-120;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-4;
+    flex-wrap: wrap;
+}
+
+.paginationSummary {
+    font-size: 13px;
+    color: $black-60;
+}
+
+.plainInput {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+}

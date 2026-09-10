@@ -4,7 +4,24 @@ import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
 // AI Workflow Configuration
 const AI_WORKFLOW_POLL_INTERVAL = 2000 // 2 seconds
 const AI_WORKFLOW_POLL_TIMEOUT = 120000 // 2 minutes
+// Bulk ingestion fans out over every challenge matching a filter, which can
+// legitimately run for far longer than a single-challenge workflow.
+const AI_BULK_INGESTION_POLL_TIMEOUT = 900000 // 15 minutes
 const API_BASE_URL = EnvironmentConfig.TC_AI_API || `${EnvironmentConfig.API.V6}/ai`
+
+/**
+ * Thrown when polling gives up before the run reached a terminal state.
+ *
+ * The run itself is still going server-side, so callers should say so rather
+ * than reporting a failure. Extends Error, so existing `catch` blocks that only
+ * read `.message` are unaffected.
+ */
+export class WorkflowPollTimeoutError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = 'WorkflowPollTimeoutError'
+    }
+}
 
 interface WorkflowRunResponse {
     runId: string
@@ -71,9 +88,10 @@ async function pollWorkflowRunStatus(
     workflowId: string,
     runId: string,
     _maxAttempts?: number,
+    _pollTimeout?: number,
 ): Promise<WorkflowRunResult> {
     const pollInterval = AI_WORKFLOW_POLL_INTERVAL
-    const pollTimeout = AI_WORKFLOW_POLL_TIMEOUT
+    const pollTimeout = _pollTimeout ?? AI_WORKFLOW_POLL_TIMEOUT
     let maxAttempts = _maxAttempts
 
     // Calculate max attempts based on timeout if not provided
@@ -104,7 +122,7 @@ async function pollWorkflowRunStatus(
 
             const elapsed = Date.now() - startTime
             if (elapsed > pollTimeout) {
-                throw new Error(`Workflow polling timeout after ${elapsed}ms`)
+                throw new WorkflowPollTimeoutError(`Workflow polling timeout after ${elapsed}ms`)
             }
 
             // Wait before next poll
@@ -117,7 +135,7 @@ async function pollWorkflowRunStatus(
             if (errorMessage.includes('timeout') || (error as any).code === 'ECONNABORTED') {
                 const elapsed = Date.now() - startTime
                 if (elapsed > pollTimeout) {
-                    throw new Error(`Workflow polling timeout after ${elapsed}ms`)
+                    throw new WorkflowPollTimeoutError(`Workflow polling timeout after ${elapsed}ms`)
                 }
 
                 // eslint-disable-next-line no-await-in-loop
@@ -131,7 +149,7 @@ async function pollWorkflowRunStatus(
         }
     }
 
-    throw new Error(`Workflow polling exceeded maximum attempts (${maxAttempts})`)
+    throw new WorkflowPollTimeoutError(`Workflow polling exceeded maximum attempts (${maxAttempts})`)
 }
 
 export interface SkillMatch {
@@ -280,6 +298,16 @@ function normalizeChallengeIngestionResult(result: WorkflowRunResult): Challenge
     }
 }
 
+export interface ChallengeIngestionOptions {
+    /**
+     * Chunk and embed the challenge but skip the vector upsert, so the index is
+     * left untouched. Honoured by the challenge-ingestion workflow itself (its
+     * upsert-vectors step is skipped) and echoed back on the report.
+     */
+    dryRun?: boolean
+    workflowId?: string
+}
+
 /**
  * Ingest a single challenge into the RAG vector index using AI workflow
  *
@@ -287,19 +315,22 @@ function normalizeChallengeIngestionResult(result: WorkflowRunResult): Challenge
  * try {
  *   const report = await ingestChallengeInRag('a1b2c3d4-...')
  *   console.log('Ingested chunks:', report.chunks)
+ *
+ *   // Preview without writing to the index
+ *   const preview = await ingestChallengeInRag('a1b2c3d4-...', { dryRun: true })
  * } catch (error) {
  *   console.error('Challenge ingestion failed:', error.message)
  * }
  */
 export async function ingestChallengeInRag(
     challengeId: string,
-    workflowId?: string,
+    options: ChallengeIngestionOptions = {},
 ): Promise<ChallengeIngestionResult> {
     if (!challengeId || typeof challengeId !== 'string') {
         throw new Error('Challenge id must be a non-empty string')
     }
 
-    const workflowIdToUse = workflowId || EnvironmentConfig.RAG_CHALLENGE_INGESTION_WORKFLOW_ID
+    const workflowIdToUse = options.workflowId || EnvironmentConfig.RAG_CHALLENGE_INGESTION_WORKFLOW_ID
 
     if (!workflowIdToUse) {
         throw new Error('RAG Challenge Ingestion Workflow ID is not configured')
@@ -307,7 +338,10 @@ export async function ingestChallengeInRag(
 
     try {
         console.log(`Starting workflow run for: ${workflowIdToUse}`)
-        const runId = await startWorkflowRun(workflowIdToUse, { challengeId })
+        const runId = await startWorkflowRun(workflowIdToUse, {
+            challengeId,
+            dryRun: !!options.dryRun,
+        })
         console.log(`Workflow started with runId: ${runId}`)
 
         console.log('Polling for workflow completion...')
@@ -319,4 +353,108 @@ export async function ingestChallengeInRag(
         console.error('Challenge RAG ingestion workflow failed:', (error as Error).message)
         throw error
     }
+}
+
+export interface BulkIngestionFilters {
+    projectId?: string
+    /** Challenge statuses; defaults server-side to ACTIVE + COMPLETED. */
+    status?: string[]
+    types?: string[]
+    tracks?: string[]
+    /** ISO date (YYYY-MM-DD) — only ingest challenges updated on or after this. */
+    updatedDateStart?: string
+    dryRun?: boolean
+    concurrency?: number
+}
+
+export interface BulkIngestionFailure {
+    challengeId: string
+    name: string
+    error: string
+}
+
+export interface BulkIngestionResult {
+    processed: number
+    succeeded: number
+    failed: number
+    skipped: number
+    chunks: number
+    dryRun: boolean
+    failures: BulkIngestionFailure[]
+}
+
+function toNumber(value: unknown): number {
+    return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+/**
+ * The bulk workflow's aggregate report isn't typed at this boundary, so read it
+ * defensively — same approach as normalizeChallengeIngestionResult above. A
+ * missing counter reads as 0 rather than rendering "undefined" to an operator.
+ */
+function normalizeBulkIngestionResult(result: WorkflowRunResult): BulkIngestionResult {
+    const raw = (result?.result ?? {}) as Record<string, unknown>
+    const perChallenge = Array.isArray(raw.results) ? raw.results : []
+
+    const failures: BulkIngestionFailure[] = perChallenge
+        .filter((entry): entry is Record<string, unknown> => (
+            !!entry && typeof entry === 'object' && (entry as Record<string, unknown>).status === 'failed'
+        ))
+        .map(entry => ({
+            challengeId: String(entry.challengeId ?? ''),
+            error: String(entry.error ?? 'Unknown error'),
+            name: String(entry.name ?? ''),
+        }))
+
+    return {
+        chunks: toNumber(raw.totalChunks),
+        dryRun: Boolean(raw.dryRun),
+        failed: toNumber(raw.failed),
+        failures,
+        processed: toNumber(raw.processed),
+        skipped: toNumber(raw.skipped),
+        succeeded: toNumber(raw.succeeded),
+    }
+}
+
+/**
+ * Run a filtered bulk ingestion into the RAG vector index.
+ *
+ * Every filter is optional — with none set, the workflow ingests every
+ * challenge in its default status set, so callers should require at least one
+ * deliberate choice from the operator.
+ *
+ * Throws WorkflowPollTimeoutError if the run outlives the poll window; the run
+ * continues server-side, so that is "still running", not "failed".
+ */
+export async function bulkIngestChallengesInRag(
+    filters: BulkIngestionFilters,
+    workflowId?: string,
+): Promise<BulkIngestionResult> {
+    const workflowIdToUse = workflowId || EnvironmentConfig.RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID
+
+    if (!workflowIdToUse) {
+        throw new Error('RAG Challenge Bulk Ingestion Workflow ID is not configured')
+    }
+
+    // Only send filters the operator actually set: the workflow applies its own
+    // defaults (e.g. the status set), which an explicit undefined would not.
+    const inputData: Record<string, unknown> = {}
+    Object.entries(filters)
+        .forEach(([key, value]) => {
+            const isEmptyArray = Array.isArray(value) && value.length === 0
+            if (value !== undefined && value !== '' && !isEmptyArray) {
+                inputData[key] = value
+            }
+        })
+
+    const runId = await startWorkflowRun(workflowIdToUse, inputData)
+    const result = await pollWorkflowRunStatus(
+        workflowIdToUse,
+        runId,
+        undefined,
+        AI_BULK_INGESTION_POLL_TIMEOUT,
+    )
+
+    return normalizeBulkIngestionResult(result)
 }

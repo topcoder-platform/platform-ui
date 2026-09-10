@@ -1,0 +1,123 @@
+@import '@libs/ui/styles/includes';
+
+.panel {
+    padding-bottom: $sp-6;
+    border-bottom: 1px solid $black-10;
+}
+
+// h1-h4 are Barlow Condensed by default in this design system; `details` is its
+// own modifier for switching a heading to regular Barlow.
+.panelTitle {
+    margin: 0;
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: none;
+    &.panelTitle {
+        font-weight: $font-weight-bold;
+        color: $black-100;
+    }
+}
+
+.panelSubtitle {
+    margin: $sp-1 0 $sp-5;
+    font-size: 14px;
+    color: $black-80;
+}
+
+.groupLabel {
+    display: block;
+    margin-bottom: $sp-3;
+    font-family: $font-barlow;
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $black-80;
+}
+
+.formRow {
+    display: flex;
+    align-items: stretch;
+    gap: $sp-5;
+
+    @include ltemd {
+        flex-direction: column;
+    }
+}
+
+.singleColumn {
+    flex: 0 0 300px;
+
+    @include ltemd {
+        flex: 1 1 auto;
+    }
+}
+
+.bulkColumn {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.bulkGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $sp-4;
+
+    @include ltemd {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include ltesm {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+.divider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1px;
+    background-color: $black-10;
+
+    @include ltemd {
+        flex: 0 0 1px;
+        width: 100%;
+        height: 1px;
+        margin: $sp-2 0;
+    }
+}
+
+.dividerLabel {
+    position: absolute;
+    padding: 2px 6px;
+    border: 1px solid $black-10;
+    border-radius: 50%;
+    background-color: $tc-white;
+    font-size: 10px;
+    font-weight: 600;
+    color: $black-60;
+}
+
+.actionsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-4;
+    margin-top: $sp-5;
+    padding-top: $sp-5;
+    border-top: 1px solid $black-10;
+    flex-wrap: wrap;
+}
+
+.dryRun {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+}
+
+.dryRunLabel {
+    font-size: 13px;
+    color: $black-80;
+}
