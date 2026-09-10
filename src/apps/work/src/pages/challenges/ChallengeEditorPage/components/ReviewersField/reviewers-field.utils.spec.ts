@@ -1,6 +1,7 @@
 import {
     aiReviewConfigHasChanges,
     getAiReviewerPhaseId,
+    getReviewContextLockReason,
     normalizeTrackForAiTemplates,
     syncAiConfigReviewers,
     validateAiReviewConfiguration,
@@ -199,5 +200,72 @@ describe('reviewers-field utils ai reviewer syncing', () => {
             },
         ]))
             .toBe('screening-phase-id')
+    })
+})
+
+describe('reviewers-field utils review context locking', () => {
+    const openSubmissionPhase = {
+        isOpen: true,
+        name: 'Submission',
+        scheduledEndDate: new Date(Date.now() + 86400000)
+            .toISOString(),
+    }
+    const closedSubmissionPhase = {
+        actualEndDate: new Date(Date.now() - 86400000)
+            .toISOString(),
+        isOpen: false,
+        name: 'Submission',
+    }
+
+    it('locks on the first submission when instant review is on', () => {
+        expect(getReviewContextLockReason({
+            hasSubmissions: true,
+            instantReview: true,
+            phases: [openSubmissionPhase],
+        }))
+            .toBe('HAS_SUBMISSIONS')
+    })
+
+    it('stays editable without submissions when instant review is on', () => {
+        expect(getReviewContextLockReason({
+            hasSubmissions: false,
+            instantReview: true,
+            phases: [openSubmissionPhase],
+        }))
+            .toBeUndefined()
+    })
+
+    it('stays editable with submissions while the submission phase is open', () => {
+        expect(getReviewContextLockReason({
+            hasSubmissions: true,
+            instantReview: false,
+            phases: [openSubmissionPhase],
+        }))
+            .toBeUndefined()
+    })
+
+    it('locks once the submission phase ends when instant review is off', () => {
+        expect(getReviewContextLockReason({
+            hasSubmissions: true,
+            instantReview: false,
+            phases: [closedSubmissionPhase],
+        }))
+            .toBe('SUBMISSION_PHASE_ENDED')
+    })
+
+    it('ignores submission phases that have not started yet', () => {
+        expect(getReviewContextLockReason({
+            hasSubmissions: false,
+            instantReview: false,
+            phases: [
+                {
+                    isOpen: false,
+                    name: 'Submission',
+                    scheduledEndDate: new Date(Date.now() + 86400000)
+                        .toISOString(),
+                },
+            ],
+        }))
+            .toBeUndefined()
     })
 })

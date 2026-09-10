@@ -287,3 +287,59 @@ export function syncAiConfigReviewers(
         ...nextAiReviewers,
     ]
 }
+
+/**
+ * Determines whether the challenge submission phase is over.
+ */
+export function isSubmissionPhaseClosed(phases: ChallengePhase[] | undefined): boolean {
+    const submissionPhase = (Array.isArray(phases) ? phases : [])
+        .find(phase => normalizeReviewerText(phase.name)
+            .toLowerCase() === 'submission')
+
+    if (!submissionPhase) {
+        return false
+    }
+
+    if (submissionPhase.isOpen === true) {
+        return false
+    }
+
+    const endDate = submissionPhase.actualEndDate || submissionPhase.scheduledEndDate
+
+    if (!endDate) {
+        return false
+    }
+
+    const endTime = new Date(endDate)
+        .getTime()
+
+    return Number.isFinite(endTime) && endTime <= Date.now()
+}
+
+export type ReviewContextLockReason = 'HAS_SUBMISSIONS' | 'SUBMISSION_PHASE_ENDED'
+
+interface ReviewContextLockParams {
+    hasSubmissions?: boolean
+    instantReview?: boolean
+    phases?: ChallengePhase[]
+}
+
+/**
+ * Review context requirements stay editable while they can still influence a review.
+ * With instant review on, the first submission is reviewed right away, so the
+ * requirements lock as soon as a submission exists. Otherwise they only lock once
+ * the submission phase is over.
+ */
+export function getReviewContextLockReason(
+    params: ReviewContextLockParams,
+): ReviewContextLockReason | undefined {
+    if (params.instantReview === true) {
+        return params.hasSubmissions === true
+            ? 'HAS_SUBMISSIONS'
+            : undefined
+    }
+
+    return isSubmissionPhaseClosed(params.phases)
+        ? 'SUBMISSION_PHASE_ENDED'
+        : undefined
+}
