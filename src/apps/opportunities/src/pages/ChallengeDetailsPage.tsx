@@ -1542,7 +1542,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                         ) : undefined}
                                         <td data-mobile-label='Actions'>
                                             <div className={styles.submissionActions}>
-                                                {(isDesign || isQa || isMarathonMatch) && (
+                                                {submission.isFileSubmission !== false && (
                                                     <button
                                                         aria-label={`Download submission ${submission.id}`}
                                                         disabled={downloadingSubmissionId === submission.id}

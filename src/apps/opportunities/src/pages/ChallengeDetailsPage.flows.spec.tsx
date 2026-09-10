@@ -23,6 +23,7 @@ import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 const mockUseSWR = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
+const mockGetSubmissionDownloadUrl = jest.fn()
 const mockChallengeMutate = jest.fn()
 const mockChallengeForumRender = jest.fn()
 const mockMySubmissionCountMutate = jest.fn()
@@ -225,7 +226,7 @@ jest.mock('../services', () => ({
     getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
     getChallengeReviewSummations: jest.fn(),
-    getChallengeSubmissionDownloadUrl: jest.fn(),
+    getChallengeSubmissionDownloadUrl: (...args: unknown[]) => mockGetSubmissionDownloadUrl(...args),
     getChallengeSubmissionPreviews: jest.fn(),
     getChallengeSubmissions: jest.fn(),
     getChallengeSubmitters: jest.fn(),
@@ -435,6 +436,9 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegister.mockResolvedValue({ id: 'new-resource-id', memberId: 123 })
         mockAgreeToTerms.mockResolvedValue(undefined)
         mockDeleteSubmission.mockResolvedValue(undefined)
+        mockGetSubmissionDownloadUrl.mockResolvedValue(
+            'https://clean-storage.example/submission-1.zip',
+        )
         mockChallengeMutate.mockImplementation(async update => (
             typeof update === 'function' ? update(mockChallenge) : update
         ))
@@ -1122,16 +1126,19 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders the Development My Submissions fields and authored actions', () => {
+    it('renders and downloads the Development My Submissions fields and authored actions', async () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
             id: 'submission-1',
+            isFileSubmission: true,
             status: 'ACTIVE',
             type: 'CONTEST_SUBMISSION',
         }]
         mockChallenge = { ...mockChallenge, status: 'ACTIVE' }
+        const anchorClick = jest.spyOn(HTMLAnchorElement.prototype, 'click')
+            .mockImplementation(() => undefined)
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -1155,8 +1162,17 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByText('submission-1')
             .closest('a'))
             .toBeNull()
-        expect(screen.queryByRole('button', { name: 'Download submission submission-1' }))
-            .not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Download submission submission-1' }))
+        await waitFor(() => expect(mockGetSubmissionDownloadUrl)
+            .toHaveBeenCalledWith('submission-1'))
+        await waitFor(() => expect(anchorClick)
+            .toHaveBeenCalledTimes(1))
+        expect(anchorClick.mock.instances[0])
+            .toMatchObject({
+                href: 'https://clean-storage.example/submission-1.zip',
+                rel: 'noreferrer',
+                target: '_blank',
+            })
         expect(screen.getByRole('button', { name: 'View history for submission submission-1' }))
             .toBeInTheDocument()
         const submissionRequest = mockUseSWR.mock.calls.find(([key]) => (
@@ -1166,6 +1182,31 @@ describe('ChallengeDetailsPage member flows', () => {
         ))
         expect(submissionRequest?.[2])
             .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
+    })
+
+    it('does not offer a clean-storage download for an external URL submission', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'url-submission',
+            isFileSubmission: false,
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+            url: 'https://deliverables.example.com/member/result',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.queryByRole('button', { name: 'Download submission url-submission' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Open submission url-submission in Review App' }))
+            .toBeInTheDocument()
     })
 
     it('displays a completed AI workflow score in active My Submissions', () => {
