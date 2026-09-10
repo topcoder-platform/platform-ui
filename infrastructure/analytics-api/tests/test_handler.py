@@ -279,6 +279,26 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertEqual(400, response["statusCode"])
         execute.assert_not_called()
 
+    def test_route_lookup_requires_a_bounded_query_free_absolute_path(self) -> None:
+        """Route reports reject missing, full-URL, query, and control-character values."""
+
+        invalid_paths = [None, "challenges", "https://www.topcoder.com/challenges", "/x?q=1", "/x\n"]
+        with patch.object(self.module, "_execute_query") as execute:
+            responses = [
+                self.module.handler(
+                    self._event(
+                        "GET /v1/analytics/route",
+                        ["analytics"],
+                        {"path": path} if path is not None else {},
+                    ),
+                    None,
+                )
+                for path in invalid_paths
+            ]
+
+        self.assertTrue(all(response["statusCode"] == 400 for response in responses))
+        execute.assert_not_called()
+
     def test_unset_filters_use_nonempty_data_api_parameters(self) -> None:
         """Optional filters use an unreachable sentinel because Data API rejects empty values."""
 
@@ -296,6 +316,11 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertIsNone(self.module.SAFE_FILTER_PATTERN.fullmatch(self.module.NO_FILTER_PARAMETER))
         self.assertIn(":campaign = '*' OR", self.module.CAMPAIGN_SQL)
         self.assertIn(":surface = '*' OR", self.module.GENERAL_SQL)
+        route_parameters = self.module._sql_parameters({"path": "/opportunities/challenge/example"})
+        self.assertEqual(
+            [{"name": "path", "value": "/opportunities/challenge/example"}],
+            route_parameters,
+        )
 
     def test_retries_one_failed_redshift_statement(self) -> None:
         """A transient failed statement is retried once inside the request deadline."""
@@ -512,6 +537,93 @@ class AnalyticsHandlerTests(unittest.TestCase):
         body = json.loads(response["body"])
         self.assertEqual(30, body["totals"]["pageViews"])
         self.assertEqual("/challenges", body["pages"][0]["path"])
+
+    def test_shapes_route_report_without_exposing_visitor_identifiers(self) -> None:
+        """Route rows become source, behavior, form, and ordered funnel aggregates."""
+
+        rows = [
+            {
+                "row_type": "summary",
+                "dimension_6": "2026-09-10",
+                "metric_1": 150,
+                "metric_2": 100,
+                "metric_3": 60,
+                "metric_4": 40,
+                "metric_5": 35,
+                "metric_6": 60,
+                "metric_7": 12.345,
+                "metric_8": 80,
+                "metric_9": 20,
+                "metric_10": 15,
+                "metric_11": 12,
+                "metric_12": 8,
+                "metric_13": 4,
+            },
+            {"row_type": "source", "dimension_1": "organic", "metric_1": 30},
+            {"row_type": "source", "dimension_1": "paid", "metric_1": 20},
+            {
+                "row_type": "click_location",
+                "dimension_1": "hero",
+                "dimension_2": "view-challenge",
+                "dimension_3": "a",
+                "dimension_4": "platform-ui.topcoder-dev.com",
+                "dimension_5": "/opportunities/challenge/123",
+                "metric_1": 25,
+                "metric_2": 20,
+            },
+            {
+                "row_type": "form",
+                "dimension_1": "contact-us",
+                "metric_1": 50,
+                "metric_2": 45,
+                "metric_3": 12,
+                "metric_4": 11,
+                "metric_5": 8,
+                "metric_6": 8,
+                "metric_7": 4,
+                "metric_8": 4,
+            },
+            {
+                "row_type": "form_abandonment",
+                "dimension_1": "contact-us",
+                "dimension_2": "company",
+                "metric_1": 3,
+                "metric_2": 3,
+            },
+            {
+                "row_type": "funnel",
+                "metric_1": 100,
+                "metric_2": 30,
+                "metric_3": 12,
+                "metric_4": 6,
+            },
+        ]
+        with patch.object(self.module, "_execute_query", return_value=rows):
+            response = self.module.handler(
+                self._event(
+                    "GET /v1/analytics/route",
+                    ["analytics"],
+                    {
+                        "from": "2026-09-01",
+                        "to": "2026-09-10",
+                        "path": "/landing",
+                    },
+                ),
+                None,
+            )
+
+        body = json.loads(response["body"])
+        self.assertEqual(200, response["statusCode"])
+        self.assertEqual(40.0, body["totals"]["clickThroughPercent"])
+        self.assertEqual(25.0, body["totals"]["bounceRatePercent"])
+        self.assertEqual(15.0, body["totals"]["conversionRatePercent"])
+        self.assertEqual(5, body["totals"]["unknownVisitorType"])
+        self.assertEqual(20.0, body["clickLocations"][0]["clickThroughPercent"])
+        self.assertEqual(66.67, body["forms"][0]["completionRatePercent"])
+        self.assertEqual(30.0, body["funnel"]["clickThroughPercent"])
+        self.assertIsNone(body["funnel"]["wins"])
+        self.assertFalse(body["funnel"]["winTrackingAvailable"])
+        self.assertNotIn("analyticsUserId", response["body"])
 
 
 if __name__ == "__main__":

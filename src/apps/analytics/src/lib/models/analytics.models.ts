@@ -17,6 +17,11 @@ export interface GeneralFilters extends AnalyticsDateRange {
     surface?: string
 }
 
+/** Exact page-path filters supported by the detailed route endpoint. */
+export interface RouteFilters extends GeneralFilters {
+    path: string
+}
+
 /** Server-provided bounded filter options and data freshness. */
 export interface AnalyticsFilterOptions {
     campaigns: string[]
@@ -146,6 +151,84 @@ export interface GeneralReport {
     pages: PageBreakdown[]
     sources: SourceBreakdown[]
     surfaces: SurfaceBreakdown[]
+}
+
+/** Detailed engagement totals for one exact route. */
+export interface RouteTotals extends GeneralTotals {
+    clickThroughPercent: number
+    newVisitors: number
+    returningVisitors: number
+    unknownVisitorType: number
+    averageEngagementSeconds: number
+    entrances: number
+    bounces: number
+    bounceRatePercent: number
+    conversions: number
+    conversionRatePercent: number
+    formStarts: number
+    formCompletions: number
+    formAbandonments: number
+}
+
+/** Mutually exclusive acquisition group assigned from a visitor's first route view. */
+export interface RouteVisitorSource {
+    source: 'organic' | 'paid' | 'social' | 'email' | 'other'
+    visitors: number
+    percent: number
+}
+
+/** Privacy-safe click aggregate for one semantic item on the selected route. */
+export interface RouteClickLocation extends Omit<ClickLocation, 'pagePath'> {
+    clickThroughPercent: number
+}
+
+/** Aggregate lifecycle metrics for one instrumented form on the selected route. */
+export interface RouteFormBreakdown {
+    formId: string
+    views: number
+    viewers: number
+    starts: number
+    starters: number
+    completions: number
+    completers: number
+    abandonments: number
+    abandoners: number
+    completionRatePercent: number
+    abandonmentRatePercent: number
+}
+
+/** Last-interacted field aggregate emitted when an instrumented form is abandoned. */
+export interface RouteFormAbandonment {
+    formId: string
+    fieldId: string
+    abandonments: number
+    visitors: number
+}
+
+/** Ordered page-to-challenge funnel for the selected route and reporting period. */
+export interface RouteChallengeFunnel {
+    pageVisitors: number
+    challengeCtaClickers: number
+    registrations: number
+    submissions: number
+    wins: number | null
+    clickThroughPercent: number
+    clickToRegistrationPercent: number
+    registrationToSubmissionPercent: number
+    winTrackingAvailable: boolean
+}
+
+/** Complete detailed route report returned by analytics-api. */
+export interface RouteReport {
+    generatedAt: string
+    dataThrough?: string
+    filters: Required<RouteFilters>
+    totals: RouteTotals
+    visitorSources: RouteVisitorSource[]
+    clickLocations: RouteClickLocation[]
+    forms: RouteFormBreakdown[]
+    formAbandonments: RouteFormAbandonment[]
+    funnel: RouteChallengeFunnel
 }
 
 /** Safe request-error category rendered by the analytics UI. */

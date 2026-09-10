@@ -6,6 +6,7 @@ import {
     getAnalyticsFilters,
     getCampaignReport,
     getGeneralReport,
+    getRouteReport,
     requestAnalyticsReport,
 } from './analytics.service'
 
@@ -52,6 +53,12 @@ describe('Analytics API service', () => {
             surface: 'platform_ui',
             to: '2026-08-30',
         })
+        await getRouteReport({
+            from: '2026-08-01',
+            path: '/opportunities/challenge/example',
+            surface: 'platform_ui',
+            to: '2026-08-30',
+        })
 
         expect(mockedXhrGetAsync)
             .toHaveBeenNthCalledWith(
@@ -69,6 +76,13 @@ describe('Analytics API service', () => {
                 3,
                 'https://api.example.com/v1/analytics/general'
                 + '?from=2026-08-01&to=2026-08-30&surface=platform_ui&async=true',
+            )
+        expect(mockedXhrGetAsync)
+            .toHaveBeenNthCalledWith(
+                4,
+                'https://api.example.com/v1/analytics/route'
+                + '?from=2026-08-01&to=2026-08-30&surface=platform_ui'
+                + '&path=%2Fopportunities%2Fchallenge%2Fexample&async=true',
             )
     })
 

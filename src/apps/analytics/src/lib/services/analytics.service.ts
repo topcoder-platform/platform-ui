@@ -8,11 +8,13 @@ import {
     CampaignReport,
     GeneralFilters,
     GeneralReport,
+    RouteFilters,
+    RouteReport,
 } from '../models'
 
 export const ANALYTICS_API_BASE = EnvironmentConfig.ANALYTICS.API_URL.replace(/\/$/, '')
 
-type AnalyticsQueryValues = Partial<CampaignFilters & GeneralFilters>
+type AnalyticsQueryValues = Partial<CampaignFilters & GeneralFilters & RouteFilters>
 type AnalyticsPollWait = (milliseconds: number) => Promise<void>
 
 interface AnalyticsPendingResponse {
@@ -34,6 +36,7 @@ const ANALYTICS_QUERY_KEYS: Array<keyof AnalyticsQueryValues> = [
     'source',
     'medium',
     'surface',
+    'path',
 ]
 
 /**
@@ -174,4 +177,15 @@ export function getCampaignReport(filters: CampaignFilters): Promise<CampaignRep
  */
 export function getGeneralReport(filters: GeneralFilters): Promise<GeneralReport> {
     return requestAnalyticsReport('general', filters)
+}
+
+/**
+ * Loads detailed engagement, form, click, and funnel analytics for one page path.
+ *
+ * @param filters validated UI date, surface, and exact path filters.
+ * @returns route totals and privacy-safe aggregate breakdowns.
+ * @throws Rejects when configuration, authentication, authorization, or the API request fails.
+ */
+export function getRouteReport(filters: RouteFilters): Promise<RouteReport> {
+    return requestAnalyticsReport('route', filters)
 }

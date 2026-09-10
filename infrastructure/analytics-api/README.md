@@ -18,8 +18,8 @@ Platform UI
 
 API Gateway validates the configured Auth0 issuer, audience, signature, and
 standard JWT time claims. Lambda then requires `analytics` in a verified
-Topcoder roles claim. The handler accepts only three fixed `GET` routes,
-strict dates, and bounded UTM/surface tokens. SQL is server-owned and uses Data
+Topcoder roles claim. The handler accepts only four fixed `GET` routes,
+strict dates, bounded UTM/surface tokens, and an exact query-free path. SQL is server-owned and uses Data
 API named parameters; callers cannot provide SQL, object names, sort clauses,
 or result limits.
 
@@ -47,9 +47,11 @@ only.
   provisions the JWT authorizer, Lambda, least-privilege query role, scheduled
   default-report prewarm, and logs.
   The former dedicated API remains during the cutover observation window.
-- `src/handler.py` validates and shapes filter, campaign, and general reports.
+- `src/handler.py` validates and shapes filter, campaign, general, and exact-route reports.
 - `bootstrap.sql` creates the read-only Redshift database role and grants only
-  the reporting objects required by the handler.
+  the reporting objects required by the handler. Its route event view projects
+  only timestamp, pseudonymous join key, session, source group, semantic click,
+  and form lifecycle fields; the Lambda role cannot select the raw event table.
 - `collector-host-migration.yaml` creates `events.<domain>` on the existing
   ingestion ALB so `analytics.<domain>` can become the reporting UI host.
 - `tests/test_handler.py` verifies authorization, validation, parameterization,
@@ -112,7 +114,17 @@ valid token with analytics    -> 200 aggregate JSON, or 202 until the query comp
 The canonical development endpoint is
 `https://api.topcoder-dev.com/v1/analytics`. Preserve existing shared-stage
 route settings when adding 5 requests/second, burst 10, detailed metrics for
-the three `GET` routes and the public `OPTIONS /v1/analytics/{proxy+}` route.
+the four `GET` routes and the public `OPTIONS /v1/analytics/{proxy+}` route.
+
+`GET /v1/analytics/route` requires `path=/...` and supports the same inclusive
+date range and optional surface as General Analytics. It returns only aggregate
+route totals, mutually exclusive visitor-source buckets, new/returning counts,
+semantic click locations, form lifecycle totals, abandonment field IDs, and an
+ordered challenge funnel. Bounce is defined as a one-page entrance session,
+average time is focused engagement per page view, and conversion is a unique
+form completer or post-CTA challenge registrant divided by route visitors.
+Winner attribution is intentionally null until a trusted challenge-results
+event is added upstream.
 
 Also verify an invalid date returns `400`, an unsupported route returns `404`,
 an opted-in cold query returns resumable `202` responses instead of `504`,

@@ -39,6 +39,36 @@ the ranked page table is paginated twenty rows at a time. Traffic-source and
 page breakdowns remain available; the application-surface breakdown is not
 shown.
 
+The General tab also provides an exact route/page-URL lookup. It accepts an
+absolute query-free path or strips the query and fragment from a pasted HTTP(S)
+URL. The detailed request runs only after a route is selected, keeping the
+initial General report small. Its definitions are:
+
+- unique source counts are mutually exclusive and use the acquisition group on
+  each visitor's first view of the selected route: Organic, Paid, Social,
+  Email, or Other/direct;
+- click-through rate is distinct people who clicked divided by distinct route
+  visitors;
+- new/returning uses AWS Clickstream session number `1` versus greater than
+  `1` at a visitor's first selected-route view;
+- average time on page is focused foreground engagement seconds divided by
+  page views;
+- bounce rate is single-page entrance sessions divided by all entrance
+  sessions for the route;
+- a conversion is a distinct route visitor who successfully completes an
+  instrumented form there or registers after clicking a specific challenge
+  link there; and
+- the challenge funnel sequences route visitor, challenge-link click,
+  registration, and submission by the same pseudonymous visitor within the
+  selected period. A trusted winner event is not currently available, so the
+  final stage is explicitly shown as **Not tracked** rather than inferred.
+
+Form reporting begins when `form_viewed`, `form_started`, `form_completed`, and
+`form_abandoned` events are deployed on an opted-in form. Completion means its
+server accepted the submission. Abandonment stores only the last stable field
+identifier; form values and rendered labels are never collected. Historical
+periods before that instrumentation correctly show no form activity.
+
 Counts are daily aggregates from the AWS Clickstream reporting views. Date
 ranges are inclusive and limited to 366 days. The UI displays the warehouse's
 `dataThrough` value because the development transform currently runs daily.
