@@ -255,6 +255,28 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeDisabled()
     })
 
+    it('keeps a confirmed URL semantically valid when submission fails', async () => {
+        mockedCreateUrlSubmission.mockRejectedValue(new Error('Review API unavailable.'))
+        renderUpload(challengeFixture({
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }))
+
+        const urlInput = screen.getByLabelText(/Submission URL/)
+        fireEvent.change(urlInput, {
+            target: { value: 'https://files.example.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Review API unavailable.')
+        expect(urlInput)
+            .toHaveAttribute('aria-invalid', 'false')
+        expect(urlInput)
+            .toHaveAttribute('aria-describedby', 'challenge-submission-url-help challenge-submission-url-error')
+    })
+
     it('revalidates registration before creating a URL submission', async () => {
         const validateRegistration = jest.fn()
             .mockResolvedValue(false)

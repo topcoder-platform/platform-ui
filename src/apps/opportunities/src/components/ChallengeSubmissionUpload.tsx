@@ -532,7 +532,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                             aria-describedby={error
                                                 ? 'challenge-submission-url-help challenge-submission-url-error'
                                                 : 'challenge-submission-url-help'}
-                                            aria-invalid={!!error}
+                                            aria-invalid={!!error && !submissionUrl}
                                             autoComplete='url'
                                             disabled={uploading}
                                             id='challenge-submission-url'
