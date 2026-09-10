@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren } from 'react'
+import { FC, PropsWithChildren, useEffect, useLayoutEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { ContentLayout } from '~/libs/ui'
@@ -8,6 +8,19 @@ import { NavTabs } from '../NavTabs'
 
 import styles from './Layout.module.scss'
 
+function resetScrollPosition(): void {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+
+    document.querySelectorAll('#root, .root-container')
+        .forEach((element: Element) => {
+            if (element instanceof HTMLElement) {
+                element.scrollTop = 0
+            }
+        })
+}
+
 export const NullLayout: FC<PropsWithChildren> = props => (
     <>{props.children}</>
 )
@@ -15,6 +28,22 @@ export const NullLayout: FC<PropsWithChildren> = props => (
 export const Layout: FC<PropsWithChildren> = props => {
     const { pathname }: { pathname: string } = useLocation()
     const hideNavTabs = isRoleErrorPath(pathname)
+
+    useEffect(() => {
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual'
+        }
+    }, [])
+
+    useLayoutEffect(() => {
+        resetScrollPosition()
+
+        const frameId = requestAnimationFrame(() => {
+            resetScrollPosition()
+        })
+
+        return () => cancelAnimationFrame(frameId)
+    }, [pathname])
 
     return (
         <>
@@ -24,7 +53,9 @@ export const Layout: FC<PropsWithChildren> = props => {
                 outerClass={styles.contentLayoutOuter}
             >
                 <div className={styles.layout}>
-                    <div className={styles.main}>{props.children}</div>
+                    <div className={styles.main} key={pathname}>
+                        {props.children}
+                    </div>
                 </div>
             </ContentLayout>
         </>
