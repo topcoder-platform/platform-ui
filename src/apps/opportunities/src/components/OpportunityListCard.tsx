@@ -23,6 +23,7 @@ import {
 } from '../models'
 import { engagementOpportunityState } from '../utils/engagement-status.utils'
 
+import { ReactComponent as ApplicationWaitlistedIcon } from '../assets/application-waitlisted.svg'
 import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
 import { ReactComponent as First2FinishTypeIcon } from '../assets/first2finish-type.svg'
 import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
@@ -439,9 +440,9 @@ function challengeSkillLabels(item: ChallengeOpportunity): string[] {
 }
 
 /**
- * Returns the scoped CSS class for a Challenge API track pill.
+ * Returns the shared Figma foreground and background palette for an opportunity track pill.
  *
- * @param trackKey normalized catalog track key.
+ * @param trackKey normalized owning-API track key, including DEV and QA aliases.
  * @returns matching Figma track color class or the neutral fallback class.
  * @throws Does not throw.
  */
@@ -451,7 +452,9 @@ function challengeTrackClass(trackKey: string): string {
         artificialintelligence: styles.artificialIntelligenceBadge,
         datascience: styles.dataScienceBadge,
         design: styles.designBadge,
+        dev: styles.developmentBadge,
         development: styles.developmentBadge,
+        qa: styles.qualityAssuranceBadge,
         qualityassurance: styles.qualityAssuranceBadge,
     }
     return trackClasses[trackKey] ?? styles.competitionBadge
@@ -896,6 +899,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         >
                             {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
                             {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateKey === 'waitlisted' && <ApplicationWaitlistedIcon aria-hidden='true' />}
                             {stateIsAccepted && <IconOutline.CheckIcon aria-hidden='true' />}
                             {stateIsClosed && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}

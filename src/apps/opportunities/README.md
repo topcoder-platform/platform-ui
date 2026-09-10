@@ -81,6 +81,12 @@ to one column when two authored-width cards no longer fit. Both selector
 buttons remain keyboard accessible and expose their active state with
 `aria-pressed`.
 
+Track tags share the same foreground and background palettes across Browse
+and My Work cards in both views: blue for Design, green for Development,
+orange for Data Science, purple for AI, and pink for QA. Unknown tracks use
+the neutral gray palette. Short `DEV` and `QA` API values use the same colors
+as their full track names.
+
 Opportunity cards preserve same-tab navigation. External role-learning links
 open in a separate tab and include `rel="noreferrer"`.
 
