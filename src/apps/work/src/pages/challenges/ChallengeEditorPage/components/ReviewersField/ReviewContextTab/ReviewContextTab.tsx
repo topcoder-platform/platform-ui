@@ -14,6 +14,8 @@ import { ChallengeStatus } from '~/apps/admin/src/lib/models'
 import { ConfirmationModal } from '~/apps/work/src/lib/components'
 import { IconButton } from '~/libs/ui/lib/components/button/icon-button'
 
+import { ReviewContextLockReason } from '../reviewers-field.utils'
+
 import ReviewContextEditor from './ReviewContextEditor'
 import styles from './ReviewContextTab.module.scss'
 
@@ -21,7 +23,7 @@ interface ReviewContextTabProps {
     challengeId?: string
     challengeDescription?: string
     challengeStatus?: ChallengeStatus
-    hasSubmissions?: boolean
+    lockReason?: ReviewContextLockReason
     onRequirementCountChange?: (count: number | undefined) => void
 }
 
@@ -43,7 +45,10 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const hasContext = !!context?.id
     const hasLoadedContext = !isLoading
     const requirementCount = context?.context?.requirements?.length
-    const isLocked = props.hasSubmissions === true
+    const isLocked = !!props.lockReason
+    const lockMessage = props.lockReason === 'HAS_SUBMISSIONS'
+        ? 'Review context is locked because instant review is enabled and this challenge already has submissions.'
+        : 'Review context is locked because the submission phase has ended.'
 
     useEffect(() => {
         props.onRequirementCountChange?.(requirementCount)
@@ -189,7 +194,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                     <p><strong>{descriptionText}</strong></p>
                     {isLocked ? (
                         <div className={styles.errorText}>
-                            Review context is locked because this challenge already has submissions.
+                            {lockMessage}
                         </div>
                     ) : (
                         <>
@@ -231,7 +236,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                         </p>
                         <IconButton
                             icon={IconSolid.RefreshIcon}
-                            disabled={isSaving || blockGenerate}
+                            disabled={isSaving || blockGenerate || isLocked}
                             label='Regenerate'
                             onClick={function (): void {
                                 setShowRegenerateConfirm(true)
@@ -244,7 +249,8 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
                         challengeId={props.challengeId ?? ''}
                         reviewContext={context}
                         onContextSaved={refetchContext}
-                        isLocked={props.hasSubmissions === true}
+                        isLocked={isLocked}
+                        lockMessage={lockMessage}
                     />
                     {showRegenerateConfirm && (
                         <ConfirmationModal

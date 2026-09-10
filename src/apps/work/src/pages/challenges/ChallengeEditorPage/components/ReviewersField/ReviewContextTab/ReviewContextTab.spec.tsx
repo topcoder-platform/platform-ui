@@ -99,7 +99,7 @@ describe('ReviewContextTab', () => {
             <ReviewContextTab
                 challengeId='challenge-1'
                 challengeDescription={'A'.repeat(120)}
-                hasSubmissions
+                lockReason='HAS_SUBMISSIONS'
             />,
         )
 
