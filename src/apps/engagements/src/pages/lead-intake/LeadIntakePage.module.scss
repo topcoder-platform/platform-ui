@@ -323,9 +323,46 @@ $brand-teal: #007D79;
         color: $text-secondary;
     }
 
-    :global([class*='__single-value']),
-    :global([class*='__multi-value__label']) {
+    :global([class*='__single-value']) {
         font-size: 16px;
+    }
+
+    :global([class*='__multi-value']) {
+        background: $brand-teal !important;
+        border-radius: 4px;
+        margin: 0;
+    }
+
+    :global([class*='__multi-value__label']) {
+        color: $tc-2026-surface !important;
+        font-family: $tc-2026-font-body;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        letter-spacing: 0;
+        line-height: 20px;
+        padding: 4px 2px 4px 8px;
+    }
+
+    :global([class*='__multi-value__remove']) {
+        align-items: center;
+        background: transparent;
+        border-radius: 4px;
+        color: $tc-2026-surface;
+        cursor: pointer;
+        display: flex;
+        margin: 0 4px 0 0;
+        padding: 4px;
+
+        &:hover {
+            background: rgb(255 255 255 / 15%);
+            color: $tc-2026-surface;
+        }
+
+        svg {
+            height: 16px;
+            stroke-width: 2;
+            width: 16px;
+        }
     }
 
     :global([class*='__control']) {
