@@ -19,7 +19,11 @@ import {
     ChallengeSubmission,
     ChallengeSubmissionType,
 } from '../models'
-import { createChallengeSubmission } from '../services'
+import {
+    createChallengeSubmission,
+    createChallengeUrlSubmission,
+} from '../services'
+import { challengeSubmissionMode } from '../utils/challenge-detail.utils'
 
 import { challengeCatalogKey } from './challenge-card.utils'
 import styles from './ChallengeSubmissionUpload.module.scss'
@@ -76,6 +80,30 @@ export function validateChallengeSubmissionFile(file: File): string | undefined 
 }
 
 /**
+ * Validates a member-authored challenge deliverable URL.
+ *
+ * @param value URL entered in the submission form.
+ * @returns member-facing validation failure, or undefined for an absolute HTTP(S) URL.
+ * @throws Does not throw; malformed URLs are returned as validation failures.
+ */
+export function validateChallengeSubmissionUrl(value: string): string | undefined {
+    const normalizedValue = value.trim()
+    if (!normalizedValue) return 'Enter the URL to your submission.'
+
+    try {
+        const url = new URL(normalizedValue)
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return 'Enter a URL beginning with http:// or https://.'
+        }
+
+        if (!url.hostname) return 'Enter a valid submission URL.'
+        return undefined
+    } catch {
+        return 'Enter a valid submission URL.'
+    }
+}
+
+/**
  * Formats the compact whole-megabyte size displayed beside an uploaded archive.
  *
  * @param bytes file size in bytes.
@@ -101,6 +129,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const [error, setError] = useState<string | undefined>()
     const [file, setFile] = useState<File | undefined>()
     const [progress, setProgress] = useState(0)
+    const [submissionUrl, setSubmissionUrl] = useState<string | undefined>()
+    const [urlInput, setUrlInput] = useState('')
     const [submissionId, setSubmissionId] = useState<string | undefined>()
     const [uploading, setUploading] = useState(false)
     const abortController = useRef<AbortController | undefined>()
@@ -109,6 +139,9 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const typeKey = challengeCatalogKey(props.challenge.type)
     const designChallenge = trackKey === 'design'
     const pluralUpload = trackKey === 'qualityassurance' || typeKey === 'marathonmatch'
+    const submissionMode = challengeSubmissionMode(props.challenge)
+    const urlMode = submissionMode === 'url'
+    const selectionReady = urlMode ? !!submissionUrl : !!file
 
     useEffect(() => () => {
         abortController.current?.abort()
@@ -128,12 +161,12 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     }
 
     /**
-     * Clears a selected file and cancels its active multipart request when present.
+     * Clears the selected file or URL and cancels its active request when present.
      *
      * @returns void after restoring the empty uploader state.
      * @throws Does not throw.
      */
-    const clearFile = (): void => {
+    const clearSelection = (): void => {
         abortController.current?.abort()
         abortController.current = undefined
         if (input.current) input.current.value = ''
@@ -141,6 +174,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         setError(undefined)
         setFile(undefined)
         setProgress(0)
+        setSubmissionUrl(undefined)
+        setUrlInput('')
         setUploadActive(false)
     }
 
@@ -181,6 +216,35 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     }
 
     /**
+     * Updates the URL draft and invalidates any previously confirmed link.
+     *
+     * @param event text-input change event.
+     * @returns void after returning the URL mode to its editable state.
+     * @throws Does not throw.
+     */
+    const changeUrl = (event: ChangeEvent<HTMLInputElement>): void => {
+        setUrlInput(event.target.value)
+        setSubmissionUrl(undefined)
+        setAgreementAccepted(false)
+        setError(undefined)
+    }
+
+    /**
+     * Validates and confirms the URL that will be sent to Review API.
+     *
+     * @returns void after accepting the trimmed URL or showing an inline error.
+     * @throws Does not throw.
+     */
+    const confirmUrl = (): void => {
+        const normalizedUrl = urlInput.trim()
+        const validationError = validateChallengeSubmissionUrl(normalizedUrl)
+        setError(validationError)
+        setAgreementAccepted(false)
+        if (!validationError) setUrlInput(normalizedUrl)
+        setSubmissionUrl(validationError ? undefined : normalizedUrl)
+    }
+
+    /**
      * Enables the browser's file-drop behavior over the styled drop zone.
      *
      * @param event drop-zone drag-over event.
@@ -213,7 +277,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
      * @throws Does not throw; request failures restore the ready state with an error message.
      */
     const submit = async (): Promise<void> => {
-        if (!file || !agreementAccepted || uploading) return
+        if (!selectionReady || !agreementAccepted || uploading) return
         const controller = new AbortController()
         abortController.current = controller
         setError(undefined)
@@ -222,19 +286,28 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
         try {
             const registrationIsCurrent = await props.onValidateRegistration()
             if (!registrationIsCurrent || controller.signal.aborted) return
-            const submission = await createChallengeSubmission(
-                props.challenge.id,
-                props.memberId,
-                challengeSubmissionType(props.challenge),
-                file,
-                setProgress,
-                controller.signal,
-            )
+            const submissionType = challengeSubmissionType(props.challenge)
+            const submission = urlMode
+                ? await createChallengeUrlSubmission(
+                    props.challenge.id,
+                    props.memberId,
+                    submissionType,
+                    submissionUrl as string,
+                    controller.signal,
+                )
+                : await createChallengeSubmission(
+                    props.challenge.id,
+                    props.memberId,
+                    submissionType,
+                    file as File,
+                    setProgress,
+                    controller.signal,
+                )
             recordAnalyticsEvent('challenge_submitted', {
                 challenge_id: props.challenge.id,
                 challenge_track: trackKey,
                 member_id: props.memberId,
-                submission_type: challengeSubmissionType(props.challenge),
+                submission_type: submissionType,
             }, true)
             setProgress(100)
             setSubmissionId(submission.id)
@@ -277,7 +350,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
      * @throws Does not throw.
      */
     const submitAnother = (): void => {
-        clearFile()
+        clearSelection()
         setSubmissionId(undefined)
     }
 
@@ -295,16 +368,25 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     </button>
                     <h2>Submit your solution</h2>
                 </div>
-                <p>Upload your solution files as described in the requirements.</p>
+                <p>
+                    {urlMode
+                        ? 'Submit the URL to your solution as described in the requirements.'
+                        : 'Upload your solution files as described in the requirements.'}
+                </p>
             </header>
             <div className={styles.columns}>
                 <aside className={styles.leftPanel}>
                     <section className={styles.infoCard}>
                         <h3>
                             <IconOutline.DocumentAddIcon aria-hidden='true' />
-                            Required Files
+                            {urlMode ? 'Required Link' : 'Required Files'}
                         </h3>
-                        {designChallenge ? (
+                        {urlMode ? (
+                            <p>
+                                Provide a direct link to the solution requested in the Requirements tab and keep it
+                                accessible throughout review.
+                            </p>
+                        ) : designChallenge ? (
                             <ul className={styles.requiredFiles}>
                                 <li>
                                     <FileTypeIcon extension='ZIP' />
@@ -345,22 +427,45 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             Submission tips
                         </h3>
                         <ul className={styles.tips}>
-                            <li>
-                                <IconOutline.SunIcon aria-hidden='true' />
-                                Upload a single ZIP file only
-                            </li>
-                            <li>
-                                <IconOutline.SunIcon aria-hidden='true' />
-                                Do not password protect the files
-                            </li>
-                            <li>
-                                <IconOutline.SunIcon aria-hidden='true' />
-                                Include all files as per guidelines
-                            </li>
-                            <li>
-                                <IconOutline.SunIcon aria-hidden='true' />
-                                Keep your handle out of your files and file names
-                            </li>
+                            {urlMode ? (
+                                <>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Link directly to your challenge deliverable
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Use a link that challenge reviewers can access
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Keep access available throughout review
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Follow all challenge submission guidelines
+                                    </li>
+                                </>
+                            ) : (
+                                <>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Upload a single ZIP file only
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Do not password protect the files
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Include all files as per guidelines
+                                    </li>
+                                    <li>
+                                        <IconOutline.SunIcon aria-hidden='true' />
+                                        Keep your handle out of your files and file names
+                                    </li>
+                                </>
+                            )}
                         </ul>
                     </section>
                     <section className={styles.infoCard}>
@@ -416,36 +521,76 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                         </div>
                     ) : (
                         <>
-                            <div className={styles.fileUploader}>
-                                <label htmlFor='challenge-submission-file'>
-                                    {pluralUpload ? 'Upload File(s)' : 'Upload File'}
-                                    <span>*</span>
-                                </label>
-                                <input
-                                    accept='.zip,application/zip,application/x-zip-compressed'
-                                    disabled={uploading}
-                                    id='challenge-submission-file'
-                                    onChange={changeFile}
-                                    ref={input}
-                                    type='file'
-                                />
-                                <button
-                                    className={classNames(styles.dropZone, { [styles.dragActive]: dragActive })}
-                                    disabled={uploading}
-                                    onClick={browse}
-                                    onDragEnter={() => setDragActive(true)}
-                                    onDragLeave={() => setDragActive(false)}
-                                    onDragOver={dragOver}
-                                    onDrop={dropFile}
-                                    type='button'
-                                >
-                                    <IconOutline.UploadIcon aria-hidden='true' />
-                                    <span>Drop your file(s) here or</span>
-                                    <strong>Browse</strong>
-                                </button>
-                                <small>Format file must be .zip | Max file size 500MB</small>
-                                {error && <p className={styles.error} role='alert'>{error}</p>}
-                            </div>
+                            {urlMode ? (
+                                <div className={styles.urlSubmission}>
+                                    <label htmlFor='challenge-submission-url'>
+                                        Submission URL
+                                        <span>*</span>
+                                    </label>
+                                    <div className={styles.urlInputRow}>
+                                        <input
+                                            aria-describedby={error
+                                                ? 'challenge-submission-url-help challenge-submission-url-error'
+                                                : 'challenge-submission-url-help'}
+                                            aria-invalid={!!error}
+                                            autoComplete='url'
+                                            disabled={uploading}
+                                            id='challenge-submission-url'
+                                            onChange={changeUrl}
+                                            placeholder='https://example.com/your-solution'
+                                            type='url'
+                                            value={urlInput}
+                                        />
+                                        <button
+                                            className={styles.setUrlButton}
+                                            disabled={uploading}
+                                            onClick={confirmUrl}
+                                            type='button'
+                                        >
+                                            Set URL
+                                        </button>
+                                    </div>
+                                    <small id='challenge-submission-url-help'>
+                                        Enter an absolute URL beginning with http:// or https://.
+                                    </small>
+                                    {error && (
+                                        <p className={styles.error} id='challenge-submission-url-error' role='alert'>
+                                            {error}
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={styles.fileUploader}>
+                                    <label htmlFor='challenge-submission-file'>
+                                        {pluralUpload ? 'Upload File(s)' : 'Upload File'}
+                                        <span>*</span>
+                                    </label>
+                                    <input
+                                        accept='.zip,application/zip,application/x-zip-compressed'
+                                        disabled={uploading}
+                                        id='challenge-submission-file'
+                                        onChange={changeFile}
+                                        ref={input}
+                                        type='file'
+                                    />
+                                    <button
+                                        className={classNames(styles.dropZone, { [styles.dragActive]: dragActive })}
+                                        disabled={uploading}
+                                        onClick={browse}
+                                        onDragEnter={() => setDragActive(true)}
+                                        onDragLeave={() => setDragActive(false)}
+                                        onDragOver={dragOver}
+                                        onDrop={dropFile}
+                                        type='button'
+                                    >
+                                        <IconOutline.UploadIcon aria-hidden='true' />
+                                        <span>Drop your file(s) here or</span>
+                                        <strong>Browse</strong>
+                                    </button>
+                                    <small>Format file must be .zip | Max file size 500MB</small>
+                                    {error && <p className={styles.error} role='alert'>{error}</p>}
+                                </div>
+                            )}
                             {file && (
                                 <div className={styles.uploadedFile}>
                                     <strong aria-live='polite'>{uploading ? 'Uploading' : 'Ready to upload'}</strong>
@@ -462,7 +607,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         </div>
                                         <button
                                             aria-label={uploading ? 'Cancel upload' : 'Remove selected file'}
-                                            onClick={clearFile}
+                                            onClick={clearSelection}
                                             type='button'
                                         >
                                             {uploading
@@ -486,10 +631,35 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                     </div>
                                 </div>
                             )}
+                            {submissionUrl && (
+                                <div className={styles.uploadedFile}>
+                                    <strong aria-live='polite'>
+                                        {uploading ? 'Submitting URL' : 'Ready to submit'}
+                                    </strong>
+                                    <div className={styles.fileRow}>
+                                        <IconOutline.LinkIcon aria-hidden='true' />
+                                        <div className={styles.fileCopy}>
+                                            <strong>{submissionUrl}</strong>
+                                            <span>Submission URL</span>
+                                        </div>
+                                        <button
+                                            aria-label={uploading ? 'Cancel submission' : 'Clear submission URL'}
+                                            onClick={clearSelection}
+                                            type='button'
+                                        >
+                                            {uploading
+                                                ? <IconOutline.XIcon aria-hidden='true' />
+                                                : <IconOutline.TrashIcon aria-hidden='true' />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             <div className={styles.declaration}>
                                 <h3>Declaration</h3>
                                 <p>
-                                    Submitting your files means you hereby agree to the
+                                    {urlMode
+                                        ? 'Submitting your link means you hereby agree to the'
+                                        : 'Submitting your files means you hereby agree to the'}
                                     {' '}
                                     <a
                                         className={styles.inlineButton}
@@ -500,15 +670,18 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         Topcoder Terms of Use
                                     </a>
                                     {' '}
-                                    and to the extent your uploaded file wins a Topcoder competition, you hereby assign,
-                                    grant and transfer and agree to assign, grant and transfer to Topcoder all right and
-                                    title in and to the Winning Submission (as further described in the terms of use).
+                                    {urlMode
+                                        ? 'and to the extent your linked solution wins a Topcoder competition, '
+                                        : 'and to the extent your uploaded file wins a Topcoder competition, '}
+                                    you hereby assign, grant and transfer and agree to assign, grant and transfer to
+                                    Topcoder all right and title in and to the Winning Submission (as further described
+                                    in the terms of use).
                                 </p>
                             </div>
                             <label className={styles.agreement}>
                                 <input
                                     checked={agreementAccepted}
-                                    disabled={!file || uploading}
+                                    disabled={!selectionReady || uploading}
                                     onChange={event => setAgreementAccepted(event.target.checked)}
                                     type='checkbox'
                                 />
@@ -528,12 +701,14 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                     className={styles.primaryButton}
                                     data-analytics-id='challenge-submit-confirm'
                                     data-analytics-placement='challenge-submission'
-                                    disabled={!file || !agreementAccepted || uploading}
+                                    disabled={!selectionReady || !agreementAccepted || uploading}
                                     onClick={submit}
                                     type='button'
                                 >
-                                    <IconOutline.UploadIcon aria-hidden='true' />
-                                    {uploading ? 'Uploading…' : 'Submit'}
+                                    {urlMode
+                                        ? <IconOutline.LinkIcon aria-hidden='true' />
+                                        : <IconOutline.UploadIcon aria-hidden='true' />}
+                                    {uploading ? (urlMode ? 'Submitting…' : 'Uploading…') : 'Submit'}
                                 </button>
                             </div>
                         </>

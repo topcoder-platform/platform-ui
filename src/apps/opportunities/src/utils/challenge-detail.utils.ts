@@ -11,6 +11,9 @@ export interface ChallengeSidebarLink {
     url: string
 }
 
+/** Submission experiences selected by Work Manager challenge metadata. */
+export type ChallengeSubmissionMode = 'url' | 'zip'
+
 /**
  * Builds the canonical Review App challenge-detail destination.
  *
@@ -62,6 +65,25 @@ export function challengeMetadataValue(
         .toLowerCase()
     return metadata?.find(item => item.name.trim()
         .toLowerCase() === normalizedName)?.value
+}
+
+/**
+ * Resolves whether a challenge accepts a URL or the standard ZIP archive.
+ *
+ * Work Manager persists this choice as `submission_type` metadata. URL mode
+ * is deliberately opt-in: missing, malformed, and unsupported values retain
+ * the established ZIP flow.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns `url` only for an exact case-insensitive metadata value; otherwise `zip`.
+ * @throws Does not throw.
+ */
+export function challengeSubmissionMode(challenge: ChallengeOpportunity): ChallengeSubmissionMode {
+    const value = challengeMetadataValue(challenge.metadata, 'submission_type')
+    return typeof value === 'string' && value.trim()
+        .toLowerCase() === 'url'
+        ? 'url'
+        : 'zip'
 }
 
 /**

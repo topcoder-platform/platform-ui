@@ -11,6 +11,7 @@ import { init } from 'filestack-js'
 import {
     buildOpportunityPageUrl,
     createChallengeSubmission,
+    createChallengeUrlSubmission,
     deleteChallengeSubmission,
     downloadChallengeSubmissionArtifact,
     getChallengeAiReviewConfig,
@@ -1319,6 +1320,55 @@ describe('opportunities service normalization', () => {
             .toHaveBeenNthCalledWith(1, 50)
         expect(progress)
             .toHaveBeenLastCalledWith(100)
+    })
+
+    it('creates a URL submission directly without initializing Filestack', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const initMock = init as jest.MockedFunction<typeof init>
+        const controller = new AbortController()
+        initMock.mockClear()
+        post.mockResolvedValueOnce({ id: 'url-submission-id' } as never)
+
+        await expect(createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            '  https://deliverables.example.com/member/result  ',
+            controller.signal,
+        ))
+            .resolves.toEqual({ id: 'url-submission-id' })
+
+        expect(post)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/submissions',
+                {
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CONTEST_SUBMISSION',
+                    url: 'https://deliverables.example.com/member/result',
+                },
+                { signal: controller.signal },
+            )
+        expect(initMock)
+            .not.toHaveBeenCalled()
+    })
+
+    it('does not create an already-cancelled URL submission', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const controller = new AbortController()
+        post.mockClear()
+        controller.abort()
+
+        await expect(createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            'https://deliverables.example.com/member/result',
+            controller.signal,
+        ))
+            .rejects.toMatchObject({ name: 'AbortError' })
+        expect(post)
+            .not.toHaveBeenCalled()
     })
 
     it('requests only the latest submission per member for the main table', async () => {
