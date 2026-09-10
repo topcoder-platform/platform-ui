@@ -473,6 +473,7 @@ const LeadIntakeSkillsField: FC<SkillsFieldProps> = (props: SkillsFieldProps) =>
             <InputSkillSelector
                 className={styles.skillsSelector}
                 loading={disabled}
+                plainRemoveIcon
                 placeholder='Type to search and add skills'
                 useWrapper={false}
                 value={renderProps.field.value}
