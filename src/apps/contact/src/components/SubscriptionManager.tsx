@@ -1,9 +1,9 @@
 /* Form callbacks capture the current field and draft state. */
 /* eslint react/jsx-no-bind: ["error", { "allowArrowFunctions": true, "allowFunctions": true }] */
-import { FC, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 
-import { MemberSubscriptions, SubscriptionType } from '../contact.models'
-import { contactError, contactGet, contactPatch, contactPost } from '../contact.service'
+import { MemberIdentity, MemberSubscriptions, SubscriptionType } from '../contact.models'
+import { contactError, contactGet, contactLookupMember, contactPatch, contactPost } from '../contact.service'
 
 interface Props {
     types: SubscriptionType[]
@@ -19,29 +19,63 @@ interface Props {
 export const SubscriptionManager: FC<Props> = props => {
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
-    const [memberId, setMemberId] = useState('')
+    const [memberQuery, setMemberQuery] = useState('')
+    const [identity, setIdentity] = useState<MemberIdentity>()
     const [member, setMember] = useState<MemberSubscriptions>()
+    const [memberLoading, setMemberLoading] = useState(false)
+    const memberGeneration = useRef(0)
     const [source, setSource] = useState('')
+    const sourceRef = useRef<HTMLInputElement>(null)
+    const [memberError, setMemberError] = useState('')
+    const [memberMessage, setMemberMessage] = useState('')
+    const [savingPreference, setSavingPreference] = useState<string>()
     const [bulk, setBulk] = useState('')
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
     const [bulkConfirmed, setBulkConfirmed] = useState(false)
 
+    useEffect(() => () => { memberGeneration.current += 1 }, [])
+
+    /**
+     * Invalidates lookup results when the administrator edits the handle/email input.
+     * @param value current lookup text; never interpreted as an internal member ID.
+     * @returns void after clearing the prior identity, preferences and obsolete lookup messages.
+     * @throws Does not throw; requests already in flight are ignored through the generation guard.
+     */
+    function changeMemberQuery(value: string): void {
+        memberGeneration.current += 1
+        setMemberQuery(value)
+        setIdentity(undefined)
+        setMember(undefined)
+        setMemberLoading(false)
+        setError('')
+        setMessage('')
+        setMemberError('')
+        setMemberMessage('')
+    }
+
     /**
      * Runs an administrative preference action and presents any request/validation failure.
      * @param action category or preference operation to perform.
+     * @param memberAction whether failures belong beside the member preference controls.
      * @returns resolves after busy state resets.
      * @throws Does not throw; errors are displayed inline.
      */
-    async function run(action: () => Promise<void>): Promise<void> {
+    async function run(action: () => Promise<void>, memberAction: boolean = false): Promise<void> {
         setBusy(true)
         setError('')
         setMessage('')
+        if (memberAction) {
+            setMemberError('')
+            setMemberMessage('')
+        }
+
         try {
             await action()
         } catch (failure) {
-            setError(contactError(failure))
+            if (memberAction) setMemberError(contactError(failure))
+            else setError(contactError(failure))
         } finally {
             setBusy(false)
         }
@@ -62,44 +96,97 @@ export const SubscriptionManager: FC<Props> = props => {
     }
 
     /**
-     * Fetches current category preferences and suppression status for the specified existing member.
-     * @returns resolves after the member preference document replaces the previous lookup.
-     * @throws Error for an empty member ID or failed lookup request.
+     * Resolves a handle/email and fetches that canonical member's current preferences and suppression status.
+     * @returns completion after the current query resolves or displays its error; obsolete responses are ignored.
+     * @throws Does not throw; errors clear prior member actions until a fresh lookup succeeds.
      */
     async function loadMember(): Promise<void> {
-        if (!memberId.trim()) throw new Error('Enter an existing Topcoder member ID.')
-        setMember(
-            await contactGet<MemberSubscriptions>(
-                `subscriptions?memberId=${encodeURIComponent(memberId.trim())}`,
-            ),
-        )
+        memberGeneration.current += 1
+        const generation = memberGeneration.current
+        setIdentity(undefined)
+        setMember(undefined)
+        setError('')
+        setMessage('')
+        setMemberError('')
+        setMemberMessage('')
+        setMemberLoading(true)
+        try {
+            const resolved = await contactLookupMember(memberQuery)
+            if (generation !== memberGeneration.current) return
+            const preferences = await contactGet<MemberSubscriptions>(
+                `subscriptions?memberId=${encodeURIComponent(resolved.memberId)}`,
+            )
+            if (generation !== memberGeneration.current) return
+            setIdentity(resolved)
+            setMember(preferences)
+        } catch (failure) {
+            if (generation === memberGeneration.current) setMemberError(contactError(failure))
+        } finally {
+            if (generation === memberGeneration.current) setMemberLoading(false)
+        }
     }
 
     /**
-     * Records a member preference with provenance and reloads authoritative subscription state.
+     * Validates explicit preference evidence beside the action before starting a save.
+     * @param subscriptionTypeId category selected by the administrator.
+     * @param subscribed affirmative opt-in or opt-out requested by the clicked action.
+     * @returns completion after validation feedback or the authenticated save and refresh.
+     * @throws Does not throw; missing evidence focuses its field and request failures remain beside the action.
+     */
+    async function recordPreference(subscriptionTypeId: string, subscribed: boolean): Promise<void> {
+        if (busy) return
+        if (!source.trim()) {
+            setMemberError('Enter the member request or consent evidence below before recording this preference.')
+            setMemberMessage('')
+            sourceRef.current?.focus()
+            return
+        }
+
+        setSavingPreference(subscriptionTypeId)
+        await run(() => updatePreference(subscriptionTypeId, subscribed), true)
+        setSavingPreference(undefined)
+    }
+
+    /**
+     * Records an explicit preference and refreshes by the already resolved canonical ID, without a new lookup.
      * @param subscriptionTypeId existing subscription category identifier.
      * @param subscribed explicit member opt-in or opt-out value.
      * @returns resolves after saving and reloading the selected member preferences.
      * @throws Error on missing provenance or failed API writes/reads.
      */
     async function updatePreference(subscriptionTypeId: string, subscribed: boolean): Promise<void> {
+        if (!member || !identity) throw new Error('Look up the member preferences before saving.')
         if (!source.trim()) throw new Error('Describe the consent or preference source before saving.')
-        if (!member) return
+        const resolved = identity
+        const generation = memberGeneration.current
         await contactPost('subscriptions', {
-            memberId: member.memberId,
-            source,
+            memberId: resolved.memberId,
+            source: source.trim(),
             subscribed,
             subscriptionTypeId,
         })
-        await loadMember()
-        setMessage('Member preference saved.')
+        if (generation !== memberGeneration.current) return
+        setMember(undefined)
+        try {
+            const preferences = await contactGet<MemberSubscriptions>(
+                `subscriptions?memberId=${encodeURIComponent(resolved.memberId)}`,
+            )
+            if (generation !== memberGeneration.current) return
+            setMember(preferences)
+            setMemberMessage(`Preference saved for ${resolved.handle}.`)
+        } catch (failure) {
+            if (generation !== memberGeneration.current) return
+            setIdentity(undefined)
+            throw new Error(`Preference saved for ${resolved.handle}, but refresh failed. `
+                + `Look up preferences again. ${contactError(failure)}`)
+        }
     }
 
     /**
-     * Applies up to 500 current member preferences sequentially with an audit source, effective now.
+     * Resolves every handle/email before applying up to 500 explicit current preferences with audit provenance.
      * Replaces each listed member/category choice; historical timestamps require the reviewed migration process.
      * @returns after all rows save; reports the completed count if an API failure stops the updates.
-     * @throws Validation failures before writes, or an annotated API error at the first failed row.
+     * @throws Validation, lookup or duplicate-member/category failures before any writes; annotated write errors.
      */
     async function updateCurrentPreferences(): Promise<void> {
         if (!source.trim() || !bulkConfirmed) {
@@ -114,26 +201,61 @@ export const SubscriptionManager: FC<Props> = props => {
         for (const row of rows) {
             if (
                 !row
-                || typeof row.memberId !== 'string'
-                || !row.memberId.trim()
+                || typeof row.member !== 'string'
+                || !row.member.trim()
+                || row.memberId !== undefined
                 || typeof row.subscriptionTypeId !== 'string'
                 || !props.types.some(type => type.id === row.subscriptionTypeId)
                 || typeof row.subscribed !== 'boolean'
             ) {
                 throw new Error(
-                    'Each row needs an existing memberId, known subscriptionTypeId, and boolean subscribed.',
+                    'Each row needs member (handle or email), known subscriptionTypeId, and boolean subscribed. '
+                    + 'Member IDs are not accepted.',
                 )
             }
         }
 
+        const resolvedRows: Array<{ memberId: string; subscriptionTypeId: string; subscribed: boolean }> = []
+        const resolvedQueries = new Map<string, MemberIdentity>()
+        const choices = new Set<string>()
+        for (const [index, row] of rows.entries()) {
+            try {
+                const query = row.member.trim()
+                const key = query.toLowerCase()
+                // Resolve bounded rows sequentially; no preference writes occur until all identities are known.
+                // eslint-disable-next-line no-await-in-loop
+                const resolved = resolvedQueries.get(key) || await contactLookupMember(query)
+                resolvedQueries.set(key, resolved)
+                const choice = JSON.stringify([resolved.memberId, row.subscriptionTypeId])
+                if (choices.has(choice)) {
+                    throw new Error(`Duplicate preference for ${resolved.handle} and this subscription category.`)
+                }
+
+                choices.add(choice)
+                resolvedRows.push({
+                    memberId: resolved.memberId,
+                    subscribed: row.subscribed,
+                    subscriptionTypeId: row.subscriptionTypeId,
+                })
+            } catch (failure) {
+                throw new Error(`No preferences were updated. Row ${index + 1}: ${contactError(failure)}`)
+            }
+        }
+
+        memberGeneration.current += 1
+        setIdentity(undefined)
+        setMember(undefined)
+        setMemberLoading(false)
+        setMemberError('')
+        setMemberMessage('')
         let completed = 0
-        for (const row of rows) {
+        for (const row of resolvedRows) {
             try {
                 // Sequential writes make partial failure position and retry behavior explicit.
                 // eslint-disable-next-line no-await-in-loop
                 await contactPost('subscriptions', {
                     memberId: row.memberId,
-                    source,
+                    source: source.trim(),
                     subscribed: row.subscribed,
                     subscriptionTypeId: row.subscriptionTypeId,
                 })
@@ -231,35 +353,52 @@ export const SubscriptionManager: FC<Props> = props => {
             </fieldset>
             <fieldset className='contact-fields' disabled={busy}>
                 <legend>Member preferences</legend>
+                {memberError && (
+                    <p id='contact-member-preference-error' role='alert' className='contact-error'>
+                        {memberError}
+                    </p>
+                )}
+                {memberMessage && <p role='status' className='contact-success'>{memberMessage}</p>}
                 <div className='contact-toolbar contact-control-row'>
                     <label>
-                        Existing member ID
+                        Topcoder handle or email
                         <input
-                            value={memberId}
-                            onChange={event => {
-                                setMemberId(event.target.value)
-                                setMember(undefined)
-                            }}
+                            value={memberQuery}
+                            onChange={event => changeMemberQuery(event.target.value)}
+                            placeholder='member.handle or member@example.com'
                         />
                     </label>
-                    <button type='button' onClick={() => run(loadMember)}>
+                    <button type='button' disabled={memberLoading || !memberQuery.trim()} onClick={loadMember}>
                         Look up preferences
                     </button>
                 </div>
+                {memberLoading && <p role='status'>Loading member preferences…</p>}
                 <label>
                     Preference source / consent evidence
                     <input
+                        ref={sourceRef}
                         value={source}
-                        onChange={event => setSource(event.target.value)}
+                        maxLength={500}
+                        aria-invalid={!!memberError && !source.trim()}
+                        aria-describedby={memberError ? 'contact-member-preference-error' : undefined}
+                        onChange={event => {
+                            setSource(event.target.value)
+                            setMemberError('')
+                        }}
                         placeholder='Member request ticket ID / current consent evidence'
                     />
                 </label>
-                {member && (
+                <p className='contact-help'>
+                    Required before recording a preference. Enter the member request or consent record;
+                    only record an opt-in when the member explicitly agreed.
+                </p>
+                {savingPreference && <p role='status'>Saving member preference…</p>}
+                {member && identity && (
                     <>
                         <h3>
-                            Member
-                            {member.memberId}
+                            {identity.handle}
                         </h3>
+                        <p>{identity.email}</p>
                         {member.suppressed && (
                             <p className='contact-warning'>
                                 This member is suppressed. Category changes do not remove delivery
@@ -291,13 +430,17 @@ export const SubscriptionManager: FC<Props> = props => {
                                                 <td>
                                                     <button
                                                         type='button'
-                                                        onClick={() => run(
-                                                            () => updatePreference(type.id, !preference?.subscribed),
-                                                        )}
+                                                        aria-describedby={memberError
+                                                            ? 'contact-member-preference-error' : undefined}
+                                                        onClick={() => {
+                                                            recordPreference(type.id, !preference?.subscribed)
+                                                        }}
                                                     >
-                                                        {preference?.subscribed
-                                                            ? 'Record opt-out'
-                                                            : 'Record explicit opt-in'}
+                                                        {savingPreference === type.id
+                                                            ? 'Saving preference…'
+                                                            : preference?.subscribed
+                                                                ? 'Record opt-out'
+                                                                : 'Record explicit opt-in'}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -314,6 +457,7 @@ export const SubscriptionManager: FC<Props> = props => {
                 <p>
                     Updates take effect now and replace each listed member&apos;s current choice for that
                     category. Set the preference source above. Maximum 500 updates per batch.
+                    Identify each member by handle or email. Every member is resolved before any updates are saved.
                 </p>
                 <p>
                     For historical HubSpot records, use the reviewed migration process to preserve original
@@ -328,7 +472,8 @@ export const SubscriptionManager: FC<Props> = props => {
                             setBulk(event.target.value)
                             setBulkConfirmed(false)
                         }}
-                        placeholder='[{"memberId":"123","subscriptionTypeId":"category-id","subscribed":true}]'
+                        placeholder={'[{"member":"member.handle","subscriptionTypeId":"category-id",'
+                            + '"subscribed":true}]'}
                     />
                 </label>
                 <label className='contact-check'>

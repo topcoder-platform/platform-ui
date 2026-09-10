@@ -131,6 +131,13 @@ export interface RecipientPage {
     total: number
 }
 
+/** Exact active member resolved from a handle or email; the ID is used only for subsequent API requests. */
+export interface MemberIdentity {
+    memberId: string
+    handle: string
+    email: string
+}
+
 export interface MemberSubscriptions {
     memberId: string
     subscriptions: Array<{ subscriptionTypeId: string; subscribed: boolean; source: string }>

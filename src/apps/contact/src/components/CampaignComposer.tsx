@@ -11,9 +11,10 @@ import {
     ContactConfig,
     EmailPreview,
     EmailTemplate,
+    MemberIdentity,
     Segment,
 } from '../contact.models'
-import { contactError, contactGet, contactPatch, contactPost } from '../contact.service'
+import { contactError, contactGet, contactLookupMember, contactPatch, contactPost } from '../contact.service'
 
 import { EmailEditor, STARTER_EMAIL } from './EmailEditor'
 import { SegmentFields } from './SegmentFields'
@@ -70,7 +71,7 @@ function initialCampaign(config: ContactConfig, campaign?: Campaign): CampaignIn
 /**
  * Displays the email authoring, audience snapshot, personalization, and two-step send workflow.
  * @param props saved campaign (when editing), server config, saved segments, and navigation callbacks.
- * @returns the editor with server-backed previews and exact frozen audience approval.
+ * @returns the editor with exact frozen audience approval and an explanation of any blocked review.
  * @throws Request failures are caught and displayed in the composer; the editor has its own boundary.
  */
 export const CampaignComposer: FC<Props> = props => {
@@ -87,7 +88,9 @@ export const CampaignComposer: FC<Props> = props => {
     const [pollRetry, setPollRetry] = useState(0)
     const [pollError, setPollError] = useState('')
     const [preview, setPreview] = useState<EmailPreview>()
-    const [memberId, setMemberId] = useState('')
+    const [previewMember, setPreviewMember] = useState<MemberIdentity>()
+    const [memberQuery, setMemberQuery] = useState('')
+    const previewVersion = useRef(0)
     const [mobile, setMobile] = useState(false)
     const [scheduledAt, setScheduledAt] = useState('')
     const [review, setReview] = useState(false)
@@ -176,11 +179,13 @@ export const CampaignComposer: FC<Props> = props => {
      */
     function change(fields: Partial<CampaignInput>): void {
         changeVersion.current += 1
+        previewVersion.current += 1
         setDraft(previous => ({ ...previous, ...fields }))
         setDirty(true)
         setAudience(undefined)
         setPollError('')
         setPreview(undefined)
+        setPreviewMember(undefined)
         setReview(false)
         setConfirmed(false)
     }
@@ -276,17 +281,24 @@ export const CampaignComposer: FC<Props> = props => {
     }
 
     /**
-     * Renders the saved campaign as the admin or selected member, including the mandatory service footer.
-     * @returns resolves after storing the server-rendered personalized preview.
-     * @throws Rejects on save, member lookup, or rendering API failure.
+     * Resolves an optional exact handle/email before rendering as that member, or as the admin when empty.
+     * @returns resolves after storing the preview and resolved identity; ignores superseded results.
+     * @throws Rejects on unknown/ambiguous members, save failures, or rendering API failure; sends no email.
      */
     async function previewEmail(): Promise<void> {
+        previewVersion.current += 1
+        const version = previewVersion.current
+        setPreview(undefined)
+        setPreviewMember(undefined)
+        const member = memberQuery.trim() ? await contactLookupMember(memberQuery.trim()) : undefined
+        if (version !== previewVersion.current) return
         const campaign = await save()
-        setPreview(
-            await contactPost<EmailPreview>(`campaigns/${campaign.id}/preview`, {
-                memberId: memberId.trim() || undefined,
-            }),
-        )
+        const result = await contactPost<EmailPreview>(`campaigns/${campaign.id}/preview`, {
+            memberId: member?.memberId,
+        })
+        if (version !== previewVersion.current) return
+        setPreview(result)
+        setPreviewMember(member)
     }
 
     /**
@@ -329,12 +341,30 @@ export const CampaignComposer: FC<Props> = props => {
         props.onClose()
     }
 
+    const audienceExpired = audience?.status === 'ready'
+        && !(new Date(audience.expiresAt)
+            .getTime() > clockNow)
     const ready
         = audience?.status === 'ready'
         && !dirty
-        && new Date(audience.expiresAt)
-            .getTime() > clockNow
+        && !audienceExpired
         && audience.recipientCount > 0
+    const reviewUnavailableReason = !props.config.sendingEnabled
+        ? 'Campaign sending is disabled in this environment.'
+        : dirty
+            ? 'Save your changes and calculate the exact audience before reviewing this send.'
+            : !audience
+                ? 'Calculate the exact audience before reviewing this send.'
+                : audience.status === 'pending'
+                    ? 'The audience is still being calculated. Wait for it to finish before reviewing this send.'
+                    : audience.status === 'failed'
+                        ? 'Audience calculation failed. Check the audience warnings in Select recipients.'
+                        : audienceExpired
+                            ? 'The audience calculation has expired. Recalculate it in Select recipients.'
+                            : !audience.recipientCount
+                                ? 'There are no eligible recipients. Check the subscription category, member '
+                                    + 'preferences, suppression status, and any engagement filter.'
+                                : undefined
     const rawBytes = new TextEncoder()
         .encode(draft.html).length
 
@@ -593,6 +623,7 @@ export const CampaignComposer: FC<Props> = props => {
                                     {' '}
                                     · Largest
                                     email
+                                    {' '}
                                     {(audience.maxEmailBytes / 1024).toFixed(1)}
                                     {' '}
                                     KB
@@ -619,8 +650,16 @@ export const CampaignComposer: FC<Props> = props => {
                                         .toLocaleString()}
                                     .
                                     {' '}
-                                    {ready ? '' : 'Refresh the snapshot before approval.'}
+                                    {audienceExpired ? 'Refresh the snapshot before approval.' : ''}
                                 </p>
+                                {!audience.recipientCount && (
+                                    <p className='contact-warning'>
+                                        No eligible recipients were found. A matching member must have a recorded
+                                        opt-in for the selected subscription category, must not be suppressed,
+                                        and must meet any email engagement filter. Check member preferences in
+                                        Subscriptions. The exclusion total does not identify which check failed.
+                                    </p>
+                                )}
                                 {audience.sample.length > 0 && (
                                     <details>
                                         <summary>Sample recipients</summary>
@@ -650,10 +689,15 @@ export const CampaignComposer: FC<Props> = props => {
                 <legend>3. Preview and test</legend>
                 <div className='contact-toolbar contact-control-row'>
                     <label>
-                        Preview member ID (optional)
+                        Preview member handle or email (optional)
                         <input
-                            value={memberId}
-                            onChange={event => setMemberId(event.target.value)}
+                            value={memberQuery}
+                            onChange={event => {
+                                previewVersion.current += 1
+                                setMemberQuery(event.target.value)
+                                setPreview(undefined)
+                                setPreviewMember(undefined)
+                            }}
                             placeholder='Your account by default'
                         />
                     </label>
@@ -668,6 +712,13 @@ export const CampaignComposer: FC<Props> = props => {
                 </div>
                 {preview && (
                     <>
+                        <p className='contact-help'>
+                            Preview for
+                            {' '}
+                            {previewMember
+                                ? `${previewMember.handle} · ${previewMember.email}`
+                                : props.config.testEmail}
+                        </p>
                         <div className='contact-toolbar'>
                             <strong>{preview.subject}</strong>
                             <span>
@@ -724,13 +775,21 @@ export const CampaignComposer: FC<Props> = props => {
                             : 'Invalid date'}
                     </p>
                 )}
-                {!props.config.sendingEnabled && (
-                    <p className='contact-warning'>Campaign sending is disabled in this environment.</p>
+                {reviewUnavailableReason && (
+                    <p id='contact-review-unavailable' className='contact-warning' role='status'>
+                        {reviewUnavailableReason}
+                    </p>
+                )}
+                {!audience && props.config.sendingEnabled && (
+                    <button type='button' onClick={() => run(calculateAudience)}>
+                        Calculate audience to continue
+                    </button>
                 )}
                 <button
                     type='button'
                     className='contact-primary'
                     disabled={!ready || !props.config.sendingEnabled}
+                    aria-describedby={reviewUnavailableReason ? 'contact-review-unavailable' : undefined}
                     onClick={() => {
                         setReview(true)
                         setConfirmed(false)

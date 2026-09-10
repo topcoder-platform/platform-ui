@@ -30,6 +30,17 @@ The final approval submits exactly the count and token displayed during review.
 Later opt-outs, suppression, and inactive-account checks can lower actual sends;
 these exclusions appear in recipient outcomes.
 
+The Review button explains its blocking condition beside the control: missing
+calculation, unsaved edits, pending/failed preparation, expiry, zero eligible
+recipients, or disabled sending. A campaign reopened without a local audience
+offers a calculation action beside Review. Choosing a schedule or leaving it
+empty does not change recipient eligibility. Empty, unexpired audiences explain
+the subscription, suppression and optional engagement checks; they do not
+incorrectly request an expiry refresh. The API currently returns only the total
+excluded count, so the UI does not attribute exclusions to a particular check.
+An unchanged draft can reuse its unexpired server snapshot; recalculation is not
+currently a forced rebuild after subscription preferences change.
+
 SES pricing comes from `/config` and snapshot cost calculations come from the
 API. The estimate includes configured email/data rates and excludes infrastructure
 and optional services; it is not an invoice guarantee. The current tenant's
@@ -37,6 +48,12 @@ service plan determines its rate, so the UI never hardcodes the conventional SES
 base rate. Scheduling accepts local time and displays the resulting UTC instant.
 Test requests contain no recipient field: the service sends only to the signed-in
 administrator's member email.
+
+Personalized preview accepts a member handle or email address; leaving it blank
+previews as the signed-in administrator. The member lookup resolves to a canonical
+ID internally and the preview displays the resolved handle/email. Changing the
+lookup clears the previous preview, and late responses for an older target are
+discarded. The test-email destination remains the signed-in administrator.
 
 ## Email editor and preview
 
@@ -106,9 +123,22 @@ editor scroll within the workspace on narrow screens. Reserved scrollbar space
 prevents short and tall panels from shifting the workspace horizontally.
 
 Subscription categories can be created, activated, or deactivated. A member
-lookup shows explicit category preferences and delivery suppression. Changes
-require audit provenance. Bulk updates of current preferences accept JSON batches
-of at most 500 rows shaped as `{memberId, subscriptionTypeId, subscribed}`. These
+lookup accepts an exact handle or email and shows the resolved handle/email,
+explicit category preferences and delivery suppression. Matching is case-insensitive
+and trims surrounding whitespace. Numeric input is treated as a numeric handle;
+administrators do not need to know member IDs. If an email matches multiple active
+members, the lookup asks for a handle instead of selecting an arbitrary account.
+Preference writes and refreshes use the already resolved canonical ID. Changes
+require the member request or consent evidence in the preference source field.
+Missing evidence focuses that field and shows an error within Member preferences.
+The clicked action shows saving progress, then refreshes the category choice and
+shows a local success or failure message. If saving succeeds but refreshing fails,
+the controls clear and request another lookup without repeating the write.
+Bulk updates of current preferences accept JSON batches
+of at most 500 rows shaped as `{member, subscriptionTypeId, subscribed}`, where
+`member` is a handle or email. All rows must resolve before any preference writes
+start. Duplicate canonical member/category choices are rejected even if one row
+uses a handle and another uses the same member's email. These
 updates take effect now and replace each listed member/category's current choice.
 All rows are validated before writes. Writes proceed sequentially and stop on
 first failure, reporting the exact completed count for review/retry. The confirmation

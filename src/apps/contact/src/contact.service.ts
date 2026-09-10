@@ -2,6 +2,8 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 
+import { MemberIdentity } from './contact.models'
+
 export const CONTACT_API_BASE = EnvironmentConfig.CONTACT_API.replace(/\/$/, '')
 
 /**
@@ -12,6 +14,18 @@ export const CONTACT_API_BASE = EnvironmentConfig.CONTACT_API.replace(/\/$/, '')
  */
 export function contactGet<T>(path: string): Promise<T> {
     return xhrGetAsync<T>(`${CONTACT_API_BASE}/${path}`)
+}
+
+/**
+ * Resolves an exact handle or email to an active member for human-facing Contact lookup forms.
+ * @param query handle or email; surrounding whitespace is removed and numeric values remain handles.
+ * @returns the canonical member identity for subsequent preferences or personalized-preview requests.
+ * @throws Rejects for blank input, unavailable/unknown members, ambiguous email, or transport/auth failures.
+ */
+export async function contactLookupMember(query: string): Promise<MemberIdentity> {
+    const value = query.trim()
+    if (!value) throw new Error('Enter a Topcoder handle or email address.')
+    return contactGet<MemberIdentity>(`members/lookup?query=${encodeURIComponent(value)}`)
 }
 
 /**

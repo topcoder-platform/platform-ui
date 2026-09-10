@@ -7,7 +7,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 import { Campaign, ContactConfig } from '../contact.models'
-import { contactGet, contactPatch, contactPost } from '../contact.service'
+import { contactGet, contactLookupMember, contactPatch, contactPost } from '../contact.service'
 
 import { CampaignComposer } from './CampaignComposer'
 
@@ -17,6 +17,7 @@ jest.mock('~/apps/analytics/src/lib/services/analytics.service', () => ({
 jest.mock('../contact.service', () => ({
     contactError: (error: Error) => error.message,
     contactGet: jest.fn(),
+    contactLookupMember: jest.fn(),
     contactPatch: jest.fn(),
     contactPost: jest.fn(),
 }))
@@ -127,6 +128,60 @@ describe('Contact audience and send approval', () => {
         expect(screen.queryByText('20,000 emails in this audience')).not.toBeInTheDocument()
     })
 
+    it('explains an empty audience for either send timing without requesting an expiry refresh', async () => {
+        (contactPost as jest.Mock).mockResolvedValue({ ...audience, excludedCount: 785, recipientCount: 0 })
+        renderComposer()
+        const schedule = screen.getByLabelText('Schedule (your local time; leave empty to send now)')
+        fireEvent.change(schedule, { target: { value: '2098-10-10T10:30' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Save and calculate exact audience' }))
+        await screen.findByText('0 emails in this audience')
+        expect(screen.getByRole('button', { name: 'Review scheduled send' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Review scheduled send' }))
+            .toHaveAccessibleDescription(/There are no eligible recipients/)
+        expect(screen.getByText(/The exclusion total does not identify which check failed/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/Refresh the snapshot before approval/)).not.toBeInTheDocument()
+        fireEvent.change(schedule, { target: { value: '' } })
+        expect(screen.getByRole('button', { name: 'Review send' }))
+            .toBeDisabled()
+        expect(contactPost)
+            .toHaveBeenCalledTimes(1)
+    })
+
+    it('offers audience calculation beside review and requires a positive count for either send timing', async () => {
+        renderComposer()
+        expect(screen.getByRole('button', { name: 'Review send' }))
+            .toHaveAccessibleDescription('Calculate the exact audience before reviewing this send.')
+        fireEvent.click(screen.getByRole('button', { name: 'Calculate audience to continue' }))
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Review send' }))
+            .toBeEnabled())
+        const schedule = screen.getByLabelText('Schedule (your local time; leave empty to send now)')
+        fireEvent.change(schedule, { target: { value: '2098-10-10T10:30' } })
+        expect(screen.getByRole('button', { name: 'Review scheduled send' }))
+            .toBeEnabled()
+        fireEvent.change(schedule, { target: { value: '' } })
+        expect(screen.getByRole('button', { name: 'Review send' }))
+            .toBeEnabled()
+        expect(contactPost)
+            .toHaveBeenCalledTimes(1)
+        expect(contactPost)
+            .toHaveBeenCalledWith('audience/preview', { campaignId: campaign.id })
+    })
+
+    it('identifies an expired positive audience as requiring a refresh', async () => {
+        (contactPost as jest.Mock).mockResolvedValue({ ...audience, expiresAt: '2000-01-01T00:00:00Z' })
+        renderComposer()
+        fireEvent.click(screen.getByRole('button', { name: 'Save and calculate exact audience' }))
+        await screen.findByText('20,000 emails in this audience')
+        expect(screen.getByRole('button', { name: 'Review send' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Review send' }))
+            .toHaveAccessibleDescription('The audience calculation has expired. Recalculate it in Select recipients.')
+        expect(screen.getByText(/Refresh the snapshot before approval/))
+            .toBeInTheDocument()
+    })
+
     it('preserves comma separators while administrators enter multiple country criteria', async () => {
         (contactPatch as jest.Mock).mockResolvedValue({ ...campaign, revision: 2 })
         renderComposer()
@@ -183,6 +238,80 @@ describe('Contact audience and send approval', () => {
             .toHaveAttribute('sandbox', '')
         expect(frame)
             .toHaveAttribute('srcdoc', '<p>Personalized preview</p>')
+        expect(contactLookupMember).not.toHaveBeenCalled()
+        expect(contactPost)
+            .toHaveBeenCalledWith('campaigns/campaign-1/preview', { memberId: undefined })
+    })
+
+    it.each([' ExampleHandle ', ' Person@Example.test '])(
+        'resolves %s to a canonical member before previewing without changing the test destination',
+        async query => {
+            (contactLookupMember as jest.Mock).mockResolvedValue({
+                email: 'person@example.test', handle: 'ExampleHandle', memberId: '9007199254740993',
+            });
+            (contactPost as jest.Mock).mockResolvedValue({
+                clippingLimitBytes: 102 * 1024,
+                emailBytes: 100,
+                html: '<p>Hello member</p>',
+                subject: 'Member preview',
+                text: 'Hello member',
+            })
+            renderComposer()
+            fireEvent.change(screen.getByLabelText('Preview member handle or email (optional)'), {
+                target: { value: query },
+            })
+            fireEvent.click(screen.getByRole('button', { name: 'Preview personalized email' }))
+            await screen.findByTitle('Personalized email preview')
+            expect(contactLookupMember)
+                .toHaveBeenCalledWith(query.trim())
+            expect(contactPost)
+                .toHaveBeenCalledWith('campaigns/campaign-1/preview', { memberId: '9007199254740993' })
+            expect(screen.getByText('Preview for ExampleHandle · person@example.test'))
+                .toBeInTheDocument()
+            expect(screen.getByRole('button', { name: `Send test to ${config.testEmail}` }))
+                .toBeInTheDocument()
+            expect(contactPost)
+                .toHaveBeenCalledTimes(1)
+            fireEvent.change(screen.getByLabelText('Preview member handle or email (optional)'), {
+                target: { value: 'AnotherHandle' },
+            })
+            expect(screen.queryByTitle('Personalized email preview')).not.toBeInTheDocument()
+        },
+    )
+
+    it.each(['Member not found.', 'Multiple members use this email. Use a handle.'])(
+        'stops previewing when the member lookup fails with %s',
+        async message => {
+            (contactLookupMember as jest.Mock).mockRejectedValue(new Error(message))
+            renderComposer()
+            fireEvent.change(screen.getByLabelText('Preview member handle or email (optional)'), {
+                target: { value: 'shared@example.test' },
+            })
+            fireEvent.click(screen.getByRole('button', { name: 'Preview personalized email' }))
+            await screen.findByRole('alert')
+            expect(screen.getByRole('alert'))
+                .toHaveTextContent(message)
+            expect(contactPost).not.toHaveBeenCalled()
+            expect(contactPatch).not.toHaveBeenCalled()
+        },
+    )
+
+    it('discards a member lookup superseded by a changed preview target', async () => {
+        let resolveLookup: (value: unknown) => void = () => undefined;
+        (contactLookupMember as jest.Mock).mockReturnValue(new Promise(resolve => { resolveLookup = resolve }))
+        renderComposer()
+        fireEvent.change(screen.getByLabelText('Preview member handle or email (optional)'), {
+            target: { value: 'FirstHandle' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Preview personalized email' }))
+        fireEvent.change(screen.getByLabelText('Preview member handle or email (optional)'), {
+            target: { value: 'SecondHandle' },
+        })
+        await act(async () => {
+            resolveLookup({ email: 'first@example.test', handle: 'FirstHandle', memberId: '123' })
+        })
+        expect(contactPost).not.toHaveBeenCalled()
+        expect(screen.queryByTitle('Personalized email preview')).not.toBeInTheDocument()
     })
 
     it('never approves a pending audience count', async () => {
