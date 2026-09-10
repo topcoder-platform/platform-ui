@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
+import { readFileSync } from 'fs'
 import {
     fireEvent,
     render,
@@ -17,6 +18,8 @@ import {
 } from '../models'
 
 import { OpportunityListCard } from './OpportunityListCard'
+
+const opportunityListCardStyles = readFileSync(`${__dirname}/OpportunityListCard.module.scss`, 'utf8')
 
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
@@ -217,6 +220,18 @@ describe('OpportunityListCard competition presentation', () => {
             .toHaveLength(2)
         expect(screen.getByText('Submissions:'))
             .toBeInTheDocument()
+    })
+
+    it('preserves the Figma spacing between grid skills and the divider', () => {
+        const competitionMainRules = Array.from(
+            opportunityListCardStyles.matchAll(/(?:^|\n)\s*\.competitionMain\s*\{([^}]*)\}/g),
+            match => match[1],
+        )
+
+        expect(competitionMainRules)
+            .toEqual(expect.arrayContaining([expect.stringContaining('gap: 15px;')]))
+        expect(competitionMainRules.some(rule => /\bgap:\s*0;/.test(rule)))
+            .toBe(false)
     })
 
     it('deep-links every active competition metric without nesting card links', () => {
