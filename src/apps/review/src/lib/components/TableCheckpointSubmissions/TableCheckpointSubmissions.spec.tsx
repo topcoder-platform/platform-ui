@@ -12,8 +12,43 @@ import type {
     ReviewAppContextModel,
     Screening,
 } from '../../models'
+import { TabContentCheckpoint } from '../ChallengeDetailsContent/TabContentCheckpoint'
 
 import { TableCheckpointSubmissions } from './TableCheckpointSubmissions'
+
+let mockScreenWidth = 1200
+
+interface TestColumn {
+    label?: ReactNode
+    renderer?: (row: Screening, rows: Screening[]) => JSX.Element
+}
+
+/**
+ * Renders checkpoint IDs, scores, and actions using the table's real column renderers.
+ * Shared by desktop/mobile table mocks to verify row visibility and scorecard navigation.
+ *
+ * @param props - Visible rows and desktop or grouped mobile column definitions.
+ * @returns The relevant rendered cells for each submission.
+ * @throws Propagates errors from the production column renderers.
+ */
+function mockRenderTable(props: { columns: Array<TestColumn | TestColumn[]>, data: Screening[] }): JSX.Element {
+    const columns = props.columns.flat()
+        .filter(column => ['Submission ID', 'Screening Score', 'Review Score', 'Action'].includes(String(column.label)))
+
+    return (
+        <div>
+            {props.data.map(row => (
+                <div key={row.submissionId} data-testid={row.submissionId}>
+                    {columns.map(column => (
+                        <div key={String(column.label)}>
+                            {column.renderer?.(row, props.data)}
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
+    )
+}
 
 jest.mock('react-router-dom', () => ({
     Link: (props: PropsWithChildren<{ className?: string, to: string }>) => (
@@ -37,12 +72,16 @@ jest.mock('~/libs/shared', () => ({
     copyTextToClipboard: () => Promise.resolve(),
     useWindowSize: () => ({
         height: 800,
-        width: 1200,
+        width: mockScreenWidth,
     }),
 }), { virtual: true })
 
 jest.mock('~/apps/admin/src/lib/components/common/TableMobile', () => ({
-    TableMobile: () => <div>Mobile table</div>,
+    TableMobile: (props: { columns: TestColumn[][], data: Screening[] }) => mockRenderTable(props),
+}), { virtual: true })
+
+jest.mock('~/apps/admin/src/lib', () => ({
+    TableLoading: () => <div>Loading</div>,
 }), { virtual: true })
 
 jest.mock('~/apps/admin/src/lib/utils', () => ({
@@ -57,25 +96,7 @@ jest.mock('~/libs/ui', () => ({
     IconSolid: {
         StarIcon: () => <span data-testid='checkpoint-winner-star' />,
     },
-    Table: (props: {
-        columns: Array<{
-            label?: ReactNode
-            renderer?: (row: Screening, rows: Screening[]) => JSX.Element
-        }>
-        data: Screening[]
-    }) => {
-        const scoreColumn = props.columns.find(column => column.label === 'Review Score')
-
-        return (
-            <div>
-                {props.data.map(row => (
-                    <div key={row.submissionId}>
-                        {scoreColumn?.renderer?.(row, props.data)}
-                    </div>
-                ))}
-            </div>
-        )
-    },
+    Table: (props: { columns: TestColumn[], data: Screening[] }) => mockRenderTable(props),
     Tooltip: (props: PropsWithChildren<{
         content?: ReactNode
         triggerOn?: string
@@ -100,6 +121,7 @@ jest.mock('../../contexts', () => {
 })
 
 jest.mock('../../hooks', () => ({
+    useRole: jest.requireActual('../../hooks/useRole').useRole,
     useRolePermissions: () => ({
         canViewAllSubmissions: true,
     }),
@@ -195,6 +217,7 @@ const challengeInfo = {
 
 const challengeContext = {
     challengeInfo,
+    duplicatesBySubmissionId: {},
     myResources: [],
     myRoles: [],
 } as unknown as ChallengeDetailContextModel
@@ -231,6 +254,10 @@ function renderCheckpointTable(): ReturnType<typeof render> {
 }
 
 describe('TableCheckpointSubmissions checkpoint winner indicator', () => {
+    beforeEach(() => {
+        mockScreenWidth = 1200
+    })
+
     it('marks only passing rows whose member id matches a checkpoint winner', () => {
         renderCheckpointTable()
 
@@ -258,5 +285,93 @@ describe('TableCheckpointSubmissions checkpoint winner indicator', () => {
         expect(screen.getByRole('link', { name: '88.89' })
             .getAttribute('href'))
             .toBe('./../reviews/non-winner-submission?reviewId=non-winner-review')
+    })
+})
+
+describe('checkpoint screening multiple Design submissions (PM-6307)', () => {
+    const screenings: Screening[] = [
+        {
+            ...winnerRow,
+            isLatest: true,
+            myReviewId: 'review-new',
+            myReviewResourceId: 'checkpoint-screener',
+            myReviewStatus: 'COMPLETED',
+            reviewId: 'review-new',
+            reviewStatus: 'COMPLETED',
+            submissionId: 'checkpoint-new',
+            type: 'CHECKPOINT_SUBMISSION',
+        },
+        {
+            ...winnerRow,
+            isLatest: false,
+            myReviewId: 'review-pending',
+            myReviewResourceId: 'checkpoint-screener',
+            myReviewStatus: 'PENDING',
+            result: '-',
+            reviewId: 'review-pending',
+            reviewStatus: 'PENDING',
+            score: 'Pending',
+            submissionId: 'checkpoint-pending',
+            type: 'CHECKPOINT_SUBMISSION',
+        },
+        {
+            ...nonWinnerRow,
+            isLatest: true,
+            myReviewId: 'review-other',
+            myReviewResourceId: 'checkpoint-screener',
+            myReviewStatus: 'COMPLETED',
+            reviewId: 'review-other',
+            reviewStatus: 'COMPLETED',
+            type: 'CHECKPOINT_SUBMISSION',
+        },
+    ]
+
+    it.each([1200, 640])('keeps the older pending submission actionable at width %s', width => {
+        mockScreenWidth = width
+        const context = {
+            ...challengeContext,
+            challengeId: 'challenge-id',
+            challengeInfo: {
+                ...challengeInfo,
+                currentPhase: 'Checkpoint Screening',
+                metadata: [{
+                    name: 'submissionLimit',
+                    value: '{"count":"2","limit":"true","unlimited":"false"}',
+                }],
+                status: 'Active',
+            },
+            myResources: [{
+                id: 'checkpoint-screener',
+                memberId: 'screener-member',
+                roleName: 'Checkpoint Screener',
+            }],
+            myRoles: ['Checkpoint Screener'],
+        } as ChallengeDetailContextModel
+
+        render(
+            <ReviewAppContext.Provider value={reviewAppContext}>
+                <ChallengeDetailContext.Provider value={context}>
+                    <TabContentCheckpoint
+                        checkpoint={screenings}
+                        downloadSubmission={jest.fn()}
+                        isDownloading={{}}
+                        isLoading={false}
+                        mode='screening'
+                    />
+                </ChallengeDetailContext.Provider>
+            </ReviewAppContext.Provider>,
+        )
+
+        screenings.forEach(row => {
+            expect(screen.getByRole('button', { name: row.submissionId }))
+                .toBeTruthy()
+        })
+        const pendingRow = within(screen.getByTestId('checkpoint-pending'))
+        expect(pendingRow.getByRole('link', { name: 'Complete Screening' })
+            .getAttribute('href'))
+            .toBe('./../reviews/checkpoint-pending?reviewId=review-pending')
+        expect(pendingRow.getByRole('link', { name: 'Pending' })
+            .getAttribute('href'))
+            .toBe('./../reviews/checkpoint-pending?reviewId=review-pending')
     })
 })
