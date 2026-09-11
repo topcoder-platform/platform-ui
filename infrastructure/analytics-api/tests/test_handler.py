@@ -504,6 +504,20 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertNotIn("click_x_bucket", self.module.CAMPAIGN_SQL)
         self.assertNotIn("click_y_bucket", self.module.CAMPAIGN_SQL)
 
+    def test_general_query_uses_one_timestamp_pruned_event_scan(self) -> None:
+        """General report dimensions share one grouping-sets scan of the event view."""
+
+        self.assertEqual(
+            1,
+            self.module.GENERAL_SQL.count("topcoder_web.product_analytics_events_v1"),
+        )
+        self.assertIn("GROUP BY GROUPING SETS", self.module.GENERAL_SQL)
+        self.assertIn("event_timestamp >= CAST(:from_date AS timestamp)", self.module.GENERAL_SQL)
+        self.assertIn(
+            "event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))",
+            self.module.GENERAL_SQL,
+        )
+
     def test_route_funnel_matches_the_exact_clicked_challenge(self) -> None:
         """Route registrations and submissions retain the clicked challenge ID."""
 

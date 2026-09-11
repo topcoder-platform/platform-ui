@@ -255,111 +255,123 @@ ORDER BY row_type, date_value, metric_1 DESC
 
 GENERAL_SQL = """
 WITH filtered_events AS (
-    SELECT *
-    FROM topcoder_web.product_analytics_events_v1
-    WHERE event_date BETWEEN CAST(:from_date AS date) AND CAST(:to_date AS date)
-      AND (:surface = '*' OR surface = :surface)
-),
-summary_row AS (
     SELECT
-        CAST(MAX(event_date) AS varchar(10)) AS data_through,
-        COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
-        COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
-        COUNT(CASE WHEN event_name = 'ui_click' THEN 1 END)::bigint AS clicks,
-        COUNT(DISTINCT CASE WHEN event_name = 'ui_click' THEN analytics_user_id END)::bigint AS clickers
-    FROM filtered_events
-),
-daily_rows AS (
-    SELECT
-        event_date,
-        COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
-        COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
-        COUNT(CASE WHEN event_name = 'ui_click' THEN 1 END)::bigint AS clicks,
-        COUNT(DISTINCT CASE WHEN event_name = 'ui_click' THEN analytics_user_id END)::bigint AS clickers
-    FROM filtered_events
-    GROUP BY event_date
-),
-page_rows AS (
-    SELECT
+        event_timestamp::date AS event_date,
+        event_name,
+        analytics_user_id,
         surface,
         page_path,
-        COUNT(*)::bigint AS page_views,
-        COUNT(DISTINCT analytics_user_id)::bigint AS visitors
-    FROM filtered_events
-    WHERE event_name = '_page_view' AND page_path IS NOT NULL
-    GROUP BY surface, page_path
-    ORDER BY page_views DESC, page_path
-    LIMIT 50
+        utm_source
+    FROM topcoder_web.product_analytics_events_v1
+    WHERE event_timestamp >= CAST(:from_date AS timestamp)
+      AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
+      AND (:surface = '*' OR surface = :surface)
 ),
-source_rows AS (
+aggregated_rows AS (
     SELECT
-        utm_source,
-        COUNT(*)::bigint AS page_views,
-        COUNT(DISTINCT analytics_user_id)::bigint AS visitors
-    FROM filtered_events
-    WHERE event_name = '_page_view'
-    GROUP BY utm_source
-    ORDER BY page_views DESC, utm_source
-    LIMIT 25
-),
-surface_rows AS (
-    SELECT
+        event_date,
         surface,
+        page_path,
+        utm_source,
+        GROUPING(event_date) AS date_is_grouped,
+        GROUPING(surface) AS surface_is_grouped,
+        GROUPING(page_path) AS page_is_grouped,
+        GROUPING(utm_source) AS source_is_grouped,
+        MAX(event_date) AS data_through,
         COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
-        COUNT(DISTINCT CASE
-            WHEN event_name = '_page_view' THEN analytics_user_id
-        END)::bigint AS visitors,
-        COUNT(CASE WHEN event_name = 'ui_click' THEN 1 END)::bigint AS clicks
+        COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+        COUNT(CASE WHEN event_name = 'ui_click' THEN 1 END)::bigint AS clicks,
+        COUNT(DISTINCT CASE WHEN event_name = 'ui_click' THEN analytics_user_id END)::bigint AS clickers
     FROM filtered_events
-    WHERE surface IS NOT NULL
-    GROUP BY surface
-    ORDER BY page_views DESC, surface
-    LIMIT 25
+    GROUP BY GROUPING SETS (
+        (),
+        (event_date),
+        (surface, page_path),
+        (utm_source),
+        (surface)
+    )
+),
+typed_rows AS (
+    SELECT
+        CASE
+            WHEN date_is_grouped = 0 THEN 'daily'
+            WHEN page_is_grouped = 0 THEN 'page'
+            WHEN source_is_grouped = 0 THEN 'source'
+            WHEN surface_is_grouped = 0 THEN 'surface'
+            ELSE 'summary'
+        END::varchar AS row_type,
+        CASE
+            WHEN date_is_grouped = 0 THEN CAST(event_date AS varchar(10))
+        END AS date_value,
+        CASE
+            WHEN date_is_grouped = 0 THEN NULL
+            WHEN page_is_grouped = 0 THEN surface
+            WHEN source_is_grouped = 0 THEN utm_source
+            WHEN surface_is_grouped = 0 THEN surface
+            ELSE CAST(data_through AS varchar(10))
+        END::varchar AS dimension_1,
+        CASE
+            WHEN page_is_grouped = 0 THEN page_path
+        END::varchar AS dimension_2,
+        NULL::varchar AS dimension_3,
+        NULL::varchar AS dimension_4,
+        page_views::double precision AS metric_1,
+        visitors::double precision AS metric_2,
+        CASE
+            WHEN page_is_grouped = 0 OR source_is_grouped = 0 THEN NULL
+            ELSE clicks
+        END::double precision AS metric_3,
+        CASE
+            WHEN date_is_grouped = 0
+              OR (
+                  date_is_grouped = 1
+                  AND surface_is_grouped = 1
+                  AND page_is_grouped = 1
+                  AND source_is_grouped = 1
+              )
+            THEN clickers
+        END::double precision AS metric_4
+    FROM aggregated_rows
+    WHERE
+        (
+            date_is_grouped = 1
+            AND surface_is_grouped = 1
+            AND page_is_grouped = 1
+            AND source_is_grouped = 1
+        )
+        OR date_is_grouped = 0
+        OR (page_is_grouped = 0 AND page_path IS NOT NULL AND page_views > 0)
+        OR (source_is_grouped = 0 AND page_views > 0)
+        OR (
+            surface_is_grouped = 0
+            AND page_is_grouped = 1
+            AND surface IS NOT NULL
+        )
+),
+ranked_rows AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY row_type
+            ORDER BY metric_1 DESC, dimension_2, dimension_1
+        ) AS row_rank
+    FROM typed_rows
 )
 SELECT
-    'summary'::varchar AS row_type,
-    NULL::varchar AS date_value,
-    data_through::varchar AS dimension_1,
-    NULL::varchar AS dimension_2,
-    NULL::varchar AS dimension_3,
-    NULL::varchar AS dimension_4,
-    page_views::double precision AS metric_1,
-    visitors::double precision AS metric_2,
-    clicks::double precision AS metric_3,
-    clickers::double precision AS metric_4
-FROM summary_row
-UNION ALL
-SELECT
-    'daily',
-    CAST(event_date AS varchar(10)),
-    NULL, NULL, NULL, NULL,
-    page_views, visitors, clicks, clickers
-FROM daily_rows
-UNION ALL
-SELECT
-    'page',
-    NULL,
-    surface,
-    page_path,
-    NULL, NULL,
-    page_views, visitors, NULL, NULL
-FROM page_rows
-UNION ALL
-SELECT
-    'source',
-    NULL,
-    utm_source,
-    NULL, NULL, NULL,
-    page_views, visitors, NULL, NULL
-FROM source_rows
-UNION ALL
-SELECT
-    'surface',
-    NULL,
-    surface,
-    NULL, NULL, NULL,
-    page_views, visitors, clicks, NULL
-FROM surface_rows
+    row_type,
+    date_value,
+    dimension_1,
+    dimension_2,
+    dimension_3,
+    dimension_4,
+    metric_1,
+    metric_2,
+    metric_3,
+    metric_4
+FROM ranked_rows
+WHERE (row_type <> 'page' OR row_rank <= 50)
+  AND (row_type <> 'source' OR row_rank <= 25)
+  AND (row_type <> 'surface' OR row_rank <= 25)
 ORDER BY row_type, date_value, metric_1 DESC
 """
 
