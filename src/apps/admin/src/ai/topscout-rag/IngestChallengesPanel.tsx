@@ -13,40 +13,17 @@ import {
     ingestChallengeInRag,
     WorkflowPollTimeoutError,
 } from '~/libs/shared'
-import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
+import { Button, InputSelect } from '~/libs/ui'
 import FormToggleSwitch from '~/libs/ui/lib/components/form/form-groups/form-toggle-switch'
 
 import { Field, TextField } from './FormFields'
+import {
+    BULK_STATUS_OPTIONS,
+    BULK_TRACK_OPTIONS,
+    BULK_TYPE_OPTIONS,
+} from './ingest-options'
 import { IngestionRun, IngestionRunSummary } from './IngestionRunSummary'
 import styles from './IngestChallengesPanel.module.scss'
-
-/**
- * tc-ai-api treats tracks and types as free-form strings (its own config
- * documents them as informational, not enums), so these are conveniences for
- * the common cases — never validation.
- */
-const TRACK_OPTIONS: InputSelectOption[] = [
-    { label: 'Any track', value: '' },
-    { label: 'Development', value: 'Development' },
-    { label: 'Design', value: 'Design' },
-    { label: 'Data Science', value: 'Data Science' },
-    { label: 'Quality Assurance', value: 'Quality Assurance' },
-]
-
-const TYPE_OPTIONS: InputSelectOption[] = [
-    { label: 'Any type', value: '' },
-    { label: 'Challenge', value: 'Challenge' },
-    { label: 'First2Finish', value: 'First2Finish' },
-    { label: 'Marathon Match', value: 'Marathon Match' },
-    { label: 'Task', value: 'Task' },
-]
-
-/** Mirrors the workflow's own default status set. */
-const STATUS_OPTIONS: InputSelectOption[] = [
-    { label: 'Active + Completed', value: '' },
-    { label: 'Active only', value: 'ACTIVE' },
-    { label: 'Completed only', value: 'COMPLETED' },
-]
 
 interface BulkFormState {
     projectId: string
@@ -221,7 +198,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                             <InputSelect
                                 name='track'
                                 label=''
-                                options={TRACK_OPTIONS}
+                                options={BULK_TRACK_OPTIONS}
                                 value={bulk.track}
                                 onChange={handleBulkChange('track')}
                                 disabled={bulkDisabled}
@@ -232,7 +209,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                             <InputSelect
                                 name='type'
                                 label=''
-                                options={TYPE_OPTIONS}
+                                options={BULK_TYPE_OPTIONS}
                                 value={bulk.type}
                                 onChange={handleBulkChange('type')}
                                 disabled={bulkDisabled}
@@ -243,7 +220,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                             <InputSelect
                                 name='status'
                                 label=''
-                                options={STATUS_OPTIONS}
+                                options={BULK_STATUS_OPTIONS}
                                 value={bulk.status}
                                 onChange={handleBulkChange('status')}
                                 disabled={bulkDisabled}

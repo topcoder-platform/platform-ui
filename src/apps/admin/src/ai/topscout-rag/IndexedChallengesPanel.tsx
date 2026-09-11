@@ -16,7 +16,6 @@ import {
     Button,
     IconOutline,
     InputSelect,
-    InputSelectOption,
     InputWrapper,
     Table,
     TableColumn,
@@ -32,27 +31,12 @@ import {
     IndexedChallenge,
 } from '../../lib/services/rag-index.service'
 
+import { INDEXED_TRACK_OPTIONS, INDEXED_TYPE_OPTIONS } from './ingest-options'
 import styles from './IndexedChallengesPanel.module.scss'
 
 const stopPropagation: MouseEventHandler = ev => ev.stopPropagation()
 
 const PER_PAGE = 10
-
-const TRACK_OPTIONS: InputSelectOption[] = [
-    { label: 'All tracks', value: '' },
-    { label: 'Development', value: 'Development' },
-    { label: 'Design', value: 'Design' },
-    { label: 'Data Science', value: 'Data Science' },
-    { label: 'Quality Assurance', value: 'Quality Assurance' },
-]
-
-const TYPE_OPTIONS: InputSelectOption[] = [
-    { label: 'All types', value: '' },
-    { label: 'Challenge', value: 'Challenge' },
-    { label: 'First2Finish', value: 'First2Finish' },
-    { label: 'Marathon Match', value: 'Marathon Match' },
-    { label: 'Task', value: 'Task' },
-]
 
 interface Filters {
     search: string
@@ -390,7 +374,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
                 <InputSelect
                     name='filterTrack'
                     label=''
-                    options={TRACK_OPTIONS}
+                    options={INDEXED_TRACK_OPTIONS}
                     value={filters.track}
                     onChange={handleFilterChange('track')}
                     tabIndex={0}
@@ -398,7 +382,7 @@ export const IndexedChallengesPanel: FC<IndexedChallengesPanelProps> = props => 
                 <InputSelect
                     name='filterType'
                     label=''
-                    options={TYPE_OPTIONS}
+                    options={INDEXED_TYPE_OPTIONS}
                     value={filters.type}
                     onChange={handleFilterChange('type')}
                     tabIndex={0}
