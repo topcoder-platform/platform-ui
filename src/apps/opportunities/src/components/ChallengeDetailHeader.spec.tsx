@@ -672,22 +672,116 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             })
     })
 
-    it('retains a future Iterative Review deadline in a Task timeline', () => {
+    it.each([
+        {
+            challengeEnd: '2026-08-31T17:44:00.000Z',
+            challengeStart: '2026-08-10T17:44:00.000Z',
+            isOpen: true,
+            phaseEnd: '2026-08-15T17:44:00.000Z',
+            phaseStart: '2026-08-13T17:44:00.000Z',
+            state: 'current',
+        },
+        {
+            challengeEnd: '2999-08-31T17:44:00.000Z',
+            challengeStart: '2999-08-10T17:44:00.000Z',
+            isOpen: false,
+            phaseEnd: '2999-08-21T17:44:00.000Z',
+            phaseStart: '2999-08-20T17:44:00.000Z',
+            state: 'future',
+        },
+    ])('omits a $state Iterative Review phase from a Task timeline', ({
+        challengeEnd,
+        challengeStart,
+        isOpen,
+        phaseEnd,
+        phaseStart,
+    }: {
+        challengeEnd: string
+        challengeStart: string
+        isOpen: boolean
+        phaseEnd: string
+        phaseStart: string
+    }) => {
+        const { container }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: isOpen ? {
+                            isOpen: true,
+                            name: 'Iterative Review',
+                            scheduledEndDate: phaseEnd,
+                        } : undefined,
+                        currentPhaseNames: isOpen ? ['Iterative Review'] : [],
+                        endDate: challengeEnd,
+                        phases: [
+                            {
+                                actualEndDate: challengeEnd,
+                                actualStartDate: challengeStart,
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                            {
+                                id: 'iterative-review',
+                                isOpen,
+                                name: 'Iterative Review',
+                                scheduledEndDate: phaseEnd,
+                                scheduledStartDate: phaseStart,
+                            },
+                            {
+                                actualEndDate: challengeEnd,
+                                actualStartDate: challengeStart,
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                        ],
+                        startDate: challengeStart,
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const itemLabels = within(timeline)
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Submission', 'Winners'])
+        expect(within(timeline)
+            .queryByText('Iterative Review'))
+            .not.toBeInTheDocument()
+        expect(container.querySelector('.timelineItems'))
+            .toHaveStyle({
+                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+            })
+    })
+
+    it('retains Iterative Review for non-Task challenge timelines', () => {
         render(
             <MemoryRouter>
                 <ChallengeDetailHeader
                     busy={false}
                     challenge={challengeFixture({
-                        currentPhase: undefined,
-                        currentPhaseNames: [],
-                        endDate: '2999-08-21T17:44:00.000Z',
-                        phases: [{
-                            actualEndDate: '2999-08-21T17:44:00.000Z',
-                            actualStartDate: '2999-08-20T17:44:00.000Z',
-                            id: 'iterative-review',
+                        currentPhase: {
+                            isOpen: true,
                             name: 'Iterative Review',
+                            scheduledEndDate: '2026-08-15T17:44:00.000Z',
+                        },
+                        currentPhaseNames: ['Iterative Review'],
+                        phases: [{
+                            id: 'iterative-review',
+                            isOpen: true,
+                            name: 'Iterative Review',
+                            scheduledEndDate: '2026-08-15T17:44:00.000Z',
+                            scheduledStartDate: '2026-08-13T17:44:00.000Z',
                         }],
-                        type: { name: 'Task' },
+                        type: { name: 'Challenge' },
                     })}
                     isRegistered={false}
                     onRegister={jest.fn()}
