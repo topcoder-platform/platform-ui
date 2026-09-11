@@ -1,8 +1,8 @@
-import { AxiosHeaders, InternalAxiosRequestConfig } from 'axios'
+import { AxiosHeaders, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
 import { tokenGetAsync } from '../../auth'
 
-import { createInstance, postAsync } from './xhr.functions'
+import { createInstance, getAsync, postAsync } from './xhr.functions'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -59,5 +59,26 @@ describe('xhr post serialization', () => {
             .toBe('Bearer auth-token')
         expect(captured?.signal)
             .toBe(controller.signal)
+    })
+})
+
+describe('xhr get request configuration', () => {
+    it('forwards cancellation and timeout controls to Axios', async () => {
+        const controller = new AbortController()
+        const get = jest.fn()
+            .mockResolvedValue({ data: { id: 'term-id' } })
+        const xhr = { get } as unknown as AxiosInstance
+
+        await expect(getAsync(
+            'https://api.example/v5/terms/term-id',
+            xhr,
+            { signal: controller.signal, timeout: 10_000 },
+        ))
+            .resolves.toEqual({ id: 'term-id' })
+        expect(get)
+            .toHaveBeenCalledWith(
+                'https://api.example/v5/terms/term-id',
+                { signal: controller.signal, timeout: 10_000 },
+            )
     })
 })

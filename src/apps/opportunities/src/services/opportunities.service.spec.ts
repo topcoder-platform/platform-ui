@@ -1579,7 +1579,11 @@ describe('opportunities service normalization', () => {
                 totalPages: 2,
             })
         expect(get)
-            .toHaveBeenCalledWith('https://api.example/v6/resource-roles')
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/resource-roles',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
         expect(globalGet)
             .toHaveBeenLastCalledWith(
                 'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role'
@@ -1880,9 +1884,19 @@ describe('opportunities service normalization', () => {
                 title: 'Rules',
             })
         expect(get)
-            .toHaveBeenNthCalledWith(1, 'https://api.example/v5/terms?legacyId=123456')
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://api.example/v5/terms?legacyId=123456',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
         expect(get)
-            .toHaveBeenNthCalledWith(2, 'https://api.example/v5/terms/term-uuid')
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://api.example/v5/terms/term-uuid',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
     })
 
     it('uses a unique cache-buster for authoritative challenge term status reads', async () => {
@@ -1942,8 +1956,53 @@ describe('opportunities service normalization', () => {
                 roleId: 'submitter-role',
                 text: '<p>Rules</p>',
             }])
+        expect(get.mock.calls.map(call => call[0]))
+            .not.toContain('https://api.example/v5/terms/reviewer-term')
+    })
+
+    it('forwards cancellation and timeout controls through submitter term detail reads', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const controller = new AbortController()
+        const requestConfig = { signal: controller.signal, timeout: 10_000 }
+        get
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+            .mockResolvedValueOnce({
+                result: [{ agreed: false, id: 'canonical-term', title: 'NDA' }],
+            })
+            .mockResolvedValueOnce({ agreed: false, id: 'canonical-term', text: '<p>NDA</p>' })
+
+        await expect(getChallengeSubmitterTermsDetails(
+            [{ id: '123456', roleId: 'submitter-role' }],
+            { signal: controller.signal, timeoutMs: 10_000 },
+        ))
+            .resolves.toEqual([{
+                agreed: false,
+                id: 'canonical-term',
+                roleId: 'submitter-role',
+                text: '<p>NDA</p>',
+                title: 'NDA',
+            }])
         expect(get)
-            .not.toHaveBeenCalledWith('https://api.example/v5/terms/reviewer-term')
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://api.example/v6/resource-roles',
+                undefined,
+                requestConfig,
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://api.example/v5/terms?legacyId=123456',
+                undefined,
+                requestConfig,
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                3,
+                'https://api.example/v5/terms/canonical-term',
+                undefined,
+                requestConfig,
+            )
     })
 
     it('returns the Terms API DocuSign recipient view', async () => {
