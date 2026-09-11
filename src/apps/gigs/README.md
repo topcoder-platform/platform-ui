@@ -16,10 +16,11 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
   between members or gigs.
 
 The app reuses platform navigation, profile/auth context, buttons, modal, spinner,
-icons, skills autocomplete service, and the scoped 2026 design tokens. Figtree
-headings, Nunito Sans body text, semantic surfaces/teal actions and responsive
-cards follow the platform design system. The reference was the August 2026 Figma
-file `C2cA6508RhpjWJDp7MLKbO`, Color page `1:54`, with design context retrieved
+icons, skills autocomplete service, and app-specific styles that use the 2026
+Sass tokens for surfaces, actions, and responsive cards. It does not opt into
+the shared 2026 foundation theme; base typography and controls use the legacy
+platform styles unless overridden by a Gigs component. The reference was the
+August 2026 Figma file `C2cA6508RhpjWJDp7MLKbO`, Color page `1:54`, with design context retrieved
 from `674:8828`. Layout retains the legacy listing/detail/form hierarchy while
 adapting to the platform components. Styles apply only inside `.gigs-app`.
 The listing search, location and sort controls use the same teal focused border
