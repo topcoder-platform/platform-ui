@@ -112,6 +112,8 @@ type ChallengeTab = ChallengeDetailTab
 const STALE_REGISTRATION_MESSAGE
     = 'Your registration is no longer active. Register again before submitting.'
 const ACTIVE_SUBMISSIONS_REFRESH_INTERVAL_MS = 30_000
+const ACTIVE_SUBMISSIONS_ERROR_RETRY_INTERVAL_MS = 10_000
+const ACTIVE_SUBMISSIONS_ERROR_RETRY_COUNT = 2
 
 /**
  * Determines whether a Design submission can still be removed while an
@@ -1205,6 +1207,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const isDesign = trackKey === 'design'
     const isQa = trackKey === 'qualityassurance'
     const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
+    const refreshActiveMySubmissions = !!props.mine
+        && props.challenge.status?.toUpperCase() === 'ACTIVE'
     const privateDesignSubmissions = isDesign
         && !props.mine
         && !challengeMetadataFlag(props.challenge, 'submissionsViewable')
@@ -1232,11 +1236,13 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 sortOrder,
             )),
         {
-            refreshInterval: props.mine && props.challenge.status?.toUpperCase() === 'ACTIVE'
+            errorRetryCount: ACTIVE_SUBMISSIONS_ERROR_RETRY_COUNT,
+            errorRetryInterval: ACTIVE_SUBMISSIONS_ERROR_RETRY_INTERVAL_MS,
+            refreshInterval: refreshActiveMySubmissions
                 ? ACTIVE_SUBMISSIONS_REFRESH_INTERVAL_MS
                 : 0,
-            revalidateOnFocus: false,
-            shouldRetryOnError: false,
+            revalidateOnFocus: refreshActiveMySubmissions,
+            shouldRetryOnError: refreshActiveMySubmissions,
         },
     )
     const previewResponse: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
@@ -1351,7 +1357,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         return <OpportunityTabLoading label='Loading submissions' />
     }
 
-    if (response.error) return <TabError onRetry={() => response.mutate()} />
+    if (response.error && response.data === undefined) {
+        return <TabError onRetry={() => response.mutate()} />
+    }
+
     if (!response.data?.items.length) {
         if (props.mine) {
             return (

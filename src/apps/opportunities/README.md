@@ -384,7 +384,10 @@ tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload
-the page; failed score requests do not enter an automatic retry loop. Final
+the page. A transient background failure retains the last successful submission
+page, retries twice with a delay, and revalidates when the member returns to the
+tab; initial failures still expose the explicit retry action. Optional score
+requests do not enter an automatic retry loop. Final
 Marathon Match values remain hidden while a submission
 phase is open, then appear after Review closes or Review API publishes a final
 result. Non-Marathon final scores appear only for completed challenges. The
