@@ -41,6 +41,12 @@ throttles cap warehouse pressure, and successful responses use `Cache-Control:
 private, no-store`. Logs contain request IDs and service-owned error categories
 only.
 
+The General report applies an inclusive timestamp range and uses Redshift
+`GROUPING SETS` to calculate its summary, daily, page, traffic-source, and
+surface sections in one scan of the reporting view. This avoids repeating the
+view's JSON-derived field work for each section while preserving exact visitor
+counts and the existing response contract.
+
 ## Files
 
 - `template.yaml` registers protected analytics routes on the shared API and
