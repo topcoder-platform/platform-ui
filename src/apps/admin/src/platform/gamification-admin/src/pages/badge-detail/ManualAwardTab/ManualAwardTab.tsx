@@ -65,10 +65,6 @@ const ManualAwardTab: FC<ManualAwardTabProps> = (props: ManualAwardTabProps) => 
         <div className={styles.tabWrap}>
             <h3>Manual Award</h3>
             <div className={styles.manualFormWrap}>
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Neque ullamcorper neque sed orci, enim amet, sed.
-                </p>
                 <div className={styles.manualForm}>
                     <InputHandleAutocomplete
                         label='Select Member'
