@@ -455,9 +455,13 @@ Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
 progress, and completed states. Virus-scan and quarantine failures are reported
 as Failed in the Provisional process with explicit 0% progress; later review
-failures remain System failures. Their actions include the clean submission,
-scorer artifacts, and submission history, while the single page-level button
-owns the Review App handoff.
+failures remain System failures. A newly active attempt stays in the Provisional
+process while its first scorer result is pending during Submission, then uses the
+System process during Review. Unknown phases are not guessed. Active My Submissions
+views refresh attempts and their embedded scorer summaries so completed results
+appear without a page reload. Their actions include the clean submission, scorer
+artifacts, and submission history, while the single page-level button owns the
+Review App handoff.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
