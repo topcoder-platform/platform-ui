@@ -207,15 +207,37 @@ function submissionTypeLabel(value?: string): string {
 /**
  * Formats the member-facing lifecycle shown in My Submissions.
  *
- * @param value optional Review API status token.
+ * @param submission Review API submission and any attached review aggregates.
+ * @param challenge owning challenge lifecycle and phases.
  * @returns normalized lifecycle label or an em dash.
  * @throws Does not throw.
  */
-function submissionStatusLabel(value?: string): string {
+function submissionStatusLabel(
+    submission: ChallengeSubmission,
+    challenge: ChallengeOpportunity,
+): string {
+    const value = submission.status
     if (!value) return '—'
     if (value.trim()
-        .toUpperCase() === 'ACTIVE') return 'In Review'
-    return submissionTypeLabel(value)
+        .toUpperCase() !== 'ACTIVE') return submissionTypeLabel(value)
+
+    const reviewCompleted = challenge.status?.trim()
+        .toUpperCase() === 'COMPLETED'
+        || (challenge.phases ?? []).some(phase => (
+            challengeCatalogKey(phase.name) === 'review' && !!phase.actualEndDate
+        ))
+        || [
+            ...(submission.reviewSummation ?? []),
+            ...(submission.reviewSummations ?? []),
+        ].some(summation => (
+            summation.isFinal === true
+            || summation.is_final === true
+            || summation.type?.trim()
+                .toLowerCase() === 'final'
+        ))
+
+    if (reviewCompleted) return 'Completed'
+    return 'In Review'
 }
 
 interface TabConfig {
@@ -1527,7 +1549,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             <>
                                                 <td data-mobile-label='Current Status'>
                                                     <span className={styles.currentStatus}>
-                                                        {submissionStatusLabel(submission.status)}
+                                                        {submissionStatusLabel(submission, props.challenge)}
                                                     </span>
                                                 </td>
                                                 <td data-mobile-label='Score'>

@@ -1181,6 +1181,95 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
     })
 
+    it('shows an active submission as completed after its challenge completes', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockChallenge = { ...mockChallenge, status: 'COMPLETED' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByText('Completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('In Review'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows an active submission as completed once the Review phase actually ends', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{
+                actualEndDate: '2026-06-04T09:30:00.000Z',
+                isOpen: false,
+                name: 'Review',
+            }],
+            status: 'ACTIVE',
+        }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByText('Completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('In Review'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows an active submission as completed when its final review summation arrives', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            reviewSummation: [{ aggregateScore: 92.5, isFinal: true }],
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockChallenge = { ...mockChallenge, phases: [], status: 'ACTIVE' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByText('Completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('In Review'))
+            .not.toBeInTheDocument()
+    })
+
+    it('preserves an explicit failed submission status after challenge completion', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            status: 'FAILED_REVIEW',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockChallenge = { ...mockChallenge, status: 'COMPLETED' }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByText('Failed Review'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Completed'))
+            .not.toBeInTheDocument()
+    })
+
     it('does not offer a clean-storage download for an external URL submission', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
