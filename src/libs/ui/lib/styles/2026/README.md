@@ -2,18 +2,20 @@
 
 This folder contains the scoped foundations for the August 2026 Topcoder design
 system. The shared theme is imported only by the internal Work, System Admin,
-Calendar, Procurement, and Reports applications, plus Opportunities.
+Calendar, Procurement, and Reports applications, plus Support, Opportunities,
+and Gigs.
 
-Member-facing apps, including Engagements, the Copilots Portal, Review, Support,
-and the separate Gigs app, do not opt into these shared foundations. Their
-existing app and component styles continue to apply. Importing `_tokens.scss`
-alone supplies Sass values without applying the shared theme.
+Engagements, the Copilots Portal, Review, and other non-migrated apps do not opt
+into these shared foundations. Their existing app and component styles continue
+to apply. Importing `_tokens.scss` alone supplies Sass values without applying
+the shared theme.
 
 `_tokens.scss` is the source for the 2026 color, type, radius, and elevation
 tokens. `_scope.scss` exposes matching custom properties and base element styles
-under explicit internal app body classes and the low-specificity
-`:where(.opportunities-app)` content container. Opportunities must not apply its
-theme class to `body`, so its shared navigation retains the legacy styles.
+under explicit internal app and Support body classes, and the low-specificity
+`:where(.opportunities-app)` and `:where(.gigs-app)` content containers.
+Opportunities and Gigs must not apply their theme classes to `body`, so their
+shared navigation retains the legacy styles.
 
 Keep the allowlist explicit: adding an unscoped `body`, heading, form, or table
 rule would change apps that must remain on the legacy platform-ui style system.

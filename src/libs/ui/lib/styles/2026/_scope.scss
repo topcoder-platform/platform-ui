@@ -1,17 +1,19 @@
 @import 'tokens';
 
-// Only internal apps and Opportunities opt into the shared 2026 foundations.
-// Keep this allowlist explicit: member-facing apps must retain their existing
-// styles, including after a themed app's stylesheet has loaded during navigation.
+// Only explicitly migrated apps opt into the shared 2026 foundations.
+// Keep Engagements, Copilots, Review, and other non-migrated apps outside this
+// allowlist, including after a themed stylesheet has loaded during navigation.
 $tc-2026-apps:
     'body.work-app',
+    'body.support-app',
     'body.admin-app',
     'body.calendar-app',
     'body.procurement-app',
     'body.reports-app',
-    // Keep Opportunities isolated from universal navigation while allowing
+    // Keep Opportunities and Gigs isolated from universal navigation while allowing
     // CSS-module component colors to override these low-specificity defaults.
-    ':where(.opportunities-app)';
+    ':where(.opportunities-app)',
+    ':where(.gigs-app)';
 
 @each $app in $tc-2026-apps {
     #{$app} {
