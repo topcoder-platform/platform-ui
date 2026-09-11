@@ -35,6 +35,29 @@ export function challengeReviewAppUrl(
 }
 
 /**
+ * Builds the Review App destination for one AI workflow run and submission.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param submissionId Review API submission identifier.
+ * @param workflowId workflow identifier returned at the top level of the run.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded workflow-review URL.
+ * @throws Does not throw.
+ */
+export function submissionAiReviewAppUrl(
+    challengeId: string,
+    submissionId: string,
+    workflowId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}`
+        + `/reviews/${encodeURIComponent(submissionId)}`
+        + `?workflowId=${encodeURIComponent(workflowId)}`
+}
+
+/**
  * Builds a member profile URL on the environment-specific Profiles app.
  *
  * @param handle public Topcoder handle.

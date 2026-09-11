@@ -19,6 +19,7 @@ import {
 import { toast } from 'react-toastify'
 
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
+import { submissionAiWorkflowRunResult } from '../components/SubmissionAiReviewDetails'
 
 const mockUseSWR = jest.fn()
 const mockDeleteSubmission = jest.fn()
@@ -36,6 +37,8 @@ let mockRegistration: { id: string } | undefined
 let mockTabAccessLoading: boolean
 let mockRegistrationRemoved: boolean
 let mockChallenge: Record<string, unknown>
+let mockAiWorkflowRuns: Record<string, Record<string, unknown>[]>
+let mockAiWorkflowRunErrors: Record<string, Error>
 let mockMemberProfiles: Record<string, unknown>[]
 let mockMemberResource: { id: string; roleName?: string } | undefined
 let mockMySubmissionCount: number | undefined
@@ -227,6 +230,7 @@ jest.mock('../services', () => ({
     getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
     getChallengeReviewSummations: jest.fn(),
+    getChallengeSubmissionAiWorkflowRuns: jest.fn(),
     getChallengeSubmissionDownloadUrl: (...args: unknown[]) => mockGetSubmissionDownloadUrl(...args),
     getChallengeSubmissionPreviews: jest.fn(),
     getChallengeSubmissions: jest.fn(),
@@ -335,6 +339,12 @@ jest.mock('../utils', () => ({
                 )))
             || additionalScores.some(score => Number.isFinite(Number(score)))
     },
+    submissionAiReviewAppUrl: (
+        challengeId: string,
+        submissionId: string,
+        workflowId: string,
+    ): string => `https://review.topcoder-dev.com/active-challenges/${challengeId}`
+        + `/reviews/${submissionId}?workflowId=${workflowId}`,
     winnerFinalScore: (
         winner: { placement?: number; userId?: string },
         projectResults: Array<{ finalScore?: number; placement?: number; userId?: string }>,
@@ -435,6 +445,8 @@ describe('ChallengeDetailsPage member flows', () => {
             track: 'Development',
             type: 'Challenge',
         }
+        mockAiWorkflowRuns = {}
+        mockAiWorkflowRunErrors = {}
         mockUnregister.mockResolvedValue(undefined)
         mockRegister.mockResolvedValue({ id: 'new-resource-id', memberId: 123 })
         mockDeleteSubmission.mockResolvedValue(undefined)
@@ -479,6 +491,14 @@ describe('ChallengeDetailsPage member flows', () => {
                         : undefined),
                     error: mockSubmissionsError,
                     mutate: mockSubmissionsMutate,
+                }
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:submission-ai-workflow-runs') {
+                const submissionId = String(key[1])
+                return {
+                    ...swrResponse(mockAiWorkflowRuns[submissionId] ?? []),
+                    error: mockAiWorkflowRunErrors[submissionId],
                 }
             }
 
@@ -1370,6 +1390,135 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('cell', { name: '87.625' }))
             .toHaveAttribute('data-mobile-label', 'Score')
+    })
+
+    it('expands the first AI workflow result and toggles each submission independently', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            reviewers: [{ aiWorkflowId: 'configured-workflow' }],
+            status: 'ACTIVE',
+        }
+        mockSubmissions = [
+            {
+                aiDecisionScore: 92,
+                createdAt: '2026-09-11T06:50:00.000Z',
+                id: 'newest-submission',
+                status: 'ACTIVE',
+                type: 'CONTEST_SUBMISSION',
+            },
+            {
+                aiDecisionScore: 60,
+                createdAt: '2026-09-10T06:50:00.000Z',
+                id: 'older-submission',
+                status: 'ACTIVE',
+                type: 'CONTEST_SUBMISSION',
+            },
+        ]
+        mockAiWorkflowRuns = {
+            'newest-submission': [{
+                completedAt: '2026-09-11T06:56:55.997Z',
+                id: 'run-newest',
+                score: 92,
+                status: 'SUCCESS',
+                workflow: {
+                    id: 'nested-workflow-id',
+                    name: '[AWS:Claude-Haiku-4.5] - Submission Requirements Workflow',
+                    scorecard: { minimumPassingScore: 75 },
+                },
+                workflowId: 'returned-top-level-workflow-id',
+            }],
+            'older-submission': [{
+                completedAt: '2026-09-10T06:56:55.997Z',
+                id: 'run-older',
+                score: 60,
+                status: 'SUCCESS',
+                workflow: {
+                    name: 'Older AI workflow',
+                    scorecard: { minimumPassingScore: 75 },
+                },
+                workflowId: 'older-workflow-id',
+            }],
+        }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        const newestToggle = screen.getByRole('button', {
+            name: 'Collapse AI review details for submission newest-submission',
+        })
+        expect(newestToggle)
+            .toHaveAttribute('aria-expanded', 'true')
+        expect(screen.getByRole('button', {
+            name: 'Expand AI review details for submission older-submission',
+        }))
+            .toHaveAttribute('aria-expanded', 'false')
+        const newestDetails = screen.getByRole('table', {
+            name: 'AI review details for submission newest-submission',
+        })
+        const detailHeaders = ['AI Reviewer', 'Review Date', 'Score', 'Result']
+        detailHeaders.forEach(header => {
+            expect(within(newestDetails)
+                .getByRole('columnheader', { name: header }))
+                .toBeInTheDocument()
+        })
+        expect(within(newestDetails)
+            .getByText('PASSED'))
+            .toBeInTheDocument()
+        expect(within(newestDetails)
+            .getByRole('link', { name: '92' }))
+            .toHaveAttribute(
+                'href',
+                'https://review.topcoder-dev.com/active-challenges/challenge-id/reviews/newest-submission'
+                    + '?workflowId=returned-top-level-workflow-id',
+            )
+        const workflowRequest = mockUseSWR.mock.calls.find(([key]) => (
+            Array.isArray(key)
+            && key[0] === 'opportunities:submission-ai-workflow-runs'
+            && key[1] === 'newest-submission'
+        ))
+        const refreshInterval = workflowRequest?.[2]?.refreshInterval as (
+            runs: Array<{ status?: string }>
+        ) => number
+        expect(refreshInterval([]))
+            .toBe(10000)
+        expect(refreshInterval([{ status: 'SUCCESS' }]))
+            .toBe(0)
+
+        fireEvent.click(screen.getByRole('button', {
+            name: 'Expand AI review details for submission older-submission',
+        }))
+
+        expect(screen.getByRole('table', {
+            name: 'AI review details for submission newest-submission',
+        }))
+            .toBeInTheDocument()
+        const olderDetails = screen.getByRole('table', {
+            name: 'AI review details for submission older-submission',
+        })
+        expect(within(olderDetails)
+            .getByText('FAILED'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: 'Collapse AI review details for submission older-submission',
+        }))
+        expect(screen.queryByRole('table', {
+            name: 'AI review details for submission older-submission',
+        }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('table', {
+            name: 'AI review details for submission newest-submission',
+        }))
+            .toBeInTheDocument()
+    })
+
+    it('handles missing AI workflow status without crashing', () => {
+        expect(submissionAiWorkflowRunResult({ id: 'run-without-status' }))
+            .toEqual({ kind: 'status', label: 'UNKNOWN' })
+        expect(submissionAiWorkflowRunResult({ id: 'legacy-failure', status: 'FAILED' }))
+            .toEqual({ kind: 'failed', label: 'FAILED' })
     })
 
     it('renders and deletes the compact Design My Submissions actions', async () => {

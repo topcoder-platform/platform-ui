@@ -9,6 +9,7 @@ import {
     challengeSubmissionMode,
     challengeSubmissionLimit,
     memberProfileUrl,
+    submissionAiReviewAppUrl,
 } from './challenge-detail.utils'
 
 jest.mock('~/config', () => ({
@@ -46,6 +47,17 @@ describe('challenge detail utilities', () => {
                 + 'challenge%20with%2Fslash/challenge-details')
         expect(challengeReviewAppUrl('challenge-id', 'https://review.example/'))
             .toBe('https://review.example/active-challenges/challenge-id/challenge-details')
+    })
+
+    it('builds encoded Review App links for one AI workflow run', () => {
+        expect(submissionAiReviewAppUrl(
+            'challenge with/slash',
+            'submission with/slash',
+            'workflow with/slash',
+            'https://review.example/',
+        ))
+            .toBe('https://review.example/active-challenges/challenge%20with%2Fslash'
+                + '/reviews/submission%20with%2Fslash?workflowId=workflow%20with%2Fslash')
     })
 
     it('builds encoded links on the configured Profiles app host', () => {

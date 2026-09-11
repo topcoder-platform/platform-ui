@@ -19,6 +19,7 @@ import {
     getChallengeMemberResource,
     getChallengeProjectResults,
     getChallengeReviewSummations,
+    getChallengeSubmissionAiWorkflowRuns,
     getChallengeSubmissionHistory,
     getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
@@ -1417,6 +1418,24 @@ describe('opportunities service normalization', () => {
         expect(get)
             .toHaveBeenLastCalledWith(
                 'https://api.example/v6/submissions/submission%2Fid/download-url',
+            )
+    })
+
+    it('loads AI workflow runs for the encoded member submission', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const runs = [{
+            id: 'workflow-run',
+            status: 'SUCCESS',
+            submissionId: 'submission/id',
+            workflowId: 'workflow-id',
+        }]
+        get.mockResolvedValueOnce(runs)
+
+        await expect(getChallengeSubmissionAiWorkflowRuns('submission/id'))
+            .resolves.toEqual(runs)
+        expect(get)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/workflows/runs?submissionId=submission%2Fid',
             )
     })
 

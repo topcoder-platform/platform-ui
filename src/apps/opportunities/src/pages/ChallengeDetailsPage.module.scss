@@ -543,6 +543,17 @@
     }
 }
 
+.expandedChevron {
+    transform: rotate(180deg);
+}
+
+.aiReviewDetailsRow {
+    > td {
+        height: auto;
+        padding: 0;
+    }
+}
+
 .reviewAppActionIcon {
     background: currentColor;
     display: inline-block;
@@ -1246,6 +1257,21 @@
                 color: #161616;
                 content: attr(data-mobile-label);
                 font-weight: 700;
+            }
+        }
+
+        .aiReviewDetailsRow {
+            border-bottom: 0;
+            margin-top: -12px;
+            padding-bottom: 0;
+
+            > td {
+                display: block;
+                padding: 0;
+
+                &::before {
+                    content: none;
+                }
             }
         }
     }
