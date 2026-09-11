@@ -1265,6 +1265,59 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeDisabled())
     })
 
+    it.each([
+        ['Submission', 'contest-submission', 'checkpoint-submission'],
+        ['Checkpoint Submission', 'checkpoint-submission', 'contest-submission'],
+    ])(
+        'only enables the matching submission type during the Design %s phase',
+        (activePhase, enabledSubmissionId, disabledSubmissionId) => {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockRegistration = { id: 'resource-id' }
+            mockChallenge = {
+                ...mockChallenge,
+                phases: [
+                    { isOpen: activePhase === 'Checkpoint Submission', name: 'Checkpoint Submission' },
+                    { isOpen: activePhase === 'Submission', name: 'Submission' },
+                ],
+                track: 'Design',
+            }
+            mockSubmissions = [
+                {
+                    createdAt: '2026-06-03T09:30:00.000Z',
+                    id: 'contest-submission',
+                    type: 'CONTEST_SUBMISSION',
+                },
+                {
+                    createdAt: '2026-06-02T09:30:00.000Z',
+                    id: 'checkpoint-submission',
+                    type: 'CHECKPOINT_SUBMISSION',
+                },
+            ]
+
+            renderPage()
+            fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+            expect(screen.getByRole('button', { name: `Delete submission ${enabledSubmissionId}` }))
+                .toBeEnabled()
+            const disabledDeleteButton = screen.getByRole('button', {
+                name: `Delete submission ${disabledSubmissionId}`,
+            })
+            expect(disabledDeleteButton)
+                .toBeDisabled()
+            expect(disabledDeleteButton)
+                .toHaveAttribute('title', 'Submission deletion is closed')
+            expect(screen.getByRole('button', { name: `Download submission ${disabledSubmissionId}` }))
+                .toBeEnabled()
+            expect(screen.getByRole('link', {
+                name: `Open submission ${disabledSubmissionId} in Review App`,
+            }))
+                .toBeInTheDocument()
+            fireEvent.click(disabledDeleteButton)
+            expect(mockDeleteSubmission)
+                .not.toHaveBeenCalled()
+        },
+    )
+
     it('disables Design submission deletion after the submission phase closes', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
