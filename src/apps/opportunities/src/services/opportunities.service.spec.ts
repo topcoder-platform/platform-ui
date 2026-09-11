@@ -1933,4 +1933,17 @@ describe('opportunities service normalization', () => {
                 templateId: 'template',
             })
     })
+
+    it.each([
+        // eslint-disable-next-line no-script-url
+        'javascript:alert(document.domain)',
+        'data:text/html,<script>parent.postMessage({type:"DocuSign"},"*")</script>',
+        '/relative-recipient-view',
+    ])('rejects an unsafe Terms API DocuSign URL: %s', async recipientViewUrl => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockResolvedValueOnce({ recipientViewUrl })
+
+        await expect(getChallengeTermDocuSignUrl('template', 'https://topcoder-dev.com/opportunities'))
+            .rejects.toThrow('Terms API returned an invalid DocuSign URL.')
+    })
 })

@@ -26,6 +26,7 @@ interface MockSWRResponse {
 let mockSWRResponse: MockSWRResponse
 const mockBaseModal = jest.fn()
 const mockAgreeToTerms = jest.fn()
+const mockGetDocuSignUrl = jest.fn()
 const mockGetSubmitterTermsDetails = jest.fn()
 const mockMutateTermsCache = jest.fn()
 const mockUseSWR = jest.fn()
@@ -42,9 +43,16 @@ jest.mock('swr', () => ({
 jest.mock('../services', () => ({
     agreeToChallengeTerms: (...args: unknown[]) => mockAgreeToTerms(...args),
     getChallengeSubmitterTermsDetails: (...args: unknown[]) => mockGetSubmitterTermsDetails(...args),
-    getChallengeTermDocuSignUrl: jest.fn(),
+    getChallengeTermDocuSignUrl: (...args: unknown[]) => mockGetDocuSignUrl(...args),
     getChallengeTermsDetails: jest.fn(),
 }))
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        COMMUNITY_APP_URL: 'https://www.topcoder-dev.com/',
+        NDA_DOCUSIGN_TEMPLATE_ID: 'configured-nda-template',
+    },
+}), { virtual: true })
 
 jest.mock('~/libs/cms', () => ({
     getSafeCmsLink: (value: string): string => value,
@@ -85,6 +93,8 @@ describe('ChallengeTermsModal', () => {
         mockBaseModal.mockClear()
         mockAgreeToTerms.mockReset()
         mockAgreeToTerms.mockResolvedValue(undefined)
+        mockGetDocuSignUrl.mockReset()
+        mockGetDocuSignUrl.mockResolvedValue('https://docusign.example/recipient')
         mockGetSubmitterTermsDetails.mockReset()
         mockMutateTermsCache.mockReset()
         mockMutateTermsCache.mockImplementation(async (_key, update) => (typeof update === 'function'
@@ -97,6 +107,11 @@ describe('ChallengeTermsModal', () => {
             isValidating: true,
             mutate: jest.fn(),
         }
+    })
+
+    afterEach(() => {
+        jest.useRealTimers()
+        jest.restoreAllMocks()
     })
 
     it('does not flash unresolved terms before showing the compact registration reminder', () => {
@@ -192,7 +207,8 @@ describe('ChallengeTermsModal', () => {
             .not.toBeInTheDocument()
     })
 
-    it('persists Standard Terms and NDA separately before completing registration', async () => {
+    it('embeds the configured DocuSign NDA after persisting Standard Terms', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
         const standardTerms: ChallengeTerm = {
             agreeabilityType: 'Electronically-agreeable',
             id: 'standard-terms',
@@ -202,11 +218,12 @@ describe('ChallengeTermsModal', () => {
         const nda: ChallengeTerm = {
             agreeabilityType: 'Electronically-agreeable',
             id: 'nda',
-            text: '<p>NDA body</p>',
+            text: 'Test',
             title: 'Topcoder Member Non-Disclosure Agreement v3.0',
         }
         const onComplete = jest.fn()
             .mockResolvedValue(undefined)
+        mockGetSubmitterTermsDetails.mockResolvedValueOnce([])
         mockSWRResponse = {
             ...mockSWRResponse,
             data: [standardTerms, nda],
@@ -229,7 +246,7 @@ describe('ChallengeTermsModal', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Standard terms body'))
             .toBeInTheDocument()
-        expect(screen.queryByText('NDA body'))
+        expect(screen.queryByText('Test'))
             .not.toBeInTheDocument()
 
         fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
@@ -244,19 +261,91 @@ describe('ChallengeTermsModal', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Agreement 2 of 2'))
             .toBeInTheDocument()
-        expect(screen.getByText('NDA body'))
-            .toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('Loading DocuSign agreement…'))
+            .not.toBeInTheDocument())
+        const frame = screen.getByTitle('Topcoder Member Non-Disclosure Agreement v3.0')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        expect(frame)
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledWith(
+                'configured-nda-template',
+                'https://www.topcoder-dev.com/community-app-assets/iframe-break',
+            )
+        expect(screen.queryByText('Test'))
+            .not.toBeInTheDocument()
         expect(screen.queryByText('Standard terms body'))
             .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'I agree' }))
+            .not.toBeInTheDocument()
 
-        fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
 
         await waitFor(() => expect(onComplete)
             .toHaveBeenCalledTimes(1))
         expect(mockAgreeToTerms)
-            .toHaveBeenNthCalledWith(2, [nda])
-        expect(mockAgreeToTerms.mock.invocationCallOrder[1])
-            .toBeLessThan(onComplete.mock.invocationCallOrder[0])
+            .toHaveBeenCalledTimes(1)
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledWith([standardTerms, nda])
+        addEventListener.mockRestore()
+    })
+
+    it('keeps an earlier term outstanding when the server returns it after DocuSign completion', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const standardTerms: ChallengeTerm = {
+            agreeabilityType: 'Electronically-agreeable',
+            id: 'standard-terms',
+            text: '<p>Standard terms body</p>',
+            title: 'Standard Terms 2026',
+        }
+        const nda: ChallengeTerm = {
+            agreeabilityType: 'Electronically-agreeable',
+            id: 'nda',
+            text: 'Test',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }
+        const onComplete = jest.fn()
+        mockGetSubmitterTermsDetails.mockResolvedValueOnce([standardTerms])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [standardTerms, nda],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[standardTerms, nda]}
+            />,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
+        const frame = await screen.findByTitle('Topcoder Member Non-Disclosure Agreement v3.0')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+
+        await waitFor(() => expect(screen.getByRole('dialog', { name: 'Standard Terms 2026' }))
+            .toBeInTheDocument())
+        expect(mockMutateTermsCache)
+            .toHaveBeenLastCalledWith(expect.any(Array), [standardTerms], { revalidate: false })
+        expect(mockAgreeToTerms)
+            .toHaveBeenCalledTimes(1)
+        expect(onComplete)
+            .not.toHaveBeenCalled()
     })
 
     it('stays on the active term and does not register when agreement fails', async () => {
@@ -354,6 +443,8 @@ describe('ChallengeTermsModal', () => {
             )
         expect(screen.queryByRole('alert'))
             .not.toBeInTheDocument()
+        expect(await screen.findByTitle('NDA'))
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
         expect(onComplete)
             .not.toHaveBeenCalled()
     })
@@ -369,7 +460,7 @@ describe('ChallengeTermsModal', () => {
             agreeabilityType: 'Electronically-agreeable',
             id: 'nda',
             text: '<p>NDA body</p>',
-            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+            title: 'Additional Challenge Terms',
         }
         mockSWRResponse = {
             ...mockSWRResponse,
@@ -393,7 +484,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
         await waitFor(() => expect(screen.getByRole('dialog', {
-            name: 'Topcoder Member Non-Disclosure Agreement v3.0',
+            name: 'Additional Challenge Terms',
         }))
             .toBeInTheDocument())
         let resolveAgreement: (() => void) | undefined
@@ -409,7 +500,7 @@ describe('ChallengeTermsModal', () => {
             .not.toHaveBeenCalled()
         view.rerender(<ChallengeTermsModal {...props} open />)
         expect(screen.getByRole('dialog', {
-            name: 'Topcoder Member Non-Disclosure Agreement v3.0',
+            name: 'Additional Challenge Terms',
         }))
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Agreeing…' }))
@@ -440,7 +531,7 @@ describe('ChallengeTermsModal', () => {
             id: 'nda',
             roleId: 'viewer-role',
             text: '<p>Passive NDA body</p>',
-            title: 'NDA reference',
+            title: 'Passive terms reference',
         }
         const registrationKey = [
             'opportunities:challenge-terms',
@@ -527,7 +618,7 @@ describe('ChallengeTermsModal', () => {
                 agreeabilityType: 'Electronically-agreeable',
                 id: 'nda',
                 text: '<p>NDA body</p>',
-                title: 'NDA',
+                title: 'Additional Rules',
             },
             {
                 agreeabilityType: 'Electronically-agreeable',
@@ -553,7 +644,7 @@ describe('ChallengeTermsModal', () => {
             .closest('article')?.parentElement
 
         fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
-        await waitFor(() => expect(screen.getByRole('dialog', { name: 'NDA' }))
+        await waitFor(() => expect(screen.getByRole('dialog', { name: 'Additional Rules' }))
             .toBeInTheDocument())
         const secondScrollContainer = screen.getByText('NDA body')
             .closest('article')?.parentElement
@@ -562,7 +653,7 @@ describe('ChallengeTermsModal', () => {
         mockSWRResponse = { ...mockSWRResponse, data: terms.slice(1) }
         view.rerender(<ChallengeTermsModal {...props} />)
 
-        expect(screen.getByRole('dialog', { name: 'NDA' }))
+        expect(screen.getByRole('dialog', { name: 'Additional Rules' }))
             .toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'I agree' }))
         await waitFor(() => expect(screen.getByRole('dialog', { name: 'Challenge Rules' }))
@@ -613,7 +704,7 @@ describe('ChallengeTermsModal', () => {
             ])
     })
 
-    it('fails closed on the active external agreement', () => {
+    it('prefers an API DocuSign template and suppresses ordinary agreement controls', async () => {
         const externalNda: ChallengeTerm = {
             agreeabilityType: 'DocuSign-template',
             docusignTemplateId: 'nda-template',
@@ -638,16 +729,412 @@ describe('ChallengeTermsModal', () => {
             />,
         )
 
-        expect(screen.getByRole('button', { name: 'I agree' }))
-            .toBeDisabled()
-        expect(screen.getByRole('button', { name: 'Complete with DocuSign' }))
+        expect(await screen.findByTitle('Topcoder Member Non-Disclosure Agreement v3.0'))
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledWith(
+                'nda-template',
+                'https://www.topcoder-dev.com/community-app-assets/iframe-break',
+            )
+        expect(screen.queryByRole('button', { name: 'I agree' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('NDA body'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Close' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('alert'))
-            .toHaveTextContent('Complete this external agreement before registering.')
         expect(mockAgreeToTerms)
             .not.toHaveBeenCalled()
         expect(onComplete)
             .not.toHaveBeenCalled()
+    })
+
+    it('reuses the active recipient view when SWR replaces a term with an equivalent object', async () => {
+        const nda: ChallengeTerm = {
+            agreeabilityType: 'DocuSign-template',
+            docusignTemplateId: 'nda-template',
+            id: 'nda',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }
+        const props = {
+            mode: 'register' as const,
+            onClose: jest.fn(),
+            onComplete: jest.fn(),
+            open: true,
+            terms: [nda],
+        }
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        const view = render(<ChallengeTermsModal {...props} />)
+
+        expect(await screen.findByTitle(nda.title as string))
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [{ ...nda }],
+        }
+        view.rerender(<ChallengeTermsModal {...props} />)
+        await act(async () => Promise.resolve())
+
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByTitle(nda.title as string))
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
+    })
+
+    it('does not render a previous single-use URL while advancing between DocuSign terms', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const firstNda: ChallengeTerm = {
+            agreeabilityType: 'DocuSign-template',
+            docusignTemplateId: 'first-template',
+            id: 'first-nda',
+            title: 'First NDA',
+        }
+        const secondNda: ChallengeTerm = {
+            agreeabilityType: 'DocuSign-template',
+            docusignTemplateId: 'second-template',
+            id: 'second-nda',
+            title: 'Second NDA',
+        }
+        mockGetDocuSignUrl
+            .mockResolvedValueOnce('https://docusign.example/first-recipient')
+            .mockImplementationOnce(() => new Promise(() => {
+                // Keep the successor request pending to inspect its loading state.
+            }))
+        mockGetSubmitterTermsDetails.mockResolvedValueOnce([secondNda])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [firstNda, secondNda],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={jest.fn()}
+                open
+                terms={[firstNda, secondNda]}
+            />,
+        )
+
+        const frame = await screen.findByTitle('First NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+
+        await waitFor(() => expect(screen.getByRole('dialog', { name: 'Second NDA' }))
+            .toBeInTheDocument())
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledTimes(2)
+        expect(document.querySelector('iframe[src="https://docusign.example/first-recipient"]'))
+            .toBeNull()
+        expect(screen.queryByTitle('Second NDA'))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Loading DocuSign agreement…'))
+            .toBeInTheDocument()
+    })
+
+    it('embeds the configured NDA in passive review without registering after completion', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            agreeabilityType: 'Electronically-agreeable',
+            id: 'nda',
+            text: 'Test',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }
+        const onClose = jest.fn()
+        const onComplete = jest.fn()
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='view'
+                onClose={onClose}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+
+        const frame = await screen.findByTitle('Topcoder Member Non-Disclosure Agreement v3.0')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        expect(screen.queryByText('Test'))
+            .not.toBeInTheDocument()
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'viewing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+
+        await waitFor(() => expect(onClose)
+            .toHaveBeenCalledTimes(1))
+        expect(mockSWRResponse.mutate)
+            .toHaveBeenCalledTimes(1)
+        expect(mockGetSubmitterTermsDetails)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
+    it('ignores untrusted DocuSign callback messages and closes on trusted cancellation', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onClose = jest.fn()
+        const onComplete = jest.fn()
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={onClose}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://attacker.example',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        expect(mockGetSubmitterTermsDetails)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'cancel', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        expect(onClose)
+            .toHaveBeenCalledTimes(1)
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
+    it('polls outstanding terms before completing DocuSign registration', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onComplete = jest.fn()
+            .mockResolvedValue(undefined)
+        mockGetSubmitterTermsDetails
+            .mockResolvedValueOnce([nda])
+            .mockResolvedValueOnce([])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        const view = render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        await act(async () => Promise.resolve())
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(1)
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+
+        await act(async () => {
+            jest.advanceTimersByTime(5000)
+            await Promise.resolve()
+        })
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(2)
+        expect(onComplete)
+            .toHaveBeenCalledTimes(1)
+        expect(mockAgreeToTerms)
+            .not.toHaveBeenCalled()
+
+        jest.useRealTimers()
+        view.unmount()
+    })
+
+    it('keeps registration blocked when DocuSign persistence cannot be confirmed', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onComplete = jest.fn()
+        mockGetSubmitterTermsDetails.mockResolvedValue([nda])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+
+        await act(async () => Promise.resolve())
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(1)
+
+        for (let attempt = 1; attempt < 5; attempt += 1) {
+            // Each status check schedules only the next retry.
+            // eslint-disable-next-line no-await-in-loop
+            await act(async () => {
+                jest.advanceTimersByTime(5000)
+                await Promise.resolve()
+            })
+        }
+
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(5)
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('couldn’t confirm your DocuSign agreement yet')
+        expect(screen.getByRole('button', { name: 'Check again' }))
+            .toBeInTheDocument()
+        expect(mockAgreeToTerms)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
+    it('cancels DocuSign confirmation polling when the modal unmounts', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onComplete = jest.fn()
+        mockGetSubmitterTermsDetails
+            .mockResolvedValueOnce([nda])
+            .mockResolvedValueOnce([])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        const view = render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        await act(async () => {
+            await Promise.resolve()
+            await Promise.resolve()
+        })
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(1)
+
+        view.unmount()
+        await act(async () => {
+            jest.advanceTimersByTime(30000)
+            await Promise.resolve()
+        })
+
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(1)
+        expect(mockMutateTermsCache)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
+    it('shows a retry when the Terms service cannot create the DocuSign view', async () => {
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            text: 'Test',
+            title: 'NDA',
+        }
+        mockGetDocuSignUrl.mockRejectedValueOnce(new Error('Terms service unavailable'))
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={jest.fn()}
+                open
+                terms={[nda]}
+            />,
+        )
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Terms service unavailable')
+        expect(screen.queryByText('Test'))
+            .not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+        expect(await screen.findByTitle('NDA'))
+            .toHaveAttribute('src', 'https://docusign.example/recipient')
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledTimes(2)
     })
 
     it('still opens a retryable dialog when accepted-term hydration fails', () => {

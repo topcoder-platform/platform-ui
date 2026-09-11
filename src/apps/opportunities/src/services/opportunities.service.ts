@@ -2223,7 +2223,7 @@ export async function getChallengeSubmitterTermsDetails(
  * @param templateId Terms API DocuSign template identifier.
  * @param returnUrl challenge route restored after signing.
  * @returns recipient URL supplied by Terms API.
- * @throws Error when Terms API omits the URL; otherwise propagates API errors.
+ * @throws Error when Terms API omits a valid absolute HTTPS URL; otherwise propagates API errors.
  */
 export async function getChallengeTermDocuSignUrl(
     templateId: string | number,
@@ -2237,5 +2237,17 @@ export async function getChallengeTermDocuSignUrl(
         templateId,
     })
     if (!response.recipientViewUrl) throw new Error('Terms API did not return a DocuSign URL.')
+
+    let recipientViewUrl: URL
+    try {
+        recipientViewUrl = new URL(response.recipientViewUrl)
+    } catch {
+        throw new Error('Terms API returned an invalid DocuSign URL.')
+    }
+
+    if (recipientViewUrl.protocol !== 'https:') {
+        throw new Error('Terms API returned an invalid DocuSign URL.')
+    }
+
     return response.recipientViewUrl
 }
