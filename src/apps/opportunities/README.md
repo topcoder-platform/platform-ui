@@ -174,7 +174,10 @@ The expanded challenge timeline follows chronological phase order between the
 synthetic Launch and Winners boundaries. Launch uses the challenge start, each
 authored phase displays its actual (then scheduled fallback) start and end on
 separate rows, and Winners uses the top-level challenge end. Only responses
-without a valid challenge end fall back to the latest valid phase end.
+without a valid challenge end fall back to the latest valid phase end. When
+Registration and another phase share the same valid start, Registration is
+shown first so overlapping Checkpoint Submission schedules match the authored
+challenge flow rather than being ordered by their different end dates.
 
 Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping
 phases current. Ended phases and boundaries render complete, future milestones
