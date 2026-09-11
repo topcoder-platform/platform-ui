@@ -429,14 +429,19 @@
 }
 
 .myMarathonTable {
-    th:first-child { width: 138px; }
-    th:nth-child(2) { width: 208px; }
-    th:nth-child(3) { width: 168px; }
-    th:nth-child(4) { width: 120px; }
-    th:nth-child(5) { width: 149px; }
+    th,
+    td {
+        padding-inline: 8px;
+    }
+
+    th:first-child { width: 120px; }
+    th:nth-child(2) { width: 190px; }
+    th:nth-child(3) { width: 150px; }
+    th:nth-child(4) { width: 105px; }
+    th:nth-child(5) { width: 140px; }
     th:nth-child(6),
-    th:nth-child(7) { width: 170px; }
-    th:nth-child(8) { width: 144px; }
+    th:nth-child(7) { width: 150px; }
+    th:nth-child(8) { width: 120px; }
 
     th:nth-child(2),
     td:nth-child(2) {
@@ -458,7 +463,7 @@
     overflow-x: auto;
 
     .myMarathonTable {
-        min-width: 1280px;
+        min-width: 1200px;
     }
 }
 
