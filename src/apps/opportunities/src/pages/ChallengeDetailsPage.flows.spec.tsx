@@ -26,6 +26,7 @@ const mockGetSubmissionDownloadUrl = jest.fn()
 const mockChallengeMutate = jest.fn()
 const mockChallengeForumRender = jest.fn()
 const mockMySubmissionCountMutate = jest.fn()
+const mockSubmissionsMutate = jest.fn()
 const mockRegister = jest.fn()
 const mockRegistrationMutate = jest.fn()
 const mockUnregister = jest.fn()
@@ -43,6 +44,8 @@ let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
 let mockReviewSummations: Record<string, unknown>[]
 let mockSubmissions: Record<string, unknown>[]
+let mockSubmissionsError: Error | undefined
+let mockSubmissionsLoaded: boolean
 let mockWinnerStats: Record<string, unknown>[]
 const challengeDetailStyles = readFileSync(`${__dirname}/ChallengeDetailsPage.module.scss`, 'utf8')
 
@@ -419,6 +422,8 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegistrants = []
         mockReviewSummations = []
         mockSubmissions = []
+        mockSubmissionsError = undefined
+        mockSubmissionsLoaded = true
         mockWinnerStats = []
         mockChallenge = {
             description: 'Challenge requirements',
@@ -440,6 +445,7 @@ describe('ChallengeDetailsPage member flows', () => {
             typeof update === 'function' ? update(mockChallenge) : update
         ))
         mockMySubmissionCountMutate.mockResolvedValue(mockMySubmissionCount)
+        mockSubmissionsMutate.mockResolvedValue(undefined)
         mockRegistrationMutate.mockImplementation(async () => (
             mockRegistrationRemoved ? undefined : mockRegistration
         ))
@@ -467,7 +473,13 @@ describe('ChallengeDetailsPage member flows', () => {
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
-                return swrResponse(submissionPage(mockSubmissions))
+                return {
+                    ...swrResponse(mockSubmissionsLoaded
+                        ? submissionPage(mockSubmissions)
+                        : undefined),
+                    error: mockSubmissionsError,
+                    mutate: mockSubmissionsMutate,
+                }
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:my-submission-count') {
@@ -1178,7 +1190,51 @@ describe('ChallengeDetailsPage member flows', () => {
             && key[2] === '123'
         ))
         expect(submissionRequest?.[2])
-            .toMatchObject({ refreshInterval: 30000, shouldRetryOnError: false })
+            .toMatchObject({
+                errorRetryCount: 2,
+                errorRetryInterval: 10000,
+                refreshInterval: 30000,
+                revalidateOnFocus: true,
+                shouldRetryOnError: true,
+            })
+    })
+
+    it('keeps loaded My Submissions visible through a transient refresh failure', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, status: 'ACTIVE' }
+        mockSubmissions = [{
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'cached-submission',
+            status: 'ACTIVE',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockSubmissionsError = new Error('Temporary Review API failure')
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByText('cached-submission'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'This section could not be loaded.' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps the explicit retry action for an initial My Submissions failure', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, status: 'ACTIVE' }
+        mockSubmissionsError = new Error('Review API unavailable')
+        mockSubmissionsLoaded = false
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('heading', { name: 'This section could not be loaded.' }))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+        expect(mockSubmissionsMutate)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('shows an active submission as completed after its challenge completes', () => {
