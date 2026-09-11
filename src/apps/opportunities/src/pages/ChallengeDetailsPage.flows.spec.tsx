@@ -1726,6 +1726,15 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
+    it('keeps the Marathon Match submissions table compact on desktop', () => {
+        expect(challengeDetailStyles)
+            .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)
+        expect(challengeDetailStyles)
+            .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1200px;/)
+        expect(challengeDetailStyles)
+            .not.toContain('min-width: 1280px;')
+    })
+
     it('preserves full precision for both Marathon Match score phases in Submissions', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }

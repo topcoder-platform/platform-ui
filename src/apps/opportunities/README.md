@@ -202,8 +202,9 @@ All Submissions and My Submissions use the same responsive record-card
 contract. Every track-specific field and action receives a visible mobile key,
 while Submission Date sorting stays above the card and continues to request
 owner-sorted pages.
-Marathon My Submissions retains its wider score columns and horizontal overflow
-on larger screens, while phone record cards fit the available content width.
+Marathon My Submissions uses compact column spacing so the complete scorer table
+fits within its desktop card. Narrow table layouts retain contained horizontal
+overflow until phone record cards take over at the mobile breakpoint.
 
 The My Submissions heading keeps its Review App handoff, but phone layouts
 stack that action below the heading copy at full content width so neither the
@@ -399,9 +400,8 @@ exception. Scores retain the full numeric precision available from the API
 without display rounding across Submissions, My Submissions, Winners,
 submission history, and Marathon Match dashboard tooltips and accessible data.
 Thousands separators, valid zero, and negative scorer sentinels retain their
-established handling. The wide My Submissions scorer table scrolls within its
-card so those full-precision values cannot overlap adjacent score or action
-columns.
+established handling. Compact My Submissions columns preserve those
+full-precision values without overlapping adjacent score or action columns.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
