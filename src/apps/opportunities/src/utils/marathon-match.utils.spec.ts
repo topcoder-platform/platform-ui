@@ -219,14 +219,94 @@ describe('Marathon Match challenge detail utilities', () => {
         }))
             .toEqual({ process: 'Provisional', progress: 0, status: 'Failed' })
         expect(marathonSubmissionTestProgress({
-            id: 'active',
+            id: 'active-system-review',
+            review: [{ status: 'IN_PROGRESS' }],
             status: 'ACTIVE',
         }))
+            .toEqual({ process: 'System', progress: 0, status: 'In progress' })
+    })
+
+    it('keeps an active submission provisional through its first scorer result', () => {
+        const submissionPhase = {
+            currentPhaseNames: ['Registration', 'Submission'],
+            phases: [
+                { isOpen: true, name: 'Registration' },
+                { isOpen: true, name: 'Submission' },
+                { isOpen: false, name: 'Review' },
+            ],
+        }
+        expect(marathonSubmissionTestProgress({
+            id: 'awaiting-provisional-score',
+            status: 'ACTIVE',
+            virusScan: true,
+        }, submissionPhase))
             .toEqual({
-                process: 'System',
+                process: 'Provisional',
                 progress: 0,
                 status: 'In progress',
             })
+        expect(marathonSubmissionTestProgress({
+            id: 'provisional-score-complete',
+            reviewSummation: [{
+                aggregateScore: 0,
+                id: 'provisional-result',
+                isProvisional: true,
+                metadata: {
+                    testProgress: 1,
+                    testStatus: 'SUCCESS',
+                },
+            }],
+            status: 'ACTIVE',
+            virusScan: true,
+        }, submissionPhase))
+            .toEqual({
+                process: 'Provisional',
+                progress: 100,
+                status: 'Passed',
+            })
+    })
+
+    it('uses only an unambiguous challenge phase for an active submission', () => {
+        const activeSubmission = { id: 'active', status: 'ACTIVE' }
+        expect(marathonSubmissionTestProgress(activeSubmission, {
+            currentPhase: { isOpen: true, name: 'Review' },
+        }))
+            .toEqual({ process: 'System', progress: 0, status: 'In progress' })
+        expect(marathonSubmissionTestProgress(activeSubmission, {
+            currentPhaseNames: ['Open'],
+        }))
+            .toEqual({ process: 'Provisional', progress: 0, status: 'In progress' })
+        expect(marathonSubmissionTestProgress(activeSubmission, {
+            phases: [{ isOpen: true, name: 'Topcoder Submission Final Fix' }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 0, status: 'In progress' })
+        expect(marathonSubmissionTestProgress(activeSubmission, {
+            currentPhaseNames: ['Registration'],
+            phases: [{ isOpen: false, name: 'Submission' }],
+        }))
+            .toEqual({})
+        expect(marathonSubmissionTestProgress(activeSubmission, {
+            currentPhaseNames: ['Submission', 'Review'],
+        }))
+            .toEqual({})
+        expect(marathonSubmissionTestProgress(activeSubmission))
+            .toEqual({})
+    })
+
+    it('uses challenge context instead of inventing a phase for a generic active review', () => {
+        const activeReview = {
+            id: 'active-review',
+            review: [{ status: 'IN_PROGRESS' }],
+            status: 'ACTIVE',
+        }
+        expect(marathonSubmissionTestProgress(activeReview, {
+            currentPhaseNames: ['Submission'],
+        }))
+            .toEqual({ process: 'Provisional', progress: 0, status: 'In progress' })
+        expect(marathonSubmissionTestProgress(activeReview, {
+            currentPhaseNames: ['Submission', 'Review'],
+        }))
+            .toEqual({ progress: 0, status: 'In progress' })
     })
 
     it('builds the provisional score timeline, excludes failures, and keeps the latest rewrite', () => {

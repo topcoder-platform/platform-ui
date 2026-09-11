@@ -190,6 +190,36 @@ function testProcessValue(value: ChallengeReviewSummation): MarathonTestProgress
 }
 
 /**
+ * Infers the scorer process from an explicitly current or open challenge phase.
+ *
+ * @param challenge optional Challenge API phase context.
+ * @returns the process expected during that phase, or undefined when it is ambiguous.
+ * @throws Does not throw.
+ */
+function challengePhaseTestProcess(
+    challenge?: Pick<ChallengeOpportunity, 'currentPhase' | 'currentPhaseNames' | 'phases'>,
+): MarathonTestProgress['process'] {
+    if (!challenge) return undefined
+    const phaseNames = [
+        ...(challenge.currentPhaseNames ?? []),
+        challenge.currentPhase?.isOpen === false ? undefined : challenge.currentPhase?.name,
+        ...(challenge.phases ?? [])
+            .filter(phase => phase.isOpen === true)
+            .map(phase => phase.name),
+    ]
+        .map(normalizeToken)
+        .filter(Boolean)
+    const processes = new Set<NonNullable<MarathonTestProgress['process']>>()
+    phaseNames.forEach(name => {
+        if (name === 'review') processes.add('System')
+        if (name === 'open' || name.includes('submission') || name === 'finalfix') {
+            processes.add('Provisional')
+        }
+    })
+    return processes.size === 1 ? [...processes][0] : undefined
+}
+
+/**
  * Selects the newest usable aggregate score for one phase.
  *
  * @param submission Review API submission with optional summations.
@@ -332,11 +362,13 @@ export function shouldShowFinalSubmissionScores(
  * back to virus-scan, review, score, and submission lifecycle fields.
  *
  * @param submission Review API submission with attached summations.
+ * @param challenge optional Challenge API context used to identify the active scoring phase.
  * @returns highest-priority truthful process, progress, and status values.
  * @throws Does not throw.
  */
 export function marathonSubmissionTestProgress(
     submission: ChallengeSubmission,
+    challenge?: Pick<ChallengeOpportunity, 'currentPhase' | 'currentPhaseNames' | 'phases'>,
 ): MarathonTestProgress {
     const candidates = submissionSummations(submission)
         .map((summation, index) => {
@@ -409,8 +441,21 @@ export function marathonSubmissionTestProgress(
         return { process: 'Provisional', progress: 100, status: 'Passed' }
     }
 
-    if (reviewStatuses.includes('In progress') || normalizeToken(submission.status) === 'active') {
-        return { process: 'System', progress: 0, status: 'In progress' }
+    const challengeProcess = challengePhaseTestProcess(challenge)
+    if (reviewStatuses.includes('In progress')) {
+        if (challengeProcess) {
+            return { process: challengeProcess, progress: 0, status: 'In progress' }
+        }
+
+        return challenge
+            ? { progress: 0, status: 'In progress' }
+            : { process: 'System', progress: 0, status: 'In progress' }
+    }
+
+    if (normalizeToken(submission.status) === 'active') {
+        return challengeProcess
+            ? { process: challengeProcess, progress: 0, status: 'In progress' }
+            : {}
     }
 
     return {}

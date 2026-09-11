@@ -1535,7 +1535,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                         <tbody>
                             {submissions.map(submission => {
                                 const scores = marathonSubmissionScores(submission)
-                                const progress = marathonSubmissionTestProgress(submission)
+                                const progress = marathonSubmissionTestProgress(submission, props.challenge)
                                 const reviewUrl = challengeReviewAppUrl(props.challenge.id)
                                 const statusClass = progress.status
                                     ? styles[`testStatus${progress.status.replace(' ', '')}`]
