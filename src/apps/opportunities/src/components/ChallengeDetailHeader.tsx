@@ -299,6 +299,7 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
 /**
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
  * Authored phases stay chronological, with Registration first when valid starts match.
+ * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
@@ -314,12 +315,10 @@ function challengeTimelineItems(
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
     const taskChallenge = isTaskChallenge(challenge)
-    const authoredPhases = (challenge.phases ?? []).filter(item => {
-        const phaseKey = challengeCatalogKey(item.name)
-        if (!taskChallenge || !phaseKey.includes('iterativereview')) return true
-        const phaseEnd = timelineTimestamp(item.actualEndDate ?? item.scheduledEndDate)
-        return phaseEnd !== undefined && phaseEnd > now
-    })
+    const authoredPhases = (challenge.phases ?? []).filter(item => (
+        !taskChallenge || !challengeCatalogKey(item.name)
+            .includes('iterativereview')
+    ))
     const phases = authoredPhases
         .map((item, index) => ({ index, item }))
         .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
