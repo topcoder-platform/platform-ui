@@ -26,6 +26,7 @@ import {
     ChallengeResourceRole,
     ChallengeReviewSummation,
     ChallengeSubmission,
+    ChallengeSubmissionAiWorkflowRun,
     ChallengeSubmissionType,
     ChallengeTerm,
     CopilotOpportunity,
@@ -1625,6 +1626,23 @@ export async function getChallengeSubmissions(
     if (memberId) url.searchParams.set('memberId', memberId)
     const response = await xhrGetAsync<SubmissionApiResponse | ChallengeSubmission[]>(url.toString())
     return normalizeSubmissionPage(response, page, perPage)
+}
+
+/**
+ * Loads the AI workflow runs associated with one member submission.
+ *
+ * Opportunities uses these records for the expandable My Submissions review table.
+ *
+ * @param submissionId Review API submission identifier.
+ * @returns workflow runs in Review API order.
+ * @throws Propagates Review API, authorization, and network errors.
+ */
+export async function getChallengeSubmissionAiWorkflowRuns(
+    submissionId: string,
+): Promise<ChallengeSubmissionAiWorkflowRun[]> {
+    return xhrGetAsync<ChallengeSubmissionAiWorkflowRun[]>(
+        `${V6_URL}/workflows/runs?submissionId=${encodeURIComponent(submissionId)}`,
+    )
 }
 
 /**

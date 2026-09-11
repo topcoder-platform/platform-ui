@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define, react/jsx-no-bind */
 import {
     FC,
+    Fragment,
     KeyboardEvent,
     ReactNode,
     SyntheticEvent,
@@ -44,6 +45,7 @@ import {
     SubmissionArtifactsModal,
     SubmissionHistoryModal,
 } from '../components'
+import { SubmissionAiReviewDetails } from '../components/SubmissionAiReviewDetails'
 import {
     challengeCatalogKey,
     ChallengePlacementPrize,
@@ -1234,12 +1236,23 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
+    const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
+        = useState<Record<string, boolean>>({})
     const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | undefined>()
     const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | undefined>()
     const trackKey = challengeCatalogKey(props.challenge.track)
     const isDesign = trackKey === 'design'
     const isQa = trackKey === 'qualityassurance'
     const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
+    const hasAiWorkflow = !isMarathonMatch && (
+        props.challenge.reviewers?.some(reviewer => !!reviewer.aiWorkflowId?.trim()) === true
+        || [
+            ...(props.challenge.currentPhaseNames ?? []),
+            ...(props.challenge.phases ?? []).map(phase => phase.name),
+        ].some(name => name.replace(/[^a-z0-9]/gi, '')
+            .toLowerCase()
+            .includes('aireview'))
+    )
     const refreshActiveMySubmissions = !!props.mine
         && props.challenge.status?.toUpperCase() === 'ACTIVE'
     const privateDesignSubmissions = isDesign
@@ -1326,6 +1339,21 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         props.challenge,
         submissions,
     )
+    /**
+     * Toggles one submission's AI details without changing other expanded rows.
+     *
+     * @param submissionId selected Review API submission identifier.
+     * @param expanded current disclosure state for the selected row.
+     * @returns void after updating the controlled disclosure state.
+     * @throws Does not throw.
+     */
+    const toggleAiSubmission = (submissionId: string, expanded: boolean): void => {
+        setAiSubmissionExpansionOverrides(current => ({
+            ...current,
+            [submissionId]: !expanded,
+        }))
+    }
+
     /**
      * Opens an authorized clean-storage download without exposing private URLs in list data.
      *
@@ -1514,141 +1542,181 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     : ''
                                 const designDeletionAllowed = isDesign
                                     && challengeAllowsDesignSubmissionDeletion(props.challenge, submission)
+                                const aiDetailsId = `submission-ai-review-${submission.id}`
+                                const aiDetailsExpanded = hasAiWorkflow && (
+                                    aiSubmissionExpansionOverrides[submission.id]
+                                    ?? submission.id === submissions[0]?.id
+                                )
                                 return (
-                                    <tr key={submission.id}>
-                                        <td data-mobile-label='Submission ID'>
-                                            <span className={styles.submissionId}>{submission.id}</span>
-                                        </td>
-                                        {!isMarathonMatch && (
-                                            <td data-mobile-label='Type'>
-                                                {submissionTypeLabel(submission.type)}
+                                    <Fragment key={submission.id}>
+                                        <tr>
+                                            <td data-mobile-label='Submission ID'>
+                                                <span className={styles.submissionId}>{submission.id}</span>
                                             </td>
-                                        )}
-                                        <td data-mobile-label='Submission Date'>
-                                            {formatTimestamp(submission.submittedDate ?? submission.createdAt)}
-                                        </td>
-                                        {isMarathonMatch ? (
-                                            <>
-                                                <td data-mobile-label='Current Test Process'>
-                                                    {progress.process ?? '—'}
+                                            {!isMarathonMatch && (
+                                                <td data-mobile-label='Type'>
+                                                    {submissionTypeLabel(submission.type)}
                                                 </td>
-                                                <td data-mobile-label='Test Status'>
-                                                    <span
-                                                        className={`${styles.testStatus} ${statusClass}`}
-                                                    >
-                                                        {progress.status ?? '—'}
-                                                    </span>
-                                                </td>
-                                                <td data-mobile-label='Test Progress'>
-                                                    <div className={styles.testProgress}>
-                                                        <span className={styles.progressTrack}>
-                                                            <span style={{ width: `${progress.progress ?? 0}%` }} />
-                                                        </span>
-                                                        <span>
-                                                            {progress.progress === undefined
-                                                                ? '—'
-                                                                : `${Math.round(progress.progress)}%`}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    className={styles.scoreColumn}
-                                                    data-mobile-label='Final Score'
-                                                >
-                                                    {formatMarathonScore(scores.finalScore, '-')}
-                                                </td>
-                                                <td
-                                                    className={styles.scoreColumn}
-                                                    data-mobile-label='Provisional Score'
-                                                >
-                                                    {formatMarathonScore(scores.provisionalScore, 'N/A')}
-                                                </td>
-                                            </>
-                                        ) : !isDesign && !isQa ? (
-                                            <>
-                                                <td data-mobile-label='Current Status'>
-                                                    <span className={styles.currentStatus}>
-                                                        {submissionStatusLabel(submission, props.challenge)}
-                                                    </span>
-                                                </td>
-                                                <td data-mobile-label='Score'>
-                                                    {formatMarathonScore(
-                                                        scores.finalScore ?? scores.provisionalScore,
-                                                        '-',
-                                                    )}
-                                                </td>
-                                            </>
-                                        ) : undefined}
-                                        <td data-mobile-label='Actions'>
-                                            <div className={styles.submissionActions}>
-                                                {submission.isFileSubmission !== false && (
-                                                    <button
-                                                        aria-label={`Download submission ${submission.id}`}
-                                                        disabled={downloadingSubmissionId === submission.id}
-                                                        onClick={() => downloadSubmission(submission)}
-                                                        title='Download submission'
-                                                        type='button'
-                                                    >
-                                                        <IconOutline.DownloadIcon aria-hidden='true' />
-                                                    </button>
-                                                )}
-                                                {isMarathonMatch && (
-                                                    <button
-                                                        aria-label={
-                                                            `Download submission artifacts ${submission.id}`
-                                                        }
-                                                        onClick={() => setArtifactsSubmissionId(submission.id)}
-                                                        title='Download submission artifacts'
-                                                        type='button'
-                                                    >
-                                                        <IconOutline.FolderDownloadIcon aria-hidden='true' />
-                                                    </button>
-                                                )}
-                                                {isDesign && (
-                                                    <button
-                                                        aria-label={`Delete submission ${submission.id}`}
-                                                        disabled={!designDeletionAllowed
-                                                            || deletingSubmissionId === submission.id}
-                                                        onClick={() => removeSubmission(submission)}
-                                                        title={designDeletionAllowed
-                                                            ? 'Delete'
-                                                            : 'Submission deletion is closed'}
-                                                        type='button'
-                                                    >
-                                                        <IconOutline.TrashIcon aria-hidden='true' />
-                                                    </button>
-                                                )}
-                                                {!isMarathonMatch && (
-                                                    <a
-                                                        aria-label={
-                                                            `Open submission ${submission.id} in Review App`
-                                                        }
-                                                        href={reviewUrl}
-                                                        rel='noreferrer'
-                                                        target='_blank'
-                                                        title='Open Review App'
-                                                    >
+                                            )}
+                                            <td data-mobile-label='Submission Date'>
+                                                {formatTimestamp(submission.submittedDate ?? submission.createdAt)}
+                                            </td>
+                                            {isMarathonMatch ? (
+                                                <>
+                                                    <td data-mobile-label='Current Test Process'>
+                                                        {progress.process ?? '—'}
+                                                    </td>
+                                                    <td data-mobile-label='Test Status'>
                                                         <span
-                                                            aria-hidden='true'
-                                                            className={styles.reviewAppActionIcon}
-                                                        />
-                                                    </a>
-                                                )}
-                                                {!isDesign && !isQa && (
-                                                    <button
-                                                        aria-label={`View history for submission ${submission.id}`}
-                                                        onClick={() => setHistorySubmission(submission)}
-                                                        title='Submission history'
-                                                        type='button'
+                                                            className={`${styles.testStatus} ${statusClass}`}
+                                                        >
+                                                            {progress.status ?? '—'}
+                                                        </span>
+                                                    </td>
+                                                    <td data-mobile-label='Test Progress'>
+                                                        <div className={styles.testProgress}>
+                                                            <span className={styles.progressTrack}>
+                                                                <span style={{ width: `${progress.progress ?? 0}%` }} />
+                                                            </span>
+                                                            <span>
+                                                                {progress.progress === undefined
+                                                                    ? '—'
+                                                                    : `${Math.round(progress.progress)}%`}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td
+                                                        className={styles.scoreColumn}
+                                                        data-mobile-label='Final Score'
                                                     >
-                                                        {isMarathonMatch
-                                                            ? <IconOutline.SearchIcon aria-hidden='true' />
-                                                            : <IconOutline.ChevronDownIcon aria-hidden='true' />}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                        {formatMarathonScore(scores.finalScore, '-')}
+                                                    </td>
+                                                    <td
+                                                        className={styles.scoreColumn}
+                                                        data-mobile-label='Provisional Score'
+                                                    >
+                                                        {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                                    </td>
+                                                </>
+                                            ) : !isDesign && !isQa ? (
+                                                <>
+                                                    <td data-mobile-label='Current Status'>
+                                                        <span className={styles.currentStatus}>
+                                                            {submissionStatusLabel(submission, props.challenge)}
+                                                        </span>
+                                                    </td>
+                                                    <td data-mobile-label='Score'>
+                                                        {formatMarathonScore(
+                                                            scores.finalScore ?? scores.provisionalScore,
+                                                            '-',
+                                                        )}
+                                                    </td>
+                                                </>
+                                            ) : undefined}
+                                            <td data-mobile-label='Actions'>
+                                                <div className={styles.submissionActions}>
+                                                    {submission.isFileSubmission !== false && (
+                                                        <button
+                                                            aria-label={`Download submission ${submission.id}`}
+                                                            disabled={downloadingSubmissionId === submission.id}
+                                                            onClick={() => downloadSubmission(submission)}
+                                                            title='Download submission'
+                                                            type='button'
+                                                        >
+                                                            <IconOutline.DownloadIcon aria-hidden='true' />
+                                                        </button>
+                                                    )}
+                                                    {isMarathonMatch && (
+                                                        <button
+                                                            aria-label={
+                                                                `Download submission artifacts ${submission.id}`
+                                                            }
+                                                            onClick={() => setArtifactsSubmissionId(submission.id)}
+                                                            title='Download submission artifacts'
+                                                            type='button'
+                                                        >
+                                                            <IconOutline.FolderDownloadIcon aria-hidden='true' />
+                                                        </button>
+                                                    )}
+                                                    {isDesign && (
+                                                        <button
+                                                            aria-label={`Delete submission ${submission.id}`}
+                                                            disabled={!designDeletionAllowed
+                                                            || deletingSubmissionId === submission.id}
+                                                            onClick={() => removeSubmission(submission)}
+                                                            title={designDeletionAllowed
+                                                                ? 'Delete'
+                                                                : 'Submission deletion is closed'}
+                                                            type='button'
+                                                        >
+                                                            <IconOutline.TrashIcon aria-hidden='true' />
+                                                        </button>
+                                                    )}
+                                                    {!isMarathonMatch && (
+                                                        <a
+                                                            aria-label={
+                                                                `Open submission ${submission.id} in Review App`
+                                                            }
+                                                            href={reviewUrl}
+                                                            rel='noreferrer'
+                                                            target='_blank'
+                                                            title='Open Review App'
+                                                        >
+                                                            <span
+                                                                aria-hidden='true'
+                                                                className={styles.reviewAppActionIcon}
+                                                            />
+                                                        </a>
+                                                    )}
+                                                    {hasAiWorkflow ? (
+                                                        <button
+                                                            aria-controls={aiDetailsId}
+                                                            aria-expanded={aiDetailsExpanded}
+                                                            aria-label={`${aiDetailsExpanded ? 'Collapse' : 'Expand'}`
+                                                            + ` AI review details for submission ${submission.id}`}
+                                                            onClick={() => toggleAiSubmission(
+                                                                submission.id,
+                                                                aiDetailsExpanded,
+                                                            )}
+                                                            title={aiDetailsExpanded
+                                                                ? 'Collapse AI review details'
+                                                                : 'Expand AI review details'}
+                                                            type='button'
+                                                        >
+                                                            <IconOutline.ChevronDownIcon
+                                                                aria-hidden='true'
+                                                                className={aiDetailsExpanded
+                                                                    ? styles.expandedChevron
+                                                                    : undefined}
+                                                            />
+                                                        </button>
+                                                    ) : !isDesign && !isQa && (
+                                                        <button
+                                                            aria-label={`View history for submission ${submission.id}`}
+                                                            onClick={() => setHistorySubmission(submission)}
+                                                            title='Submission history'
+                                                            type='button'
+                                                        >
+                                                            {isMarathonMatch
+                                                                ? <IconOutline.SearchIcon aria-hidden='true' />
+                                                                : <IconOutline.ChevronDownIcon aria-hidden='true' />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {aiDetailsExpanded && (
+                                            <tr className={styles.aiReviewDetailsRow}>
+                                                <td colSpan={isDesign || isQa ? 4 : 6}>
+                                                    <SubmissionAiReviewDetails
+                                                        challengeId={props.challenge.id}
+                                                        id={aiDetailsId}
+                                                        submissionId={submission.id}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </Fragment>
                                 )
                             })}
                         </tbody>

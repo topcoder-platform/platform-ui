@@ -114,6 +114,11 @@ export interface ChallengeAiReviewConfig {
     mode: ChallengeAiReviewMode
 }
 
+/** Challenge API reviewer assignment used to identify AI-reviewed challenges. */
+export interface ChallengeReviewer {
+    aiWorkflowId?: string
+}
+
 export interface ChallengeOpportunity {
     attachments?: ChallengeAttachment[]
     currentPhase?: ChallengePhase
@@ -139,6 +144,7 @@ export interface ChallengeOpportunity {
     prizeSets?: ChallengePrizeSet[]
     projectId?: string
     registrationEndDate?: string
+    reviewers?: ChallengeReviewer[]
     skills?: OpportunitySkill[]
     startDate?: string
     status?: string
@@ -404,6 +410,23 @@ export interface ChallengeSubmission {
     type?: string
     url?: string
     virusScan?: boolean
+}
+
+/** Review API workflow-run projection displayed beneath a member submission. */
+export interface ChallengeSubmissionAiWorkflowRun {
+    completedAt?: string
+    id: string
+    score?: number | string | null
+    status?: string
+    submissionId?: string
+    workflow?: {
+        id?: string
+        name?: string
+        scorecard?: {
+            minimumPassingScore?: number | string | null
+        }
+    }
+    workflowId?: string
 }
 
 /** Submission categories accepted by the v6 Review API upload endpoint. */
