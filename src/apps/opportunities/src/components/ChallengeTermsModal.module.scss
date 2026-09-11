@@ -220,21 +220,31 @@
     }
 }
 
-.externalButton {
-    align-self: flex-start;
-    background: #007d79;
-    border: 0;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-    padding: 8px 24px;
+.docuSign {
+    min-height: min(532px, 60vh);
+    position: relative;
+    width: 100%;
+}
 
-    &:disabled {
-        cursor: wait;
-        opacity: .6;
-    }
+.docuSignFrame {
+    border: 0;
+    display: block;
+    height: min(532px, 60vh);
+    width: 100%;
+}
+
+.docuSignStatus {
+    align-items: center;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    inset: 0;
+    justify-content: center;
+    min-height: min(532px, 60vh);
+    position: absolute;
+    text-align: center;
+    z-index: 1;
 }
 
 @media (max-width: 700px) {

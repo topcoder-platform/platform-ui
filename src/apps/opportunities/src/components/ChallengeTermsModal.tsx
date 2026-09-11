@@ -13,6 +13,7 @@ import useSWR, {
     useSWRConfig,
 } from 'swr'
 
+import { EnvironmentConfig } from '~/config'
 import { getSafeCmsLink } from '~/libs/cms'
 import {
     BaseModal,
@@ -33,6 +34,10 @@ import styles from './ChallengeTermsModal.module.scss'
 
 export type ChallengeTermsMode = 'register' | 'view'
 
+const DOCUSIGN_POLL_DELAY_MS = 5000
+const DOCUSIGN_POLL_MAX_ATTEMPTS = 5
+const NDA_TITLE_PATTERN = /\bnda\b|non[-\s]?disclosure/i
+
 interface ChallengeTermsModalProps {
     busy?: boolean
     memberId?: number | string
@@ -41,6 +46,58 @@ interface ChallengeTermsModalProps {
     onComplete: () => Promise<void> | void
     open: boolean
     terms: ChallengeTerm[]
+}
+
+/**
+ * Resolves the DocuSign template backing a challenge term.
+ *
+ * Terms API metadata takes precedence. The configured template is a legacy
+ * compatibility fallback for NDA records whose current API detail contains
+ * placeholder electronic-agreement content but no template identifier.
+ *
+ * @param term complete Terms API record.
+ * @param configuredTemplateId environment-specific default NDA template.
+ * @returns the API template, configured NDA fallback, or undefined.
+ * @throws Does not throw.
+ */
+export function resolveChallengeTermDocuSignTemplateId(
+    term: ChallengeTerm,
+    configuredTemplateId: string | undefined = EnvironmentConfig.NDA_DOCUSIGN_TEMPLATE_ID,
+): string | number | undefined {
+    const apiTemplateId = typeof term.docusignTemplateId === 'string'
+        ? term.docusignTemplateId.trim()
+        : term.docusignTemplateId
+    if (apiTemplateId) return apiTemplateId
+
+    const fallbackTemplateId = configuredTemplateId?.trim()
+    return fallbackTemplateId && NDA_TITLE_PATTERN.test(term.title ?? '')
+        ? fallbackTemplateId
+        : undefined
+}
+
+/**
+ * Builds the legacy iframe callback URL used by the Terms service.
+ *
+ * @returns the community-app endpoint that posts the DocuSign event to its parent frame.
+ * @throws Does not throw.
+ */
+function buildDocuSignReturnUrl(): string {
+    const communityAppUrl = EnvironmentConfig.COMMUNITY_APP_URL?.replace(/\/$/, '')
+        || window.location.origin
+    return `${communityAppUrl}/community-app-assets/iframe-break`
+}
+
+/**
+ * Delays a DocuSign agreement-status retry without blocking the browser.
+ *
+ * @param durationMs delay in milliseconds.
+ * @returns promise resolved after the requested delay.
+ * @throws Does not throw.
+ */
+function delay(durationMs: number): Promise<void> {
+    return new Promise(resolve => {
+        window.setTimeout(resolve, durationMs)
+    })
 }
 
 /**
@@ -53,7 +110,7 @@ interface ChallengeTermsModalProps {
  */
 export function requiresExternalAgreement(term: ChallengeTerm): boolean {
     return !term.agreed
-        && (!!term.docusignTemplateId
+        && (!!resolveChallengeTermDocuSignTemplateId(term)
             || (!!term.agreeabilityType
                 && term.agreeabilityType.toLowerCase() !== 'electronically-agreeable'))
 }
@@ -73,10 +130,18 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const [completedTermIds, setCompletedTermIds] = useState<string[]>([])
     const [agreementBusy, setAgreementBusy] = useState(false)
     const [agreementError, setAgreementError] = useState('')
-    const [externalBusy, setExternalBusy] = useState(false)
+    const [docuSignCompleting, setDocuSignCompleting] = useState(false)
+    const [docuSignLoading, setDocuSignLoading] = useState(false)
+    const [docuSignRetry, setDocuSignRetry] = useState(0)
+    const [docuSignView, setDocuSignView] = useState<{ key: string; url: string }>()
     const [externalError, setExternalError] = useState('')
     const agreementRequestRef = useRef(0)
     const activeAgreementRequestRef = useRef<number>()
+    const closeRef = useRef<() => void>(() => undefined)
+    const docuSignCallbackHandledRef = useRef(false)
+    const docuSignCompletionRef = useRef<() => Promise<void>>(async () => undefined)
+    const docuSignFrameRef = useRef<HTMLIFrameElement>(null)
+    const docuSignUrlRequestRef = useRef(0)
     const interactionRef = useRef(0)
     const { mutate: mutateTermsCache }: FullConfiguration = useSWRConfig()
     const memberScope = props.memberId === undefined ? 'anonymous' : String(props.memberId)
@@ -120,6 +185,25 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const activePosition = completedTermIds.length
     const agreementTotal = completedTermIds.length + pendingTerms.length
     const activeExternalAgreement = !!activeTerm && requiresExternalAgreement(activeTerm)
+    const docuSignTerm = registrationMode
+        ? activeTerm && resolveChallengeTermDocuSignTemplateId(activeTerm) ? activeTerm : undefined
+        : displayedTerms.find(term => !!resolveChallengeTermDocuSignTemplateId(term))
+    const docuSignTemplateId = docuSignTerm
+        ? resolveChallengeTermDocuSignTemplateId(docuSignTerm)
+        : undefined
+    const docuSignRequestKey = docuSignTerm && docuSignTemplateId
+        ? JSON.stringify([
+            props.mode,
+            memberScope,
+            termKey,
+            docuSignTerm.id ?? docuSignTerm.url ?? docuSignTerm.title ?? 'term',
+            docuSignTemplateId,
+        ])
+        : undefined
+    const docuSignUrl = docuSignView?.key === docuSignRequestKey
+        ? docuSignView?.url
+        : undefined
+    const docuSignBusy = docuSignLoading || docuSignCompleting
     const compactRegistration = registrationMode
         && !response.error
         && !response.isValidating
@@ -136,10 +220,55 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             setAccepted(false)
             setCompletedTermIds([])
             setAgreementError('')
-            setExternalBusy(false)
+            setDocuSignCompleting(false)
+            setDocuSignLoading(false)
+            setDocuSignRetry(0)
+            setDocuSignView(undefined)
             setExternalError('')
+            docuSignCallbackHandledRef.current = false
+        }
+
+        return () => {
+            // Cancel delayed agreement polling and late URL requests on scope
+            // changes or unmount so they cannot complete an obsolete registration.
+            interactionRef.current += 1
         }
     }, [props.open, props.mode, memberScope, termKey])
+
+    useEffect(() => {
+        const request = docuSignUrlRequestRef.current + 1
+        docuSignUrlRequestRef.current = request
+        docuSignCallbackHandledRef.current = false
+        setDocuSignView(undefined)
+        setDocuSignLoading(false)
+        setExternalError('')
+        if (!props.open || !docuSignRequestKey || !docuSignTemplateId) return
+
+        const interaction = interactionRef.current
+        setDocuSignLoading(true)
+        getChallengeTermDocuSignUrl(docuSignTemplateId, buildDocuSignReturnUrl())
+            .then(url => {
+                if (interaction !== interactionRef.current
+                    || request !== docuSignUrlRequestRef.current) return
+                setDocuSignView({ key: docuSignRequestKey, url })
+            })
+            .catch(error => {
+                if (interaction !== interactionRef.current
+                    || request !== docuSignUrlRequestRef.current) return
+                setExternalError(error instanceof Error && error.message.trim()
+                    ? error.message
+                    : 'We couldn\u2019t load the DocuSign agreement. Please try again.')
+            })
+            .finally(() => {
+                if (interaction === interactionRef.current
+                    && request === docuSignUrlRequestRef.current) setDocuSignLoading(false)
+            })
+    }, [
+        docuSignRetry,
+        docuSignRequestKey,
+        docuSignTemplateId,
+        props.open,
+    ])
 
     /**
      * Sanitizes Terms API HTML while removing document-authored inline CSS.
@@ -246,30 +375,149 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         props.onClose()
     }
 
-    /** Opens the Terms API's authenticated DocuSign recipient flow. */
-    const startDocuSign = async (term: ChallengeTerm): Promise<void> => {
-        if (!term.docusignTemplateId || externalBusy) return
+    /**
+     * Polls authenticated outstanding terms until the signed DocuSign term is
+     * absent, accounting for the Terms service's asynchronous persistence.
+     *
+     * @param termId canonical term identifier signed in the recipient frame.
+     * @param interaction modal interaction that owns the callback.
+     * @returns remaining terms, or undefined when the interaction became stale or confirmation timed out.
+     * @throws Propagates Terms API failures.
+     */
+    const pollForDocuSignAgreement = async (
+        termId: string,
+        interaction: number,
+    ): Promise<ChallengeTerm[] | undefined> => {
+        for (let attempt = 1; attempt <= DOCUSIGN_POLL_MAX_ATTEMPTS; attempt += 1) {
+            // Sequential polling is required because Terms service persistence is asynchronous.
+            // eslint-disable-next-line no-await-in-loop
+            const refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms)
+            if (interaction !== interactionRef.current) return undefined
+            if (!refreshedTerms.some(term => term.id === termId)) return refreshedTerms
+            if (attempt < DOCUSIGN_POLL_MAX_ATTEMPTS) {
+                // eslint-disable-next-line no-await-in-loop
+                await delay(DOCUSIGN_POLL_DELAY_MS)
+                if (interaction !== interactionRef.current) return undefined
+            }
+        }
+
+        return undefined
+    }
+
+    /**
+     * Reconciles a trusted DocuSign callback before advancing terms or
+     * registering. Passive review refreshes details but never registers.
+     *
+     * @returns promise settled after refresh, advancement, or a visible confirmation error.
+     * @throws Does not throw; errors remain visible inside the active modal.
+     */
+    const completeDocuSignAgreement = async (): Promise<void> => {
+        if (!docuSignTerm || docuSignCompleting) return
         const interaction = interactionRef.current
-        setExternalBusy(true)
+        const termId = docuSignTerm.id
+        setDocuSignCompleting(true)
         setExternalError('')
         try {
-            const url = await getChallengeTermDocuSignUrl(term.docusignTemplateId, window.location.href)
+            if (!registrationMode) {
+                await response.mutate()
+                if (interaction === interactionRef.current) close()
+                return
+            }
+
+            if (!termId || !termsCacheKey) {
+                throw new Error('We couldn\u2019t verify this DocuSign agreement because it is missing an identifier.')
+            }
+
+            const refreshedTerms = await pollForDocuSignAgreement(termId, interaction)
             if (interaction !== interactionRef.current) return
-            window.location.assign(url)
+            if (!refreshedTerms) {
+                throw new Error('We couldn\u2019t confirm your DocuSign agreement yet. Please try again.')
+            }
+
+            const outstandingTermIds = new Set(refreshedTerms
+                .map(term => term.id)
+                .filter((id): id is string => !!id))
+            const confirmedCompletedIds = Array.from(new Set([...completedTermIds, termId]))
+                .filter(id => !outstandingTermIds.has(id))
+            await mutateTermsCache(termsCacheKey, refreshedTerms, { revalidate: false })
+            if (interaction !== interactionRef.current) return
+            if (refreshedTerms.length === 0) {
+                await props.onComplete()
+            } else {
+                // A term returned by the server is still outstanding, even if
+                // this modal previously recorded it as completed locally.
+                setCompletedTermIds(confirmedCompletedIds)
+            }
         } catch (error) {
             if (interaction !== interactionRef.current) return
-            setExternalError(error instanceof Error
+            setExternalError(error instanceof Error && error.message.trim()
                 ? error.message
-                : 'The external agreement could not be opened.')
+                : 'We couldn\u2019t confirm your DocuSign agreement. Please try again.')
         } finally {
-            if (interaction === interactionRef.current) setExternalBusy(false)
+            if (interaction === interactionRef.current) setDocuSignCompleting(false)
         }
     }
 
-    const buttons = registrationMode ? (
+    /**
+     * Retries either recipient-view creation or post-signature confirmation,
+     * depending on which stage produced the visible DocuSign error.
+     *
+     * @returns void after scheduling the relevant retry.
+     * @throws Does not throw.
+     */
+    const retryDocuSign = (): void => {
+        if (docuSignUrl) completeDocuSignAgreement()
+        else setDocuSignRetry(current => current + 1)
+    }
+
+    closeRef.current = close
+    docuSignCompletionRef.current = completeDocuSignAgreement
+
+    useEffect(() => {
+        // Subscribe before the recipient iframe is rendered so a fast callback
+        // cannot arrive between the iframe commit and this passive effect.
+        if (!props.open || !docuSignRequestKey) return undefined
+        let trustedOrigin: string
+        try {
+            trustedOrigin = new URL(buildDocuSignReturnUrl()).origin
+        } catch {
+            return undefined
+        }
+
+        /** Handles only messages sent by the active, same-origin callback frame. */
+        const handleDocuSignMessage = (event: MessageEvent): void => {
+            const frameWindow = docuSignFrameRef.current?.contentWindow
+            if (!frameWindow || event.source !== frameWindow || event.origin !== trustedOrigin) return
+            if (!event.data || event.data.type !== 'DocuSign') return
+
+            if (event.data.event === 'signing_complete' || event.data.event === 'viewing_complete') {
+                if (docuSignCallbackHandledRef.current) return
+                docuSignCallbackHandledRef.current = true
+                docuSignCompletionRef.current()
+            } else {
+                closeRef.current()
+            }
+        }
+
+        window.addEventListener('message', handleDocuSignMessage)
+        return () => window.removeEventListener('message', handleDocuSignMessage)
+    }, [docuSignRequestKey, props.open])
+
+    const buttons = registrationMode && activeExternalAgreement ? (
+        <Button
+            className={styles.modalAction}
+            customRadius
+            disabled={props.busy || docuSignCompleting}
+            label='Close'
+            noCaps
+            onClick={close}
+            primary
+            size='lg'
+        />
+    ) : registrationMode ? (
         <>
             <Button
-                disabled={props.busy || agreementBusy || externalBusy}
+                disabled={props.busy || agreementBusy}
                 className={styles.modalAction}
                 customRadius
                 label={compactRegistration ? 'Cancel' : 'I disagree'}
@@ -282,7 +530,6 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 disabled={(compactRegistration && !accepted)
                     || props.busy
                     || agreementBusy
-                    || externalBusy
                     || response.isValidating
                     || !!response.error
                     || (!compactRegistration && (!activeTerm || activeExternalAgreement))}
@@ -374,39 +621,56 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                         className={styles.terms}
                         key={registrationMode ? activeTerm?.id : 'view'}
                     >
-                        {displayedTerms.map((term: ChallengeTerm, index: number) => (
-                            <article
-                                className={styles.term}
-                                key={term.id ?? term.url ?? term.title ?? `term-${index}`}
-                            >
-                                {!registrationMode && (terms.length > 1 || index > 0) && (
-                                    <h3>{term.title || `Challenge term ${index + 1}`}</h3>
-                                )}
-                                {term.text && (
-                                    <div dangerouslySetInnerHTML={{ __html: sanitizedText(term.text) }} />
-                                )}
-                                {getSafeCmsLink(term.url) && (
-                                    <a href={getSafeCmsLink(term.url)} rel='noreferrer' target='_blank'>
-                                        Open this term in a new window
-                                        <IconOutline.ExternalLinkIcon aria-hidden='true' />
-                                    </a>
-                                )}
-                                {registrationMode && requiresExternalAgreement(term) && term.docusignTemplateId && (
-                                    <button
-                                        className={styles.externalButton}
-                                        disabled={externalBusy}
-                                        onClick={() => startDocuSign(term)}
-                                        type='button'
-                                    >
-                                        {externalBusy ? 'Opening DocuSign…' : 'Complete with DocuSign'}
-                                    </button>
-                                )}
-                                {term.agreed && <small>You have already accepted this term.</small>}
-                            </article>
-                        ))}
+                        {displayedTerms.map((term: ChallengeTerm, index: number) => {
+                            const displayedDocuSignTerm = term === docuSignTerm && !!docuSignTemplateId
+                            return (
+                                <article
+                                    className={styles.term}
+                                    key={term.id ?? term.url ?? term.title ?? `term-${index}`}
+                                >
+                                    {!registrationMode && (terms.length > 1 || index > 0) && (
+                                        <h3>{term.title || `Challenge term ${index + 1}`}</h3>
+                                    )}
+                                    {displayedDocuSignTerm ? (
+                                        <div className={styles.docuSign}>
+                                            {docuSignBusy && (
+                                                <div className={styles.docuSignStatus} role='status'>
+                                                    <LoadingSpinner />
+                                                    <span>
+                                                        {docuSignCompleting
+                                                            ? 'Confirming your signature…'
+                                                            : 'Loading DocuSign agreement…'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {docuSignUrl && (
+                                                <iframe
+                                                    className={styles.docuSignFrame}
+                                                    ref={docuSignFrameRef}
+                                                    src={docuSignUrl}
+                                                    title={term.title || 'DocuSign agreement'}
+                                                />
+                                            )}
+                                        </div>
+                                    ) : term.text ? (
+                                        <div dangerouslySetInnerHTML={{ __html: sanitizedText(term.text) }} />
+                                    ) : undefined}
+                                    {!displayedDocuSignTerm && getSafeCmsLink(term.url) && (
+                                        <a href={getSafeCmsLink(term.url)} rel='noreferrer' target='_blank'>
+                                            Open this term in a new window
+                                            <IconOutline.ExternalLinkIcon aria-hidden='true' />
+                                        </a>
+                                    )}
+                                    {term.agreed && <small>You have already accepted this term.</small>}
+                                </article>
+                            )
+                        })}
                     </div>
                 )}
-                {!compactRegistration && registrationMode && activeExternalAgreement && (
+                {!compactRegistration
+                    && registrationMode
+                    && activeExternalAgreement
+                    && !docuSignTemplateId && (
                     <div className={styles.error} role='alert'>
                         Complete this external agreement before registering.
                     </div>
@@ -415,7 +679,12 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                     <div className={styles.error} role='alert'>{agreementError}</div>
                 )}
                 {!compactRegistration && externalError && (
-                    <div className={styles.error} role='alert'>{externalError}</div>
+                    <div className={styles.error} role='alert'>
+                        <span>{externalError}</span>
+                        <button disabled={docuSignBusy} onClick={retryDocuSign} type='button'>
+                            {docuSignUrl ? 'Check again' : 'Try again'}
+                        </button>
+                    </div>
                 )}
                 {compactRegistration && (
                     <label>

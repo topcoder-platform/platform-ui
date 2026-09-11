@@ -331,9 +331,12 @@ registers or agrees on a member's behalf. Terms API HTML retains its semantic
 structure and safe links, but document-authored inline styles are removed so
 modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
 authoritative.
-DocuSign-template terms expose the Terms API recipient flow and return to the
-challenge route after signing; registration remains blocked until the service
-reports that every external agreement is complete.
+DocuSign-template terms, plus NDA-titled terms that use the environment's
+legacy DocuSign template fallback, replace placeholder Terms API text with the
+embedded recipient view in both registration and passive review. The frame
+returns through community-app's iframe callback, and registration remains
+blocked while Opportunities polls authenticated outstanding terms until the
+service confirms the signature.
 
 Task challenges are assignment-only work. Their details preserve Requirements,
 Registrants, and Winners for visibility, but do not request or expose voluntary

@@ -6,7 +6,10 @@ import {
     markdownHeadingText,
 } from './ChallengeMarkdown'
 import { paginationWindow } from './OpportunityPagination'
-import { requiresExternalAgreement } from './ChallengeTermsModal'
+import {
+    requiresExternalAgreement,
+    resolveChallengeTermDocuSignTemplateId,
+} from './ChallengeTermsModal'
 import {
     engagementSkillNames,
     formatAnticipatedStart,
@@ -17,15 +20,26 @@ import { buildLegacyOpportunityRedirect } from '../pages/LegacyOpportunityRedire
 import { parseSkillsFilter } from '../utils/opportunity-filter.utils'
 
 jest.mock('react-markdown', () => () => undefined)
+jest.mock('rehype-raw', () => jest.fn())
+jest.mock('rehype-sanitize', () => ({ default: jest.fn(), defaultSchema: {} }))
 jest.mock('remark-breaks', () => jest.fn())
 jest.mock('remark-gfm', () => jest.fn())
+jest.mock('~/apps/copilots', () => ({ absoluteRootRoute: '/copilots' }), { virtual: true })
 jest.mock('~/config', () => ({
-    EnvironmentConfig: { ENGAGEMENTS_URL: 'https://engagements.example' },
+    EnvironmentConfig: {
+        COMMUNITY_APP_URL: 'https://community.example',
+        ENGAGEMENTS_URL: 'https://engagements.example',
+        NDA_DOCUSIGN_TEMPLATE_ID: 'configured-nda-template',
+    },
 }), { virtual: true })
 jest.mock('~/libs/cms', () => ({ getSafeCmsLink: jest.fn(value => value) }), { virtual: true })
 jest.mock('~/libs/ui', () => ({ IconOutline: {} }), { virtual: true })
 jest.mock('dompurify', () => ({ sanitize: jest.fn(value => value) }))
-jest.mock('../services', () => ({ getChallengeSubmitterTermsDetails: jest.fn() }))
+jest.mock('../services', () => ({
+    getChallengeSubmitterTermsDetails: jest.fn(),
+    getChallengeTermDocuSignUrl: jest.fn(),
+    getChallengeTermsDetails: jest.fn(),
+}))
 
 describe('opportunity presentation utilities', () => {
     it('creates stable Markdown table-of-contents fragments including duplicate headings', () => {
@@ -134,6 +148,24 @@ describe('opportunity presentation utilities', () => {
             .toBe('/opportunities/challenge/challenge-id?tab=submissions#requirements')
     })
 
+    it('prefers Terms API DocuSign templates and falls back for NDA titles', () => {
+        expect(resolveChallengeTermDocuSignTemplateId({
+            docusignTemplateId: 'api-template',
+            title: 'Topcoder NDA',
+        }, 'configured-template'))
+            .toBe('api-template')
+        expect(resolveChallengeTermDocuSignTemplateId({
+            agreeabilityType: 'Electronically-agreeable',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }, 'configured-template'))
+            .toBe('configured-template')
+        expect(resolveChallengeTermDocuSignTemplateId({
+            agreeabilityType: 'Electronically-agreeable',
+            title: 'Standard Terms 2026',
+        }, 'configured-template'))
+            .toBeUndefined()
+    })
+
     it('blocks challenge registration for outstanding external agreements only', () => {
         expect(requiresExternalAgreement({
             agreeabilityType: 'DocuSign-template',
@@ -154,9 +186,23 @@ describe('opportunity presentation utilities', () => {
         }))
             .toBe(false)
         expect(requiresExternalAgreement({
+            agreeabilityType: 'Electronically-agreeable',
+            agreed: false,
+            id: 'nda',
+            title: 'Topcoder Member Non-Disclosure Agreement v3.0',
+        }))
+            .toBe(true)
+        expect(requiresExternalAgreement({
             agreeabilityType: 'DocuSign-template',
             agreed: true,
             id: 'accepted-nda',
+        }))
+            .toBe(false)
+        expect(requiresExternalAgreement({
+            agreeabilityType: 'Electronically-agreeable',
+            agreed: true,
+            id: 'accepted-title-nda',
+            title: 'NDA',
         }))
             .toBe(false)
     })
