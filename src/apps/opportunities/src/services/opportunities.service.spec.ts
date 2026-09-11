@@ -1885,6 +1885,31 @@ describe('opportunities service normalization', () => {
             .toHaveBeenNthCalledWith(2, 'https://api.example/v5/terms/term-uuid')
     })
 
+    it('uses a unique cache-buster for authoritative challenge term status reads', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockClear()
+        get
+            .mockResolvedValueOnce({ agreed: false, id: 'nda' })
+            .mockResolvedValueOnce({ agreed: true, id: 'nda' })
+
+        await getChallengeTermDetails({ id: 'nda' }, { fresh: true })
+        await getChallengeTermDetails({ id: 'nda' }, { fresh: true })
+
+        const requestUrls = get.mock.calls.map(call => new URL(String(call[0])))
+        expect(requestUrls.map(url => url.origin + url.pathname))
+            .toEqual([
+                'https://api.example/v5/terms/nda',
+                'https://api.example/v5/terms/nda',
+            ])
+        const cacheBusters = requestUrls.map(url => url.searchParams.get('nocache'))
+        expect(cacheBusters[0])
+            .toMatch(/^\d+-\d+$/)
+        expect(cacheBusters[1])
+            .toMatch(/^\d+-\d+$/)
+        expect(cacheBusters[1])
+            .not.toBe(cacheBusters[0])
+    })
+
     it('persists separate electronic agreement requests in caller order', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
         post.mockClear()
