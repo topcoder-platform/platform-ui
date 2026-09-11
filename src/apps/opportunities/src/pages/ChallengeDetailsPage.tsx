@@ -114,21 +114,32 @@ const STALE_REGISTRATION_MESSAGE
 const ACTIVE_SUBMISSIONS_REFRESH_INTERVAL_MS = 30_000
 
 /**
- * Determines whether a Design submission can still be removed while an
- * authored submission phase is open.
+ * Determines whether a Design submission can still be removed while the
+ * phase that produced that submission is open.
  *
  * @param challenge challenge with expanded or compact current-phase data.
- * @returns true during Submission or Checkpoint Submission only.
+ * @param submission authored submission whose phase ownership is checked.
+ * @returns true only when the submission type matches the active authored phase.
  * @throws Does not throw.
  */
-export function challengeAllowsDesignSubmissionDeletion(challenge: ChallengeOpportunity): boolean {
+export function challengeAllowsDesignSubmissionDeletion(
+    challenge: ChallengeOpportunity,
+    submission: ChallengeSubmission,
+): boolean {
     const openPhaseKeys = [
         ...(challenge.phases ?? [])
             .filter(phase => phase.isOpen === true)
             .map(phase => challengeCatalogKey(phase.name)),
         ...(challenge.currentPhaseNames ?? []).map(challengeCatalogKey),
     ]
-    return openPhaseKeys.some(key => key === 'submission' || key === 'checkpointsubmission')
+    const submissionTypeKey = challengeCatalogKey(submission.type)
+    const requiredPhaseKey = submissionTypeKey === 'checkpointsubmission'
+        ? 'checkpointsubmission'
+        : submissionTypeKey === 'contestsubmission'
+            ? 'submission'
+            : undefined
+
+    return !!requiredPhaseKey && openPhaseKeys.includes(requiredPhaseKey)
 }
 
 interface SortableColumnHeaderProps {
@@ -1309,9 +1320,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         props.challenge,
         submissions,
     )
-    const designDeletionAllowed = isDesign
-        && challengeAllowsDesignSubmissionDeletion(props.challenge)
-
     /**
      * Opens an authorized clean-storage download without exposing private URLs in list data.
      *
@@ -1495,6 +1503,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                 const statusClass = progress.status
                                     ? styles[`testStatus${progress.status.replace(' ', '')}`]
                                     : ''
+                                const designDeletionAllowed = isDesign
+                                    && challengeAllowsDesignSubmissionDeletion(props.challenge, submission)
                                 return (
                                     <tr key={submission.id}>
                                         <td data-mobile-label='Submission ID'>
