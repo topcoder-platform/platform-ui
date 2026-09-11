@@ -34,8 +34,10 @@ import styles from './ChallengeTermsModal.module.scss'
 
 export type ChallengeTermsMode = 'register' | 'view'
 
-const DOCUSIGN_POLL_DELAY_MS = 5000
-const DOCUSIGN_POLL_MAX_ATTEMPTS = 5
+// One immediate read followed by bounded backoff. The final attempt occurs
+// after 91 seconds, leaving enough time for DocuSign Connect and the Terms
+// receiver transaction without holding registration open indefinitely.
+const DOCUSIGN_POLL_RETRY_DELAYS_MS = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 20000]
 const NDA_TITLE_PATTERN = /\bnda\b|non[-\s]?disclosure/i
 
 interface ChallengeTermsModalProps {
@@ -98,6 +100,28 @@ function delay(durationMs: number): Promise<void> {
     return new Promise(resolve => {
         window.setTimeout(resolve, durationMs)
     })
+}
+
+/**
+ * Identifies status-read failures that are safe to retry. Network failures and
+ * timeout/rate-limit/server responses can clear while DocuSign confirmation is
+ * propagating; authorization and other client errors should surface immediately.
+ *
+ * @param error failure returned by the authenticated Terms status read.
+ * @returns true when another read may succeed without changing user state.
+ * @throws Does not throw.
+ */
+function isTransientDocuSignStatusError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return true
+    const candidate = error as {
+        response?: { status?: unknown }
+        status?: unknown
+    }
+    const rawStatus = candidate.status ?? candidate.response?.status
+    if (rawStatus === undefined || rawStatus === null) return true
+    const status = Number(rawStatus)
+    if (!Number.isFinite(status) || status === 0) return true
+    return status === 408 || status === 425 || status === 429 || status >= 500
 }
 
 /**
@@ -382,23 +406,35 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
      * @param termId canonical term identifier signed in the recipient frame.
      * @param interaction modal interaction that owns the callback.
      * @returns remaining terms, or undefined when the interaction became stale or confirmation timed out.
-     * @throws Propagates Terms API failures.
+     * @throws Propagates non-transient Terms API failures; transient failures are retried.
      */
     const pollForDocuSignAgreement = async (
         termId: string,
         interaction: number,
     ): Promise<ChallengeTerm[] | undefined> => {
-        for (let attempt = 1; attempt <= DOCUSIGN_POLL_MAX_ATTEMPTS; attempt += 1) {
-            // Sequential polling is required because Terms service persistence is asynchronous.
-            // eslint-disable-next-line no-await-in-loop
-            const refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms)
-            if (interaction !== interactionRef.current) return undefined
-            if (!refreshedTerms.some(term => term.id === termId)) return refreshedTerms
-            if (attempt < DOCUSIGN_POLL_MAX_ATTEMPTS) {
+        const attemptCount = DOCUSIGN_POLL_RETRY_DELAYS_MS.length + 1
+        for (let attempt = 0; attempt < attemptCount; attempt += 1) {
+            if (attempt > 0) {
                 // eslint-disable-next-line no-await-in-loop
-                await delay(DOCUSIGN_POLL_DELAY_MS)
+                await delay(DOCUSIGN_POLL_RETRY_DELAYS_MS[attempt - 1])
                 if (interaction !== interactionRef.current) return undefined
             }
+
+            let refreshedTerms: ChallengeTerm[] | undefined
+            // Sequential polling is required because Terms service persistence is asynchronous.
+            try {
+                // A unique `nocache` value is required for each authoritative
+                // post-signature read; the Terms endpoint otherwise emits an ETag
+                // without an explicit no-store policy.
+                // eslint-disable-next-line no-await-in-loop
+                refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms, { fresh: true })
+            } catch (error) {
+                if (interaction !== interactionRef.current) return undefined
+                if (!isTransientDocuSignStatusError(error)) throw error
+            }
+
+            if (interaction !== interactionRef.current) return undefined
+            if (refreshedTerms && !refreshedTerms.some(term => term.id === termId)) return refreshedTerms
         }
 
         return undefined

@@ -291,7 +291,7 @@ describe('ChallengeTermsModal', () => {
         expect(mockAgreeToTerms)
             .toHaveBeenCalledTimes(1)
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenCalledWith([standardTerms, nda])
+            .toHaveBeenCalledWith([standardTerms, nda], { fresh: true })
         addEventListener.mockRestore()
     })
 
@@ -936,7 +936,7 @@ describe('ChallengeTermsModal', () => {
             .not.toHaveBeenCalled()
     })
 
-    it('polls outstanding terms before completing DocuSign registration', async () => {
+    it('keeps polling past 20 seconds before completing DocuSign registration', async () => {
         const addEventListener = jest.spyOn(window, 'addEventListener')
         const nda: ChallengeTerm = {
             id: 'nda',
@@ -945,6 +945,10 @@ describe('ChallengeTermsModal', () => {
         const onComplete = jest.fn()
             .mockResolvedValue(undefined)
         mockGetSubmitterTermsDetails
+            .mockResolvedValueOnce([nda])
+            .mockResolvedValueOnce([nda])
+            .mockResolvedValueOnce([nda])
+            .mockResolvedValueOnce([nda])
             .mockResolvedValueOnce([nda])
             .mockResolvedValueOnce([])
         mockSWRResponse = {
@@ -977,12 +981,21 @@ describe('ChallengeTermsModal', () => {
         expect(onComplete)
             .not.toHaveBeenCalled()
 
-        await act(async () => {
-            jest.advanceTimersByTime(5000)
-            await Promise.resolve()
-        })
+        const retryDelays = [2000, 3000, 5000, 8000, 13000]
+
+        for (let retry = 0; retry < retryDelays.length; retry += 1) {
+            // Each completed read schedules the next backoff interval.
+            // eslint-disable-next-line no-await-in-loop
+            await act(async () => {
+                jest.advanceTimersByTime(retryDelays[retry])
+                await Promise.resolve()
+            })
+        }
+
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenCalledTimes(2)
+            .toHaveBeenCalledTimes(6)
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenLastCalledWith([nda], { fresh: true })
         expect(onComplete)
             .toHaveBeenCalledTimes(1)
         expect(mockAgreeToTerms)
@@ -990,6 +1003,62 @@ describe('ChallengeTermsModal', () => {
 
         jest.useRealTimers()
         view.unmount()
+    })
+
+    it('retries a transient Terms status failure before completing DocuSign registration', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onComplete = jest.fn()
+            .mockResolvedValue(undefined)
+        mockGetSubmitterTermsDetails
+            .mockRejectedValueOnce(Object.assign(new Error('Terms service unavailable'), { status: 503 }))
+            .mockResolvedValueOnce([])
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        await act(async () => Promise.resolve())
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+
+        await act(async () => {
+            jest.advanceTimersByTime(2000)
+            await Promise.resolve()
+        })
+
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(2)
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenNthCalledWith(1, [nda], { fresh: true })
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenNthCalledWith(2, [nda], { fresh: true })
+        expect(onComplete)
+            .toHaveBeenCalledTimes(1)
+        expect(mockAgreeToTerms)
+            .not.toHaveBeenCalled()
     })
 
     it('keeps registration blocked when DocuSign persistence cannot be confirmed', async () => {
@@ -1028,17 +1097,18 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(1)
 
-        for (let attempt = 1; attempt < 5; attempt += 1) {
+        const retryDelays = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 20000]
+        for (let retry = 0; retry < retryDelays.length; retry += 1) {
             // Each status check schedules only the next retry.
             // eslint-disable-next-line no-await-in-loop
             await act(async () => {
-                jest.advanceTimersByTime(5000)
+                jest.advanceTimersByTime(retryDelays[retry])
                 await Promise.resolve()
             })
         }
 
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenCalledTimes(5)
+            .toHaveBeenCalledTimes(9)
         expect(screen.getByRole('alert'))
             .toHaveTextContent('couldn’t confirm your DocuSign agreement yet')
         expect(screen.getByRole('button', { name: 'Check again' }))
@@ -1046,6 +1116,19 @@ describe('ChallengeTermsModal', () => {
         expect(mockAgreeToTerms)
             .not.toHaveBeenCalled()
         expect(onComplete)
+            .not.toHaveBeenCalled()
+
+        mockGetSubmitterTermsDetails.mockResolvedValueOnce([])
+        fireEvent.click(screen.getByRole('button', { name: 'Check again' }))
+        await act(async () => Promise.resolve())
+
+        expect(onComplete)
+            .toHaveBeenCalledTimes(1)
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledTimes(1)
+        expect(mockGetSubmitterTermsDetails)
+            .toHaveBeenCalledTimes(10)
+        expect(mockAgreeToTerms)
             .not.toHaveBeenCalled()
     })
 

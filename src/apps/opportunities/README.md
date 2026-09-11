@@ -336,7 +336,10 @@ legacy DocuSign template fallback, replace placeholder Terms API text with the
 embedded recipient view in both registration and passive review. The frame
 returns through community-app's iframe callback, and registration remains
 blocked while Opportunities polls authenticated outstanding terms until the
-service confirms the signature.
+service confirms the signature. Confirmation reads bypass HTTP caches and use
+a bounded 91-second backoff window, including retries for transient Terms API
+failures; an unconfirmed signature remains blocked and can be checked again
+without creating another DocuSign recipient view.
 
 Task challenges are assignment-only work. Their details preserve Requirements,
 Registrants, and Winners for visibility, but do not request or expose voluntary

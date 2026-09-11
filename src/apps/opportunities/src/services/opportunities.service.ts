@@ -2151,6 +2151,29 @@ interface DocuSignViewResponse {
     recipientViewUrl?: string
 }
 
+interface ChallengeTermsDetailsOptions {
+    fresh?: boolean
+}
+
+let challengeTermsFreshRequestSequence = 0
+
+/**
+ * Adds a unique query value when an agreement-status read must bypass browser
+ * and intermediary HTTP caches.
+ *
+ * @param url Terms API request URL.
+ * @param fresh whether the caller requires an authoritative status read.
+ * @returns the original URL or a uniquely cache-busted URL.
+ * @throws Does not throw.
+ */
+function buildChallengeTermDetailsUrl(url: string, fresh: boolean = false): string {
+    if (!fresh) return url
+
+    challengeTermsFreshRequestSequence += 1
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}nocache=${Date.now()}-${challengeTermsFreshRequestSequence}`
+}
+
 /**
  * Loads the complete title, agreement type, URL, and body for one challenge
  * term reference from the v5 Terms API.
@@ -2161,26 +2184,39 @@ interface DocuSignViewResponse {
  * either API response omits them.
  *
  * @param term lightweight challenge term reference.
+ * @param options request behavior; fresh reads bypass HTTP caches for post-signature polling.
  * @returns complete term details, or the original reference when it has no ID.
  * @throws Error when a legacy ID is not found; otherwise propagates API errors.
  */
-export async function getChallengeTermDetails(term: ChallengeTerm): Promise<ChallengeTerm> {
+export async function getChallengeTermDetails(
+    term: ChallengeTerm,
+    options: ChallengeTermsDetailsOptions = {},
+): Promise<ChallengeTerm> {
     if (!term.id) return term
     let details: ChallengeTerm
     if (/^[\d]{5,8}$/.test(term.id)) {
         const response = await xhrGetAsync<LegacyTermsSearchResponse>(
-            `${EnvironmentConfig.API.V5}/terms?legacyId=${encodeURIComponent(term.id)}`,
+            buildChallengeTermDetailsUrl(
+                `${EnvironmentConfig.API.V5}/terms?legacyId=${encodeURIComponent(term.id)}`,
+                options.fresh,
+            ),
         )
         const match = response.result?.[0]
         if (!match) throw new Error(`Challenge term ${term.id} was not found.`)
         if (!match.id) throw new Error(`Challenge term ${term.id} has no canonical identifier.`)
         const canonicalDetails = await xhrGetAsync<ChallengeTerm>(
-            `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(match.id)}`,
+            buildChallengeTermDetailsUrl(
+                `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(match.id)}`,
+                options.fresh,
+            ),
         )
         details = { ...match, ...canonicalDetails }
     } else {
         details = await xhrGetAsync<ChallengeTerm>(
-            `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id)}`,
+            buildChallengeTermDetailsUrl(
+                `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id)}`,
+                options.fresh,
+            ),
         )
     }
 
@@ -2191,11 +2227,15 @@ export async function getChallengeTermDetails(term: ChallengeTerm): Promise<Chal
  * Resolves all lightweight challenge term references for modal display.
  *
  * @param terms lightweight terms included with a Challenge API response.
+ * @param options request behavior shared by every detail read.
  * @returns complete Terms API records in challenge order.
  * @throws Propagates any individual term detail failure.
  */
-export function getChallengeTermsDetails(terms: ChallengeTerm[]): Promise<ChallengeTerm[]> {
-    return Promise.all(terms.map(getChallengeTermDetails))
+export function getChallengeTermsDetails(
+    terms: ChallengeTerm[],
+    options: ChallengeTermsDetailsOptions = {},
+): Promise<ChallengeTerm[]> {
+    return Promise.all(terms.map(term => getChallengeTermDetails(term, options)))
 }
 
 /**
@@ -2205,14 +2245,19 @@ export function getChallengeTermsDetails(terms: ChallengeTerm[]): Promise<Challe
  * agreed again during registration.
  *
  * @param terms lightweight role-scoped references from Challenge API.
+ * @param options request behavior shared by every detail read.
  * @returns unaccepted, complete Submitter term records in challenge order.
  * @throws Propagates Resource Role or Terms API failures.
  */
 export async function getChallengeSubmitterTermsDetails(
     terms: ChallengeTerm[],
+    options: ChallengeTermsDetailsOptions = {},
 ): Promise<ChallengeTerm[]> {
     const submitterRole = await getSubmitterRole()
-    const details = await getChallengeTermsDetails(terms.filter(term => term.roleId === submitterRole.id))
+    const details = await getChallengeTermsDetails(
+        terms.filter(term => term.roleId === submitterRole.id),
+        options,
+    )
     return details.filter(term => !term.agreed)
 }
 
