@@ -21,7 +21,6 @@ import { toast } from 'react-toastify'
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 
 const mockUseSWR = jest.fn()
-const mockAgreeToTerms = jest.fn()
 const mockDeleteSubmission = jest.fn()
 const mockGetSubmissionDownloadUrl = jest.fn()
 const mockChallengeMutate = jest.fn()
@@ -172,13 +171,13 @@ jest.mock('../components', () => ({
         )
     },
     ChallengeTermsModal: (props: {
-        onAccept: () => Promise<void>
         onClose: () => void
+        onComplete: () => Promise<void>
         open: boolean
     }): JSX.Element => (
         props.open ? (
             <div aria-label='Challenge terms' role='dialog'>
-                <button onClick={props.onAccept} type='button'>Accept terms</button>
+                <button onClick={props.onComplete} type='button'>Complete terms</button>
                 <button onClick={props.onClose} type='button'>Close terms</button>
             </div>
         ) : <></>
@@ -219,7 +218,6 @@ jest.mock('../components/challenge-card.utils', () => ({
 }))
 
 jest.mock('../services', () => ({
-    agreeToChallengeTerms: (...args: unknown[]) => mockAgreeToTerms(...args),
     deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
     getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
@@ -434,7 +432,6 @@ describe('ChallengeDetailsPage member flows', () => {
         }
         mockUnregister.mockResolvedValue(undefined)
         mockRegister.mockResolvedValue({ id: 'new-resource-id', memberId: 123 })
-        mockAgreeToTerms.mockResolvedValue(undefined)
         mockDeleteSubmission.mockResolvedValue(undefined)
         mockGetSubmissionDownloadUrl.mockResolvedValue(
             'https://clean-storage.example/submission-1.zip',
@@ -675,7 +672,7 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('closes challenge terms immediately while registration is pending', () => {
         mockProfile = { handle: 'coder', userId: 123 }
-        mockAgreeToTerms.mockReturnValue(new Promise<void>(() => {
+        mockRegister.mockReturnValue(new Promise<void>(() => {
             // Keep the request pending so the modal state can be asserted independently.
         }))
 
@@ -684,7 +681,7 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByRole('dialog', { name: 'Challenge terms' }))
             .toBeInTheDocument()
 
-        fireEvent.click(screen.getByRole('button', { name: 'Accept terms' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Complete terms' }))
 
         expect(screen.queryByRole('dialog', { name: 'Challenge terms' }))
             .not.toBeInTheDocument()
@@ -695,15 +692,15 @@ describe('ChallengeDetailsPage member flows', () => {
 
         renderPage()
         fireEvent.click(screen.getByRole('button', { name: 'Register' }))
-        fireEvent.click(screen.getByRole('button', { name: 'Accept terms' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Complete terms' }))
 
         await waitFor(() => expect(mockRegister)
             .toHaveBeenCalledWith('challenge-id', 'coder'))
-        expect(mockRegistrationMutate)
+        await waitFor(() => expect(mockRegistrationMutate)
             .toHaveBeenCalledWith(
                 { id: 'new-resource-id', memberId: 123 },
                 { revalidate: false },
-            )
+            ))
         const countUpdate = mockChallengeMutate.mock.calls[0][0] as (
             challenge: Record<string, unknown>
         ) => Record<string, unknown>

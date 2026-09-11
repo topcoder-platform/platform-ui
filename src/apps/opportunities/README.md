@@ -313,7 +313,15 @@ resolves that same role and sends `memberId` plus
 filters, global sorting, counts, and pagination. The terms modal similarly
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
-agreement. Registration content stays unmounted until that request resolves
+agreement. Outstanding terms are presented one at a time and each electronic
+agreement is persisted before the next appears; the Submitter resource is not
+created until the final prerequisite succeeds. Ambiguous agreement failures are
+reconciled once against authenticated outstanding terms before a retry is shown.
+Member identity scopes the
+agreement cache, and numeric legacy references are followed through their
+canonical authenticated Terms API detail before eligibility is decided.
+Registration content stays
+unmounted until that request resolves
 and unmounts immediately on close, so unresolved fallback terms cannot flash
 during the modal transition. Passive “Review challenge terms” mode never
 registers or agrees on a member's behalf. Terms API HTML retains its semantic

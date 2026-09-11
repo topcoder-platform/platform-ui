@@ -61,7 +61,6 @@ jest.mock('../components/challenge-card.utils', () => ({
 }))
 
 jest.mock('../services', () => ({
-    agreeToChallengeTerms: jest.fn(),
     getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
     getChallengeProjectResults: jest.fn(),
@@ -79,6 +78,7 @@ jest.mock('../utils', () => ({
     challengeForumUrl: (): undefined => undefined,
     formatMarathonScore: (): string => '—',
     isMarathonMatchChallenge: (): boolean => false,
+    isTaskChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (): boolean => false,
     marathonSubmissionScores: (): Record<string, never> => ({}),
     memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,

@@ -2155,8 +2155,10 @@ interface DocuSignViewResponse {
  * Loads the complete title, agreement type, URL, and body for one challenge
  * term reference from the v5 Terms API.
  *
- * Numeric legacy IDs use the legacyId search route; UUIDs use the canonical
- * detail route. Reference fields are retained when the detail omits them.
+ * Numeric legacy IDs first use the legacyId search route to resolve their UUID,
+ * then use the canonical authenticated detail route so user-specific agreement
+ * state and the complete body are present. Reference fields are retained when
+ * either API response omits them.
  *
  * @param term lightweight challenge term reference.
  * @returns complete term details, or the original reference when it has no ID.
@@ -2171,7 +2173,11 @@ export async function getChallengeTermDetails(term: ChallengeTerm): Promise<Chal
         )
         const match = response.result?.[0]
         if (!match) throw new Error(`Challenge term ${term.id} was not found.`)
-        details = match
+        if (!match.id) throw new Error(`Challenge term ${term.id} has no canonical identifier.`)
+        const canonicalDetails = await xhrGetAsync<ChallengeTerm>(
+            `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(match.id)}`,
+        )
+        details = { ...match, ...canonicalDetails }
     } else {
         details = await xhrGetAsync<ChallengeTerm>(
             `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id)}`,
