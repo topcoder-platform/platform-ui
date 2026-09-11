@@ -2,7 +2,7 @@
 
 This directory contains the development infrastructure and Lambda code for the
 role-gated Analytics UI. The API is a read-only adapter over the existing AWS
-Clickstream Redshift reporting views; it is not an ingestion endpoint.
+Clickstream Redshift reporting relations; it is not an ingestion endpoint.
 
 ## Architecture and security boundary
 
@@ -13,7 +13,7 @@ Platform UI
   -> Lambda exact analytics-role check and fixed queries
   -> Redshift Data API
   -> analytics_api_reader database role
-  -> approved reporting views
+  -> approved reporting views and materialized projection
 ```
 
 API Gateway validates the configured Auth0 issuer, audience, signature, and
@@ -34,18 +34,25 @@ validated parameters, retry attempt, and current or previous four-hour window.
 The four-hour window remains below the Data API's eight-hour idempotency
 retention and permits one complete boundary-crossing window without making
 tokens reusable for other reports. An EventBridge schedule invokes the default
-Campaigns report and filter-option queries at each new window, allowing their
-statements to finish before an interactive request while preserving Redshift
-Serverless idle cost controls. Browser polling is bounded. Concurrency and API
-throttles cap warehouse pressure, and successful responses use `Cache-Control:
-private, no-store`. Logs contain request IDs and service-owned error categories
-only.
+Campaigns report, filter-option query, and `/opportunities` route report at each
+new window, allowing their statements to finish before an interactive request
+while preserving Redshift Serverless idle cost controls. Browser polling is
+bounded. Concurrency and API throttles cap warehouse pressure, and successful
+responses use `Cache-Control: private, no-store`. Logs contain request IDs and
+service-owned error categories only.
 
 The General report applies an inclusive timestamp range and uses Redshift
 `GROUPING SETS` to calculate its summary, daily, page, traffic-source, and
 surface sections in one scan of the reporting view. This avoids repeating the
 view's JSON-derived field work for each section while preserving exact visitor
 counts and the existing response contract.
+
+The Route report reads an auto-refreshed, timestamp-sorted materialized
+projection containing only its approved event types and fields. Replicated
+distribution keeps the report's repeated session and funnel joins local and
+avoids re-extracting JSON fields from the wide Clickstream table. The response
+continues to expose `dataThrough` so consumers can see the latest included route
+page-view date while Redshift schedules incremental refreshes.
 
 ## Files
 
@@ -55,10 +62,10 @@ counts and the existing response contract.
   The former dedicated API remains during the cutover observation window.
 - `src/handler.py` validates and shapes filter, campaign, general, and exact-route reports.
 - `bootstrap.sql` creates the read-only Redshift database role and grants only
-  the reporting objects required by the handler. Its route event view projects
-  only timestamp, pseudonymous join key, session, source group, semantic click,
-  challenge join key, and form lifecycle fields; the Lambda role cannot select
-  the raw event table.
+  the reporting objects required by the handler. Its route event view and
+  materialized projection expose only timestamp, pseudonymous join key,
+  session, source group, semantic click, challenge join key, and form lifecycle
+  fields; the Lambda role cannot select the raw event table.
 - `collector-host-migration.yaml` creates `events.<domain>` on the existing
   ingestion ALB so `analytics.<domain>` can become the reporting UI host.
 - `tests/test_handler.py` verifies authorization, validation, parameterization,
@@ -77,12 +84,14 @@ secret values into parameters, source files, or shell history.
    preflight/request to `/collect` before changing either client configuration.
 4. Package `src/handler.py` as a versioned zip in the encrypted Clickstream
    templates bucket.
-5. Deploy `template.yaml` with `CAPABILITY_NAMED_IAM`, the shared HTTP API ID,
+5. Run `bootstrap.sql` through the Data API using the Redshift namespace's
+   managed administrator secret before deploying code that reads a new
+   reporting relation. On reapplication, omit existing `CREATE ROLE` and
+   `CREATE MATERIALIZED VIEW` statements, then run the replaceable view and
+   idempotent `GRANT` statements.
+6. Deploy `template.yaml` with `CAPABILITY_NAMED_IAM`, the shared HTTP API ID,
    and the exact workgroup, wildcard certificate, public hosted zone, code
    bucket, and code key.
-6. Run `bootstrap.sql` through the Data API using the Redshift namespace's
-   managed administrator secret. On reapplication, omit `CREATE ROLE` if the
-   role already exists and run the idempotent `GRANT` statements.
 7. Exercise Lambda directly with missing, wrong, and exact role claims, then
    exercise the public API with no token, an unauthorized token, and an
    authorized token. A direct invocation does not replace the positive public

@@ -521,8 +521,48 @@ class AnalyticsHandlerTests(unittest.TestCase):
     def test_route_funnel_matches_the_exact_clicked_challenge(self) -> None:
         """Route registrations and submissions retain the clicked challenge ID."""
 
+        self.assertIn("topcoder_web.route_analytics_events_mv_v1", self.module.ROUTE_SQL)
+        self.assertNotIn(":surface", self.module.ROUTE_SQL)
+        self.assertIn("AND surface = :surface", self.module.ROUTE_SURFACE_SQL)
         self.assertIn("event.challenge_id = click.challenge_id", self.module.ROUTE_SQL)
         self.assertIn("event.challenge_id = registration.challenge_id", self.module.ROUTE_SQL)
+
+    def test_route_query_omits_unused_surface_wildcard(self) -> None:
+        """Unfiltered routes avoid a bound wildcard branch in each warehouse scan."""
+
+        with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+            response = self.module.handler(
+                self._event(
+                    "GET /v1/analytics/route",
+                    ["analytics"],
+                    {"path": "/opportunities"},
+                ),
+                None,
+            )
+
+        self.assertEqual(200, response["statusCode"])
+        query_sql, parameters = execute.call_args.args[:2]
+        self.assertIs(self.module.ROUTE_SQL, query_sql)
+        self.assertNotIn("surface", {parameter["name"] for parameter in parameters})
+
+        self.module._cache.clear()
+        with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+            response = self.module.handler(
+                self._event(
+                    "GET /v1/analytics/route",
+                    ["analytics"],
+                    {"path": "/opportunities", "surface": "platform_ui"},
+                ),
+                None,
+            )
+
+        self.assertEqual(200, response["statusCode"])
+        query_sql, parameters = execute.call_args.args[:2]
+        self.assertEqual(self.module.ROUTE_SURFACE_SQL, query_sql)
+        parameter_values = {
+            parameter["name"]: parameter["value"] for parameter in parameters
+        }
+        self.assertEqual("platform_ui", parameter_values["surface"])
 
     def test_shapes_general_report(self) -> None:
         """General rows retain page, source, and surface dimensions."""

@@ -3,7 +3,7 @@
 API Gateway verifies the current Topcoder Auth0 access token before invoking
 this Lambda. The handler independently requires the exact ``analytics`` role,
 validates every filter, and executes fixed parameterized queries against the
-Topcoder AWS Clickstream reporting views.
+Topcoder AWS Clickstream reporting relations.
 """
 
 from __future__ import annotations
@@ -379,7 +379,7 @@ ORDER BY row_type, date_value, metric_1 DESC
 ROUTE_SQL = """
 WITH date_events AS (
     SELECT *
-    FROM topcoder_web.route_analytics_events_v1
+    FROM topcoder_web.route_analytics_events_mv_v1
     WHERE event_timestamp >= CAST(:from_date AS timestamp)
       AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
       AND event_name IN (
@@ -398,7 +398,6 @@ route_events AS (
     SELECT *
     FROM date_events
     WHERE page_path = :path
-      AND (:surface = '*' OR surface = :surface)
 ),
 route_page_views AS (
     SELECT *
@@ -661,6 +660,12 @@ SELECT
 FROM funnel_row
 ORDER BY row_type, metric_1 DESC, dimension_1
 """
+
+ROUTE_SURFACE_SQL = ROUTE_SQL.replace(
+    "    WHERE page_path = :path\n",
+    "    WHERE page_path = :path\n      AND surface = :surface\n",
+    1,
+)
 
 
 class QueryFailure(RuntimeError):
@@ -1004,6 +1009,11 @@ def _route_report(
 ) -> dict[str, Any]:
     """Load and shape detailed engagement analytics for one exact page path.
 
+    Requests without a surface use a fixed query that omits the surface
+    predicate and parameter; filtered requests use the exact-match variant.
+    This lets Redshift prune the replicated route projection without evaluating
+    a bound wildcard branch during each reused event scan.
+
     Args:
         filters: Validated date, surface, and query-free path filters.
         context: Lambda context used to respect the remaining deadline.
@@ -1017,7 +1027,14 @@ def _route_report(
         QueryFailure or QueryTimeout when Redshift cannot return data.
     """
 
-    rows = _execute_query(ROUTE_SQL, _sql_parameters(filters), context, query_token)
+    query_filters = dict(filters)
+    query_sql = ROUTE_SQL
+    if filters["surface"]:
+        query_sql = ROUTE_SURFACE_SQL
+    else:
+        query_filters.pop("surface")
+
+    rows = _execute_query(query_sql, _sql_parameters(query_filters), context, query_token)
     summary = next((row for row in rows if row.get("row_type") == "summary"), {})
     funnel_row = next((row for row in rows if row.get("row_type") == "funnel"), {})
     visitors = _integer(summary.get("metric_2"))
