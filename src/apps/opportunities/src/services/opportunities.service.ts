@@ -1939,15 +1939,25 @@ export async function getChallengeResources(
     return normalizePage(response, page, perPage)
 }
 
+interface ChallengeTermsRequestOptions {
+    signal?: AbortSignal
+    timeoutMs?: number
+}
+
 /**
  * Resolves the canonical Submitter role used by challenge registration.
  *
+ * @param options optional cancellation and timeout controls for the Resource API request.
  * @returns Submitter resource role.
  * @throws Error when Resource API does not expose a Submitter role.
  */
-export async function getSubmitterRole(): Promise<ChallengeResourceRole> {
+export async function getSubmitterRole(
+    options: ChallengeTermsRequestOptions = {},
+): Promise<ChallengeResourceRole> {
     const response = await xhrGetAsync<ChallengeResourceRole[] | ApiEnvelope<ChallengeResourceRole[]>>(
         `${V6_URL}/resource-roles`,
+        undefined,
+        { signal: options.signal, timeout: options.timeoutMs },
     )
     const role = unwrap(response)
         .find(item => item.name.trim()
@@ -2151,7 +2161,7 @@ interface DocuSignViewResponse {
     recipientViewUrl?: string
 }
 
-interface ChallengeTermsDetailsOptions {
+interface ChallengeTermsDetailsOptions extends ChallengeTermsRequestOptions {
     fresh?: boolean
 }
 
@@ -2184,7 +2194,7 @@ function buildChallengeTermDetailsUrl(url: string, fresh: boolean = false): stri
  * either API response omits them.
  *
  * @param term lightweight challenge term reference.
- * @param options request behavior; fresh reads bypass HTTP caches for post-signature polling.
+ * @param options request behavior; fresh reads bypass HTTP caches while signal and timeoutMs bound each request.
  * @returns complete term details, or the original reference when it has no ID.
  * @throws Error when a legacy ID is not found; otherwise propagates API errors.
  */
@@ -2193,6 +2203,10 @@ export async function getChallengeTermDetails(
     options: ChallengeTermsDetailsOptions = {},
 ): Promise<ChallengeTerm> {
     if (!term.id) return term
+    const requestConfig = {
+        signal: options.signal,
+        timeout: options.timeoutMs,
+    }
     let details: ChallengeTerm
     if (/^[\d]{5,8}$/.test(term.id)) {
         const response = await xhrGetAsync<LegacyTermsSearchResponse>(
@@ -2200,6 +2214,8 @@ export async function getChallengeTermDetails(
                 `${EnvironmentConfig.API.V5}/terms?legacyId=${encodeURIComponent(term.id)}`,
                 options.fresh,
             ),
+            undefined,
+            requestConfig,
         )
         const match = response.result?.[0]
         if (!match) throw new Error(`Challenge term ${term.id} was not found.`)
@@ -2209,6 +2225,8 @@ export async function getChallengeTermDetails(
                 `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(match.id)}`,
                 options.fresh,
             ),
+            undefined,
+            requestConfig,
         )
         details = { ...match, ...canonicalDetails }
     } else {
@@ -2217,6 +2235,8 @@ export async function getChallengeTermDetails(
                 `${EnvironmentConfig.API.V5}/terms/${encodeURIComponent(term.id)}`,
                 options.fresh,
             ),
+            undefined,
+            requestConfig,
         )
     }
 
@@ -2227,7 +2247,7 @@ export async function getChallengeTermDetails(
  * Resolves all lightweight challenge term references for modal display.
  *
  * @param terms lightweight terms included with a Challenge API response.
- * @param options request behavior shared by every detail read.
+ * @param options cache, cancellation, and timeout behavior shared by every detail read.
  * @returns complete Terms API records in challenge order.
  * @throws Propagates any individual term detail failure.
  */
@@ -2245,7 +2265,7 @@ export function getChallengeTermsDetails(
  * agreed again during registration.
  *
  * @param terms lightweight role-scoped references from Challenge API.
- * @param options request behavior shared by every detail read.
+ * @param options cache, cancellation, and timeout behavior shared by the role and detail reads.
  * @returns unaccepted, complete Submitter term records in challenge order.
  * @throws Propagates Resource Role or Terms API failures.
  */
@@ -2253,7 +2273,7 @@ export async function getChallengeSubmitterTermsDetails(
     terms: ChallengeTerm[],
     options: ChallengeTermsDetailsOptions = {},
 ): Promise<ChallengeTerm[]> {
-    const submitterRole = await getSubmitterRole()
+    const submitterRole = await getSubmitterRole(options)
     const details = await getChallengeTermsDetails(
         terms.filter(term => term.roleId === submitterRole.id),
         options,

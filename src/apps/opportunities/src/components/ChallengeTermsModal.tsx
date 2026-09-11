@@ -34,10 +34,12 @@ import styles from './ChallengeTermsModal.module.scss'
 
 export type ChallengeTermsMode = 'register' | 'view'
 
-// One immediate read followed by bounded backoff. The final attempt occurs
-// after 91 seconds, leaving enough time for DocuSign Connect and the Terms
-// receiver transaction without holding registration open indefinitely.
-const DOCUSIGN_POLL_RETRY_DELAYS_MS = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 20000]
+// One immediate read followed by bounded backoff. Confirmation has a separate
+// 91-second wall-clock deadline so slow requests and throttled browser timers
+// cannot extend the registration gate indefinitely.
+const DOCUSIGN_POLL_RETRY_DELAYS_MS = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 19000]
+const DOCUSIGN_CONFIRMATION_TIMEOUT_MS = 91_000
+const DOCUSIGN_STATUS_REQUEST_TIMEOUT_MS = 10_000
 const NDA_TITLE_PATTERN = /\bnda\b|non[-\s]?disclosure/i
 
 interface ChallengeTermsModalProps {
@@ -90,15 +92,74 @@ function buildDocuSignReturnUrl(): string {
 }
 
 /**
- * Delays a DocuSign agreement-status retry without blocking the browser.
+ * Delays a DocuSign agreement-status retry without blocking the browser and
+ * clears the timer when the owning confirmation is cancelled.
  *
  * @param durationMs delay in milliseconds.
- * @returns promise resolved after the requested delay.
+ * @param signal signal that cancels the pending delay.
+ * @returns promise resolving true after the delay or false after cancellation.
  * @throws Does not throw.
  */
-function delay(durationMs: number): Promise<void> {
+function delay(durationMs: number, signal: AbortSignal): Promise<boolean> {
+    if (signal.aborted) return Promise.resolve(false)
+
     return new Promise(resolve => {
-        window.setTimeout(resolve, durationMs)
+        let settled = false
+        let timeout = 0
+        const onAbort = (): void => {
+            if (settled) return
+            settled = true
+            window.clearTimeout(timeout)
+            resolve(false)
+        }
+
+        timeout = window.setTimeout(() => {
+            if (settled) return
+            settled = true
+            signal.removeEventListener('abort', onAbort)
+            resolve(true)
+        }, durationMs)
+        signal.addEventListener('abort', onAbort, { once: true })
+    })
+}
+
+/**
+ * Rejects an in-flight status read as soon as its confirmation signal aborts,
+ * even if a mocked or non-Axios request fails to observe the signal itself.
+ *
+ * @param request status request to settle.
+ * @param signal signal bounding the owning confirmation interaction.
+ * @returns the request result when it settles before cancellation.
+ * @throws AbortError after cancellation, or the original request failure.
+ */
+function awaitWithAbort<T>(request: Promise<T>, signal: AbortSignal): Promise<T> {
+    if (signal.aborted) {
+        return Promise.reject(new DOMException('DocuSign confirmation cancelled.', 'AbortError'))
+    }
+
+    return new Promise((resolve, reject) => {
+        let settled = false
+        const onAbort = (): void => {
+            if (settled) return
+            settled = true
+            reject(new DOMException('DocuSign confirmation cancelled.', 'AbortError'))
+        }
+
+        signal.addEventListener('abort', onAbort, { once: true })
+        request.then(
+            value => {
+                if (settled) return
+                settled = true
+                signal.removeEventListener('abort', onAbort)
+                resolve(value)
+            },
+            error => {
+                if (settled) return
+                settled = true
+                signal.removeEventListener('abort', onAbort)
+                reject(error)
+            },
+        )
     })
 }
 
@@ -164,6 +225,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const closeRef = useRef<() => void>(() => undefined)
     const docuSignCallbackHandledRef = useRef(false)
     const docuSignCompletionRef = useRef<() => Promise<void>>(async () => undefined)
+    const docuSignConfirmationControllerRef = useRef<AbortController>()
     const docuSignFrameRef = useRef<HTMLIFrameElement>(null)
     const docuSignUrlRequestRef = useRef(0)
     const interactionRef = useRef(0)
@@ -239,6 +301,8 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const fullTitle = activeTerm?.title || terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
+        docuSignConfirmationControllerRef.current?.abort()
+        docuSignConfirmationControllerRef.current = undefined
         interactionRef.current += 1
         if (props.open) {
             setAccepted(false)
@@ -253,8 +317,10 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         }
 
         return () => {
-            // Cancel delayed agreement polling and late URL requests on scope
-            // changes or unmount so they cannot complete an obsolete registration.
+            // Cancel agreement polling, its active HTTP request, and late URL
+            // callbacks so they cannot complete an obsolete registration.
+            docuSignConfirmationControllerRef.current?.abort()
+            docuSignConfirmationControllerRef.current = undefined
             interactionRef.current += 1
         }
     }, [props.open, props.mode, memberScope, termKey])
@@ -395,6 +461,8 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
      * @throws Does not throw.
      */
     const close = (): void => {
+        docuSignConfirmationControllerRef.current?.abort()
+        docuSignConfirmationControllerRef.current = undefined
         interactionRef.current += 1
         props.onClose()
     }
@@ -405,20 +473,33 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
      *
      * @param termId canonical term identifier signed in the recipient frame.
      * @param interaction modal interaction that owns the callback.
+     * @param signal signal bounding all retry delays and status requests.
+     * @param deadlineAt absolute time when confirmation must stop.
      * @returns remaining terms, or undefined when the interaction became stale or confirmation timed out.
      * @throws Propagates non-transient Terms API failures; transient failures are retried.
      */
     const pollForDocuSignAgreement = async (
         termId: string,
         interaction: number,
+        signal: AbortSignal,
+        deadlineAt: number,
     ): Promise<ChallengeTerm[] | undefined> => {
         const attemptCount = DOCUSIGN_POLL_RETRY_DELAYS_MS.length + 1
         for (let attempt = 0; attempt < attemptCount; attempt += 1) {
             if (attempt > 0) {
                 // eslint-disable-next-line no-await-in-loop
-                await delay(DOCUSIGN_POLL_RETRY_DELAYS_MS[attempt - 1])
-                if (interaction !== interactionRef.current) return undefined
+                const delayCompleted = await delay(
+                    Math.min(
+                        DOCUSIGN_POLL_RETRY_DELAYS_MS[attempt - 1],
+                        Math.max(0, deadlineAt - Date.now()),
+                    ),
+                    signal,
+                )
+                if (!delayCompleted || interaction !== interactionRef.current) return undefined
             }
+
+            const remainingMs = deadlineAt - Date.now()
+            if (signal.aborted || remainingMs <= 0) return undefined
 
             let refreshedTerms: ChallengeTerm[] | undefined
             // Sequential polling is required because Terms service persistence is asynchronous.
@@ -427,9 +508,16 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 // post-signature read; the Terms endpoint otherwise emits an ETag
                 // without an explicit no-store policy.
                 // eslint-disable-next-line no-await-in-loop
-                refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms, { fresh: true })
+                refreshedTerms = await awaitWithAbort(
+                    getChallengeSubmitterTermsDetails(props.terms, {
+                        fresh: true,
+                        signal,
+                        timeoutMs: Math.min(DOCUSIGN_STATUS_REQUEST_TIMEOUT_MS, remainingMs),
+                    }),
+                    signal,
+                )
             } catch (error) {
-                if (interaction !== interactionRef.current) return undefined
+                if (signal.aborted || interaction !== interactionRef.current) return undefined
                 if (!isTransientDocuSignStatusError(error)) throw error
             }
 
@@ -451,11 +539,19 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         if (!docuSignTerm || docuSignCompleting) return
         const interaction = interactionRef.current
         const termId = docuSignTerm.id
+        const confirmationController = new AbortController()
+        const deadlineAt = Date.now() + DOCUSIGN_CONFIRMATION_TIMEOUT_MS
+        docuSignConfirmationControllerRef.current?.abort()
+        docuSignConfirmationControllerRef.current = confirmationController
+        const confirmationTimeout = window.setTimeout(
+            () => confirmationController.abort(),
+            DOCUSIGN_CONFIRMATION_TIMEOUT_MS,
+        )
         setDocuSignCompleting(true)
         setExternalError('')
         try {
             if (!registrationMode) {
-                await response.mutate()
+                await awaitWithAbort(Promise.resolve(response.mutate()), confirmationController.signal)
                 if (interaction === interactionRef.current) close()
                 return
             }
@@ -464,10 +560,18 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 throw new Error('We couldn\u2019t verify this DocuSign agreement because it is missing an identifier.')
             }
 
-            const refreshedTerms = await pollForDocuSignAgreement(termId, interaction)
+            const refreshedTerms = await pollForDocuSignAgreement(
+                termId,
+                interaction,
+                confirmationController.signal,
+                deadlineAt,
+            )
             if (interaction !== interactionRef.current) return
             if (!refreshedTerms) {
-                throw new Error('We couldn\u2019t confirm your DocuSign agreement yet. Please try again.')
+                throw new Error(
+                    'We couldn\u2019t confirm your DocuSign agreement within 91 seconds. '
+                    + 'Select Check again to retry.',
+                )
             }
 
             const outstandingTermIds = new Set(refreshedTerms
@@ -486,10 +590,23 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             }
         } catch (error) {
             if (interaction !== interactionRef.current) return
-            setExternalError(error instanceof Error && error.message.trim()
-                ? error.message
-                : 'We couldn\u2019t confirm your DocuSign agreement. Please try again.')
+            if (confirmationController.signal.aborted) {
+                setExternalError(registrationMode
+                    ? 'We couldn\u2019t confirm your DocuSign agreement within 91 seconds. '
+                        + 'Select Check again to retry.'
+                    : 'We couldn\u2019t refresh this DocuSign agreement within 91 seconds. '
+                        + 'Select Check again to retry.')
+            } else {
+                setExternalError(error instanceof Error && error.message.trim()
+                    ? error.message
+                    : 'We couldn\u2019t confirm your DocuSign agreement. Please try again.')
+            }
         } finally {
+            window.clearTimeout(confirmationTimeout)
+            if (docuSignConfirmationControllerRef.current === confirmationController) {
+                docuSignConfirmationControllerRef.current = undefined
+            }
+
             if (interaction === interactionRef.current) setDocuSignCompleting(false)
         }
     }

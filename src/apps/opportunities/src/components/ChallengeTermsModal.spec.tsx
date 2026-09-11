@@ -291,7 +291,11 @@ describe('ChallengeTermsModal', () => {
         expect(mockAgreeToTerms)
             .toHaveBeenCalledTimes(1)
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenCalledWith([standardTerms, nda], { fresh: true })
+            .toHaveBeenCalledWith([standardTerms, nda], expect.objectContaining({
+                fresh: true,
+                signal: expect.objectContaining({ aborted: false }),
+                timeoutMs: 10000,
+            }))
         addEventListener.mockRestore()
     })
 
@@ -888,6 +892,67 @@ describe('ChallengeTermsModal', () => {
             .not.toHaveBeenCalled()
     })
 
+    it('bounds a passive DocuSign refresh that never settles', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onClose = jest.fn()
+        const onComplete = jest.fn()
+        const mutate = jest.fn(() => new Promise(() => {
+            // Intentionally remains pending until the confirmation deadline.
+        }))
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+            mutate,
+        }
+
+        render(
+            <ChallengeTermsModal
+                mode='view'
+                onClose={onClose}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'viewing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        await act(async () => Promise.resolve())
+
+        expect(screen.getByText('Confirming your signature…'))
+            .toBeInTheDocument()
+        await act(async () => {
+            jest.advanceTimersByTime(91000)
+            await Promise.resolve()
+            await Promise.resolve()
+        })
+
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('couldn’t refresh this DocuSign agreement within 91 seconds')
+        expect(screen.getByRole('button', { name: 'Check again' }))
+            .toBeEnabled()
+        expect(mutate)
+            .toHaveBeenCalledTimes(1)
+        expect(mockGetDocuSignUrl)
+            .toHaveBeenCalledTimes(1)
+        expect(onClose)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
     it('ignores untrusted DocuSign callback messages and closes on trusted cancellation', async () => {
         const addEventListener = jest.spyOn(window, 'addEventListener')
         const nda: ChallengeTerm = {
@@ -995,7 +1060,11 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(6)
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenLastCalledWith([nda], { fresh: true })
+            .toHaveBeenLastCalledWith([nda], expect.objectContaining({
+                fresh: true,
+                signal: expect.objectContaining({ aborted: false }),
+                timeoutMs: 10000,
+            }))
         expect(onComplete)
             .toHaveBeenCalledTimes(1)
         expect(mockAgreeToTerms)
@@ -1005,7 +1074,7 @@ describe('ChallengeTermsModal', () => {
         view.unmount()
     })
 
-    it('retries a transient Terms status failure before completing DocuSign registration', async () => {
+    it('retries a timed-out Terms status request before completing DocuSign registration', async () => {
         const addEventListener = jest.spyOn(window, 'addEventListener')
         const nda: ChallengeTerm = {
             id: 'nda',
@@ -1014,7 +1083,9 @@ describe('ChallengeTermsModal', () => {
         const onComplete = jest.fn()
             .mockResolvedValue(undefined)
         mockGetSubmitterTermsDetails
-            .mockRejectedValueOnce(Object.assign(new Error('Terms service unavailable'), { status: 503 }))
+            .mockRejectedValueOnce(Object.assign(new Error('Terms status request timed out'), {
+                code: 'ECONNABORTED',
+            }))
             .mockResolvedValueOnce([])
         mockSWRResponse = {
             ...mockSWRResponse,
@@ -1052,9 +1123,17 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(2)
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenNthCalledWith(1, [nda], { fresh: true })
+            .toHaveBeenNthCalledWith(1, [nda], expect.objectContaining({
+                fresh: true,
+                signal: expect.objectContaining({ aborted: false }),
+                timeoutMs: 10000,
+            }))
         expect(mockGetSubmitterTermsDetails)
-            .toHaveBeenNthCalledWith(2, [nda], { fresh: true })
+            .toHaveBeenNthCalledWith(2, [nda], expect.objectContaining({
+                fresh: true,
+                signal: expect.objectContaining({ aborted: false }),
+                timeoutMs: 10000,
+            }))
         expect(onComplete)
             .toHaveBeenCalledTimes(1)
         expect(mockAgreeToTerms)
@@ -1097,7 +1176,7 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(1)
 
-        const retryDelays = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 20000]
+        const retryDelays = [2000, 3000, 5000, 8000, 13000, 20000, 20000, 19000]
         for (let retry = 0; retry < retryDelays.length; retry += 1) {
             // Each status check schedules only the next retry.
             // eslint-disable-next-line no-await-in-loop
@@ -1110,7 +1189,7 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(9)
         expect(screen.getByRole('alert'))
-            .toHaveTextContent('couldn’t confirm your DocuSign agreement yet')
+            .toHaveTextContent('couldn’t confirm your DocuSign agreement within 91 seconds')
         expect(screen.getByRole('button', { name: 'Check again' }))
             .toBeInTheDocument()
         expect(mockAgreeToTerms)
@@ -1132,16 +1211,77 @@ describe('ChallengeTermsModal', () => {
             .not.toHaveBeenCalled()
     })
 
-    it('cancels DocuSign confirmation polling when the modal unmounts', async () => {
+    it('bounds a status read that never settles and leaves confirmation retryable', async () => {
         const addEventListener = jest.spyOn(window, 'addEventListener')
         const nda: ChallengeTerm = {
             id: 'nda',
             title: 'NDA',
         }
         const onComplete = jest.fn()
-        mockGetSubmitterTermsDetails
-            .mockResolvedValueOnce([nda])
-            .mockResolvedValueOnce([])
+        mockGetSubmitterTermsDetails.mockImplementation(() => new Promise(() => {
+            // Intentionally remains pending until the confirmation deadline.
+        }))
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [nda],
+            isValidating: false,
+        }
+        render(
+            <ChallengeTermsModal
+                mode='register'
+                onClose={jest.fn()}
+                onComplete={onComplete}
+                open
+                terms={[nda]}
+            />,
+        )
+        const frame = await screen.findByTitle('NDA')
+        await waitFor(() => expect(addEventListener)
+            .toHaveBeenCalledWith('message', expect.any(Function)))
+        jest.useFakeTimers()
+        fireEvent(window, new MessageEvent('message', {
+            data: { event: 'signing_complete', type: 'DocuSign' },
+            origin: 'https://www.topcoder-dev.com',
+            source: (frame as HTMLIFrameElement).contentWindow,
+        }))
+        await act(async () => Promise.resolve())
+
+        const firstOptions = mockGetSubmitterTermsDetails.mock.calls[0][1] as {
+            signal: AbortSignal
+        }
+        expect(screen.getByText('Confirming your signature…'))
+            .toBeInTheDocument()
+        expect(firstOptions.signal.aborted)
+            .toBe(false)
+
+        await act(async () => {
+            jest.advanceTimersByTime(91000)
+            await Promise.resolve()
+            await Promise.resolve()
+        })
+
+        expect(firstOptions.signal.aborted)
+            .toBe(true)
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('couldn’t confirm your DocuSign agreement within 91 seconds')
+        expect(screen.getByRole('button', { name: 'Check again' }))
+            .toBeEnabled()
+        expect(mockAgreeToTerms)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
+    })
+
+    it('aborts an in-flight DocuSign status read when the modal unmounts', async () => {
+        const addEventListener = jest.spyOn(window, 'addEventListener')
+        const nda: ChallengeTerm = {
+            id: 'nda',
+            title: 'NDA',
+        }
+        const onComplete = jest.fn()
+        mockGetSubmitterTermsDetails.mockImplementation(() => new Promise(() => {
+            // Intentionally remains pending so unmount must cancel the interaction.
+        }))
         mockSWRResponse = {
             ...mockSWRResponse,
             data: [nda],
@@ -1171,13 +1311,19 @@ describe('ChallengeTermsModal', () => {
         })
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(1)
+        const firstOptions = mockGetSubmitterTermsDetails.mock.calls[0][1] as {
+            signal: AbortSignal
+        }
+        expect(firstOptions.signal.aborted)
+            .toBe(false)
 
         view.unmount()
         await act(async () => {
-            jest.advanceTimersByTime(30000)
             await Promise.resolve()
         })
 
+        expect(firstOptions.signal.aborted)
+            .toBe(true)
         expect(mockGetSubmitterTermsDetails)
             .toHaveBeenCalledTimes(1)
         expect(mockMutateTermsCache)
