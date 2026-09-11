@@ -22,6 +22,19 @@ sudo yarn start
 
 - Mock data files are under src/apps/review/src/mock-datas
 
+### Design checkpoint screening:
+
+- Checkpoint Screening keeps each submission returned by the Review API visible,
+  including an older submission from the same member when the Design submission
+  limit is greater than one. Each pending row links to its own screening scorecard
+  on desktop and mobile.
+- The submissions API must return the configured review window to assigned Design
+  screeners and reviewers, ranking checkpoint and final submissions independently.
+  An `isLatest: false` submission within that window is still eligible for review.
+  The frontend cannot recover rows removed by the API's history-privacy filter.
+- PM-6307 regression coverage uses two submissions from one member, with the older
+  screening still pending, plus a completed submission from another member.
+
 ### Winners result identity:
 
 - The Winners tab loads every page from the Review API `projectResult` endpoint.
