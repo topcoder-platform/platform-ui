@@ -213,6 +213,7 @@ const MobileApplicationSort: FC<MobileApplicationSortProps> = props => (
  * Renders a public review opportunity with API-authoritative reviewer gating.
  * Non-reviewers receive the education card and an inactive CTA; reviewers do
  * not receive that card and can apply only when `canApply` is true.
+ * The Applications tab displays a count only when visible applications exist.
  *
  * @returns detail route for `/opportunities/review/:reviewOpportunityId`.
  * @throws Does not throw; API failures render an in-page state.
@@ -501,7 +502,7 @@ export const ReviewOpportunityDetailsPage: FC = () => {
                         type='button'
                     >
                         Applications
-                        <span>{applicationTotal}</span>
+                        {applicationTotal > 0 && <span>{applicationTotal}</span>}
                     </button>
                     <i aria-hidden='true' />
                 </div>
