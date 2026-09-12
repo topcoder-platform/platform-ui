@@ -366,6 +366,19 @@ Design challenges without the flag keep challenge-wide submissions private and
 render the explicit private state. A registered member's My Submissions table
 remains available independently of that public release flag.
 
+For registered members with no submissions, completed or cancelled challenges
+show Daniela's [PM-6309 empty state](https://www.figma.com/design/ox68RqPcbhD7oJvU3TkhLP/Topcoder-Opportunities-Experience---Final-Aug-2026?node-id=14868-57021):
+“Submission phase has ended” and “This challenge is no longer accepting
+submissions.” The panel retains the Review App link and omits the upload button.
+An upload action is available only while `challengeSubmissionIsOpen` reports an
+open submission phase, including checkpoint, final-fix, and legacy Open phases.
+Other closed phases keep neutral empty-state copy, so registration or a gap
+between submission rounds does not incorrectly claim the challenge has ended.
+
+Challenge detail tabs (Registrants, Submissions, My Submissions, and Forum) and
+the review opportunity Applications tab show count badges only for positive
+counts. Zero or unavailable counts leave the tab label and navigation intact.
+
 Opportunity detail tabs keep their page header and tab navigation mounted while
 the selected panel changes. Lazy challenge panels use a panel-scoped loading
 state, so loading Registrants, Submissions, Dashboard, Forum, or a forum topic

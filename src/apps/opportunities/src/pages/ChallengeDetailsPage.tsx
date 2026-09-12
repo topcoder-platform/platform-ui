@@ -50,6 +50,7 @@ import {
     challengeCatalogKey,
     ChallengePlacementPrize,
     challengePlacementPrizes,
+    challengeSubmissionIsOpen,
 } from '../components/challenge-card.utils'
 import {
     ChallengeAiReviewConfig,
@@ -100,6 +101,7 @@ import {
     ChallengeDetailTab,
     challengeDetailTabFromSearch,
 } from '../utils/challenge-detail-route.utils'
+import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import medal1 from '../assets/medal-1.svg'
 import medal2 from '../assets/medal-2.svg'
@@ -313,7 +315,7 @@ function formatTimestamp(value?: string): string {
 /**
  * Renders the replacement challenge details route with lazy tab data, Markdown
  * table of contents, Review App rail, registration terms, Task-aware member
- * workflows, and Support reporting.
+ * workflows, positive tab counts, and Support reporting.
  *
  * @returns challenge detail page for `/opportunities/challenge/:challengeId`.
  * @throws Does not throw; request failures render in-page recovery states.
@@ -531,13 +533,15 @@ export const ChallengeDetailsPage: FC = () => {
     }
 
     /**
-     * Opens the Figma submission flow under the member's revalidated My Submissions tab.
+     * Opens the Figma submission flow under the member's revalidated My Submissions tab
+     * only while the challenge accepts submissions.
      *
      * @returns promise settled after selecting the tab, restoring registration state,
      * or redirecting an anonymous member to sign in.
      * @throws Does not throw.
      */
     const startSubmission = async (): Promise<void> => {
+        if (!challenge || !challengeSubmissionIsOpen(challenge)) return
         if (!memberId) {
             window.location.assign(authUrlLogin(window.location.href))
             return
@@ -783,7 +787,7 @@ export const ChallengeDetailsPage: FC = () => {
                             type='button'
                         >
                             {tab.label}
-                            {tab.count !== undefined && <span>{tab.count}</span>}
+                            {(tab.count ?? 0) > 0 && <span>{tab.count}</span>}
                         </button>
                     ))}
                 </div>
@@ -1227,7 +1231,7 @@ interface SubmissionsTabProps {
  * Loads and paginates submissions only after a submission tab is selected.
  *
  * @param props challenge, member scope, viewer identity, My Submissions flag, and submission callbacks.
- * @returns submission table/gallery or request state.
+ * @returns submission table/gallery, lifecycle-aware empty state, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
 const SubmissionsTab: FC<SubmissionsTabProps> = props => {
@@ -1423,8 +1427,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         if (props.mine) {
             return (
                 <MySubmissionsEmpty
+                    challenge={props.challenge}
                     onStartSubmission={props.onStartSubmission}
-                    reviewUrl={challengeReviewAppUrl(props.challenge.id)}
                 />
             )
         }
@@ -2357,44 +2361,57 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
 }
 
 /**
- * Renders the empty My Submissions state with its primary upload action.
+ * Renders the Figma empty My Submissions state for the challenge lifecycle.
+ * Completed or cancelled challenges explain that submissions have ended; other
+ * closed phases retain a neutral message. Only open submission phases offer upload.
  *
- * @param props optional upload action shown inside the empty state.
- * @returns empty-state panel.
+ * @param props owning challenge and optional callback that opens the upload flow.
+ * @returns empty-state panel with the Review App handoff and any available upload action.
  * @throws Does not throw.
  */
 const MySubmissionsEmpty: FC<{
+    challenge: ChallengeOpportunity
     onStartSubmission?: () => void
-    reviewUrl: string
-}> = props => (
-    <section className={styles.mySubmissionsEmpty}>
-        <div className={`${styles.submissionHeading} ${styles.mySubmissionHeading}`}>
-            <div>
-                <h2>My Submissions</h2>
-                <p>Manage your submissions or upload new.</p>
+}> = props => {
+    const submissionOpen = challengeSubmissionIsOpen(props.challenge)
+    const status = challengeCatalogKey(props.challenge.status)
+    const submissionEnded = status === 'completed' || status.startsWith('cancelled')
+
+    return (
+        <section className={styles.mySubmissionsEmpty}>
+            <div className={`${styles.submissionHeading} ${styles.mySubmissionHeading}`}>
+                <div>
+                    <h2>My Submissions</h2>
+                    <p>Manage your submissions or upload new.</p>
+                </div>
+                <a
+                    className={styles.reviewAppButton}
+                    href={challengeReviewAppUrl(props.challenge.id)}
+                    rel='noreferrer'
+                    target='_blank'
+                >
+                    Open Review App
+                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
+                </a>
             </div>
-            <a
-                className={styles.reviewAppButton}
-                href={props.reviewUrl}
-                rel='noreferrer'
-                target='_blank'
-            >
-                Open Review App
-                <IconOutline.ExternalLinkIcon aria-hidden='true' />
-            </a>
-        </div>
-        <EmptyTab
-            action={(
-                <button onClick={props.onStartSubmission} type='button'>
-                    <IconOutline.UploadIcon />
-                    Submit a solution
-                </button>
-            )}
-            title='You have no submissions yet'
-            text='Upload a submission to compete in this challenge.'
-        />
-    </section>
-)
+            <EmptyTab
+                action={submissionOpen && props.onStartSubmission && (
+                    <button onClick={props.onStartSubmission} type='button'>
+                        <IconOutline.UploadIcon aria-hidden='true' />
+                        Submit a solution
+                    </button>
+                )}
+                icon={<EmptyInfoIcon aria-hidden='true' />}
+                title={submissionEnded ? 'Submission phase has ended' : 'You have no submissions yet'}
+                text={submissionEnded
+                    ? 'This challenge is no longer accepting submissions.'
+                    : submissionOpen
+                        ? 'Upload a submission to compete in this challenge.'
+                        : 'Your submissions will appear here.'}
+            />
+        </section>
+    )
+}
 
 /**
  * Renders the authentication handoff for a private member tab.
@@ -2428,20 +2445,21 @@ const TabError: FC<{ onRetry: () => void }> = props => (
 
 interface EmptyTabProps {
     action?: ReactNode
+    icon?: ReactNode
     text: string
     title?: string
 }
 
 /**
- * Renders a neutral empty-tab message and optional in-context action.
+ * Renders a neutral empty-tab message with an optional icon and in-context action.
  *
- * @param props title, text, and optional action.
+ * @param props title, text, optional replacement for the information icon, and optional action.
  * @returns empty-state callout.
  * @throws Does not throw.
  */
 const EmptyTab: FC<EmptyTabProps> = props => (
     <div className={styles.emptyTab}>
-        <IconOutline.InformationCircleIcon />
+        {props.icon ?? <IconOutline.InformationCircleIcon />}
         {props.title && <strong>{props.title}</strong>}
         <p>{props.text}</p>
         {props.action}

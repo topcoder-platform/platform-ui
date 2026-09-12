@@ -235,6 +235,30 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
     })
 
+    it('hides the zero application count while keeping the Applications tab available', () => {
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({ applications: [{ id: 'cancelled', status: 'CANCELLED' }] }),
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        const tab = screen.getByRole('tab', { name: 'Applications' })
+        expect(tab)
+            .toHaveTextContent(/^Applications$/)
+        fireEvent.click(tab)
+        expect(tab)
+            .toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('shows the positive count for visible reviewer applications', () => {
+        renderPage()
+
+        expect(screen.getByRole('tab', { name: 'Applications 2' }))
+            .toHaveTextContent(/^Applications2$/)
+    })
+
     it('sorts applications in both directions from the application-date header', () => {
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /Applications/ }))

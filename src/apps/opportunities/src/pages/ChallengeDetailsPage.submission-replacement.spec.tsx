@@ -232,7 +232,7 @@ describe('PM-5987 Design submission replacement without reloading', () => {
 
         await screen.findByText('You have no submissions yet')
         await waitFor(() => expect(screen.getByRole('tab', { name: /^My Submissions/ }))
-            .toHaveTextContent('My Submissions0'))
+            .toHaveTextContent(/^My Submissions$/))
         expect(screen.getByRole('tab', { name: /^Submissions/ }))
             .toHaveTextContent(`Submissions${OTHER_MEMBER_SUBMISSIONS}`)
         expect(screen.getByRole('button', { name: 'Unregister' }))

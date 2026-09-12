@@ -208,6 +208,7 @@ jest.mock('../components', () => ({
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
+    ...jest.requireActual('../components/challenge-card.utils'),
     challengeCatalogKey: (value?: string | { name?: string }): string => (
         typeof value === 'string' ? value : value?.name ?? ''
     )
@@ -442,6 +443,8 @@ describe('ChallengeDetailsPage member flows', () => {
             numOfPosts: 3,
             numOfRegistrants: 8,
             numOfSubmissions: 5,
+            phases: [{ isOpen: true, name: 'Submission' }],
+            status: 'ACTIVE',
             track: 'Development',
             type: 'Challenge',
         }
@@ -975,6 +978,92 @@ describe('ChallengeDetailsPage member flows', () => {
             .toContain('.mySubmissionHeading {')
         expect(challengeDetailStyles)
             .toContain('flex-direction: column;')
+    })
+
+    it.each([
+        ['Design', 'Challenge', 'COMPLETED'],
+        ['Development', 'Challenge', 'Completed'],
+        ['Quality Assurance', 'Challenge', 'completed'],
+        ['Data Science', 'Marathon Match', 'COMPLETED'],
+        ['Development', 'First2Finish', 'COMPLETED'],
+        ['Design', 'Challenge', 'Cancelled - Zero Submissions'],
+    ])('shows the ended empty state for %s %s (%s)', (track, type, status) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockMySubmissionCount = 0
+        mockChallenge = { ...mockChallenge, status, track, type }
+
+        renderPage('/opportunities/challenge/challenge-id?tab=mine')
+
+        const panel = within(screen.getByRole('tabpanel'))
+        expect(panel.getByText('Submission phase has ended'))
+            .toBeInTheDocument()
+        expect(panel.getByText('This challenge is no longer accepting submissions.'))
+            .toBeInTheDocument()
+        expect(panel.queryByRole('button', { name: 'Submit a solution' }))
+            .not.toBeInTheDocument()
+        expect(panel.getByRole('link', { name: 'Open Review App' }))
+            .toHaveAttribute('href', 'https://review.topcoder-dev.com/active-challenges/challenge-id/challenge-details')
+        expect(screen.getByRole('tab', { name: 'My Submissions' }))
+            .toHaveTextContent(/^My Submissions$/)
+    })
+
+    it.each(['Submission', 'Checkpoint Submission', 'Final Fix', 'Open'])(
+        'offers the empty-state upload action while %s is open',
+        async phase => {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockRegistration = { id: 'resource-id' }
+            mockChallenge = { ...mockChallenge, currentPhaseNames: ['Registration', phase], phases: [] }
+
+            renderPage('/opportunities/challenge/challenge-id?tab=mine')
+
+            const panel = within(screen.getByRole('tabpanel'))
+            expect(panel.getByText('You have no submissions yet'))
+                .toBeInTheDocument()
+            fireEvent.click(panel.getByRole('button', { name: 'Submit a solution' }))
+            await waitFor(() => expect(screen.getByText('Submission upload form'))
+                .toBeInTheDocument())
+        },
+    )
+
+    it.each(['Registration', 'Checkpoint Review', 'Review'])(
+        'keeps the empty state neutral without an upload action during %s',
+        phase => {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockRegistration = { id: 'resource-id' }
+            mockChallenge = { ...mockChallenge, currentPhaseNames: [phase], phases: [] }
+
+            renderPage('/opportunities/challenge/challenge-id?tab=mine')
+
+            const panel = within(screen.getByRole('tabpanel'))
+            expect(panel.getByText('Your submissions will appear here.'))
+                .toBeInTheDocument()
+            expect(panel.queryByText('Submission phase has ended'))
+                .not.toBeInTheDocument()
+            expect(panel.queryByRole('button', { name: 'Submit a solution' }))
+                .not.toBeInTheDocument()
+        },
+    )
+
+    it.each([0, undefined])('omits %s counts without hiding the challenge tabs', count => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockMySubmissionCount = count
+        mockChallenge = {
+            ...mockChallenge,
+            numOfPosts: count,
+            numOfRegistrants: count,
+            numOfSubmissions: count,
+        }
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants', 'Submissions', 'My Submissions', 'Forum', 'Winners'])
+        fireEvent.click(screen.getByRole('tab', { name: 'Forum' }))
+        expect(screen.getByText('Forum content'))
+            .toBeInTheDocument()
     })
 
     it('keeps the Marathon graph only in the metadata-gated Dashboard tab', () => {
@@ -2011,6 +2100,7 @@ describe('ChallengeDetailsPage member flows', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockChallenge = {
             ...mockChallenge,
+            phases: [],
             status: 'COMPLETED',
             type: 'Marathon Match',
             winners: Array.from({ length: 6 }, (_value, index) => ({
