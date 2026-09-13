@@ -1878,6 +1878,31 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each([
+        ['ACTIVE', false],
+        ['COMPLETED', true],
+        ['CANCELLED_FAILED_REVIEW', false],
+        ['CANCELLED', false],
+    ])('gates other contestants artifact actions for %s challenges', (status, allowed) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, status, type: 'Marathon Match' }
+        mockSubmissions = [{ finalScore: 100, id: 'submission-other', memberId: '456' }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        const action = screen.queryByRole('button', { name: 'Download submission artifacts submission-other' })
+        if (allowed) {
+            expect(action)
+                .toBeInTheDocument()
+            fireEvent.click(action as HTMLElement)
+            expect(screen.getByText('Artifacts modal submission-other'))
+                .toBeInTheDocument()
+        } else {
+            expect(action).not.toBeInTheDocument()
+        }
+    })
+
     it('renders Marathon Match testing progress and both score phases without rounding', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
@@ -1886,6 +1911,7 @@ describe('ChallengeDetailsPage member flows', () => {
             createdAt: '2026-06-03T09:30:00.000Z',
             finalScore: 99.31399426811394,
             id: 'submission-1',
+            memberId: '123',
             provisionalScore: 99.08838088531581,
         }]
 

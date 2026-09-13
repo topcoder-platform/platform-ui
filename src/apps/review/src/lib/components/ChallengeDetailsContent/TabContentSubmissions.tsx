@@ -1,6 +1,7 @@
 /**
  * Tab content for submissions during the submission phase.
  * Unlimited Design challenges show every submission without history actions.
+ * Marathon Match rows include artifact access governed by ownership and completion.
  */
 import {
     FC,
@@ -34,6 +35,7 @@ import { getHandleColor, getProfileUrl } from '../common/columnUtils'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
+import { SubmissionArtifactsButton } from '../SubmissionArtifactsButton/SubmissionArtifactsButton'
 import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
@@ -445,6 +447,10 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 >
                                     <IconOutline.DocumentDuplicateIcon />
                                 </button>
+                                <SubmissionArtifactsButton
+                                    memberId={submission.memberId}
+                                    submissionId={submission.id}
+                                />
                                 <SubmissionDuplicatesBadge submissionId={submission.id} />
                                 {canShowTopgearReprocess && (
                                     <button

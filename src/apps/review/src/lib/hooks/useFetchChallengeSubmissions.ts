@@ -35,6 +35,7 @@ export interface ChallengeSubmissionsViewer {
 export interface ChallengeVisibilityFlags {
     isDesign: boolean
     isCompleted: boolean
+    isMarathonMatch?: boolean
     submissionsViewable: boolean
 }
 
@@ -42,8 +43,10 @@ export interface ChallengeVisibilityFlags {
  * Fetch challenge submissions
  * @param challengeId challenge id
  * @param viewer viewer roles and userId for filtering
- * @param challengeVisibility when set and Design + completed + submissionsViewable, submitters see all submissions
+ * @param challengeVisibility completed Marathon Matches release all contestant attempts;
+ * completed Design challenges still require submissionsViewable.
  * @returns challenge submissions
+ * @throws Does not throw; fetch failures are exposed through the returned error state.
  */
 export function useFetchChallengeSubmissions(
     challengeId?: string,
@@ -165,6 +168,17 @@ export function useFetchChallengeSubmissions(
             challengeVisibility?.submissionsViewable,
         ],
     )
+    const allowViewAllSubmissionsForMarathon = Boolean(
+        challengeVisibility?.isMarathonMatch && challengeVisibility.isCompleted,
+    )
+
+    // Refresh active-challenge latest-only responses when MM history becomes available.
+    useEffect(() => {
+        if (allowViewAllSubmissionsForMarathon) {
+            mutate()
+                .catch(() => undefined)
+        }
+    }, [allowViewAllSubmissionsForMarathon, mutate])
 
     // Show backend error when fetching data fail
     useEffect(() => {
@@ -192,7 +206,8 @@ export function useFetchChallengeSubmissions(
         const shouldRestrictToCurrentMember = Boolean(
             hasSubmitterRole
             && !canViewAllSubmissions
-            && !allowViewAllSubmissionsForDesign,
+            && !allowViewAllSubmissionsForDesign
+            && !allowViewAllSubmissionsForMarathon,
         )
 
         const normalizeStatus = (status: unknown): string => {
@@ -247,6 +262,7 @@ export function useFetchChallengeSubmissions(
         hasSubmitterRole,
         viewerMemberId,
         allowViewAllSubmissionsForDesign,
+        allowViewAllSubmissionsForMarathon,
     ])
 
     if (error) {

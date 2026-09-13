@@ -484,6 +484,14 @@ views refresh attempts and their embedded scorer summaries so completed results
 appear without a page reload. Their actions include the clean submission, scorer
 artifacts, and submission history, while the single page-level button owns the
 Review App handoff.
+Artifact controls in All Submissions, My Submissions, and submission history
+use the challenge's exact `COMPLETED` status for Marathon Matches. Before completion
+(including cancelled challenges), contestants can list and download only their own
+regular artifacts. After completion, registered contestants can download regular
+and internal provisional/system artifacts for their own and other members' attempts.
+Scores and phase end dates never unlock artifacts. Existing admin/copilot access
+is retained. The shared dialog filters internal entries when permission changes,
+and Review API independently authorizes both listing and every download.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
@@ -495,6 +503,8 @@ compact close action only at that breakpoint. History requests include the
 selected member ID;
 Review API returns every attempt to that member and authorized challenge staff,
 while ordinary viewers receive only the selected entrant's latest attempt.
+Registered contestants of a completed Marathon Match can also inspect every
+historical attempt to download its released scorer artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
 Submission is open. Successful deletion updates both the challenge and member
 submission counts as well as the current list. Replacing a Design submission

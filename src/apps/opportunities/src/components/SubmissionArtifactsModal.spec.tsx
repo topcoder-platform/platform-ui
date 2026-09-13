@@ -65,6 +65,24 @@ describe('SubmissionArtifactsModal', () => {
             .mockImplementation(() => undefined)
     })
 
+    it.each([false, true])('filters internal artifact controls when access is %s', async allowInternalArtifacts => {
+        mockedGetArtifacts.mockResolvedValue(['regular-results', 'provisional-internal', 'system-INTERNAL'])
+        render(
+            <SWRConfig value={{ provider: () => new Map() }}>
+                <SubmissionArtifactsModal
+                    allowInternalArtifacts={allowInternalArtifacts}
+                    onClose={jest.fn()}
+                    open
+                    submissionId='submission-id'
+                />
+            </SWRConfig>,
+        )
+        expect(await screen.findByRole('button', { name: 'Download artifact regular-results' }))
+            .toBeInTheDocument()
+        expect(screen.queryAllByRole('button', { name: /Download artifact .*internal/i }))
+            .toHaveLength(allowInternalArtifacts ? 2 : 0)
+    })
+
     it('loads and downloads the selected scorer artifact through Review API', async () => {
         render(
             <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
