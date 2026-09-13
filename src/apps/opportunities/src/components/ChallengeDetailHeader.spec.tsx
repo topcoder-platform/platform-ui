@@ -71,6 +71,78 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveAttribute('href', '/opportunities/competitions?search=Probability')
     })
 
+    it('shows authored design tags alongside standardized skills', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: [{ name: 'Yacc' }],
+                        tags: ['Application Front-End Design'],
+                        track: 'Design',
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Application Front-End Design' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Application%20Front-End%20Design')
+        expect(screen.getByRole('link', { name: 'Yacc' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Yacc')
+    })
+
+    it.each([
+        {
+            labels: ['C++ / C#'],
+            overrides: { skills: undefined, tags: ['C++ / C#'] },
+            scenario: 'tags without skills',
+        },
+        {
+            labels: ['Featured', 'TypeScript'],
+            overrides: {
+                skills: [{ name: ' TypeScript ' }, { name: '' }],
+                tags: ['', ' Featured ', 'TypeScript', 'Featured'],
+            },
+            scenario: 'duplicate and blank tags or skills',
+        },
+        {
+            labels: [],
+            overrides: { skills: undefined, tags: undefined },
+            scenario: 'missing tags and skills',
+        },
+        {
+            labels: [],
+            overrides: { skills: [], tags: [] },
+            scenario: 'empty tags and skills',
+        },
+    ])('renders searchable labels for $scenario', ({ labels, overrides }: {
+        labels: string[]
+        overrides: Partial<ChallengeOpportunity>
+    }) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture(overrides)}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const links = screen.getAllByRole('link')
+            .filter(link => link.getAttribute('href')
+                ?.startsWith('/opportunities/competitions?search='))
+        expect(links.map(link => link.textContent))
+            .toEqual(labels)
+    })
+
     it('uses the compact QA label for Quality Assurance challenges', () => {
         render(
             <MemoryRouter>
