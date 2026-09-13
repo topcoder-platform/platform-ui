@@ -130,6 +130,32 @@ describe('SubmissionHistoryModal', () => {
             .toHaveBeenCalledTimes(2)
     })
 
+    it.each([false, true])('gates historical artifact actions with authorization %s', async allowed => {
+        const onOpenArtifacts = jest.fn()
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    isMarathonMatch
+                    onClose={jest.fn()}
+                    onOpenArtifacts={allowed ? onOpenArtifacts : undefined}
+                    open
+                    submission={{ id: 'submission-two', memberId: '123' }}
+                />
+            </SWRConfig>,
+        )
+        await screen.findByText('submission-one')
+        const action = screen.queryByRole('button', { name: 'Download submission artifacts submission-one' })
+        if (allowed) {
+            fireEvent.click(action as HTMLElement)
+            expect(onOpenArtifacts)
+                .toHaveBeenCalledWith('submission-one')
+        } else {
+            expect(action)
+                .not.toBeInTheDocument()
+        }
+    })
+
     it('replaces the non-Marathon status column with the final score', async () => {
         render(
             <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>

@@ -18,6 +18,20 @@ sudo yarn start
 
 - Configuration files are under src/apps/review/src/config
 
+### Marathon Match artifacts (PM-6242):
+
+- Submissions and submission history expose an artifact action for the selected
+  attempt. `SubmissionArtifactsButton` uses challenge ownership and resource roles
+  to open the shared Opportunities artifact dialog.
+- Contestants retain access to their own regular artifacts before completion.
+  Only a challenge whose status is exactly `COMPLETED` releases their own internal
+  artifacts and all other contestants' regular/internal artifacts. Final scores,
+  closed phases, and cancelled statuses do not unlock this access.
+- Registered contestants can inspect other members' historical attempts after MM
+  completion. Administrators and challenge copilots retain existing access.
+- Review API rechecks challenge access and current status separately for artifact
+  listing and downloading; the UI is not the authorization boundary.
+
 ### Mock data:
 
 - Mock data files are under src/apps/review/src/mock-datas

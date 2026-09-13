@@ -823,7 +823,9 @@ export const ChallengeDetailsPage: FC = () => {
                         activeTab={activeTab}
                         canCreateForumAnnouncements={isAdministrator || isChallengeCopilot}
                         canDeleteForumTopics={isAdministrator}
+                        canManageArtifacts={isAdministrator || isChallengeCopilot}
                         challenge={challenge}
+                        isRegistered={isRegistered}
                         memberId={memberId}
                         onCloseSubmission={closeSubmission}
                         onContactSupport={() => setIssueOpen(true)}
@@ -884,6 +886,8 @@ interface ChallengeTabContentProps {
     canCreateForumAnnouncements: boolean
     canDeleteForumTopics: boolean
     challenge: ChallengeOpportunity
+    canManageArtifacts: boolean
+    isRegistered: boolean
     memberId?: string
     onCloseSubmission: () => void
     onContactSupport: () => void
@@ -914,7 +918,14 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
         return props.memberId || isDesign
-            ? <SubmissionsTab challenge={props.challenge} viewerMemberId={props.memberId} />
+            ? (
+                <SubmissionsTab
+                    canManageArtifacts={props.canManageArtifacts}
+                    challenge={props.challenge}
+                    isRegistered={props.isRegistered}
+                    viewerMemberId={props.memberId}
+                />
+            )
             : <SignInTab subject='submissions' />
     }
 
@@ -937,8 +948,11 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 
         return (
             <SubmissionsTab
+                canManageArtifacts={props.canManageArtifacts}
                 challenge={props.challenge}
+                isRegistered={props.isRegistered}
                 memberId={props.memberId}
+                viewerMemberId={props.memberId}
                 mine
                 onDeleted={props.onDeleted}
                 onStartSubmission={props.onStartSubmission}
@@ -1240,6 +1254,8 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
 
 interface SubmissionsTabProps {
     challenge: ChallengeOpportunity
+    canManageArtifacts?: boolean
+    isRegistered?: boolean
     memberId?: string
     mine?: boolean
     onDeleted?: () => Promise<void>
@@ -1250,7 +1266,7 @@ interface SubmissionsTabProps {
 /**
  * Loads and paginates submissions only after a submission tab is selected.
  *
- * @param props challenge, member scope, viewer identity, My Submissions flag, and submission callbacks.
+ * @param props challenge, registration/management rights, viewer identity, My Submissions flag, and callbacks.
  * @returns submission table/gallery, lifecycle-aware empty state, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
@@ -1268,6 +1284,32 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const isDesign = trackKey === 'design'
     const isQa = trackKey === 'qualityassurance'
     const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
+    const completedMarathon = isMarathonMatch && props.challenge.status?.toUpperCase() === 'COMPLETED'
+    const allowInternalArtifacts = !!props.canManageArtifacts || completedMarathon
+
+    /**
+     * Gates scorer artifact controls using ownership and completed MM participation.
+     * @param submission Candidate row; Review API rechecks access on each request.
+     * @returns Whether this viewer should see the artifact action.
+     * @throws Does not throw.
+     */
+    const canViewArtifacts = (submission: ChallengeSubmission): boolean => isMarathonMatch && (
+        !!props.canManageArtifacts
+        || (!!props.viewerMemberId && challengeSubmissionMemberId(submission) === props.viewerMemberId)
+        || (completedMarathon && !!props.isRegistered)
+    )
+
+    /**
+     * Opens scorer artifacts from either the latest row or a history entry.
+     * @param submissionId Authorized submission selected by the viewer.
+     * @returns void after closing history and opening the artifact dialog.
+     * @throws Does not throw; the dialog reports API authorization errors.
+     */
+    const openArtifacts = (submissionId: string): void => {
+        setHistorySubmission(undefined)
+        setArtifactsSubmissionId(submissionId)
+    }
+
     const hasAiWorkflow = !isMarathonMatch && (
         props.challenge.reviewers?.some(reviewer => !!reviewer.aiWorkflowId?.trim()) === true
         || [
@@ -1650,12 +1692,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                             <IconOutline.DownloadIcon aria-hidden='true' />
                                                         </button>
                                                     )}
-                                                    {isMarathonMatch && (
+                                                    {canViewArtifacts(submission) && (
                                                         <button
                                                             aria-label={
                                                                 `Download submission artifacts ${submission.id}`
                                                             }
-                                                            onClick={() => setArtifactsSubmissionId(submission.id)}
+                                                            onClick={() => openArtifacts(submission.id)}
                                                             title='Download submission artifacts'
                                                             type='button'
                                                         >
@@ -1839,6 +1881,17 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             </td>
                                         )}
                                         <td data-mobile-label='Action'>
+                                            {canViewArtifacts(submission) && (
+                                                <button
+                                                    aria-label={`Download submission artifacts ${submission.id}`}
+                                                    className={styles.historyLink}
+                                                    onClick={() => openArtifacts(submission.id)}
+                                                    type='button'
+                                                >
+                                                    <IconOutline.FolderDownloadIcon aria-hidden='true' width={20} />
+                                                    Artifacts
+                                                </button>
+                                            )}
                                             <button
                                                 className={styles.historyLink}
                                                 onClick={() => setHistorySubmission(submission)}
@@ -1862,6 +1915,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             )}
             <div className={styles.tablePagination}>{pagination}</div>
             <SubmissionArtifactsModal
+                allowInternalArtifacts={allowInternalArtifacts}
                 onClose={() => setArtifactsSubmissionId(undefined)}
                 open={!!artifactsSubmissionId}
                 submissionId={artifactsSubmissionId}
@@ -1870,6 +1924,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 challengeId={props.challenge.id}
                 isMarathonMatch={isMarathonMatch}
                 onClose={() => setHistorySubmission(undefined)}
+                onOpenArtifacts={historySubmission && canViewArtifacts(historySubmission) ? openArtifacts : undefined}
                 open={!!historySubmission}
                 reviewSummations={scoreResponse.data}
                 showFinalScores={props.mine || showAllSubmissionFinalScores}

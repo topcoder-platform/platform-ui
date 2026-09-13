@@ -13,6 +13,7 @@ import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
 import { SubmissionDuplicatesBadge } from '../SubmissionDuplicates/SubmissionDuplicatesBadge'
 import { SubmissionDuplicatesPanel } from '../SubmissionDuplicates/SubmissionDuplicatesPanel'
+import { SubmissionArtifactsButton } from '../SubmissionArtifactsButton/SubmissionArtifactsButton'
 import { ChallengeDetailContext } from '../../contexts/ChallengeDetailContext'
 
 import styles from './SubmissionHistoryModal.module.scss'
@@ -139,6 +140,12 @@ function normalizeDecisionStatus(
     return 'pending'
 }
 
+/**
+ * Shows historical submission details and authorized download/artifact actions.
+ * @param props History rows, visibility, download state, and close/access callbacks.
+ * @returns The history dialog with per-row Marathon Match artifact controls.
+ * @throws Does not throw; download handlers report request errors separately.
+ */
 export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: SubmissionHistoryModalProps) => {
     const sortedSubmissions = useMemo<SubmissionInfo[]>(
         () => props.submissions
@@ -319,6 +326,10 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                     <td className={styles.cellSubmission}>
                         <span className={styles.submissionCell}>
                             {renderedDownloadButton}
+                            <SubmissionArtifactsButton
+                                memberId={submission.memberId}
+                                submissionId={submission.id}
+                            />
                             {copyButton}
                             <SubmissionDuplicatesBadge submissionId={submission.id} />
                         </span>

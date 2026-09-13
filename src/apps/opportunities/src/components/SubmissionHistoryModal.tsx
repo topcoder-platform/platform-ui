@@ -22,6 +22,7 @@ interface SubmissionHistoryModalProps {
     challengeId: string
     isMarathonMatch?: boolean
     onClose: () => void
+    onOpenArtifacts?: (submissionId: string) => void
     open: boolean
     reviewSummations?: ChallengeReviewSummation[]
     showFinalScores?: boolean
@@ -81,7 +82,7 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
  * navigating away from Opportunities to Review App. Review API may limit an
  * ordinary viewer to the latest attempt.
  *
- * @param props selected submission, challenge context, visibility, and close callback.
+ * @param props selected submission, challenge context, visibility, and authorized artifact/close callbacks.
  * @returns modal with history rows or a loading, error, or empty state.
  * @throws Does not throw; request failures render a retryable modal state.
  */
@@ -144,6 +145,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                 <th>Submission Date</th>
                                 {props.isMarathonMatch && <th>Provisional Score</th>}
                                 <th>Final Score</th>
+                                {props.onOpenArtifacts && <th>Artifacts</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -170,6 +172,17 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                                 )
                                                 : formatMarathonScore(scores.finalScore, 'N/A')}
                                         </td>
+                                        {props.onOpenArtifacts && (
+                                            <td data-mobile-label='Artifacts' data-mobile-order='5'>
+                                                <button
+                                                    aria-label={`Download submission artifacts ${submission.id}`}
+                                                    onClick={() => props.onOpenArtifacts?.(submission.id)}
+                                                    type='button'
+                                                >
+                                                    Artifacts
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 )
                             })}

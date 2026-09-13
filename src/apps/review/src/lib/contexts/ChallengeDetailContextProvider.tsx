@@ -25,7 +25,7 @@ import {
     UseFetchSubmissionDuplicatesResult,
 } from '../hooks'
 import type { ChallengeVisibilityFlags } from '../hooks/useFetchChallengeSubmissions'
-import { canViewSubmissionDuplicates } from '../utils'
+import { canViewSubmissionDuplicates, isMarathonMatchChallenge } from '../utils'
 
 import { ChallengeDetailContext } from './ChallengeDetailContext'
 import { ReviewAppContext } from './ReviewAppContext'
@@ -85,7 +85,12 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
                 ),
             )
 
-            return { isCompleted, isDesign, submissionsViewable }
+            return {
+                isCompleted,
+                isDesign,
+                isMarathonMatch: isMarathonMatchChallenge(challengeInfo),
+                submissionsViewable,
+            }
         },
         [challengeInfo],
     )

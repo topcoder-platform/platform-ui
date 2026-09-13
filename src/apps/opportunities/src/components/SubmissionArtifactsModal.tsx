@@ -13,6 +13,7 @@ import {
 import styles from './SubmissionArtifactsModal.module.scss'
 
 interface SubmissionArtifactsModalProps {
+    allowInternalArtifacts?: boolean
     onClose: () => void
     open: boolean
     submissionId?: string
@@ -70,6 +71,7 @@ function saveArtifact(blob: Blob, filename: string): void {
 /**
  * Lists and downloads scorer-generated files for one authored submission.
  *
+ * Internal files are displayed only with explicit completion/management permission.
  * @param props selected submission, visibility, and close callback.
  * @returns artifact dialog with loading, error, empty, and download states.
  * @throws Does not throw; request failures remain visible in the dialog.
@@ -78,7 +80,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
     const [downloadingArtifactId, setDownloadingArtifactId] = useState<string>()
     const response: SWRResponse<string[], Error> = useSWR(
         props.open && props.submissionId
-            ? ['opportunities:submission-artifacts', props.submissionId]
+            ? ['opportunities:submission-artifacts', props.submissionId, !!props.allowInternalArtifacts]
             : undefined,
         () => getChallengeSubmissionArtifacts(props.submissionId as string),
         { revalidateOnFocus: false, shouldRetryOnError: false },
@@ -106,6 +108,12 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
         }
     }
 
+    // Also filter cached responses when completion or viewer permissions change.
+    const artifacts = (response.data ?? []).filter(artifactId => (
+        props.allowInternalArtifacts || !artifactId.toLowerCase()
+            .includes('internal')
+    ))
+
     let content
     if (response.isValidating && !response.data) {
         content = <div className={styles.loading}><LoadingSpinner /></div>
@@ -116,7 +124,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                 <button onClick={() => response.mutate()} type='button'>Try again</button>
             </div>
         )
-    } else if (!response.data?.length) {
+    } else if (!artifacts.length) {
         content = <p className={styles.message}>No submission artifacts are available.</p>
     } else {
         content = (
@@ -129,7 +137,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                         </tr>
                     </thead>
                     <tbody>
-                        {response.data.map(artifactId => (
+                        {artifacts.map(artifactId => (
                             <tr key={artifactId}>
                                 <td><span title={artifactId}>{artifactId}</span></td>
                                 <td>

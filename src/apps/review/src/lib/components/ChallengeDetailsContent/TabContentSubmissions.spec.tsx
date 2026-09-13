@@ -86,6 +86,7 @@ jest.mock('~/libs/shared', () => ({
 jest.mock('~/libs/ui', () => ({
     IconOutline: {
         DocumentDuplicateIcon: () => <span />,
+        FolderDownloadIcon: () => <span />,
         RefreshIcon: () => <span />,
     },
     Table: (props: {
