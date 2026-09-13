@@ -34,10 +34,12 @@ The Competitions sidebar follows the authored Figma filter with one Search
 control and the helper text “Search skills, technologies, projects.” Its value
 is mirrored in the shareable `search` query parameter and sent through the
 Challenge API `search` parameter; Competitions does not render a second
-skills/technologies field. Challenge-detail skill tags link back to
-`/opportunities/competitions?search=<skill>` so the destination input and
-owner-backed results are filtered immediately. Other opportunity domains
-retain their owner-specific skill facet where supported.
+skills/technologies field. The challenge-detail header displays authored `tags`
+followed by standardized `skills[].name` values, trimming whitespace and omitting
+blank or duplicate labels. Both tags and skills link back to
+`/opportunities/competitions?search=<label>` so the destination input and
+owner-backed results are filtered immediately. Other opportunity domains retain
+their owner-specific skill facet where supported.
 On mobile, Search, ownership, and Status remain immediately visible while the
 Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.

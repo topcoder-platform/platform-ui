@@ -440,8 +440,9 @@ function timelineTimezone(): string {
 }
 
 /**
- * Renders the Figma challenge title, phase context, prizes, and competition
- * member actions. Assignment-only Task challenges intentionally omit actions.
+ * Renders the Figma challenge title, authored tags, standardized skills, phase
+ * context, prizes, and competition member actions. Tags precede skills, with
+ * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
  *
  * @param props challenge and registration state.
  * @returns dark challenge detail masthead with Task-aware action visibility.
@@ -494,7 +495,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
             .toUpperCase()
         return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
     })
-    const skills = props.challenge.skills ?? []
+    const labels = Array.from(new Set([
+        ...(props.challenge.tags ?? []),
+        ...(props.challenge.skills ?? []).map(skill => skill.name),
+    ].map(label => label.trim())
+        .filter(Boolean)))
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
@@ -532,17 +537,17 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </span>
                         </div>
                         <h1>{props.challenge.name}</h1>
-                        {skills.length > 0 && (
+                        {labels.length > 0 && (
                             <div className={classNames(styles.skills, {
                                 [styles.designSkills]: trackKey === 'design',
                             })}
                             >
-                                {skills.map(skill => (
+                                {labels.map(label => (
                                     <Link
-                                        key={skill.id ?? skill.name}
-                                        to={`/opportunities/competitions?search=${encodeURIComponent(skill.name)}`}
+                                        key={label}
+                                        to={`/opportunities/competitions?search=${encodeURIComponent(label)}`}
                                     >
-                                        {skill.name}
+                                        {label}
                                     </Link>
                                 ))}
                             </div>
