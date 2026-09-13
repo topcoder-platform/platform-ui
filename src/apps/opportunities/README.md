@@ -475,7 +475,11 @@ cancel control remains available, aborts its request, clears the selected file
 or URL, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
-progress, and completed states. Virus-scan and quarantine failures are reported
+progress, and completed states. A superseded scorer's `CANCELLED` status is shown
+as a neutral `Cancelled` label. The newest phase result takes precedence over
+older progress, and cancelled phase scores do not fall back to placeholder or
+legacy aggregate values. Cancelled results are excluded from dashboard points.
+Virus-scan and quarantine failures are reported
 as Failed in the Provisional process with explicit 0% progress; later review
 failures remain System failures. A newly active attempt stays in the Provisional
 process while its first scorer result is pending during Submission, then uses the
