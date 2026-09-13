@@ -1934,6 +1934,44 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
+    it('shows cancelled Marathon attempts without scorer placeholder scores', () => {
+        const utils = jest.requireMock('../utils')
+        const actual = jest.requireActual('../utils/marathon-match.utils')
+        jest.spyOn(utils, 'marathonSubmissionScores')
+            .mockImplementation(actual.marathonSubmissionScores)
+        jest.spyOn(utils, 'marathonSubmissionTestProgress')
+            .mockImplementation(actual.marathonSubmissionTestProgress)
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{
+            id: 'cancelled-attempt',
+            memberId: '123',
+            provisionalScore: 99,
+            status: 'ACTIVE',
+        }]
+        mockReviewSummations = [{
+            aggregateScore: -1,
+            id: 'cancelled-result',
+            isProvisional: true,
+            metadata: { testProgress: 1, testStatus: 'CANCELLED' },
+            submissionId: 'cancelled-attempt',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getByText('Cancelled'))
+            .toHaveClass('testStatusCancelled')
+        expect(screen.queryByText('Failed'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('cell', { name: '-1' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('cell', { name: '99' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: 'N/A' }))
+            .toHaveAttribute('data-mobile-label', 'Provisional Score')
+    })
+
     it('keeps the Marathon Match submissions table compact on desktop', () => {
         expect(challengeDetailStyles)
             .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)

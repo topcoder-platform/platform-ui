@@ -18,7 +18,7 @@ export interface MarathonSubmissionScores {
 export interface MarathonTestProgress {
     process?: 'Example' | 'Provisional' | 'System'
     progress?: number
-    status?: 'Failed' | 'In progress' | 'Passed'
+    status?: 'Cancelled' | 'Failed' | 'In progress' | 'Passed'
 }
 
 export interface MarathonDashboardPoint {
@@ -112,7 +112,8 @@ function hasCompletedScoring(value: ChallengeReviewSummation, score: number): bo
         return true
     }
 
-    if (['error', 'failed', 'inprogress', 'pending', 'processing', 'running'].includes(status)) {
+    if (['cancelled', 'canceled', 'error', 'failed', 'inprogress', 'pending', 'processing', 'running']
+        .includes(status)) {
         return false
     }
 
@@ -160,7 +161,7 @@ function testProgressValue(value: unknown): number | undefined {
 }
 
 /**
- * Resolves scorer lifecycle aliases to the three authored status labels.
+ * Resolves scorer lifecycle aliases, including intentional cancellation, to status labels.
  *
  * @param value scorer status token.
  * @returns member-facing scorer status, or undefined.
@@ -168,6 +169,7 @@ function testProgressValue(value: unknown): number | undefined {
  */
 function testStatusValue(value: unknown): MarathonTestProgress['status'] {
     const status = normalizeToken(value)
+    if (['cancelled', 'canceled'].includes(status)) return 'Cancelled'
     if (status.startsWith('failed') || ['error', 'aifailedreview'].includes(status)) return 'Failed'
     if (['success', 'passed', 'complete', 'completed'].includes(status)) return 'Passed'
     if (['inprogress', 'pending', 'processing', 'running'].includes(status)) return 'In progress'
@@ -220,27 +222,28 @@ function challengePhaseTestProcess(
 }
 
 /**
- * Selects the newest usable aggregate score for one phase.
+ * Selects the newest phase summation, including cancelled or unscored results.
  *
  * @param submission Review API submission with optional summations.
  * @param phase requested Marathon Match score phase.
- * @returns newest finite phase score, or undefined.
+ * @returns newest phase result, or undefined. Used to prevent cancelled runs from
+ * falling back to stale legacy scores.
  * @throws Does not throw.
  */
-function latestSummationScore(
+function latestPhaseSummation(
     submission: ChallengeSubmission,
     phase: MarathonScorePhase,
-): number | undefined {
+): ChallengeReviewSummation | undefined {
     return submissionSummations(submission)
         .map((summation, index) => ({
             index,
             phase: summationPhase(summation),
-            score: finiteScore(summation.aggregateScore),
+            summation,
             timestamp: summationTimestamp(summation),
         }))
-        .filter(candidate => candidate.phase === phase && candidate.score !== undefined)
+        .filter(candidate => candidate.phase === phase)
         .sort((first, second) => second.timestamp - first.timestamp || second.index - first.index)[0]
-        ?.score
+        ?.summation
 }
 
 /**
@@ -295,6 +298,7 @@ export function marathonDashboardIsEnabled(challenge: ChallengeOpportunity): boo
 /**
  * Resolves provisional and final Marathon Match scores, preferring the latest
  * phase-specific review summation over legacy submission-level fields.
+ * Cancelled phase scores, including placeholder aggregates, are not displayed.
  *
  * @param submission Review API submission with modern or legacy score fields.
  * @returns resolved provisional and final scores.
@@ -303,14 +307,20 @@ export function marathonDashboardIsEnabled(challenge: ChallengeOpportunity): boo
 export function marathonSubmissionScores(
     submission: ChallengeSubmission,
 ): MarathonSubmissionScores {
-    const provisionalScore = latestSummationScore(submission, 'provisional')
-        ?? finiteScore(submission.provisionalScore)
-        ?? finiteScore(submission.initialScore)
-        ?? averageReviewScore((submission.review ?? []).map(review => review.initialScore))
-    const finalScore = latestSummationScore(submission, 'final')
-        ?? finiteScore(submission.finalScore)
-        ?? finiteScore(submission.aiDecisionScore)
-        ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
+    const provisional = latestPhaseSummation(submission, 'provisional')
+    const final = latestPhaseSummation(submission, 'final')
+    const provisionalScore = testStatusValue(provisional?.metadata?.testStatus) === 'Cancelled'
+        ? undefined
+        : finiteScore(provisional?.aggregateScore)
+            ?? finiteScore(submission.provisionalScore)
+            ?? finiteScore(submission.initialScore)
+            ?? averageReviewScore((submission.review ?? []).map(review => review.initialScore))
+    const finalScore = testStatusValue(final?.metadata?.testStatus) === 'Cancelled'
+        ? undefined
+        : finiteScore(final?.aggregateScore)
+            ?? finiteScore(submission.finalScore)
+            ?? finiteScore(submission.aiDecisionScore)
+            ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
     return { finalScore, provisionalScore }
 }
 
@@ -360,6 +370,7 @@ export function shouldShowFinalSubmissionScores(
 /**
  * Resolves the most relevant member-safe scorer progress metadata, then falls
  * back to virus-scan, review, score, and submission lifecycle fields.
+ * Uses the newest result per phase so stale progress cannot hide a cancellation.
  *
  * @param submission Review API submission with attached summations.
  * @param challenge optional Challenge API context used to identify the active scoring phase.
@@ -370,7 +381,9 @@ export function marathonSubmissionTestProgress(
     submission: ChallengeSubmission,
     challenge?: Pick<ChallengeOpportunity, 'currentPhase' | 'currentPhaseNames' | 'phases'>,
 ): MarathonTestProgress {
-    const candidates = submissionSummations(submission)
+    const candidates = (['example', 'provisional', 'final'] as MarathonScorePhase[])
+        .map(phase => latestPhaseSummation(submission, phase))
+        .filter((summation): summation is ChallengeReviewSummation => !!summation)
         .map((summation, index) => {
             const metadata = summation.metadata ?? {}
             const details = metadata.testProgressDetails
@@ -386,13 +399,15 @@ export function marathonSubmissionTestProgress(
             })
             const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
             const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
-            const priority = status === 'In progress'
-                ? 4
-                : process === 'System'
-                    ? 3
-                    : process === 'Provisional'
-                        ? 2
-                        : 1
+            const priority = status === 'Cancelled'
+                ? 5
+                : status === 'In progress'
+                    ? 4
+                    : process === 'System'
+                        ? 3
+                        : process === 'Provisional'
+                            ? 2
+                            : 1
             return {
                 index,
                 priority,
@@ -410,7 +425,7 @@ export function marathonSubmissionTestProgress(
     if (current) {
         return {
             process: current.process,
-            progress: current.progress ?? (current.status === 'Failed' ? 0 : undefined),
+            progress: current.progress ?? (['Failed', 'Cancelled'].includes(current.status ?? '') ? 0 : undefined),
             status: current.status,
         }
     }

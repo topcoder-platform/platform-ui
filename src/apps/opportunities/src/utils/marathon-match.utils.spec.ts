@@ -11,6 +11,60 @@ import {
 } from './marathon-match.utils'
 
 describe('Marathon Match challenge detail utilities', () => {
+    it.each(['CANCELLED', 'CANCELED'])('preserves %s and suppresses cancelled phase scores', testStatus => {
+        const submission = {
+            finalScore: 91,
+            id: 'cancelled-attempt',
+            provisionalScore: 87,
+            reviewSummation: [{
+                aggregateScore: -1,
+                isProvisional: true,
+                metadata: { testStatus },
+            }, {
+                aggregateScore: -1,
+                isFinal: true,
+                metadata: { testStatus },
+            }],
+            status: 'ACTIVE',
+        }
+
+        expect(marathonSubmissionTestProgress(submission))
+            .toMatchObject({ status: 'Cancelled' })
+        expect(marathonSubmissionScores(submission))
+            .toEqual({ finalScore: undefined, provisionalScore: undefined })
+    })
+
+    it('does not allow older in-progress metadata to override a newer cancellation', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'cancelled-attempt',
+            reviewSummation: [{
+                createdAt: '2026-09-01T10:00:00Z',
+                id: 'old-progress',
+                isProvisional: true,
+                metadata: { testProgress: 0.5, testStatus: 'IN PROGRESS' },
+            }, {
+                createdAt: '2026-09-01T10:01:00Z',
+                id: 'new-cancellation',
+                isProvisional: true,
+                metadata: { testStatus: 'CANCELLED' },
+            }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 0, status: 'Cancelled' })
+    })
+
+    it('does not graph cancelled attempts even if a stale positive score is attached', () => {
+        expect(buildMarathonDashboardData([{
+            aggregateScore: 98,
+            id: 'cancelled-result',
+            isProvisional: true,
+            memberId: '123',
+            metadata: { testProgress: 1, testStatus: 'CANCELLED' },
+            reviewedDate: '2026-09-01T10:01:00Z',
+            submissionId: 'cancelled-attempt',
+        }]))
+            .toEqual([])
+    })
+
     it('recognizes Marathon Match catalog names, IDs, and tags', () => {
         expect(isMarathonMatchChallenge({ id: 'one', name: 'One', type: 'Marathon Match' }))
             .toBe(true)
