@@ -223,6 +223,9 @@ function submissionTypeLabel(value?: string): string {
 
 /**
  * Formats the member-facing lifecycle shown in My Submissions.
+ * The latest final manual review outcome supersedes an earlier AI failure;
+ * challenge completion alone does not clear failures, and other explicit
+ * submission statuses remain authoritative.
  *
  * @param submission Review API submission and any attached review aggregates.
  * @param challenge owning challenge lifecycle and phases.
@@ -235,23 +238,40 @@ function submissionStatusLabel(
 ): string {
     const value = submission.status
     if (!value) return '—'
-    if (value.trim()
-        .toUpperCase() !== 'ACTIVE') return submissionTypeLabel(value)
+    const status = value.trim()
+        .toUpperCase()
+    if (status !== 'ACTIVE' && status !== 'AI_FAILED_REVIEW') return submissionTypeLabel(value)
+
+    const finalReview = [
+        ...(submission.reviewSummation ?? []),
+        ...(submission.reviewSummations ?? []),
+    ].filter(summation => (
+        summation.isFinal === true
+        || summation.is_final === true
+        || summation.type?.trim()
+            .toLowerCase() === 'final'
+    ))
+        .map((summation, index) => ({
+            index,
+            summation,
+            timestamp: Date.parse(
+                summation.reviewedDate ?? summation.updatedAt ?? summation.createdAt ?? summation.created ?? '',
+            ) || 0,
+        }))
+        .sort((first, second) => second.timestamp - first.timestamp || second.index - first.index)[0]?.summation
+
+    if (status === 'AI_FAILED_REVIEW') {
+        if (finalReview?.isPassing === true) return 'Completed'
+        if (finalReview?.isPassing === false) return 'Failed Review'
+        return submissionTypeLabel(value)
+    }
 
     const reviewCompleted = challenge.status?.trim()
         .toUpperCase() === 'COMPLETED'
         || (challenge.phases ?? []).some(phase => (
             challengeCatalogKey(phase.name) === 'review' && !!phase.actualEndDate
         ))
-        || [
-            ...(submission.reviewSummation ?? []),
-            ...(submission.reviewSummations ?? []),
-        ].some(summation => (
-            summation.isFinal === true
-            || summation.is_final === true
-            || summation.type?.trim()
-                .toLowerCase() === 'final'
-        ))
+        || !!finalReview
 
     if (reviewCompleted) return 'Completed'
     return 'In Review'

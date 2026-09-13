@@ -396,7 +396,14 @@ Marathon Match Submissions always use the Figma table with provisional and
 final score columns. The score graph is rendered only in the separate Dashboard
 tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
-and final scores. Active My Submissions pages periodically revalidate so an
+and final scores. In My Submissions, an `ACTIVE` submission shows Completed
+when its challenge completes, Review actually ends, or a final review aggregate
+arrives. For an `AI_FAILED_REVIEW` submission, the latest final manual review's
+explicit `isPassing` result takes precedence: passing shows Completed and
+failing shows Failed Review. Challenge completion, provisional scores, or AI
+scores alone do not clear an AI failure. Other explicit submission statuses
+remain authoritative, and the AI workflow details retain the original result.
+Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload
 the page. AI-reviewed challenges expand the newest submission's workflow details
 by default; each row can reveal the reviewer, completion date, threshold-derived

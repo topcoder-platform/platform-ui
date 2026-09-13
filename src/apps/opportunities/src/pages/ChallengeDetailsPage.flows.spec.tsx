@@ -1415,13 +1415,132 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
-    it('preserves an explicit failed submission status after challenge completion', () => {
+    it('shows a passing final manual review instead of an earlier AI failure', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            reviewers: [{ aiWorkflowId: 'ai-workflow' }],
+            status: 'COMPLETED',
+        }
+        mockSubmissions = [{
+            aiDecisionScore: 60,
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'submission-1',
+            reviewSummation: [{ aggregateScore: 100, isFinal: true, isPassing: true }],
+            status: 'AI_FAILED_REVIEW',
+            type: 'CONTEST_SUBMISSION',
+        }]
+        mockAiWorkflowRuns = {
+            'submission-1': [{
+                completedAt: '2026-06-03T09:35:00.000Z',
+                id: 'ai-run',
+                score: 60,
+                status: 'SUCCESS',
+                workflow: {
+                    name: 'AI reviewer',
+                    scorecard: { minimumPassingScore: 75 },
+                },
+            }],
+        }
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('cell', { name: 'Completed' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '100' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Ai Failed Review'))
+            .not.toBeInTheDocument()
+        expect(within(screen.getByRole('table', { name: 'AI review details for submission submission-1' }))
+            .getByText('FAILED'))
+            .toBeInTheDocument()
+    })
+
+    it.each([
+        { reviewSummation: [{ isFinal: true, isPassing: true }] },
+        { reviewSummation: [{ is_final: true, isPassing: true }] },
+        { reviewSummations: [{ isPassing: true, type: ' FINAL ' }] },
+    ])('uses a passing final review before the challenge completes: %j', summations => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, phases: [], status: 'ACTIVE' }
+        mockSubmissions = [{
+            ...summations,
+            id: 'submission-1',
+            status: ' ai_failed_review ',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('cell', { name: 'Completed' }))
+            .toBeInTheDocument()
+    })
+
+    it.each<[boolean, string]>([
+        [true, 'Completed'],
+        [false, 'Failed Review'],
+    ])('uses the latest final manual review outcome when passing is %s', (isPassing, label) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockSubmissions = [{
+            id: 'submission-1',
+            reviewSummation: [
+                { isFinal: true, isPassing, reviewedDate: '2026-06-04T09:30:00.000Z' },
+                { isFinal: true, isPassing: !isPassing, reviewedDate: '2026-06-03T09:30:00.000Z' },
+            ],
+            status: 'AI_FAILED_REVIEW',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('cell', { name: label }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Ai Failed Review'))
+            .not.toBeInTheDocument()
+    })
+
+    it.each([
+        {},
+        { aiDecisionScore: 100 },
+        { reviewSummation: [{ aggregateScore: 100, isFinal: false, isPassing: true }] },
+        { reviewSummation: [{ aggregateScore: 100, isFinal: true }] },
+    ])('preserves an AI failure without a final manual outcome after challenge completion: %j', submission => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [{ actualEndDate: '2026-06-04T09:30:00.000Z', isOpen: false, name: 'Review' }],
+            status: 'COMPLETED',
+        }
+        mockSubmissions = [{ ...submission, id: 'submission-1', status: 'AI_FAILED_REVIEW' }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('cell', { name: 'Ai Failed Review' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Completed'))
+            .not.toBeInTheDocument()
+    })
+
+    it.each([
+        ['FAILED_REVIEW', 'Failed Review'],
+        ['FAILED_SCREENING', 'Failed Screening'],
+        ['FAILED_CHECKPOINT_REVIEW', 'Failed Checkpoint Review'],
+        ['FAILED_CHECKPOINT_SCREENING', 'Failed Checkpoint Screening'],
+        ['DELETED', 'Deleted'],
+    ])('preserves an explicit %s submission status after challenge completion', (status, label) => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
         mockSubmissions = [{
             createdAt: '2026-06-03T09:30:00.000Z',
             id: 'submission-1',
-            status: 'FAILED_REVIEW',
+            reviewSummation: [{ aggregateScore: 100, isFinal: true, isPassing: true }],
+            status,
             type: 'CONTEST_SUBMISSION',
         }]
         mockChallenge = { ...mockChallenge, status: 'COMPLETED' }
@@ -1429,7 +1548,7 @@ describe('ChallengeDetailsPage member flows', () => {
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
 
-        expect(screen.getByText('Failed Review'))
+        expect(screen.getByRole('cell', { name: label }))
             .toBeInTheDocument()
         expect(screen.queryByText('Completed'))
             .not.toBeInTheDocument()
