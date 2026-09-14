@@ -1,0 +1,871 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import '@testing-library/jest-dom'
+import { fireEvent, render, RenderResult, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+
+import { ChallengeOpportunity } from '../models'
+
+import { ChallengeDetailHeader } from './ChallengeDetailHeader'
+
+jest.mock('~/libs/ui', () => {
+    const Icon = (): JSX.Element => <svg />
+    return {
+        IconOutline: new Proxy({}, {
+            get: () => Icon,
+        }),
+    }
+}, { virtual: true })
+
+/** Creates an active, overlapping registration/submission challenge fixture. */
+function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): ChallengeOpportunity {
+    return {
+        currentPhase: {
+            isOpen: true,
+            name: 'Submission',
+            scheduledEndDate: '2026-08-15T00:00:00.000Z',
+        },
+        currentPhaseNames: ['Registration', 'Submission'],
+        id: 'challenge-id',
+        name: 'Figma challenge',
+        phases: [
+            { isOpen: true, name: 'Registration' },
+            { isOpen: true, name: 'Submission', scheduledEndDate: '2026-08-15T00:00:00.000Z' },
+        ],
+        prizeSets: [{
+            prizes: Array.from({ length: 10 }, (_, index) => ({ type: 'USD', value: 1000 - (index * 50) })),
+            type: 'PLACEMENT',
+        }],
+        skills: [{ name: 'Algorithms' }, { name: 'Probability' }],
+        status: 'ACTIVE',
+        track: { name: 'Data Science', track: 'DATA_SCIENCE' },
+        type: { name: 'Marathon Match' },
+        ...overrides,
+    }
+}
+
+describe('ChallengeDetailHeader actions and presentation', () => {
+    beforeEach(() => {
+        jest.spyOn(Date, 'now')
+            .mockReturnValue(Date.parse('2026-08-14T00:00:00.000Z'))
+    })
+
+    afterEach(() => jest.restoreAllMocks())
+
+    it('links each skill to the competition listing search convention', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Algorithms' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Algorithms')
+        expect(screen.getByRole('link', { name: 'Probability' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Probability')
+    })
+
+    it('shows authored design tags alongside standardized skills', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: [{ name: 'Yacc' }],
+                        tags: ['Application Front-End Design'],
+                        track: 'Design',
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Application Front-End Design' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Application%20Front-End%20Design')
+        expect(screen.getByRole('link', { name: 'Yacc' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Yacc')
+    })
+
+    it.each([
+        {
+            labels: ['C++ / C#'],
+            overrides: { skills: undefined, tags: ['C++ / C#'] },
+            scenario: 'tags without skills',
+        },
+        {
+            labels: ['Featured', 'TypeScript'],
+            overrides: {
+                skills: [{ name: ' TypeScript ' }, { name: '' }],
+                tags: ['', ' Featured ', 'TypeScript', 'Featured'],
+            },
+            scenario: 'duplicate and blank tags or skills',
+        },
+        {
+            labels: [],
+            overrides: { skills: undefined, tags: undefined },
+            scenario: 'missing tags and skills',
+        },
+        {
+            labels: [],
+            overrides: { skills: [], tags: [] },
+            scenario: 'empty tags and skills',
+        },
+    ])('renders searchable labels for $scenario', ({ labels, overrides }: {
+        labels: string[]
+        overrides: Partial<ChallengeOpportunity>
+    }) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture(overrides)}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const links = screen.getAllByRole('link')
+            .filter(link => link.getAttribute('href')
+                ?.startsWith('/opportunities/competitions?search='))
+        expect(links.map(link => link.textContent))
+            .toEqual(labels)
+    })
+
+    it('uses the compact QA label for Quality Assurance challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        track: { name: 'Quality Assurance', track: 'QUALITY_ASSURANCE' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('QA'))
+            .toHaveClass('qaTrack')
+        expect(screen.queryByText('Quality Assurance'))
+            .not.toBeInTheDocument()
+    })
+
+    it.each(['Design', 'Development', 'Data Science', 'Quality Assurance', 'AI'])(
+        'uses the centered Prizes title treatment for the %s track',
+        track => {
+            render(
+                <MemoryRouter>
+                    <ChallengeDetailHeader
+                        busy={false}
+                        challenge={challengeFixture({ track })}
+                        isRegistered={false}
+                        onRegister={jest.fn()}
+                        onSubmit={jest.fn()}
+                        onUnregister={jest.fn()}
+                    />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByText('Prizes'))
+                .toHaveClass('prizeTitle')
+        },
+    )
+
+    it('shows only Register for an unregistered open challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const register = screen.getByRole('button', { name: 'Register' })
+        expect(register)
+            .toBeEnabled()
+        expect(register.className)
+            .toContain('secondary')
+        expect(screen.getByText(/phase closes in/))
+            .toHaveClass('phaseQualifier')
+        expect(screen.queryByText('Unregister'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Submit a solution'))
+            .not.toBeInTheDocument()
+    })
+
+    it.each([
+        ['Task catalog type', { type: { name: 'Task' } }, false],
+        ['nested task flag', { task: { isAssigned: true, isTask: true, memberId: '123' } }, true],
+        ['flattened task flag', { taskIsTask: true }, true],
+        ['legacy pure-v5 flag', { legacy: { pureV5Task: true } }, false],
+    ])('hides member actions for the %s while preserving prize details', (_label, overrides, isRegistered) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture(overrides)}
+                    isRegistered={isRegistered as boolean}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByAltText('1 place'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Register' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Unregister' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Submit a solution' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows enabled member actions only while their phases are open', () => {
+        const onSubmit = jest.fn()
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={onSubmit}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeEnabled()
+        const submit = screen.getByRole('button', { name: 'Submit a solution' })
+        expect(submit)
+            .toBeEnabled()
+        submit.click()
+        expect(onSubmit)
+            .toHaveBeenCalledTimes(1)
+
+        rerender(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhaseNames: [],
+                        phases: [{ isOpen: false, name: 'Registration' }],
+                        status: 'COMPLETED',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
+    })
+
+    it('disables unregistering after the member has submitted', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    hasSubmitted
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeEnabled()
+    })
+
+    it('labels a challenge without an active phase as completed', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status: 'COMPLETED',
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Challenge completed'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Timeline complete'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Register' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
+    })
+
+    it.each([
+        ['DRAFT', 'Draft'],
+        ['CANCELLED_CLIENT_REQUEST', 'Cancelled client request'],
+    ])('shows the authored inactive %s status with both disabled actions', (status, label) => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status,
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText(label))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Challenge completed'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Register' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
+    })
+
+    it('avoids flashing Register while member registration is unresolved', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                    registrationLoading
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('button', { name: 'Checking registration…' }))
+            .toBeDisabled()
+        expect(screen.queryByRole('button', { name: 'Register' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('uses the exact Data Science header color and all ten placement prizes', () => {
+        const renderResult: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture()}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Data Science').className)
+            .toContain('dataScienceTrack')
+        expect(screen.getAllByAltText(/place$/))
+            .toHaveLength(10)
+        expect(screen.getByAltText('10 place'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('group', { name: 'Additional placement prizes' }))
+            .toContainElement(screen.getByAltText('4 place'))
+        const rings: HTMLDivElement | null = renderResult.container.querySelector('.rings')
+        expect(rings?.children)
+            .toHaveLength(3)
+        expect(rings?.querySelector('.ringOuter'))
+            .toBeInTheDocument()
+        expect(rings?.querySelector('.ringMiddle'))
+            .toBeInTheDocument()
+        expect(rings?.querySelector('.ringInner'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps the fourth and fifth placement prizes visible without collapsing them into overflow UI', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        prizeSets: [{
+                            prizes: Array.from({ length: 5 }, (_value, index) => ({
+                                type: 'USD',
+                                value: 1000 - (index * 100),
+                            })),
+                            type: 'PLACEMENT',
+                        }],
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const additionalPrizes = screen.getByRole('group', { name: 'Additional placement prizes' })
+        expect(within(additionalPrizes)
+            .getByAltText('4 place'))
+            .toBeInTheDocument()
+        expect(within(additionalPrizes)
+            .getByAltText('5 place'))
+            .toBeInTheDocument()
+        expect(within(additionalPrizes)
+            .getAllByRole('img'))
+            .toHaveLength(2)
+    })
+
+    it('replaces detail prizes with the leaderboard label for fun challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({ funChallenge: true })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('No individual prize - leaderboard scoring'))
+            .toHaveClass('funChallengePrize')
+        expect(screen.queryByAltText('1 place'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Prize details coming soon'))
+            .not.toBeInTheDocument()
+    })
+
+    it('uses the compact featured prize layout for long point labels', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        prizeSets: [{
+                            prizes: [
+                                { type: 'POINT', value: 1200 },
+                                { type: 'POINT', value: 600 },
+                                { type: 'POINT', value: 400 },
+                            ],
+                            type: 'PLACEMENT',
+                        }],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('1,200 pts').className)
+            .toContain('compactPrize')
+        expect(screen.getByText('1,200 pts')
+            .parentElement?.className)
+            .toContain('compactFeaturedPrizes')
+    })
+
+    it('renders the Figma phase rail with date rows and challenge-end Winners milestone', () => {
+        const challengeEnd = '2999-08-20T12:30:00.000Z'
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: challengeEnd,
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-15T00:00:00.000Z',
+                                actualStartDate: '2026-08-10T00:00:00.000Z',
+                                id: 'registration',
+                                isOpen: true,
+                                name: 'Registration',
+                            },
+                            {
+                                id: 'submission',
+                                isOpen: true,
+                                name: 'Submission',
+                                scheduledEndDate: '2026-08-15T00:00:00.000Z',
+                                scheduledStartDate: '2026-08-10T00:00:00.000Z',
+                            },
+                        ],
+                        startDate: '2026-08-10T00:00:00.000Z',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const prizeCard = screen.getByText('Prizes')
+            .closest('aside')
+        expect(prizeCard)
+            .toHaveClass('actionCard')
+        expect(timeline.parentElement)
+            .toBe(prizeCard?.parentElement)
+        const items = within(timeline)
+            .getAllByRole('listitem')
+        expect(items)
+            .toHaveLength(4)
+        expect(within(timeline)
+            .getByText('Launch'))
+            .toBeInTheDocument()
+
+        const registration = within(timeline)
+            .getByText('Registration')
+            .closest('li') as HTMLLIElement
+        expect(registration)
+            .toHaveAttribute('data-state', 'current')
+        expect(registration.querySelectorAll('time'))
+            .toHaveLength(2)
+
+        const winners = within(timeline)
+            .getByText('Winners')
+            .closest('li') as HTMLLIElement
+        expect(winners)
+            .toHaveAttribute('data-state', 'upcoming')
+        expect(winners.querySelector('time'))
+            .toHaveAttribute('datetime', challengeEnd)
+        expect(timeline.querySelectorAll('.timelineRail img'))
+            .toHaveLength(4)
+        expect(timeline.querySelectorAll('[data-state="current"]'))
+            .toHaveLength(6)
+        const timezone = within(timeline)
+            .getByText(/^Time zone:/)
+        expect(timezone)
+            .toBeInTheDocument()
+        expect(timezone.compareDocumentPosition(items[0]))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(timeline.querySelector('.timelineGraphic > .timelineRail'))
+            .toBeInTheDocument()
+        expect(timeline.querySelector('.timelineGraphic > .timelineItems'))
+            .toBeInTheDocument()
+        expect(timeline.querySelectorAll('.mobileTimelineMarker'))
+            .toHaveLength(items.length)
+        expect(timeline.querySelectorAll('.mobileTimelineMarker img'))
+            .toHaveLength(items.length)
+    })
+
+    it('sorts expanded timeline phases chronologically and uses the short hide label', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: '2026-08-20T12:30:00.000Z',
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-10T00:29:00.000Z',
+                                actualStartDate: '2026-08-10T00:12:00.000Z',
+                                id: 'checkpoint-submission',
+                                name: 'Checkpoint Submission',
+                            },
+                            {
+                                actualEndDate: '2026-08-10T00:40:00.000Z',
+                                actualStartDate: '2026-08-10T00:00:00.000Z',
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                            {
+                                actualEndDate: '2026-08-10T00:35:00.000Z',
+                                actualStartDate: '2026-08-10T00:30:00.000Z',
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                        ],
+                        startDate: '2026-08-10T00:00:00.000Z',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        expect(screen.getByRole('button', { name: 'Hide timeline' }))
+            .toBeInTheDocument()
+
+        const itemLabels = within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Submission', 'Winners'])
+    })
+
+    it('places Registration before a concurrent Checkpoint Submission phase', () => {
+        const sharedStart = '2026-09-10T07:40:29.840Z'
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: '2026-09-28T15:34:09.020Z',
+                        phases: [
+                            {
+                                actualStartDate: sharedStart,
+                                id: 'checkpoint-submission',
+                                name: 'Checkpoint Submission',
+                                scheduledEndDate: '2026-09-13T07:34:09.020Z',
+                            },
+                            {
+                                actualStartDate: sharedStart,
+                                id: 'registration',
+                                name: 'Registration',
+                                scheduledEndDate: '2026-09-16T07:34:09.020Z',
+                            },
+                        ],
+                        startDate: sharedStart,
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const itemLabels = within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Winners'])
+    })
+
+    it('omits an ended Task review and keeps Registration before Submission', () => {
+        const { container }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        endDate: '2026-08-13T17:44:00.000Z',
+                        phases: [
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'iterative-review',
+                                name: 'Iterative Review',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                            {
+                                actualEndDate: '2026-08-13T17:44:00.000Z',
+                                actualStartDate: '2026-08-13T17:44:00.000Z',
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                        ],
+                        startDate: '2026-08-13T17:44:00.000Z',
+                        status: 'COMPLETED',
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const itemLabels = within(timeline)
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Submission', 'Winners'])
+        expect(within(timeline)
+            .queryByText('Iterative Review'))
+            .not.toBeInTheDocument()
+        expect(timeline.querySelectorAll('.timelineRail img'))
+            .toHaveLength(4)
+        expect(timeline.querySelectorAll('.mobileTimelineMarker img'))
+            .toHaveLength(4)
+        expect(container.querySelector('.timelineItems'))
+            .toHaveStyle({
+                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+            })
+    })
+
+    it.each([
+        {
+            challengeEnd: '2026-08-31T17:44:00.000Z',
+            challengeStart: '2026-08-10T17:44:00.000Z',
+            isOpen: true,
+            phaseEnd: '2026-08-15T17:44:00.000Z',
+            phaseStart: '2026-08-13T17:44:00.000Z',
+            state: 'current',
+        },
+        {
+            challengeEnd: '2999-08-31T17:44:00.000Z',
+            challengeStart: '2999-08-10T17:44:00.000Z',
+            isOpen: false,
+            phaseEnd: '2999-08-21T17:44:00.000Z',
+            phaseStart: '2999-08-20T17:44:00.000Z',
+            state: 'future',
+        },
+    ])('omits a $state Iterative Review phase from a Task timeline', ({
+        challengeEnd,
+        challengeStart,
+        isOpen,
+        phaseEnd,
+        phaseStart,
+    }: {
+        challengeEnd: string
+        challengeStart: string
+        isOpen: boolean
+        phaseEnd: string
+        phaseStart: string
+    }) => {
+        const { container }: RenderResult = render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: isOpen ? {
+                            isOpen: true,
+                            name: 'Iterative Review',
+                            scheduledEndDate: phaseEnd,
+                        } : undefined,
+                        currentPhaseNames: isOpen ? ['Iterative Review'] : [],
+                        endDate: challengeEnd,
+                        phases: [
+                            {
+                                actualEndDate: challengeEnd,
+                                actualStartDate: challengeStart,
+                                id: 'registration',
+                                name: 'Registration',
+                            },
+                            {
+                                id: 'iterative-review',
+                                isOpen,
+                                name: 'Iterative Review',
+                                scheduledEndDate: phaseEnd,
+                                scheduledStartDate: phaseStart,
+                            },
+                            {
+                                actualEndDate: challengeEnd,
+                                actualStartDate: challengeStart,
+                                id: 'submission',
+                                name: 'Submission',
+                            },
+                        ],
+                        startDate: challengeStart,
+                        type: { name: 'Task' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const itemLabels = within(timeline)
+            .getAllByRole('listitem')
+            .map(item => item.querySelector('strong')?.textContent)
+        expect(itemLabels)
+            .toEqual(['Launch', 'Registration', 'Submission', 'Winners'])
+        expect(within(timeline)
+            .queryByText('Iterative Review'))
+            .not.toBeInTheDocument()
+        expect(container.querySelector('.timelineItems'))
+            .toHaveStyle({
+                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+            })
+    })
+
+    it('retains Iterative Review for non-Task challenge timelines', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Iterative Review',
+                            scheduledEndDate: '2026-08-15T17:44:00.000Z',
+                        },
+                        currentPhaseNames: ['Iterative Review'],
+                        phases: [{
+                            id: 'iterative-review',
+                            isOpen: true,
+                            name: 'Iterative Review',
+                            scheduledEndDate: '2026-08-15T17:44:00.000Z',
+                            scheduledStartDate: '2026-08-13T17:44:00.000Z',
+                        }],
+                        type: { name: 'Challenge' },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        expect(within(screen.getByRole('region', { name: 'Challenge timeline' }))
+            .getByText('Iterative Review'))
+            .toBeInTheDocument()
+    })
+})

@@ -1,12 +1,20 @@
-import { Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    SetStateAction,
+    useContext,
+    useMemo,
+    useState,
+} from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import _ from 'lodash'
 import cn from 'classnames'
 import moment from 'moment'
 
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import { EnvironmentConfig } from '~/config'
-import { useWindowSize, WindowSize } from '~/libs/shared'
+import { ingestChallengeInRag, useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, Table, type TableColumn } from '~/libs/ui'
 
 import { ReactComponent as RegistrantUserIcon } from '../../assets/i/registrant-user-icon.svg'
@@ -22,12 +30,10 @@ import { useEventCallback } from '../../hooks'
 import { Challenge, ChallengeFilterCriteria, ChallengeType } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
 import { checkIsMM } from '../../utils/challenge'
+import { handleError } from '../../utils'
 
 import { MobileListView } from './MobileListView'
-import {
-    canOpenReviewUi,
-    getReviewUiChallengeUrl,
-} from './reviewUiLink'
+import { canOpenReviewUi, getReviewUiChallengeUrl } from './reviewUiLink'
 import { getChallengeSubTrackSuffix } from './challengeTypeTrack'
 import styles from './ChallengeList.module.scss'
 
@@ -68,19 +74,25 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
 const ChallengeUserStats: FC<{ challenge: Challenge }> = props => (
     <div className={styles.challengeUserStats}>
         <span
-            title={`${props.challenge.numOfRegistrants} registrant${props.challenge.numOfRegistrants > 1 ? 's' : ''}`}
+            title={`${props.challenge.numOfRegistrants} registrant${
+                props.challenge.numOfRegistrants > 1 ? 's' : ''
+            }`}
         >
             <RegistrantUserIcon className='icon icon-fill' />
             <span>{props.challenge.numOfRegistrants}</span>
         </span>
         <span
-            title={`${props.challenge.numOfSubmissions} submission${props.challenge.numOfSubmissions > 1 ? 's' : ''}`}
+            title={`${props.challenge.numOfSubmissions} submission${
+                props.challenge.numOfSubmissions > 1 ? 's' : ''
+            }`}
         >
             <SubmissionIcon className='icon icon-fill' />
             <span>{props.challenge.numOfSubmissions}</span>
         </span>
         <span
-            title={`${props.challenge.groups.length} group${props.challenge.groups.length > 1 ? 's' : ''}`}
+            title={`${props.challenge.groups.length} group${
+                props.challenge.groups.length > 1 ? 's' : ''
+            }`}
         >
             <UserGroupIcon className='icon icon-fill' />
             <span>{props.challenge.groups.length}</span>
@@ -131,10 +143,7 @@ const TrackIcon: FC<{ challenge: Challenge }> = props => {
     const trackName = props.challenge.track?.name || ''
 
     return (
-        <div
-            className={cn(styles.trackIcon)}
-            style={iconStyles(trackName)}
-        >
+        <div className={cn(styles.trackIcon)} style={iconStyles(trackName)}>
             {type?.abbreviation}
         </div>
     )
@@ -145,12 +154,45 @@ const Actions: FC<{
     currentFilters: ChallengeFilterCriteria
 }> = props => {
     const [openDropdown, setOpenDropdown] = useState(false)
+    const [isIngesting, setIsIngesting] = useState(false)
     const navigate = useNavigate()
     const isMM = useMemo(() => checkIsMM(props.challenge), [props.challenge])
     const goToManageUser = useEventCallback(() => {
         navigate(`${props.challenge.id}/manage-user`, {
             state: { previousChallengeListFilter: props.currentFilters },
         })
+    })
+
+    const handleIngestInRag = useEventCallback(async () => {
+        if (isIngesting) {
+            return
+        }
+
+        setIsIngesting(true)
+        const toastId = toast.loading(
+            `Ingesting "${props.challenge.name}" into RAG…`,
+        )
+
+        try {
+            const report = await ingestChallengeInRag(props.challenge.id)
+
+            const message = report.skipped
+                ? 'Challenge has no description to index — nothing to ingest.'
+                : `Challenge ingested into RAG successfully (${report.chunks} `
+                  + `chunk${report.chunks === 1 ? '' : 's'}).`
+
+            toast.update(toastId, {
+                autoClose: 5000,
+                isLoading: false,
+                render: message,
+                type: 'success',
+            })
+        } catch (error) {
+            toast.dismiss(toastId)
+            handleError(error)
+        } finally {
+            setIsIngesting(false)
+        }
     })
 
     const manageDropdownMenuTrigger = useEventCallback(
@@ -223,13 +265,24 @@ const Actions: FC<{
                     {isMM && (
                         <li
                             onClick={function onClick() {
-                                navigate(`${props.challenge.id}/manage-marathon-match`)
+                                navigate(
+                                    `${props.challenge.id}/manage-marathon-match`,
+                                )
                                 setOpenDropdown(false)
                             }}
                         >
                             Marathon Match
                         </li>
                     )}
+                    <li
+                        className={cn({ disabled: isIngesting })}
+                        onClick={function onClick() {
+                            setOpenDropdown(false)
+                            handleIngestInRag()
+                        }}
+                    >
+                        Upsert for TopScout
+                    </li>
                 </ul>
             </DropdownMenu>
 
@@ -240,7 +293,9 @@ const Actions: FC<{
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
             >
                 <ul>
-                    <li className={cn({ disabled: !hasChallengeDetailsAccess })}>
+                    <li
+                        className={cn({ disabled: !hasChallengeDetailsAccess })}
+                    >
                         {hasChallengeDetailsAccess && (
                             <a
                                 href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.challenge.id}`}
@@ -250,7 +305,9 @@ const Actions: FC<{
                                 Challenge Details
                             </a>
                         )}
-                        {!hasChallengeDetailsAccess && <span>Challenge Details</span>}
+                        {!hasChallengeDetailsAccess && (
+                            <span>Challenge Details</span>
+                        )}
                     </li>
                     <li className={cn({ disabled: !hasWorkManagerAccess })}>
                         {hasWorkManagerAccess && (

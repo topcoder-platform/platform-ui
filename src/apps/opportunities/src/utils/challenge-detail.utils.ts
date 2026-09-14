@@ -1,0 +1,333 @@
+import { EnvironmentConfig } from '~/config'
+import { getSafeCmsLink } from '~/libs/cms'
+
+import {
+    ChallengeMetadata,
+    ChallengeOpportunity,
+} from '../models'
+
+export interface ChallengeSidebarLink {
+    label: string
+    url: string
+}
+
+/** Submission experiences selected by Work Manager challenge metadata. */
+export type ChallengeSubmissionMode = 'url' | 'zip'
+
+/**
+ * Builds the canonical Review App challenge-detail destination.
+ *
+ * The Review App uses its own configured origin in deployed environments, so
+ * Opportunities must not route these links through the current www host.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded active-challenge detail URL.
+ * @throws Does not throw.
+ */
+export function challengeReviewAppUrl(
+    challengeId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}/challenge-details`
+}
+
+/**
+ * Builds the Review App destination for one AI workflow run and submission.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param submissionId Review API submission identifier.
+ * @param workflowId workflow identifier returned at the top level of the run.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded workflow-review URL.
+ * @throws Does not throw.
+ */
+export function submissionAiReviewAppUrl(
+    challengeId: string,
+    submissionId: string,
+    workflowId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}`
+        + `/reviews/${encodeURIComponent(submissionId)}`
+        + `?workflowId=${encodeURIComponent(workflowId)}`
+}
+
+/**
+ * Builds a member profile URL on the environment-specific Profiles app.
+ *
+ * @param handle public Topcoder handle.
+ * @param profileBaseUrl configured Profiles app origin, optionally overridden by tests.
+ * @returns absolute, safely encoded member profile URL.
+ * @throws Does not throw.
+ */
+export function memberProfileUrl(
+    handle: string,
+    profileBaseUrl: string = EnvironmentConfig.URLS.USER_PROFILE,
+): string {
+    return `${profileBaseUrl.replace(/\/+$/, '')}/${encodeURIComponent(handle)}`
+}
+
+/**
+ * Returns a case-insensitive Challenge API metadata value.
+ *
+ * @param metadata arbitrary metadata list from Challenge API.
+ * @param name recognized metadata name.
+ * @returns the first matching raw value, or undefined.
+ * @throws Does not throw.
+ */
+export function challengeMetadataValue(
+    metadata: ChallengeMetadata[] | undefined,
+    name: string,
+): unknown {
+    const normalizedName = name.trim()
+        .toLowerCase()
+    return metadata?.find(item => item.name.trim()
+        .toLowerCase() === normalizedName)?.value
+}
+
+/**
+ * Resolves whether a challenge accepts a URL or the standard ZIP archive.
+ *
+ * Work Manager persists this choice as `submission_type` metadata. URL mode
+ * is deliberately opt-in: missing, malformed, and unsupported values retain
+ * the established ZIP flow.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns `url` only for an exact case-insensitive metadata value; otherwise `zip`.
+ * @throws Does not throw.
+ */
+export function challengeSubmissionMode(challenge: ChallengeOpportunity): ChallengeSubmissionMode {
+    const value = challengeMetadataValue(challenge.metadata, 'submission_type')
+    return typeof value === 'string' && value.trim()
+        .toLowerCase() === 'url'
+        ? 'url'
+        : 'zip'
+}
+
+/**
+ * Parses the legacy file-types metadata into unique member-facing labels.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns trimmed file types, or an empty list for malformed metadata.
+ * @throws Does not throw.
+ */
+export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
+    const raw = challengeMetadataValue(challenge.metadata, 'fileTypes')
+    try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+        if (!Array.isArray(parsed)) {
+            if (typeof parsed === 'string' && parsed.trim()) return [parsed.trim()]
+
+            return []
+        }
+
+        const seen = new Set<string>()
+        return parsed.reduce<string[]>((result, item) => {
+            if (typeof item !== 'string' || !item.trim()) return result
+            const value = item.trim()
+            const key = value.toLowerCase()
+            if (!seen.has(key)) {
+                seen.add(key)
+                result.push(value)
+            }
+
+            return result
+        }, [])
+    } catch (error) {
+        if (typeof raw === 'string' && raw.trim()) return [raw.trim()]
+        return []
+    }
+}
+
+/**
+ * Reads the legacy design-challenge stock-photography allowance.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns true only when Work Manager explicitly enables stock art.
+ * @throws Does not throw.
+ */
+export function challengeAllowsStockArt(challenge: ChallengeOpportunity): boolean {
+    return String(challengeMetadataValue(challenge.metadata, 'allowStockArt'))
+        .trim()
+        .toLowerCase() === 'true'
+}
+
+/**
+ * Converts an arbitrary value to a positive integer.
+ *
+ * @param value candidate numeric value.
+ * @returns a positive integer, or undefined for invalid/unlimited values.
+ * @throws Does not throw.
+ */
+function positiveInteger(value: unknown): number | undefined {
+    const numericValue = Number(value)
+    return Number.isInteger(numericValue) && numericValue > 0 ? numericValue : undefined
+}
+
+/**
+ * Reads the legacy submission-limit metadata contract.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns positive configured limit, or undefined for unlimited/malformed data.
+ * @throws Does not throw.
+ */
+export function challengeSubmissionLimit(challenge: ChallengeOpportunity): number | undefined {
+    const raw = challengeMetadataValue(challenge.metadata, 'submissionLimit')
+    try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return positiveInteger(parsed)
+        }
+
+        const value = parsed as Record<string, unknown>
+        const limited = value.limit === true || String(value.limit)
+            .toLowerCase() === 'true'
+        const unlimited = value.unlimited === true || String(value.unlimited)
+            .toLowerCase() === 'true'
+        if (limited) return positiveInteger(value.count)
+        if (unlimited || 'limit' in value || 'unlimited' in value) return undefined
+        return positiveInteger(value.count)
+    } catch (error) {
+        return positiveInteger(raw)
+    }
+}
+
+/**
+ * Returns an approved HTTP(S) URL from arbitrary Challenge API data.
+ *
+ * @param value candidate authored destination.
+ * @returns normalized HTTP(S) URL, or undefined for unsafe/retired/local URLs.
+ * @throws Does not throw.
+ */
+function safeChallengeLink(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined
+    const safeUrl = getSafeCmsLink(value.trim())
+    if (!safeUrl || !/^(?:https?:)?\/\//i.test(safeUrl)) return undefined
+    try {
+        const url = new URL(safeUrl, 'https://topcoder-dev.com')
+        return ['http:', 'https:'].includes(url.protocol) ? url.toString() : undefined
+    } catch (error) {
+        return undefined
+    }
+}
+
+/**
+ * Returns safe, authored right-rail links without synthesizing repository or
+ * environment destinations absent from Challenge API metadata.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns safe environment, repository, discussion, and attachment links.
+ * @throws Does not throw.
+ */
+export function challengeSidebarLinks(challenge: ChallengeOpportunity): {
+    attachments: ChallengeSidebarLink[]
+    challengeLinks: ChallengeSidebarLink[]
+} {
+    const metadataLinks = [
+        { label: 'Environment', value: challengeMetadataValue(challenge.metadata, 'environment') },
+        { label: 'Code Repository', value: challengeMetadataValue(challenge.metadata, 'codeRepo') },
+        {
+            label: 'Screening Scorecard',
+            value: challengeScorecardUrl(challenge.legacy?.screeningScorecardId),
+        },
+        {
+            label: 'Review Scorecard',
+            value: challengeScorecardUrl(challenge.legacy?.reviewScorecardId),
+        },
+    ]
+    const discussions = (challenge.discussions ?? []).map(discussion => ({
+        label: discussion.name?.trim() || 'Challenge Discussion',
+        value: discussion.url,
+    }))
+    const challengeLinks = [...metadataLinks, ...discussions]
+        .map(link => ({ label: link.label, url: safeChallengeLink(link.value) }))
+        .filter((link): link is ChallengeSidebarLink => !!link.url)
+    const attachments = (challenge.attachments ?? [])
+        .map(attachment => ({
+            label: attachment.name?.trim() || attachment.description?.trim() || 'Challenge attachment',
+            url: safeChallengeLink(attachment.url),
+        }))
+        .filter((link): link is ChallengeSidebarLink => !!link.url)
+    return { attachments, challengeLinks }
+}
+
+/**
+ * Builds an environment-aware legacy Online Review scorecard URL.
+ *
+ * @param scorecardId legacy scorecard identifier exposed by Challenge API.
+ * @param onlineReviewUrl configured Online Review base, optionally overridden by tests.
+ * @returns safe scorecard URL, or undefined for malformed/nonpositive IDs or configuration.
+ * @throws Does not throw.
+ */
+export function challengeScorecardUrl(
+    scorecardId: number | undefined,
+    onlineReviewUrl: string = EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL,
+): string | undefined {
+    if (!Number.isInteger(scorecardId) || Number(scorecardId) <= 0) return undefined
+    try {
+        const url = new URL(onlineReviewUrl)
+        const basePath = url.pathname.replace(/\/+$/, '')
+        url.pathname = `${basePath.endsWith('/review') ? basePath : `${basePath}/review`}`
+            + '/actions/ViewScorecard'
+        url.search = ''
+        url.searchParams.set('scid', String(scorecardId))
+        return safeChallengeLink(url.toString())
+    } catch (error) {
+        return undefined
+    }
+}
+
+/**
+ * Derives the public Vanilla web origin from its environment-specific API URL.
+ * Production intentionally retains the established discussions.topcoder.com
+ * member experience even though its API is hosted at vanilla.topcoder.com.
+ *
+ * @param v2Url configured Vanilla API v2 URL.
+ * @returns member-facing web origin, or undefined for unsafe configuration.
+ * @throws Does not throw.
+ */
+function vanillaWebOrigin(v2Url: string): string | undefined {
+    try {
+        const url = new URL(v2Url)
+        if (!['http:', 'https:'].includes(url.protocol)) return undefined
+        return url.hostname === 'vanilla.topcoder.com'
+            ? 'https://discussions.topcoder.com'
+            : url.origin
+    } catch (error) {
+        return undefined
+    }
+}
+
+/**
+ * Builds an environment-aware forum URL, preferring an authored safe Challenge
+ * discussion and falling back to the legacy forum identifier.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @param v2Url optional Vanilla API URL override used by tests.
+ * @returns safe discussion/forum URL, forum home, or undefined for bad config.
+ * @throws Does not throw.
+ */
+export function challengeForumUrl(
+    challenge: ChallengeOpportunity,
+    v2Url: string = EnvironmentConfig.VANILLA_FORUM.V2_URL,
+): string | undefined {
+    const discussionUrl = (challenge.discussions ?? [])
+        .map(discussion => safeChallengeLink(discussion.url))
+        .find(Boolean)
+    if (discussionUrl) return discussionUrl
+
+    const origin = vanillaWebOrigin(v2Url)
+    if (!origin) return undefined
+    const forumId = challenge.legacy?.forumId ?? challenge.forumId
+    if (!forumId) return undefined
+    const design = typeof challenge.track === 'string'
+        ? challenge.track.toLowerCase() === 'design'
+        : challenge.track?.name?.toLowerCase() === 'design'
+    const query = design ? `module=ThreadList&forumID=${forumId}` : `module=Category&categoryID=${forumId}`
+    return `${origin}/?${query}`
+}

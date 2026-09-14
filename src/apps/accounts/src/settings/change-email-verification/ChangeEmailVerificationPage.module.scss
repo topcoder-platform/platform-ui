@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.layout {
+    margin: $sp-8 auto !important;
+}
+
+.card {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    margin: $sp-10 auto;
+    max-width: 620px;
+    text-align: center;
+
+    p {
+        margin: 0;
+    }
+}
+
+.error {
+    color: $red-100;
+}

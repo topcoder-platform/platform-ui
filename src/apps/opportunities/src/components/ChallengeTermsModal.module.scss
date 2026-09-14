@@ -1,0 +1,263 @@
+.compactModal,
+.termsModal {
+    border-radius: 8px !important;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1) !important;
+    padding: 32px !important;
+
+    > hr,
+    > div:last-child > hr {
+        display: none;
+    }
+
+    > div:last-child {
+        margin-top: 24px;
+    }
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 24px;
+        line-height: 38px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    :global(.modal-body) {
+        margin: 24px 0 0;
+        overflow: visible !important;
+        padding: 0;
+    }
+}
+
+.compactModal {
+    max-width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    width: 600px !important;
+}
+
+.termsModal {
+    max-width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    width: 960px !important;
+}
+
+.body {
+    color: #161616;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    gap: 12px;
+    line-height: 22px;
+
+    p,
+    ul,
+    h3 {
+        margin: 0;
+    }
+
+    ul {
+        list-style: disc;
+        padding-left: 21px;
+
+        ul {
+            padding-left: 28px;
+        }
+    }
+
+    a {
+        color: #007d79;
+        font-weight: 400;
+    }
+
+    label {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        gap: 8px;
+
+        input {
+            accent-color: #007d79;
+            height: 16px;
+            margin: 0;
+            width: 16px;
+        }
+    }
+}
+
+.compactModal .body {
+    font-size: 14px;
+    gap: 8px;
+    line-height: 20px;
+
+    label {
+        font-size: 16px;
+        line-height: 22px;
+        min-height: 32px;
+    }
+}
+
+.progress {
+    color: #6f7787;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.modalAction {
+    border-radius: 4px !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    font-size: 16px !important;
+    height: 38px;
+    line-height: 22px !important;
+    padding: 8px 24px !important;
+    text-transform: none !important;
+}
+
+.loading,
+.error {
+    align-items: center;
+    border-radius: 4px;
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+}
+
+.loading {
+    background: #f5f7fa;
+}
+
+.error {
+    background: #fcf4d6;
+    color: #8e6a00;
+    justify-content: space-between;
+
+    button {
+        background: none;
+        border: 0;
+        color: #007d79;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+    }
+}
+
+.terms {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 532px;
+    overflow: auto;
+    padding: 16px 24px 24px;
+}
+
+.term {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    h3,
+    h1,
+    h2,
+    h4 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 600;
+        margin: 0;
+        text-transform: none;
+    }
+
+    > div {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        line-height: 22px;
+
+        p,
+        li,
+        a,
+        span {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+    }
+
+    > div > :first-child {
+        margin-top: 0;
+    }
+
+    p,
+    ul,
+    ol {
+        margin: 0 0 12px;
+    }
+
+    ul,
+    ol {
+        padding-left: 24px;
+    }
+
+    small {
+        color: #137d60;
+        font-weight: 700;
+    }
+
+    > a {
+        align-items: center;
+        display: inline-flex;
+        gap: 4px;
+
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
+}
+
+.docuSign {
+    min-height: min(532px, 60vh);
+    position: relative;
+    width: 100%;
+}
+
+.docuSignFrame {
+    border: 0;
+    display: block;
+    height: min(532px, 60vh);
+    width: 100%;
+}
+
+.docuSignStatus {
+    align-items: center;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    inset: 0;
+    justify-content: center;
+    min-height: min(532px, 60vh);
+    position: absolute;
+    text-align: center;
+    z-index: 1;
+}
+
+@media (max-width: 700px) {
+    .compactModal,
+    .termsModal {
+        padding: 24px 16px !important;
+
+        :global(.modal-body) {
+            margin-top: 24px;
+        }
+    }
+
+    .terms {
+        padding: 16px;
+    }
+}

@@ -19,6 +19,7 @@ import {
     buildWorkAppChallengeUrl,
     buildWorkManagerAssignmentUrl,
     buildWorkManagerProjectUrl,
+    formatAuditActionValue,
     getPaymentDetailsSummaryConfig,
     isChallengePaymentType,
     resolvePaymentAgreementSummary,
@@ -264,11 +265,11 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                     {beforeFrom}
                     from
                     {' '}
-                    <strong>{fromValue}</strong>
+                    <strong>{formatAuditActionValue(fromValue)}</strong>
                     {' '}
                     to
                     {' '}
-                    <strong>{toValue}</strong>
+                    <strong>{formatAuditActionValue(toValue)}</strong>
                 </>
             )
         }

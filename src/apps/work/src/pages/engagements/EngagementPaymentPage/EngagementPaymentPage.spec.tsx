@@ -248,7 +248,8 @@ describe('EngagementPaymentPage', () => {
             .toEqual(expect.arrayContaining([
                 'Billing Start Date*',
                 'Rate Per Hour*',
-                'Standard Hours Per Week*',
+                'Standard Hours Per Day*',
+                'Payment Cycle*',
             ]))
 
         fireEvent.click(screen.getByRole('button', {

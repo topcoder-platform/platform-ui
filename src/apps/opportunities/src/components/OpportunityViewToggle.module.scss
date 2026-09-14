@@ -1,0 +1,49 @@
+.toggle {
+    display: inline-flex;
+    flex: 0 0 76px;
+    height: 38px;
+    width: 76px;
+
+    button {
+        align-items: center;
+        background: transparent;
+        border: 1px solid #007d79;
+        box-sizing: border-box;
+        cursor: pointer;
+        display: inline-flex;
+        height: 38px;
+        justify-content: center;
+        padding: 8px;
+        width: 38px;
+
+        &:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        &:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #161616;
+            outline-offset: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        &:hover:not(.active) {
+            background: rgba(0, 125, 121, .08);
+        }
+
+        svg {
+            display: block;
+            height: 20px;
+            width: 20px;
+        }
+    }
+
+    .active {
+        background: #007d79;
+        border: 0;
+    }
+}

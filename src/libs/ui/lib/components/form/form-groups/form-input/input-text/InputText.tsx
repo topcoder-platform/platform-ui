@@ -13,6 +13,7 @@ import styles from './InputText.module.scss'
 export type InputTextTypes = 'checkbox' | 'password' | 'text' | 'number' | 'textarea'
 
 export interface InputTextProps {
+    readonly actionElement?: JSX.Element
     readonly autocomplete?: FormInputAutocompleteOption
     readonly checked?: boolean
     readonly className?: string

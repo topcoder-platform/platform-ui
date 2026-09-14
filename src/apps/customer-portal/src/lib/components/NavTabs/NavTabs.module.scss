@@ -68,6 +68,7 @@
                 display: flex;
                 align-items: center;
                 gap: $sp-2;
+                position: relative;
                 &.active {
                     font-weight: 700;
                 }
@@ -104,6 +105,27 @@
                             color: var(--invertButtonColor);
                         }
                     }
+
+                    .hasChildren {
+                        display: block;
+
+                        .submenu {
+                            background: transparent;
+                            border-radius: 0;
+                            box-shadow: none;
+                            display: none;
+                            padding: 0;
+                            position: static;
+
+                            li {
+                                padding: $sp-2 $sp-6 $sp-2 $sp-10;
+                            }
+                        }
+
+                        &.menuOpen .submenu {
+                            display: block;
+                        }
+                    }
                 }
             }
         }
@@ -113,6 +135,76 @@
 .tabLabel {
     display: inline-flex;
     align-items: center;
+}
+
+.menuTrigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    gap: $sp-2;
+    line-height: inherit;
+    padding: 0;
+}
+
+.chevron {
+    flex: 0 0 16px;
+    height: 16px;
+    width: 16px;
+}
+
+.hasChildren {
+    .menuTrigger {
+        width: 100%;
+    }
+
+    .chevron {
+        transition: transform 160ms ease;
+    }
+
+    &:hover,
+    &.menuOpen {
+        z-index: 5;
+    }
+
+    &.menuOpen .chevron {
+        transform: rotate(-180deg);
+    }
+
+    .submenu {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(10, 10, 10, 0.12);
+        display: none;
+        left: 0;
+        min-width: 220px;
+        padding: 8px 0;
+        position: absolute;
+        top: calc(100% - 4px);
+        z-index: 120;
+
+        li {
+            display: block;
+            font-weight: 400;
+            line-height: 22px;
+            margin-left: 0;
+            padding: 10px 16px;
+            white-space: nowrap;
+
+            &:hover,
+            &.active {
+                font-weight: 700;
+            }
+        }
+    }
+
+    &:hover .submenu,
+    &.menuOpen .submenu {
+        display: block;
+    }
 }
 
 .externalIcon {

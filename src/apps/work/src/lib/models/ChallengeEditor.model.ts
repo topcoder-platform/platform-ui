@@ -5,6 +5,7 @@ import {
     ChallengeReviewType,
 } from './Challenge.model'
 import { Attachment } from './Attachment.model'
+import { GiteaTeam } from './GiteaTeam.model'
 import { PrizeSet } from './Prize.model'
 import { Reviewer } from './Reviewer.model'
 import { Skill } from './Skill.model'
@@ -42,6 +43,8 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     id?: string
     /** Whether the challenge is a production test, persisted in challenge metadata. */
     isTestChallenge?: boolean
+    /** Gitea teams challenge participants are synced with, persisted in challenge metadata. */
+    giteaTeams?: GiteaTeam[]
     metadata?: ChallengeMetadata[]
     name: string
     prizeSets?: PrizeSet[]

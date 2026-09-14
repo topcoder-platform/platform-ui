@@ -5,6 +5,11 @@ export type PackedCircle = {
     y: number
 }
 
+export type PackCirclesOptions = {
+    fit?: 'contain' | 'width'
+    padding?: number
+}
+
 function overlaps(
     a: PackedCircle,
     b: PackedCircle,
@@ -49,21 +54,36 @@ function shuffleItems<T>(items: T[], rng: () => number): T[] {
     return shuffled
 }
 
+function resolveAspect(
+    width: number,
+    height: number,
+    fit: PackCirclesOptions['fit'],
+): number {
+    if (fit === 'width') {
+        // Portrait cloud: about two bubbles across, stacked long-ways.
+        return 0.48
+    }
+
+    return Math.min(Math.max(width / Math.max(height, 1), 1), 2.15)
+}
+
 /**
  * Place circles in a tight non-overlapping cluster, then scale uniformly
- * so the pack fits inside the given viewport while staying close together.
- * Placement order is shuffled so the largest bubble is not always centered.
+ * so the pack fits the viewport. `fit: 'width'` keeps bubble size and lets
+ * the pack grow tall so mobile can scroll the long way.
  */
 export function packCircles(
     items: Array<{ id: string; r: number }>,
     width: number,
     height: number,
-    padding: number = 6,
+    options: PackCirclesOptions = {},
 ): PackedCircle[] {
+    const padding = options.padding ?? 6
+    const fit = options.fit ?? 'contain'
     const rng = createRng(items.reduce((seed, item) => seed + hashString(item.id), 1))
     const ordered = shuffleItems(items, rng)
     const placed: PackedCircle[] = []
-    const aspect = Math.min(Math.max(width / Math.max(height, 1), 1), 2.15)
+    const aspect = resolveAspect(width, height, fit)
     const angleOffset = rng() * Math.PI * 2
 
     ordered.forEach(item => {
@@ -111,7 +131,7 @@ export function packCircles(
         })
     })
 
-    if (!placed.length || width <= 0 || height <= 0) {
+    if (!placed.length || width <= 0 || (fit === 'contain' && height <= 0)) {
         return placed
     }
 
@@ -124,9 +144,15 @@ export function packCircles(
     const inset = 16
     const availableWidth = Math.max(width - (inset * 2), 1)
     const availableHeight = Math.max(height - (inset * 2), 1)
-    const scale = Math.min(availableWidth / packWidth, availableHeight / packHeight)
-    const offsetX = inset + ((availableWidth - (packWidth * scale)) / 2)
-    const offsetY = inset + ((availableHeight - (packHeight * scale)) / 2)
+    const scale = fit === 'width'
+        ? Math.min(availableWidth / packWidth, 1.05)
+        : Math.min(availableWidth / packWidth, availableHeight / packHeight)
+    const scaledWidth = packWidth * scale
+    const scaledHeight = packHeight * scale
+    const offsetX = inset + ((availableWidth - scaledWidth) / 2)
+    const offsetY = fit === 'width'
+        ? inset
+        : inset + ((availableHeight - scaledHeight) / 2)
 
     return placed.map(circle => ({
         id: circle.id,
@@ -134,4 +160,12 @@ export function packCircles(
         x: ((circle.x - minX) * scale) + offsetX,
         y: ((circle.y - minY) * scale) + offsetY,
     }))
+}
+
+export function packedBoundsHeight(circles: PackedCircle[], padding: number = 16): number {
+    if (!circles.length) {
+        return 0
+    }
+
+    return Math.max(...circles.map(circle => circle.y + circle.r)) + padding
 }

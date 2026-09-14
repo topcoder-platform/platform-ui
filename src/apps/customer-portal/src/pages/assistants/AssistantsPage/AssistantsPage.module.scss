@@ -1,0 +1,37 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    color: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Nunito Sans', sans-serif;
+    padding: 8px 0 0;
+
+    h1 {
+        color: #151515;
+        font-family: 'Figtree', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 38px;
+        margin-top: 20px;
+        text-transform: none;
+    }
+
+    p {
+        color: #0a0a0a;
+        font-size: 18px;
+        line-height: 25px;
+        margin: 4px 0 0;
+    }
+}
+
+.cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 24px;
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}

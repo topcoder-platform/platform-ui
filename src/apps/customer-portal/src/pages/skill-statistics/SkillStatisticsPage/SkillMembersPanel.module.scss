@@ -2,10 +2,8 @@
 
 .section {
     margin-top: 40px;
-}
 
-.header {
-    h2 {
+    .header h2 {
         color: #151515;
         font-family: 'Figtree', sans-serif;
         font-size: 26px;
@@ -35,9 +33,14 @@
 }
 
 .filters {
+    background: #E9ECEF;
+    border-radius: 8px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding: 16px;
+    height: fit-content;
 }
 
 .search {
@@ -57,7 +60,6 @@
 
         &:focus-visible {
             outline: 2px solid #078477;
-            outline-offset: 1px;
         }
     }
 
@@ -80,9 +82,9 @@
     span {
         color: #0a0a0a;
         font-family: 'Nunito Sans', sans-serif;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 700;
-        line-height: 16px;
+        line-height: 20px;
     }
 
     select {
@@ -101,7 +103,6 @@
 
         &:focus-visible {
             outline: 2px solid #078477;
-            outline-offset: 1px;
         }
     }
 }
@@ -160,23 +161,152 @@ $visible-member-rows: 10;
     th:first-child,
     td:first-child {
         text-align: center;
-        width: 64px;
+        width: 8%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+        width: 35%;
     }
 
     th:nth-child(3),
     td:nth-child(3) {
-        width: 88px;
+        text-align: left;
+        width: 20%;
     }
 
     th:nth-child(4),
     td:nth-child(4) {
-        width: 140px;
+        width: 23%;
     }
 
-    th:last-child,
-    td:last-child {
+    th:nth-child(5),
+    td:nth-child(5) {
+        padding-right: 32px;
         text-align: right;
-        width: 110px;
+        width: 18%;
+    }
+
+    td.empty {
+        color: #545f71;
+        font-size: 14px;
+        height: $row-height * $visible-member-rows;
+        padding: 24px 16px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .detailsRow {
+        display: none;
+    }
+
+    @include ltemd {
+        thead {
+            display: none;
+        }
+
+        th.desktopOnly,
+        td.desktopOnly {
+            display: none;
+        }
+
+        th:first-child,
+        td:first-child {
+            padding-left: 8px;
+            padding-right: 8px;
+            width: 100px;
+            text-align: start;
+        }
+
+        th:nth-child(2),
+        td:nth-child(2) {
+            padding-left: 8px;
+            padding-right: 8px;
+            width: auto;
+        }
+
+        .memberRow {
+            cursor: pointer;
+        }
+
+        .detailsRow {
+            display: table-row;
+
+            td {
+                height: auto;
+                padding: 12px 8px;
+                vertical-align: top;
+            }
+        }
+    }
+}
+
+.toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #767676;
+    cursor: pointer;
+    display: none;
+    flex: 0 0 auto;
+    justify-content: center;
+    margin-left: auto;
+    padding: 8px;
+
+    @include ltemd {
+        display: inline-flex;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #078477;
+        outline-offset: 2px;
+    }
+}
+
+.chevron {
+    display: block;
+    flex: 0 0 20px;
+    height: 20px;
+    transition: transform 160ms ease;
+    width: 20px;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.details {
+    display: none;
+    grid-template-columns: 100px minmax(0, 1fr);
+    margin: 0;
+    row-gap: 10px;
+    column-gap: 50px;
+
+    @include ltemd {
+        display: grid;
+    }
+}
+
+.detail {
+    display: contents;
+    line-height: 20px;
+
+    dt {
+        color: #0a0a0a;
+        font-size: 14px;
+        font-weight: 700;
+        justify-self: end;
+        overflow: visible;
+        padding-right: 8px;
+        white-space: nowrap;
+    }
+
+    dd {
+        color: #1a1a1a;
+        font-size: 14px;
+        font-weight: 400;
+        margin: 0;
+        min-width: 0;
     }
 }
 
@@ -199,6 +329,7 @@ $visible-member-rows: 10;
 
 .memberText {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     min-width: 0;
 }
@@ -257,12 +388,5 @@ $visible-member-rows: 10;
     font-size: 14px;
     line-height: 20px;
     min-width: 19px;
-    text-align: center;
-}
-
-.empty {
-    color: #545f71;
-    font-size: 14px;
-    padding: 24px 16px;
     text-align: center;
 }

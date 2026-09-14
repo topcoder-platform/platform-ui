@@ -1,4 +1,5 @@
 export {
+    globalInstance as xhrGlobalInstance,
     createInstance as xhrCreateInstance,
     requestAsync as xhrRequestAsync,
     deleteAsync as xhrDeleteAsync,

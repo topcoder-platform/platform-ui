@@ -3,6 +3,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -184,6 +185,20 @@ export const SubmissionTypeField: FC = () => {
     }) as string | undefined
     const [groupsById, setGroupsById] = useState<Record<string, Group | undefined>>({})
     const [hasUserSelectedSubmissionType, setHasUserSelectedSubmissionType] = useState(false)
+    /*
+     * Groups whose lookup already ran, so a group the Groups API cannot return - a deleted group, a
+     * group the copilot cannot read, or a failed request - is not requested again. Keying the lookup
+     * off the resolved groups instead would retry those forever, because an unresolved group stays
+     * missing from the resolved map and every retry publishes a new map that reruns the lookup.
+     */
+    const requestedGroupIdsRef = useRef<Set<string>>(new Set<string>())
+    const isMountedRef = useRef<boolean>(true)
+
+    useEffect(() => (
+        (): void => {
+            isMountedRef.current = false
+        }
+    ), [])
 
     const selectedGroupIds = useMemo(
         () => normalizeGroupIds(groupIds),
@@ -202,22 +217,24 @@ export const SubmissionTypeField: FC = () => {
 
     useEffect(() => {
         if (explicitSubmissionType) {
-            return undefined
+            return
         }
 
         const currentSelectedGroupIds = selectedGroupKey
             ? selectedGroupKey.split('|')
             : []
-        const missingGroupIds = currentSelectedGroupIds
-            .filter(groupId => !groupsById[groupId])
+        const pendingGroupIds = currentSelectedGroupIds
+            .filter(groupId => !requestedGroupIdsRef.current.has(groupId))
 
-        if (!missingGroupIds.length) {
-            return undefined
+        if (!pendingGroupIds.length) {
+            return
         }
 
-        let isMounted = true
+        pendingGroupIds.forEach(groupId => {
+            requestedGroupIdsRef.current.add(groupId)
+        })
 
-        Promise.all(missingGroupIds.map(async groupId => {
+        Promise.all(pendingGroupIds.map(async groupId => {
             try {
                 return {
                     group: await fetchGroupById(groupId),
@@ -231,7 +248,7 @@ export const SubmissionTypeField: FC = () => {
             }
         }))
             .then(resolvedGroups => {
-                if (!isMounted) {
+                if (!isMountedRef.current) {
                     return
                 }
 
@@ -246,13 +263,9 @@ export const SubmissionTypeField: FC = () => {
                     ),
                 }))
             })
-
-        return () => {
-            isMounted = false
-        }
+            .catch(() => undefined)
     }, [
         explicitSubmissionType,
-        groupsById,
         selectedGroupKey,
     ])
 

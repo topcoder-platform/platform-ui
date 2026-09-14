@@ -1,0 +1,83 @@
+.container {
+    display: grid;
+    gap: 20px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.createEngagementRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.projectInput {
+    min-width: 280px;
+    border: 1px solid var(--black-20, #ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.section {
+    background: var(--tc-white, #fff);
+    border: 1px solid var(--black-10, #eee);
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.field {
+    display: grid;
+    gap: 4px;
+}
+
+.fieldLabel {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--black-60, #666);
+    text-transform: uppercase;
+}
+
+.fieldValue {
+    font-size: 0.95rem;
+    color: var(--black-100, #111);
+    white-space: pre-wrap;
+}
+
+.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.statusPill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}

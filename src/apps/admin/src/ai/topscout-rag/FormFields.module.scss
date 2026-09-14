@@ -1,0 +1,33 @@
+@import '@libs/ui/styles/includes';
+
+.field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.fieldLabel {
+    margin-bottom: $sp-1;
+    font-family: $font-barlow;
+    font-size: 12px;
+    line-height: 16px;
+    color: $black-100;
+}
+
+.fieldHint {
+    margin-top: $sp-2;
+    font-size: 12px;
+    color: $black-60;
+}
+
+.input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+
+    &:disabled {
+        background: transparent;
+        cursor: not-allowed;
+    }
+}

@@ -1,0 +1,22 @@
+@import '@libs/ui/styles/includes';
+
+.contentLayoutOuter {
+    margin: $sp-8 auto !important;
+}
+
+.container {
+    align-items: center;
+    background: #fff4f4;
+    border: 1px solid #f2c9c9;
+    border-radius: 8px;
+    color: #8a1f1f;
+    display: flex;
+    margin-top: $sp-4;
+    padding: $sp-4;
+}
+
+.message {
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+}

@@ -181,6 +181,37 @@ describe('calculateReviewProgress', () => {
             .toBe(50)
     })
 
+    it('counts an older pending Design checkpoint submission toward progress (PM-6307)', () => {
+        const progress = calculateReviewProgress({
+            challengePhases: [createPhase('Checkpoint Screening')],
+            checkpointReviewRows: [],
+            checkpointScreeningRows: [
+                createScreeningRow('checkpoint-new', 'PASS', {
+                    isLatest: true,
+                    memberId: 'member-one',
+                    reviewStatus: 'COMPLETED',
+                }),
+                createScreeningRow('checkpoint-older', '-', {
+                    isLatest: false,
+                    memberId: 'member-one',
+                    reviewStatus: 'PENDING',
+                }),
+                createScreeningRow('checkpoint-other', 'PASS', {
+                    isLatest: true,
+                    memberId: 'member-two',
+                    reviewStatus: 'COMPLETED',
+                }),
+            ],
+            currentPhaseName: 'Checkpoint Screening',
+            isDesignChallenge: true,
+            reviewRows: [],
+            screeningRows: [],
+        })
+
+        expect(progress)
+            .toBe(67)
+    })
+
     it('counts each reviewer assignment in multi-screener phase progress', () => {
         const screeningRows: Screening[] = [
             createScreeningRow('submission-one', '-', {

@@ -1,0 +1,304 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
+
+.root {
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-lg;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.viewport {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $sp-6;
+}
+
+.empty {
+    align-items: center;
+    color: $tc-2026-muted;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    font-size: 14px;
+    gap: 16px;
+    justify-content: center;
+    text-align: center;
+
+    h4 {
+        color: $tc-2026-ink;
+        font-family: $tc-2026-font-heading;
+        font-size: 17px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    p {
+        margin: 0;
+        max-width: 420px;
+    }
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 480px;
+}
+
+.suggestion {
+    background-color: rgba($tc-2026-teal, .08);
+    border: 1px solid rgba($tc-2026-teal, .25);
+    border-radius: 999px;
+    color: $tc-2026-teal;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    transition: background-color .15s ease, border-color .15s ease;
+
+    &:hover {
+        background-color: rgba($tc-2026-teal, .14);
+        border-color: $tc-2026-teal;
+    }
+}
+
+.userMessage,
+.assistantMessage {
+    border-radius: $tc-2026-radius-lg;
+    font-size: 14px;
+    line-height: 22px;
+    max-width: 75%;
+    padding: 10px 14px;
+}
+
+.userMessage {
+    align-self: flex-end;
+    background-color: $tc-2026-teal;
+    color: $tc-2026-surface;
+    white-space: pre-wrap;
+}
+
+.assistantMessage {
+    align-self: flex-start;
+    background-color: $tc-2026-canvas;
+    color: $tc-2026-body;
+}
+
+.toolCall {
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-md;
+    margin: 4px 0 16px;
+    overflow: hidden;
+    white-space: normal;
+}
+
+.toolCallHeader {
+    align-items: center;
+    background-color: $tc-2026-canvas;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    padding: 6px 10px;
+    user-select: none;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+
+    &::marker {
+        content: '';
+    }
+}
+
+.toolCallChevron {
+    color: $tc-2026-teal;
+    flex: 0 0 auto;
+    height: 14px;
+    transition: transform 0.15s ease;
+    width: 14px;
+
+    .toolCall[open] & {
+        transform: rotate(180deg);
+    }
+}
+
+.toolCallName {
+    color: $tc-2026-ink;
+    flex: 1 1 auto;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.toolCallStatus {
+    align-items: center;
+    color: $tc-2026-teal;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 5px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.toolCallDots {
+    .thinkingDot {
+        background-color: currentcolor;
+        height: 3px;
+        width: 3px;
+    }
+}
+
+.thinking {
+    padding: 12px 14px;
+}
+
+.thinkingDots {
+    align-items: center;
+    display: inline-flex;
+    gap: 4px;
+}
+
+.thinkingDot {
+    animation: thinkingBounce 1.2s ease-in-out infinite;
+    background-color: $tc-2026-border-strong;
+    border-radius: 50%;
+    height: 6px;
+    width: 6px;
+
+    &:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+}
+
+@keyframes thinkingBounce {
+    0%,
+    60%,
+    100% {
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+.toolCallError {
+    color: $tc-2026-danger;
+}
+
+.toolCallSection {
+    border-top: 1px solid $tc-2026-border;
+    padding: 8px 10px;
+}
+
+.toolCallLabel {
+    color: $tc-2026-muted;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.toolCallBody {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    line-height: 18px;
+    margin: 0;
+    max-height: 240px;
+    overflow: auto;
+    white-space: pre;
+}
+
+.composer {
+    align-items: flex-end;
+    border-top: 1px solid $tc-2026-border;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: $sp-4;
+}
+
+.memoryHint {
+    color: $tc-2026-muted;
+    flex: 0 0 auto;
+    font-size: 11px;
+    margin: 0;
+    padding: 0 $sp-4 $sp-3;
+    text-align: right;
+}
+
+.input {
+    background-color: $tc-2026-surface;
+    border: 1px solid $tc-2026-border-strong;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-body;
+    flex: 1 1 auto;
+    font-family: $tc-2026-font-body;
+    font-size: 14px;
+    max-height: 120px;
+    padding: 10px 12px;
+    resize: none;
+
+    &:focus {
+        border-color: $tc-2026-teal;
+        outline: none;
+    }
+}
+
+.send,
+.cancel {
+    border: none;
+    border-radius: $tc-2026-radius-sm;
+    color: $tc-2026-surface;
+    cursor: pointer;
+    flex: 0 0 auto;
+    font-family: $tc-2026-font-body;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: background-color .15s ease;
+}
+
+.send {
+    background-color: $tc-2026-teal-bright;
+
+    &:hover {
+        background-color: $tc-2026-teal;
+    }
+
+    &:disabled {
+        background-color: $tc-2026-border-strong;
+        cursor: not-allowed;
+    }
+}
+
+.cancel {
+    background-color: $tc-2026-ink-raised;
+
+    &:hover {
+        background-color: $tc-2026-ink;
+    }
+}

@@ -14,6 +14,7 @@ import styles from './InputWrapper.module.scss'
 export const optional: string = '(optional)'
 
 interface InputWrapperProps {
+    readonly actionElement?: JSX.Element
     readonly children: ReactNode
     readonly className?: string
     readonly classNameWrapper?: string
@@ -77,6 +78,11 @@ const InputWrapper = forwardRef<HTMLDivElement, InputWrapperProps>((props: Input
                 onBlur={clearFocusStyle}
                 onFocus={setStyleForFocus}
             >
+                {props.actionElement && (
+                    <div className={styles.action}>
+                        {props.actionElement}
+                    </div>
+                )}
                 <label
                     className={styles.label}
                     role='presentation'

@@ -1,6 +1,7 @@
 import {
     Dispatch,
     FC,
+    KeyboardEvent,
     MouseEvent,
     SetStateAction,
     useCallback,
@@ -28,6 +29,7 @@ import styles from './NavTabs.module.scss'
 const NavTabs: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const [isOpen, setIsOpen] = useState<boolean>(false)
+    const [openMenuId, setOpenMenuId] = useState<string>()
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
 
@@ -59,7 +61,19 @@ const NavTabs: FC = () => {
 
     const triggerTab = useCallback(() => {
         setIsOpen(!isOpen)
+        setOpenMenuId(undefined)
     }, [isOpen])
+
+    const closeMenus = useCallback(() => {
+        setIsOpen(false)
+        setOpenMenuId(undefined)
+    }, [])
+
+    const navigateToTab = useCallback((tabId: string) => {
+        setActiveTab(tabId)
+        closeMenus()
+        navigate(`${rootRoute}/${tabId}`)
+    }, [closeMenus, navigate])
 
     const handleTabClick = useCallback(
         (event: MouseEvent<HTMLLIElement>) => {
@@ -73,19 +87,36 @@ const NavTabs: FC = () => {
             }
 
             if (tabUrl) {
-                setIsOpen(false)
+                closeMenus()
                 window.open(tabUrl, '_blank', 'noopener,noreferrer')
                 return
             }
 
-            setActiveTab(tabId)
-            setIsOpen(false)
-            navigate(`${rootRoute}/${tabId}`)
+            navigateToTab(tabId)
         },
-        [navigate],
+        [closeMenus, navigateToTab],
     )
 
-    useClickOutside(triggerRef.current, () => setIsOpen(false))
+    const toggleMenu = useCallback((event: MouseEvent<HTMLElement>, tabId: string) => {
+        event.stopPropagation()
+        setOpenMenuId(current => (current === tabId ? undefined : tabId))
+    }, [])
+
+    const handleMenuKeyDown = useCallback((event: KeyboardEvent<HTMLElement>) => {
+        if (event.key === 'Escape') {
+            setOpenMenuId(undefined)
+        }
+    }, [])
+
+    const handleChildClick = useCallback((
+        event: MouseEvent<HTMLLIElement>,
+        childId: string,
+    ) => {
+        event.stopPropagation()
+        navigateToTab(childId)
+    }, [navigateToTab])
+
+    useClickOutside(triggerRef.current, closeMenus)
 
     return (
         <div
@@ -101,7 +132,66 @@ const NavTabs: FC = () => {
                 </div>
                 <ul className={styles.tab}>
                     {tabs.map(tab => {
-                        const isActive = tab.id === activeTab && !tab.url
+                        const hasChildren = Boolean(tab.children?.length)
+                        const isChildActive = tab.children?.some(child => (
+                            pathname === `/${child.id}`
+                            || pathname.startsWith(`/${child.id}/`)
+                        ))
+                        const isActive = hasChildren
+                            ? Boolean(isChildActive) || tab.id === activeTab
+                            : tab.id === activeTab && !tab.url
+                        const isMenuOpen = openMenuId === tab.id
+
+                        if (hasChildren) {
+                            return (
+                                <li
+                                    className={classNames(
+                                        styles.hasChildren,
+                                        isActive && styles.active,
+                                        isMenuOpen && styles.menuOpen,
+                                    )}
+                                    key={tab.id}
+                                >
+                                    <button
+                                        aria-expanded={isMenuOpen}
+                                        aria-haspopup='true'
+                                        className={styles.menuTrigger}
+                                        onClick={function onClick(event: MouseEvent<HTMLButtonElement>) {
+                                            toggleMenu(event, tab.id)
+                                        }}
+                                        onKeyDown={handleMenuKeyDown}
+                                        type='button'
+                                    >
+                                        <span className={styles.tabLabel}>{tab.title}</span>
+                                        <IconOutline.ChevronDownIcon
+                                            aria-hidden='true'
+                                            className={styles.chevron}
+                                        />
+                                    </button>
+                                    <ul className={styles.submenu}>
+                                        {tab.children?.map(child => {
+                                            const isChildItemActive = pathname === `/${child.id}`
+                                                || pathname.startsWith(`/${child.id}/`)
+
+                                            return (
+                                                <li
+                                                    className={isChildItemActive ? styles.active : ''}
+                                                    data-tab-id={child.id}
+                                                    key={child.id}
+                                                    onClick={function onClick(
+                                                        event: MouseEvent<HTMLLIElement>,
+                                                    ) {
+                                                        handleChildClick(event, child.id)
+                                                    }}
+                                                >
+                                                    {child.title}
+                                                </li>
+                                            )
+                                        })}
+                                    </ul>
+                                </li>
+                            )
+                        }
 
                         return (
                             <li

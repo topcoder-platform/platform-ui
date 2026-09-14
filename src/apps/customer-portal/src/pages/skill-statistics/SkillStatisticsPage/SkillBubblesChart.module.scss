@@ -8,8 +8,8 @@
     width: 100%;
 
     @include ltemd {
-        height: 420px;
-        min-height: 420px;
+        height: auto;
+        min-height: 640px;
     }
 }
 
@@ -55,12 +55,28 @@
     justify-content: center;
     overflow: hidden;
     width: 80%;
+}
 
-    svg {
-        color: #fff;
-        flex: 0 0 auto;
-        margin-bottom: 4px;
-    }
+.materialIcon {
+    color: #fff;
+    direction: ltr;
+    display: block;
+    flex: 0 0 auto;
+    font-family: 'Material Symbols Rounded';
+    font-feature-settings: 'liga';
+    font-style: normal;
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 1;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-transform: none;
+    user-select: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
 }
 
 .label {
@@ -99,7 +115,7 @@
         border-top: 8px solid #0f172a;
         content: '';
         height: 0;
-        left: 50%;
+        left: var(--arrow-x, 50%);
         position: absolute;
         top: 100%;
         transform: translateX(-50%);
@@ -144,6 +160,12 @@
             top: var(--arrow-offset, 50%);
             transform: translateY(-50%);
         }
+    }
+
+    &.anchored {
+        position: absolute;
+        width: min(320px, calc(100% - 16px));
+        z-index: 5;
     }
 }
 

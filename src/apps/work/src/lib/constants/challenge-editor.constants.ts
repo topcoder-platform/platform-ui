@@ -160,3 +160,9 @@ export const REVIEW_TYPES = {
 export const AUTOCOMPLETE_MIN_LENGTH = 3
 
 export const AUTOCOMPLETE_DEBOUNCE_TIME_MS = 300
+
+/** Minimum keyword length before the Gitea team search is called. */
+export const GITEA_TEAM_SEARCH_MIN_LENGTH = 2
+
+/** Idle time before a Gitea team keystroke reaches the review API. */
+export const GITEA_TEAM_SEARCH_DEBOUNCE_TIME_MS = 500

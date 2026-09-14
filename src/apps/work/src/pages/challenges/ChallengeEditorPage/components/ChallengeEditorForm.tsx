@@ -162,6 +162,9 @@ import {
     FunChallengeField,
 } from './FunChallengeField'
 import {
+    GiteaTeamsField,
+} from './GiteaTeamsField'
+import {
     GroupsField,
 } from './GroupsField'
 import {
@@ -4594,6 +4597,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             ? <ShowDashboardField disabled={isReadOnly} />
                                             : undefined}
                                         <TestChallengeField disabled={isReadOnly} />
+                                    </div>
+                                </section>
+
+                                <section className={styles.section}>
+                                    <h3 className={styles.sectionTitle}>Git</h3>
+                                    <div className={styles.grid}>
+                                        <GiteaTeamsField disabled={isReadOnly} />
                                     </div>
                                 </section>
 

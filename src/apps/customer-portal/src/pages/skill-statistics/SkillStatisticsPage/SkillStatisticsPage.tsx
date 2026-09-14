@@ -114,6 +114,7 @@ const SkillStatisticsPage: FC = () => {
                 <SkillMembersPanel
                     category={selectedCategory}
                     countryFilter={countryFilter}
+                    key={selectedCategory.id}
                     members={members || []}
                     onCountryChange={setCountryFilter}
                     onSearchChange={setSearch}

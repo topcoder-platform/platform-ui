@@ -37,3 +37,70 @@
         }
     }
 }
+
+.marketing {
+    border-bottom: 1px solid $black-10;
+    margin-bottom: $sp-8;
+    padding-bottom: $sp-8;
+
+    h4 {
+        margin-bottom: $sp-3;
+    }
+
+    p {
+        margin: $sp-3 0;
+    }
+}
+
+.emailCategories {
+    border: 0;
+    margin: $sp-5 0;
+    padding: 0;
+}
+
+.preferenceLegend {
+    font-weight: 700;
+    margin-bottom: $sp-3;
+}
+
+.emailCategory {
+    display: flex;
+    align-items: flex-start;
+    gap: $sp-3;
+    padding: $sp-3 0;
+    cursor: pointer;
+
+    input {
+        accent-color: $turq-160;
+        flex-shrink: 0;
+        height: 20px;
+        margin-top: 2px;
+        width: 20px;
+    }
+
+    span span {
+        display: block;
+        margin-top: $sp-1;
+        color: $black-60;
+    }
+}
+
+.preferenceError {
+    color: #a32727;
+}
+
+.deliveryNotice {
+    background: $black-5;
+    border-radius: 4px;
+    padding: $sp-3;
+}
+
+.preferenceHint {
+    color: $black-60;
+    font-size: 14px;
+    padding-bottom: $sp-3;
+}
+
+.preferenceSaved {
+    color: $turq-160;
+}

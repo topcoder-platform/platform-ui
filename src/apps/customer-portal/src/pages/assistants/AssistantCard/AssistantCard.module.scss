@@ -1,0 +1,82 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    background-color: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    display: flex;
+    align-items: stretch;
+    color: $black-100;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+        border-color: $black-20;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    @include ltesm {
+        flex-direction: column;
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: $sp-6;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.title {
+    color: $black-100;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 28px;
+    margin: 0;
+    text-transform: none;
+}
+
+.description {
+    color: #545f71;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    margin: 0;
+}
+
+.agentRail {
+    display: flex;
+    flex: 0 0 104px;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-4;
+    background-color: $black-5;
+    border-left: 1px solid $black-10;
+
+    @include ltesm {
+        flex: 0 0 auto;
+        border-left: none;
+        border-top: 1px solid $black-10;
+    }
+}
+
+.iconBadge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-3;
+    border-radius: 50%;
+    background-color: $tc-white;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    color: $blue-110;
+}

@@ -1104,7 +1104,10 @@ export const EngagementPaymentPage: FC = () => {
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>Payment Cycle</span>
+                                                <span className={styles.label}>
+                                                    Payment Cycle
+                                                    <span aria-hidden='true' className={styles.required}>*</span>
+                                                </span>
                                                 <span className={styles.value}>{formatPaymentCycle(assignment.paymentCycle)}</span>
                                             </div>
                                             <div>

@@ -28,6 +28,10 @@
 
 ## Validation Rules
 
+In the simplified Design reviewer editor, the selected copilot controls Checkpoint Review, Review,
+and Approval assignments. Resource hydration restores saved screeners without overwriting those
+copilot-controlled assignments, including after a manual save resets the form to clean state.
+
 The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/challenge-editor.schema.ts`.
 
 - `name`: required, max 200 chars; special and non-ASCII characters are allowed.

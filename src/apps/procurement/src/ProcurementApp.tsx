@@ -2,7 +2,7 @@
 /**
  * Shell for the hidden procurement app.
  */
-import { FC, useContext, useMemo } from 'react'
+import { FC, useContext, useEffect, useMemo } from 'react'
 import { NavLink, Outlet, Routes } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -19,6 +19,7 @@ import {
 } from './config/routes.config'
 import { toolTitle } from './procurement-app.routes'
 import styles from './ProcurementApp.module.scss'
+import './styles/index.scss'
 
 interface ProcurementNavigationItem {
     label: string
@@ -57,6 +58,11 @@ const navigationItems: ProcurementNavigationItem[] = [
 const ProcurementApp: FC = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(() => getChildRoutes(toolTitle), [getChildRoutes])
+
+    useEffect(() => {
+        document.body.classList.add('procurement-app')
+        return () => document.body.classList.remove('procurement-app')
+    }, [])
 
     return (
         <ContentLayout

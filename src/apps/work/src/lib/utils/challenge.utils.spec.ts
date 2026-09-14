@@ -116,6 +116,26 @@ describe('challenge utils', () => {
                 })
         })
 
+        it('surfaces cancelled provisional runs superseded by a newer submission', () => {
+            expect(getSubmissionTestProgress({
+                reviewSummation: [
+                    {
+                        isProvisional: true,
+                        metadata: {
+                            testProcess: 'provisional',
+                            testProgress: 1,
+                            testStatus: 'CANCELLED',
+                        },
+                    },
+                ],
+            }))
+                .toEqual({
+                    process: 'provisional',
+                    progressPercent: '100%',
+                    status: 'CANCELLED',
+                })
+        })
+
         it('prefers a completed provisional process over a later example process', () => {
             expect(getSubmissionTestProgress({
                 reviewSummation: [

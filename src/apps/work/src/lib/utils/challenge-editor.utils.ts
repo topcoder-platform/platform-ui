@@ -11,6 +11,7 @@ import {
 import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
+    GITEA_METADATA_FIELD,
     IS_TEST_CHALLENGE_METADATA_FIELD,
 } from '../constants'
 import {
@@ -31,7 +32,9 @@ import {
 
 import {
     booleanToMetadata,
+    giteaTeamsToMetadata,
     metadataToBoolean,
+    metadataToGiteaTeams,
 } from './metadata.utils'
 
 interface BillingInfo {
@@ -1029,6 +1032,7 @@ export function transformChallengeToFormData(
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
+        giteaTeams: metadataToGiteaTeams(metadata, GITEA_METADATA_FIELD),
         groups: normalizeStringArray(challenge?.groups),
         id: challenge?.id,
         isTestChallenge: metadataToBoolean(
@@ -1090,9 +1094,14 @@ export function transformFormDataToChallenge(
         IS_TEST_CHALLENGE_METADATA_FIELD,
         formData.isTestChallenge === true,
     )
+    const metadataWithGitea = giteaTeamsToMetadata(
+        metadataWithTestChallenge,
+        GITEA_METADATA_FIELD,
+        formData.giteaTeams,
+    )
     const milestoneMetadata = buildMilestoneMetadata(formData.milestoneConfiguration)
     const metadata = [
-        ...metadataWithTestChallenge,
+        ...metadataWithGitea,
         ...milestoneMetadata,
     ]
     const roundType = normalizeRoundType(formData.roundType) || ROUND_TYPES.SINGLE_ROUND
