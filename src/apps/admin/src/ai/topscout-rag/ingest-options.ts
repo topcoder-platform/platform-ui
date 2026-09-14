@@ -35,9 +35,9 @@ export const BULK_TRACK_OPTIONS: InputSelectOption[] = [
 export const BULK_TYPE_OPTIONS: InputSelectOption[] = [
     { label: 'Any type', value: '' },
     { label: 'Challenge', value: 'Challenge' },
-    { label: 'First2Finish', value: 'First2Finish' },
-    { label: 'Marathon Match', value: 'Marathon Match' },
-    { label: 'Task', value: 'Task' },
+    { label: 'First2Finish', value: 'F2F' },
+    { label: 'Marathon Match', value: 'MM' },
+    { label: 'Task', value: 'TSK' },
 ]
 
 /** Mirrors the workflow's own default status set. */
