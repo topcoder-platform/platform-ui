@@ -443,7 +443,11 @@ An empty Winners tab reflects the challenge lifecycle: cancelled challenges
 state that no winners were selected, drafts explain that judging has not run,
 and active challenges retain the ongoing-review guidance.
 
-Registered members submit without leaving challenge details. My Submissions
+Registered members submit without leaving challenge details. The prize card's
+Submit a solution action revalidates registration, opens My Submissions, and
+scrolls the rendered upload panel below the fixed navigation. The scroll is
+instant when reduced motion is preferred; repeated clicks return to the open
+form. Selecting ordinary tabs does not trigger this upload scroll. My Submissions
 also exposes the environment-specific Review App handoff before and after an
 upload. File-backed rows expose the authorized download action for every
 challenge track, while authored external-URL rows omit that file action. The

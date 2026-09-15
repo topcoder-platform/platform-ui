@@ -1124,6 +1124,10 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegistration = { id: 'resource-id' }
 
         renderPage()
+        const panel = screen.getByRole('tabpanel')
+        const scrollIntoView = jest.fn()
+        panel.scrollIntoView = scrollIntoView
+        expect(scrollIntoView).not.toHaveBeenCalled()
         fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
 
         await waitFor(() => expect(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -1132,9 +1136,19 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveBeenCalledTimes(1)
         expect(screen.getByText('Submission upload form'))
             .toBeInTheDocument()
+        expect(scrollIntoView)
+            .toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+        expect(panel)
+            .toHaveAttribute('id', 'challenge-panel-mine')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
+        await waitFor(() => expect(scrollIntoView)
+            .toHaveBeenCalledTimes(2))
         fireEvent.click(screen.getByRole('button', { name: 'Back to submissions' }))
         expect(screen.getByText('You have no submissions yet'))
             .toBeInTheDocument()
+        expect(scrollIntoView)
+            .toHaveBeenCalledTimes(2)
     })
 
     it('keeps the upload mounted and challenge tabs locked until an active upload finishes', async () => {
