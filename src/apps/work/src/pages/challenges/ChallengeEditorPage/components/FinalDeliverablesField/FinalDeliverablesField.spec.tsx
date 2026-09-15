@@ -5,6 +5,7 @@ import {
 } from 'react'
 import {
     render,
+    RenderResult,
     screen,
 } from '@testing-library/react'
 import '@testing-library/jest-dom'
@@ -16,6 +17,7 @@ import {
 } from 'react-hook-form'
 
 import { ChallengeEditorFormData } from '../../../../../lib/models'
+import { commitPendingFinalDeliverable } from '../../../../../lib/utils/final-deliverables.utils'
 
 import { FinalDeliverablesField } from './FinalDeliverablesField'
 
@@ -51,6 +53,7 @@ interface TestHarnessProps {
         name: string
         value: unknown
     }>
+    onSave?: (formData: ChallengeEditorFormData) => void
 }
 
 const MetadataWatcher: FC = () => {
@@ -74,15 +77,53 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
         },
     })
 
+    /** Submits the editor values using the create/save metadata normalization. */
+    function handleSave(): void {
+        props.onSave?.(commitPendingFinalDeliverable(formMethods.getValues()))
+    }
+
     return (
         <FormProvider {...formMethods}>
             <FinalDeliverablesField />
             <MetadataWatcher />
+            {props.onSave && (
+                <button onClick={handleSave} type='button'>
+                    Save challenge
+                </button>
+            )}
         </FormProvider>
     )
 }
 
 describe('FinalDeliverablesField', () => {
+    it('saves a pending file type when Save is clicked and restores it from saved metadata', async () => {
+        const user = userEvent.setup()
+        const onSave = jest.fn()
+        const { unmount }: RenderResult = render(
+            <TestHarness
+                defaultMetadata={[{ name: 'allowStockArt', value: 'true' }]}
+                onSave={onSave}
+            />,
+        )
+
+        await user.type(screen.getByRole('textbox'), '  PNG  ')
+        await user.click(screen.getByRole('button', { name: 'Save challenge' }))
+
+        expect(onSave)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                metadata: [
+                    { name: 'allowStockArt', value: 'true' },
+                    { name: 'fileTypes', value: '["PNG"]' },
+                ],
+            }))
+        unmount()
+        render(<TestHarness defaultMetadata={onSave.mock.calls[0][0].metadata} />)
+        expect(screen.getByText('PNG'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('textbox'))
+            .toHaveValue('')
+    })
+
     it('adds unique file types to the saved metadata payload', async () => {
         const user = userEvent.setup()
 
