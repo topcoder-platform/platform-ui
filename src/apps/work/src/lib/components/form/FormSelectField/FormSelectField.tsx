@@ -139,6 +139,12 @@ function getSelectComponent(
     return Select
 }
 
+/**
+ * Renders a form select with its visible label bound to the focusable input.
+ * @param props Field name, label, choices, and optional async/multiple-value behavior.
+ * @returns A React Select control connected to the surrounding form.
+ * @throws Requires a parent FormProvider; option-loading errors propagate to the loader.
+ */
 export const FormSelectField: FC<FormSelectFieldProps> = (props: FormSelectFieldProps) => {
     const formContext = useFormContext()
     const {
@@ -206,7 +212,7 @@ export const FormSelectField: FC<FormSelectFieldProps> = (props: FormSelectField
                 className={styles.select}
                 classNamePrefix='challenge-select'
                 defaultOptions={isAsync}
-                id={props.name}
+                inputId={props.name}
                 isClearable={props.isClearable}
                 isDisabled={props.disabled}
                 isMulti={isMulti}

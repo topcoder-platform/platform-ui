@@ -5,6 +5,8 @@ import { IconOutline } from '~/libs/ui'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 
+import { ShowcaseMetadata } from '../../models/ProjectShowcasePost.model'
+
 import styles from './ShowcasePostPreview.module.scss'
 
 export interface ShowcasePostPreviewChallenge {
@@ -16,7 +18,7 @@ export interface ShowcasePostPreviewChallenge {
     numOfRegistrants?: number
 }
 
-export interface ShowcasePostPreviewData {
+export interface ShowcasePostPreviewData extends ShowcaseMetadata {
     title: string
     content: string
     categories: Array<{ id: string; name: string }>
@@ -99,12 +101,37 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
 
             <div className={styles.bodyWrap}>
                 <div className={styles.body}>
-                    <div
-                        className={styles.htmlContent}
-                        dangerouslySetInnerHTML={{
-                            __html: renderRichTextToHtml(data.content || ''),
-                        }}
-                    />
+                    <dl>
+                        {[
+                            ['Type', data.type],
+                            ['Customer', data.customer],
+                            ['SMU', data.smu === 'Others' ? data.smuOther : data.smu],
+                            ['Deal Close Date', data.dealCloseDate],
+                            ['Key Win', data.keyWin],
+                            ['Current Status', data.currentStatus],
+                            ['Owner', data.owner],
+                        ].filter(([, value]) => !!value)
+                            .map(([label, value]) => (
+                                <div key={label} className={styles.subTitleItem}>
+                                    <dt>{label}</dt>
+                                    <dd>{value}</dd>
+                                </div>
+                            ))}
+                    </dl>
+                    {[
+                        ['The Challenge', data.challenge],
+                        ['The Solution', data.content],
+                        ['Business Impact Realised', data.businessImpact],
+                    ].filter(([, value]) => !!value)
+                        .map(([label, value]) => (
+                            <section key={label} className={styles.section}>
+                                <h5 className={styles.sectionTitle}>{label}</h5>
+                                <div
+                                    className={styles.htmlContent}
+                                    dangerouslySetInnerHTML={{ __html: renderRichTextToHtml(value || '') }}
+                                />
+                            </section>
+                        ))}
 
                     <section className={styles.section}>
                         <h5 className={styles.sectionTitle}>Media assets</h5>
@@ -155,7 +182,7 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                     </section>
 
                     <section className={styles.section}>
-                        <h5 className={styles.sectionTitle}>Challenges</h5>
+                        <h5 className={styles.sectionTitle}>Topcoder Challenge Launched</h5>
                         {data.challenges.length > 0 ? (
                             <ul className={styles.challengeList}>
                                 {data.challenges.map(challenge => {

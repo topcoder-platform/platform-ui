@@ -18,6 +18,7 @@ import type {
     ProjectShowcasePostIndustry,
     ProjectShowcasePostMedia,
     ProjectShowcasePostTaxonomyItem,
+    ShowcaseMetadata,
 } from '../models'
 
 import { fetchMembersByUserIds } from './members.service'
@@ -102,6 +103,12 @@ function buildProjectShowcasePostsUrl(
     return `${urlBase}?${query.toString()}`
 }
 
+/**
+ * Fetches a paginated showcase list including shared metadata and owner values.
+ * @param params Project, pagination, sorting and taxonomy filters.
+ * @returns Normalized posts and pagination data, enriched with creator handles.
+ * @throws A normalized error when a required API request fails.
+ */
 export async function fetchProjectShowcasePosts(
     params: FetchProjectShowcasePostsParams,
 ): Promise<FetchProjectShowcasePostsResponse> {
@@ -110,38 +117,9 @@ export async function fetchProjectShowcasePosts(
             buildProjectShowcasePostsUrl(params),
         )
 
-        const posts = (response.data || []).map((post: any) => ({
-            categories: Array.isArray(post.categories)
-                ? post.categories.map((category: any) => ({
-                    id: String(category.id),
-                    name: String(category.name || ''),
-                }))
-                : [],
-            content: String(post.content || ''),
-            createdAt: String(post.createdAt || ''),
-            createdByHandle: post.createdByHandle !== undefined && post.createdByHandle !== null
-                ? String(post.createdByHandle)
-                : undefined,
-            createdById: Number(post.createdById || 0),
-            id: String(post.id),
-            industries: Array.isArray(post.industries)
-                ? post.industries.map((industry: any) => ({
-                    id: String(industry.id),
-                    name: String(industry.name || ''),
-                }))
-                : [],
-            media: Array.isArray(post.media)
-                ? post.media.map((mediaItem: any) => ({
-                    id: String(mediaItem.id || ''),
-                    type: String(mediaItem.type || ''),
-                    url: String(mediaItem.url || ''),
-                }))
-                    .filter((item: any) => item.url)
-                : [],
-            projectId: String(post.projectId || ''),
-            status: String(post.status || ''),
-            title: String(post.title || ''),
-        }))
+        const posts = (response.data || [])
+            .map(normalizeProjectShowcasePost)
+            .filter((post: ProjectShowcasePostDetails | undefined): post is ProjectShowcasePostDetails => !!post)
 
         const creatorUserIds: string[] = Array.from(new Set<string>(
             posts
@@ -225,6 +203,12 @@ function normalizeProjectShowcasePostMediaArray(value: unknown): ProjectShowcase
         .filter(item => item.url)
 }
 
+/**
+ * Normalizes API post data and the shared project metadata for forms and previews.
+ * @param value Raw projects API response.
+ * @returns A showcase post or undefined when the response is not an object.
+ * @throws Does not throw for valid JSON responses.
+ */
 function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePostDetails | undefined {
     if (typeof value !== 'object' || value === null) {
         return undefined
@@ -233,7 +217,9 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePostDetail
     const post = value as Record<string, unknown>
 
     return {
+        businessImpact: normalizeStringOrUndefined(post.businessImpact),
         categories: normalizeTaxonomyArray(post.categories),
+        challenge: normalizeStringOrUndefined(post.challenge),
         challengeIds: Array.isArray(post.challengeIds)
             ? post.challengeIds.map((item: any) => String(item))
             : [],
@@ -242,13 +228,24 @@ function normalizeProjectShowcasePost(value: unknown): ProjectShowcasePostDetail
         createdAt: normalizeString(post.createdAt),
         createdByHandle: normalizeStringOrUndefined(post.createdByHandle),
         createdById: Number(post.createdById || 0),
+        currentStatus: normalizeStringOrUndefined(post.currentStatus),
+        customer: normalizeStringOrUndefined(post.customer),
+        dealCloseDate: normalizeStringOrUndefined(post.dealCloseDate),
         id: normalizeString(post.id),
         industries: normalizeTaxonomyArray(post.industries),
+        keyWin: normalizeStringOrUndefined(post.keyWin),
         media: normalizeProjectShowcasePostMediaArray(post.media),
+        owner: normalizeStringOrUndefined(post.owner),
         projectId: normalizeStringOrUndefined(post.projectId),
         projectTitle: String(post.projectTitle || ''),
+        publishedAt: normalizeStringOrUndefined(post.publishedAt),
+        publishedBy: normalizeStringOrUndefined(post.publishedBy),
+        sendToWin: post.sendToWin === true,
+        smu: normalizeStringOrUndefined(post.smu),
+        smuOther: normalizeStringOrUndefined(post.smuOther),
         status: normalizeString(post.status),
         title: normalizeString(post.title),
+        type: normalizeStringOrUndefined(post.type),
     }
 }
 
@@ -272,9 +269,16 @@ export async function fetchProjectShowcasePost(
     }
 }
 
+/**
+ * Creates a showcase and saves its shared project metadata atomically.
+ * @param projectId Project owning the showcase post.
+ * @param payload Showcase fields, project metadata, and WIN opt-in.
+ * @returns The saved showcase post.
+ * @throws A normalized API error when validation or saving fails.
+ */
 export async function createProjectShowcasePost(
     projectId: string,
-    payload: {
+    payload: ShowcaseMetadata & {
         title: string
         content: string
         industryIds: string[]
@@ -300,10 +304,18 @@ export async function createProjectShowcasePost(
     }
 }
 
+/**
+ * Updates supplied post fields and shared project metadata; omitted fields stay unchanged.
+ * @param projectId Project owning the showcase post.
+ * @param postId Showcase post to update.
+ * @param payload Showcase fields, project metadata, and WIN opt-in.
+ * @returns The saved showcase post.
+ * @throws A normalized API error when validation or saving fails.
+ */
 export async function updateProjectShowcasePost(
     projectId: string,
     postId: string,
-    payload: {
+    payload: ShowcaseMetadata & {
         title?: string
         content?: string
         industryIds?: string[]

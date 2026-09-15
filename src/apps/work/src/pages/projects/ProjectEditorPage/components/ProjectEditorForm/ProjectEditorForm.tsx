@@ -51,6 +51,7 @@ import {
     showErrorToast,
     showSuccessToast,
 } from '../../../../../lib/utils'
+import { ProjectMetadataFields } from '../../../../../lib/components/form/ProjectMetadataFields'
 
 import styles from './ProjectEditorForm.module.scss'
 
@@ -64,6 +65,10 @@ interface ProjectEditorFormProps {
 }
 
 interface ProjectEditorFormValues {
+    customer: string
+    smu: string
+    smuOther: string
+    dealCloseDate: string
     billingAccountId: string
     cancelReason: string
     description: string
@@ -83,6 +88,13 @@ interface CurrentBillingAccountDetails {
     status: string
 }
 
+/**
+ * Initializes project fields from the project record, including shared showcase metadata.
+ * @param isEdit Whether the form edits an existing project.
+ * @param projectDetail The loaded project, when editing.
+ * @returns Complete form values with empty defaults for optional metadata.
+ * @throws Does not throw.
+ */
 function getDefaultFormValues(
     isEdit: boolean,
     projectDetail?: Project,
@@ -96,12 +108,16 @@ function getDefaultFormValues(
     return {
         billingAccountId,
         cancelReason: projectDetail?.cancelReason || '',
+        customer: projectDetail?.details?.customer || '',
+        dealCloseDate: projectDetail?.details?.dealCloseDate || '',
         description: projectDetail?.description || '',
         displayMemberPaymentDetailsToCopilots: isEdit
             ? projectDetail?.details?.displayMemberPaymentDetailsToCopilots === true
             : true,
         groups,
         name: projectDetail?.name || '',
+        smu: projectDetail?.details?.smu || '',
+        smuOther: projectDetail?.details?.smuOther || '',
         status: isEdit
             ? (projectDetail?.status || PROJECT_STATUS.DRAFT)
             : PROJECT_STATUS.DRAFT,
@@ -363,12 +379,19 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     ? [termsValue]
                     : undefined
                 const groups = normalizeStringList(formData.groups)
+                const projectMetadata = {
+                    customer: formData.customer.trim(),
+                    dealCloseDate: formData.dealCloseDate,
+                    smu: formData.smu,
+                    smuOther: formData.smu === 'Others' ? formData.smuOther.trim() : '',
+                }
 
                 if (!props.isEdit) {
                     const payload: CreateProjectPayload = {
                         billingAccountId: normalizedBillingAccountId,
                         description: formData.description,
                         details: {
+                            ...projectMetadata,
                             displayMemberPaymentDetailsToCopilots:
                                 formData.displayMemberPaymentDetailsToCopilots,
                         },
@@ -398,6 +421,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     description: formData.description,
                     details: {
                         ...(props.projectDetail.details || {}),
+                        ...projectMetadata,
                         displayMemberPaymentDetailsToCopilots:
                             formData.displayMemberPaymentDetailsToCopilots,
                     },
@@ -541,6 +565,10 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             required
                             rows={4}
                         />
+                    </div>
+
+                    <div className={styles.grid}>
+                        <ProjectMetadataFields />
                     </div>
 
                     <div className={styles.grid}>

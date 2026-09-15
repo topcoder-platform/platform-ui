@@ -8,7 +8,14 @@ import { TaasJob } from './TaasJob.model'
 
 export type ProjectStatus = typeof PROJECT_STATUSES[number]['value']
 
-export interface ProjectDetails extends Record<string, unknown> {
+export interface ProjectMetadata {
+    customer?: string
+    smu?: string
+    smuOther?: string
+    dealCloseDate?: string
+}
+
+export interface ProjectDetails extends Record<string, unknown>, ProjectMetadata {
     displayMemberPaymentDetailsToCopilots?: boolean
     taasDefinition?: {
         taasJobs?: TaasJob[]
