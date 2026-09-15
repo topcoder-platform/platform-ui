@@ -1920,7 +1920,6 @@ describe('ChallengeDetailsPage member flows', () => {
         const headers = [
             'Current Test Process',
             'Test Status',
-            'Test Progress',
             'Final Score',
             'Provisional Score',
         ]
@@ -1928,8 +1927,10 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument())
         expect(screen.getByText('System'))
             .toBeInTheDocument()
-        expect(screen.getByText('In progress'))
-            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Test Progress' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('progressbar', { name: 'Test progress for submission submission-1' }))
+            .toHaveAttribute('aria-valuenow', '50')
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
         const finalScore = screen.getByRole('cell', { name: '99.31399426811394' })
@@ -1988,6 +1989,8 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
         expect(screen.getByText('Cancelled'))
             .toHaveClass('testStatusCancelled')
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
         expect(screen.queryByText('Failed'))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('cell', { name: '-1' }))
@@ -2002,7 +2005,7 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(challengeDetailStyles)
             .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)
         expect(challengeDetailStyles)
-            .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1200px;/)
+            .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1040px;/)
         expect(challengeDetailStyles)
             .not.toContain('min-width: 1280px;')
     })
