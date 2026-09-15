@@ -24,6 +24,31 @@ jest.mock('~/config', () => ({
     }),
 }), { virtual: true })
 
+describe('final deliverables save mapping', () => {
+    it.each<[string, string[]]>([
+        [' PDF ', ['PNG', 'PDF']],
+        [' png ', ['PNG']],
+        ['  ', ['PNG']],
+    ])('includes pending input %j without duplicating or losing existing metadata', (finalDeliverable, expected) => {
+        const formData = transformChallengeToFormData({
+            metadata: [
+                { name: 'fileTypes', value: '["PNG"]' },
+                { name: 'allowStockArt', value: 'true' },
+            ],
+        })
+        const saved = transformFormDataToChallenge({ ...formData, finalDeliverable })
+
+        expect(saved.metadata)
+            .toEqual(expect.arrayContaining([
+                { name: 'fileTypes', value: JSON.stringify(expected) },
+                { name: 'allowStockArt', value: 'true' },
+            ]))
+        expect(saved).not.toHaveProperty('finalDeliverable')
+        expect(transformChallengeToFormData(saved).finalDeliverable)
+            .toBe('')
+    })
+})
+
 describe('formatLastSaved', () => {
     it('reports when a challenge has not been saved', () => {
         expect(formatLastSaved())
