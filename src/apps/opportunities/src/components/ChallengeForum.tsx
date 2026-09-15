@@ -370,14 +370,14 @@ const ParticipantGroup: FC<{
 
 interface ForumFallbackProps {
     externalUrl?: string
-    text: string
+    text?: string
     title: string
 }
 
 /**
  * Preserves a safe recovery path when embedded API access is unavailable.
  *
- * @param props fallback copy and optional legacy destination.
+ * @param props fallback title, optional description, and optional legacy destination.
  * @returns forum fallback state.
  * @throws Does not throw.
  */
@@ -385,7 +385,7 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
     <div className={styles.fallback}>
         <IconOutline.ChatAlt2Icon aria-hidden='true' />
         <h2>{props.title}</h2>
-        <p>{props.text}</p>
+        {props.text && <p>{props.text}</p>}
         {props.externalUrl && (
             <a href={props.externalUrl} rel='noreferrer' target='_blank'>
                 Open legacy forum
@@ -1798,7 +1798,6 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         return (
             <ForumFallback
                 externalUrl={externalUrl}
-                text='The embedded discussion could not be loaded. No communication action was attempted.'
                 title='Forum temporarily unavailable'
             />
         )
