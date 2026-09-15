@@ -1601,7 +1601,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     <>
                                         <th>Current Test Process</th>
                                         <th>Test Status</th>
-                                        <th>Test Progress</th>
                                         <th className={styles.scoreColumn}>Final Score</th>
                                         <th className={styles.scoreColumn}>Provisional Score</th>
                                     </>
@@ -1649,23 +1648,41 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         {progress.process ?? '—'}
                                                     </td>
                                                     <td data-mobile-label='Test Status'>
-                                                        <span
-                                                            className={`${styles.testStatus} ${statusClass}`}
-                                                        >
-                                                            {progress.status ?? '—'}
-                                                        </span>
-                                                    </td>
-                                                    <td data-mobile-label='Test Progress'>
-                                                        <div className={styles.testProgress}>
-                                                            <span className={styles.progressTrack}>
-                                                                <span style={{ width: `${progress.progress ?? 0}%` }} />
-                                                            </span>
-                                                            <span>
-                                                                {progress.progress === undefined
-                                                                    ? '—'
-                                                                    : `${Math.round(progress.progress)}%`}
-                                                            </span>
-                                                        </div>
+                                                        {(!progress.status || progress.status === 'In progress')
+                                                            && progress.progress !== undefined ? (
+                                                                <div
+                                                                    aria-label={
+                                                                        `Test progress for submission ${submission.id}`
+                                                                    }
+                                                                    aria-valuemax={100}
+                                                                    aria-valuemin={0}
+                                                                    aria-valuenow={Math.round(progress.progress)}
+                                                                    className={styles.testProgress}
+                                                                    role='progressbar'
+                                                                >
+                                                                    <span
+                                                                        aria-hidden='true'
+                                                                        className={styles.progressTrack}
+                                                                    >
+                                                                        <span
+                                                                            style={{ width: `${progress.progress}%` }}
+                                                                        />
+                                                                    </span>
+                                                                    <span>{`${Math.round(progress.progress)}%`}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className={`${styles.testStatus} ${statusClass}`}>
+                                                                    {progress.status === 'Passed' && (
+                                                                        <IconOutline.CheckIcon aria-hidden='true' />
+                                                                    )}
+                                                                    {progress.status === 'Failed' && (
+                                                                        <IconOutline.MinusCircleIcon
+                                                                            aria-hidden='true'
+                                                                        />
+                                                                    )}
+                                                                    {progress.status ?? '—'}
+                                                                </span>
+                                                            )}
                                                     </td>
                                                     <td
                                                         className={styles.scoreColumn}

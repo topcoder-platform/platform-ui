@@ -424,6 +424,12 @@ submission history, and Marathon Match dashboard tooltips and accessible data.
 Thousands separators, valid zero, and negative scorer sentinels retain their
 established handling. Compact My Submissions columns preserve those
 full-precision values without overlapping adjacent score or action columns.
+Marathon My Submissions combines Test Progress and Test Status into one Test
+Status column. Running tests show the available progress bar and percentage;
+Passed, Failed, and Cancelled attempts show their terminal badge instead. If
+progress is unavailable, the status label or an em dash remains visible. The
+seven-column table fits the padded desktop card; narrower tablets retain
+horizontal scrolling and mobile uses the existing record cards.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a

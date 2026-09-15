@@ -438,11 +438,10 @@
     th:first-child { width: 120px; }
     th:nth-child(2) { width: 190px; }
     th:nth-child(3) { width: 150px; }
-    th:nth-child(4) { width: 105px; }
-    th:nth-child(5) { width: 140px; }
-    th:nth-child(6),
-    th:nth-child(7) { width: 150px; }
-    th:nth-child(8) { width: 120px; }
+    th:nth-child(4) { width: 140px; }
+    th:nth-child(5),
+    th:nth-child(6) { width: 160px; }
+    th:nth-child(7) { width: 120px; }
 
     th:nth-child(2),
     td:nth-child(2) {
@@ -464,7 +463,7 @@
     overflow-x: auto;
 
     .myMarathonTable {
-        min-width: 1200px;
+        min-width: 1040px;
     }
 }
 
@@ -481,9 +480,16 @@
 }
 
 .testStatus {
+    align-items: center;
     border-radius: 4px;
     display: inline-flex;
+    gap: 4px;
     padding: 2px 4px;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
 }
 
 .testStatusInprogress {
