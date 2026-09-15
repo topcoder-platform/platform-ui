@@ -73,8 +73,14 @@
 
             li {
                 font-family: 'Nunito Sans', sans-serif;
+                font-weight: 400;
                 margin-left: $sp-8;
                 color: var(--FontColor);
+
+                .tabLink {
+                    color: inherit;
+                    font-weight: inherit;
+                }
 
                 &.active {
                     font-weight: 700;
@@ -112,8 +118,7 @@
                         width: 100%;
 
                         &.active {
-                            background-color: var(--Actived);
-                            color: var(--invertButtonColor);
+                            color: var(--FontColor);
                         }
                     }
                 }
