@@ -7,6 +7,7 @@ import {
     SyntheticEvent,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -356,6 +357,8 @@ export const ChallengeDetailsPage: FC = () => {
     const [registrationBusy, setRegistrationBusy] = useState(false)
     const [registrantsRevision, setRegistrantsRevision] = useState(0)
     const [submissionFlowOpen, setSubmissionFlowOpen] = useState(false)
+    const [submissionScrollRequest, setSubmissionScrollRequest] = useState(0)
+    const submissionPanelRef = useRef<HTMLElement>(null)
     const [submissionUploadBusy, setSubmissionUploadBusy] = useState(false)
     const [unregisterConfirmOpen, setUnregisterConfirmOpen] = useState(false)
     const [visibleTerms, setVisibleTerms] = useState<ChallengeTerm[]>([])
@@ -421,6 +424,7 @@ export const ChallengeDetailsPage: FC = () => {
         setIssueOpen(false)
         setRegistrationBusy(false)
         setSubmissionFlowOpen(false)
+        setSubmissionScrollRequest(0)
         setSubmissionUploadBusy(false)
         setTermsMode('view')
         setTermsOpen(false)
@@ -481,6 +485,15 @@ export const ChallengeDetailsPage: FC = () => {
     const tabAccessIsLoading = !profileInitialized
         || registrationAccessIsLoading
         || memberResourceAccessIsLoading
+
+    useEffect(() => {
+        if (!submissionScrollRequest || !submissionFlowOpen || activeTab !== 'mine') return
+
+        submissionPanelRef.current?.scrollIntoView?.({
+            behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+            block: 'start',
+        })
+    }, [activeTab, submissionFlowOpen, submissionScrollRequest])
 
     useEffect(() => {
         if (!challenge || !searchParams.has('tab') || tabAccessIsLoading || requestedTabIsVisible) return
@@ -554,7 +567,8 @@ export const ChallengeDetailsPage: FC = () => {
 
     /**
      * Opens the Figma submission flow under the member's revalidated My Submissions tab
-     * only while the challenge accepts submissions.
+     * only while the challenge accepts submissions, then scrolls the rendered upload
+     * panel into view. Repeated clicks also return to the open upload panel.
      *
      * @returns promise settled after selecting the tab, restoring registration state,
      * or redirecting an anonymous member to sign in.
@@ -570,6 +584,7 @@ export const ChallengeDetailsPage: FC = () => {
         if (!await validateSubmissionRegistration()) return
         selectTab('mine')
         setSubmissionFlowOpen(true)
+        setSubmissionScrollRequest(request => request + 1)
     }
 
     /**
@@ -817,6 +832,7 @@ export const ChallengeDetailsPage: FC = () => {
                     aria-labelledby={`challenge-tab-${activeTab}`}
                     className={styles.mainContent}
                     id={`challenge-panel-${activeTab}`}
+                    ref={submissionPanelRef}
                     role='tabpanel'
                 >
                     <ChallengeTabContent
