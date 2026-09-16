@@ -34,9 +34,12 @@
 .panelHeader h2 { font-size: $tc-2026-h4-size; line-height: 32px; }
 .panelHeader p { margin-top: 4px; color: $tc-2026-muted; }
 .filters { padding: 24px; display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; background: $tc-2026-canvas; }
-.search { flex: 1 1 220px; min-width: 160px; margin-bottom: 0; }
-.selectField { display: flex; flex-direction: column; gap: 8px; font-weight: 700; flex: 1 1 180px; }
-.selectField select, .pageControls select { background: $tc-2026-surface; border: 1px solid $tc-2026-border-strong; padding: 10px 12px; min-height: 40px; color: $tc-2026-body; font-weight: 400; max-width: 100%; }
+.filterField { display: flex; flex-direction: column; gap: 8px; flex: 1 1 220px; min-width: 160px; }
+.filterField label { font-size: 16px; line-height: 24px; font-weight: 700; }
+.filterField input, .filterField select, .pageControls select { background: $tc-2026-surface; border: 1px solid $tc-2026-border-strong; padding: 10px 12px; min-height: 40px; color: $tc-2026-body; font-weight: 400; max-width: 100%; }
+.filterField input, .filterField select { width: 100%; height: 48px; box-sizing: border-box; font-size: 16px; line-height: 24px; }
+.filterField input::placeholder { color: $tc-2026-muted; opacity: 1; }
+.filterField input:disabled { background: $tc-2026-border; cursor: not-allowed; }
 .filterActions { min-height: 48px; }
 .tableScroll { overflow-x: auto; width: 100%; }
 .table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -68,6 +71,6 @@
     .headerActions { width: 100%; justify-content: space-between; }
     .panelHeader, .filters, .pagination { padding: 16px; }
     .panelHeader { align-items: flex-start; flex-direction: column; }
-    .search, .selectField { flex-basis: 100%; }
+    .filterField { flex-basis: 100%; }
     .error { align-items: flex-start; flex-direction: column; }
 }

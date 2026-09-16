@@ -13,6 +13,8 @@ Report metadata determines every displayed column, including grouped Stage.
 Search and column substring filters apply on **Apply**; headers sort globally
 before server pagination. Changing a filter, sort or page size starts at page
 one. Clear resets filters and sorting. Null display values use an em dash.
+Search sales, Filter field and Contains use persistent labels above equal-height
+controls, aligned in the desktop filter row and stacked on mobile.
 The semantic HTML table provides keyboard sorting, `aria-sort`, and a focusable
 horizontal scroll region for wide reports; the shared Table component performs
 client sorting and is intentionally not used for this server-paginated report.
@@ -25,8 +27,8 @@ are explicit. `allData: false` warns that filters and totals cover only received
 rows, because Salesforce Analytics caps report details at 2,000 records.
 
 The app opts into scoped shared 2026 foundations, using Figtree headings, Nunito
-Sans body text, semantic color tokens, shared buttons, inputs and loading
-controls. Source design guidance:
+Sans body text, semantic color tokens, shared buttons and loading controls, and
+explicitly labelled native filter controls. Source design guidance:
 [Topcoder Design System — August 2026](https://www.figma.com/design/C2cA6508RhpjWJDp7MLKbO/Topcoder-Design-System---Aug-2026?node-id=1-54).
 
 Run `nvm use` in platform-ui before `yarn lint`, `LOGICAL_ENV=dev yarn run build`,

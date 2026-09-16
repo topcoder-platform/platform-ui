@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { ButtonHTMLAttributes, ChangeEvent, ReactNode } from 'react'
+import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import SalesPage from './SalesPage'
 import { SalesReport } from './sales.models'
@@ -19,15 +19,6 @@ jest.mock('~/libs/ui', () => ({
         </button>
     ),
     IconOutline: { RefreshIcon: () => <span /> },
-    InputText: (props: {
-        label: string; disabled?: boolean; name: string; value: string;
-        onChange: (event: ChangeEvent<HTMLInputElement>) => void
-    }) => (
-        <label htmlFor={props.name}>
-            {props.label}
-            <input disabled={props.disabled} id={props.name} value={props.value} onChange={props.onChange} />
-        </label>
-    ),
     LoadingSpinner: (props: { message: string }) => <span>{props.message}</span>,
     PageTitle: (props: { children: ReactNode }) => <title>{props.children}</title>,
 }), { virtual: true })
