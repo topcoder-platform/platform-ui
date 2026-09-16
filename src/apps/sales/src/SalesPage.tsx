@@ -4,7 +4,7 @@
 /* eslint jsx-a11y/no-noninteractive-tabindex: ["error", { "roles": ["region"] }] */
 import { FC, FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 
-import { Button, IconOutline, InputText, LoadingSpinner, PageTitle } from '~/libs/ui'
+import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
 
 import { SalesQuery, SalesReport } from './sales.models'
 import { fetchSalesReport, salesErrorMessage } from './sales.service'
@@ -188,20 +188,21 @@ const SalesPage: FC = () => {
                 </div>
 
                 <form className={styles.filters} onSubmit={applyFilters}>
-                    <InputText
-                        classNameWrapper={styles.search}
-                        forceUpdateValue
-                        label='Search sales'
-                        maxLength={200}
-                        name='sales-search'
-                        onChange={event => setSearch(event.target.value)}
-                        placeholder='Search all report fields'
-                        tabIndex={0}
-                        type='text'
-                        value={search}
-                    />
-                    <label className={styles.selectField} htmlFor='sales-filter-column'>
-                        Filter field
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-search'>Search sales</label>
+                        <input
+                            id='sales-search'
+                            maxLength={200}
+                            name='sales-search'
+                            onChange={event => setSearch(event.target.value)}
+                            placeholder='Search all report fields'
+                            spellCheck={false}
+                            type='text'
+                            value={search}
+                        />
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-filter-column'>Filter field</label>
                         <select
                             id='sales-filter-column'
                             onChange={event => setFilterColumn(event.target.value)}
@@ -212,20 +213,21 @@ const SalesPage: FC = () => {
                                 <option key={column.id} value={column.id}>{column.label}</option>
                             ))}
                         </select>
-                    </label>
-                    <InputText
-                        classNameWrapper={styles.search}
-                        disabled={!filterColumn}
-                        forceUpdateValue
-                        label='Contains'
-                        maxLength={200}
-                        name='sales-filter-value'
-                        onChange={event => setFilterValue(event.target.value)}
-                        placeholder='Filter value'
-                        tabIndex={0}
-                        type='text'
-                        value={filterValue}
-                    />
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-filter-value'>Contains</label>
+                        <input
+                            disabled={!filterColumn}
+                            id='sales-filter-value'
+                            maxLength={200}
+                            name='sales-filter-value'
+                            onChange={event => setFilterValue(event.target.value)}
+                            placeholder='Filter value'
+                            spellCheck={false}
+                            type='text'
+                            value={filterValue}
+                        />
+                    </div>
                     <div className={styles.filterActions}>
                         <Button disabled={loading || !report} noCaps secondary type='submit'>Apply</Button>
                         <Button noCaps onClick={clearFilters} link>Clear</Button>
