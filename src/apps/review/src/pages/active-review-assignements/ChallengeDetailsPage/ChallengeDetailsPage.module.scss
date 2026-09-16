@@ -107,11 +107,13 @@
 }
 
 .summary {
-    align-items: center;
-    justify-content: space-between;
+    align-items: flex-start;
     display: flex;
     flex-wrap: wrap;
+    gap: $sp-4;
+    justify-content: space-between;
 }
+
 
 .statusPillRow {
     margin-top: $sp-2;

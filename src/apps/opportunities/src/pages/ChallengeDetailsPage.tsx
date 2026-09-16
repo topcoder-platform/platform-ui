@@ -369,8 +369,11 @@ export const ChallengeDetailsPage: FC = () => {
     )
     const challenge = challengeResponse.data
     const taskChallenge = isTaskChallenge(challenge)
+    const developmentChallenge = challenge
+        ? challengeCatalogKey(challenge.track) === 'development'
+        : false
     const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile && challenge && !isMarathonMatchChallenge(challenge)
+        challengeId && profile && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
             ? ['opportunities:challenge-review-style', challengeId]
             : undefined,
         () => getChallengeAiReviewConfig(challengeId),

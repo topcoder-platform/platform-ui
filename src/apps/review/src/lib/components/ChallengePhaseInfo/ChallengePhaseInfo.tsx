@@ -7,15 +7,21 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { EnvironmentConfig } from '~/config'
+import {
+    formatInstantReviewLabel,
+    formatReviewModeLabel,
+    hasAiReviewConfig,
+    isDevelopmentChallengeTrack,
+} from '~/libs/shared'
 
-import type { BackendPhase, BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
+import type { AiReviewConfig, BackendPhase, BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
 import type { WinningDetailDto } from '../../services'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
 import { fetchWinningsByExternalId } from '../../services'
 import { ProgressBar } from '../ProgressBar'
 import { SUBMITTER, TABLE_DATE_FORMAT } from '../../../config/index.config'
-import { formatDurationDate } from '../../utils'
+import { formatDurationDate, isMarathonMatchChallenge } from '../../utils'
 
 import styles from './ChallengePhaseInfo.module.scss'
 
@@ -61,11 +67,19 @@ const ROLE_TO_PRIZESET_TYPE: Record<string, string> = {
 }
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
-    const { myChallengeRoles }: useRoleProps = useRole()
+    const { actionChallengeRole, myChallengeRoles }: useRoleProps = useRole()
+    const isSubmitterView = actionChallengeRole === SUBMITTER
     const {
+        aiReviewConfig,
         challengeId,
+        isLoadingAiReviewConfig,
         resources,
-    }: { challengeId?: string; resources: BackendResource[] } = useContext(ChallengeDetailContext)
+    }: {
+        aiReviewConfig?: AiReviewConfig
+        challengeId?: string
+        isLoadingAiReviewConfig: boolean
+        resources: BackendResource[]
+    } = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const [paymentAmount, setPaymentAmount] = useState<string | undefined>(undefined)
     const [hasPayment, setHasPayment] = useState(false)
@@ -81,6 +95,12 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         const name = (props.challengeInfo?.type?.name || '').toLowerCase()
         return abbreviation === 'TSK' || name === 'task'
     }, [props.challengeInfo?.type?.abbreviation, props.challengeInfo?.type?.name])
+
+    const showReviewConfiguration = useMemo(
+        () => isDevelopmentChallengeTrack(props.challengeInfo?.track)
+            && !isMarathonMatchChallenge(props.challengeInfo),
+        [props.challengeInfo],
+    )
 
     const submitterHandle = useMemo(() => {
         if (!Array.isArray(resources)) return 'N/A'
@@ -299,7 +319,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 isTask,
                 variant,
             }),
-            createRolesItem(myChallengeRoles),
+            ...(!isSubmitterView ? [createRolesItem(myChallengeRoles)] : []),
             ...createTaskItems({
                 formattedStartDate,
                 formattedTaskPayment,
@@ -326,8 +346,18 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 reviewProgress: props.reviewProgress,
                 variant,
             }),
+            ...(isSubmitterView && showReviewConfiguration
+                ? createReviewConfigItems({
+                    aiReviewConfig,
+                    isLoading: isLoadingAiReviewConfig,
+                })
+                : []),
         ]
     }, [
+        actionChallengeRole,
+        aiReviewConfig,
+        isLoadingAiReviewConfig,
+        isSubmitterView,
         formattedNonTaskPayment,
         formattedStartDate,
         formattedTaskPayment,
@@ -342,6 +372,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         props.reviewProgress,
         props.reviewInProgress,
         props.variant,
+        showReviewConfiguration,
         submitterHandle,
         walletUrl,
     ])
@@ -551,6 +582,35 @@ function createNonTaskItems(config: {
                     {config.formattedNonTaskPayment}
                 </a>
             ),
+        })
+    }
+
+    return items
+}
+
+function createReviewConfigItems(config: {
+    aiReviewConfig?: AiReviewConfig
+    isLoading: boolean
+}): ChallengePhaseItem[] {
+    if (config.isLoading) {
+        return [{
+            icon: 'icon-ai-review',
+            title: 'Review Mode',
+            value: 'Loading…',
+        }]
+    }
+
+    const items: ChallengePhaseItem[] = [{
+        icon: 'icon-ai-review',
+        title: 'Review Mode',
+        value: formatReviewModeLabel(config.aiReviewConfig),
+    }]
+
+    if (hasAiReviewConfig(config.aiReviewConfig)) {
+        items.push({
+            icon: 'icon-shuffle',
+            title: 'Instant Review',
+            value: formatInstantReviewLabel(config.aiReviewConfig?.instantReview === true),
         })
     }
 
