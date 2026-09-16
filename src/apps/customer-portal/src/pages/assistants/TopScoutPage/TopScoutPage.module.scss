@@ -3,11 +3,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
 .page {
+    box-sizing: border-box;
     color: $tc-2026-body;
     display: flex;
     flex-direction: column;
     font-family: $tc-2026-font-body;
-    padding: 8px 0 0;
+    min-height: calc(#{$content-height} - 180px);
+    padding: 8px 0 $sp-8;
 
     h1 {
         color: $tc-2026-ink;
@@ -34,34 +36,42 @@
 }
 
 .layout {
+    align-items: stretch;
     display: flex;
+    flex: 1 1 auto;
     gap: 16px;
-    height: 70vh;
+    height: calc(#{$content-height} - 320px);
     margin-top: 20px;
-    margin-bottom: 28px;
     min-height: 480px;
     width: 100%;
 
     @include ltesm {
         flex-direction: column;
         height: auto;
+        min-height: 560px;
     }
 }
 
 .sidebar {
+    display: flex;
     flex: 0 0 133px;
+    flex-direction: column;
     max-width: 133px;
+    min-height: 0;
 
     @include ltesm {
         flex: 0 0 auto;
         max-height: 160px;
         max-width: 100%;
+        min-height: 160px;
     }
 }
 
 .chatPanel {
     display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
     min-width: 0;
     position: relative;
     width: 100%;
