@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
 import { Winning } from '../../../models/WinningDetail'
+import { formatCurrencyAmount } from '../payment-view.utils'
 import styles from '../PaymentView.module.scss'
 
 interface PaymentGeneralInfoTabProps {
@@ -10,6 +11,12 @@ interface PaymentGeneralInfoTabProps {
     readonly payment: Winning
 }
 
+/**
+ * Shows winning metadata and the amount/status of each historical installment.
+ * @param props Formatted winning and its description/date presentation values.
+ * @returns General Info content, with a breakdown for multi-installment payments.
+ * @throws RangeError if a stored installment contains an invalid currency code.
+ */
 const PaymentGeneralInfoTab: FC<PaymentGeneralInfoTabProps> = (props: PaymentGeneralInfoTabProps) => (
     <div className={styles.tabPanelContent}>
         <div className={styles.infoItemFull}>
@@ -55,6 +62,23 @@ const PaymentGeneralInfoTab: FC<PaymentGeneralInfoTabProps> = (props: PaymentGen
                 </div>
             )}
         </div>
+        {props.payment.details.length > 1 && (
+            <div className={styles.infoItemFull}>
+                <span className={styles.label}>Installments</span>
+                {props.payment.details.map(installment => (
+                    <p key={installment.id} className={styles.value}>
+                        Installment
+                        {' '}
+                        {installment.installmentNumber}
+                        {': '}
+                        {formatCurrencyAmount(Number(installment.grossAmount), installment.currency)}
+                        {' — '}
+                        {installment.status.replaceAll('_', ' ')
+                            .toLowerCase()}
+                    </p>
+                ))}
+            </div>
+        )}
     </div>
 )
 
