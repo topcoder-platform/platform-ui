@@ -570,373 +570,380 @@ const LeadIntakePage: FC = () => {
     }, [])
 
     return (
-        <ContentLayout innerClass={styles.pageInner} outerClass={styles.pageOuter}>
+        <ContentLayout
+            contentClass={styles.pageContent}
+            isFluid
+            innerClass={styles.pageInner}
+            outerClass={styles.pageOuter}
+        >
             <header className={styles.pageHeader}>
                 <h2 className={styles.pageHeaderTitle}>Engagement Lead Intake</h2>
             </header>
 
-            <div className={styles.formContainer}>
-                {!submitted && (
-                    <div className={styles.intro}>
-                        <div className={styles.introTitle}>Submit an Engagement Requirement</div>
-                        <p className={styles.introText}>
-                            Use this form to share your Flexi-Talent resource requirement.
-                            No sign-in is required. A Talent Manager will review your submission
-                            and follow up using the work email provided.
-                        </p>
-                    </div>
-                )}
-
-                {submitted && (
-                    <div className={styles.successCard}>
-                        <div className={styles.successIconWrap}>
-                            <IconOutline.CheckCircleIcon className={styles.successIcon} />
+            <div className={styles.pageBody}>
+                <div className={styles.formContainer}>
+                    {!submitted && (
+                        <div className={styles.intro}>
+                            <div className={styles.introTitle}>Submit an Engagement Requirement</div>
+                            <p className={styles.introText}>
+                                Use this form to share your Flexi-Talent resource requirement.
+                                No sign-in is required. A Talent Manager will review your submission
+                                and follow up using the work email provided.
+                            </p>
                         </div>
-                        <h4 className={styles.successTitle}>Thank you for your submission!</h4>
-                        <p className={styles.successText}>
-                            Your engagement requirement has been received. A Talent Manager
-                            will review it and contact you at the email address provided.
-                        </p>
-                        <Button
-                            className={styles.primaryButton}
-                            customRadius
-                            label='Back to homepage'
-                            noCaps
-                            onClick={handleBackToHomepage}
-                            primary
-                            type='button'
-                        />
-                    </div>
-                )}
+                    )}
 
-                {submitError && (
-                    <div className={`${styles.notice} ${styles.noticeError}`}>
-                        <IconOutline.ExclamationIcon className={styles.noticeIcon} />
-                        <div>
-                            <p className={styles.noticeTitle}>Submission failed</p>
-                            <p className={styles.noticeText}>{submitError}</p>
-                        </div>
-                    </div>
-                )}
-
-                {!submitted && (
-                    <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-                        <section className={styles.section}>
-                            <h5 className={styles.sectionTitle}>1. Contact & Account</h5>
-                            <div className={styles.fieldGrid}>
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Example: john.doe@wipro.com',
-                                        label: 'Work Email Address',
-                                        required: true,
-                                    }}
-                                    name='workEmail'
-                                    type='email'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Examples: ABC Bank, XYZ Telecom',
-                                        label: 'Account / Customer Name',
-                                        required: true,
-                                    }}
-                                    name='accountName'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Examples: APMEA, AMERICAS1, Chief Operating Office',
-                                        label: 'Strategic Market Unit (SMU)',
-                                        required: true,
-                                    }}
-                                    name='smu'
-                                />
+                    {submitted && (
+                        <div className={styles.successCard}>
+                            <div className={styles.successIconWrap}>
+                                <IconOutline.CheckCircleIcon className={styles.successIcon} />
                             </div>
-                        </section>
-
-                        <section className={styles.section}>
-                            <h5 className={styles.sectionTitle}>2. Role Requirements</h5>
-                            <div className={styles.fieldGrid}>
-                                <LeadIntakeSelectField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Select the commercial model for this requirement.',
-                                        label: 'Engagement Model',
-                                        required: true,
-                                    }}
-                                    name='engagementModel'
-                                    options={[
-                                        { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
-                                        { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
-                                    ]}
-                                    placeholder='Select model'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Examples: Full Stack Developer, Product Manager, QA Engineer',
-                                        label: 'Role Title',
-                                        required: true,
-                                    }}
-                                    name='roleTitle'
-                                />
-                                <LeadIntakeTextareaField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Describe key responsibilities, deliverables, and expected outcomes.',
-                                        label: 'Detailed Job Description',
-                                        required: true,
-                                    }}
-                                    name='jobDescription'
-                                />
-                                <LeadIntakeSkillsField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Type to search and select the mandatory skills for this role.',
-                                        label: 'Required Skills',
-                                        required: true,
-                                    }}
-                                    onSkillsChange={handleSkillsChange}
-                                />
-                                <LeadIntakeSelectField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Select the required level of experience.',
-                                        label: 'Experience Level Required',
-                                        required: true,
-                                    }}
-                                    name='experienceLevel'
-                                    options={[
-                                        { label: 'Junior', value: 'JUNIOR' },
-                                        { label: 'Mid-Level', value: 'MID' },
-                                        { label: 'Senior', value: 'SENIOR' },
-                                        { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
-                                    ]}
-                                    placeholder='Select level'
-                                />
-                                <LeadIntakeNumberField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Specify the minimum years of relevant experience required.',
-                                        label: 'Minimum Years of Experience',
-                                        required: true,
-                                    }}
-                                    name='minYearsExperience'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Optional. Examples: Banking, Insurance, Healthcare, Telecom',
-                                        label: 'Industry Domain Experience',
-                                    }}
-                                    name='industryDomain'
-                                />
-                            </div>
-                        </section>
-
-                        <section className={styles.section}>
-                            <h5 className={styles.sectionTitle}>3. Engagement Details</h5>
-                            <div className={styles.fieldGrid}>
-                                <LeadIntakeNumberField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Indicate the number of resources required for this role.',
-                                        label: 'Number of Resources Required',
-                                        required: true,
-                                    }}
-                                    name='resourcesRequired'
-                                />
-                                <LeadIntakeDateField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Indicate the date on which the resource(s) are expected to begin.',
-                                        label: 'Preferred Start Date',
-                                        required: true,
-                                    }}
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Examples: 3 months, 6 months, 12 months, ongoing',
-                                        label: 'Engagement Duration',
-                                        required: true,
-                                    }}
-                                    name='engagementDuration'
-                                />
-                                <LeadIntakeNumberField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Specify the expected daily working hours for the resource.',
-                                        label: 'Expected Working Hours per Day',
-                                        required: true,
-                                    }}
-                                    name='workingHoursPerDay'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Examples: IST, GMT, CET, PST, EST or ANY',
-                                        label: 'Time Zone Requirement',
-                                        required: true,
-                                    }}
-                                    name='timeZoneRequirement'
-                                />
-                                <LeadIntakeRadioGroupField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Topcoder Flexi-Talent resources operate remotely.',
-                                        label: 'Remote Work Acceptance',
-                                        required: true,
-                                    }}
-                                    name='remoteWorkAccepted'
-                                    options={[
-                                        { label: 'Yes', value: 'yes' },
-                                        { label: 'No', value: 'no' },
-                                    ]}
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Optional. Examples: India-only, EU-preferred or ANY',
-                                        label: 'Work Location Restrictions',
-                                    }}
-                                    name='workLocationRestrictions'
-                                />
-                            </div>
-                        </section>
-
-                        <section className={styles.section}>
-                            <h5 className={styles.sectionTitle}>4. Commercial & Priority</h5>
-                            <div className={styles.fieldGrid}>
-                                <LeadIntakeSelectField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Select the currency for the approved hourly bill rate.',
-                                        label: 'Bill Rate Currency',
-                                        required: true,
-                                    }}
-                                    name='billRateCurrency'
-                                    options={[
-                                        { label: 'USD', value: 'USD' },
-                                        { label: 'GBP', value: 'GBP' },
-                                        { label: 'EUR', value: 'EUR' },
-                                        { label: 'INR', value: 'INR' },
-                                        { label: 'Other', value: 'OTHER' },
-                                    ]}
-                                    placeholder='Select currency'
-                                />
-                                <LeadIntakeTextField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Hourly amount, e.g. 100',
-                                        label: 'Approved Client Bill Rate (Hourly)',
-                                        required: true,
-                                    }}
-                                    name='billRateAmount'
-                                />
-                                <LeadIntakeSelectField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: 'Select how urgently this requirement needs to be fulfilled.',
-                                        label: 'Priority of Request',
-                                        required: true,
-                                    }}
-                                    name='priority'
-                                    options={[
-                                        { label: 'Critical — immediate fulfilment required', value: 'CRITICAL' },
-                                        { label: 'High', value: 'HIGH' },
-                                        { label: 'Medium', value: 'MEDIUM' },
-                                        { label: 'Low', value: 'LOW' },
-                                    ]}
-                                    placeholder='Select priority'
-                                />
-                                <LeadIntakeTextareaField
-                                    control={control}
-                                    disabled={submitting}
-                                    errors={errors}
-                                    fieldProps={{
-                                        hint: [
-                                            'Optional. Examples: client-facing experience,',
-                                            'overlap hours, certifications, languages',
-                                        ].join(' '),
-                                        label: 'Additional Requirements or Constraints',
-                                    }}
-                                    name='additionalRequirements'
-                                />
-                            </div>
-                        </section>
-
-                        <div className={styles.submitSection}>
+                            <h4 className={styles.successTitle}>Thank you for your submission!</h4>
+                            <p className={styles.successText}>
+                                Your engagement requirement has been received. A Talent Manager
+                                will review it and contact you at the email address provided.
+                            </p>
                             <Button
                                 className={styles.primaryButton}
                                 customRadius
-                                disabled={submitting || (hasSubmitted && !formIsValid)}
-                                label={(
-                                    <span className={styles.submitLabel}>
-                                        {submitting && (
-                                            <LoadingSpinner className={styles.submitSpinner} inline />
-                                        )}
-                                        Submit Requirement
-                                    </span>
-                                )}
+                                label='Back to homepage'
                                 noCaps
+                                onClick={handleBackToHomepage}
                                 primary
-                                type='submit'
-                            />
-                            <Button
-                                className={styles.secondaryButton}
-                                customRadius
-                                disabled={submitting}
-                                label='Clear'
-                                noCaps
-                                onClick={handleClear}
-                                secondary
                                 type='button'
                             />
                         </div>
-                    </form>
-                )}
+                    )}
+
+                    {submitError && (
+                        <div className={`${styles.notice} ${styles.noticeError}`}>
+                            <IconOutline.ExclamationIcon className={styles.noticeIcon} />
+                            <div>
+                                <p className={styles.noticeTitle}>Submission failed</p>
+                                <p className={styles.noticeText}>{submitError}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {!submitted && (
+                        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                            <section className={styles.section}>
+                                <h5 className={styles.sectionTitle}>1. Contact & Account</h5>
+                                <div className={styles.fieldGrid}>
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Example: john.doe@wipro.com',
+                                            label: 'Work Email Address',
+                                            required: true,
+                                        }}
+                                        name='workEmail'
+                                        type='email'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Examples: ABC Bank, XYZ Telecom',
+                                            label: 'Account / Customer Name',
+                                            required: true,
+                                        }}
+                                        name='accountName'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Examples: APMEA, AMERICAS1, Chief Operating Office',
+                                            label: 'Strategic Market Unit (SMU)',
+                                            required: true,
+                                        }}
+                                        name='smu'
+                                    />
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h5 className={styles.sectionTitle}>2. Role Requirements</h5>
+                                <div className={styles.fieldGrid}>
+                                    <LeadIntakeSelectField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Select the commercial model for this requirement.',
+                                            label: 'Engagement Model',
+                                            required: true,
+                                        }}
+                                        name='engagementModel'
+                                        options={[
+                                            { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
+                                            { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
+                                        ]}
+                                        placeholder='Select model'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Examples: Full Stack Developer, Product Manager, QA Engineer',
+                                            label: 'Role Title',
+                                            required: true,
+                                        }}
+                                        name='roleTitle'
+                                    />
+                                    <LeadIntakeTextareaField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Describe key responsibilities, deliverables, and expected outcomes.',
+                                            label: 'Detailed Job Description',
+                                            required: true,
+                                        }}
+                                        name='jobDescription'
+                                    />
+                                    <LeadIntakeSkillsField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Type to search and select the mandatory skills for this role.',
+                                            label: 'Required Skills',
+                                            required: true,
+                                        }}
+                                        onSkillsChange={handleSkillsChange}
+                                    />
+                                    <LeadIntakeSelectField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Select the required level of experience.',
+                                            label: 'Experience Level Required',
+                                            required: true,
+                                        }}
+                                        name='experienceLevel'
+                                        options={[
+                                            { label: 'Junior', value: 'JUNIOR' },
+                                            { label: 'Mid-Level', value: 'MID' },
+                                            { label: 'Senior', value: 'SENIOR' },
+                                            { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
+                                        ]}
+                                        placeholder='Select level'
+                                    />
+                                    <LeadIntakeNumberField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Specify the minimum years of relevant experience required.',
+                                            label: 'Minimum Years of Experience',
+                                            required: true,
+                                        }}
+                                        name='minYearsExperience'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Optional. Examples: Banking, Insurance, Healthcare, Telecom',
+                                            label: 'Industry Domain Experience',
+                                        }}
+                                        name='industryDomain'
+                                    />
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h5 className={styles.sectionTitle}>3. Engagement Details</h5>
+                                <div className={styles.fieldGrid}>
+                                    <LeadIntakeNumberField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Indicate the number of resources required for this role.',
+                                            label: 'Number of Resources Required',
+                                            required: true,
+                                        }}
+                                        name='resourcesRequired'
+                                    />
+                                    <LeadIntakeDateField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Indicate the date on which the resource(s) are expected to begin.',
+                                            label: 'Preferred Start Date',
+                                            required: true,
+                                        }}
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Examples: 3 months, 6 months, 12 months, ongoing',
+                                            label: 'Engagement Duration',
+                                            required: true,
+                                        }}
+                                        name='engagementDuration'
+                                    />
+                                    <LeadIntakeNumberField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Specify the expected daily working hours for the resource.',
+                                            label: 'Expected Working Hours per Day',
+                                            required: true,
+                                        }}
+                                        name='workingHoursPerDay'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Examples: IST, GMT, CET, PST, EST or ANY',
+                                            label: 'Time Zone Requirement',
+                                            required: true,
+                                        }}
+                                        name='timeZoneRequirement'
+                                    />
+                                    <LeadIntakeRadioGroupField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Topcoder Flexi-Talent resources operate remotely.',
+                                            label: 'Remote Work Acceptance',
+                                            required: true,
+                                        }}
+                                        name='remoteWorkAccepted'
+                                        options={[
+                                            { label: 'Yes', value: 'yes' },
+                                            { label: 'No', value: 'no' },
+                                        ]}
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Optional. Examples: India-only, EU-preferred or ANY',
+                                            label: 'Work Location Restrictions',
+                                        }}
+                                        name='workLocationRestrictions'
+                                    />
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h5 className={styles.sectionTitle}>4. Commercial & Priority</h5>
+                                <div className={styles.fieldGrid}>
+                                    <LeadIntakeSelectField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Select the currency for the approved hourly bill rate.',
+                                            label: 'Bill Rate Currency',
+                                            required: true,
+                                        }}
+                                        name='billRateCurrency'
+                                        options={[
+                                            { label: 'USD', value: 'USD' },
+                                            { label: 'GBP', value: 'GBP' },
+                                            { label: 'EUR', value: 'EUR' },
+                                            { label: 'INR', value: 'INR' },
+                                            { label: 'Other', value: 'OTHER' },
+                                        ]}
+                                        placeholder='Select currency'
+                                    />
+                                    <LeadIntakeTextField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Hourly amount, e.g. 100',
+                                            label: 'Approved Client Bill Rate (Hourly)',
+                                            required: true,
+                                        }}
+                                        name='billRateAmount'
+                                    />
+                                    <LeadIntakeSelectField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: 'Select how urgently this requirement needs to be fulfilled.',
+                                            label: 'Priority of Request',
+                                            required: true,
+                                        }}
+                                        name='priority'
+                                        options={[
+                                            { label: 'Critical — immediate fulfilment required', value: 'CRITICAL' },
+                                            { label: 'High', value: 'HIGH' },
+                                            { label: 'Medium', value: 'MEDIUM' },
+                                            { label: 'Low', value: 'LOW' },
+                                        ]}
+                                        placeholder='Select priority'
+                                    />
+                                    <LeadIntakeTextareaField
+                                        control={control}
+                                        disabled={submitting}
+                                        errors={errors}
+                                        fieldProps={{
+                                            hint: [
+                                                'Optional. Examples: client-facing experience,',
+                                                'overlap hours, certifications, languages',
+                                            ].join(' '),
+                                            label: 'Additional Requirements or Constraints',
+                                        }}
+                                        name='additionalRequirements'
+                                    />
+                                </div>
+                            </section>
+
+                            <div className={styles.submitSection}>
+                                <Button
+                                    className={styles.primaryButton}
+                                    customRadius
+                                    disabled={submitting || (hasSubmitted && !formIsValid)}
+                                    label={(
+                                        <span className={styles.submitLabel}>
+                                            {submitting && (
+                                                <LoadingSpinner className={styles.submitSpinner} inline />
+                                            )}
+                                            Submit Requirement
+                                        </span>
+                                    )}
+                                    noCaps
+                                    primary
+                                    type='submit'
+                                />
+                                <Button
+                                    className={styles.secondaryButton}
+                                    customRadius
+                                    disabled={submitting}
+                                    label='Clear'
+                                    noCaps
+                                    onClick={handleClear}
+                                    secondary
+                                    type='button'
+                                />
+                            </div>
+                        </form>
+                    )}
+                </div>
             </div>
         </ContentLayout>
     )

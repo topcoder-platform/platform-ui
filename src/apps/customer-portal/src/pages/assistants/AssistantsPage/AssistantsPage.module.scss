@@ -1,11 +1,13 @@
 @import '@libs/ui/styles/includes';
 
 .page {
+    box-sizing: border-box;
     color: #0a0a0a;
     display: flex;
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
-    padding: 8px 0 0;
+    min-height: calc(#{$content-height} - 180px);
+    padding: 8px 0 $sp-10;
 
     h1 {
         color: #151515;
