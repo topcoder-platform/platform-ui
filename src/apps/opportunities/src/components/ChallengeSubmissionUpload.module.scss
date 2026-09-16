@@ -59,6 +59,42 @@
     gap: 16px;
 }
 
+.urlFlow {
+    .columns {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .leftPanel {
+        display: flex;
+    }
+
+    .actions {
+        justify-content: flex-end;
+    }
+}
+
+.submissionInstructions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    ol {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0;
+        padding-left: 20px;
+    }
+}
+
+.submissionWarning {
+    font-weight: 700;
+
+    span {
+        color: #c1294f;
+    }
+}
+
 .infoCard,
 .mainPanel {
     background: #fff;
@@ -577,7 +613,8 @@
 }
 
 @media (max-width: 900px) {
-    .columns {
+    .columns,
+    .urlFlow .columns {
         grid-template-columns: 1fr;
     }
 
