@@ -212,8 +212,10 @@ function getWinningAssignmentId(payment: WinningDetail): string | undefined {
  * @param payment raw finance winning row returned by the payouts API.
  * @param handleMap member-handle lookup keyed by winner identifier.
  * @returns the normalized winning record rendered by the payments table.
- * @remarks The release date and hold status are derived here to keep the
- * component-level mapping callback trivial.
+ * @throws RangeError when currency/date formatting receives an invalid value.
+ * @remarks Uses the Finance gross summary, falling back to summed installment
+ * gross amounts for compatible older responses. Repeated totalAmount values
+ * are never added. The release date and hold status use the primary installment.
  */
 // eslint-disable-next-line complexity
 function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, string>): Winning {
@@ -221,6 +223,9 @@ function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, 
     const releaseDate = new Date(payment.releaseDate)
     const diffMs = releaseDate.getTime() - now.getTime()
     const diffHours = diffMs / (1000 * 60 * 60)
+    const grossAmount = payment.grossAmount ?? Number(payment.details
+        .reduce((total, installment) => total + Number(installment.grossAmount), 0)
+        .toFixed(2))
 
     let formattedReleaseDate
     if (diffHours > 0 && diffHours <= 24) {
@@ -262,8 +267,8 @@ function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, 
         description: payment.description,
         details: payment.details,
         externalId: payment.externalId,
-        grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
-        grossAmountNumber: parseFloat(payment.details[0].grossAmount),
+        grossAmount: formatCurrency(String(grossAmount), payment.details[0].currency),
+        grossAmountNumber: grossAmount,
         handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
         id: payment.id,
         releaseDate: formattedReleaseDate,
