@@ -464,8 +464,17 @@ storage, so pending DMZ and quarantined files cannot be downloaded. Work
 Manager's case-insensitive `submission_type=url` challenge
 metadata selects the URL experience; every other value, including missing or
 malformed metadata, retains the standard ZIP experience. URL submissions
-require a confirmed absolute HTTP(S) link and send that link directly to
-`POST /v6/submissions` without invoking Filestack. ZIP submissions accept one
+reuse community-app's Topgear flow and exact Wipro instructions, submission
+warning, customer-deliverable note, and Service Now (SNOW) support guidance in
+Opportunities-styled cards. Members enter a Wipro SharePoint deliverable link,
+click **Set URL**, accept the declaration, and submit. Editing a confirmed link
+clears its confirmation and acceptance. URL validation requires an absolute
+HTTP(S) link with a deliverable path on `wipro365.sharepoint.com`,
+`wipro365-my.sharepoint.com`, or `wipro365-my.sharepoint.com.mcas.ms`, with no
+embedded credentials or nonstandard port. Deployments can override these exact
+hosts with the pipe-separated `REACT_APP_TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS`
+setting, matching community-app's allowlist configuration. URL submissions send
+the confirmed link directly to `POST /v6/submissions` without invoking Filestack. ZIP submissions accept one
 `.zip` archive up to 500MB and report live upload progress. The browser uploads
 the archive to Filestack's S3 endpoint using the environment's canonical
 submissions DMZ bucket, then sends the resulting storage URL to the same Review
@@ -475,14 +484,14 @@ member's registration before submission. The active phase selects `CONTEST_SUBMI
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
-Requirements content in ZIP mode; URL mode replaces file-specific guidance
-with link accessibility reminders. Successful submissions expose the created
+Requirements content in ZIP mode. Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
-leaving the confirmation state. The declaration opens the public Topcoder
-Terms of Use in a new tab. While either request is active, the detail tabs and
-every form action that would unmount the submission are disabled. The explicit
-cancel control remains available, aborts its request, clears the selected file
-or URL, and then unlocks normal navigation.
+leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
+Terms of Use; URL mode preserves the exact TopGear declaration and opens
+community-app's TopGear terms and conditions URL in a new tab. While either
+request is active, the detail tabs and every form action that would unmount the
+submission are disabled. The explicit cancel control remains available, aborts
+its request, clears the selected file or URL, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
 progress, and completed states. A superseded scorer's `CANCELLED` status is shown

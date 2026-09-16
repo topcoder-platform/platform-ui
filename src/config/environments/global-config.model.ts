@@ -62,10 +62,12 @@ export interface GlobalConfig {
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
         TERMS_OF_USE: string
+        TOPGEAR_TERMS: string
         UNIVERSAL_NAV: string
         CHALLENGES_PAGE: string
         WORK_APP: string
     }
+    TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[]
     TERMS_URL?: string
     NDA_TERMS_URL?: string
     DEFAULT_NDA_UUID: string
