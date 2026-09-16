@@ -9,6 +9,12 @@ import {
     ChallengeOpportunity,
     ChallengeTerm,
 } from '../models'
+import { getChallengeTermsDetails } from '../services'
+import {
+    getInstantReviewStyleItem,
+    getReviewStyleModeItem,
+    hasAiReviewConfig,
+} from '../utils/ai-review-config.utils'
 import {
     challengeAllowsStockArt,
     challengeFileTypes,
@@ -33,7 +39,6 @@ import {
     QA_COMPETITION_TYPES_URL,
     USABLE_CODE_RULES_URL,
 } from '../utils/opportunity-learning.utils'
-import { getChallengeTermsDetails } from '../services'
 import programBanner from '../assets/ai-exponential-program.png'
 import sidebarArrowIcon from '../assets/sidebar-arrow.svg'
 import sidebarBookIcon from '../assets/sidebar-book.svg'
@@ -78,29 +83,8 @@ interface ReviewStyleSectionProps {
     unavailable?: boolean
 }
 
-interface ReviewStylePresentation {
-    label: string
-    tooltip: string
-}
-
-const MANUAL_REVIEW_STYLE: ReviewStylePresentation = {
-    label: 'Manual',
-    tooltip: 'Community Review Board performs a thorough review based on scorecards.',
-}
-
-const AI_REVIEW_STYLES: Record<ChallengeAiReviewConfig['mode'], ReviewStylePresentation> = {
-    AI_GATING: {
-        label: 'AI Gating',
-        tooltip: 'AI performs a preliminary review, then the Community Review Board evaluates submissions that pass.',
-    },
-    AI_ONLY: {
-        label: 'AI only',
-        tooltip: 'AI will perform a thorough review based on scorecards.',
-    },
-}
-
 /**
- * Renders one Figma review-style bullet and its accessible explanation.
+ * Renders one review-style bullet with an accessible tooltip.
  *
  * @param props member-facing label and tooltip copy.
  * @returns one review-style list item.
@@ -129,16 +113,14 @@ const ReviewStyleItem: FC<ReviewStyleItemProps> = props => (
 )
 
 /**
- * Renders the API-backed Review Style rows shared by every challenge type.
+ * Renders development-challenge review style above challenge terms.
  *
  * @param props AI review configuration and request state.
- * @returns Review Style heading with manual or AI-specific detail rows.
+ * @returns Review mode and instant review details.
  * @throws Does not throw.
  */
 const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
-    const presentation = props.config
-        ? AI_REVIEW_STYLES[props.config.mode] ?? MANUAL_REVIEW_STYLE
-        : MANUAL_REVIEW_STYLE
+    const reviewModeItem = getReviewStyleModeItem(props.config)
 
     return (
         <div className={styles.infoSection}>
@@ -147,18 +129,15 @@ const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
                 Review Style
             </h3>
             {props.loading
-                ? <p className={styles.reviewStyleStatus}>Loading review style…</p>
+                ? <p className={styles.reviewConfigStatus}>Loading review configuration…</p>
                 : props.unavailable
-                    ? <p className={styles.reviewStyleStatus}>Review style is unavailable.</p>
+                    ? <p className={styles.reviewConfigStatus}>Review configuration is unavailable.</p>
                     : (
                         <ul className={styles.reviewStyleList}>
-                            <ReviewStyleItem {...presentation} />
-                            {props.config && (
+                            <ReviewStyleItem {...reviewModeItem} />
+                            {hasAiReviewConfig(props.config) && (
                                 <ReviewStyleItem
-                                    label={`Instant Review is ${props.config.instantReview ? 'On' : 'Off'}`}
-                                    tooltip={props.config.instantReview
-                                        ? 'You will receive AI feedback during the submission phase'
-                                        : 'You will not receive AI feedback during the submission phase.'}
+                                    {...getInstantReviewStyleItem(props.config?.instantReview === true)}
                                 />
                             )}
                         </ul>
@@ -509,7 +488,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                     </>
                 )}
-                {!marathonMatch && (
+                {developmentChallenge && !marathonMatch && (
                     <ReviewStyleSection
                         config={props.aiReviewConfig}
                         loading={props.reviewStyleLoading}
