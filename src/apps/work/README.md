@@ -44,3 +44,10 @@ default and white on a teal hover background.
 
 Original implementation reference:
 - `work-manager/`
+
+## Sales
+
+The Sales tab opens the read-only Salesforce report for Administrators and Talent
+Managers. It is also available on the dedicated Sales host. Search, column
+filters, sorting, pagination and refresh use `reports-api-v6`; all edits remain
+in Salesforce. See [Sales app documentation](../sales/README.md).

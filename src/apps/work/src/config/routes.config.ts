@@ -6,6 +6,7 @@ export const rootRoute: string
         : `/${AppSubdomain.work}`
 
 export const challengesRouteId = 'challenges'
+export const salesRouteId = 'sales'
 export const challengeCreateRouteId = 'challenge-create'
 export const challengeEditRouteId = 'challenge-edit'
 export const projectsRouteId = 'projects'
