@@ -6,7 +6,8 @@ import { FC, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from
 
 import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
 
-import { SalesQuery, SalesReport } from './sales.models'
+import { OpportunityModal } from './OpportunityModal'
+import { SalesQuery, SalesReport, toOpportunityId } from './sales.models'
 import { fetchSalesReport, salesErrorMessage } from './sales.service'
 import {
     dateColumns,
@@ -20,6 +21,11 @@ import './sales.scss'
 
 const initialQuery: SalesQuery = { page: 1, perPage: 25 }
 const filterDebounceMs = 400
+
+interface SelectedOpportunity {
+    id: string
+    name: string
+}
 
 /**
  * Merges search and column filter controls into the report query.
@@ -66,6 +72,7 @@ const SalesPage: FC = () => {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(true)
     const [refreshVersion, setRefreshVersion] = useState(0)
+    const [openedOpportunity, setOpenedOpportunity] = useState<SelectedOpportunity>()
     const forceRefresh = useRef(false)
     const busy = useRef(false)
 
@@ -490,11 +497,27 @@ const SalesPage: FC = () => {
                                 <tbody>
                                     {report.rows.map(row => (
                                         <tr key={row.id}>
-                                            {row.cells.map((cell, index) => (
-                                                <td key={report.columns[index].id}>
-                                                    {cell.label || '—'}
-                                                </td>
-                                            ))}
+                                            {row.cells.map((cell, index) => {
+                                                const opportunityId = toOpportunityId(cell.value)
+                                                const label = cell.label || '—'
+
+                                                return (
+                                                    <td key={report.columns[index].id}>
+                                                        {opportunityId && cell.label ? (
+                                                            <button
+                                                                className={styles.opportunityButton}
+                                                                onClick={() => setOpenedOpportunity({
+                                                                    id: opportunityId,
+                                                                    name: label,
+                                                                })}
+                                                                type='button'
+                                                            >
+                                                                {label}
+                                                            </button>
+                                                        ) : label}
+                                                    </td>
+                                                )
+                                            })}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -548,6 +571,15 @@ const SalesPage: FC = () => {
                     </>
                 )}
             </section>
+
+            {openedOpportunity && (
+                <OpportunityModal
+                    onClose={() => setOpenedOpportunity(undefined)}
+                    open
+                    opportunityId={openedOpportunity.id}
+                    opportunityName={openedOpportunity.name}
+                />
+            )}
         </div>
     )
 }

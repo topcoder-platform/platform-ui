@@ -1,13 +1,21 @@
-# Sales (PM-6343, PM-6364)
+# Sales (PM-6343, PM-6363, PM-6364)
 
 Read-only Salesforce reporting for Administrators and Talent Managers. Available
 at `sales.topcoder.com` / `sales.topcoder-dev.com`, `/sales` on the combined host,
 and the **Sales** tab inside Work (`/sales` on the Work host, `/work/sales` on the
 combined host). Route guards and the Reports API independently enforce access.
 
-The page calls `GET {REPORTS_API}/sales` with the signed-in user's token. All
-Salesforce credentials stay in `reports-api-v6`. No create, update, delete,
-export, machine credentials or direct Salesforce API calls exist in the UI.
+The page calls `GET {REPORTS_API}/sales` with the signed-in user's token, and
+`GET {API.V6}/projects/salesforce/opportunities/{id}` for the opportunity popup.
+All Salesforce credentials stay in `reports-api-v6` and `projects-api-v6`. No
+create, update, delete, export, machine credentials or direct Salesforce API
+calls exist in the UI.
+
+Report cells whose value is a Salesforce opportunity id (the `006` key prefix)
+render the opportunity name as a button. Opening it shows a popup with the
+opportunity description first, followed by the customer, SMU, close date and
+stage when Salesforce provides them, plus a link to the record. The popup closes
+with its Close button or the X icon; obsolete lookups are aborted.
 
 ## Date range filter (PM-6364)
 

@@ -13,6 +13,8 @@ export interface ProjectMetadata {
     smu?: string
     smuOther?: string
     dealCloseDate?: string
+    /** Salesforce opportunity the project details were imported from. */
+    salesforceOpportunityId?: string
 }
 
 export interface ProjectDetails extends Record<string, unknown>, ProjectMetadata {
