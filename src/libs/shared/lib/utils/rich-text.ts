@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 
 const RICH_TEXT_ALLOWED_ATTRIBUTES = [
     'align',
+    'alt',
     'border',
     'cellpadding',
     'cellspacing',
@@ -10,10 +11,13 @@ const RICH_TEXT_ALLOWED_ATTRIBUTES = [
     'colspan',
     'height',
     'href',
+    'loading',
     'rel',
     'rowspan',
+    'src',
     'style',
     'target',
+    'title',
     'type',
     'width',
 ]
@@ -33,6 +37,7 @@ const RICH_TEXT_ALLOWED_TAGS = [
     'h5',
     'h6',
     'hr',
+    'img',
     'li',
     'ol',
     'p',
