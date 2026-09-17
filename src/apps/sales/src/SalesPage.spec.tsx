@@ -53,7 +53,6 @@ describe('Sales page', () => {
         fireEvent.change(screen.getByLabelText('Search sales'), { target: { value: 'Example' } })
         fireEvent.change(screen.getByLabelText('Filter field'), { target: { value: 'NAME' } })
         fireEvent.change(screen.getByLabelText('Contains'), { target: { value: 'opportunity' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 filterColumn: 'NAME', filterValue: 'opportunity', page: 1, search: 'Example',
@@ -71,6 +70,33 @@ describe('Sales page', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Next' }))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }), expect.any(AbortSignal)))
+    })
+
+    it('searches as the user types after a short pause and applies immediately on enter', async () => {
+        jest.useFakeTimers()
+        render(<SalesPage />)
+        await act(async () => { await Promise.resolve() })
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(1)
+        fireEvent.change(screen.getByLabelText('Search sales'), { target: { value: 'Tal' } })
+        fireEvent.change(screen.getByLabelText('Search sales'), { target: { value: 'Talent' } })
+        await act(async () => { jest.advanceTimersByTime(399) })
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(1)
+        await act(async () => { jest.advanceTimersByTime(1) })
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(2)
+        expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, search: 'Talent' }), expect.any(AbortSignal))
+        fireEvent.change(screen.getByLabelText('Search sales'), { target: { value: 'Talent search' } })
+        await act(async () => { fireEvent.submit(screen.getByLabelText('Search sales')) })
+        expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ search: 'Talent search' }), expect.any(AbortSignal))
+        await act(async () => { jest.advanceTimersByTime(400) })
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(3)
+        expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument()
+        jest.useRealTimers()
     })
 
     it('refreshes without losing filters and labels retained data after failure', async () => {

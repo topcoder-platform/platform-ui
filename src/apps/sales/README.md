@@ -10,7 +10,7 @@ Salesforce credentials stay in `reports-api-v6`. No create, update, delete,
 export, machine credentials or direct Salesforce API calls exist in the UI.
 
 Report metadata determines every displayed column, including grouped Stage.
-Search and column substring filters apply on **Apply**; headers sort globally
+Search and column substring filters apply automatically as the user types (debounced); headers sort globally
 before server pagination. Changing a filter, sort or page size starts at page
 one. Clear resets filters and sorting. Null display values use an em dash.
 Search sales, Filter field and Contains use persistent labels above equal-height

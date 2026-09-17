@@ -12,6 +12,33 @@ import styles from './SalesPage.module.scss'
 import './sales.scss'
 
 const initialQuery: SalesQuery = { page: 1, perPage: 25 }
+const filterDebounceMs = 400
+
+/**
+ * Merges search and column filter controls into the report query.
+ * @param current Active report query.
+ * @param search Raw search input.
+ * @param filterColumn Selected filter column ID.
+ * @param filterValue Raw column filter input.
+ * @returns The current query when nothing changed, otherwise a new query reset to page one. Does not throw.
+ */
+function withFilters(current: SalesQuery, search: string, filterColumn: string, filterValue: string): SalesQuery {
+    const value = filterValue.trim()
+    const next = {
+        filterColumn: filterColumn && value ? filterColumn : undefined,
+        filterValue: filterColumn && value ? value : undefined,
+        search: search.trim() || undefined,
+    }
+    if (
+        next.search === (current.search || undefined)
+        && next.filterColumn === current.filterColumn
+        && next.filterValue === current.filterValue
+    ) {
+        return current
+    }
+
+    return { ...current, ...next, page: 1 }
+}
 
 /**
  * Read-only Sales workspace, used on the dedicated host and inside Work.
@@ -85,16 +112,17 @@ const SalesPage: FC = () => {
         }
     }, [refresh, report?.refreshAfterSeconds])
 
-    /** @param event Filter form submission. @returns Nothing; applies controls from page one. Does not throw. */
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setQuery(current => withFilters(current, search, filterColumn, filterValue))
+        }, filterDebounceMs)
+        return () => window.clearTimeout(timer)
+    }, [search, filterColumn, filterValue])
+
+    /** @param event Filter form submission. @returns Nothing; applies pending controls immediately. Does not throw. */
     function applyFilters(event: FormEvent<HTMLFormElement>): void {
         event.preventDefault()
-        setQuery(current => ({
-            ...current,
-            filterColumn: filterColumn && filterValue.trim() ? filterColumn : undefined,
-            filterValue: filterColumn && filterValue.trim() ? filterValue.trim() : undefined,
-            page: 1,
-            search: search.trim(),
-        }))
+        setQuery(current => withFilters(current, search, filterColumn, filterValue))
     }
 
     /** Clears filters and sorting after a schema change or empty search; returns void and does not throw. */
@@ -229,7 +257,6 @@ const SalesPage: FC = () => {
                         />
                     </div>
                     <div className={styles.filterActions}>
-                        <Button disabled={loading || !report} noCaps secondary type='submit'>Apply</Button>
                         <Button noCaps onClick={clearFilters} link>Clear</Button>
                     </div>
                 </form>
