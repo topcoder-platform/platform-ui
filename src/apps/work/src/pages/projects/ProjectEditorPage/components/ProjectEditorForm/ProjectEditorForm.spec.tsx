@@ -14,6 +14,9 @@ import {
     createProject,
     updateProject,
 } from '../../../../../lib/services'
+import {
+    fetchSalesforceOpportunity,
+} from '../../../../../lib/services/salesforce-opportunities.service'
 
 import { ProjectEditorForm } from './ProjectEditorForm'
 
@@ -144,6 +147,11 @@ jest.mock('../../../../../lib/services', () => ({
     updateProject: jest.fn(),
 }))
 
+jest.mock('../../../../../lib/services/salesforce-opportunities.service', () => ({
+    fetchSalesforceOpportunity: jest.fn(),
+    salesforceOpportunityErrorMessage: () => 'We could not reach Salesforce. Please try again.',
+}))
+
 jest.mock('../../../../../lib/utils', () => ({
     formatDate: () => '-',
     showErrorToast: jest.fn(),
@@ -173,6 +181,9 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
     typeof useFetchProjectBillingAccount
 >
 const mockedCreateProject = createProject as jest.MockedFunction<typeof createProject>
+const mockedFetchSalesforceOpportunity = fetchSalesforceOpportunity as jest.MockedFunction<
+    typeof fetchSalesforceOpportunity
+>
 const mockedUpdateProject = updateProject as jest.MockedFunction<typeof updateProject>
 
 describe('ProjectEditorForm', () => {
@@ -312,16 +323,111 @@ describe('ProjectEditorForm', () => {
             .toBe('Custom')
         fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'Updated' } })
         fireEvent.keyDown(screen.getByLabelText('SMU'), { code: 'ArrowDown', key: 'ArrowDown' })
-        fireEvent.click(screen.getByText('Europe'))
+        fireEvent.click(screen.getByText('EURP'))
         expect(screen.queryByLabelText(/^Other SMU/))
             .toBeNull()
         fireEvent.click(screen.getByRole('button', { name: 'Save project' }))
         await waitFor(() => expect(mockedUpdateProject)
             .toHaveBeenCalledWith('project-1', expect.objectContaining({
                 details: expect.objectContaining({
-                    customer: 'Updated', dealCloseDate: '2026-09-16', retained: true, smu: 'Europe', smuOther: '',
+                    customer: 'Updated', dealCloseDate: '2026-09-16', retained: true, smu: 'EURP', smuOther: '',
                 }),
             })))
+    })
+
+    it('shows the current option for a project saved with a legacy SMU label', () => {
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        description: 'Description',
+                        details: { customer: 'Customer', smu: 'Americas1' },
+                        id: 'project-1',
+                        name: 'Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('AMR1'))
+            .toBeTruthy()
+    })
+
+    it('populates the shared metadata from a Salesforce opportunity and links to it', async () => {
+        mockedFetchSalesforceOpportunity.mockResolvedValue({
+            closeDate: '2026-07-31',
+            customer: 'Novartis Pharmaceuticals',
+            id: '006UN00000XamntYAB',
+            name: 'EMEA - AWS - PS BFSI',
+            smu: 'AMR1',
+            url: 'https://topcoder.my.salesforce.com/006UN00000XamntYAB',
+        })
+
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        description: 'Description',
+                        details: {},
+                        id: 'project-1',
+                        name: 'Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.change(screen.getByLabelText(/^Salesforce Opportunity ID/), {
+            target: { value: '006UN00000XamntYAB' },
+        })
+
+        await waitFor(() => expect(mockedFetchSalesforceOpportunity)
+            .toHaveBeenCalledWith('006UN00000XamntYAB', expect.any(AbortSignal)))
+        await waitFor(() => expect((screen.getByLabelText('Customer') as HTMLInputElement).value)
+            .toBe('Novartis Pharmaceuticals'))
+        expect((screen.getByLabelText('Deal Close Date') as HTMLInputElement).value)
+            .toBe('2026-07-31')
+        expect(screen.getByText('AMR1'))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'View in Salesforce' })
+            .getAttribute('href'))
+            .toBe('https://topcoder.my.salesforce.com/006UN00000XamntYAB')
+    })
+
+    it('does not look up an incomplete Salesforce opportunity ID', async () => {
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        description: 'Description',
+                        details: {},
+                        id: 'project-1',
+                        name: 'Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.change(screen.getByLabelText(/^Salesforce Opportunity ID/), {
+            target: { value: '006UN000' },
+        })
+
+        await waitFor(() => expect(screen.getByText(/valid 15 or 18 character/))
+            .toBeTruthy())
+        expect(mockedFetchSalesforceOpportunity)
+            .not
+            .toHaveBeenCalled()
     })
 
 })

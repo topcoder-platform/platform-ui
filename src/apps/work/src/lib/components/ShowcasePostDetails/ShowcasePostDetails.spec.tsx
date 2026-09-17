@@ -46,7 +46,8 @@ describe('Showcase post details', () => {
         view.rerender(<ShowcasePostDetails data={{ owner: 'oww', smu: 'Americas1' }} />)
         expect(screen.getByText('SMU'))
             .toBeInTheDocument()
-        expect(screen.getByText('Americas1'))
+        // Projects stored before the Salesforce naming alignment render the current label.
+        expect(screen.getByText('AMR1'))
             .toBeInTheDocument()
         expect(screen.getByText('Owner'))
             .toBeInTheDocument()

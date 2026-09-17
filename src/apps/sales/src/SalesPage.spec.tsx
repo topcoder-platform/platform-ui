@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import SalesPage from './SalesPage'
+import { fetchOpportunity } from './opportunity.service'
 import { SalesReport } from './sales.models'
 import { fetchSalesReport } from './sales.service'
 
@@ -12,7 +13,21 @@ jest.mock('./sales.service', () => ({
     salesErrorMessage: () => 'Unable to refresh. Please try again.',
 }))
 
+jest.mock('./opportunity.service', () => ({
+    fetchOpportunity: jest.fn(),
+    opportunityErrorMessage: () => 'We could not load the opportunity details. Please try again.',
+}))
+
 jest.mock('~/libs/ui', () => ({
+    BaseModal: (props: { buttons?: ReactNode; children: ReactNode; open: boolean; title: ReactNode }) => (
+        props.open ? (
+            <div role='dialog'>
+                <h2>{props.title}</h2>
+                {props.children}
+                {props.buttons}
+            </div>
+        ) : undefined
+    ),
     Button: (props: ButtonHTMLAttributes<HTMLButtonElement>) => (
         <button disabled={props.disabled} onClick={props.onClick} type={props.type === 'submit' ? 'submit' : 'button'}>
             {props.children}
@@ -24,6 +39,7 @@ jest.mock('~/libs/ui', () => ({
 }), { virtual: true })
 
 const fetchReport = fetchSalesReport as jest.MockedFunction<typeof fetchSalesReport>
+const fetchOpportunityDetails = fetchOpportunity as jest.MockedFunction<typeof fetchOpportunity>
 
 /** Creates non-customer Sales test data. @returns A synthetic report page. Does not throw. */
 function fixture(): SalesReport {
@@ -44,8 +60,11 @@ function fixture(): SalesReport {
 }
 
 describe('Sales page', () => {
-    beforeEach(() => fetchReport.mockReset()
-        .mockResolvedValue(fixture()))
+    beforeEach(() => {
+        fetchOpportunityDetails.mockReset()
+        fetchReport.mockReset()
+            .mockResolvedValue(fixture())
+    })
 
     it('renders live metadata and sends search, column filters, sorting and pagination to the API', async () => {
         render(<SalesPage />)
@@ -157,5 +176,61 @@ describe('Sales page', () => {
             .toHaveBeenCalledTimes(3)
         visibility.mockRestore()
         jest.useRealTimers()
+    })
+
+    it('opens the opportunity description in a popup and closes it again', async () => {
+        fetchReport.mockResolvedValue({
+            ...fixture(),
+            rows: [{
+                cells: [{ label: 'EMEA - AWS - PS BFSI', value: '006UN00000XamntYAB' }],
+                id: '0:0',
+            }],
+        })
+        fetchOpportunityDetails.mockResolvedValue({
+            closeDate: '2026-07-31',
+            description: 'Next AWS MVP for the BFSI practice.',
+            id: '006UN00000XamntYAB',
+            name: 'EMEA - AWS - PS BFSI',
+            url: 'https://topcoder.my.salesforce.com/006UN00000XamntYAB',
+        })
+
+        render(<SalesPage />)
+        fireEvent.click(await screen.findByRole('button', { name: 'EMEA - AWS - PS BFSI' }))
+
+        expect(fetchOpportunityDetails)
+            .toHaveBeenCalledWith('006UN00000XamntYAB', expect.any(AbortSignal))
+        expect(await screen.findByText('Next AWS MVP for the BFSI practice.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'View in Salesforce' }))
+            .toHaveAttribute('href', 'https://topcoder.my.salesforce.com/006UN00000XamntYAB')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    })
+
+    it('explains a failed opportunity lookup inside the popup', async () => {
+        fetchReport.mockResolvedValue({
+            ...fixture(),
+            rows: [{
+                cells: [{ label: 'EMEA - AWS - PS BFSI', value: '006UN00000XamntYAB' }],
+                id: '0:0',
+            }],
+        })
+        fetchOpportunityDetails.mockRejectedValue({ response: { status: 404 } })
+
+        render(<SalesPage />)
+        fireEvent.click(await screen.findByRole('button', { name: 'EMEA - AWS - PS BFSI' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('We could not load the opportunity details. Please try again.')
+    })
+
+    it('leaves cells that do not carry an opportunity id as plain text', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+
+        expect(screen.queryByRole('button', { name: 'Example opportunity' }))
+            .not
+            .toBeInTheDocument()
     })
 })

@@ -71,6 +71,7 @@ import type {
 } from '../../../lib/models'
 import { ProjectMetadataFields } from '../../../lib/components/form/ProjectMetadataFields'
 import {
+    normalizeSmuValue,
     SHOWCASE_CURRENT_STATUS_VALUES,
     SHOWCASE_TYPE_VALUES,
 } from '../../../lib/constants/showcase.constants'
@@ -250,7 +251,7 @@ function mapPostToFormData(
         })) || [],
         owner: post?.owner || '',
         sendToWin: post?.sendToWin === true,
-        smu: metadata?.smu || '',
+        smu: normalizeSmuValue(metadata?.smu),
         smuOther: metadata?.smuOther || '',
         title: post?.title || '',
         type: post?.type || '',

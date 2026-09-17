@@ -2,6 +2,7 @@ import { FC } from 'react'
 
 import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 
+import { normalizeSmuValue } from '../../constants/showcase.constants'
 import { ShowcaseMetadata } from '../../models/ProjectShowcasePost.model'
 
 import styles from './ShowcasePostDetails.module.scss'
@@ -47,7 +48,7 @@ function formatDealCloseDate(value: string | undefined): string | undefined {
 export function getShowcaseDetailItems(data: ShowcaseMetadata): ShowcasePostDetailItem[] {
     const smu = data.smu === 'Others'
         ? data.smuOther?.trim() || data.smu
-        : data.smu
+        : normalizeSmuValue(data.smu)
 
     return [
         { label: 'Type', value: data.type },

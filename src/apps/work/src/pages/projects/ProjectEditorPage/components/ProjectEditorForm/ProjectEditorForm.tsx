@@ -16,6 +16,7 @@ import {
     PROJECT_STATUS,
     PROJECT_STATUSES,
 } from '../../../../../lib/constants'
+import { normalizeSmuValue } from '../../../../../lib/constants/showcase.constants'
 import {
     FormBillingAccountAutocomplete,
     FormCheckboxField,
@@ -66,6 +67,7 @@ interface ProjectEditorFormProps {
 
 interface ProjectEditorFormValues {
     customer: string
+    salesforceOpportunityId: string
     smu: string
     smuOther: string
     dealCloseDate: string
@@ -116,7 +118,8 @@ function getDefaultFormValues(
             : true,
         groups,
         name: projectDetail?.name || '',
-        smu: projectDetail?.details?.smu || '',
+        salesforceOpportunityId: projectDetail?.details?.salesforceOpportunityId || '',
+        smu: normalizeSmuValue(projectDetail?.details?.smu),
         smuOther: projectDetail?.details?.smuOther || '',
         status: isEdit
             ? (projectDetail?.status || PROJECT_STATUS.DRAFT)
@@ -382,6 +385,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 const projectMetadata = {
                     customer: formData.customer.trim(),
                     dealCloseDate: formData.dealCloseDate,
+                    salesforceOpportunityId: formData.salesforceOpportunityId.trim(),
                     smu: formData.smu,
                     smuOther: formData.smu === 'Others' ? formData.smuOther.trim() : '',
                 }
@@ -568,7 +572,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     </div>
 
                     <div className={styles.grid}>
-                        <ProjectMetadataFields />
+                        <ProjectMetadataFields showSalesforceOpportunity />
                     </div>
 
                     <div className={styles.grid}>
