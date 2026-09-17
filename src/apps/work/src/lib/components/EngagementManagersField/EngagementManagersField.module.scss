@@ -52,6 +52,11 @@
     align-items: flex-end;
 }
 
+.addFormField {
+    flex: 1 1 260px;
+    min-width: 220px;
+}
+
 .empty,
 .loading {
     color: $black-60;

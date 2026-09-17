@@ -33,7 +33,12 @@ interface FormUserAutocompleteProps {
     disabled?: boolean
     label: string
     name: string
-    onValueChange?: (value: string) => void
+    /**
+     * Receives the new field value, plus the selected member when there is one. Callers that need
+     * more than the value field - a user id for identity and a handle for display, say - can take
+     * both from here instead of resolving the member a second time.
+     */
+    onValueChange?: (value: string, user?: User) => void
     placeholder?: string
     required?: boolean
     users?: User[]
@@ -237,7 +242,7 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
                 : ''
 
             setSelectedOption(nextSelectedOption)
-            onValueChange?.(nextValue)
+            onValueChange?.(nextValue, nextSelectedOption?.user)
             field.onChange(nextValue)
         },
         [field, onValueChange],

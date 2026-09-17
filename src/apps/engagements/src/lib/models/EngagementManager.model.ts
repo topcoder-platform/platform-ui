@@ -10,6 +10,15 @@ export interface EngagementManager {
     userId: string
 }
 
+/**
+ * Identity of the member being granted approval authority.
+ *
+ * `userId` is the authoritative field - authority is keyed on it. `handle` and `name` are display
+ * values the caller already has from the member picker, sent so the API does not have to look the
+ * member up again.
+ */
 export interface AssignEngagementManagerRequest {
-    handle: string
+    handle?: string
+    name?: string
+    userId: string
 }

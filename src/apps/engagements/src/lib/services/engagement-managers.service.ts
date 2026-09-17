@@ -24,17 +24,18 @@ export const getEngagementManagers = async (
 /**
  * Grants a member timesheet approval authority on the engagement. Administrators only.
  *
- * The handle is validated server-side: it must belong to an active Topcoder member and must not
- * already be assigned. Re-assigning a previously removed manager reactivates that record rather than
- * creating a second one.
+ * Keyed on the member's user id; the handle and name come along as display values from the member
+ * picker, which saves the API a member lookup. A member already assigned is rejected server-side,
+ * and re-assigning a previously removed manager reactivates that record rather than creating a
+ * second one.
  */
 export const assignEngagementManager = async (
     engagementId: string,
-    handle: string,
+    manager: AssignEngagementManagerRequest,
 ): Promise<EngagementManager> => (
     xhrPostAsync<AssignEngagementManagerRequest, EngagementManager>(
         managersUrl(engagementId),
-        { handle },
+        manager,
     )
 )
 

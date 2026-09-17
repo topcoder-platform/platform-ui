@@ -1,14 +1,24 @@
-import { FC, FocusEvent, FormEvent, useCallback, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
+import {
+    FormProvider,
+    useForm,
+    UseFormReturn,
+    useWatch,
+} from 'react-hook-form'
 
-import { Button, IconOutline, InputText, LoadingSpinner } from '~/libs/ui'
+import { Button, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { FormUserAutocomplete } from '~/apps/work/src/lib/components/form'
+import type { User } from '~/apps/work/src/lib/models'
 
-import type { EngagementManager } from '../../lib/models'
+import type { AssignEngagementManagerRequest, EngagementManager } from '../../lib/models'
 import {
     assignEngagementManager,
     removeEngagementManager,
 } from '../../lib/services/engagement-managers.service'
 
 import styles from './EngagementManagers.module.scss'
+
+type SelectedManager = AssignEngagementManagerRequest
 
 interface EngagementManagersProps {
     /** Engagement whose managers are being listed. */
@@ -21,6 +31,12 @@ interface EngagementManagersProps {
     onChange?: () => void
 }
 
+interface ManagerFieldFormData {
+    managerUserId: string
+}
+
+const MANAGER_USER_ID_FIELD = 'managerUserId'
+
 const extractErrorMessage = (error: unknown, fallback: string): string => {
     const typedError = error as {
         message?: string
@@ -28,6 +44,70 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
     }
 
     return typedError?.response?.data?.message || typedError?.message || fallback
+}
+
+interface AddManagerFormProps {
+    formMethods: UseFormReturn<ManagerFieldFormData>
+    isAssigning: boolean
+    onAssign: (manager: SelectedManager) => void
+}
+
+/**
+ * Handle picker plus the add action. Lives inside the form provider because
+ * `FormUserAutocomplete` - the same member picker the challenge reviewer and screener fields use -
+ * reads its value through react-hook-form context.
+ */
+const AddManagerForm: FC<AddManagerFormProps> = (props: AddManagerFormProps) => {
+    const [selectedManager, setSelectedManager] = useState<SelectedManager | undefined>()
+    const selectedUserId = useWatch({
+        control: props.formMethods.control,
+        name: MANAGER_USER_ID_FIELD,
+    }) as string | undefined
+
+    // The picker hands back the member it selected, so the user id and the handle both come from one
+    // selection. Nothing has to look the member up again - not here, and not on the server.
+    const handleSelectionChange = useCallback((value: string, user?: User) => {
+        setSelectedManager(value && user
+            ? {
+                handle: user.handle,
+                name: [user.firstName, user.lastName]
+                    .filter(Boolean)
+                    .join(' ')
+                    .trim() || undefined,
+                userId: value,
+            }
+            : undefined)
+    }, [])
+
+    const handleSubmit = props.formMethods.handleSubmit(() => {
+        if (!selectedManager || selectedManager.userId !== selectedUserId) {
+            return
+        }
+
+        props.onAssign(selectedManager)
+    })
+
+    return (
+        <form className={styles.addForm} onSubmit={handleSubmit}>
+            <div className={styles.addFormField}>
+                <FormUserAutocomplete
+                    disabled={props.isAssigning}
+                    label='Add manager'
+                    name={MANAGER_USER_ID_FIELD}
+                    onValueChange={handleSelectionChange}
+                    placeholder='Search user handles'
+                    valueField='userId'
+                />
+            </div>
+            <Button
+                disabled={props.isAssigning || !selectedManager}
+                label={props.isAssigning ? 'Adding...' : 'Add Manager'}
+                primary
+                size='sm'
+                type='submit'
+            />
+        </form>
+    )
 }
 
 /**
@@ -38,37 +118,33 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
  * in the other - there is one list, not two copies to reconcile.
  */
 const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManagersProps) => {
-    const [handle, setHandle] = useState<string>('')
     const [error, setError] = useState<string | undefined>()
     const [isAssigning, setIsAssigning] = useState<boolean>(false)
     const [removingUserId, setRemovingUserId] = useState<string | undefined>()
 
     const canEdit = props.canEdit ?? false
+    const formMethods = useForm<ManagerFieldFormData>({
+        defaultValues: { managerUserId: '' },
+        mode: 'onChange',
+    })
 
-    const handleAssign = useCallback(async (event: FormEvent) => {
-        event.preventDefault()
-
-        const trimmedHandle = handle.trim()
-        if (!trimmedHandle) {
-            setError('Enter a Topcoder handle.')
-            return
-        }
-
+    const handleAssign = useCallback(async (manager: SelectedManager) => {
         setError(undefined)
         setIsAssigning(true)
 
         try {
-            await assignEngagementManager(props.engagementId, trimmedHandle)
-            setHandle('')
+            await assignEngagementManager(props.engagementId, manager)
+            formMethods.reset({ managerUserId: '' })
             props.onChange?.()
         } catch (assignError) {
             // The API is the only place handle existence, account status, and duplicates are
-            // checked, so its message is the one worth showing.
+            // checked, so its message is the one worth showing. The picker narrows the input to real
+            // handles; it does not know who is already a manager on this engagement.
             setError(extractErrorMessage(assignError, 'Failed to assign manager.'))
         } finally {
             setIsAssigning(false)
         }
-    }, [handle, props])
+    }, [formMethods, props])
 
     const handleRemove = useCallback(async (manager: EngagementManager) => {
         /* eslint-disable-next-line no-restricted-globals, no-alert */
@@ -142,28 +218,13 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
                     )}
 
                     {canEdit && (
-                        <form className={styles.addForm} onSubmit={handleAssign}>
-                            <InputText
-                                label='Add manager by Topcoder handle'
-                                name='managerHandle'
-                                onChange={function onHandleChange(
-                                    event: FocusEvent<HTMLInputElement>,
-                                ) {
-                                    setHandle(event.target.value)
-                                    setError(undefined)
-                                }}
-                                placeholder='e.g. maryj'
-                                type='text'
-                                value={handle}
+                        <FormProvider {...formMethods}>
+                            <AddManagerForm
+                                formMethods={formMethods}
+                                isAssigning={isAssigning}
+                                onAssign={handleAssign}
                             />
-                            <Button
-                                disabled={isAssigning || !handle.trim()}
-                                label={isAssigning ? 'Adding...' : 'Add Manager'}
-                                primary
-                                size='sm'
-                                type='submit'
-                            />
-                        </form>
+                        </FormProvider>
                     )}
 
                     {error && (

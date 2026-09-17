@@ -14,6 +14,7 @@ import {
     ENGAGEMENTS_ROOT_API_URL,
 } from '../constants'
 import {
+    AssignEngagementManagerPayload,
     Assignment,
     Engagement,
     EngagementFilters,
@@ -957,18 +958,19 @@ export async function fetchEngagementManagers(
 /**
  * Grants a member timesheet approval authority on an engagement.
  *
- * The handle is validated server-side: it must belong to an active Topcoder member, and a member
- * already assigned is rejected. Re-assigning someone previously removed reactivates their record
- * rather than creating a duplicate.
+ * Keyed on the member's user id; the handle and name come along as display values from the member
+ * picker, which saves the API a member lookup. A member already assigned is rejected server-side,
+ * and re-assigning someone previously removed reactivates their record rather than creating a
+ * duplicate.
  */
 export async function assignEngagementManager(
     engagementId: number | string,
-    handle: string,
+    manager: AssignEngagementManagerPayload,
 ): Promise<EngagementManager> {
     try {
-        return xhrPostAsync<{ handle: string }, EngagementManager>(
+        return xhrPostAsync<AssignEngagementManagerPayload, EngagementManager>(
             `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers`,
-            { handle },
+            manager,
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to assign engagement manager')
