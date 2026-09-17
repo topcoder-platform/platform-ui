@@ -5,9 +5,9 @@ import { SalesQuery, SalesReport } from './sales.models'
 
 /**
  * Reads Salesforce report data through the role-protected Reports API using the user's token.
- * @param query Server-side search, filter, sorting, pagination and refresh options.
+ * @param query Server-side search, filter, date range, sorting, pagination and refresh options.
  * @param signal Cancels obsolete requests when controls change or the page unmounts.
- * @returns The current report schema and one page of rows.
+ * @returns The current report schema, snapshot-wide totals and one page of rows.
  * @throws Propagates network, authorization and sanitized Reports API errors.
  */
 export function fetchSalesReport(query: SalesQuery, signal?: AbortSignal): Promise<SalesReport> {
@@ -33,6 +33,9 @@ export function salesErrorMessage(error: unknown): string {
     if (status === 401) return 'Your session has expired. Sign in again to view sales data.'
     if (status === 403) return 'Sales data is available to Administrators and Talent Managers.'
     if (status === 503) return 'The sales connection is not configured yet. Contact your administrator.'
-    if (status === 400) return 'The report columns have changed. Clear the filters and sorting, then try again.'
+    if (status === 400) {
+        return 'The report columns have changed. Reset the date range, clear the filters and sorting, then try again.'
+    }
+
     return 'We could not refresh the Salesforce report. Please try again.'
 }
