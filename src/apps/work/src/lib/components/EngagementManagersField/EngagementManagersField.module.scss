@@ -1,0 +1,62 @@
+@import '@libs/ui/styles/includes';
+
+.managers {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: $tc-white;
+}
+
+.header {
+    display: grid;
+    gap: 4px;
+}
+
+.label {
+    @include font-weight-bold;
+}
+
+.hint {
+    color: $black-60;
+}
+
+.list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: $black-5;
+}
+
+.name {
+    overflow-wrap: anywhere;
+}
+
+.addForm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.empty,
+.loading {
+    color: $black-60;
+}
+
+.error {
+    color: $red-100;
+}

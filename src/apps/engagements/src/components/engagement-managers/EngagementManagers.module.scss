@@ -1,0 +1,73 @@
+@import '@libs/ui/styles/includes';
+
+.managers {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid $black-10;
+    background: $tc-white;
+}
+
+.header {
+    display: grid;
+    gap: 4px;
+}
+
+.title {
+    margin: 0;
+}
+
+.hint {
+    color: $black-60;
+}
+
+.managerList {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.managerItem {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: $black-5;
+}
+
+.managerName {
+    overflow-wrap: anywhere;
+}
+
+.addForm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.emptyState {
+    margin: 0;
+    color: $black-60;
+}
+
+.error {
+    margin: 0;
+    color: $red-100;
+}
+
+.loadingState {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.loadingSpinner {
+    position: relative;
+}

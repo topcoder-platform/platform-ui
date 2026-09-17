@@ -5,6 +5,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -26,6 +27,7 @@ import {
 
 import {
     CompleteAssignmentModal,
+    EngagementManagersField,
     ErrorMessage,
     LoadingSpinner,
     PaymentFormData,
@@ -38,6 +40,7 @@ import {
 } from '../../../lib/components/form'
 import {
     useFetchEngagement,
+    useFetchEngagementManagers,
     useFetchProject,
     useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
@@ -47,7 +50,11 @@ import {
 } from '../../../lib/constants'
 import {
     Assignment,
+    WorkAppContextModel,
 } from '../../../lib/models'
+import {
+    WorkAppContext,
+} from '../../../lib/contexts'
 import {
     createMemberPayment,
     partiallyUpdateEngagement,
@@ -55,6 +62,7 @@ import {
 } from '../../../lib/services'
 import {
     calculateAssignmentRatePerWeek,
+    canManageEngagementManagers,
     deserializeTentativeAssignmentDate,
     formatAssignmentDaysLeftInEngagement,
     getAssignmentPaymentCycle,
@@ -764,8 +772,17 @@ export const EngagementPaymentPage: FC = () => {
     const hasScrolledToHighlightedAssignment = useRef<boolean>(false)
 
     const engagementResult = useFetchEngagement(engagementId)
+    const engagementManagersResult = useFetchEngagementManagers(engagementId)
     const projectResult = useFetchProject(projectId)
     const projectBillingAccountResult = useFetchProjectBillingAccount(projectId)
+    const workAppContext = useContext(WorkAppContext) as WorkAppContextModel
+    // Mirrors the engagements API's administrator definition for timesheets. The API is the gate, so
+    // offering the control to anyone else would only produce a 403.
+    const canManageManagers = canManageEngagementManagers(workAppContext.userRoles ?? [])
+    const refreshEngagementManagers = useCallback(() => {
+        engagementManagersResult.mutate()
+            .catch(() => undefined)
+    }, [engagementManagersResult])
 
     const assignments = useMemo(() => {
         if (!Array.isArray(engagementResult.engagement?.assignments)) {
@@ -1016,6 +1033,13 @@ export const EngagementPaymentPage: FC = () => {
             pageTitle={pageTitle}
         >
             <div className={styles.container}>
+                <EngagementManagersField
+                    canEdit={canManageManagers}
+                    engagementId={engagementId}
+                    isLoading={engagementManagersResult.isLoading}
+                    managers={engagementManagersResult.managers}
+                    onChange={refreshEngagementManagers}
+                />
                 {assignments.length === 0
                     ? <div className={styles.empty}>No assigned members found.</div>
                     : (

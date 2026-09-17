@@ -17,6 +17,7 @@ import {
     Assignment,
     Engagement,
     EngagementFilters,
+    EngagementManager,
     PaginationModel,
     Skill,
 } from '../models'
@@ -931,5 +932,63 @@ export async function createMemberExperience(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to create member experience')
+    }
+}
+
+/**
+ * Lists the managers authorized to approve timesheets on an engagement.
+ *
+ * These are the same endpoints the Engagements Portal timesheet page uses. There is one manager list
+ * behind both apps, which is what makes a change made in either one visible in the other without any
+ * synchronization between them.
+ */
+export async function fetchEngagementManagers(
+    engagementId: number | string,
+): Promise<EngagementManager[]> {
+    try {
+        return xhrGetAsync<EngagementManager[]>(
+            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch engagement managers')
+    }
+}
+
+/**
+ * Grants a member timesheet approval authority on an engagement.
+ *
+ * The handle is validated server-side: it must belong to an active Topcoder member, and a member
+ * already assigned is rejected. Re-assigning someone previously removed reactivates their record
+ * rather than creating a duplicate.
+ */
+export async function assignEngagementManager(
+    engagementId: number | string,
+    handle: string,
+): Promise<EngagementManager> {
+    try {
+        return xhrPostAsync<{ handle: string }, EngagementManager>(
+            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers`,
+            { handle },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to assign engagement manager')
+    }
+}
+
+/**
+ * Revokes a manager's timesheet approval authority.
+ *
+ * Soft-deleted server-side, so approvals this manager already made keep their attribution.
+ */
+export async function removeEngagementManager(
+    engagementId: number | string,
+    managerUserId: string,
+): Promise<void> {
+    try {
+        await xhrDeleteAsync(
+            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers/${managerUserId}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to remove engagement manager')
     }
 }

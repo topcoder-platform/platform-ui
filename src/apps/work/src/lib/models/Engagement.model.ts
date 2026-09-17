@@ -70,6 +70,18 @@ export interface Application {
     yearsOfExperience: number
 }
 
+/**
+ * A manager authorized to approve timesheets on an engagement.
+ *
+ * The list lives in the engagements API and is shared with the Engagements Portal: both apps read and
+ * write the same endpoints, so a manager added in either one shows up in the other.
+ */
+export interface EngagementManager {
+    handle: string
+    name: string | null
+    userId: string
+}
+
 export interface Engagement {
     account?: string
     anticipatedStart: EngagementAnticipatedStart | string
@@ -84,6 +96,7 @@ export interface Engagement {
     durationWeeks: number
     id: number | string
     isPrivate: boolean
+    managers?: EngagementManager[]
     project?: {
         id?: number | string
         name?: string
