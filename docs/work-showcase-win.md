@@ -31,6 +31,14 @@ The Challenge, The Solution and Business Impact Realised use the same Markdown
 editor and sanitized rich-text preview. Key Win and Owner are single-line strings
 of up to 255 characters. Existing title, taxonomy and solution requirements remain.
 
+The Work preview modal and the customer portal showcase (`/showcase` cards and
+post pages) share `ShowcasePostDetails`. Type, Customer, SMU (the custom value
+for Others), Deal Close Date, Key Win, Current Status and Owner appear in a
+labelled summary, followed by The Challenge, The Solution and Business Impact
+Realised. Anything left blank is hidden, including empty media, challenge,
+stats and skills sections. Showcase cards show Type, Customer and Current Status
+when they are set.
+
 **Send to WIN** is unchecked for new posts and retains the saved choice on edits.
 Saving with the checkbox selected makes the record available to authorized callers
 of `GET /v6/reports/WIN`. This is a pull integration: the success message confirms
@@ -45,5 +53,5 @@ deploy the reports API change for WIN callers. No new UI environment variables a
 
 Use `.nvmrc`, then `yarn lint`, `yarn run build`, and the tests for
 `ProjectShowcasePage`, `ProjectEditorForm`, `project-editor.schema`, and
-`showcase-post.schema`. Manually check that editing metadata in either form is
+`showcase-post.schema` and `ShowcasePostDetails`. Manually check that editing metadata in either form is
 reflected when reopening the other form, and that opting in/out changes the WIN report.

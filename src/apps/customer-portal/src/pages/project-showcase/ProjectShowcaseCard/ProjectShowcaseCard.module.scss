@@ -80,6 +80,14 @@
     gap: 12px;
 }
 
+.highlights {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22px;
+    overflow-wrap: anywhere;
+}
+
 .taxonomy {
     display: flex;
     align-items: center;
